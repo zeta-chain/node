@@ -20,7 +20,7 @@ import (
 	"runtime/debug"
 
 	errorsmod "cosmossdk.io/errors"
-	tmlog "github.com/cometbft/cometbft/libs/log"
+	tmlog "cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -177,7 +177,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*observertypes.MsgVoteBlockHeader,
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgVoteBlame:
-		signers := innerMsg.GetSigners()
+		signers := innerMsg.(sdk.LegacyMsg).GetSigners()
 		if len(signers) == 1 {
 			return isAuthorizedSigner(signers[0].String())
 		}

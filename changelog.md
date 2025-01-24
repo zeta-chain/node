@@ -5,9 +5,7 @@
 ### Features
 
 * [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
-
-### Features
-
+* [3357](https://github.com/zeta-chain/node/pull/3357) - cosmos-sdk v.50.x upgrade
 * [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
 
 ### Refactor
@@ -22,7 +20,6 @@
 
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
-
 
 ## v25.0.0
 

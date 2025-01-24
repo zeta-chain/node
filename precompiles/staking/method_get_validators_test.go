@@ -116,7 +116,7 @@ func Test_GetValidators(t *testing.T) {
 		list, ok := res[0].([]string)
 		require.True(t, ok)
 		require.Len(t, list, 1)
-		require.Equal(t, validator.GetOperator().String(), list[0])
+		require.Equal(t, validator.GetOperator(), list[0])
 	})
 
 	t.Run(" should return staker's validator list - heavy test with 100 validators", func(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -48,7 +49,7 @@ func (c *Contract) getRewards(
 	// In this case, simply return an empty list of rewards, so external contracts
 	// can process this case without failing.
 	if err != nil {
-		if errors.Is(err, distrtypes.ErrNoDelegationExists) {
+		if errors.Is(err, stakingtypes.ErrNoDelegation) {
 			rewards := make([]DecCoin, 0)
 			return method.Outputs.Pack(rewards)
 		}

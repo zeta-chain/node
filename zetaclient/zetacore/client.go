@@ -184,7 +184,7 @@ func buildCosmosClientContext(
 
 	var (
 		input   = strings.NewReader("")
-		client  cosmosclient.TendermintRPC
+		client  cosmosclient.CometRPC
 		nodeURI string
 	)
 

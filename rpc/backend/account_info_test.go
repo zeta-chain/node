@@ -143,11 +143,12 @@ func (suite *BackendTestSuite) TestGetProof() {
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
 					expProofValue.Bytes(),
 				)
+				addressStoreKey := append(authtypes.AddressStoreKeyPrefix, sdk.AccAddress(address1.Bytes())...)
 				RegisterABCIQueryWithOptions(
 					client,
 					bn.Int64(),
 					"store/acc/key",
-					authtypes.AddressStoreKey(sdk.AccAddress(address1.Bytes())),
+					addressStoreKey.Bytes(),
 					tmrpcclient.ABCIQueryOptions{Height: iavlHeight, Prove: true},
 					expProofValue.Bytes(),
 				)

@@ -88,7 +88,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	err = k.bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountAZeta))),
+		sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amountAZeta))),
 	)
 	if err != nil {
 		return ethcommon.Address{}, err

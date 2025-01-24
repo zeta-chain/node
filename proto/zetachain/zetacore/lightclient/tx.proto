@@ -3,11 +3,13 @@ package zetachain.zetacore.lightclient;
 
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/lightclient/block_header_verification.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/lightclient/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc EnableHeaderVerification(MsgEnableHeaderVerification)
       returns (MsgEnableHeaderVerificationResponse);
   rpc DisableHeaderVerification(MsgDisableHeaderVerification)
@@ -15,6 +17,7 @@ service Msg {
 }
 
 message MsgEnableHeaderVerification {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   repeated int64 chain_id_list = 2;
 }
@@ -22,6 +25,7 @@ message MsgEnableHeaderVerification {
 message MsgEnableHeaderVerificationResponse {}
 
 message MsgDisableHeaderVerification {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   repeated int64 chain_id_list = 2;
 }

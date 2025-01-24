@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -61,7 +62,7 @@ func (tx testTx) GetPriority() int64         { return tx.priority }
 func (tx testTx) GetNonce() uint64           { return tx.nonce }
 func (tx testTx) GetAddress() sdk.AccAddress { return tx.address }
 
-func (tx testTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -88,13 +89,14 @@ func (tx testUnsignedTx) GetPriority() int64         { return tx.priority }
 func (tx testUnsignedTx) GetNonce() uint64           { return tx.nonce }
 func (tx testUnsignedTx) GetAddress() sdk.AccAddress { return tx.address }
 
-func (tx testUnsignedTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testUnsignedTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testUnsignedTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
 func (tx testUnsignedTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	return res, nil
 }
+func (tx testUnsignedTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 
 var (
 	_ sdk.Tx                  = (*testTx)(nil)
@@ -105,6 +107,8 @@ var (
 )
 
 func (tx testTx) GetMsgs() []sdk.Msg { return nil }
+
+func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
 
@@ -141,7 +145,7 @@ func (tx testEthTx) GetExtensionOptions() []*codectypes.Any {
 
 func (tx testEthTx) GetNonCriticalExtensionOptions() []*codectypes.Any { panic("not implemented") }
 
-func (tx testEthTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testEthTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testEthTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -168,7 +172,7 @@ func (tx testUnsignedEthTx) GetNonCriticalExtensionOptions() []*codectypes.Any {
 	panic("not implemented")
 }
 
-func (tx testUnsignedEthTx) GetSigners() []sdk.AccAddress { panic("not implemented") }
+func (tx testUnsignedEthTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testUnsignedEthTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
@@ -179,7 +183,8 @@ var (
 	_ authante.HasExtensionOptionsTx = (*testUnsignedEthTx)(nil)
 )
 
-func (tx testEthTx) GetMsgs() []sdk.Msg { return tx.msgs }
+func (tx testEthTx) GetMsgs() []sdk.Msg                    { return tx.msgs }
+func (tx testEthTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 
 func (tx testEthTx) ValidateBasic() error { return nil }
 
@@ -187,7 +192,8 @@ func (tx testEthTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-func (tx testUnsignedEthTx) GetMsgs() []sdk.Msg { return tx.msgs }
+func (tx testUnsignedEthTx) GetMsgs() []sdk.Msg                    { return tx.msgs }
+func (tx testUnsignedEthTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 
 func (tx testUnsignedEthTx) ValidateBasic() error { return nil }
 

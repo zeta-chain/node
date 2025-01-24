@@ -3,20 +3,23 @@ package zetachain.zetacore.emissions;
 
 import "zetachain/zetacore/emissions/params.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/emissions/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   rpc WithdrawEmission(MsgWithdrawEmission)
       returns (MsgWithdrawEmissionResponse);
 }
 
 message MsgWithdrawEmission {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string amount = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
@@ -24,6 +27,7 @@ message MsgWithdrawEmission {
 message MsgWithdrawEmissionResponse {}
 
 message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
   string authority = 1;
   Params params = 2 [ (gogoproto.nullable) = false ];
 }

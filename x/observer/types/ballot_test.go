@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +15,7 @@ func TestBallot_AddVote(t *testing.T) {
 
 	tt := []struct {
 		name        string
-		threshold   sdk.Dec
+		threshold   sdkmath.LegacyDec
 		voterList   []string
 		votes       []votes
 		finalVotes  []VoteType
@@ -25,7 +25,7 @@ func TestBallot_AddVote(t *testing.T) {
 	}{
 		{
 			name:      "All success",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -44,7 +44,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Multiple votes by a observer , Ballot success",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -64,7 +64,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Multiple votes by a observer , Ballot in progress",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -84,7 +84,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Ballot finalized at threshold",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{
 				"Observer1",
 				"Observer2",
@@ -131,7 +131,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Ballot finalized at threshold but more votes added after",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{
 				"Observer1",
 				"Observer2",
@@ -178,7 +178,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Two observers",
-			threshold: sdk.MustNewDecFromStr("1.00"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("1.00"),
 			voterList: []string{"Observer1", "Observer2"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -190,7 +190,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Low threshold 1 always fails as Failure is checked first",
-			threshold: sdk.MustNewDecFromStr("0.01"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.01"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -209,7 +209,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Low threshold 2 always fails as Failure is checked first",
-			threshold: sdk.MustNewDecFromStr("0.01"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.01"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -228,7 +228,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "100 percent threshold cannot finalze with less than 100 percent votes",
-			threshold: sdk.MustNewDecFromStr("1"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("1"),
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []votes{
 				{"Observer1", VoteType_SuccessObservation},
@@ -247,7 +247,7 @@ func TestBallot_AddVote(t *testing.T) {
 		},
 		{
 			name:      "Voter not in voter list",
-			threshold: sdk.MustNewDecFromStr("0.66"),
+			threshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			voterList: []string{},
 			votes: []votes{
 				{"Observer5", VoteType_SuccessObservation},
@@ -289,14 +289,14 @@ func TestBallot_AddVote(t *testing.T) {
 func TestBallot_IsFinalizingVote(t *testing.T) {
 	tt := []struct {
 		name            string
-		BallotThreshold sdk.Dec
+		BallotThreshold sdkmath.LegacyDec
 		Votes           []VoteType
 		finalizingVote  int
 		finalStatus     BallotStatus
 	}{
 		{
 			name:            "finalized to success",
-			BallotThreshold: sdk.MustNewDecFromStr("0.66"),
+			BallotThreshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			Votes: []VoteType{
 				VoteType_SuccessObservation,
 				VoteType_SuccessObservation,
@@ -316,7 +316,7 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 		},
 		{
 			name:            "finalized to failure",
-			BallotThreshold: sdk.MustNewDecFromStr("0.66"),
+			BallotThreshold: sdkmath.LegacyMustNewDecFromStr("0.66"),
 			Votes: []VoteType{
 				VoteType_FailureObservation,
 				VoteType_FailureObservation,
@@ -336,7 +336,7 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 		},
 		{
 			name:            "low threshold finalized early to success",
-			BallotThreshold: sdk.MustNewDecFromStr("0.01"),
+			BallotThreshold: sdkmath.LegacyMustNewDecFromStr("0.01"),
 			Votes: []VoteType{
 				VoteType_SuccessObservation,
 				VoteType_FailureObservation,
@@ -356,7 +356,7 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 		},
 		{
 			name:            "100 percent threshold cannot finalize with less than 100 percent votes",
-			BallotThreshold: sdk.MustNewDecFromStr("1"),
+			BallotThreshold: sdkmath.LegacyMustNewDecFromStr("1"),
 			Votes: []VoteType{
 				VoteType_FailureObservation,
 				VoteType_FailureObservation,
@@ -376,7 +376,7 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 		},
 		{
 			name:            "100 percent threshold can finalize with 100 percent votes",
-			BallotThreshold: sdk.MustNewDecFromStr("1"),
+			BallotThreshold: sdkmath.LegacyMustNewDecFromStr("1"),
 			Votes: []VoteType{
 				VoteType_FailureObservation,
 				VoteType_FailureObservation,
@@ -469,7 +469,7 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				VoterList:        test.voterList,
 				Votes:            test.votes,
 				ObservationType:  0,
-				BallotThreshold:  sdk.Dec{},
+				BallotThreshold:  sdkmath.LegacyDec{},
 				BallotStatus:     test.ballotStatus,
 			}
 			rewardsMap := map[string]int64{}
