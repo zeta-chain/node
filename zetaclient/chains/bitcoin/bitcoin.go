@@ -144,7 +144,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		var (
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = base.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		if params.ReceiverChainId != chainID {
@@ -173,23 +173,18 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 				Uint64("outbound.earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
 				Msg("Schedule CCTX: lookahead reached")
 			return nil
-		case b.observer.IsOutboundActive(outboundID):
+		case b.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
 			continue
 		}
 
-		b.observer.MarkOutbound(outboundID, true)
-
-		go func() {
-			defer b.observer.MarkOutbound(outboundID, false)
-			b.signer.TryProcessOutbound(
-				ctx,
-				cctx,
-				b.observer,
-				b.observer.ZetacoreClient(),
-				zetaHeight,
-			)
-		}()
+		go b.signer.TryProcessOutbound(
+			ctx,
+			cctx,
+			b.observer,
+			b.observer.ZetacoreClient(),
+			zetaHeight,
+		)
 	}
 
 	return nil

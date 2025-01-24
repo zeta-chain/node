@@ -163,7 +163,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		var (
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = base.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		switch {
@@ -188,7 +188,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		case !continueKeysign:
 			e.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
 			continue
-		case e.observer.IsOutboundActive(outboundID):
+		case e.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
 			continue
 		}
@@ -215,17 +215,12 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 
 		// otherwise, the normal interval is used
 		if nonce%scheduleInterval == zetaHeight%scheduleInterval {
-			e.observer.MarkOutbound(outboundID, true)
-
-			go func() {
-				defer e.observer.MarkOutbound(outboundID, false)
-				e.signer.TryProcessOutbound(
-					ctx,
-					cctx,
-					e.observer.ZetacoreClient(),
-					zetaHeight,
-				)
-			}()
+			go e.signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				e.observer.ZetacoreClient(),
+				zetaHeight,
+			)
 		}
 
 		// #nosec G115 always in range

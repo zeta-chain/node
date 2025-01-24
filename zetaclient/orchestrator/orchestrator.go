@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -425,8 +426,18 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	signer interfaces.ChainSigner,
 ) {
 	solObserver, ok := observer.(*solanaobserver.Observer)
-	if !ok { // should never happen
+
+	// should never happen
+	if !ok {
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
+		return
+	}
+
+	solSigner, ok := signer.(*solanasigner.Signer)
+
+	// should never happen
+	if !ok {
+		oc.logger.Error().Msgf("ScheduleCctxSolana: chain signer is not a solana signer")
 		return
 	}
 
@@ -440,7 +451,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	for _, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
-		outboundID := base.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+		outboundID := base.OutboundIDFromCCTX(cctx)
 
 		if params.ReceiverChainId != chainID {
 			oc.logger.Error().
@@ -467,19 +478,20 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			continue
 		}
 
+		// noop
+		if solSigner.IsOutboundActive(outboundID) {
+			continue
+		}
+
 		// schedule a TSS keysign
-		if nonce%interval == zetaHeight%interval && !solObserver.IsOutboundActive(outboundID) {
-			solObserver.MarkOutbound(outboundID, true)
-			go func() {
-				defer solObserver.MarkOutbound(outboundID, false)
-				signer.TryProcessOutbound(
-					ctx,
-					cctx,
-					observer,
-					oc.zetacoreClient,
-					zetaHeight,
-				)
-			}()
+		if nonce%interval == zetaHeight%interval {
+			go signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				observer,
+				oc.zetacoreClient,
+				zetaHeight,
+			)
 		}
 	}
 }
@@ -493,15 +505,14 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 	observer interfaces.ChainObserver,
 	signer interfaces.ChainSigner,
 ) {
-	tonObserver, ok := observer.(*tonobserver.Observer)
-
 	// should never happen
-	if !ok {
+	if _, ok := observer.(*tonobserver.Observer); !ok {
 		oc.logger.Error().Msg("ScheduleCCTXTON: observer is not TON")
 		return
 	}
 
-	if _, ok := signer.(*tonsigner.Signer); !ok {
+	tonSigner, ok := signer.(*tonsigner.Signer)
+	if !ok {
 		oc.logger.Error().Msg("ScheduleCCTXTON: signer is not TON")
 		return
 	}
@@ -520,7 +531,7 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 			cctx       = cctxList[i]
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = base.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		if params.ReceiverChainId != chainID {
@@ -530,7 +541,7 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 		}
 
 		// outbound is already being processed
-		if tonObserver.IsOutboundActive(outboundID) {
+		if tonSigner.IsOutboundActive(outboundID) {
 			continue
 		}
 
@@ -551,11 +562,8 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 			continue
 		}
 
-		tonObserver.MarkOutbound(outboundID, true)
-
 		// try to sign and broadcast cctx to TON
 		task := func(ctx context.Context) error {
-			defer tonObserver.MarkOutbound(outboundID, false)
 			signer.TryProcessOutbound(
 				ctx,
 				cctx,

@@ -115,8 +115,12 @@ func (signer *Signer) TryProcessOutbound(
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
+		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
 			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
 		}

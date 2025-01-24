@@ -1,11 +1,14 @@
 package base
 
 import (
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -25,6 +28,8 @@ type Signer struct {
 	// outboundBeingReported is a map of outbound being reported to tracker
 	outboundBeingReported map[string]bool
 
+	activeOutbounds map[string]time.Time
+
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
 	mu sync.Mutex
@@ -43,6 +48,7 @@ func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Sig
 		chain:                 chain,
 		tss:                   tss,
 		outboundBeingReported: make(map[string]bool),
+		activeOutbounds:       make(map[string]time.Time),
 		logger: Logger{
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
@@ -104,4 +110,63 @@ func (s *Signer) Lock() {
 // Unlock unlocks the signer.
 func (s *Signer) Unlock() {
 	s.mu.Unlock()
+}
+
+// MarkOutboundActive marks the outbound as active.
+func (s *Signer) MarkOutbound(outboundID string, active bool) {
+	// noop
+	if s.IsOutboundActive(outboundID) == active {
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if active {
+		now := time.Now().UTC()
+		s.activeOutbounds[outboundID] = now
+
+		s.logger.Std.Info().
+			Bool("outbound.active", active).
+			Str("outbound.id", outboundID).
+			Time("outbound.timestamp", now).
+			Int("outbound.total", len(s.activeOutbounds)).
+			Msg("MarkOutbound")
+
+		return
+	}
+
+	startedAt, found := s.activeOutbounds[outboundID]
+	if !found {
+		return
+	}
+
+	timeTaken := time.Since(startedAt)
+	delete(s.activeOutbounds, outboundID)
+
+	s.logger.Std.Info().
+		Bool("outbound.active", active).
+		Str("outbound.id", outboundID).
+		Dur("outbound.time_taken", timeTaken).
+		Int("outbound.total", len(s.activeOutbounds)).
+		Msg("MarkOutbound")
+}
+
+func (s *Signer) IsOutboundActive(outboundID string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, found := s.activeOutbounds[outboundID]
+	return found
+}
+
+// OutboundID returns the outbound ID.
+func OutboundID(index string, receiverChainID int64, nonce uint64) string {
+	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
+}
+
+// OutboundIDFromCCTX returns the outbound ID from the cctx.
+func OutboundIDFromCCTX(cctx *types.CrossChainTx) string {
+	index, params := cctx.GetIndex(), cctx.GetCurrentOutboundParam()
+	return OutboundID(index, params.ReceiverChainId, params.TssNonce)
 }

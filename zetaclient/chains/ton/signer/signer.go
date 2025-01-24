@@ -78,6 +78,10 @@ func (s *Signer) TryProcessOutbound(
 	zetacore interfaces.ZetacoreClient,
 	zetaBlockHeight uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	s.MarkOutbound(outboundID, true)
+	defer s.MarkOutbound(outboundID, false)
+
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
 	lf := map[string]any{
