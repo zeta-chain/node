@@ -682,7 +682,7 @@ func (k Keeper) CallEVM(
 		}
 		errString, err := errMessage.ToJSON()
 		if err != nil {
-			return resp, cosmoserrors.Wrapf(err, errMessage.String())
+			return resp, fmt.Errorf("json marshalling failed %s,%s", err.Error(), errMessage.String())
 		}
 		return resp, errors.New(errString)
 	}

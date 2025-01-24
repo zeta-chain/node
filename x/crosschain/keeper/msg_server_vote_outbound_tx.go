@@ -199,7 +199,7 @@ HandleInvalidOutbound saves an invalid outbound transaction. It does the followi
 func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
 	cctx.SetAbort(types.StatusMessages{
 		StatusMessage:        "outbound failed unable to process",
-		ErrorMessageOutbound: cctxerror.NewCCTXErrorJsonMessage(errMessage, nil),
+		ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage(errMessage, nil),
 	})
 	ctx.Logger().Error(errMessage)
 	k.SaveOutbound(ctx, cctx, tssPubkey)
