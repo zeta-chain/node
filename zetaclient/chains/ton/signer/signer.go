@@ -85,7 +85,7 @@ func (s *Signer) TryProcessOutbound(
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
 	lf := map[string]any{
-		"outbound.index":   cctx.Index,
+		"outbound.id":      outboundID,
 		"outbound.nonce":   cctx.GetCurrentOutboundParam().TssNonce,
 		"outbound.outcome": string(outcome),
 	}
