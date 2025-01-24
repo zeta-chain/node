@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Install mockery
-go install github.com/vektra/mockery/v2@v2.38.0
+go install github.com/vektra/mockery/v2@v2.45.0
 
 # Run generate command for mocks
 cd ./testutil/keeper/mocks

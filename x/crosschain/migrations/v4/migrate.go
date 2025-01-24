@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -46,8 +46,8 @@ func SetZetaAccounting(
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	prefixedStore := prefix.NewStore(ctx.KVStore(crossChainStoreKey), p)
 	abortedAmountZeta := sdkmath.ZeroUint()
-	iterator := sdk.KVStorePrefixIterator(prefixedStore, []byte{})
-	defer func(iterator sdk.Iterator) {
+	iterator := storetypes.KVStorePrefixIterator(prefixedStore, []byte{})
+	defer func(iterator storetypes.Iterator) {
 		err := iterator.Close()
 		if err != nil {
 			panic(err)
@@ -77,8 +77,8 @@ func MoveNonceToObserverModule(
 	var pendingNonces []observertypes.PendingNonces
 	var nonceToCcTx []observertypes.NonceToCctx
 	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.ChainNoncesKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-	defer func(iterator sdk.Iterator) {
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator storetypes.Iterator) {
 		err := iterator.Close()
 		if err != nil {
 			return
@@ -92,8 +92,8 @@ func MoveNonceToObserverModule(
 		}
 	}
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
-	iterator = sdk.KVStorePrefixIterator(store, []byte{})
-	defer func(iterator sdk.Iterator) {
+	iterator = storetypes.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator storetypes.Iterator) {
 		err := iterator.Close()
 		if err != nil {
 			return
@@ -107,8 +107,8 @@ func MoveNonceToObserverModule(
 		}
 	}
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
-	iterator = sdk.KVStorePrefixIterator(store, []byte{})
-	defer func(iterator sdk.Iterator) {
+	iterator = storetypes.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator storetypes.Iterator) {
 		err := iterator.Close()
 		if err != nil {
 			return
@@ -154,7 +154,7 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	}
 
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSHistoryKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val observertypes.TSS

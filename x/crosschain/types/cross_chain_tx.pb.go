@@ -4,8 +4,8 @@
 package types
 
 import (
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	coin "github.com/zeta-chain/node/pkg/coin"
@@ -148,16 +148,16 @@ func (ProtocolContractVersion) EnumDescriptor() ([]byte, []int) {
 type InboundParams struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// the Connector.send()
-	SenderChainId          int64                                   `protobuf:"varint,2,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
-	TxOrigin               string                                  `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
-	CoinType               coin.CoinType                           `protobuf:"varint,4,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
-	Asset                  string                                  `protobuf:"bytes,5,opt,name=asset,proto3" json:"asset,omitempty"`
-	Amount                 github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
-	ObservedHash           string                                  `protobuf:"bytes,7,opt,name=observed_hash,json=observedHash,proto3" json:"observed_hash,omitempty"`
-	ObservedExternalHeight uint64                                  `protobuf:"varint,8,opt,name=observed_external_height,json=observedExternalHeight,proto3" json:"observed_external_height,omitempty"`
-	BallotIndex            string                                  `protobuf:"bytes,9,opt,name=ballot_index,json=ballotIndex,proto3" json:"ballot_index,omitempty"`
-	FinalizedZetaHeight    uint64                                  `protobuf:"varint,10,opt,name=finalized_zeta_height,json=finalizedZetaHeight,proto3" json:"finalized_zeta_height,omitempty"`
-	TxFinalizationStatus   TxFinalizationStatus                    `protobuf:"varint,11,opt,name=tx_finalization_status,json=txFinalizationStatus,proto3,enum=zetachain.zetacore.crosschain.TxFinalizationStatus" json:"tx_finalization_status,omitempty"`
+	SenderChainId          int64                  `protobuf:"varint,2,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
+	TxOrigin               string                 `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
+	CoinType               coin.CoinType          `protobuf:"varint,4,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
+	Asset                  string                 `protobuf:"bytes,5,opt,name=asset,proto3" json:"asset,omitempty"`
+	Amount                 cosmossdk_io_math.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=cosmossdk.io/math.Uint" json:"amount"`
+	ObservedHash           string                 `protobuf:"bytes,7,opt,name=observed_hash,json=observedHash,proto3" json:"observed_hash,omitempty"`
+	ObservedExternalHeight uint64                 `protobuf:"varint,8,opt,name=observed_external_height,json=observedExternalHeight,proto3" json:"observed_external_height,omitempty"`
+	BallotIndex            string                 `protobuf:"bytes,9,opt,name=ballot_index,json=ballotIndex,proto3" json:"ballot_index,omitempty"`
+	FinalizedZetaHeight    uint64                 `protobuf:"varint,10,opt,name=finalized_zeta_height,json=finalizedZetaHeight,proto3" json:"finalized_zeta_height,omitempty"`
+	TxFinalizationStatus   TxFinalizationStatus   `protobuf:"varint,11,opt,name=tx_finalization_status,json=txFinalizationStatus,proto3,enum=zetachain.zetacore.crosschain.TxFinalizationStatus" json:"tx_finalization_status,omitempty"`
 	// this field describes if a smart contract call should be made for a inbound
 	// with assets only used for protocol contract version 2
 	IsCrossChainCall bool `protobuf:"varint,12,opt,name=is_cross_chain_call,json=isCrossChainCall,proto3" json:"is_cross_chain_call,omitempty"`
@@ -285,7 +285,7 @@ func (m *InboundParams) GetStatus() InboundStatus {
 type ZetaAccounting struct {
 	// aborted_zeta_amount stores the total aborted amount for cctx of coin-type
 	// ZETA
-	AbortedZetaAmount github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,1,opt,name=aborted_zeta_amount,json=abortedZetaAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"aborted_zeta_amount"`
+	AbortedZetaAmount cosmossdk_io_math.Uint `protobuf:"bytes,1,opt,name=aborted_zeta_amount,json=abortedZetaAmount,proto3,customtype=cosmossdk.io/math.Uint" json:"aborted_zeta_amount"`
 }
 
 func (m *ZetaAccounting) Reset()         { *m = ZetaAccounting{} }
@@ -374,26 +374,26 @@ func (m *CallOptions) GetIsArbitraryCall() bool {
 }
 
 type OutboundParams struct {
-	Receiver        string                                  `protobuf:"bytes,1,opt,name=receiver,proto3" json:"receiver,omitempty"`
-	ReceiverChainId int64                                   `protobuf:"varint,2,opt,name=receiver_chainId,json=receiverChainId,proto3" json:"receiver_chainId,omitempty"`
-	CoinType        coin.CoinType                           `protobuf:"varint,3,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
-	Amount          github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,4,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
-	TssNonce        uint64                                  `protobuf:"varint,5,opt,name=tss_nonce,json=tssNonce,proto3" json:"tss_nonce,omitempty"`
+	Receiver        string                 `protobuf:"bytes,1,opt,name=receiver,proto3" json:"receiver,omitempty"`
+	ReceiverChainId int64                  `protobuf:"varint,2,opt,name=receiver_chainId,json=receiverChainId,proto3" json:"receiver_chainId,omitempty"`
+	CoinType        coin.CoinType          `protobuf:"varint,3,opt,name=coin_type,json=coinType,proto3,enum=zetachain.zetacore.pkg.coin.CoinType" json:"coin_type,omitempty"`
+	Amount          cosmossdk_io_math.Uint `protobuf:"bytes,4,opt,name=amount,proto3,customtype=cosmossdk.io/math.Uint" json:"amount"`
+	TssNonce        uint64                 `protobuf:"varint,5,opt,name=tss_nonce,json=tssNonce,proto3" json:"tss_nonce,omitempty"`
 	// Deprecated (v21), use CallOptions
 	GasLimit       uint64 `protobuf:"varint,6,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
 	GasPrice       string `protobuf:"bytes,7,opt,name=gas_price,json=gasPrice,proto3" json:"gas_price,omitempty"`
 	GasPriorityFee string `protobuf:"bytes,23,opt,name=gas_priority_fee,json=gasPriorityFee,proto3" json:"gas_priority_fee,omitempty"`
 	// the above are commands for zetaclients
 	// the following fields are used when the outbound tx is mined
-	Hash                   string                                 `protobuf:"bytes,8,opt,name=hash,proto3" json:"hash,omitempty"`
-	BallotIndex            string                                 `protobuf:"bytes,9,opt,name=ballot_index,json=ballotIndex,proto3" json:"ballot_index,omitempty"`
-	ObservedExternalHeight uint64                                 `protobuf:"varint,10,opt,name=observed_external_height,json=observedExternalHeight,proto3" json:"observed_external_height,omitempty"`
-	GasUsed                uint64                                 `protobuf:"varint,20,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
-	EffectiveGasPrice      github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,21,opt,name=effective_gas_price,json=effectiveGasPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"effective_gas_price"`
-	EffectiveGasLimit      uint64                                 `protobuf:"varint,22,opt,name=effective_gas_limit,json=effectiveGasLimit,proto3" json:"effective_gas_limit,omitempty"`
-	TssPubkey              string                                 `protobuf:"bytes,11,opt,name=tss_pubkey,json=tssPubkey,proto3" json:"tss_pubkey,omitempty"`
-	TxFinalizationStatus   TxFinalizationStatus                   `protobuf:"varint,12,opt,name=tx_finalization_status,json=txFinalizationStatus,proto3,enum=zetachain.zetacore.crosschain.TxFinalizationStatus" json:"tx_finalization_status,omitempty"`
-	CallOptions            *CallOptions                           `protobuf:"bytes,24,opt,name=call_options,json=callOptions,proto3" json:"call_options,omitempty"`
+	Hash                   string                `protobuf:"bytes,8,opt,name=hash,proto3" json:"hash,omitempty"`
+	BallotIndex            string                `protobuf:"bytes,9,opt,name=ballot_index,json=ballotIndex,proto3" json:"ballot_index,omitempty"`
+	ObservedExternalHeight uint64                `protobuf:"varint,10,opt,name=observed_external_height,json=observedExternalHeight,proto3" json:"observed_external_height,omitempty"`
+	GasUsed                uint64                `protobuf:"varint,20,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
+	EffectiveGasPrice      cosmossdk_io_math.Int `protobuf:"bytes,21,opt,name=effective_gas_price,json=effectiveGasPrice,proto3,customtype=cosmossdk.io/math.Int" json:"effective_gas_price"`
+	EffectiveGasLimit      uint64                `protobuf:"varint,22,opt,name=effective_gas_limit,json=effectiveGasLimit,proto3" json:"effective_gas_limit,omitempty"`
+	TssPubkey              string                `protobuf:"bytes,11,opt,name=tss_pubkey,json=tssPubkey,proto3" json:"tss_pubkey,omitempty"`
+	TxFinalizationStatus   TxFinalizationStatus  `protobuf:"varint,12,opt,name=tx_finalization_status,json=txFinalizationStatus,proto3,enum=zetachain.zetacore.crosschain.TxFinalizationStatus" json:"tx_finalization_status,omitempty"`
+	CallOptions            *CallOptions          `protobuf:"bytes,24,opt,name=call_options,json=callOptions,proto3" json:"call_options,omitempty"`
 }
 
 func (m *OutboundParams) Reset()         { *m = OutboundParams{} }
@@ -625,11 +625,11 @@ func (m *Status) GetCreatedTimestamp() int64 {
 
 // RevertOptions represents the options for reverting a cctx
 type RevertOptions struct {
-	RevertAddress  string                                  `protobuf:"bytes,1,opt,name=revert_address,json=revertAddress,proto3" json:"revert_address,omitempty"`
-	CallOnRevert   bool                                    `protobuf:"varint,2,opt,name=call_on_revert,json=callOnRevert,proto3" json:"call_on_revert,omitempty"`
-	AbortAddress   string                                  `protobuf:"bytes,3,opt,name=abort_address,json=abortAddress,proto3" json:"abort_address,omitempty"`
-	RevertMessage  []byte                                  `protobuf:"bytes,4,opt,name=revert_message,json=revertMessage,proto3" json:"revert_message,omitempty"`
-	RevertGasLimit github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=revert_gas_limit,json=revertGasLimit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"revert_gas_limit"`
+	RevertAddress  string                 `protobuf:"bytes,1,opt,name=revert_address,json=revertAddress,proto3" json:"revert_address,omitempty"`
+	CallOnRevert   bool                   `protobuf:"varint,2,opt,name=call_on_revert,json=callOnRevert,proto3" json:"call_on_revert,omitempty"`
+	AbortAddress   string                 `protobuf:"bytes,3,opt,name=abort_address,json=abortAddress,proto3" json:"abort_address,omitempty"`
+	RevertMessage  []byte                 `protobuf:"bytes,4,opt,name=revert_message,json=revertMessage,proto3" json:"revert_message,omitempty"`
+	RevertGasLimit cosmossdk_io_math.Uint `protobuf:"bytes,5,opt,name=revert_gas_limit,json=revertGasLimit,proto3,customtype=cosmossdk.io/math.Uint" json:"revert_gas_limit"`
 }
 
 func (m *RevertOptions) Reset()         { *m = RevertOptions{} }
@@ -694,15 +694,15 @@ func (m *RevertOptions) GetRevertMessage() []byte {
 }
 
 type CrossChainTx struct {
-	Creator                 string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Index                   string                                  `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
-	ZetaFees                github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,5,opt,name=zeta_fees,json=zetaFees,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"zeta_fees" yaml:"zeta_fees"`
-	RelayedMessage          string                                  `protobuf:"bytes,6,opt,name=relayed_message,json=relayedMessage,proto3" json:"relayed_message,omitempty"`
-	CctxStatus              *Status                                 `protobuf:"bytes,8,opt,name=cctx_status,json=cctxStatus,proto3" json:"cctx_status,omitempty"`
-	InboundParams           *InboundParams                          `protobuf:"bytes,9,opt,name=inbound_params,json=inboundParams,proto3" json:"inbound_params,omitempty"`
-	OutboundParams          []*OutboundParams                       `protobuf:"bytes,10,rep,name=outbound_params,json=outboundParams,proto3" json:"outbound_params,omitempty"`
-	ProtocolContractVersion ProtocolContractVersion                 `protobuf:"varint,11,opt,name=protocol_contract_version,json=protocolContractVersion,proto3,enum=zetachain.zetacore.crosschain.ProtocolContractVersion" json:"protocol_contract_version,omitempty"`
-	RevertOptions           RevertOptions                           `protobuf:"bytes,12,opt,name=revert_options,json=revertOptions,proto3" json:"revert_options"`
+	Creator                 string                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Index                   string                  `protobuf:"bytes,2,opt,name=index,proto3" json:"index,omitempty"`
+	ZetaFees                cosmossdk_io_math.Uint  `protobuf:"bytes,5,opt,name=zeta_fees,json=zetaFees,proto3,customtype=cosmossdk.io/math.Uint" json:"zeta_fees" yaml:"zeta_fees"`
+	RelayedMessage          string                  `protobuf:"bytes,6,opt,name=relayed_message,json=relayedMessage,proto3" json:"relayed_message,omitempty"`
+	CctxStatus              *Status                 `protobuf:"bytes,8,opt,name=cctx_status,json=cctxStatus,proto3" json:"cctx_status,omitempty"`
+	InboundParams           *InboundParams          `protobuf:"bytes,9,opt,name=inbound_params,json=inboundParams,proto3" json:"inbound_params,omitempty"`
+	OutboundParams          []*OutboundParams       `protobuf:"bytes,10,rep,name=outbound_params,json=outboundParams,proto3" json:"outbound_params,omitempty"`
+	ProtocolContractVersion ProtocolContractVersion `protobuf:"varint,11,opt,name=protocol_contract_version,json=protocolContractVersion,proto3,enum=zetachain.zetacore.crosschain.ProtocolContractVersion" json:"protocol_contract_version,omitempty"`
+	RevertOptions           RevertOptions           `protobuf:"bytes,12,opt,name=revert_options,json=revertOptions,proto3" json:"revert_options"`
 }
 
 func (m *CrossChainTx) Reset()         { *m = CrossChainTx{} }

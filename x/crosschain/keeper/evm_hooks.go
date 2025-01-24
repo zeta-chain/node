@@ -7,7 +7,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -197,7 +197,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		txOrigin,
 		toAddr,
 		foreignCoin.ForeignChainId,
-		math.NewUintFromBigInt(event.Value),
+		sdkmath.NewUintFromBigInt(event.Value),
 		"",
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
@@ -240,7 +240,7 @@ func (k Keeper) ProcessZetaSentEvent(
 	if err := k.bankKeeper.BurnCoins(
 		ctx,
 		fungibletypes.ModuleName,
-		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas))),
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(event.ZetaValueAndGas))),
 	); err != nil {
 		ctx.Logger().Error(fmt.Sprintf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error()))
 		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())
@@ -269,7 +269,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
 
-	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
+	amount := sdkmath.NewUintFromBigInt(event.ZetaValueAndGas)
 	messageString := base64.StdEncoding.EncodeToString(event.Message)
 
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.

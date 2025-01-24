@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -84,17 +85,17 @@ func AddObserverListCmd() *cobra.Command {
 			var keygenPubKeys []string
 
 			var balances []banktypes.Balance
-			validatorTokens, ok := sdk.NewIntFromString(ValidatorTokens)
+			validatorTokens, ok := sdkmath.NewIntFromString(ValidatorTokens)
 			if !ok {
 				panic("Failed to parse string to int for observer")
 			}
 
-			hotkeyTokens, ok := sdk.NewIntFromString(HotkeyTokens)
+			hotkeyTokens, ok := sdkmath.NewIntFromString(HotkeyTokens)
 			if !ok {
 				panic("Failed to parse string to int for hotkey")
 			}
 
-			observerTokens, ok := sdk.NewIntFromString(ObserverTokens)
+			observerTokens, ok := sdkmath.NewIntFromString(ObserverTokens)
 			if !ok {
 				panic("Failed to parse string to int for hotkey")
 			}
@@ -326,7 +327,7 @@ func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []
 }
 
 func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
-	spendMaxTokens, ok := sdk.NewIntFromString(info.SpendMaxTokens)
+	spendMaxTokens, ok := sdkmath.NewIntFromString(info.SpendMaxTokens)
 	if !ok {
 		panic("Failed to parse spend max tokens")
 	}
@@ -346,7 +347,7 @@ func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReade
 }
 
 func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
-	stakingMaxTokens, ok := sdk.NewIntFromString(info.StakingMaxTokens)
+	stakingMaxTokens, ok := sdkmath.NewIntFromString(info.StakingMaxTokens)
 	if !ok {
 		panic("Failed to parse staking max tokens")
 	}

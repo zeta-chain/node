@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -439,7 +440,7 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 		errorMint := errors.New("", 1, "error minting coins")
 
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 		err := k.DepositCoinZeta(ctx, to, amount)

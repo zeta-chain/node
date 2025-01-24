@@ -1,12 +1,12 @@
 package app
 
 import (
+	"context"
 	"os"
 	"path"
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/stretchr/testify/require"
 
@@ -34,13 +34,13 @@ func TestUpgradeTracker(t *testing.T) {
 				storeUpgrade: &storetypes.StoreUpgrades{
 					Added: []string{lightclienttypes.ModuleName},
 				},
-				upgradeHandler: func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error) {
+				upgradeHandler: func(ctx context.Context, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				},
 			},
 			{
 				index: 3000,
-				upgradeHandler: func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error) {
+				upgradeHandler: func(ctx context.Context, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				},
 			},

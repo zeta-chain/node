@@ -7,11 +7,13 @@ import "zetachain/zetacore/pkg/coin/coin.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "zetachain/zetacore/crosschain/cross_chain_tx.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc AddOutboundTracker(MsgAddOutboundTracker)
       returns (MsgAddOutboundTrackerResponse);
   rpc AddInboundTracker(MsgAddInboundTracker)
@@ -43,10 +45,11 @@ service Msg {
 }
 
 message MsgMigrateTssFunds {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   string amount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -54,6 +57,7 @@ message MsgMigrateTssFunds {
 message MsgMigrateTssFundsResponse {}
 
 message MsgUpdateTssAddress {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string tss_pubkey = 2;
 }
@@ -61,6 +65,7 @@ message MsgUpdateTssAddress {
 message MsgUpdateTssAddressResponse {}
 
 message MsgAddInboundTracker {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   string tx_hash = 3;
@@ -74,6 +79,7 @@ message MsgAddInboundTrackerResponse {}
 
 // TODO: https://github.com/zeta-chain/node/issues/3083
 message MsgWhitelistERC20 {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string erc20_address = 2;
   int64 chain_id = 3;
@@ -82,7 +88,7 @@ message MsgWhitelistERC20 {
   uint32 decimals = 6;
   int64 gas_limit = 7;
   string liquidity_cap = 8 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -93,6 +99,7 @@ message MsgWhitelistERC20Response {
 }
 
 message MsgAddOutboundTracker {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   uint64 nonce = 3;
@@ -109,6 +116,7 @@ message MsgAddOutboundTrackerResponse {
 }
 
 message MsgRemoveOutboundTracker {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   uint64 nonce = 3;
@@ -117,6 +125,7 @@ message MsgRemoveOutboundTracker {
 message MsgRemoveOutboundTrackerResponse {}
 
 message MsgVoteGasPrice {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
 
   int64 chain_id = 2;
@@ -132,18 +141,19 @@ message MsgVoteGasPrice {
 message MsgVoteGasPriceResponse {}
 
 message MsgVoteOutbound {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string cctx_hash = 2;
   string observed_outbound_hash = 3;
   uint64 observed_outbound_block_height = 4;
   uint64 observed_outbound_gas_used = 10;
   string observed_outbound_effective_gas_price = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   uint64 observed_outbound_effective_gas_limit = 12;
   string value_received = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"value_received\""
   ];
@@ -156,6 +166,7 @@ message MsgVoteOutbound {
 message MsgVoteOutboundResponse {}
 
 message MsgVoteInbound {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string sender = 2;
   int64 sender_chain_id = 3;
@@ -163,7 +174,7 @@ message MsgVoteInbound {
   int64 receiver_chain = 5;
   //  string zeta_burnt = 6;
   string amount = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
   //  string mMint = 7;
@@ -196,6 +207,7 @@ message MsgVoteInbound {
 message MsgVoteInboundResponse {}
 
 message MsgAbortStuckCCTX {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string cctx_index = 2;
 }
@@ -203,6 +215,7 @@ message MsgAbortStuckCCTX {
 message MsgAbortStuckCCTXResponse {}
 
 message MsgRefundAbortedCCTX {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string cctx_index = 2;
   string refund_address =
@@ -212,6 +225,7 @@ message MsgRefundAbortedCCTX {
 message MsgRefundAbortedCCTXResponse {}
 
 message MsgUpdateRateLimiterFlags {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   RateLimiterFlags rate_limiter_flags = 2 [ (gogoproto.nullable) = false ];
 }
@@ -219,12 +233,13 @@ message MsgUpdateRateLimiterFlags {
 message MsgUpdateRateLimiterFlagsResponse {}
 
 message MsgMigrateERC20CustodyFunds {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   string new_custody_address = 3;
   string erc20_address = 4;
   string amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -232,6 +247,7 @@ message MsgMigrateERC20CustodyFunds {
 message MsgMigrateERC20CustodyFundsResponse { string cctx_index = 1; }
 
 message MsgUpdateERC20CustodyPauseStatus {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
 

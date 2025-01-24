@@ -33,7 +33,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -91,7 +91,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			consAddress, err := validator.GetConsAddr()
 			require.NoError(t, err)
 			k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-				Address:             consAddress.String(),
+				Address:             string(consAddress),
 				StartHeight:         0,
 				JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 				Tombstoned:          true,
@@ -142,7 +142,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -193,7 +193,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -245,7 +245,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -296,7 +296,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -343,7 +343,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -393,7 +393,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -451,7 +451,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,

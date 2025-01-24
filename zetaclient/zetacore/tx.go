@@ -75,8 +75,10 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
 	// verify message validity
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+	if m, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+		}
 	}
 
 	authzSigner := clientauthz.GetSigner(msgURL)

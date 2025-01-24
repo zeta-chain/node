@@ -19,7 +19,7 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/server"
 
 	zetaos "github.com/zeta-chain/node/pkg/os"

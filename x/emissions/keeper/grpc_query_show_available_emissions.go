@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +24,7 @@ func (k Keeper) ShowAvailableEmissions(
 	emissions, found := k.GetWithdrawableEmission(ctx, req.Address)
 	if !found {
 		return &types.QueryShowAvailableEmissionsResponse{
-			Amount: sdk.NewCoin(config.BaseDenom, sdk.ZeroInt()).String(),
+			Amount: sdk.NewCoin(config.BaseDenom, sdkmath.ZeroInt()).String(),
 		}, nil
 	}
 	return &types.QueryShowAvailableEmissionsResponse{
