@@ -78,7 +78,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		// do not commit anything here as the CCTX should be aborted
 		config.CCTX.SetAbort(types.StatusMessages{
 			StatusMessage:        "outbound failed unable to process",
-			ErrorMessageOutbound: cctxerror.NewCCTXErrorJsonMessage("Unable to create outbound", err),
+			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("Unable to create outbound", err),
 		})
 		return types.CctxStatus_Aborted, err
 	}

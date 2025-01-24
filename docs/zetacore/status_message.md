@@ -39,12 +39,9 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
   - The `ErrorMessage` field only contains a value if the original outbound failed. It contains details about the error that caused the outbound to fail
   - The `ErrorMessageRevert` field only contains a value if the revert outbound failed. It contains details about the error that caused the revert outbound to fail.
 
-### Example values for StatusMessage field and how to interpret them
+### StatusMessage fieldsand how to interpret it
 - `initiating outbound` : The inbound votes have been successfully finalized, and the protocol is starting the outbound process
-- `outbound successfully mined` : The outbound was successfully mined
-- `revert successfully processed` : The outbound failed , but the revert was successful
 - `revert failed to be processed` : The revert failed. This message also means that the initial outbound has failed.
-
 - `outbound failed` : The outbound failed, The protocol would try to create a revert either in the same block or schedule one to be picked up by zetaclient
 - `outbound failed for admin tx` : The outbound failed for an admin transaction, in this case we do not revert the cctx
 - `outbound failed unable to process` : The outbound processing failed at the protocol level. When this happens, the protocol sets the cctx to aborted.
@@ -53,15 +50,14 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 - `cctx aborted through MsgAbortStuckCCTX` : The cctx was aborted manually by an admin command
 
 
-### Example values for ErrorMessage and ErrorMessageRevert fields and how to interpret them
-
-- For a failed deposit, the ErrorMessage would contain the following fields. The protocol generates the fields tagged as internal.
+### ErrorMessage and ErrorMessageRevert fields and how to interpret them
+- The ErrorMessage and ErrorMessageRevert would contain the following fields. The protocol generates the fields tagged as internal.
 ```
   - message [Internal]: A message from the protocol to explain the error
+  - error : Error message related to the call
   - method: The method that was called by the protocol
   - contract: The contract that his method was called on
   - args:The arguments that were used for this call
-  - error : Error message from the ZEVM call
   - revert_reason: Revert reason from the smart contract call, if any
 ```
 Sample error message for a failed deposit
@@ -79,4 +75,3 @@ Sample error message for a failed deposit
 
 - `outbound tx failed to be executed on connected chain` : `revert tx failed to be executed on connected chain` : The outbound/revert transaction failed to be executed on the connected chain.
 - `coin type [CoinType] not supported for revert when source chain is Zetachain` : The coin type is not supported for revert when the source chain is Zetachain.
-- `error from EVMDeposit: [Error_String]` : Error returned by the protocol when trying to deposit tokens( and optionally call a contract) on ZEVM. The error string should explain the cause 
