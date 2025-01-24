@@ -131,7 +131,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(
+		_, contractCall, err := k.ProcessDeposit(
 			ctx,
 			sample.EthAddress().Bytes(),
 			chainID,
@@ -165,7 +165,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(
+		_, contractCall, err := k.ProcessDeposit(
 			ctx,
 			sample.EthAddress().Bytes(),
 			chainID,
@@ -201,7 +201,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(
+		_, contractCall, err := k.ProcessDeposit(
 			ctx,
 			sample.EthAddress().Bytes(),
 			chainID,
@@ -239,7 +239,7 @@ func TestKeeper_ProcessV2Deposit(t *testing.T) {
 		sender := sample.EthAddress()
 
 		// ACT
-		_, contractCall, err := k.ProcessV2Deposit(
+		_, contractCall, err := k.ProcessDeposit(
 			ctx,
 			sender.Bytes(),
 			chainID,

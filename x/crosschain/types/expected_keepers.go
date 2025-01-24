@@ -152,7 +152,7 @@ type FungibleKeeper interface {
 		protocolContractVersion ProtocolContractVersion,
 		isCrossChainCall bool,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
-	ProcessV2RevertDeposit(
+	ProcessRevert(
 		ctx sdk.Context,
 		inboundSender string,
 		amount *big.Int,

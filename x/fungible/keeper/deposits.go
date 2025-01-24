@@ -13,10 +13,10 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 )
 
-// ProcessV2Deposit handles a deposit from an inbound tx with protocol version 2
+// ProcessDeposit handles a deposit from an inbound tx with protocol version 2
 // returns [txResponse, isContractCall, error]
 // isContractCall is true if the message is non empty
-func (k Keeper) ProcessV2Deposit(
+func (k Keeper) ProcessDeposit(
 	ctx sdk.Context,
 	from []byte,
 	senderChainID int64,
@@ -48,8 +48,8 @@ func (k Keeper) ProcessV2Deposit(
 	return res, false, err
 }
 
-// ProcessV2RevertDeposit handles a revert deposit from an inbound tx with protocol version 2
-func (k Keeper) ProcessV2RevertDeposit(
+// ProcessRevert handles a revert deposit from an inbound tx with protocol version 2
+func (k Keeper) ProcessRevert(
 	ctx sdk.Context,
 	inboundSender string,
 	amount *big.Int,
@@ -106,3 +106,5 @@ func (k Keeper) ProcessV2RevertDeposit(
 
 	return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
 }
+
+//

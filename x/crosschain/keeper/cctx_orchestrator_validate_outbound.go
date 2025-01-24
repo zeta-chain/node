@@ -360,7 +360,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 
 		// process the revert on ZEVM
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
-		evmTxResponse, err := k.fungibleKeeper.ProcessV2RevertDeposit(
+		evmTxResponse, err := k.fungibleKeeper.ProcessRevert(
 			tmpCtx,
 			cctx.InboundParams.Sender,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),

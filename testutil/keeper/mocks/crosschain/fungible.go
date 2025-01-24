@@ -420,12 +420,12 @@ func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Contex
 	return r0, r1
 }
 
-// ProcessV2RevertDeposit provides a mock function with given fields: ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage
-func (_m *CrosschainFungibleKeeper) ProcessV2RevertDeposit(ctx types.Context, inboundSender string, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+// ProcessRevert provides a mock function with given fields: ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage
+func (_m *CrosschainFungibleKeeper) ProcessRevert(ctx types.Context, inboundSender string, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ProcessV2RevertDeposit")
+		panic("no return value specified for ProcessRevert")
 	}
 
 	var r0 *evmtypes.MsgEthereumTxResponse

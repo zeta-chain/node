@@ -45,7 +45,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	// handle the deposit for protocol contract version 2
 	if protocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return k.ProcessV2Deposit(
+		return k.ProcessDeposit(
 			ctx,
 			from,
 			senderChainID,

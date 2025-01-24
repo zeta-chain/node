@@ -318,7 +318,7 @@ func MockProcessV2RevertDeposit(
 	// callOnRevert bool
 	// revertMessage []byte
 	m.On(
-		"ProcessV2RevertDeposit",
+		"ProcessRevert",
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
