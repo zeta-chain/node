@@ -126,7 +126,7 @@ func (k msgServer) VoteOutbound(
 	if err != nil {
 		// The validate function for the outbound returns an error, which means that the outbound is invalid and should instead be aborted directly
 		// Irrespective of what the Ballot status is
-		k.HandleInvalidOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
+		k.HandleInvalidOutbound(ctx, &cctx, err, tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
 	// The outbound is valid, the HandleValidOutbound function would save the required status changes
@@ -196,12 +196,12 @@ HandleInvalidOutbound saves an invalid outbound transaction. It does the followi
  2. Save the outbound
 */
 
-func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
+func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, err error, tssPubkey string) {
 	cctx.SetAbort(types.StatusMessages{
 		StatusMessage:        "outbound failed unable to process",
-		ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage(errMessage, nil),
+		ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("", err),
 	})
-	ctx.Logger().Error(errMessage)
+	ctx.Logger().Error(err.Error())
 	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
 

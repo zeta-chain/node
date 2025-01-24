@@ -28,7 +28,7 @@ func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 		if err != nil {
 			return nil, errors.Wrap(
 				types.ErrDepositZetaToEvmAccount,
-				fmt.Sprintf("to: %s, amount: %sm err %s", to.String(), inboundAmount.String(), err.Error()),
+				fmt.Sprintf("to: %s, amount: %s err %s", to.String(), inboundAmount.String(), err.Error()),
 			)
 		}
 		return nil, nil

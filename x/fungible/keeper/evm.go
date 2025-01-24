@@ -681,15 +681,17 @@ func (k Keeper) CallEVM(
 	if err != nil {
 		// create an error message
 		errMessage := ccctxerror.NewZEVMErrorMessage(method, contract, args, types.ErrCallEvmWithData.Error(), err)
-		// if it is a revert error/ the revert reason is available, then add it
+		// if it is a revert error and the revert reason is available, then add it
 		revertErr, ok := err.(*evmtypes.RevertError)
 		if ok {
 			errMessage.AddRevertReason(revertErr.ErrorData())
 		}
+		// Marshall the error message into a JSON string. If it fails, return the string representation of the error message
 		errString, err := errMessage.ToJSON()
 		if err != nil {
 			return resp, fmt.Errorf("json marshalling failed %s,%s", err.Error(), errMessage.String())
 		}
+		// The JSON string already contains all the necessary information we do not need to wrap
 		return resp, errors.New(errString)
 	}
 	return resp, nil

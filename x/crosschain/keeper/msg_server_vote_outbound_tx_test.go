@@ -592,7 +592,7 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.HandleInvalidOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+		k.HandleInvalidOutbound(ctx, cctx, errors.New(sample.String()), sample.Tss().TssPubkey)
 
 		//ASSERT
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
@@ -619,7 +619,7 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.HandleInvalidOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+		k.HandleInvalidOutbound(ctx, cctx, errors.New(sample.String()), sample.Tss().TssPubkey)
 
 		//ASSERT
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
