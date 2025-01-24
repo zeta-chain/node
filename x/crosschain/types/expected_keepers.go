@@ -163,6 +163,17 @@ type FungibleKeeper interface {
 		callOnRevert bool,
 		revertMessage []byte,
 	) (*evmtypes.MsgEthereumTxResponse, error)
+	ProcessAbort(
+		ctx sdk.Context,
+		inboundSender string,
+		amount *big.Int,
+		outgoing bool,
+		chainID int64,
+		coinType coin.CoinType,
+		asset string,
+		abortAddress ethcommon.Address,
+		revertMessage []byte,
+	) (*evmtypes.MsgEthereumTxResponse, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender ethcommon.Address,

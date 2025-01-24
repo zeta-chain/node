@@ -27,6 +27,10 @@ func (k Keeper) ProcessDeposit(
 	coinType coin.CoinType,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	if coinType == coin.CoinType_Zeta {
+		return nil, false, errors.New("ZETA asset is currently unsupported for deposit with V2 protocol contracts")
+	}
+
 	context := systemcontract.ZContext{
 		Origin:  []byte{},
 		Sender:  ethcommon.BytesToAddress(from),
@@ -60,6 +64,10 @@ func (k Keeper) ProcessRevert(
 	callOnRevert bool,
 	revertMessage []byte,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
+	if coinType == coin.CoinType_Zeta {
+		return nil, errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
+	}
+
 	// get the zrc20 contract
 	zrc20Addr, _, err := k.getAndCheckZRC20(
 		ctx,
@@ -74,7 +82,6 @@ func (k Keeper) ProcessRevert(
 
 	switch coinType {
 	case coin.CoinType_NoAssetCall:
-
 		if callOnRevert {
 			// no asset, call simple revert
 			res, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
@@ -83,8 +90,6 @@ func (k Keeper) ProcessRevert(
 			// no asset, no call, do nothing
 			return nil, nil
 		}
-	case coin.CoinType_Zeta:
-		return nil, errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
 	case coin.CoinType_ERC20, coin.CoinType_Gas:
 		if callOnRevert {
 			// revert with a ZRC20 asset
@@ -107,4 +112,53 @@ func (k Keeper) ProcessRevert(
 	return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
 }
 
-//
+// ProcessAbort handles an abort deposit from an inbound tx with protocol version 2
+func (k Keeper) ProcessAbort(
+	ctx sdk.Context,
+	inboundSender string,
+	amount *big.Int,
+	outgoing bool,
+	chainID int64,
+	coinType coin.CoinType,
+	asset string,
+	abortAddress ethcommon.Address,
+	revertMessage []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	if coinType == coin.CoinType_Zeta {
+		return nil, errors.New("ZETA asset is currently unsupported for abort with V2 protocol contracts")
+	}
+
+	// get the zrc20 contract
+	zrc20Addr, _, err := k.getAndCheckZRC20(
+		ctx,
+		amount,
+		chainID,
+		coinType,
+		asset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// if the cctx contains asset, the asset is first deposited to the abort address, separately from onAbort call
+	if coinType == coin.CoinType_ERC20 || coinType == coin.CoinType_NoAssetCall {
+		// simply deposit back to the revert address
+		// if the deposit fails, processing the abort entirely fails
+		// MsgRefundAbort can still be used to retry the operation later on
+		if _, err := k.DepositZRC20(ctx, zrc20Addr, abortAddress, amount); err != nil {
+			return nil, err
+		}
+	}
+
+	// call onAbort
+	return k.CallExecuteAbort(
+		ctx,
+		inboundSender,
+		zrc20Addr,
+		amount,
+		outgoing,
+		big.NewInt(chainID),
+		abortAddress,
+		revertMessage,
+	)
+}

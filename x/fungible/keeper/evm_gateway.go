@@ -249,3 +249,55 @@ func (k Keeper) CallDepositAndRevert(
 		},
 	)
 }
+
+// CallExecuteAbort calls the executeAbort function on the gateway contract
+//
+//	function executeAbort(
+//	address target,
+//	AbortContext abortContext,
+//	)
+func (k Keeper) CallExecuteAbort(
+	ctx sdk.Context,
+	inboundSender string,
+	zrc20 common.Address,
+	amount *big.Int,
+	outgoing bool,
+	chainID *big.Int,
+	target common.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, types.ErrSystemContractNotFound
+	}
+	gatewayAddr := common.HexToAddress(systemContract.Gateway)
+	if crypto.IsEmptyAddress(gatewayAddr) {
+		return nil, types.ErrGatewayContractNotSet
+	}
+
+	return k.CallEVM(
+		ctx,
+		*gatewayABI,
+		types.ModuleAddressEVM,
+		gatewayAddr,
+		BigIntZero,
+		gatewayGasLimit,
+		true,
+		false,
+		"executeAbort",
+		target,
+		revert.AbortContext{
+			Sender:        common.HexToAddress(inboundSender).Bytes(), // TODO(IN THIS PR): check for Bitcoin
+			Asset:         zrc20,
+			Amount:        amount,
+			Outgoing:      outgoing,
+			ChainID:       chainID,
+			RevertMessage: message,
+		},
+	)
+}
