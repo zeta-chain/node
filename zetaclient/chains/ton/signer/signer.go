@@ -18,7 +18,6 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 // LiteClient represents a TON client
@@ -75,22 +74,14 @@ func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gatew
 func (s *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *cc.CrossChainTx,
-	proc *outboundprocessor.Processor,
-	outboundID string,
 	_ interfaces.ChainObserver,
 	zetacore interfaces.ZetacoreClient,
 	zetaBlockHeight uint64,
 ) {
-	proc.StartTryProcess(outboundID)
-
-	defer func() {
-		proc.EndTryProcess(outboundID)
-	}()
-
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
 	lf := map[string]any{
-		"outbound.id":      outboundID,
+		"outbound.index":   cctx.Index,
 		"outbound.nonce":   cctx.GetCurrentOutboundParam().TssNonce,
 		"outbound.outcome": string(outcome),
 	}

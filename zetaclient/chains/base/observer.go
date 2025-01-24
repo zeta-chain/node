@@ -59,6 +59,8 @@ type Observer struct {
 
 	blockCache *lru.Cache
 
+	activeOutbounds map[string]time.Time
+
 	// db is the database to persist data
 	db *db.DB
 
@@ -104,6 +106,7 @@ func NewObserver(
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
+		activeOutbounds:  make(map[string]time.Time),
 		mu:               &sync.Mutex{},
 		logger:           newObserverLogger(chain, logger),
 		stop:             make(chan struct{}),
@@ -131,21 +134,21 @@ func (ob *Observer) Stop() {
 	defer ob.mu.Unlock()
 
 	if !ob.started {
-		ob.logger.Chain.Info().Msgf("Observer already stopped for chain %d", ob.Chain().ChainId)
+		ob.logger.Chain.Info().Msg("Observer already stopped")
 		return
 	}
 
-	ob.logger.Chain.Info().Msgf("Stopping observer for chain %d", ob.Chain().ChainId)
+	ob.logger.Chain.Info().Msg("Stopping observer")
 
 	close(ob.stop)
 	ob.started = false
 
 	// close database
 	if err := ob.db.Close(); err != nil {
-		ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
+		ob.Logger().Chain.Error().Err(err).Msg("Unable to close db")
 	}
 
-	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
+	ob.Logger().Chain.Info().Msgf("observer stopped")
 }
 
 // Chain returns the chain for the observer.
@@ -438,6 +441,49 @@ func (ob *Observer) ReportBlockLatency(latestBlockTime time.Time) {
 	metrics.LatestBlockLatency.WithLabelValues(ob.chain.Name).Set(elapsedTime.Seconds())
 }
 
+// MarkOutboundActive marks the outbound as active.
+func (ob *Observer) MarkOutbound(outboundID string, active bool) {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	if active {
+		now := time.Now().UTC()
+		ob.activeOutbounds[outboundID] = now
+
+		ob.logger.Outbound.Info().
+			Bool("outbound.active", active).
+			Str("outbound.id", outboundID).
+			Time("outbound.timestamp", now).
+			Int("outbound.total", len(ob.activeOutbounds)).
+			Msg("MarkOutbound")
+
+		return
+	}
+
+	startedAt, found := ob.activeOutbounds[outboundID]
+	if !found {
+		return
+	}
+
+	timeTaken := time.Since(startedAt)
+	delete(ob.activeOutbounds, outboundID)
+
+	ob.logger.Outbound.Info().
+		Bool("outbound.active", active).
+		Str("outbound.id", outboundID).
+		Dur("outbound.time_taken", timeTaken).
+		Int("outbound.total", len(ob.activeOutbounds)).
+		Msg("MarkOutbound")
+}
+
+func (ob *Observer) IsOutboundActive(outboundID string) bool {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
+	_, found := ob.activeOutbounds[outboundID]
+	return found
+}
+
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
 func EnvVarLatestBlockByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_BLOCK", chain.ChainId)
@@ -446,6 +492,11 @@ func EnvVarLatestBlockByChain(chain chains.Chain) string {
 // EnvVarLatestTxByChain returns the environment variable for the last tx by chain.
 func EnvVarLatestTxByChain(chain chains.Chain) string {
 	return fmt.Sprintf("CHAIN_%d_SCAN_FROM_TX", chain.ChainId)
+}
+
+// ToOutboundID returns the outboundID for observer to track.
+func ToOutboundID(index string, receiverChainID int64, nonce uint64) string {
+	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
 }
 
 func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {

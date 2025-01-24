@@ -8,7 +8,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 type DummySigner struct{}
@@ -16,8 +15,6 @@ type DummySigner struct{}
 func (s *DummySigner) TryProcessOutbound(
 	_ context.Context,
 	_ *crosschaintypes.CrossChainTx,
-	_ *outboundprocessor.Processor,
-	_ string,
 	_ interfaces.ChainObserver,
 	_ interfaces.ZetacoreClient,
 	_ uint64,
