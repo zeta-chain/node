@@ -37,7 +37,6 @@ func operationSimulateVoteInbound(
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   k.GetAuthKeeper(),
@@ -141,7 +140,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(&msg, true, "", nil)
+		opMsg := simtypes.NewOperationMsg(&msg, true, "")
 
 		// Add subsequent votes
 		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)

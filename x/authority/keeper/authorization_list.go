@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/authority/types"
@@ -31,11 +31,16 @@ func (k Keeper) GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationLi
 // CheckAuthorization uses both the authorization list and the policies to check if the signer is authorized
 func (k Keeper) CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error {
 	// Policy transactions must have only one signer
-	if len(msg.GetSigners()) != 1 {
+
+	if _, ok := msg.(sdk.LegacyMsg); !ok {
+		return fmt.Errorf("GetSigners method missing")
+	}
+
+	if len(msg.(sdk.LegacyMsg).GetSigners()) != 1 {
 		return errors.Wrapf(types.ErrSigners, "msg: %v", sdk.MsgTypeURL(msg))
 	}
 
-	signer := msg.GetSigners()[0].String()
+	signer := msg.(sdk.LegacyMsg).GetSigners()[0].String()
 	msgURL := sdk.MsgTypeURL(msg)
 
 	authorizationsList, found := k.GetAuthorizationList(ctx)

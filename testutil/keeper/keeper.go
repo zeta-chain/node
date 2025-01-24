@@ -5,21 +5,23 @@ import (
 	"testing"
 	"time"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitymodule "github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -31,14 +33,15 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	capabilitymodule "github.com/cosmos/ibc-go/modules/capability"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmmodule "github.com/zeta-chain/ethermint/x/evm"
@@ -72,7 +75,7 @@ import (
 )
 
 // NewContext creates a new sdk.Context for testing purposes with initialized header
-func NewContext(stateStore sdk.MultiStore) sdk.Context {
+func NewContext(stateStore storetypes.MultiStore) sdk.Context {
 	header := tmproto.Header{
 		Height:  1,
 		ChainID: "test_7000-1",
@@ -144,14 +147,14 @@ var moduleAccountPerms = map[string][]string{
 }
 
 var (
-	testStoreKeys = sdk.NewKVStoreKeys(
+	testStoreKeys = storetypes.NewKVStoreKeys(
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		evmtypes.StoreKey,
 		consensustypes.StoreKey,
 	)
-	testTransientKeys = sdk.NewTransientStoreKeys(evmtypes.TransientKey)
-	testMemKeys       = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	testTransientKeys = storetypes.NewTransientStoreKeys(evmtypes.TransientKey)
+	testMemKeys       = storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -187,8 +190,8 @@ func ParamsKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) paramskeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
-	tkeys := sdk.NewTransientStoreKey(paramstypes.TStoreKey)
+	storeKey := storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	tkeys := storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(tkeys, storetypes.StoreTypeTransient, db)
@@ -206,10 +209,15 @@ func ConsensusKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) consensuskeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(consensustypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(consensustypes.StoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	return consensuskeeper.NewKeeper(cdc, storeKey, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	return consensuskeeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(storeKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
 }
 
 // AccountKeeper instantiates an account keeper for testing purposes
@@ -218,14 +226,15 @@ func AccountKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) authkeeper.AccountKeeper {
-	storeKey := sdk.NewKVStoreKey(authtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return authkeeper.NewAccountKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		ethermint.ProtoAccount,
 		moduleAccountPerms,
+		authcodec.NewBech32Codec("zeta"),
 		"zeta",
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -238,16 +247,17 @@ func BankKeeper(
 	ss store.CommitMultiStore,
 	authKeeper authkeeper.AccountKeeper,
 ) bankkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(banktypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	blockedAddrs := make(map[string]bool)
 
 	return bankkeeper.NewBaseKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		authKeeper,
 		blockedAddrs,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 }
 
@@ -259,15 +269,17 @@ func StakingKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 ) stakingkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(stakingtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return *stakingkeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		authKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 }
 
@@ -278,12 +290,12 @@ func SlashingKeeper(
 	ss store.CommitMultiStore,
 	stakingKeeper stakingkeeper.Keeper,
 ) slashingkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(slashingtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	return slashingkeeper.NewKeeper(
 		cdc,
 		codec.NewLegacyAmino(),
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		stakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -298,12 +310,12 @@ func DistributionKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper *stakingkeeper.Keeper,
 ) distrkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(distrtypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(distrtypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	return distrkeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		authKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -323,7 +335,7 @@ func UpgradeKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) upgradekeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(upgradetypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(upgradetypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	skipUpgradeHeights := make(map[int64]bool)
@@ -331,7 +343,7 @@ func UpgradeKeeper(
 
 	return *upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		cdc,
 		"",
 		vs,
@@ -344,22 +356,19 @@ func FeeMarketKeeper(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-	paramKeeper paramskeeper.Keeper,
-	consensusKeeper consensuskeeper.Keeper,
 ) feemarketkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(feemarkettypes.StoreKey)
-	transientKey := sdk.NewTransientStoreKey(feemarkettypes.TransientKey)
+	storeKey := storetypes.NewKVStoreKey(feemarkettypes.StoreKey)
+	transientKey := storetypes.NewTransientStoreKey(feemarkettypes.TransientKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
 	return feemarketkeeper.NewKeeper(
 		cdc,
+		runtime.NewKVStoreService(storeKey),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		storeKey,
 		transientKey,
-		paramKeeper.Subspace(feemarkettypes.ModuleName),
-		consensusKeeper,
 	)
 }
 
@@ -372,11 +381,9 @@ func EVMKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
-	paramKeeper paramskeeper.Keeper,
-	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(evmtypes.StoreKey)
-	transientKey := sdk.NewTransientStoreKey(evmtypes.TransientKey)
+	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
+	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
@@ -394,6 +401,7 @@ func EVMKeeper(
 
 	k := evmkeeper.NewKeeper(
 		cdc,
+		runtime.NewKVStoreService(storeKey),
 		storeKey,
 		transientKey,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
@@ -402,9 +410,7 @@ func EVMKeeper(
 		stakingKeeper,
 		feemarketKeeper,
 		"",
-		paramKeeper.Subspace(evmtypes.ModuleName),
 		nil,
-		consensusKeeper,
 		allKeys,
 	)
 
@@ -427,9 +433,10 @@ func NewSDKKeepersWithKeys(
 	)
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		ethermint.ProtoAccount,
 		maccPerms,
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
 	)
@@ -441,42 +448,41 @@ func NewSDKKeepersWithKeys(
 	)
 	authKeeper := authkeeper.NewAccountKeeper(
 		cdc,
-		keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		ethermint.ProtoAccount,
-		moduleAccountPerms,
-		"zeta",
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		maccPerms,
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
 	)
 	blockedAddrs := make(map[string]bool)
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		authKeeper,
 		blockedAddrs,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 	stakingKeeper := *stakingkeeper.NewKeeper(
 		cdc,
-		keys[stakingtypes.StoreKey],
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		authKeeper,
 		bankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	consensusKeeper := consensuskeeper.NewKeeper(
-		cdc,
-		keys[consensustypes.StoreKey],
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 	feeMarketKeeper := feemarketkeeper.NewKeeper(
 		cdc,
+		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey],
 		tKeys[feemarkettypes.TransientKey],
-		paramsKeeper.Subspace(feemarkettypes.ModuleName),
-		consensusKeeper,
 	)
 	evmKeeper := evmkeeper.NewKeeper(
 		cdc,
+		runtime.NewKVStoreService(keys[evmtypes.StoreKey]),
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
@@ -485,15 +491,13 @@ func NewSDKKeepersWithKeys(
 		stakingKeeper,
 		feeMarketKeeper,
 		"",
-		paramsKeeper.Subspace(evmtypes.ModuleName),
 		[]evmkeeper.CustomContractFn{},
-		consensusKeeper,
 		allKeys,
 	)
 	slashingKeeper := slashingkeeper.NewKeeper(
 		cdc,
 		codec.NewLegacyAmino(),
-		keys[slashingtypes.StoreKey],
+		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
 		stakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -504,7 +508,7 @@ func NewSDKKeepersWithKeys(
 	)
 	dstrKeeper := distrkeeper.NewKeeper(
 		cdc,
-		keys[distrtypes.StoreKey],
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
@@ -561,7 +565,7 @@ func CapabilityKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 ) *capabilitykeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(capabilitytypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(capabilitytypes.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey)
 
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -580,7 +584,7 @@ func IBCKeeper(
 	uppgradeKeeper upgradekeeper.Keeper,
 	capabilityKeeper capabilitykeeper.Keeper,
 ) *ibckeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(ibcexported.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
@@ -592,6 +596,7 @@ func IBCKeeper(
 		stakingKeeper,
 		uppgradeKeeper,
 		scopedIBCKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
 
@@ -607,7 +612,7 @@ func TransferKeeper(
 	capabilityKeeper capabilitykeeper.Keeper,
 	ibcRouter *porttypes.Router,
 ) ibctransferkeeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(ibctransfertypes.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
@@ -618,10 +623,11 @@ func TransferKeeper(
 		paramKeeper.Subspace(ibctransfertypes.ModuleName),
 		ibcKeeper.ChannelKeeper,
 		ibcKeeper.ChannelKeeper,
-		&ibcKeeper.PortKeeper,
+		ibcKeeper.PortKeeper,
 		authKeeper,
 		bankKeeper,
 		scopedTransferKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// create IBC module from bottom to top of stack
@@ -646,8 +652,7 @@ func NewSDKKeepers(
 	authKeeper := AccountKeeper(cdc, db, ss)
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
-	consensusKeeper := ConsensusKeeper(cdc, db, ss)
-	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper, consensusKeeper)
+	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss)
 	evmKeeper := EVMKeeper(
 		cdc,
 		db,
@@ -656,8 +661,6 @@ func NewSDKKeepers(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
-		paramsKeeper,
-		consensusKeeper,
 	)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
@@ -707,8 +710,9 @@ func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Cont
 
 	// Set validator in the store
 	validator := sample.Validator(t, r)
-	sdkk.StakingKeeper.SetValidator(ctx, validator)
-	err := sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	err := sdkk.StakingKeeper.SetValidator(ctx, validator)
+	require.NoError(t, err)
+	err = sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	require.NoError(t, err)
 
 	// Validator is proposer

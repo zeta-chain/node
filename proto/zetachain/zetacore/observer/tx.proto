@@ -11,11 +11,13 @@ import "zetachain/zetacore/observer/tss.proto";
 import "zetachain/zetacore/observer/operational.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "zetachain/zetacore/pkg/proofs/proofs.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateObserver(MsgUpdateObserver) returns (MsgUpdateObserverResponse);
   rpc UpdateChainParams(MsgUpdateChainParams)
@@ -37,6 +39,7 @@ service Msg {
 }
 
 message MsgUpdateObserver {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string old_observer_address = 2;
   string new_observer_address = 3;
@@ -45,6 +48,7 @@ message MsgUpdateObserver {
 message MsgUpdateObserverResponse {}
 
 message MsgVoteBlockHeader {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   bytes block_hash = 3;
@@ -58,6 +62,7 @@ message MsgVoteBlockHeaderResponse {
 }
 
 message MsgUpdateChainParams {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   ChainParams chainParams = 2;
 }
@@ -65,6 +70,7 @@ message MsgUpdateChainParams {
 message MsgUpdateChainParamsResponse {}
 
 message MsgRemoveChainParams {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
 }
@@ -72,6 +78,7 @@ message MsgRemoveChainParams {
 message MsgRemoveChainParamsResponse {}
 
 message MsgAddObserver {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string observer_address = 2;
   string zetaclient_grantee_pubkey = 3;
@@ -81,6 +88,7 @@ message MsgAddObserver {
 message MsgAddObserverResponse {}
 
 message MsgVoteBlame {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   Blame blame_info = 3 [ (gogoproto.nullable) = false ];
@@ -89,6 +97,7 @@ message MsgVoteBlame {
 message MsgVoteBlameResponse {}
 
 message MsgUpdateKeygen {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 block = 2;
 }
@@ -96,6 +105,7 @@ message MsgUpdateKeygen {
 message MsgUpdateKeygenResponse {}
 
 message MsgResetChainNonces {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
   int64 chain_nonce_low = 3;
@@ -105,6 +115,7 @@ message MsgResetChainNonces {
 message MsgResetChainNoncesResponse {}
 
 message MsgVoteTSS {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string tss_pubkey = 2;
   int64 keygen_zeta_height = 3;
@@ -118,6 +129,7 @@ message MsgVoteTSSResponse {
 }
 
 message MsgEnableCCTX {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   bool enableInbound = 2;
   bool enableOutbound = 3;
@@ -126,6 +138,7 @@ message MsgEnableCCTX {
 message MsgEnableCCTXResponse {}
 
 message MsgDisableCCTX {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   bool disableInbound = 2;
   bool disableOutbound = 3;
@@ -134,6 +147,7 @@ message MsgDisableCCTX {
 message MsgDisableCCTXResponse {}
 
 message MsgUpdateGasPriceIncreaseFlags {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   GasPriceIncreaseFlags gasPriceIncreaseFlags = 2
       [ (gogoproto.nullable) = false ];
@@ -142,6 +156,7 @@ message MsgUpdateGasPriceIncreaseFlags {
 message MsgUpdateGasPriceIncreaseFlagsResponse {}
 
 message MsgUpdateOperationalFlags {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   OperationalFlags operational_flags = 2 [ (gogoproto.nullable) = false ];
 }

@@ -9,7 +9,10 @@ func (c *Contract) GetAllValidators(
 	ctx sdk.Context,
 	method *abi.Method,
 ) ([]byte, error) {
-	validators := c.stakingKeeper.GetAllValidators(ctx)
+	validators, err := c.stakingKeeper.GetAllValidators(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	validatorsRes := make([]Validator, len(validators))
 	for i, v := range validators {

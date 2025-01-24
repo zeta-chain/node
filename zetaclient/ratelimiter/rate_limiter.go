@@ -3,7 +3,6 @@ package ratelimiter
 
 import (
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -47,13 +46,13 @@ type Output struct {
 // NewInput creates a rate limiter input from gRPC response
 func NewInput(resp crosschaintypes.QueryRateLimiterInputResponse) (*Input, bool) {
 	// parse the past cctxs value from string
-	pastCctxsValue, ok := sdk.NewIntFromString(resp.PastCctxsValue)
+	pastCctxsValue, ok := sdkmath.NewIntFromString(resp.PastCctxsValue)
 	if !ok {
 		return nil, false
 	}
 
 	// parse the pending cctxs value from string
-	pendingCctxsValue, ok := sdk.NewIntFromString(resp.PendingCctxsValue)
+	pendingCctxsValue, ok := sdkmath.NewIntFromString(resp.PendingCctxsValue)
 	if !ok {
 		return nil, false
 	}
@@ -102,7 +101,7 @@ func ApplyRateLimiter(input *Input, window int64, rate sdkmath.Uint) *Output {
 		pendingCctxWindow := input.Height - input.LowestPendingCctxHeight + 1
 		if pendingCctxWindow > window {
 			withdrawWindow = pendingCctxWindow
-			withdrawLimitInAzeta = blockLimitInAzeta.Mul(sdk.NewInt(pendingCctxWindow))
+			withdrawLimitInAzeta = blockLimitInAzeta.Mul(sdkmath.NewInt(pendingCctxWindow))
 		}
 	}
 
@@ -135,7 +134,7 @@ func ApplyRateLimiter(input *Input, window int64, rate sdkmath.Uint) *Output {
 	return &Output{
 		CctxsMap:              cctxMap,
 		CurrentWithdrawWindow: withdrawWindow,
-		CurrentWithdrawRate:   totalWithdrawInAzeta.Quo(sdk.NewInt(withdrawWindow)),
+		CurrentWithdrawRate:   totalWithdrawInAzeta.Quo(sdkmath.NewInt(withdrawWindow)),
 		RateLimitExceeded:     limitExceeded,
 	}
 }

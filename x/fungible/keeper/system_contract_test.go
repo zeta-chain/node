@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -408,7 +409,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 		err = sdkk.BankKeeper.MintCoins(
 			ctx,
 			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))),
+			sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amountToSwap))),
 		)
 		require.NoError(t, err)
 
@@ -518,7 +519,7 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 		err = sdkk.BankKeeper.MintCoins(
 			ctx,
 			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))),
+			sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amountToSwap))),
 		)
 		require.NoError(t, err)
 

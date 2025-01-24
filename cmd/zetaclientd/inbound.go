@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -17,11 +18,13 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/orchestrator"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -89,21 +92,52 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 
 	baseLogger := base.Logger{Std: zerolog.Nop(), Compliance: zerolog.Nop()}
 
-	observers, err := orchestrator.CreateChainObserverMap(ctx, client, nil, db.SqliteInMemory, baseLogger, nil)
+	database, err := db.NewFromSqliteInMemory(true)
 	if err != nil {
-		return errors.Wrap(err, "failed to create chain observer map")
+		return errors.Wrap(err, "unable to open database")
 	}
 
 	// get ballot identifier according to the chain type
 	if chain.IsEVM() {
-		observer, ok := observers[chainID]
-		if !ok {
-			return fmt.Errorf("observer not found for evm chain %d", chain.ID())
+		var (
+			rawChain       = chain.RawChain()
+			rawChainParams = chain.Params()
+		)
+
+		evmConfig, found := appContext.Config().GetEVMConfig(chain.ID())
+		if !found {
+			return fmt.Errorf("unable to find evm config")
 		}
 
-		evmObserver, ok := observer.(*evmobserver.Observer)
-		if !ok {
-			return fmt.Errorf("observer is not evm observer for chain %d", chain.ID())
+		httpClient, err := metrics.GetInstrumentedHTTPClient(evmConfig.Endpoint)
+		if err != nil {
+			return errors.Wrapf(err, "unable to create http client (%s)", evmConfig.Endpoint)
+		}
+
+		evmClient, err := evmclient.NewFromEndpoint(ctx, evmConfig.Endpoint)
+		if err != nil {
+			return errors.Wrapf(err, "unable to create evm client (%s)", evmConfig.Endpoint)
+		}
+
+		evmJSONRPCClient := ethrpc.NewEthRPC(evmConfig.Endpoint, ethrpc.WithHttpClient(httpClient))
+
+		baseObserver, err := base.NewObserver(
+			*rawChain,
+			*rawChainParams,
+			client,
+			nil,
+			1000,
+			nil,
+			database,
+			baseLogger,
+		)
+		if err != nil {
+			return errors.Wrap(err, "unable to create base observer")
+		}
+
+		evmObserver, err := evmobserver.New(baseObserver, evmClient, evmJSONRPCClient)
+		if err != nil {
+			return errors.Wrap(err, "unable to create observer")
 		}
 
 		coinType := coin.CoinType_Cmd
@@ -167,21 +201,21 @@ func InboundGetBallot(_ *cobra.Command, args []string) error {
 			return errors.Wrap(err, "unable to create rpc client")
 		}
 
-		database, err := db.NewFromSqliteInMemory(true)
-		if err != nil {
-			return errors.Wrap(err, "unable to open database")
-		}
-
-		observer, err := btcobserver.NewObserver(
+		baseObserver, err := base.NewObserver(
 			*chain.RawChain(),
-			rpcClient,
 			*chain.Params(),
 			client,
 			nil,
+			100,
+			nil,
 			database,
 			baseLogger,
-			nil,
 		)
+		if err != nil {
+			return errors.Wrap(err, "unable to create base observer")
+		}
+
+		observer, err := btcobserver.New(*chain.RawChain(), baseObserver, rpcClient)
 		if err != nil {
 			return errors.Wrap(err, "unable to create btc observer")
 		}
