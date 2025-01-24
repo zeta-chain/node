@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
@@ -99,6 +100,23 @@ func Test_FilterInboundEvents(t *testing.T) {
 		// check result
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
+	})
+}
+
+func Test_FilterSolanaInboundEvents(t *testing.T) {
+	// load archived inbound deposit tx result
+	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
+	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
+	chain := chains.SolanaDevnet
+	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+	// parse gateway ID
+	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
+	require.NoError(t, err)
+
+	t.Run("should return early if logger is empty", func(t *testing.T) {
+		_, err = observer.FilterSolanaInboundEvents(txResult, nil, gatewayID, chain.ChainId)
+		require.ErrorContains(t, err, "logger is nil")
 	})
 }
 

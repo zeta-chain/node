@@ -190,6 +190,9 @@ func FilterSolanaInboundEvents(txResult *rpc.GetTransactionResult,
 	logger *base.ObserverLogger,
 	gatewayID solana.PublicKey,
 	senderChainID int64) ([]*clienttypes.InboundEvent, error) {
+	if logger == nil {
+		return nil, errors.New("logger is nil")
+	}
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -242,6 +245,8 @@ func FilterSolanaInboundEvents(txResult *rpc.GetTransactionResult,
 					CoinType:      coin.CoinType_Gas,
 					Asset:         deposit.Asset,
 				})
+				logger.Inbound.Info().Msg("FilterInboundEvents: deposit detected")
+
 				logger.Inbound.Info().
 					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
