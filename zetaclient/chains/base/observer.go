@@ -166,7 +166,13 @@ func (ob *Observer) SetChainParams(params observertypes.ChainParams) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
+	if observertypes.ChainParamsEqual(ob.chainParams, params) {
+		return
+	}
+
 	ob.chainParams = params
+
+	ob.logger.Chain.Info().Any("observer.chain_params", params).Msg("updated chain params")
 }
 
 // ZetacoreClient returns the zetacore client for the observer.

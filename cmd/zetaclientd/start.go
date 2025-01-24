@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/graceful"
 	zetaos "github.com/zeta-chain/node/pkg/os"
+	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -115,6 +116,8 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to setup TSS service")
 	}
 
+	graceful.AddStopper(tss.Stop)
+
 	// Starts various background TSS listeners.
 	// Shuts down zetaclientd if any is triggered.
 	maintenance.NewTSSListener(zetacoreClient, logger.Std).Listen(ctx, func() {
@@ -159,8 +162,26 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
+	taskScheduler := scheduler.New(logger.Std)
+	maestroV2Deps := &orchestrator.Dependencies{
+		Zetacore:  zetacoreClient,
+		TSS:       tss,
+		DBPath:    dbPath,
+		Telemetry: telemetry,
+	}
+
+	maestroV2, err := orchestrator.NewV2(taskScheduler, maestroV2Deps, logger)
+	if err != nil {
+		return errors.Wrap(err, "unable to create orchestrator V2")
+	}
+
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, maestro)
+
+	// Start orchestrator V2
+	// V2 will co-exist with V1 until all types of chains will be refactored (BTC, EVM, SOL, TON).
+	// (currently it's only BTC)
+	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()

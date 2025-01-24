@@ -28,13 +28,14 @@ import (
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/precompiles/prototype"
 	"github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
 func Test_IStakingContract(t *testing.T) {
@@ -508,6 +509,7 @@ func setupGasCoin(
 		symbol,
 		8,
 		nil,
+		ptr.Ptr(math.NewUintFromString("100000000000000000000000000")),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, *evmk, ctx, addr)

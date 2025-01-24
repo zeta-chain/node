@@ -157,12 +157,17 @@ func TestScheduler(t *testing.T) {
 
 		// Interval updater that increases the interval by 50ms on each counter increment.
 		intervalUpdater := func() time.Duration {
-			return time.Duration(atomic.LoadInt32(&counter)) * 50 * time.Millisecond
+			cnt := atomic.LoadInt32(&counter)
+			if cnt == 0 {
+				return time.Millisecond
+			}
+
+			return time.Duration(cnt) * 50 * time.Millisecond
 		}
 
 		// ACT
 		// Register task and stop it after x1.5 interval.
-		task := ts.scheduler.Register(ts.ctx, exec, Interval(time.Millisecond), IntervalUpdater(intervalUpdater))
+		task := ts.scheduler.Register(ts.ctx, exec, IntervalUpdater(intervalUpdater))
 
 		time.Sleep(time.Second)
 		task.Stop()

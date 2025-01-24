@@ -10,12 +10,12 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 )
 
 // parseOutboundEventV2 parses an event from an outbound with protocol contract v2
@@ -33,20 +33,20 @@ func parseOutboundEventV2(
 		return big.NewInt(0), chains.ReceiveStatus_failed, nil
 	}
 
-	outboundType := evm.ParseOutboundTypeFromCCTX(*cctx)
+	outboundType := common.ParseOutboundTypeFromCCTX(*cctx)
 	switch outboundType {
-	case evm.OutboundTypeGasWithdraw, evm.OutboundTypeGasWithdrawRevert:
+	case common.OutboundTypeGasWithdraw, common.OutboundTypeGasWithdrawRevert:
 		// simple transfer, no need to parse event
 		return transaction.Value(), chains.ReceiveStatus_success, nil
-	case evm.OutboundTypeERC20Withdraw, evm.OutboundTypeERC20WithdrawRevert:
+	case common.OutboundTypeERC20Withdraw, common.OutboundTypeERC20WithdrawRevert:
 		return parseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
-	case evm.OutboundTypeERC20WithdrawAndCall:
+	case common.OutboundTypeERC20WithdrawAndCall:
 		return parseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
-	case evm.OutboundTypeGasWithdrawAndCall, evm.OutboundTypeCall:
+	case common.OutboundTypeGasWithdrawAndCall, common.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
 		return parseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
-	case evm.OutboundTypeGasWithdrawRevertAndCallOnRevert, evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
+	case common.OutboundTypeGasWithdrawRevertAndCallOnRevert, common.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
 		return parseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
@@ -67,7 +67,7 @@ func parseAndCheckGatewayExecuted(
 			continue
 		}
 		// basic event check
-		if err := evm.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), evm.TopicsGatewayExecuted); err != nil {
+		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayExecuted); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -121,7 +121,7 @@ func parseAndCheckGatewayReverted(
 			continue
 		}
 		// basic event check
-		if err := evm.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), evm.TopicsGatewayReverted); err != nil {
+		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayReverted); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -181,7 +181,7 @@ func parseAndCheckERC20CustodyWithdraw(
 			continue
 		}
 		// basic event check
-		if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdraw); err != nil {
+		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdraw); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(
@@ -241,7 +241,7 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 			continue
 		}
 		// basic event check
-		if err := evm.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), evm.TopicsERC20CustodyWithdrawAndCall); err != nil {
+		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdrawAndCall); err != nil {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, errors.Wrap(

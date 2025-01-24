@@ -4,17 +4,15 @@ import (
 	"fmt"
 
 	"github.com/gagliardetto/solana-go"
-	zetaeth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/wzeta.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/zevm/zetaconnectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
-	uniswapv2router "github.com/zeta-chain/protocol-contracts/v1/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
+	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
@@ -22,6 +20,8 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 )
 
 // setContractsFromConfig get EVM contracts from config

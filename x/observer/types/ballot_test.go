@@ -477,5 +477,4 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			require.Equal(t, test.expectedMap, rewardsMap)
 		})
 	}
-
 }

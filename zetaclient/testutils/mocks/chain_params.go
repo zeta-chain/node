@@ -5,8 +5,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/pkg/constant"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -32,7 +32,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		Erc20CustodyContractAddress: erc20CustodyAddr,
 		InboundTicker:               12,
 		OutboundTicker:              15,
-		WatchUtxoTicker:             0,
+		WatchUtxoTicker:             1,
 		GasPriceTicker:              30,
 		OutboundScheduleInterval:    30,
 		OutboundScheduleLookahead:   60,

@@ -204,7 +204,8 @@ func TestBeginBlocker(t *testing.T) {
 	})
 
 	t.Run("successfully distribute rewards", func(t *testing.T) {
-		numberOfTestBlocks := 100
+		//Arrange
+		numberOfTestBlocks := 10
 		k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
 		observerSet := sample.ObserverSet(10)
 		zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
@@ -239,6 +240,9 @@ func TestBeginBlocker(t *testing.T) {
 
 		params, found := k.GetParams(ctx)
 		require.True(t, found)
+		// Set the ballot maturity blocks to numberOfTestBlocks so that the ballot mature at the end of the for loop which produces blocks
+		params.BallotMaturityBlocks = int64(numberOfTestBlocks)
+		err = k.SetParams(ctx, params)
 
 		// Get the rewards distribution, this is a fixed amount based on total block rewards and distribution percentages
 		validatorRewardsForABlock, observerRewardsForABlock, tssSignerRewardsForABlock := emissionstypes.GetRewardsDistributions(
@@ -248,6 +252,11 @@ func TestBeginBlocker(t *testing.T) {
 		distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
 		require.True(t, blockRewards.TruncateInt().GT(distributedRewards))
 
+		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), len(ballotList))
+		_, found = zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
+		require.True(t, found)
+
+		// Act
 		for i := 0; i < numberOfTestBlocks; i++ {
 			emissionPoolBeforeBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
 			// produce a block
@@ -278,12 +287,23 @@ func TestBeginBlocker(t *testing.T) {
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
 
+		// Assert
+
+		// 1. Assert Observer rewards, these are distributed at the block in which the ballots mature.
+		// numberOfTestBlocks is the same maturity blocks for the ballots
+
 		// We can simplify the calculation as the rewards are distributed equally among all the observers
 		rewardPerUnit := observerRewardsForABlock.Quo(
 			sdk.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))),
 		)
 		emissionAmount := rewardPerUnit.Mul(sdk.NewInt(int64(len(ballotList))))
 
+		// 2 . Assert ballots and ballot list are deleted on maturity
+		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), 0)
+		_, found = zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
+		require.False(t, found)
+
+		//3. Assert amounts in undistributed pools
 		// Check if the rewards are distributed equally among all the observers
 		for _, observer := range observerSet.ObserverList {
 			observerEmission, found := k.GetWithdrawableEmission(ctx, observer)

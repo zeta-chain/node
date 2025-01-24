@@ -1,6 +1,7 @@
 package observer_test
 
 import (
+	"context"
 	"math/big"
 	"os"
 	"strconv"
@@ -69,14 +70,14 @@ func Test_NewObserver(t *testing.T) {
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create mock btc client with block height 100
-	btcClient := mocks.NewBTCRPCClient(t)
-	btcClient.On("GetBlockCount").Return(int64(100), nil)
+	btcClient := mocks.NewBitcoinClient(t)
+	btcClient.On("GetBlockCount", mock.Anything).Return(int64(100), nil)
 
 	// test cases
 	tests := []struct {
 		name         string
 		chain        chains.Chain
-		btcClient    interfaces.BTCRPCClient
+		btcClient    *mocks.BitcoinClient
 		chainParams  observertypes.ChainParams
 		coreClient   interfaces.ZetacoreClient
 		tss          interfaces.TSSSigner
@@ -101,7 +102,7 @@ func Test_NewObserver(t *testing.T) {
 			chainParams:  params,
 			coreClient:   nil,
 			tss:          mocks.NewTSS(t),
-			errorMessage: "unable to get BTC net params for chain",
+			errorMessage: "unable to get BTC net params",
 		},
 		{
 			name:        "should fail if env var us invalid",
@@ -137,18 +138,20 @@ func Test_NewObserver(t *testing.T) {
 				defer tt.after()
 			}
 
-			// create observer
-			ob, err := observer.NewObserver(
+			baseObserver, err := base.NewObserver(
 				tt.chain,
-				tt.btcClient,
 				tt.chainParams,
 				tt.coreClient,
 				tt.tss,
+				100,
+				tt.ts,
 				database,
 				tt.logger,
-				tt.ts,
 			)
+			require.NoError(t, err)
 
+			// create observer
+			ob, err := observer.New(tt.chain, baseObserver, tt.btcClient)
 			if tt.errorMessage != "" {
 				require.ErrorContains(t, err, tt.errorMessage)
 				require.Nil(t, ob)
@@ -170,18 +173,18 @@ func Test_BlockCache(t *testing.T) {
 		hash := sample.BtcHash()
 		header := &wire.BlockHeader{Version: 1}
 		block := &btcjson.GetBlockVerboseTxResult{Version: 1}
-		ob.client.On("GetBlockHash", mock.Anything).Return(&hash, nil)
-		ob.client.On("GetBlockHeader", &hash).Return(header, nil)
-		ob.client.On("GetBlockVerboseTx", &hash).Return(block, nil)
+		ob.client.On("GetBlockHash", mock.Anything, mock.Anything).Return(&hash, nil)
+		ob.client.On("GetBlockHeader", mock.Anything, &hash).Return(header, nil)
+		ob.client.On("GetBlockVerbose", mock.Anything, &hash).Return(block, nil)
 
 		// get block and header from observer, fallback to btc client
-		result, err := ob.GetBlockByNumberCached(100)
+		result, err := ob.GetBlockByNumberCached(ob.ctx, 100)
 		require.NoError(t, err)
 		require.EqualValues(t, header, result.Header)
 		require.EqualValues(t, block, result.Block)
 
 		// get block header from cache
-		result, err = ob.GetBlockByNumberCached(100)
+		result, err = ob.GetBlockByNumberCached(ob.ctx, 100)
 		require.NoError(t, err)
 		require.EqualValues(t, header, result.Header)
 		require.EqualValues(t, block, result.Block)
@@ -195,7 +198,7 @@ func Test_BlockCache(t *testing.T) {
 		ob.BlockCache().Add(blockNumber, "a string value")
 
 		// get result from cache
-		result, err := ob.GetBlockByNumberCached(blockNumber)
+		result, err := ob.GetBlockByNumberCached(ob.ctx, blockNumber)
 		require.ErrorContains(t, err, "cached value is not of type *BTCBlockNHeader")
 		require.Nil(t, result)
 	})
@@ -204,6 +207,7 @@ func Test_BlockCache(t *testing.T) {
 func Test_LoadLastBlockScanned(t *testing.T) {
 	// use Bitcoin mainnet chain for testing
 	chain := chains.BitcoinMainnet
+	ctx := context.Background()
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create observer and write 199 as last block scanned
@@ -211,7 +215,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(199)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, 199, ob.LastBlockScanned())
 	})
@@ -225,7 +229,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned()
+		err := ob.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
@@ -237,10 +241,10 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 		// attach a mock btc client that returns rpc error
 		obOther.client.ExpectedCalls = nil
-		obOther.client.On("GetBlockCount").Return(int64(0), errors.New("rpc error"))
+		obOther.client.On("GetBlockCount", mock.Anything).Return(int64(0), errors.New("rpc error"))
 
 		// load last block scanned
-		err := obOther.LoadLastBlockScanned()
+		err := obOther.LoadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "rpc error")
 	})
 	t.Run("should use hardcode block 100 for regtest", func(t *testing.T) {
@@ -248,7 +252,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obRegnet := newTestSuite(t, chains.BitcoinRegtest)
 
 		// load last block scanned
-		err := obRegnet.LoadLastBlockScanned()
+		err := obRegnet.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, observer.RegnetStartBlock, obRegnet.LastBlockScanned())
 	})
@@ -299,18 +303,21 @@ func TestSubmittedTx(t *testing.T) {
 type testSuite struct {
 	*observer.Observer
 
-	client   *mocks.BTCRPCClient
+	ctx      context.Context
+	client   *mocks.BitcoinClient
 	zetacore *mocks.ZetacoreClient
 	db       *db.DB
 }
 
 func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
+	ctx := context.Background()
+
 	require.True(t, chain.IsBitcoinChain())
 
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
-	client := mocks.NewBTCRPCClient(t)
-	client.On("GetBlockCount").Return(int64(100), nil).Maybe()
+	client := mocks.NewBitcoinClient(t)
+	client.On("GetBlockCount", mock.Anything).Return(int64(100), nil).Maybe()
 
 	zetacore := mocks.NewZetacoreClient(t)
 
@@ -319,19 +326,23 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 
 	log := zerolog.New(zerolog.NewTestWriter(t))
 
-	ob, err := observer.NewObserver(
+	baseObserver, err := base.NewObserver(
 		chain,
-		client,
 		chainParams,
 		zetacore,
 		nil,
+		100,
+		nil,
 		database,
 		base.Logger{Std: log, Compliance: log},
-		nil,
 	)
 	require.NoError(t, err)
 
+	ob, err := observer.New(chain, baseObserver, client)
+	require.NoError(t, err)
+
 	return &testSuite{
+		ctx:      ctx,
 		Observer: ob,
 		client:   client,
 		zetacore: zetacore,

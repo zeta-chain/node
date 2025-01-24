@@ -154,7 +154,7 @@ jobs:
 
       - name: Artifact Attestations
         id: attestation
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
             dist/zetacored_**/*

@@ -9,6 +9,23 @@ struct RevertOptions {
     uint256 onRevertGasLimit;
 }
 
+interface IGatewayZEVM {
+    function withdraw(
+        bytes memory receiver,
+        uint256 amount,
+        address zrc20,
+        RevertOptions calldata revertOptions
+    ) external;
+
+    function call(
+        bytes memory receiver,
+        address zrc20,
+        bytes calldata message,
+        uint256 gasLimit,
+        RevertOptions calldata revertOptions
+    ) external;
+}
+
 interface IGatewayEVM {
     function deposit(address receiver, RevertOptions calldata revertOptions) external payable;
     function depositAndCall(
@@ -19,6 +36,11 @@ interface IGatewayEVM {
     external
     payable;
     function call(address receiver, bytes calldata payload, RevertOptions calldata revertOptions) external;
+}
+
+interface IZRC20 {
+    function approve(address spender, uint256 amount) external returns (bool);
+    function withdrawGasFee() external view returns (address, uint256);
 }
 
 interface IERC20 {
@@ -150,6 +172,24 @@ contract TestDAppV2 {
         // we do it specifically for ZetaChain to test the outbound processing workflow
         if (isZetaChain) {
             consumeGas();
+
+            // withdraw funds to the sender on connected chain
+            if (isWithdrawMessage(string(revertContext.revertMessage))) {
+                (address feeToken, uint256 feeAmount) = IZRC20(revertContext.asset).withdrawGasFee();
+                require(feeToken == revertContext.asset, "zrc20 is not gas token");
+                require(feeAmount <= revertContext.amount, "fee amount is higher than the amount");
+                uint256 withdrawAmount = revertContext.amount - feeAmount;
+
+                IZRC20(revertContext.asset).approve(msg.sender, revertContext.amount);
+
+                // caller is the gateway
+                IGatewayZEVM(msg.sender).withdraw(
+                    abi.encode(revertContext.sender),
+                    withdrawAmount,
+                    revertContext.asset,
+                    RevertOptions(address(0), false, address(0), "", 0)
+                );
+            }
         }
 
         setCalledWithMessage(string(revertContext.revertMessage));
@@ -200,6 +240,10 @@ contract TestDAppV2 {
 
         // Reset the storage array to avoid accumulation of storage cost
         delete storageArray;
+    }
+
+    function isWithdrawMessage(string memory message) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(message)) == keccak256(abi.encodePacked("withdraw"));
     }
 
     receive() external payable {}

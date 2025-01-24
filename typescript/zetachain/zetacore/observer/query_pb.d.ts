@@ -5,13 +5,13 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
+import type { Ballot, BallotStatus, VoteType } from "./ballot_pb.js";
 import type { OperationalFlags } from "./operational_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
-import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { TSS } from "./tss_pb.js";
-import type { BallotStatus, VoteType } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType } from "./observer_pb.js";
 import type { Chain } from "../pkg/chains/chains_pb.js";
 import type { ChainParams, ChainParamsList } from "./params_pb.js";
@@ -19,6 +19,59 @@ import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBallotsRequest
+ */
+export declare class QueryBallotsRequest extends Message<QueryBallotsRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryBallotsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBallotsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBallotsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBallotsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBallotsRequest;
+
+  static equals(a: QueryBallotsRequest | PlainMessage<QueryBallotsRequest> | undefined, b: QueryBallotsRequest | PlainMessage<QueryBallotsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBallotsResponse
+ */
+export declare class QueryBallotsResponse extends Message<QueryBallotsResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.Ballot ballots = 1;
+   */
+  ballots: Ballot[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryBallotsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBallotsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBallotsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBallotsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBallotsResponse;
+
+  static equals(a: QueryBallotsResponse | PlainMessage<QueryBallotsResponse> | undefined, b: QueryBallotsResponse | PlainMessage<QueryBallotsResponse> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryOperationalFlagsRequest

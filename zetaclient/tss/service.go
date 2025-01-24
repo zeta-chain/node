@@ -23,6 +23,7 @@ import (
 // KeySigner signs messages using TSS (subset of go-tss)
 type KeySigner interface {
 	KeySign(req keysign.Request) (keysign.Response, error)
+	Stop()
 }
 
 // Zetacore zeta core client.
@@ -223,6 +224,12 @@ func (s *Service) SignBatch(
 	// todo sig save to LRU cache (chain-id + digest). We need LRU per EACH chain
 
 	return sigs, nil
+}
+
+func (s *Service) Stop() {
+	s.logger.Info().Msg("Stopping TSS service")
+	s.tss.Stop()
+	s.logger.Info().Msg("TSS service stopped")
 }
 
 var (

@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
@@ -54,7 +54,7 @@ func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
 
 	// the runner balance should be increased by the deposit amount
 	amountIncreased := new(big.Int).Sub(balanceAfter, balanceBefore)
-	amountSatoshis, err := bitcoin.GetSatoshis(amount)
+	amountSatoshis, err := common.GetSatoshis(amount)
 	require.NoError(r, err)
 	require.Positive(r, amountSatoshis)
 	// #nosec G115 always positive

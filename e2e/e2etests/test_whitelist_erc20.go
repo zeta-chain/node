@@ -3,11 +3,12 @@ package e2etests
 import (
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -40,6 +41,7 @@ func TestWhitelistERC20(r *runner.E2ERunner, _ []string) {
 		"NEWERC20",
 		6,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 

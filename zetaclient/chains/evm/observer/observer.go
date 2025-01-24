@@ -11,34 +11,27 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zeta.non-eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/v2/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zeta.non-eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
-	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 )
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for evm chains
 type Observer struct {
 	// base.Observer implements the base chain observer
-	base.Observer
+	*base.Observer
 
 	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
-	evmClient interfaces.EVMRPCClient
+	evmClient *client.Client
 
 	// evmJSONRPC is the EVM JSON RPC client for the observed chain
 	evmJSONRPC interfaces.EVMJSONRPCClient
@@ -60,37 +53,15 @@ type priorityFeeConfig struct {
 	supported bool
 }
 
-// NewObserver returns a new EVM chain observer
-func NewObserver(
-	ctx context.Context,
-	chain chains.Chain,
-	evmClient interfaces.EVMRPCClient,
+// New Observer constructor
+func New(
+	baseObserver *base.Observer,
+	evmClient *client.Client,
 	evmJSONRPC interfaces.EVMJSONRPCClient,
-	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	database *db.DB,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
 ) (*Observer, error) {
-	// create base observer
-	baseObserver, err := base.NewObserver(
-		chain,
-		chainParams,
-		zetacoreClient,
-		tss,
-		base.DefaultBlockCacheSize,
-		ts,
-		database,
-		logger,
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create base observer")
-	}
-
 	// create evm observer
 	ob := &Observer{
-		Observer:                      *baseObserver,
+		Observer:                      baseObserver,
 		evmClient:                     evmClient,
 		evmJSONRPC:                    evmJSONRPC,
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
@@ -99,7 +70,7 @@ func NewObserver(
 	}
 
 	// load last block scanned
-	if err = ob.LoadLastBlockScanned(ctx); err != nil {
+	if err := ob.LoadLastBlockScanned(context.Background()); err != nil {
 		return nil, errors.Wrap(err, "unable to load last block scanned")
 	}
 
@@ -131,9 +102,9 @@ func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.
 // NOTE: we use the same address as gateway v1
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used
-func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custodyv2.ERC20Custody, error) {
+func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
-	contract, err := erc20custodyv2.NewERC20Custody(addr, ob.evmClient)
+	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
@@ -160,22 +131,6 @@ func FetchZetaTokenContract(
 	client interfaces.EVMRPCClient,
 ) (*zeta.ZetaNonEth, error) {
 	return zeta.NewZetaNonEth(addr, client)
-}
-
-// Start all observation routines for the evm chain
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
-		return
-	}
-
-	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
-
-	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
-	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
-	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
@@ -234,7 +189,7 @@ func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool,
 	if err != nil {
 		return nil, false, err
 	}
-	err = evm.ValidateEvmTransaction(tx)
+	err = common.ValidateEvmTransaction(tx)
 	if err != nil {
 		return nil, false, err
 	}
@@ -281,7 +236,7 @@ func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		return nil, fmt.Errorf("block not found: %d", blockNumber)
 	}
 	for i := range block.Transactions {
-		err := evm.ValidateEvmTransaction(&block.Transactions[i])
+		err := common.ValidateEvmTransaction(&block.Transactions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -308,6 +263,17 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 		ob.WithLastBlockScanned(blockNumber)
 	}
 	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", ob.Chain().ChainId, ob.LastBlockScanned())
+
+	return nil
+}
+
+func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
+	blockTime, err := ob.evmClient.HealthCheck(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to check rpc health")
+	}
+
+	ob.ReportBlockLatency(blockTime)
 
 	return nil
 }

@@ -11,12 +11,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	ccctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -65,6 +67,7 @@ func (k Keeper) ValidateOutboundZEVM(
 				})
 			return types.CctxStatus_Aborted
 		}
+
 		commitRevert()
 		return types.CctxStatus_PendingRevert
 	}
@@ -211,6 +214,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		err = k.validateZRC20Withdrawal(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.InboundParams.CoinType,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			[]byte(cctx.GetCurrentOutboundParam().Receiver),
 		)
@@ -385,20 +389,53 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 			),
 		})
 
+		// use a temporary context to not commit any state change in case of error
+		tmpCtx, commit := ctx.CacheContext()
+
 		// process the revert on ZEVM
-		if err := k.fungibleKeeper.ProcessV2RevertDeposit(
-			ctx,
+		to := ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver)
+		evmTxResponse, err := k.fungibleKeeper.ProcessV2RevertDeposit(
+			tmpCtx,
 			cctx.InboundParams.Sender,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
 			chainID,
 			cctx.InboundParams.CoinType,
 			cctx.InboundParams.Asset,
-			ethcommon.HexToAddress(cctx.GetCurrentOutboundParam().Receiver),
+			to,
 			cctx.RevertOptions.CallOnRevert,
 			cctx.RevertOptions.RevertMessage,
-		); err != nil {
-			return errors.Wrap(err, "failed ProcessV2RevertDeposit")
+		)
+		if fungibletypes.IsContractReverted(evmTxResponse, err) {
+			// this is a contract revert, we commit the state to save the emitted logs related to revert
+			commit()
+			return errors.Wrap(err, "revert transaction reverted")
+		} else if err != nil {
+			// this should not happen and we don't commit the state to avoid inconsistent state
+			return errors.Wrap(err, "revert transaction couldn't be processed")
 		}
+
+		// a withdrawal event in the logs could generate cctxs for outbound transactions.
+		if evmTxResponse != nil {
+			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
+			if len(logs) > 0 {
+				tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
+				txOrigin := cctx.InboundParams.TxOrigin
+				if txOrigin == "" {
+					txOrigin = cctx.InboundParams.Sender
+				}
+
+				// process logs to process cctx events initiated during the contract call
+				if err = k.ProcessLogs(tmpCtx, logs, to, txOrigin); err != nil {
+					// this happens if the cctx events are not processed correctly with invalid withdrawals
+					// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+					// the contract call is considered as reverted
+					return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				}
+			}
+		}
+
+		// commit state change from the deposit and eventual cctx events
+		commit()
 
 		// tx is reverted
 		cctx.SetReverted()
@@ -421,6 +458,9 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 				nil,
 			),
 		})
+	default:
+		return fmt.Errorf("unexpected cctx status %s", cctx.CctxStatus.Status)
 	}
+
 	return nil
 }

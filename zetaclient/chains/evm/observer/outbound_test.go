@@ -15,8 +15,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/v1/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 )
 
 func Test_IsOutboundProcessed(t *testing.T) {
@@ -423,10 +423,10 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		confirmations := ob.chainParams.ConfirmationCount
 
 		// create mock evm client with preloaded block, tx and receipt
-		ob.evmClient.On("BlockNumber", mock.Anything).Unset()
-		ob.evmClient.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
-		ob.evmClient.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
-		ob.evmClient.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
+		ob.evmMock.On("BlockNumber", mock.Anything).Unset()
+		ob.evmMock.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
+		ob.evmMock.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
+		ob.evmMock.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
 
 		ob.BlockCache().Add(blockNumber, block)
 

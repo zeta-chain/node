@@ -7,12 +7,13 @@ import (
 	"os/exec"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/v2/pkg/zrc20.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests/legacy"
@@ -79,6 +80,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 			"sETH",
 			coin.CoinType_Gas,
 			100000,
+			nil,
 		),
 	)
 	require.NoError(r, err)
@@ -165,6 +167,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		"USDT",
 		18,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 

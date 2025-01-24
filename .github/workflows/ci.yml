@@ -104,7 +104,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
       - name: go get node
         working-directory: contrib/rpcimportable
         run: go get github.com/zeta-chain/node@${{github.event.pull_request.head.sha || github.sha}}
