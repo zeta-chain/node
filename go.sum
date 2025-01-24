@@ -1393,8 +1393,8 @@ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-github.com/zeta-chain/ethermint v0.0.0-20250120181018-673ea0ae47f0 h1:WtGdYSPmAkxmF8Ov/4wcjMSAtM8GHStQVdwQufigqvE=
-github.com/zeta-chain/ethermint v0.0.0-20250120181018-673ea0ae47f0/go.mod h1:33Dvxsz2lWW1YQuxDvci8yWAzEvnB+CFWfbJqGdFUZo=
+github.com/zeta-chain/ethermint v0.0.0-20250124145234-b12523a2c64f h1:31XqosZt7MJiVWJqTm4qZLYm3bkO5kCTtdy0od+eii4=
+github.com/zeta-chain/ethermint v0.0.0-20250124145234-b12523a2c64f/go.mod h1:Pykye2Mw2eQ8/l80MTr6yNaBm6OI3TkQCmwQGUrL5VM=
 github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc h1:FVOttT/f7QCZMkOLssLTY1cbX8pT+HS/kg81zgUAmYE=
 github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc/go.mod h1:MgO2/CmxFnj6W7v/5hrz3ypco3kHkb8856pRnFkY4xQ=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
