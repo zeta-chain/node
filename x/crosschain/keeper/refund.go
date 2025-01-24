@@ -13,7 +13,36 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func (k Keeper) RefundAbortedAmountOnZetaChain(
+// ProcessAbort processes the abort of a cctx
+// It refunds the amount to the abort address and try calling onAbort
+func (k Keeper) ProcessAbort(
+	ctx sdk.Context,
+	cctx types.CrossChainTx,
+) error {
+	abortedAmount := GetAbortedAmount(cctx)
+
+	// process the abort on the zevm
+	// TODO(IN THIS PR): filter events for new cctxs
+	_, err := k.fungibleKeeper.ProcessAbort(
+		ctx,
+		cctx.InboundParams.Sender,
+		abortedAmount.BigInt(),
+		true,
+		1,
+		cctx.InboundParams.CoinType,
+		"",
+		ethcommon.HexToAddress(cctx.RevertOptions.AbortAddress),
+		cctx.RevertOptions.RevertMessage,
+	)
+
+	return err
+}
+
+// LegacyRefundAbortedAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
+// For v2 cctx this logic has been replaced by using ProcessAbort of the fungible module
+// TODO: Remove once only v2 workflow is supported
+// https://github.com/zeta-chain/node/issues/2627
+func (k Keeper) LegacyRefundAbortedAmountOnZetaChain(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	refundAddress ethcommon.Address,
@@ -21,18 +50,20 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(
 	coinType := cctx.InboundParams.CoinType
 	switch coinType {
 	case coin.CoinType_Gas:
-		return k.RefundAmountOnZetaChainGas(ctx, cctx, refundAddress)
+		return k.LegacyRefundAbortedAmountOnZetaChainGas(ctx, cctx, refundAddress)
 	case coin.CoinType_Zeta:
-		return k.RefundAmountOnZetaChainZeta(ctx, cctx, refundAddress)
+		return k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, cctx, refundAddress)
 	case coin.CoinType_ERC20:
-		return k.RefundAmountOnZetaChainERC20(ctx, cctx, refundAddress)
+		return k.LegacyRefundAbortedAmountOnZetaChainERC20(ctx, cctx, refundAddress)
 	default:
 		return fmt.Errorf("unsupported coin type for refund on ZetaChain : %s", coinType)
 	}
 }
 
-// RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
-func (k Keeper) RefundAmountOnZetaChainGas(
+// LegacyRefundAbortedAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
+// TODO: Remove once only v2 workflow is supported
+// https://github.com/zeta-chain/node/issues/2627
+func (k Keeper) LegacyRefundAbortedAmountOnZetaChainGas(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	refundAddress ethcommon.Address,
@@ -60,8 +91,10 @@ func (k Keeper) RefundAmountOnZetaChainGas(
 	return nil
 }
 
-// RefundAmountOnZetaChainZeta refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
-func (k Keeper) RefundAmountOnZetaChainZeta(
+// LegacyRefundAbortedAmountOnZetaChainZeta refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
+// TODO: Remove once only v2 workflow is supported
+// https://github.com/zeta-chain/node/issues/2627
+func (k Keeper) LegacyRefundAbortedAmountOnZetaChainZeta(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	refundAddress ethcommon.Address,
@@ -83,10 +116,12 @@ func (k Keeper) RefundAmountOnZetaChainZeta(
 	return nil
 }
 
-// RefundAmountOnZetaChainERC20 refunds the amount of the cctx on ZetaChain in case of aborted cctx
+// LegacyRefundAbortedAmountOnZetaChainERC20 refunds the amount of the cctx on ZetaChain in case of aborted cctx
 // NOTE: GetCurrentOutboundParam should contain the last up to date cctx amount
 // Refund address should already be validated before calling this function
-func (k Keeper) RefundAmountOnZetaChainERC20(
+// TODO: Remove once only v2 workflow is supported
+// https://github.com/zeta-chain/node/issues/2627
+func (k Keeper) LegacyRefundAbortedAmountOnZetaChainERC20(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
 	refundAddress ethcommon.Address,
