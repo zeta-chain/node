@@ -194,9 +194,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(err)
 
 	// monitor block production to ensure we fail fast if there are consensus failures
-	// this is not run in an errgroup since only returning an error will not exit immediately
-	// this needs to be early to quickly detect consensus failure during genesis
-	go monitorBlockProductionExit(ctx, cancel, conf)
+	go monitorBlockProductionCancel(ctx, cancel, conf)
 
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)

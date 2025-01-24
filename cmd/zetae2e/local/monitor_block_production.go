@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 )
 
-// monitorBlockProductionExit calls monitorBlockProduction and exits upon any error
-func monitorBlockProductionExit(ctx context.Context, cancel context.CancelCauseFunc, conf config.Config) {
+// monitorBlockProductionCancel calls monitorBlockProduction and exits upon any error
+func monitorBlockProductionCancel(ctx context.Context, cancel context.CancelCauseFunc, conf config.Config) {
 	err := monitorBlockProduction(ctx, conf)
 	if err != nil {
 		cancel(err)
