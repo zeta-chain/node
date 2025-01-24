@@ -54,6 +54,7 @@ func GetBtcEventWithWitness(
 	status := types.InboundStatus_SUCCESS
 	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
 	if err != nil {
+		amount = 0
 		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 		logger.Error().Err(err).Msgf("unable to deduct depositor fee for tx %s", tx.Txid)
 	}
