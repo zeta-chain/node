@@ -190,8 +190,16 @@ func (r *E2ERunner) approveZRC20(allowed ethcommon.Address, zrc20 *zrc20.ZRC20) 
 	require.NoError(r, err)
 
 	// approve 1M*1e18 if allowance is below 1k
+	r.Logger.Info(
+		"Allowance for %s to %s with token %s: %s",
+		r.Account.EVMAddress().String(),
+		allowed.String(),
+		r.SPLZRC20Addr,
+		allowance.String(),
+	)
 	thousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
 	if allowance.Cmp(thousand) < 0 {
+		r.Logger.Info("Approving %s to %s", r.Account.EVMAddress().String(), allowed.String())
 		tx, err := zrc20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

@@ -16,10 +16,10 @@ func TestOperationAddLiquiditySPL(r *runner.E2ERunner, args []string) {
 	_, ok := liqZETA.SetString(args[0], 10)
 	require.True(r, ok, "Invalid amount specified for TestOperationAddLiquiditySPL")
 
-	liqERC20 := big.NewInt(0)
-	_, ok = liqERC20.SetString(args[1], 10)
+	liqSPL := big.NewInt(0)
+	_, ok = liqSPL.SetString(args[1], 10)
 	require.True(r, ok, "Invalid amount specified for TestOperationAddLiquiditySPL")
 
 	// perform the add liquidity
-	r.AddLiquiditySPL(liqZETA, liqERC20)
+	r.AddLiquiditySPL(liqZETA, liqSPL)
 }
