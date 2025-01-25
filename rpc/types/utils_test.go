@@ -38,7 +38,7 @@ func TestCheckTxFee(t *testing.T) {
 			gas:      21000,
 			feeCap:   1.0,
 			wantErr:  true,
-			errMsg:   "gasPrice is nil",
+			errMsg:   "gasprice is nil",
 		},
 		{
 			name:     "zero fee cap",
