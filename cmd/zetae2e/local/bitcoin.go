@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -64,8 +65,8 @@ func bitcoinTestRoutines(
 	}
 
 	// create test routines
-	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
-	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
+	routineDeposit, wgDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, nil)
+	routineWithdraw, _ := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, wgDeposit)
 
 	return routineDeposit, routineWithdraw
 }
@@ -108,7 +109,15 @@ func initBitcoinRunner(
 }
 
 // createBitcoinTestRoutine creates a test routine for given test names
-func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
+// The 'wgDependency' argument is used to wait for dependent routine to complete
+func createBitcoinTestRoutine(
+	r *runner.E2ERunner,
+	testNames []string,
+	wgDependency *sync.WaitGroup,
+) (func() error, *sync.WaitGroup) {
+	var thisRoutine sync.WaitGroup
+	thisRoutine.Add(1)
+
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
@@ -122,12 +131,20 @@ func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() er
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
-		if err := r.RunE2ETests(testsToRun); err != nil {
-			return fmt.Errorf("bitcoin tests failed: %v", err)
+		for _, test := range testsToRun {
+			// RBF test needs to wait for all deposit tests to complete
+			if test.Name == e2etests.TestBitcoinWithdrawRBFName && wgDependency != nil {
+				r.Logger.Print("⏳waiting - %s", test.Description)
+				wgDependency.Wait()
+			}
+			if err := r.RunE2ETest(test, true); err != nil {
+				return fmt.Errorf("bitcoin tests failed: %v", err)
+			}
 		}
 
+		thisRoutine.Done()
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
 
 		return err
-	}
+	}, &thisRoutine
 }

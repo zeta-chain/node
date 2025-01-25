@@ -32,8 +32,8 @@ const (
 // GetCCTXByInboundHash gets cctx by inbound hash
 func GetCCTXByInboundHash(
 	ctx context.Context,
-	inboundHash string,
 	client crosschaintypes.QueryClient,
+	inboundHash string,
 ) *crosschaintypes.CrossChainTx {
 	t := TestingFromContext(ctx)
 

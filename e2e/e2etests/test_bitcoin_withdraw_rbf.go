@@ -21,17 +21,13 @@ import (
 func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
-	// wait for block mining to stop
-	wgDepositRunner.Wait()
-	r.Logger.Print("Bitcoin mining stopped, starting RBF test")
-
 	// parse arguments
 	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
 	to, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
 	// initiate a withdraw CCTX
 	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
-	cctx := utils.GetCCTXByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient)
+	cctx := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, receipt.TxHash.Hex())
 
 	// wait for the 1st outbound tracker hash to come in
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
