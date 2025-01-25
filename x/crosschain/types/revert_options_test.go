@@ -50,7 +50,7 @@ func TestRevertOptions_GetEVMRevertAddress(t *testing.T) {
 func TestRevertOptions_GetBTCRevertAddress(t *testing.T) {
 	t.Run("valid Bitcoin revert address", func(t *testing.T) {
 		r := sample.Rand()
-		addr := sample.BtcAddressP2WPKH(t, r, &chaincfg.TestNet3Params).String()
+		addr := sample.BTCAddressP2WPKH(t, r, &chaincfg.TestNet3Params).String()
 		actualAddr, valid := types.RevertOptions{
 			RevertAddress: addr,
 		}.GetBTCRevertAddress(chains.BitcoinTestnet.ChainId)
