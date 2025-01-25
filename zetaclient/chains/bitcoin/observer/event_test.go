@@ -32,7 +32,7 @@ func createTestBtcEvent(
 	memoStd *memo.InboundMemo,
 ) observer.BTCInboundEvent {
 	return observer.BTCInboundEvent{
-		FromAddress: sample.BTCAddressP2WPKH(t, net).String(),
+		FromAddress: sample.BTCAddressP2WPKH(t, sample.Rand(), net).String(),
 		ToAddress:   sample.EthAddress().Hex(),
 		MemoBytes:   memo,
 		MemoStd:     memoStd,
@@ -235,6 +235,8 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 }
 
 func Test_ValidateStandardMemo(t *testing.T) {
+	r := sample.Rand()
+
 	// test cases
 	tests := []struct {
 		name   string
@@ -249,7 +251,7 @@ func Test_ValidateStandardMemo(t *testing.T) {
 				},
 				FieldsV0: memo.FieldsV0{
 					RevertOptions: crosschaintypes.RevertOptions{
-						RevertAddress: sample.BTCAddressP2WPKH(t, &chaincfg.TestNet3Params).String(),
+						RevertAddress: sample.BTCAddressP2WPKH(t, r, &chaincfg.TestNet3Params).String(),
 					},
 				},
 			},
@@ -399,8 +401,9 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 
 	t.Run("should create new inbound vote msg with standard memo", func(t *testing.T) {
 		// create revert options
+		r := sample.Rand()
 		revertOptions := crosschaintypes.NewEmptyRevertOptions()
-		revertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, &chaincfg.MainNetParams).String()
+		revertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, r, &chaincfg.MainNetParams).String()
 
 		// create test event
 		receiver := sample.EthAddress()

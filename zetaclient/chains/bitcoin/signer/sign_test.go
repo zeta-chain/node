@@ -22,6 +22,7 @@ import (
 )
 
 func Test_AddTxInputs(t *testing.T) {
+	r := sample.Rand()
 	net := &chaincfg.MainNetParams
 
 	tests := []struct {
@@ -36,13 +37,13 @@ func Test_AddTxInputs(t *testing.T) {
 				{
 					TxID:    sample.BtcHash().String(),
 					Vout:    0,
-					Address: sample.BTCAddressP2WPKH(t, net).String(),
+					Address: sample.BTCAddressP2WPKH(t, r, net).String(),
 					Amount:  0.1,
 				},
 				{
 					TxID:    sample.BtcHash().String(),
 					Vout:    1,
-					Address: sample.BTCAddressP2WPKH(t, net).String(),
+					Address: sample.BTCAddressP2WPKH(t, r, net).String(),
 					Amount:  0.2,
 				},
 			},
@@ -310,8 +311,9 @@ func Test_SignTx(t *testing.T) {
 			require.Len(t, inAmounts, len(tt.inputs))
 
 			// add outputs
+			r := sample.Rand()
 			for _, amount := range tt.outputs {
-				pkScript := sample.BTCAddressP2WPKHScript(t, tt.net)
+				pkScript := sample.BTCAddressP2WPKHScript(t, r, tt.net)
 				tx.AddTxOut(wire.NewTxOut(amount, pkScript))
 			}
 
