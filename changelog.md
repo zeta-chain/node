@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## unreleased
+## Unreleased
+
+### Features
+
+* [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
+* [3357](https://github.com/zeta-chain/node/pull/3357) - cosmos-sdk v.50.x upgrade
+* [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
 
 ### Refactor
 
@@ -9,6 +15,7 @@
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 * [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
+* [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 
 ### Fixes
 

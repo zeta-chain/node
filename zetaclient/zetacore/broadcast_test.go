@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
@@ -65,7 +66,7 @@ func TestBroadcast(t *testing.T) {
 				WithPayload(feemarkettypes.QueryParamsRequest{}).
 				Return(feemarkettypes.QueryParamsResponse{
 					Params: feemarkettypes.Params{
-						BaseFee: types.NewInt(23455),
+						BaseFee: sdkmath.NewInt(23455),
 					},
 				})
 		},

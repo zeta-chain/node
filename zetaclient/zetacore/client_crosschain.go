@@ -3,13 +3,29 @@ package zetacore
 import (
 	"context"
 	"sort"
+	"strconv"
 
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
+
+func (c *Client) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
+	list, total, err := c.Clients.ListPendingCCTX(ctx, chainID)
+
+	if err == nil {
+		// #nosec G115 always in range
+		label := strconv.Itoa(int(chainID))
+		value := float64(total)
+
+		metrics.PendingTxsPerChain.WithLabelValues(label).Set(value)
+	}
+
+	return list, total, err
+}
 
 // GetAllOutboundTrackerByChain returns all outbound trackers for a chain
 func (c *Client) GetAllOutboundTrackerByChain(

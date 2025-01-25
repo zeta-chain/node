@@ -67,12 +67,8 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
 	// create signer
-	signer := signer.New(
-		chain,
-		tss,
-		rpcClient,
-		logger,
-	)
+	baseSigner := base.NewSigner(chain, tss, logger)
+	signer := signer.New(baseSigner, rpcClient)
 
 	return &testSuite{
 		Signer:         signer,
@@ -90,7 +86,9 @@ func Test_NewSigner(t *testing.T) {
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.NoError(t, err)
 	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-	signer := signer.New(chains.BitcoinMainnet, tss, mocks.NewBitcoinClient(t), base.DefaultLogger())
+
+	baseSigner := base.NewSigner(chains.BitcoinMainnet, tss, base.DefaultLogger())
+	signer := signer.New(baseSigner, mocks.NewBitcoinClient(t))
 	require.NotNil(t, signer)
 }
 
@@ -378,16 +376,11 @@ func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 	testLogger := zerolog.New(zerolog.NewTestWriter(t))
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
-	ob, err := observer.NewObserver(
-		s.Chain(),
-		s.client,
-		params,
-		s.zetacoreClient,
-		s.tss,
-		database,
-		logger,
-		ts,
-	)
+	// create observer
+	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, logger)
+	require.NoError(t, err)
+
+	ob, err := observer.New(s.Chain(), baseObserver, s.client)
 	require.NoError(t, err)
 	return ob
 }

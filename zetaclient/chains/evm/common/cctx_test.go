@@ -1,20 +1,18 @@
-package evm_test
+package common
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
 )
 
 func TestParseOutboundTypeFromCCTX(t *testing.T) {
 	tests := []struct {
 		name     string
 		cctx     types.CrossChainTx
-		expected evm.OutboundType
+		expected OutboundType
 	}{
 		{
 			name: "Gas withdraw and call",
@@ -27,7 +25,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: evm.OutboundTypeGasWithdrawAndCall,
+			expected: OutboundTypeGasWithdrawAndCall,
 		},
 		{
 			name: "Gas withdraw",
@@ -40,7 +38,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: evm.OutboundTypeGasWithdraw,
+			expected: OutboundTypeGasWithdraw,
 		},
 		{
 			name: "ERC20 withdraw and call",
@@ -53,7 +51,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: evm.OutboundTypeERC20WithdrawAndCall,
+			expected: OutboundTypeERC20WithdrawAndCall,
 		},
 		{
 			name: "ERC20 withdraw revert and call on revert",
@@ -68,7 +66,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					CallOnRevert: true,
 				},
 			},
-			expected: evm.OutboundTypeERC20WithdrawRevertAndCallOnRevert,
+			expected: OutboundTypeERC20WithdrawRevertAndCallOnRevert,
 		},
 		{
 			name: "No asset call",
@@ -80,7 +78,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: evm.OutboundTypeCall,
+			expected: OutboundTypeCall,
 		},
 		{
 			name: "ZETA gives Uuknown outbound type",
@@ -92,13 +90,13 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: evm.OutboundTypeUnknown,
+			expected: OutboundTypeUnknown,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := evm.ParseOutboundTypeFromCCTX(tt.cctx)
+			result := ParseOutboundTypeFromCCTX(tt.cctx)
 			require.Equal(t, tt.expected, result)
 		})
 	}

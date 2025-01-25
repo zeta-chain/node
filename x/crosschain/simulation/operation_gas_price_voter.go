@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -45,12 +46,12 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			Price:       gasPrice.Prices[0],
 			PriorityFee: gasPrice.PriorityFees[0],
 			BlockNumber: uint64(ctx.BlockHeight()) + r.Uint64()%1000, // #nosec G115 - overflow is not a issue here
-			Supply:      sdk.NewInt(r.Int63n(1e18)).String(),
+			Supply:      sdkmath.NewInt(r.Int63n(1e18)).String(),
 		}
 
 		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
 		if ctx.BlockHeight() <= 1 {
-			return simtypes.NewOperationMsg(&msg, true, "block height less than 1", nil), nil, nil
+			return simtypes.NewOperationMsg(&msg, true, "block height less than 1"), nil, nil
 		}
 
 		err = msg.ValidateBasic()
@@ -64,7 +65,6 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   k.GetAuthKeeper(),

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/require"
 
@@ -55,7 +55,7 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -97,7 +97,7 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -122,7 +122,7 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 			VoterList:        []string{accAddressOfValidator.String()},
 			Votes:            []types.VoteType{types.VoteType_SuccessObservation},
 			BallotStatus:     types.BallotStatus_BallotInProgress,
-			BallotThreshold:  sdk.NewDec(2),
+			BallotThreshold:  sdkmath.LegacyNewDec(2),
 		}
 		k.SetBallot(ctx, &ballot)
 
@@ -144,7 +144,7 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -169,7 +169,7 @@ func TestMsgServer_VoteBlame(t *testing.T) {
 			VoterList:        []string{accAddressOfValidator.String()},
 			Votes:            []types.VoteType{types.VoteType_NotYetVoted},
 			BallotStatus:     types.BallotStatus_BallotInProgress,
-			BallotThreshold:  sdk.NewDec(2),
+			BallotThreshold:  sdkmath.LegacyNewDec(2),
 		}
 		k.SetBallot(ctx, &ballot)
 

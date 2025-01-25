@@ -153,9 +153,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		case chain.IsBitcoin():
 			observerSigner, err = oc.bootstrapBitcoin(ctx, chain)
 		case chain.IsEVM():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3302
-			continue
+			observerSigner, err = oc.bootstrapEVM(ctx, chain)
 		case chain.IsSolana():
 			// TODO
 			// https://github.com/zeta-chain/node/issues/3301
@@ -167,7 +165,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		}
 
 		switch {
-		case errors.Is(errSkipChain, err):
+		case errors.Is(err, errSkipChain):
 			// TODO use throttled logger instead of sampled one.
 			// https://github.com/zeta-chain/node/issues/3336
 			oc.logger.sampled.Warn().Err(err).Fields(chain.LogFields()).Msg("Skipping observer-signer")

@@ -92,11 +92,14 @@ func Test_AddTxInputs(t *testing.T) {
 
 func Test_AddWithdrawTxOutputs(t *testing.T) {
 	// Create test signer and receiver address
-	signer := signer.New(
+	baseSigner := base.NewSigner(
 		chains.BitcoinMainnet,
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
-		mocks.NewBitcoinClient(t),
 		base.DefaultLogger(),
+	)
+	signer := signer.New(
+		baseSigner,
+		mocks.NewBitcoinClient(t),
 	)
 
 	// tss address and script

@@ -3,7 +3,9 @@ package sample
 import (
 	"bytes"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	log2 "github.com/cometbft/cometbft/libs/log"
+	"github.com/rs/zerolog"
 )
 
 type TestLogger struct {
@@ -13,7 +15,8 @@ type TestLogger struct {
 
 func NewTestLogger() *TestLogger {
 	tl := &TestLogger{}
-	tl.Logger = log.NewTMLogger(log.NewSyncWriter(&tl.buf))
+	// TODO: simplify?
+	tl.Logger = log.NewLogger(zerolog.New(log2.NewSyncWriter(&tl.buf)))
 	return tl
 }
 
