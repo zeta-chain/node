@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
 
@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	DefaultMinObserverDelegation = sdk.MustNewDecFromStr("1000000000000000000000")
-	DefaultBallotThreshold       = sdk.MustNewDecFromStr("0.66")
+	DefaultMinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("1000000000000000000000")
+	DefaultBallotThreshold       = sdkmath.LegacyMustNewDecFromStr("0.66")
 )
 
 // Validate checks all chain params correspond to a chain and there is no duplicate chain id
@@ -115,7 +115,7 @@ func ValidateChainParams(params *ChainParams) error {
 		)
 	}
 
-	if params.BallotThreshold.IsNil() || params.BallotThreshold.GT(sdk.OneDec()) {
+	if params.BallotThreshold.IsNil() || params.BallotThreshold.GT(sdkmath.LegacyOneDec()) {
 		return ErrParamsThreshold
 	}
 

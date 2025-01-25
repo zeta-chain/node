@@ -2,7 +2,6 @@ package types
 
 import (
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetRewardsDistributions returns the current distribution of rewards
@@ -14,22 +13,22 @@ func GetRewardsDistributions(params Params) (sdkmath.Int, sdkmath.Int, sdkmath.I
 	blockReward := params.BlockRewardAmount
 
 	// Fetch the validator rewards, use 0 if the percentage is not set
-	validatorRewards := sdk.NewInt(0)
-	validatorRewardsDec, err := sdk.NewDecFromStr(params.ValidatorEmissionPercentage)
+	validatorRewards := sdkmath.NewInt(0)
+	validatorRewardsDec, err := sdkmath.LegacyNewDecFromStr(params.ValidatorEmissionPercentage)
 	if err == nil {
 		validatorRewards = validatorRewardsDec.Mul(blockReward).TruncateInt()
 	}
 
 	// Fetch the observer rewards, use 0 if the percentage is not set
-	observerRewards := sdk.NewInt(0)
-	observerRewardsDec, err := sdk.NewDecFromStr(params.ObserverEmissionPercentage)
+	observerRewards := sdkmath.NewInt(0)
+	observerRewardsDec, err := sdkmath.LegacyNewDecFromStr(params.ObserverEmissionPercentage)
 	if err == nil {
 		observerRewards = observerRewardsDec.Mul(blockReward).TruncateInt()
 	}
 
 	// Fetch the TSS signer rewards, use 0 if the percentage is not set
-	tssSignerRewards := sdk.NewInt(0)
-	tssSignerRewardsDec, err := sdk.NewDecFromStr(params.TssSignerEmissionPercentage)
+	tssSignerRewards := sdkmath.NewInt(0)
+	tssSignerRewardsDec, err := sdkmath.LegacyNewDecFromStr(params.TssSignerEmissionPercentage)
 	if err == nil {
 		tssSignerRewards = tssSignerRewardsDec.Mul(blockReward).TruncateInt()
 	}

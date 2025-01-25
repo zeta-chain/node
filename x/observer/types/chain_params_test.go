@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	. "gopkg.in/check.v1"
@@ -201,21 +201,21 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	require.NotNil(s.T(), err)
 
 	copy = *params
-	copy.BallotThreshold = sdk.Dec{}
+	copy.BallotThreshold = sdkmath.LegacyDec{}
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.BallotThreshold = sdk.MustNewDecFromStr("1.2")
+	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.BallotThreshold = sdk.MustNewDecFromStr("0.9")
+	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("0.9")
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 
 	copy = *params
-	copy.MinObserverDelegation = sdk.Dec{}
+	copy.MinObserverDelegation = sdkmath.LegacyDec{}
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
-	copy.MinObserverDelegation = sdk.MustNewDecFromStr("0.9")
+	copy.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
 	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 }

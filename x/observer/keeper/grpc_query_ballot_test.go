@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -151,7 +152,7 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
 				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot
@@ -176,7 +177,7 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
 				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot
@@ -224,7 +225,7 @@ func TestKeeper_Ballots(t *testing.T) {
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
 				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot

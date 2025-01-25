@@ -4,12 +4,13 @@ import (
 	"math/big"
 	"testing"
 
-	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -71,7 +72,7 @@ func initCrosschainKeeper(
 	authorityKeeper types.AuthorityKeeper,
 	lightclientKeeper types.LightclientKeeper,
 ) *keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
@@ -100,7 +101,7 @@ func CrosschainKeeperWithMocks(
 	// Initialize local store
 	db := tmdb.NewMemDB()
 	logger := log.NewNopLogger()
-	stateStore := rootmulti.NewStore(db, logger)
+	stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	// Create regular keepers
@@ -301,6 +302,35 @@ func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeepe
 func MockFailedGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) {
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(chains.Chain{}, false).Once()
+}
+
+func MockProcessV2RevertDeposit(
+	m *crosschainmocks.CrosschainFungibleKeeper,
+	retEVMTxResponse *evmtypes.MsgEthereumTxResponse,
+	retErr error,
+) {
+	// ctx types.Context
+	// inboundSender string
+	// amount *big.Int
+	// chainID int64
+	// coinType coin.CoinType
+	// asset string
+	// revertAddress common.Address
+	// callOnRevert bool
+	// revertMessage []byte
+	m.On(
+		"ProcessV2RevertDeposit",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).
+		Return(retEVMTxResponse, retErr).Once()
 }
 
 func MockGetRevertGasLimitForERC20(

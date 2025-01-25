@@ -3,15 +3,13 @@ package main_test
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/stretchr/testify/require"
 
@@ -82,13 +80,16 @@ func Test_ModifyObserverState(t *testing.T) {
 func Test_ImportDataIntoFile(t *testing.T) {
 	t.Run("successfully import data into file and modify data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
-		genDoc := sample.GenDoc(t)
-		importGenDoc := ImportGenDoc(t, cdc, 100)
+		appGenesis := sample.AppGenesis(t)
+		importAppGenesis := ImportAppGenesis(t, cdc, 100)
 
-		err := zetacored.ImportDataIntoFile(genDoc, importGenDoc, cdc, true)
+		err := zetacored.ImportDataIntoFile(appGenesis, importAppGenesis, cdc, true)
 		require.NoError(t, err)
 
-		appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+		types.GenesisDocFromJSON(appGenesis.AppState)
+
+		var appState map[string]json.RawMessage
+		err = json.Unmarshal(appGenesis.AppState, &appState)
 		require.NoError(t, err)
 
 		// Crosschain module is in Modify list
@@ -121,13 +122,14 @@ func Test_ImportDataIntoFile(t *testing.T) {
 
 	t.Run("successfully import data into file without modifying data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
-		genDoc := sample.GenDoc(t)
-		importGenDoc := ImportGenDoc(t, cdc, 8)
+		appGenesis := sample.AppGenesis(t)
+		importAppGenesis := ImportAppGenesis(t, cdc, 8)
 
-		err := zetacored.ImportDataIntoFile(genDoc, importGenDoc, cdc, false)
+		err := zetacored.ImportDataIntoFile(appGenesis, importAppGenesis, cdc, false)
 		require.NoError(t, err)
 
-		appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+		var appState map[string]json.RawMessage
+		err = json.Unmarshal(appGenesis.AppState, &appState)
 		require.NoError(t, err)
 
 		// Crosschain module is in Modify list
@@ -160,26 +162,12 @@ func Test_ImportDataIntoFile(t *testing.T) {
 	})
 }
 
-func Test_GetGenDoc(t *testing.T) {
-	t.Run("successfully get genesis doc from file", func(t *testing.T) {
-		fp := filepath.Join(os.TempDir(), "genesis.json")
-		err := genutil.ExportGenesisFile(sample.GenDoc(t), fp)
-		require.NoError(t, err)
-		_, err = zetacored.GetGenDoc(fp)
-		require.NoError(t, err)
-	})
-	t.Run("fail to get genesis doc from file", func(t *testing.T) {
-		_, err := zetacored.GetGenDoc("test")
-		require.ErrorContains(t, err, "no such file or directory")
-	})
-}
-
-func ImportGenDoc(t *testing.T, cdc *codec.ProtoCodec, n int) *types.GenesisDoc {
-	importGenDoc := sample.GenDoc(t)
+func ImportAppGenesis(t *testing.T, cdc *codec.ProtoCodec, n int) *genutiltypes.AppGenesis {
+	importAppGenesis := sample.AppGenesis(t)
 	importStateJson, err := json.Marshal(GetImportData(t, cdc, n))
 	require.NoError(t, err)
-	importGenDoc.AppState = importStateJson
-	return importGenDoc
+	importAppGenesis.AppState = importStateJson
+	return importAppGenesis
 }
 
 func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.RawMessage {
@@ -242,7 +230,7 @@ func GetImportData(t *testing.T, cdc *codec.ProtoCodec, n int) map[string]json.R
 		}
 	}
 	balances := make([]banktypes.Balance, n)
-	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))
+	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.ZeroInt()))
 	for i := 0; i < n; i++ {
 		balances[i] = banktypes.Balance{
 			Address: sample.AccAddress(),

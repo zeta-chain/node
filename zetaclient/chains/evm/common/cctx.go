@@ -1,4 +1,4 @@
-package evm
+package common
 
 import (
 	"github.com/zeta-chain/node/pkg/coin"

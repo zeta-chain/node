@@ -150,7 +150,7 @@ func DistributeObserverRewards(
 
 // DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
 // This is done so that the reserves factor is properly calculated in the next block
-func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+func DistributeTSSRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
 }
@@ -177,7 +177,7 @@ func distributeRewardsForMaturedBallots(
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
-		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
+		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
 		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(maturedBallots)))
@@ -217,7 +217,7 @@ func distributeRewardsForMaturedBallots(
 		}
 
 		// Defensive check
-		if rewardPerUnit.GT(sdk.ZeroInt()) {
+		if rewardPerUnit.GT(sdkmath.ZeroInt()) {
 			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardUnits))
 			keeper.AddObserverEmission(ctx, observerAddress.String(), rewardAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{

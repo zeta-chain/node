@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -22,7 +22,7 @@ func createForeignCoinAndAssetRate(
 	chainID int64,
 	decimals uint32,
 	coinType coin.CoinType,
-	rate sdk.Dec,
+	rate sdkmath.LegacyDec,
 ) (fungibletypes.ForeignCoins, types.AssetRate) {
 	// create foreign coin
 	foreignCoin := sample.ForeignCoins(t, zrc20Addr)
@@ -67,19 +67,19 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 	zrc20ERC20Addr1 := sample.EthAddress().Hex()
 	zrc20ERC20Addr2 := sample.EthAddress().Hex()
 	testflags := types.RateLimiterFlags{
-		Rate: sdk.NewUint(100),
+		Rate: sdkmath.NewUint(100),
 		Conversions: []types.Conversion{
 			{
 				Zrc20: zrc20GasAddr,
-				Rate:  sdk.NewDec(1),
+				Rate:  sdkmath.LegacyNewDec(1),
 			},
 			{
 				Zrc20: zrc20ERC20Addr1,
-				Rate:  sdk.NewDec(2),
+				Rate:  sdkmath.LegacyNewDec(2),
 			},
 			{
 				Zrc20: zrc20ERC20Addr2,
-				Rate:  sdk.NewDec(3),
+				Rate:  sdkmath.LegacyNewDec(3),
 			},
 		},
 	}
@@ -101,7 +101,7 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 		chainID,
 		18,
 		coin.CoinType_Gas,
-		sdk.NewDec(1),
+		sdkmath.LegacyNewDec(1),
 	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, gasCoin)
 
@@ -113,7 +113,7 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 		chainID,
 		8,
 		coin.CoinType_ERC20,
-		sdk.NewDec(2),
+		sdkmath.LegacyNewDec(2),
 	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin1)
 
@@ -125,7 +125,7 @@ func TestKeeper_GetRateLimiterAssetRateList(t *testing.T) {
 		chainID,
 		6,
 		coin.CoinType_ERC20,
-		sdk.NewDec(3),
+		sdkmath.LegacyNewDec(3),
 	)
 	zk.FungibleKeeper.SetForeignCoins(ctx, erc20Coin2)
 

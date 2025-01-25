@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	dbm "github.com/cometbft/cometbft-db"
+	protov2 "google.golang.org/protobuf/proto"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -20,7 +22,6 @@ import (
 	"github.com/zeta-chain/ethermint/app"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/crypto/hd"
-	"github.com/zeta-chain/ethermint/encoding"
 	"github.com/zeta-chain/ethermint/indexer"
 	"github.com/zeta-chain/ethermint/tests"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -40,8 +41,9 @@ type BackendTestSuite struct {
 type testTx struct {
 }
 
-func (tx testTx) GetMsgs() []sdk.Msg           { return nil }
-func (tx testTx) GetSigners() []sdk.AccAddress { return nil }
+func (tx testTx) GetMsgs() []sdk.Msg                    { return nil }
+func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (tx testTx) GetSigners() []sdk.AccAddress          { return nil }
 
 func (tx testTx) ValidateBasic() error { return nil }
 func (t testTx) ProtoMessage()         { panic("not implemented") }
@@ -93,7 +95,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	suite.signer = tests.NewSigner(priv)
 	suite.Require().NoError(err)
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := app.MakeConfigForTest()
 	clientCtx := client.Context{}.WithChainID(ChainID).
 		WithHeight(1).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -111,7 +113,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	suite.backend.ctx = rpctypes.ContextWithHeight(1)
 
 	// Add codec
-	encCfg := encoding.MakeConfig(app.ModuleBasics)
+	encCfg := app.MakeConfigForTest()
 	suite.backend.clientCtx.Codec = encCfg.Codec
 }
 
@@ -130,8 +132,6 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 		nil,
 	)
 	suite.signAndEncodeEthTx(msgEthereumTx)
-	// A valid msg should have empty `From`
-	msgEthereumTx.From = ""
 
 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetSignatures()
@@ -143,13 +143,13 @@ func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byt
 	return msgEthereumTx, bz
 }
 
-func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ResponseDeliverTx) {
+func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ExecTxResult) {
 	testTx := &testTx{}
 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetSignatures()
 	txBuilder.SetMsgs(testTx)
 	bz, _ := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	return bz, abci.ResponseDeliverTx{
+	return bz, abci.ExecTxResult{
 		Code: 0,
 		Events: []abci.Event{
 			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
@@ -221,7 +221,7 @@ func (suite *BackendTestSuite) buildFormattedBlock(
 
 func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
-	encCfg := encoding.MakeConfig(app.ModuleBasics)
+	encCfg := app.MakeConfigForTest()
 	return keyring.New(
 		sdk.KeyringServiceName(),
 		keyring.BackendTest,

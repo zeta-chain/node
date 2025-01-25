@@ -165,6 +165,14 @@ func newTestSuite(t *testing.T) *testSuite {
 	return ts
 }
 
+func (ts *testSuite) HasObserverSigner(chainID int64) bool {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+
+	_, ok := ts.V2.chains[chainID]
+	return ok
+}
+
 func (ts *testSuite) MockChainParams(newValues ...any) {
 	chainList, chainParams := parseChainsWithParams(ts.t, newValues...)
 
@@ -189,6 +197,9 @@ func (ts *testSuite) getChainParams(_ context.Context) ([]*observertypes.ChainPa
 
 // UpdateConfig updates "global" config.Config for test suite.
 func (ts *testSuite) UpdateConfig(fn func(cfg *config.Config)) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+
 	cfg := ts.appContext.Config()
 	fn(&cfg)
 

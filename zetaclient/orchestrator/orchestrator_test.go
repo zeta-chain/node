@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -143,8 +143,8 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		Erc20CustodyContractAddress: testutils.OtherAddress3,
 		OutboundScheduleInterval:    15,
 		OutboundScheduleLookahead:   16,
-		BallotThreshold:             sdk.OneDec(),
-		MinObserverDelegation:       sdk.OneDec(),
+		BallotThreshold:             sdkmath.LegacyOneDec(),
+		MinObserverDelegation:       sdkmath.LegacyOneDec(),
 		IsSupported:                 true,
 	}
 	btcChainParamsNew := &observertypes.ChainParams{
@@ -159,8 +159,8 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		Erc20CustodyContractAddress: testutils.OtherAddress3,
 		OutboundScheduleInterval:    60,
 		OutboundScheduleLookahead:   200,
-		BallotThreshold:             sdk.OneDec(),
-		MinObserverDelegation:       sdk.OneDec(),
+		BallotThreshold:             sdkmath.LegacyOneDec(),
+		MinObserverDelegation:       sdkmath.LegacyOneDec(),
 		IsSupported:                 true,
 	}
 	solChainParamsNew := &observertypes.ChainParams{
@@ -175,8 +175,8 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		Erc20CustodyContractAddress: "",
 		OutboundScheduleInterval:    10,
 		OutboundScheduleLookahead:   10,
-		BallotThreshold:             sdk.OneDec(),
-		MinObserverDelegation:       sdk.OneDec(),
+		BallotThreshold:             sdkmath.LegacyOneDec(),
+		MinObserverDelegation:       sdkmath.LegacyOneDec(),
 		IsSupported:                 true,
 	}
 	tonChainParamsNew := &observertypes.ChainParams{
@@ -191,8 +191,8 @@ func Test_GetUpdatedChainObserver(t *testing.T) {
 		Erc20CustodyContractAddress: "",
 		OutboundScheduleInterval:    10,
 		OutboundScheduleLookahead:   10,
-		BallotThreshold:             sdk.OneDec(),
-		MinObserverDelegation:       sdk.OneDec(),
+		BallotThreshold:             sdkmath.LegacyOneDec(),
+		MinObserverDelegation:       sdkmath.LegacyOneDec(),
 		IsSupported:                 true,
 	}
 
@@ -465,7 +465,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			rateLimiterFlags: &crosschaintypes.RateLimiterFlags{
 				Enabled: true,
 				Window:  100,
-				Rate:    sdk.NewUint(1e18), // 1 ZETA/block
+				Rate:    sdkmath.NewUint(1e18), // 1 ZETA/block
 			},
 			response: &crosschaintypes.QueryRateLimiterInputResponse{
 				Height:       100,
@@ -473,8 +473,8 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 				CctxsPending: allCctxsPending,
 				// #nosec G115 len always positive
 				TotalPending:            uint64(len(allCctxsPending) + len(allCctxsMissed)),
-				PastCctxsValue:          sdk.NewInt(10).Mul(sdk.NewInt(1e18)).String(), // 10 ZETA
-				PendingCctxsValue:       sdk.NewInt(90).Mul(sdk.NewInt(1e18)).String(), // 90 ZETA
+				PastCctxsValue:          sdkmath.NewInt(10).Mul(sdkmath.NewInt(1e18)).String(), // 10 ZETA
+				PendingCctxsValue:       sdkmath.NewInt(90).Mul(sdkmath.NewInt(1e18)).String(), // 90 ZETA
 				LowestPendingCctxHeight: 11,
 			},
 			ethCctxsFallback: nil,
@@ -494,7 +494,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			rateLimiterFlags: &crosschaintypes.RateLimiterFlags{
 				Enabled: true,
 				Window:  100,
-				Rate:    sdk.NewUint(1e18), // 1 ZETA/block
+				Rate:    sdkmath.NewUint(1e18), // 1 ZETA/block
 			},
 			response: nil,
 			fail:     true,
@@ -504,7 +504,7 @@ func Test_GetPendingCctxsWithinRateLimit(t *testing.T) {
 			rateLimiterFlags: &crosschaintypes.RateLimiterFlags{
 				Enabled: true,
 				Window:  100,
-				Rate:    sdk.NewUint(1e18), // 1 ZETA/block
+				Rate:    sdkmath.NewUint(1e18), // 1 ZETA/block
 			},
 			response: &crosschaintypes.QueryRateLimiterInputResponse{
 				PastCctxsValue: "invalid",

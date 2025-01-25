@@ -4,7 +4,8 @@ import (
 	"strconv"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	slicemath "github.com/zeta-chain/node/pkg/math"
@@ -64,7 +65,7 @@ func (k Keeper) RemoveGasPrice(ctx sdk.Context, index string) {
 // GetAllGasPrice returns all gasPrice
 func (k Keeper) GetAllGasPrice(ctx sdk.Context) (list []types.GasPrice) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GasPriceKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

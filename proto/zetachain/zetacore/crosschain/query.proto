@@ -11,11 +11,13 @@ import "zetachain/zetacore/crosschain/outbound_tracker.proto";
 import "zetachain/zetacore/crosschain/rate_limiter_flags.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/crosschain/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  option (cosmos.msg.v1.service) = true;
   // Queries a outbound tracker by index.
   rpc OutboundTracker(QueryGetOutboundTrackerRequest)
       returns (QueryGetOutboundTrackerResponse) {
