@@ -4,9 +4,11 @@ import (
 	"context"
 	"math"
 	"math/big"
+	"strings"
 	"testing"
 	"time"
 
+	gethcommon "github.com/ethereum/go-ethereum/common"
 	geth "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
@@ -94,6 +96,59 @@ func TestLiveClient(t *testing.T) {
 				time.Sleep(1 * time.Second)
 
 				v2, errV2 := ts.BlockByNumber2(ts.ctx, bn)
+
+				// ASSERT
+				tt.assert(t, v1, errV1, v2, errV2)
+			})
+		}
+	})
+
+	t.Run("TransactionByHash2", func(t *testing.T) {
+		for _, tt := range []struct {
+			name     string
+			endpoint string
+			txHash   string
+			assert   func(t *testing.T, v1 *geth.Transaction, errV1 error, v2 *Transaction, errV2 error)
+		}{
+			{
+				name:     "Both work for BASE",
+				endpoint: URLBaseMainnet,
+				txHash:   "0xc2df77353c26eb282eb988a00f643e96d819fac20bb8bc1cfa3f4d6928be9fca",
+				assert: func(t *testing.T, v1 *geth.Transaction, errV1 error, v2 *Transaction, errV2 error) {
+					require.NoError(t, errV1)
+					require.NoError(t, errV2)
+
+					require.Equal(t, v1.Hash().String(), v2.Hash)
+
+					v1To, v2To := strings.ToLower(v1.To().String()), strings.ToLower(v2.To)
+
+					require.Equal(t, v1To, v2To)
+					require.Equal(t, "0x17517d3645c28b4b6da6bc8cee382b16491605b2", v2To)
+				},
+			},
+			{
+				name:     "L1 deposit works only for BASE",
+				endpoint: URLBaseMainnet,
+				txHash:   "0xc373497bbbd9efdaa5c4b328950d148dfc71914a6180e4f3a9c70041334aa5f3",
+				assert: func(t *testing.T, v1 *geth.Transaction, errV1 error, v2 *Transaction, errV2 error) {
+					require.ErrorContains(t, errV1, "transaction type not supported")
+					require.NoError(t, errV2)
+
+					require.Nil(t, v1)
+					require.Equal(t, "0x4200000000000000000000000000000000000007", v2.To)
+				},
+			},
+		} {
+			t.Run(tt.name, func(t *testing.T) {
+				// ASSERT
+				ts := newTestSuite(t, tt.endpoint)
+
+				// ACT
+				v1, _, errV1 := ts.TransactionByHash(ts.ctx, gethcommon.HexToHash(tt.txHash))
+
+				time.Sleep(1 * time.Second)
+
+				v2, errV2 := ts.TransactionByHash2(ts.ctx, tt.txHash)
 
 				// ASSERT
 				tt.assert(t, v1, errV1, v2, errV2)

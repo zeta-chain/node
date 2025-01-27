@@ -90,6 +90,22 @@ func (c *Client) BlockByNumber2(ctx context.Context, blockNumber *big.Int) (*Blo
 	return blockFromRaw(raw)
 }
 
+// TransactionByHash2 is alternative to geth TransactionByHash that supports NON-ETH chains.
+// See BlockByNumber2.
+func (c *Client) TransactionByHash2(ctx context.Context, hash string) (*Transaction, error) {
+	raw, err := c.call(ctx, "eth_getTransactionByHash", hash)
+	if err != nil {
+		return nil, errors.Wrapf(err, "transaction %s", hash)
+	}
+
+	var tx Transaction
+	if err := json.Unmarshal(raw, &tx); err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal transaction")
+	}
+
+	return &tx, nil
+}
+
 func (c *Client) call(ctx context.Context, method string, args ...any) (json.RawMessage, error) {
 	var raw json.RawMessage
 
