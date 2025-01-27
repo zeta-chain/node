@@ -55,7 +55,7 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 		r.CheckZRC20BalanceAndSupply()
 	}
 
-	r.Logger.Print("✅ completed - %s (duration %s)", e2eTest.Name, time.Since(startTime))
+	r.Logger.Print("✅ completed - %s (%s)", e2eTest.Name, time.Since(startTime))
 
 	return nil
 }
