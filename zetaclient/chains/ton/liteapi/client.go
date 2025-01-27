@@ -13,7 +13,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
-	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 )
 
 // Client extends liteapi.Client with some high-level tools
@@ -39,7 +39,7 @@ func New(client *liteapi.Client) *Client {
 
 // NewFromSource creates a new client from a URL or a file path.
 func NewFromSource(ctx context.Context, urlOrPath string) (*Client, error) {
-	cfg, err := zetaton.ConfigFromSource(ctx, urlOrPath)
+	cfg, err := config.FromSource(ctx, urlOrPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get config")
 	}

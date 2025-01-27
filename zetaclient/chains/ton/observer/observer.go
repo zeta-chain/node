@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -39,7 +39,7 @@ const outboundsCacheSize = 1024
 //
 //go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
-	zetaton.ConfigGetter
+	config.Getter
 	GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error)
 	GetBlockHeader(ctx context.Context, blockID ton.BlockIDExt, mode uint32) (tlb.BlockInfo, error)
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
@@ -124,12 +124,12 @@ func (ob *Observer) watchGasPrice(ctx context.Context) error {
 
 // postGasPrice fetches on-chain gas config and reports it to Zetacore.
 func (ob *Observer) postGasPrice(ctx context.Context) error {
-	cfg, err := zetaton.FetchGasConfig(ctx, ob.client)
+	cfg, err := config.FetchGasConfig(ctx, ob.client)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch gas config")
 	}
 
-	gasPrice, err := zetaton.ParseGasPrice(cfg)
+	gasPrice, err := config.ParseGasPrice(cfg)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse gas price")
 	}
