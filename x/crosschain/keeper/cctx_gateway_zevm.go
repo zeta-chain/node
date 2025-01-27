@@ -23,6 +23,14 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	ctx sdk.Context,
 	config InitiateOutboundConfig,
 ) (newCCTXStatus types.CctxStatus, err error) {
+	// abort if CCTX inbound observation status indicates failure
+	// this is specifically for Bitcoin inbound error 'INSUFFICIENT_DEPOSITOR_FEE'
+	if config.CCTX.InboundParams.Status == types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE {
+		config.CCTX.SetAbort("observation failed", types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String())
+		return types.CctxStatus_Aborted, nil
+	}
+
+	// process the deposit
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := c.crosschainKeeper.HandleEVMDeposit(tmpCtx, config.CCTX)
 

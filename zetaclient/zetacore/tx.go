@@ -33,6 +33,7 @@ func GetInboundVoteMessage(
 	asset string,
 	signerAddress string,
 	eventIndex uint,
+	status types.InboundStatus,
 ) *types.MsgVoteInbound {
 	msg := types.NewMsgVoteInbound(
 		signerAddress,
@@ -51,6 +52,7 @@ func GetInboundVoteMessage(
 		eventIndex,
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		status,
 	)
 	return msg
 }

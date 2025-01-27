@@ -222,6 +222,7 @@ func zetaTokenVoteV1(
 		"",
 		"",
 		event.Raw.Index,
+		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
 
@@ -251,6 +252,7 @@ func erc20VoteV1(
 		event.Asset.String(),
 		"",
 		event.Raw.Index,
+		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
 
@@ -282,6 +284,7 @@ func gasVoteV1(
 		"",
 		"",
 		0, // not a smart contract call
+		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
 
@@ -317,6 +320,7 @@ func depositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 		event.Raw.Index,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		crosschaintypes.InboundStatus_SUCCESS,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 		crosschaintypes.WithCrossChainCall(isCrossChainCall),
 	)
@@ -348,6 +352,7 @@ func depositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 		event.Raw.Index,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		crosschaintypes.InboundStatus_SUCCESS,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 		crosschaintypes.WithCrossChainCall(true),
 	)
@@ -373,6 +378,7 @@ func callInboundVoteV2(event *gatewayevm.GatewayEVMCalled,
 		event.Raw.Index,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		crosschaintypes.InboundStatus_SUCCESS,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 	)
 }
