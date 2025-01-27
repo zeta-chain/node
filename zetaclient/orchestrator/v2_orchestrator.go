@@ -160,7 +160,6 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 			continue
 		case chain.IsTON():
 			observerSigner, err = oc.bootstrapTON(ctx, chain)
-			continue
 		}
 
 		switch {
