@@ -69,8 +69,6 @@ func TestBootstrap(t *testing.T) {
 		mockEthCalls(ts, maticServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
-			// disable btc for this test
-			cfg.BTCChainConfigs = nil
 			cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 				Endpoint: ethServer.Endpoint,
 			}
@@ -117,6 +115,43 @@ func TestBootstrap(t *testing.T) {
 
 		tasksMissGroup(t, ts.scheduler.Tasks(), "evm:1")
 		assert.Contains(t, ts.Log.String(), `"chain":1,"message":"Removed observer-signer"`)
+	})
+
+	t.Run("TON", func(t *testing.T) {
+		// TODO
+		// https://github.com/zeta-chain/node/issues/3419
+
+		t.Skip("Depends on lite-server mocks")
+		// t.Parallel()
+
+		// ARRANGE
+		// Given orchestrator
+		ts := newTestSuite(t)
+
+		// Given TON rpc URL
+		ts.UpdateConfig(func(cfg *config.Config) {
+			// todo
+			cfg.TONConfig = config.TONConfig{
+				LiteClientConfigURL: "localhost",
+			}
+		})
+
+		// Mock zetacore calls
+		mockZetacoreCalls(ts)
+
+		// ACT
+		// Start the orchestrator and wait for TON observerSigner to bootstrap
+		require.NoError(t, ts.Start(ts.ctx))
+
+		// ASSERT
+		check := func() bool {
+			return ts.HasObserverSigner(chains.TONMainnet.ChainId)
+		}
+
+		assert.Eventually(t, check, 3*constant.ZetaBlockTime, 100*time.Millisecond)
+
+		tasksHaveGroup(t, ts.scheduler.Tasks(), "ton:2015140")
+		assert.Contains(t, ts.Log.String(), `"chain":2015140,"chain_network":"ton","message":"Added observer-signer"`)
 	})
 }
 
