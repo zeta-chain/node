@@ -28,8 +28,15 @@ type CCTXErrorMessage struct {
 	RevertReason string `json:"revert_reason"`
 }
 
-// NewZEVMErrorMessage creates a new CCTXErrorMessage,
-// which contains additional fields which are specific to ZEVM calls only
+// NewCCTXErrorMessage creates a new CCTXErrorMessage struct
+func NewCCTXErrorMessage(message string) CCTXErrorMessage {
+	return CCTXErrorMessage{
+		Message: message,
+	}
+}
+
+// NewZEVMErrorMessage is s special case of NewCCTXErrorMessage which is called by ZEVM specific code.
+// This creates a CCTXErrorMessage with ZEVM specific fields like Method, Contract, Args
 func NewZEVMErrorMessage(
 	method string,
 	contract common.Address,
@@ -58,22 +65,24 @@ func NewZEVMErrorMessage(
 // 5 - If the error is a chain of errors and one of the errors is a CCTXErrorMessage, we should unpack the CCTXErrorMessage and return the JSON string and add the errors into the error field
 // This function does not return an error, if the marshalling fails, it returns a string representation of the CCTXErrorMessage
 func NewCCTXErrorJSONMessage(message string, newError error) string {
-	m := &CCTXErrorMessage{
-		Message: message,
-	}
+	m := NewCCTXErrorMessage(message)
 
 	if newError != nil {
+		// 1. Split the error message into parts where each part is a separate error message. Json or a simple string
 		errorLists := SplitErrorMessage(newError.Error())
 
 		for _, e := range errorLists {
+			//
 			parsed, err := ParseCCTXErrorMessage(e)
 			switch {
-			// parsing failed so this is not a CCTXErrorMessage json string
+			// 3.  parsing failed so this is not a CCTXErrorMessage json string. Wrap the error into the CCTXErrorMessage.Error field
 			case err != nil:
 				{
 					m.WrapError(e)
 				}
-			// parsing succeeded, this is a CCTXErrorMessage unpack it
+			// parsing succeeded, this is a CCTXErrorMessage unpack it. Wrap the error into the CCTXErrorMessage.Error field and assign the other fields
+			// The message fields are overwritten , it should contain only a single message describing the error. The actual error chain is added to the error field
+			// the method, contract, args, revert_reason fields are present only in ZEVM errors and are directly added to the CCTXErrorMessage struct
 			default:
 				{
 					m.Message = parsed.Message
@@ -94,7 +103,16 @@ func NewCCTXErrorJSONMessage(message string, newError error) string {
 	return jsonString
 }
 
-// SplitErrorMessage splits the error message into parts it treats a json formatted error message as a single part
+// SplitErrorMessage splits the error message into parts it treats a JSON formatted error message as a single part
+
+// Example inputs that this function can handle
+// 1. "errorString1:errorString2:errorString3" : deposit error: can't call a non-contract address, processing error: withdraw amount 100 is less than dust amount 1000: invalid withdrawal amount
+
+// 2. "errorString1:{jsonObject}" : deposit error: {"message":"contract call failed when calling EVM with data","error":"execution reverted: ret 0x: evm transaction execution failed",
+// "method":"depositAndCall0","contract":"0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9,
+// args: "[{[] 0xdFb74337c53141bf912101b0Ee770FA8e2DCB921 1337} 0x13A0c5930C028511Dc02665E7285134B6d11A5f4 10000000000000000
+// 0xE83192f6301d090EFB2F38824A12E98877F66fe3 [101 53 52 55 51 50 100 55 50 55 57 99 56 97 99 100 48 97 97 101 55 57 98 51 101 100 99 101 50 55 99 99 50 57 97 49 48 51 56 100 48 102 102
+// 54 52 57 98 53 101 51 56 101 55 51 53 56 55 101 100 55 56 102 49 48 101 101 97 49 52 56 100 97 55 97 51 97 57 100 98 49 101 101 98 55 51 57 100 49 52 54 53 56 55 99 101 99 48 56 54 55]]","revert_reason":""}
 func SplitErrorMessage(input string) []string {
 	var result []string
 

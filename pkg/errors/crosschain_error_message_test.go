@@ -14,6 +14,20 @@ var (
 	sampleErr2 = errors.New("test", 9992, "error_cause2")
 )
 
+func Test_NewCCTXErrorMessage(t *testing.T) {
+	t.Run("TestNewCCTXErrorMessage", func(t *testing.T) {
+		m := cctxerror.NewCCTXErrorMessage("message")
+		jsonString, err := m.ToJSON()
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			`{"message":"message","error":"","method":"","contract":"","args":"","revert_reason":""}`,
+			jsonString,
+		)
+	})
+
+}
+
 func Test_ZEvmErrorMessage(t *testing.T) {
 	t.Run("TestEvmErrorMessage", func(t *testing.T) {
 		contractAddress := "0xE97Ac2CA30D30de65a6FE0Ab20EDC39a623c18df"
