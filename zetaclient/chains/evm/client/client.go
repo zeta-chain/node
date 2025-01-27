@@ -11,12 +11,11 @@ import (
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 type Client struct {
-	interfaces.EVMRPCClient
+	*ethclient.Client
 	ethtypes.Signer
 }
 
@@ -101,7 +100,7 @@ func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 	}
 
 	// query latest block header
-	header, err := c.EVMRPCClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
+	header, err := c.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
 		return time.Time{}, errors.Wrapf(err, "unable to get block header for block %d", bn)
 	}

@@ -25,7 +25,7 @@ func (s *EVMServer) SetBlockNumber(n int) {
 }
 
 func (s *EVMServer) MockSendTransaction() {
-	s.On("eth_sendRawTransaction", func(params []any) (any, error) {
+	s.On("eth_sendRawTransaction", func(_ []any) (any, error) {
 		return nil, nil
 	})
 }
