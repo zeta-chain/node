@@ -106,11 +106,6 @@ func Test_BroadcastOutbound(t *testing.T) {
 			nonce: uint64(148),
 		},
 		{
-			name:  "should successfully broadcast and include RBF outbound",
-			chain: chains.BitcoinMainnet,
-			nonce: uint64(148),
-		},
-		{
 			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
 			chain:       chains.BitcoinMainnet,
 			nonce:       uint64(148),

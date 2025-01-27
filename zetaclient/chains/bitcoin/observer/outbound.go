@@ -369,7 +369,6 @@ func (ob *Observer) GetIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
 }
 
 // Basic TSS outbound checks:
-//   - confirmations >= 0
 //   - should be able to query the raw tx
 //   - check if all inputs are segwit && TSS inputs
 //
