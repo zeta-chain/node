@@ -58,7 +58,7 @@ func (r *E2ERunner) addLiquidity(tokenAddr ethcommon.Address, amountZETA, amount
 	}
 
 	// get the pair address
-	pairAddress, err := r.UniswapV2Factory.GetPair(&bind.CallOpts{}, r.WZetaAddr, r.ERC20ZRC20Addr)
+	pairAddress, err := r.UniswapV2Factory.GetPair(&bind.CallOpts{}, r.WZetaAddr, tokenAddr)
 	require.NoError(r, err)
 
 	r.Logger.Info("ZETA/token pair address: %s", pairAddress.Hex())
