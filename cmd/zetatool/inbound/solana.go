@@ -99,5 +99,6 @@ func voteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		0, // not a smart contract call
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		crosschaintypes.InboundStatus_SUCCESS,
 	), nil
 }
