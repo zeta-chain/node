@@ -6,18 +6,13 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/liteclient"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
-	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 // Observer is a TON observer.
@@ -29,8 +24,6 @@ type Observer struct {
 
 	outbounds *lru.Cache
 }
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 const outboundsCacheSize = 1024
 
@@ -46,8 +39,6 @@ type LiteClient interface {
 	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
 	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
 }
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // New constructor for TON Observer.
 func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*Observer, error) {
@@ -75,55 +66,8 @@ func New(bo *base.Observer, client LiteClient, gateway *toncontracts.Gateway) (*
 	}, nil
 }
 
-// Start starts the observer. This method is NOT blocking.
-// Note that each `watch*` method has a ticker that will stop as soon as
-// baseObserver.Stop() was called (ticker.WithStopChan)
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msg("observer is already started")
-		return
-	}
-
-	ob.Logger().Chain.Info().Msg("observer is starting")
-
-	start(ctx, ob.watchInbound, "WatchInbound", ob.Logger().Inbound)
-	start(ctx, ob.watchInboundTracker, "WatchInboundTracker", ob.Logger().Inbound)
-	start(ctx, ob.watchOutbound, "WatchOutbound", ob.Logger().Outbound)
-	start(ctx, ob.watchGasPrice, "WatchGasPrice", ob.Logger().GasPrice)
-	start(ctx, ob.watchRPCStatus, "WatchRPCStatus", ob.Logger().Chain)
-}
-
-// fire goroutine  task
-func start(ctx context.Context, task func(ctx context.Context) error, name string, log zerolog.Logger) {
-	bg.Work(ctx, task, bg.WithName(name), bg.WithLogger(log))
-}
-
-// watchGasPrice observes TON gas price and votes it to Zetacore.
-func (ob *Observer) watchGasPrice(ctx context.Context) error {
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		if err := ob.postGasPrice(ctx); err != nil {
-			ob.Logger().GasPrice.Err(err).Msg("WatchGasPrice: postGasPrice error")
-		}
-
-		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().GasPriceTicker)
-		t.SetInterval(newInterval)
-
-		return nil
-	}
-
-	ob.Logger().GasPrice.Info().Msg("WatchGasPrice started")
-
-	return ticker.Run(
-		ctx,
-		ticker.DurationFromUint64Seconds(ob.ChainParams().GasPriceTicker),
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().GasPrice, "WatchGasPrice"),
-	)
-}
-
-// postGasPrice fetches on-chain gas config and reports it to Zetacore.
-func (ob *Observer) postGasPrice(ctx context.Context) error {
+// PostGasPrice fetches on-chain gas config and reports it to Zetacore.
+func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	cfg, err := config.FetchGasConfig(ctx, ob.client)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch gas config")
@@ -149,38 +93,18 @@ func (ob *Observer) postGasPrice(ctx context.Context) error {
 	return errVote
 }
 
-// watchRPCStatus observes TON RPC status.
-func (ob *Observer) watchRPCStatus(ctx context.Context) error {
-	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := ob.checkRPCStatus(ctx); err != nil {
-			ob.Logger().Chain.Err(err).Msg("checkRPCStatus error")
-		}
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		common.RPCStatusCheckInterval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Chain, "WatchRPCStatus"),
-	)
-}
-
-// checkRPCStatus checks TON RPC status and alerts if necessary.
-func (ob *Observer) checkRPCStatus(ctx context.Context) error {
+// CheckRPCStatus checks TON RPC status and alerts if necessary.
+func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	blockID, err := ob.getLatestMasterchainBlock(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get latest masterchain block")
 	}
 
 	block, err := ob.client.GetBlockHeader(ctx, blockID, 0)
-	if err != nil {
+	switch {
+	case err != nil:
 		return errors.Wrap(err, "failed to get masterchain block header")
-	}
-
-	if block.NotMaster {
+	case block.NotMaster:
 		return errors.Errorf("block %q is not a master block", blockID.BlockID.String())
 	}
 

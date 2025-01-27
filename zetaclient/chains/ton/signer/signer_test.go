@@ -73,7 +73,7 @@ func TestSigner(t *testing.T) {
 	ts.OnGetTransactionsSince(ts.gw.AccountID(), lt, ton.Bits256(hash), []ton.Transaction{withdrawalTX}, nil)
 
 	// ACT
-	signer.TryProcessOutbound(ts.ctx, cctx, ts.proc, outboundID, nil, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx, ts.proc, outboundID, ts.zetacore, zetaHeight)
 
 	// ASSERT
 	// Make sure signer send the tx the chain AND published the outbound tracker

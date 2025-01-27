@@ -7,8 +7,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
+	tontools "github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
@@ -18,6 +20,11 @@ import (
 	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
+	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -125,6 +132,42 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	return evm.New(oc.scheduler, observer, signer), nil
 }
 
+func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
+	// should not happen
+	if !chain.IsTON() {
+		return nil, errors.New("chain is not TON")
+	}
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, found := app.Config().GetTONConfig()
+	if !found {
+		return nil, errors.Wrap(errSkipChain, "unable to find TON config")
+	}
+
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create TON client")
+	}
+
+	observer, err := tonobserver.New(baseObserver, tonClient, gateway)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create observer")
+	}
+
+	signer := tonsigner.New(oc.newBaseSigner(chain), tonClient, gateway)
+
+	return ton.New(oc.scheduler, observer, signer), nil
+}
+
 func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {
 	var (
 		rawChain       = chain.RawChain()
@@ -169,4 +212,24 @@ func btcDatabaseFileName(chain chains.Chain) string {
 	default:
 		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
 	}
+}
+
+func makeTONClient(
+	ctx context.Context,
+	cfg config.TONConfig,
+	gatewayAddr string,
+) (*liteapi.Client, *toncontracts.Gateway, error) {
+	client, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Unable to create TON liteapi")
+	}
+
+	gatewayID, err := tontools.ParseAccountID(gatewayAddr)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Unable to parse gateway address %q", gatewayAddr)
+	}
+
+	gw := toncontracts.NewGateway(gatewayID)
+
+	return client, gw, nil
 }

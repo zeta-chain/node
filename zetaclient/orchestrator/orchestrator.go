@@ -23,8 +23,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
-	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
-	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -358,7 +356,7 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				}
 
 				// managed by V2
-				if chain.IsBitcoin() || chain.IsEVM() {
+				if chain.IsBitcoin() || chain.IsEVM() || chain.IsTON() {
 					continue
 				}
 
@@ -407,7 +405,8 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				case chain.IsSolana():
 					oc.ScheduleCctxSolana(ctx, zetaHeight, chainID, cctxList, ob, signer)
 				case chain.IsTON():
-					oc.ScheduleCCTXTON(ctx, zetaHeight, chainID, cctxList, ob, signer)
+					// Managed by orchestrator V2
+					continue
 				default:
 					oc.logger.Error().Msgf("runScheduler: no scheduler found chain %d", chainID)
 					continue
@@ -486,92 +485,6 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 				zetaHeight,
 			)
 		}
-	}
-}
-
-// ScheduleCCTXTON schedules TON outbound keySign on each ZetaChain block
-func (oc *Orchestrator) ScheduleCCTXTON(
-	ctx context.Context,
-	zetaHeight uint64,
-	chainID int64,
-	cctxList []*types.CrossChainTx,
-	observer interfaces.ChainObserver,
-	signer interfaces.ChainSigner,
-) {
-	// should never happen
-	if _, ok := observer.(*tonobserver.Observer); !ok {
-		oc.logger.Error().Msg("ScheduleCCTXTON: observer is not TON")
-		return
-	}
-
-	if _, ok := signer.(*tonsigner.Signer); !ok {
-		oc.logger.Error().Msg("ScheduleCCTXTON: signer is not TON")
-		return
-	}
-
-	// Scheduler interval measured in zeta blocks.
-	// runScheduler() guarantees that this function is called every zeta block.
-	// Note that TON blockchain is async and doesn't have a concept of confirmations
-	// i.e. tx is finalized as soon as it's included in the next block (less than 6 seconds)
-	// #nosec G115 positive
-	interval := uint64(observer.ChainParams().OutboundScheduleInterval)
-
-	shouldProcessOutbounds := zetaHeight%interval == 0
-
-	for i := range cctxList {
-		var (
-			cctx       = cctxList[i]
-			params     = cctx.GetCurrentOutboundParam()
-			nonce      = params.TssNonce
-			outboundID = outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
-		)
-
-		if params.ReceiverChainId != chainID {
-			// should not happen
-			oc.logger.Error().Msgf("ScheduleCCTXTON: outbound chain id mismatch (got %d)", params.ReceiverChainId)
-			continue
-		}
-
-		// vote outbound if it's already confirmed
-		continueKeySign, err := observer.VoteOutboundIfConfirmed(ctx, cctx)
-
-		switch {
-		case err != nil:
-			oc.logger.Error().Err(err).Uint64("outbound.nonce", nonce).
-				Msg("ScheduleCCTXTON: VoteOutboundIfConfirmed failed")
-			continue
-		case !continueKeySign:
-			oc.logger.Info().Uint64("outbound.nonce", nonce).
-				Msg("ScheduleCCTXTON: outbound already processed")
-			continue
-		case !shouldProcessOutbounds:
-			// well, let's wait for another block to (probably) trigger the processing
-			continue
-		}
-
-		// try to sign and broadcast cctx to TON
-		task := func(ctx context.Context) error {
-			signer.TryProcessOutbound(
-				ctx,
-				cctx,
-				oc.outboundProc,
-				outboundID,
-				observer,
-				oc.zetacoreClient,
-				zetaHeight,
-			)
-
-			return nil
-		}
-
-		// fire async task
-		taskLogger := oc.logger.Logger.With().
-			Int64(logs.FieldChain, chainID).
-			Str("outbound.id", outboundID).
-			Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).
-			Logger()
-
-		bg.Work(ctx, task, bg.WithName("TryProcessOutbound"), bg.WithLogger(taskLogger))
 	}
 }
 
