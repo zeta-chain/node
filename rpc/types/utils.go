@@ -17,6 +17,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -307,6 +308,10 @@ func CheckTxFee(gasPrice *big.Int, gas uint64, feeCap float64) error {
 	// Short circuit if there is no cap for transaction fee at all.
 	if feeCap == 0 {
 		return nil
+	}
+	// Return an error if gasPrice is nil
+	if gasPrice == nil {
+		return errors.New("gasprice is nil")
 	}
 	totalfee := new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas)))
 	// 1 photon in 10^18 aphoton
