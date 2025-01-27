@@ -11,11 +11,8 @@ import (
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 type Client struct {
@@ -25,14 +22,6 @@ type Client struct {
 
 // NewFromEndpoint new Client constructor based on endpoint URL.
 func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
-	if endpoint == testutils.MockEVMRPCEndpoint {
-		chainID := big.NewInt(chains.Ethereum.ChainId)
-		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.EVMRPCClient{}
-
-		return New(client, ethSigner), nil
-	}
-
 	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get instrumented HTTP client")
@@ -56,7 +45,7 @@ func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
 }
 
 // New Client constructor.
-func New(client interfaces.EVMRPCClient, signer ethtypes.Signer) *Client {
+func New(client *ethclient.Client, signer ethtypes.Signer) *Client {
 	return &Client{client, signer}
 }
 

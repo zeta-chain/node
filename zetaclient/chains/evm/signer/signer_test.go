@@ -9,13 +9,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -35,21 +35,24 @@ var (
 
 type testSuite struct {
 	*Signer
-	tss     *mocks.TSS
-	evmMock *mocks.EVMRPCClient
-	client  *client.Client
+	tss       *mocks.TSS
+	evmServer *testrpc.EVMServer
+	client    *client.Client
 }
 
 func newTestSuite(t *testing.T) *testSuite {
 	ctx := context.Background()
 
-	evmClient, err := client.NewFromEndpoint(ctx, testutils.MockEVMRPCEndpoint)
+	chain := chains.BscMainnet
+
+	evmServer := testrpc.NewEVMServer(t)
+
+	evmServer.SetChainID(int(chain.ChainId))
+	evmServer.MockSendTransaction()
+
+	evmClient, err := client.NewFromEndpoint(ctx, evmServer.Endpoint)
 	require.NoError(t, err)
 
-	evmMock, ok := evmClient.EVMRPCClient.(*mocks.EVMRPCClient)
-	require.True(t, ok)
-
-	chain := chains.BscMainnet
 	tss := mocks.NewTSS(t)
 
 	logger := testlog.New(t)
@@ -66,10 +69,10 @@ func newTestSuite(t *testing.T) *testSuite {
 	require.NoError(t, err)
 
 	return &testSuite{
-		Signer:  s,
-		tss:     tss,
-		evmMock: evmMock,
-		client:  evmClient,
+		Signer:    s,
+		tss:       tss,
+		evmServer: evmServer,
+		client:    evmClient,
 	}
 }
 
@@ -147,9 +150,6 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	cctx := getCCTX(t)
 	processor := getNewOutboundProcessor()
 
-	// Attach mock EVM client to the signer
-	evmSigner.evmMock.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
-
 	// Test with mock client that has keys
 	client := mocks.NewZetacoreClient(t).
 		WithKeys(&keys.Keys{}).
@@ -174,9 +174,6 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
-
-	// Attach mock EVM evmClient to the signer
-	evmSigner.evmMock.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
