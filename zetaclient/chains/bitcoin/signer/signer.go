@@ -136,7 +136,7 @@ func (signer *Signer) TryProcessOutbound(
 	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
 		// sign RBF tx
 		rbfTx = true
-		signedTx, err = signer.SignRBFTx(ctx, cctx, height, stuckTx.Tx, minRelayFee)
+		signedTx, err = signer.SignRBFTx(ctx, height, params.TssNonce, stuckTx.Tx, params.GasPriorityFee, minRelayFee)
 		if err != nil {
 			logger.Error().Err(err).Msg("SignRBFTx failed")
 			return

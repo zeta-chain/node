@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -473,6 +474,26 @@ func TestOutboundSizeBreakdown(t *testing.T) {
 	// check default depositor fee
 	depositFee := DepositorFee(defaultDepositorFeeRate)
 	require.Equal(t, depositFee, 0.00001360)
+}
+
+func TestOutboundFeeRateFromCCTXRate(t *testing.T) {
+	tests := []struct {
+		inputRate  int64
+		outputRate int64
+	}{
+		{inputRate: 0, outputRate: 0},
+		{inputRate: 1, outputRate: 1},
+		{inputRate: 2, outputRate: 2},
+		{inputRate: 10, outputRate: 8},
+		{inputRate: 20, outputRate: 15},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			output := OutboundFeeRateFromCCTXRate(test.inputRate)
+			require.Equal(t, test.outputRate, output)
+		})
+	}
 }
 
 func TestOutboundSizeMinMaxError(t *testing.T) {

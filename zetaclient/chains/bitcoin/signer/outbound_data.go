@@ -79,6 +79,17 @@ func NewOutboundData(
 		feeRate = newRate
 	}
 
+	// apply outbound fee rate multiplier
+	feeRate = common.OutboundFeeRateFromCCTXRate(feeRate)
+
+	// to avoid minRelayTxFee error, please do not use the minimum rate (1 sat/vB by default).
+	// we simply add additional 1 sat/vB to 'minRate' to avoid tx rejection by Bitcoin core.
+	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/policy.h#L35
+	minRate := common.FeeRateToSatPerByte(minRelayFee)
+	if feeRate <= minRate {
+		feeRate = minRate + 1
+	}
+
 	// check receiver address
 	to, err := chains.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
@@ -96,11 +107,6 @@ func NewOutboundData(
 	if params.CallOptions.GasLimit > math.MaxInt64 {
 		return nil, fmt.Errorf("invalid gas limit %d", params.CallOptions.GasLimit)
 	}
-
-	// add minimum relay fee (1000 satoshis/KB by default) to gasPrice to avoid minRelayTxFee error
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/policy.h#L35
-	satPerByte := common.FeeRateToSatPerByte(minRelayFee)
-	feeRate += satPerByte
 
 	// compliance check
 	restrictedCCTX := compliance.IsCctxRestricted(cctx)

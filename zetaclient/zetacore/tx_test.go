@@ -25,7 +25,7 @@ const (
 	ethBlockHash = "1a17bcc359e84ba8ae03b17ec425f97022cd11c3e279f6bdf7a96fcffa12b366"
 )
 
-func Test_GasPriceMultiplier(t *testing.T) {
+func Test_GasPriceMultiplierFeeCharge(t *testing.T) {
 	tt := []struct {
 		name       string
 		chain      chains.Chain
@@ -84,7 +84,7 @@ func Test_GasPriceMultiplier(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			multiplier := GasPriceMultiplier(tc.chain)
+			multiplier := GasPriceMultiplierFeeCharge(tc.chain)
 			require.Equal(t, tc.multiplier, multiplier)
 		})
 	}

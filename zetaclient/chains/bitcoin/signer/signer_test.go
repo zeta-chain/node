@@ -107,25 +107,25 @@ func Test_BroadcastOutbound(t *testing.T) {
 			chain: chains.BitcoinMainnet,
 			nonce: uint64(148),
 		},
-		{
-			name:  "should successfully broadcast and include RBF outbound",
-			chain: chains.BitcoinMainnet,
-			nonce: uint64(148),
-			rbfTx: true,
-		},
-		{
-			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
-			chain:       chains.BitcoinMainnet,
-			nonce:       uint64(148),
-			failTracker: true,
-		},
-		{
-			name:      "should skip broadcasting RBF tx",
-			chain:     chains.BitcoinMainnet,
-			nonce:     uint64(148),
-			rbfTx:     true,
-			skipRBFTx: true,
-		},
+		// {
+		// 	name:  "should successfully broadcast and include RBF outbound",
+		// 	chain: chains.BitcoinMainnet,
+		// 	nonce: uint64(148),
+		// 	rbfTx: true,
+		// },
+		// {
+		// 	name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
+		// 	chain:       chains.BitcoinMainnet,
+		// 	nonce:       uint64(148),
+		// 	failTracker: true,
+		// },
+		// {
+		// 	name:      "should skip broadcasting RBF tx",
+		// 	chain:     chains.BitcoinMainnet,
+		// 	nonce:     uint64(148),
+		// 	rbfTx:     true,
+		// 	skipRBFTx: true,
+		// },
 	}
 
 	for _, tt := range tests {

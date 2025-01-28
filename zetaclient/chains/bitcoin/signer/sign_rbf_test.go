@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
@@ -21,7 +20,6 @@ func Test_SignRBFTx(t *testing.T) {
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BitcoinMainnet
 	nonce := uint64(148)
-	cctx := testutils.LoadCctxByNonce(t, chain.ChainId, nonce)
 	txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
 	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
@@ -80,11 +78,10 @@ func Test_SignRBFTx(t *testing.T) {
 	tests := []struct {
 		name         string
 		chain        chains.Chain
-		cctx         *crosschaintypes.CrossChainTx
 		lastTx       *btcutil.Tx
 		preTxs       []prevTx
 		minRelayFee  float64
-		cctxRate     string
+		cctxRateStr  string
 		liveRate     int64
 		memplTxsInfo *mempoolTxsInfo
 		errMsg       string
@@ -93,12 +90,11 @@ func Test_SignRBFTx(t *testing.T) {
 		{
 			name:        "should sign RBF tx successfully",
 			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
 			lastTx:      btcutil.NewTx(msgTx.Copy()),
 			preTxs:      preTxs,
 			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    59, // 59 sat/vB
+			cctxRateStr: "76", // 57 sat/vB as tx rate
+			liveRate:    59,   // 59 sat/vB
 			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
@@ -115,30 +111,27 @@ func Test_SignRBFTx(t *testing.T) {
 		{
 			name:        "should return error if latest fee rate is not available",
 			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
 			lastTx:      btcutil.NewTx(msgTx.Copy()),
 			minRelayFee: 0.00001,
-			cctxRate:    "",
+			cctxRateStr: "",
 			errMsg:      "invalid fee rate",
 		},
 		{
 			name:         "should return error if unable to create fee bumper",
 			chain:        chains.BitcoinMainnet,
-			cctx:         cctx,
 			lastTx:       btcutil.NewTx(msgTx.Copy()),
 			minRelayFee:  0.00001,
-			cctxRate:     "57",
+			cctxRateStr:  "76",
 			memplTxsInfo: nil,
 			errMsg:       "NewCPFPFeeBumper failed",
 		},
 		{
 			name:        "should return error if live rate is too high",
 			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
 			lastTx:      btcutil.NewTx(msgTx.Copy()),
 			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    99, // 99 sat/vB is much higher than ccxt rate
+			cctxRateStr: "76", // 57 sat/vB as tx rate
+			liveRate:    99,   // 99 sat/vB is much higher than ccxt rate
 			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
@@ -148,13 +141,13 @@ func Test_SignRBFTx(t *testing.T) {
 			errMsg: "BumpTxFee failed",
 		},
 		{
-			name:        "should return error if live rate is too high",
+			name:        "should return error if unable to get previous tx",
 			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
 			lastTx:      btcutil.NewTx(msgTx.Copy()),
+			preTxs:      nil,
 			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    59, // 59 sat/vB
+			cctxRateStr: "76", // 57 sat/vB as tx rate
+			liveRate:    59,   // 59 sat/vB
 			memplTxsInfo: newMempoolTxsInfo(
 				1,          // 1 stuck tx
 				0.00027213, // fees: 0.00027213 BTC
@@ -170,9 +163,6 @@ func Test_SignRBFTx(t *testing.T) {
 			// ARRANGE
 			// setup signer
 			s := newTestSuite(t, tt.chain)
-
-			// mock cctx rate
-			tt.cctx.GetCurrentOutboundParam().GasPriorityFee = tt.cctxRate
 
 			// mock RPC live fee rate
 			if tt.liveRate > 0 {
@@ -218,7 +208,7 @@ func Test_SignRBFTx(t *testing.T) {
 			// ACT
 			// sign tx
 			ctx := context.Background()
-			newTx, err := s.SignRBFTx(ctx, tt.cctx, 1, tt.lastTx, tt.minRelayFee)
+			newTx, err := s.SignRBFTx(ctx, 1, nonce, tt.lastTx, tt.cctxRateStr, tt.minRelayFee)
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
 				return

@@ -90,10 +90,9 @@ func (signer *Signer) SignWithdrawTx(
 		signer.Logger().Std.Info().
 			Msgf("txSize %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", txData.txSize, txSize, txData.nonce)
 	}
-	if txSize < common.OutboundBytesMin { // outbound shouldn't be blocked by low sizeLimit
+	if txSize < common.OutboundBytesMin {
 		signer.Logger().Std.Warn().
 			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, common.OutboundBytesMin)
-		txSize = common.OutboundBytesMin
 	}
 	if txSize > common.OutboundBytesMax { // in case of accident
 		signer.Logger().Std.Warn().
@@ -112,9 +111,6 @@ func (signer *Signer) SignWithdrawTx(
 	// add tx outputs
 	inputValue := selected.Value
 	err = signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
-	if err != nil {
-		return nil, err
-	}
 	if err != nil {
 		return nil, err
 	}

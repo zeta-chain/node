@@ -58,7 +58,7 @@ func Test_NewOutboundData(t *testing.T) {
 				to:         receiver,
 				amount:     0.1,
 				amountSats: 10000000,
-				feeRate:    11, // 10 + 1 (minRelayFee)
+				feeRate:    8, // Round(7.5)
 				txSize:     254,
 				nonce:      1,
 				height:     101,
@@ -87,7 +87,7 @@ func Test_NewOutboundData(t *testing.T) {
 				to:         receiver,
 				amount:     0.1,
 				amountSats: 10000000,
-				feeRate:    16, // 15 + 1 (minRelayFee)
+				feeRate:    11, // Round(11.25)
 				txSize:     254,
 				nonce:      1,
 				height:     101,
@@ -185,7 +185,7 @@ func Test_NewOutboundData(t *testing.T) {
 				to:         receiver,
 				amount:     0, // should cancel the tx
 				amountSats: 0,
-				feeRate:    11, // 10 + 1 (minRelayFee)
+				feeRate:    8, // Round(7.5)
 				txSize:     254,
 				nonce:      1,
 				height:     101,
@@ -212,7 +212,7 @@ func Test_NewOutboundData(t *testing.T) {
 				to:         receiver,
 				amount:     0, // should cancel the tx
 				amountSats: 0,
-				feeRate:    11, // 10 + 1 (minRelayFee)
+				feeRate:    8, // Round(7.5)
 				txSize:     254,
 				nonce:      1,
 				height:     101,

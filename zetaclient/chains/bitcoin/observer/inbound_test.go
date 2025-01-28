@@ -289,7 +289,7 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 	net := &chaincfg.MainNetParams
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	// expected result
@@ -647,7 +647,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	blockNumber := uint64(835640)
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
@@ -727,7 +727,7 @@ func TestGetBtcEvent(t *testing.T) {
 		blockNumber := uint64(835640)
 		net := &chaincfg.MainNetParams
 		// 2.992e-05, see avgFeeRate https://mempool.space/api/v1/blocks/835640
-		depositorFee := common.DepositorFee(22 * clientcommon.BTCOutboundGasPriceMultiplier)
+		depositorFee := common.DepositorFee(22 * clientcommon.BTCGasPriceMultiplierFeeCharge)
 		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 		txHash2 := "37777defed8717c581b4c0509329550e344bdc14ac38f71fc050096887e535c8"
@@ -761,7 +761,7 @@ func TestGetBtcEvent(t *testing.T) {
 		net := &chaincfg.MainNetParams
 
 		// fee rate of above tx is 28 sat/vB
-		depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
+		depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
 		feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 		// expected result

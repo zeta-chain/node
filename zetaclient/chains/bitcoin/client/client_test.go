@@ -464,7 +464,7 @@ func TestClientLive(t *testing.T) {
 
 			// the actual fee rate is 860 sat/vByte
 			// #nosec G115 always in range
-			expectedRate := int64(float64(860) * common.BTCOutboundGasPriceMultiplier)
+			expectedRate := int64(float64(860) * common.BTCGasPriceMultiplierFeeCharge)
 			expectedFee := btc.DepositorFee(expectedRate)
 			require.Equal(t, expectedFee, depositorFee)
 		})

@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -22,16 +22,16 @@ import (
 //   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
 func (signer *Signer) SignRBFTx(
 	ctx context.Context,
-	cctx *types.CrossChainTx,
 	height uint64,
+	nonce uint64,
 	lastTx *btcutil.Tx,
+	latestRateStr string,
 	minRelayFee float64,
 ) (*wire.MsgTx, error) {
 	var (
-		params = cctx.GetCurrentOutboundParam()
-		lf     = map[string]any{
+		lf = map[string]any{
 			logs.FieldMethod: "SignRBFTx",
-			logs.FieldNonce:  params.TssNonce,
+			logs.FieldNonce:  nonce,
 			logs.FieldTx:     lastTx.MsgTx().TxID(),
 		}
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
@@ -43,12 +43,12 @@ func (signer *Signer) SignRBFTx(
 		// hardcode for regnet E2E test, zetacore won't feed it to CCTX
 		cctxRate = client.FeeRateRegnetRBF
 	default:
-		// parse recent fee rate from CCTX
-		recentRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-		if err != nil || recentRate <= 0 {
-			return nil, fmt.Errorf("invalid fee rate %s", params.GasPriorityFee)
+		// parse latest fee rate from CCTX
+		latestRate, err := strconv.ParseInt(latestRateStr, 10, 64)
+		if err != nil || latestRate <= 0 {
+			return nil, fmt.Errorf("invalid fee rate %s", latestRateStr)
 		}
-		cctxRate = recentRate
+		cctxRate = common.OutboundFeeRateFromCCTXRate(latestRate)
 	}
 
 	// create fee bumper
@@ -85,7 +85,7 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// sign the RBF tx
-	err = signer.SignTx(ctx, newTx, inAmounts, height, params.TssNonce)
+	err = signer.SignTx(ctx, newTx, inAmounts, height, nonce)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
