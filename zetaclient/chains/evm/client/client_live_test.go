@@ -10,11 +10,11 @@ import (
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	geth "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
+// Note that you need a RPC with API key as const RPC rate limits are low
 const (
 	URLEthMainnet     = "https://rpc.ankr.com/eth"
 	URLEthSepolia     = "https://rpc.ankr.com/eth_sepolia"
@@ -47,7 +47,6 @@ func TestLiveClient(t *testing.T) {
 		})
 	})
 
-	// Note that you need a RPC with API key as const RPC rate limits are low
 	t.Run("BlockByNumber2", func(t *testing.T) {
 		for _, tt := range []struct {
 			name     string
@@ -167,8 +166,7 @@ func TestLiveClient(t *testing.T) {
 type testSuite struct {
 	t *testing.T
 
-	ctx       context.Context
-	ethClient *ethclient.Client
+	ctx context.Context
 
 	*Client
 }
