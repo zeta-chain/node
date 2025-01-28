@@ -188,7 +188,7 @@ func parseTransaction(data []byte) (*Transaction, error) {
 func (i *hexInt) UnmarshalJSON(data []byte) error {
 	result, err := parseInt(string(bytes.Trim(data, `"`)))
 	if err != nil {
-		errors.Wrapf(err, "failed to parse int from %s", data)
+		return errors.Wrapf(err, "failed to parse int from %s", data)
 	}
 
 	*i = hexInt(result)

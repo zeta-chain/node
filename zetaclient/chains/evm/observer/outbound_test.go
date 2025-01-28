@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -447,6 +448,8 @@ func Test_FilterTSSOutbound(t *testing.T) {
 
 	t.Run("should filter nothing on RPC error", func(t *testing.T) {
 		ob := newTestSuite(t)
+
+		ob.evmMock.On("BlockByNumber2", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)

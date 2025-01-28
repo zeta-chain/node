@@ -157,7 +157,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 
-	// get connector and erce20Custody contracts
+	// get connector and erc20Custody contracts
 	connectorAddr, connector, err := ob.GetConnectorContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
@@ -219,7 +219,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 }
 
 // parseOutboundReceivedValue parses the received value and status from the outbound receipt
-// The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
+// The received value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
 // TODO: simplify this function and reduce the number of argument
 // https://github.com/zeta-chain/node/issues/2627
 // https://github.com/zeta-chain/node/pull/2666#discussion_r1718379784
@@ -385,7 +385,7 @@ func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock u
 // FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
 func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
 	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
-	block, err := ob.GetBlockByNumberCached(blockNumber)
+	block, err := ob.GetBlockByNumberCached(ctx, blockNumber)
 	if err != nil {
 		ob.Logger().
 			Outbound.Error().
@@ -490,7 +490,7 @@ func (ob *Observer) checkConfirmedTx(
 
 	// cross-check tx inclusion against the block
 	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
-	err = ob.CheckTxInclusion(transaction, receipt)
+	err = ob.CheckTxInclusion(ctx, transaction, receipt)
 	if err != nil {
 		logger.Error().Err(err).Msg("CheckTxInclusion error")
 		return nil, nil, false

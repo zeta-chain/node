@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"math/big"
 	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -31,10 +31,7 @@ type Observer struct {
 	priorityFeeConfig
 
 	// evmClient is the EVM client for the observed chain
-	evmClient *client.Client
-
-	// evmJSONRPC is the EVM JSON RPC client for the observed chain
-	evmJSONRPC interfaces.EVMJSONRPCClient
+	evmClient interfaces.EVMRPCClient
 
 	// outboundConfirmedReceipts is the map to index confirmed receipts by hash
 	outboundConfirmedReceipts map[string]*ethtypes.Receipt
@@ -54,16 +51,11 @@ type priorityFeeConfig struct {
 }
 
 // New Observer constructor
-func New(
-	baseObserver *base.Observer,
-	evmClient *client.Client,
-	evmJSONRPC interfaces.EVMJSONRPCClient,
-) (*Observer, error) {
+func New(baseObserver *base.Observer, client interfaces.EVMRPCClient) (*Observer, error) {
 	// create evm observer
 	ob := &Observer{
 		Observer:                      baseObserver,
-		evmClient:                     evmClient,
-		evmJSONRPC:                    evmJSONRPC,
+		evmClient:                     client,
 		outboundConfirmedReceipts:     make(map[string]*ethtypes.Receipt),
 		outboundConfirmedTransactions: make(map[string]*ethtypes.Transaction),
 		priorityFeeConfig:             priorityFeeConfig{},
@@ -154,13 +146,14 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] != nil &&
-		ob.outboundConfirmedTransactions[ob.OutboundID(nonce)] != nil
+	id := ob.OutboundID(nonce)
+
+	return ob.outboundConfirmedReceipts[id] != nil && ob.outboundConfirmedTransactions[id] != nil
 }
 
 // CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
-func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
-	block, err := ob.GetBlockByNumberCached(receipt.BlockNumber.Uint64())
+func (ob *Observer) CheckTxInclusion(ctx context.Context, tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
+	block, err := ob.GetBlockByNumberCached(ctx, receipt.BlockNumber.Uint64())
 	if err != nil {
 		return errors.Wrapf(err, "GetBlockByNumberCached error for block %d txHash %s nonce %d",
 			receipt.BlockNumber.Uint64(), tx.Hash(), tx.Nonce())
@@ -183,9 +176,8 @@ func (ob *Observer) CheckTxInclusion(tx *ethtypes.Transaction, receipt *ethtypes
 }
 
 // TransactionByHash query transaction by hash via JSON-RPC
-// TODO(revamp): update this method as a pure RPC method that takes two parameters (jsonRPC, and txHash) and move to upper package to file rpc.go
-func (ob *Observer) TransactionByHash(txHash string) (*ethrpc.Transaction, bool, error) {
-	tx, err := ob.evmJSONRPC.EthGetTransactionByHash(txHash)
+func (ob *Observer) TransactionByHash(ctx context.Context, txHash string) (*client.Transaction, bool, error) {
+	tx, err := ob.evmClient.TransactionByHash2(ctx, txHash)
 	if err != nil {
 		return nil, false, err
 	}
@@ -202,18 +194,18 @@ func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash)
 
 // GetBlockByNumberCached get block by number from cache
 // returns block, ethrpc.Block, isFallback, isSkip, error
-func (ob *Observer) GetBlockByNumberCached(blockNumber uint64) (*ethrpc.Block, error) {
+func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber uint64) (*client.Block, error) {
 	if result, ok := ob.BlockCache().Get(blockNumber); ok {
-		if block, ok := result.(*ethrpc.Block); ok {
+		if block, ok := result.(*client.Block); ok {
 			return block, nil
 		}
-		return nil, errors.New("cached value is not of type *ethrpc.Block")
+		return nil, errors.New("cached value is not of type *client.Block")
 	}
 	if blockNumber > math.MaxInt32 {
 		return nil, fmt.Errorf("block number %d is too large", blockNumber)
 	}
 	// #nosec G115 always in range, checked above
-	block, err := ob.BlockByNumber(int(blockNumber))
+	block, err := ob.BlockByNumber(ctx, int(blockNumber))
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +219,8 @@ func (ob *Observer) RemoveCachedBlock(blockNumber uint64) {
 }
 
 // BlockByNumber query block by number via JSON-RPC
-func (ob *Observer) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
-	block, err := ob.evmJSONRPC.EthGetBlockByNumber(blockNumber, true)
+func (ob *Observer) BlockByNumber(ctx context.Context, blockNumber int) (*client.Block, error) {
+	block, err := ob.evmClient.BlockByNumber2(ctx, big.NewInt(int64(blockNumber)))
 	if err != nil {
 		return nil, err
 	}

@@ -181,7 +181,7 @@ func (signer *Signer) Sign(
 
 	addr := crypto.PubkeyToAddress(*pubk)
 	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.client, sig[:])
+	signedTX, err := tx.WithSignature(signer.client.Signer, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -229,7 +229,7 @@ func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) e
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	return signer.client.EVMRPCClient.SendTransaction(ctx, tx)
+	return signer.client.SendTransaction(ctx, tx)
 }
 
 // TryProcessOutbound - signer interface implementation

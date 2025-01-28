@@ -4,6 +4,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -165,6 +166,7 @@ type EVMRPCClient interface {
 
 	BlockByNumber2(ctx context.Context, number *big.Int) (*ethclient.Block, error)
 	TransactionByHash2(ctx context.Context, hash string) (*ethclient.Transaction, error)
+	HealthCheck(ctx context.Context) (time.Time, error)
 }
 
 // SolanaRPCClient is the interface for Solana RPC client

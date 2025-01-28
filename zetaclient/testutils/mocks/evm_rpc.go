@@ -14,6 +14,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	time "time"
+
 	types "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -251,6 +253,34 @@ func (_m *EVMRPCClient) HeaderByNumber(ctx context.Context, number *big.Int) (*t
 
 	if rf, ok := ret.Get(1).(func(context.Context, *big.Int) error); ok {
 		r1 = rf(ctx, number)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// HealthCheck provides a mock function with given fields: ctx
+func (_m *EVMRPCClient) HealthCheck(ctx context.Context) (time.Time, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HealthCheck")
+	}
+
+	var r0 time.Time
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (time.Time, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) time.Time); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(time.Time)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
