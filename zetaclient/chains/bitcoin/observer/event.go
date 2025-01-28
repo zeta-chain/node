@@ -218,6 +218,9 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 	}
 
+	// check if the memo is a cross-chain call, or simple token deposit
+	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
+
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.FromAddress,
@@ -237,6 +240,6 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 		crosschaintypes.WithRevertOptions(revertOptions),
-		crosschaintypes.WithCrossChainCall(len(event.MemoStd.Payload) > 0),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)
 }
