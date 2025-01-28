@@ -61,7 +61,7 @@ func NewLocalCmd() *cobra.Command {
 		Run:   localE2ETest,
 	}
 	cmd.Flags().Bool(flagContractsDeployed, false, "set to to true if running tests again with existing state")
-	cmd.Flags().Int64(flagWaitForHeight, 0, "block height for tests to begin, ex. --wait-for 100")
+	cmd.Flags().Int64(flagWaitForHeight, 1, "block height for tests to begin, ex. --wait-for 100")
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
@@ -150,9 +150,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// wait for a specific height on ZetaChain
-	if waitForHeight != 0 {
-		noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
-	}
+	noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
 
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
