@@ -144,7 +144,7 @@ func (signer *Signer) BroadcastOutbound(
 
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod: "broadcastOutbound",
+		logs.FieldMethod: "BroadcastOutbound",
 		logs.FieldNonce:  nonce,
 		logs.FieldTx:     txHash,
 		logs.FieldCctx:   cctx.Index,

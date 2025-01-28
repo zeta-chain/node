@@ -13,13 +13,11 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -29,9 +27,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 // the relative path to the testdata directory
@@ -63,11 +61,11 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 		WithZetaChain()
 
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create signer
-	baseSigner := base.NewSigner(chain, tss, logger)
+	baseSigner := base.NewSigner(chain, tss, baseLogger)
 	signer := signer.New(baseSigner, rpcClient)
 
 	return &testSuite{
@@ -76,20 +74,6 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 		client:         rpcClient,
 		zetacoreClient: zetacoreClient,
 	}
-}
-
-func Test_NewSigner(t *testing.T) {
-	// test private key with EVM address
-	// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
-	// BTC testnet: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	require.NoError(t, err)
-	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-
-	baseSigner := base.NewSigner(chains.BitcoinMainnet, tss, base.DefaultLogger())
-	signer := signer.New(baseSigner, mocks.NewBitcoinClient(t))
-	require.NotNil(t, signer)
 }
 
 func Test_BroadcastOutbound(t *testing.T) {
@@ -344,17 +328,6 @@ func makeCtx(t *testing.T) context.Context {
 	require.NoError(t, err, "unable to update app context")
 
 	return zctx.WithAppContext(context.Background(), app)
-}
-
-// getCCTX returns a CCTX for testing
-func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
-	return testutils.LoadCctxByNonce(t, 8332, 148)
-}
-
-// getNewOutboundProcessor creates a new outbound processor for testing
-func getNewOutboundProcessor() *outboundprocessor.Processor {
-	logger := zerolog.Logger{}
-	return outboundprocessor.NewProcessor(logger)
 }
 
 // getNewObserver creates a new BTC chain observer for testing
