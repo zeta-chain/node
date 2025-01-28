@@ -208,7 +208,9 @@ func (signer *Signer) broadcastOutbound(
 	// to tolerate tx nonce mismatch with PDA nonce or unknown RPC error
 	backOff := broadcastBackoff
 	for i := 0; i < broadcastRetries; i++ {
-		time.Sleep(backOff)
+		if i > 0 {
+			time.Sleep(backOff)
+		}
 
 		// PDA nonce may already be increased by other relayer, no need to retry
 		pdaInfo, err := signer.client.GetAccountInfo(ctx, signer.pda)
@@ -221,6 +223,13 @@ func (signer *Signer) broadcastOutbound(
 			} else if pda.Nonce > nonce {
 				logger.Info().Err(err).Fields(lf).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
 				break
+			} else if pda.Nonce < nonce {
+				logger.Info().Fields(lf).Msgf("PDA nonce %d is below next outbound nonce", pda.Nonce)
+				// only apply doubling backoff if we are not next to be scheduled
+				if pda.Nonce < nonce-1 {
+					backOff *= 2
+				}
+				continue
 			}
 		}
 
