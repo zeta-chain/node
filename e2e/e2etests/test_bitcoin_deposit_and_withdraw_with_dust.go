@@ -32,13 +32,11 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	require.Equal(r, receipt.Status, uint64(1))
 
 	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
+	utxos := r.ListDeployerUTXOs()
 
 	// ACT
 	// Deposit 0.01 BTC to withdrawer, this is an arbitrary amount, must be greater than dust amount
-	txHash, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos, withdrawerAddr.Bytes())
+	txHash, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[:1], withdrawerAddr.Bytes())
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
