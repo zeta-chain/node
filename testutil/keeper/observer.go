@@ -3,12 +3,13 @@ package keeper
 import (
 	"testing"
 
-	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -53,7 +54,7 @@ func initObserverKeeper(
 	authKeeper authkeeper.AccountKeeper,
 	lightclientKeeper types.LightclientKeeper,
 ) *keeper.Keeper {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
 	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, nil)
@@ -77,12 +78,12 @@ func ObserverKeeperWithMocks(
 	t testing.TB,
 	mockOptions ObserverMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
-	stateStore := rootmulti.NewStore(db, log.NewNopLogger())
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	authorityKeeperTmp := initAuthorityKeeper(cdc, stateStore)
@@ -176,7 +177,7 @@ type ObserverMockStakingKeeper struct {
 }
 
 func (m *ObserverMockStakingKeeper) MockGetValidator(validator stakingtypes.Validator) {
-	m.On("GetValidator", mock.Anything, mock.Anything).Return(validator, true)
+	m.On("GetValidator", mock.Anything, mock.Anything).Return(validator, nil)
 }
 
 // GetObserverSlashingMock returns a new observer slashing keeper mock

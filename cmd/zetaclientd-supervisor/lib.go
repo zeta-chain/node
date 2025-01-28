@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/hashicorp/go-getter"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -127,7 +127,7 @@ func atomicSymlink(target, linkName string) error {
 }
 
 func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
-	client := tmservice.NewServiceClient(s.zetacoredConn)
+	client := cmtservice.NewServiceClient(s.zetacoredConn)
 	prevVersion := ""
 	for {
 		select {
@@ -135,7 +135,7 @@ func (s *zetaclientdSupervisor) watchForVersionChanges(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		}
-		res, err := client.GetNodeInfo(ctx, &tmservice.GetNodeInfoRequest{})
+		res, err := client.GetNodeInfo(ctx, &cmtservice.GetNodeInfoRequest{})
 		if err != nil {
 			s.logger.Warn().Err(err).Msg("get node info")
 			continue

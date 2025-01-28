@@ -11,6 +11,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -29,10 +31,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
@@ -230,10 +230,10 @@ func (zts ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdkt
 	}
 	// increase gas and fees if multiple messages are provided
 	txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
-	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdktypes.NewInt(int64(len(msgs)))))
+	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
 
 	// Sign tx
-	err = tx.Sign(zts.txFactory, account, txBuilder, true)
+	err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
 	if err != nil {
 		return nil, err
 	}
@@ -443,6 +443,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"gETH",
 			coin.CoinType_Gas,
 			100000,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -453,6 +454,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"tBTC",
 			coin.CoinType_Gas,
 			100000,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -463,6 +465,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"SOL",
 			coin.CoinType_Gas,
 			100000,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -473,6 +476,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"TON",
 			coin.CoinType_Gas,
 			100_000,
+			nil,
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
@@ -483,6 +487,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"USDT",
 			coin.CoinType_ERC20,
 			100000,
+			nil,
 		),
 	}
 
@@ -496,6 +501,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 			"USDT",
 			coin.CoinType_ERC20,
 			100000,
+			nil,
 		))
 	}
 
@@ -575,7 +581,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 	}
 
 	// convert amount
-	amountInt := sdktypes.NewIntFromBigInt(amount)
+	amountInt := sdkmath.NewIntFromBigInt(amount)
 
 	// fund emissions pool
 	_, err = zts.BroadcastTx(account, banktypes.NewMsgSend(
@@ -625,7 +631,7 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 
 // InitializeLiquidityCaps initializes the liquidity cap for the given coin with a large value
 func (zts ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
-	liquidityCap := sdktypes.NewUint(1e18).MulUint64(1e12)
+	liquidityCap := sdkmath.NewUint(1e18).MulUint64(1e12)
 
 	msgs := make([]sdktypes.Msg, len(zrc20s))
 	for i, zrc20 := range zrc20s {

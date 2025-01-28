@@ -131,14 +131,14 @@ func (b *Bitcoin) group() scheduler.Group {
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
 func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
+	if err := b.updateChainParams(ctx); err != nil {
+		return errors.Wrap(err, "unable to update chain params")
+	}
+
 	var (
 		lookahead = b.observer.ChainParams().OutboundScheduleLookahead
 		chainID   = b.observer.Chain().ChainId
 	)
-
-	if err := b.updateChainParams(ctx); err != nil {
-		return errors.Wrap(err, "unable to update chain params")
-	}
 
 	zetaBlock, ok := scheduler.BlockFromContext(ctx)
 	if !ok {

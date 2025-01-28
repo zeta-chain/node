@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	coin "github.com/zeta-chain/node/pkg/coin"
@@ -41,13 +40,13 @@ func (r RateLimiterFlags) Validate() error {
 }
 
 // GetConversionRate returns the conversion rate for the given zrc20
-func (r RateLimiterFlags) GetConversionRate(zrc20 string) (sdk.Dec, bool) {
+func (r RateLimiterFlags) GetConversionRate(zrc20 string) (sdkmath.LegacyDec, bool) {
 	for _, conversion := range r.Conversions {
 		if conversion.Zrc20 == zrc20 {
 			return conversion.Rate, true
 		}
 	}
-	return sdk.NewDec(0), false
+	return sdkmath.LegacyNewDec(0), false
 }
 
 // BuildAssetRateMapFromList builds maps (foreign chain id -> asset -> rate) from a list of gas and erc20 asset rates
@@ -80,17 +79,17 @@ func ConvertCctxValueToAzeta(
 	gasAssetRateMap map[int64]AssetRate,
 	erc20AssetRateMap map[int64]map[string]AssetRate,
 ) sdkmath.Int {
-	var rate sdk.Dec
+	var rate sdkmath.LegacyDec
 	var decimals uint32
 	switch cctx.InboundParams.CoinType {
 	case coin.CoinType_Zeta:
 		// no conversion needed for ZETA
-		return sdk.NewIntFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
+		return sdkmath.NewIntFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	case coin.CoinType_Gas:
 		assetRate, found := gasAssetRateMap[chainID]
 		if !found {
 			// skip if no rate found for gas coin on this chainID
-			return sdk.NewInt(0)
+			return sdkmath.NewInt(0)
 		}
 		rate = assetRate.Rate
 		decimals = assetRate.Decimals
@@ -99,30 +98,30 @@ func ConvertCctxValueToAzeta(
 		_, found := erc20AssetRateMap[chainID]
 		if !found {
 			// skip if no rate found for this chainID
-			return sdk.NewInt(0)
+			return sdkmath.NewInt(0)
 		}
 		assetRate := erc20AssetRateMap[chainID][strings.ToLower(cctx.InboundParams.Asset)]
 		rate = assetRate.Rate
 		decimals = assetRate.Decimals
 	default:
 		// skip CoinType_Cmd
-		return sdk.NewInt(0)
+		return sdkmath.NewInt(0)
 	}
 	// should not happen, return 0 to skip if it happens
-	if rate.IsNil() || rate.LTE(sdk.NewDec(0)) {
+	if rate.IsNil() || rate.LTE(sdkmath.LegacyNewDec(0)) {
 		return sdkmath.NewInt(0)
 	}
 
 	// the whole coin amounts of zeta and zrc20
 	// given decimals = 6, the amount will be 10^6 = 1000000
 	oneZeta := coin.AzetaPerZeta()
-	oneZrc20 := sdk.NewDec(10).Power(uint64(decimals))
+	oneZrc20 := sdkmath.LegacyNewDec(10).Power(uint64(decimals))
 
 	// convert cctx asset amount into azeta amount
 	// given amountCctx = 2000000, rate = 0.8, decimals = 6
 	// amountCctxDec: 2000000 * 0.8 = 1600000.0
 	// amountAzetaDec: 1600000.0 * 10e18 / 10e6 = 1600000000000000000.0
-	amountCctxDec := sdk.NewDecFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
+	amountCctxDec := sdkmath.LegacyNewDecFromBigInt(cctx.GetCurrentOutboundParam().Amount.BigInt())
 	amountAzetaDec := amountCctxDec.Mul(rate).Mul(oneZeta).Quo(oneZrc20)
 	return amountAzetaDec.TruncateInt()
 }

@@ -140,18 +140,20 @@ func Test_NewObserver(t *testing.T) {
 				defer tt.after()
 			}
 
-			// create observer
-			ob, err := observer.NewObserver(
+			baseObserver, err := base.NewObserver(
 				tt.chain,
-				tt.btcClient,
 				tt.chainParams,
 				tt.coreClient,
 				tt.tss,
+				100,
+				tt.ts,
 				database,
 				tt.logger,
-				tt.ts,
 			)
+			require.NoError(t, err)
 
+			// create observer
+			ob, err := observer.New(tt.chain, baseObserver, tt.btcClient)
 			if tt.errorMessage != "" {
 				require.ErrorContains(t, err, tt.errorMessage)
 				require.Nil(t, ob)
@@ -335,17 +337,19 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	testLogger := zerolog.New(zerolog.NewTestWriter(t))
 	logger := base.Logger{Std: testLogger, Compliance: testLogger}
 
-	// create observer
-	ob, err := observer.NewObserver(
+	baseObserver, err := base.NewObserver(
 		chain,
-		client,
 		chainParams,
 		zetacore,
 		tss,
+		100,
+		&metrics.TelemetryServer{},
 		database,
 		logger,
-		&metrics.TelemetryServer{},
 	)
+	require.NoError(t, err)
+
+	ob, err := observer.New(chain, baseObserver, client)
 	require.NoError(t, err)
 
 	return &testSuite{

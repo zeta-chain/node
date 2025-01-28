@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -92,6 +95,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			coin.CoinType_ERC20,
 			"beta",
 			big.NewInt(90_000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.NoError(t, err)
 		codeHash := codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
@@ -138,6 +142,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			coin.CoinType_ERC20,
 			"gamma",
 			big.NewInt(90_000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 		require.NoError(t, err)

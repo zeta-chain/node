@@ -1,10 +1,9 @@
 package staking
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -89,8 +88,9 @@ func NewIStakingContract(
 	kvGasConfig storetypes.GasConfig,
 ) *Contract {
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	if fungibleKeeper.GetAuthKeeper().GetAccount(ctx, accAddress) == nil {
-		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	if !fungibleKeeper.GetAuthKeeper().HasAccount(ctx, accAddress) {
+		acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
+		fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
 	}
 
 	return &Contract{

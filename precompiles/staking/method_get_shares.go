@@ -1,9 +1,11 @@
 package staking
 
 import (
+	"errors"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -39,9 +41,15 @@ func (c *Contract) GetShares(
 	if err != nil {
 		return nil, err
 	}
-
-	delegation := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
 	shares := big.NewInt(0)
+	delegation, err := c.stakingKeeper.Delegation(ctx, sdk.AccAddress(stakerAddress.Bytes()), validator)
+	if err != nil {
+		if errors.Is(err, stakingtypes.ErrNoDelegation) {
+			return method.Outputs.Pack(shares)
+		}
+		return nil, err
+	}
+
 	if delegation != nil {
 		shares = delegation.GetShares().BigInt()
 	}

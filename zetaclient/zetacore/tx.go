@@ -33,6 +33,7 @@ func GetInboundVoteMessage(
 	asset string,
 	signerAddress string,
 	eventIndex uint,
+	status types.InboundStatus,
 ) *types.MsgVoteInbound {
 	msg := types.NewMsgVoteInbound(
 		signerAddress,
@@ -51,6 +52,7 @@ func GetInboundVoteMessage(
 		eventIndex,
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		status,
 	)
 	return msg
 }
@@ -73,8 +75,10 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
 	// verify message validity
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+	if m, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+		}
 	}
 
 	authzSigner := clientauthz.GetSigner(msgURL)

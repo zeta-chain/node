@@ -22,6 +22,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/libs/bytes"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -120,7 +121,7 @@ func (b *Backend) GetProof(
 	}
 
 	// query account proofs
-	accountKey := authtypes.AddressStoreKey(sdk.AccAddress(address.Bytes()))
+	accountKey := bytes.HexBytes(append(authtypes.AddressStoreKeyPrefix, address.Bytes()...))
 	_, proof, err := b.queryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -55,7 +56,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -82,7 +83,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
@@ -110,7 +111,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             consAddress.String(),
+			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
@@ -162,15 +163,15 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		validator.DelegatorShares = sdk.NewDec(100)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(100)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 
 		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
-			ValidatorAddress: validator.GetOperator().String(),
-			Shares:           sdk.NewDec(10),
+			ValidatorAddress: validator.GetOperator(),
+			Shares:           sdkmath.LegacyNewDec(10),
 		})
 
 		k.SetObserverSet(ctx, types.ObserverSet{
@@ -190,8 +191,8 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
 
-		validator.DelegatorShares = sdk.NewDec(1)
-		validator.Tokens = sdk.NewInt(1)
+		validator.DelegatorShares = sdkmath.LegacyNewDec(1)
+		validator.Tokens = sdkmath.NewInt(1)
 		sdkk.StakingKeeper.SetValidator(ctx, validator)
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -200,7 +201,7 @@ func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
 		require.NoError(t, err)
 		sdkk.StakingKeeper.SetDelegation(ctx, stakingtypes.Delegation{
 			DelegatorAddress: accAddressOfValidator.String(),
-			ValidatorAddress: validator.GetOperator().String(),
+			ValidatorAddress: validator.GetOperator(),
 			Shares:           minDelegation,
 		})
 
@@ -410,7 +411,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 	t.Run("user can create a ballot and add a vote, without finalizing ballot", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		threshold, err := sdk.NewDecFromStr("0.7")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.7")
 		require.NoError(t, err)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
@@ -468,7 +469,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 
 		chain, _ := k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0))
 		index := sample.ZetaIndex(t)
-		threshold, err := sdk.NewDecFromStr("0.7")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.7")
 		require.NoError(t, err)
 
 		ballot := types.Ballot{
@@ -522,7 +523,7 @@ func TestKeeper_VoteOnBallot(t *testing.T) {
 		})
 
 		index := sample.ZetaIndex(t)
-		threshold, err := sdk.NewDecFromStr("0.1")
+		threshold, err := sdkmath.LegacyNewDecFromStr("0.1")
 		require.NoError(t, err)
 
 		ballot := types.Ballot{

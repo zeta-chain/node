@@ -14,7 +14,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -50,11 +49,8 @@ type Signer struct {
 }
 
 // New creates a new Bitcoin signer
-func New(chain chains.Chain, tss interfaces.TSSSigner, rpc RPC, logger base.Logger) *Signer {
-	return &Signer{
-		Signer: base.NewSigner(chain, tss, logger),
-		rpc:    rpc,
-	}
+func New(baseSigner *base.Signer, rpc RPC) *Signer {
+	return &Signer{Signer: baseSigner, rpc: rpc}
 }
 
 // Broadcast sends the signed transaction to the network

@@ -19,12 +19,12 @@ message Params {
   string observer_emission_percentage = 6;
   string tss_signer_emission_percentage = 7;
   string observer_slash_amount = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   int64 ballot_maturity_blocks = 10;
   string block_reward_amount = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 
@@ -45,7 +45,7 @@ message LegacyParams {
   string tss_signer_emission_percentage = 7;
   string duration_factor_constant = 8;
   string observer_slash_amount = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   int64 ballot_maturity_blocks = 10;

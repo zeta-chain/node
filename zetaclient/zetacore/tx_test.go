@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -261,7 +262,9 @@ func TestZetacore_GetInboundVoteMessage(t *testing.T) {
 			coin.CoinType_Gas,
 			"azeta",
 			address.String(),
-			0)
+			0,
+			types.InboundStatus_SUCCESS,
+		)
 		require.Equal(t, address.String(), msg.Creator)
 	})
 }

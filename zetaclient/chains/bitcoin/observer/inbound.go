@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -248,7 +248,7 @@ func FilterAndParseIncomingTx(
 //   - a valid MsgVoteInbound message, or
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
-func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
+func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *types.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
@@ -321,7 +321,14 @@ func GetBtcEventWithoutWitness(
 		value        float64
 		depositorFee float64
 		memo         []byte
+		status       = types.InboundStatus_SUCCESS
 	)
+
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod: "GetBtcEventWithoutWitness",
+		logs.FieldTx:     tx.Txid,
+	}
 
 	if len(tx.Vout) >= 2 {
 		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
@@ -345,19 +352,22 @@ func GetBtcEventWithoutWitness(
 				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 			}
 
-			// deposit amount has to be no less than the minimum depositor fee
-			if vout0.Value < depositorFee {
-				logger.Info().
-					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
-				return nil, nil
+			// deduct depositor fee
+			// to allow developers to track failed deposit caused by insufficient depositor fee,
+			// the error message will be forwarded to zetacore to register a failed CCTX
+			value, err = DeductDepositorFee(vout0.Value, depositorFee)
+			if err != nil {
+				value = 0
+				status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+				logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
 			}
-			value = vout0.Value - depositorFee
 
 			// 2nd vout must be a valid OP_RETURN memo
 			vout1 := tx.Vout[1]
 			memo, found, err = common.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
 			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+				lf["memo"] = vout1.ScriptPubKey.Hex
+				logger.Error().Err(err).Fields(lf).Msgf("unable to decode OP_RETURN memo")
 				return nil, nil
 			}
 		}
@@ -388,6 +398,7 @@ func GetBtcEventWithoutWitness(
 			MemoBytes:    memo,
 			BlockNumber:  blockNumber,
 			TxHash:       tx.Txid,
+			Status:       status,
 		}, nil
 	}
 	return nil, nil

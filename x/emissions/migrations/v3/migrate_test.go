@@ -34,7 +34,7 @@ func TestMigrate(t *testing.T) {
 			ValidatorEmissionPercentage: "00.50",
 			ObserverEmissionPercentage:  "00.35",
 			TssSignerEmissionPercentage: "00.15",
-			ObserverSlashAmount:         sdk.ZeroInt(),
+			ObserverSlashAmount:         sdkmath.ZeroInt(),
 		}
 		legacySubspace := newMockSubspace(legacyParams)
 
@@ -71,7 +71,7 @@ func TestMigrate(t *testing.T) {
 			ValidatorEmissionPercentage: "-00.50",
 			ObserverEmissionPercentage:  "00.35",
 			TssSignerEmissionPercentage: "00.15",
-			ObserverSlashAmount:         sdk.ZeroInt(),
+			ObserverSlashAmount:         sdkmath.ZeroInt(),
 		}
 		legacySubspace := newMockSubspace(legacyParams)
 

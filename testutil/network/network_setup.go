@@ -6,22 +6,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	tmlog "github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -79,9 +82,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
-	BondedTokens     math.Int                   // the amount of tokens each validator stakes
+	AccountTokens    sdkmath.Int                // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
+	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
@@ -270,7 +273,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				var err error
-				apiListenAddr, _, err = server.FreeTCPAddr()
+				apiListenAddr, _, err = FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -286,7 +289,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				rpcAddr, _, err := server.FreeTCPAddr()
+				rpcAddr, _, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -296,25 +299,19 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, err := server.FreeTCPAddr()
+				_, grpcPort, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
 				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			}
 			appCfg.GRPC.Enable = true
-
-			_, grpcWebPort, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
-			}
-			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := tmlog.NewNopLogger()
+		logger := log.NewNopLogger()
 		if cfg.EnableTMLogging {
-			logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+			logger = log.NewLogger(os.Stdout)
 		}
 
 		ctx.Logger = logger
@@ -338,13 +335,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		proxyAddr, _, err := server.FreeTCPAddr()
+		proxyAddr, _, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
 		tmCfg.ProxyApp = proxyAddr
 
-		p2pAddr, _, err := server.FreeTCPAddr()
+		p2pAddr, _, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
@@ -415,18 +412,18 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		commission, err := sdk.NewDecFromStr("0.5")
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
 		if err != nil {
 			return nil, err
 		}
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
-			math.OneInt(),
+			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			sdkmath.OneInt(),
 		)
 		if err != nil {
 			return nil, err
@@ -438,7 +435,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(createValMsg)
 		if err != nil {
@@ -455,7 +452,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
+		err = tx.Sign(context.TODO(), txFactory, nodeDirName, txBuilder, true)
 		if err != nil {
 			return nil, err
 		}
@@ -528,9 +525,33 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
-	server.TrapSignal(network.Cleanup)
+	trapSignal(network.Cleanup)
 
 	return network, nil
+}
+
+// trapSignal traps SIGINT and SIGTERM and calls os.Exit once a signal is received.
+func trapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+		exitCode := 128
+
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+
+		os.Exit(exitCode)
+	}()
 }
 
 // LatestHeight returns the latest height of the network or an error if the
@@ -548,14 +569,14 @@ func (n *Network) LatestHeight() (int64, error) {
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := tmservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
 
 	for {
 		select {
 		case <-timeout.C:
 			return latestHeight, errors.New("LatestHeight: timeout exceeded waiting for block")
 		case <-ticker.C:
-			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 			if err == nil && res != nil {
 				return res.SdkBlock.Header.Height, nil
 			}
@@ -585,7 +606,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	var latestHeight int64
 	val := n.Validators[0]
-	queryClient := tmservice.NewServiceClient(val.ClientCtx)
+	queryClient := cmtservice.NewServiceClient(val.ClientCtx)
 
 	for {
 		select {
@@ -593,7 +614,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			return latestHeight, errors.New("WaitForHeightWithTimeout: timeout exceeded waiting for block")
 		case <-ticker.C:
 
-			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 			if err == nil && res != nil {
 				latestHeight = res.GetSdkBlock().Header.Height
 				if latestHeight >= h {
@@ -690,4 +711,22 @@ func centerText(text string, width int) string {
 	rightBuffer := strings.Repeat(" ", (width-textLen)/2+(width-textLen)%2)
 
 	return fmt.Sprintf("%s%s%s", leftBuffer, text, rightBuffer)
+}
+
+// Get a free address for a test CometBFT server
+// protocol is either tcp, http, etc
+func FreeTCPAddr() (addr, port string, err error) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return "", "", err
+	}
+
+	if err := l.Close(); err != nil {
+		return "", "", err
+	}
+
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }

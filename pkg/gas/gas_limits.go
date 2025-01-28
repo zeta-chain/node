@@ -2,7 +2,6 @@ package gas
 
 import (
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -15,10 +14,10 @@ const (
 
 // MultiplyGasPrice multiplies the median gas price by the given multiplier and returns the truncated value
 func MultiplyGasPrice(medianGasPrice sdkmath.Uint, multiplierString string) (sdkmath.Uint, error) {
-	multiplier, err := sdk.NewDecFromStr(multiplierString)
+	multiplier, err := sdkmath.LegacyNewDecFromStr(multiplierString)
 	if err != nil {
 		return sdkmath.ZeroUint(), err
 	}
-	gasPrice := sdk.NewDecFromBigInt(medianGasPrice.BigInt())
+	gasPrice := sdkmath.LegacyNewDecFromBigInt(medianGasPrice.BigInt())
 	return sdkmath.NewUintFromString(gasPrice.Mul(multiplier).TruncateInt().String()), nil
 }

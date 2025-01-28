@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -45,9 +45,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.InboundParams.CoinType = coin.CoinType_Gas
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(1e7)  // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254 // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
+				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
+				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			chainID:     chain.ChainId,
@@ -73,10 +73,10 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.InboundParams.CoinType = coin.CoinType_Gas
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(1e7)  // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254 // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
-				cctx.GetCurrentOutboundParam().GasPriorityFee = "15"      // 15 sats/vByte
+				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
+				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
+				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().GasPriorityFee = "15"         // 15 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			chainID:     chain.ChainId,
@@ -172,9 +172,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.InboundParams.Sender = sample.RestrictedEVMAddressTest
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(1e7)  // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254 // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
+				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
+				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			chainID:     chain.ChainId,
@@ -199,7 +199,7 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.InboundParams.CoinType = coin.CoinType_Gas
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdk.NewUint(constant.BTCWithdrawalDustAmount - 1)
+				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(constant.BTCWithdrawalDustAmount - 1)
 				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254 // 254 bytes
 				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1

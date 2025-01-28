@@ -49,7 +49,7 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		balance = k.GetBankKeeper().
 			GetBalance(ctx, types.UndistributedObserverRewardsPoolAddress, config.BaseDenom).
 			Amount.String()
-		require.Equal(t, sdk.ZeroInt().String(), balance)
+		require.Equal(t, sdkmath.ZeroInt().String(), balance)
 	})
 
 	t.Run("unable to withdraw emissions with invalid address", func(t *testing.T) {
@@ -155,7 +155,7 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 			sdk.MustAccAddressFromBech32(withdrawableEmission.Address),
 			config.BaseDenom,
 		).Amount.String()
-		require.Equal(t, sdk.ZeroInt().String(), balance)
+		require.Equal(t, sdkmath.ZeroInt().String(), balance)
 	})
 
 	t.Run("unable to withdraw emissions if amount requested is more that available", func(t *testing.T) {

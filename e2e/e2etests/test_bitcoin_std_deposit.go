@@ -40,7 +40,7 @@ func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
 	}
 
 	// deposit BTC with standard memo
-	txHash := r.DepositBTCWithAmount(amount, memo)
+	txHash := r.DepositBTCWithExactAmount(amount, memo)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)

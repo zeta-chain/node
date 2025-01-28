@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -157,7 +158,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 // FilterInboundEventsAndVote filters inbound events from a txResult and post a vote.
 func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
 	// filter inbound events from txResult
-	events, err := ob.FilterInboundEvents(txResult)
+	events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 	if err != nil {
 		return errors.Wrapf(err, "error FilterInboundEvent")
 	}
@@ -181,7 +182,12 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 //   - takes at one event (the first) per token (SOL or SPL) per transaction.
 //   - takes at most two events (one SOL + one SPL) per transaction.
 //   - ignores exceeding events.
-func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
+func FilterInboundEvents(
+	txResult *rpc.GetTransactionResult,
+	gatewayID solana.PublicKey,
+	senderChainID int64,
+	logger zerolog.Logger,
+) ([]*clienttypes.InboundEvent, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -203,14 +209,13 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
-			ob.Logger().
-				Inbound.Err(err).
+			logger.Err(err).
 				Msgf("no program found at index %d for sig %s", instruction.ProgramIDIndex, tx.Signatures[0])
 			continue
 		}
 
 		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(ob.gatewayID) {
+		if !programPk.Equals(gatewayID) {
 			continue
 		}
 
@@ -222,7 +227,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
+					SenderChainID: senderChainID,
 					Sender:        deposit.Sender,
 					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
@@ -234,12 +239,10 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 					CoinType:      coin.CoinType_Gas,
 					Asset:         deposit.Asset,
 				})
-				ob.Logger().Inbound.Info().
-					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
-				Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 
 		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
@@ -250,7 +253,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
+					SenderChainID: senderChainID,
 					Sender:        deposit.Sender,
 					Receiver:      "", // receiver will be pulled out from memo later
 					TxOrigin:      deposit.Sender,
@@ -262,11 +265,115 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 					CoinType:      coin.CoinType_ERC20,
 					Asset:         deposit.Asset,
 				})
-				ob.Logger().Inbound.Info().
+				logger.Info().Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+			}
+		} else {
+			logger.Warn().Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+		}
+	}
+
+	return events, nil
+}
+
+// FilterSolanaInboundEvents filters inbound events from a tx result.
+// Note: for consistency with EVM chains, this method
+//   - takes at one event (the first) per token (SOL or SPL) per transaction.
+//   - takes at most two events (one SOL + one SPL) per transaction.
+//   - ignores exceeding events.
+func FilterSolanaInboundEvents(txResult *rpc.GetTransactionResult,
+	logger *base.ObserverLogger,
+	gatewayID solana.PublicKey,
+	senderChainID int64) ([]*clienttypes.InboundEvent, error) {
+	if logger == nil {
+		return nil, errors.New("logger is nil")
+	}
+	// unmarshal transaction
+	tx, err := txResult.Transaction.GetTransaction()
+	if err != nil {
+		return nil, errors.Wrap(err, "error unmarshaling transaction")
+	}
+
+	// there should be at least one instruction and one account, otherwise skip
+	if len(tx.Message.Instructions) <= 0 {
+		return nil, nil
+	}
+
+	// create event array to collect all events in the transaction
+	seenDeposit := false
+	seenDepositSPL := false
+	events := make([]*clienttypes.InboundEvent, 0)
+
+	// loop through instruction list to filter the 1st valid event
+	for i, instruction := range tx.Message.Instructions {
+		// get the program ID
+		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
+		if err != nil {
+			logger.
+				Inbound.Err(err).
+				Msgf("no program found at index %d for sig %s", instruction.ProgramIDIndex, tx.Signatures[0])
+			continue
+		}
+
+		// skip instructions that are irrelevant to the gateway program invocation
+		if !programPk.Equals(gatewayID) {
+			continue
+		}
+
+		// try parsing the instruction as a 'deposit' if not seen yet
+		if !seenDeposit {
+			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
+			} else if deposit != nil {
+				seenDeposit = true
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID: senderChainID,
+					Sender:        deposit.Sender,
+					Receiver:      "", // receiver will be pulled out from memo later
+					TxOrigin:      deposit.Sender,
+					Amount:        deposit.Amount,
+					Memo:          deposit.Memo,
+					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:        tx.Signatures[0].String(),
+					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:      coin.CoinType_Gas,
+					Asset:         deposit.Asset,
+				})
+				logger.Inbound.Info().Msg("FilterInboundEvents: deposit detected")
+
+				logger.Inbound.Info().
+					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+			}
+		} else {
+			logger.Inbound.Warn().
+				Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+		}
+
+		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
+		if !seenDepositSPL {
+			deposit, err := solanacontracts.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsDepositSPL")
+			} else if deposit != nil {
+				seenDepositSPL = true
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID: senderChainID,
+					Sender:        deposit.Sender,
+					Receiver:      "", // receiver will be pulled out from memo later
+					TxOrigin:      deposit.Sender,
+					Amount:        deposit.Amount,
+					Memo:          deposit.Memo,
+					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:        tx.Signatures[0].String(),
+					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:      coin.CoinType_ERC20,
+					Asset:         deposit.Asset,
+				})
+				logger.Inbound.Info().
 					Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
+			logger.Inbound.Warn().
 				Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 	}
@@ -312,6 +419,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		0, // not a smart contract call
 		crosschaintypes.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
 

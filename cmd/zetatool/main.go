@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/cmd/zetatool/filterdeposit"
+	"github.com/zeta-chain/node/cmd/zetatool/inbound"
 )
 
 var rootCmd = &cobra.Command{
@@ -16,13 +16,13 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(filterdeposit.NewFilterDepositCmd())
+	rootCmd.AddCommand(inbound.NewGetInboundBallotCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 }
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "Error executing command: %v\n", err)
 		os.Exit(1)
 	}
 }
