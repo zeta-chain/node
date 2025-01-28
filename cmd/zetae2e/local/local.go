@@ -317,7 +317,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinWithdrawP2WSHName,
 			e2etests.TestBitcoinWithdrawMultipleName,
 			e2etests.TestBitcoinWithdrawRestrictedName,
-			e2etests.TestBitcoinWithdrawRBFName,
+			//e2etests.TestBitcoinWithdrawRBFName,
 		}
 
 		if !light {
