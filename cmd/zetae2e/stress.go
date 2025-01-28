@@ -112,7 +112,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	verbose := must(cmd.Flags().GetBool(flagVerbose))
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")

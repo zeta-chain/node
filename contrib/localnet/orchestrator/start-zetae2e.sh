@@ -7,6 +7,9 @@
 # A second optional argument can be passed and can have the following value:
 # upgrade: run the local e2e once, then restart zetaclientd at upgrade height and run the local e2e again
 
+# Trap signals and forward to children
+trap 'kill -- -$$' SIGINT SIGTERM
+
 get_zetacored_version() {
   retries=10
   node_info=""
