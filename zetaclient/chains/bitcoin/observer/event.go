@@ -79,6 +79,7 @@ func (event *BTCInboundEvent) Category() clienttypes.InboundCategory {
 }
 
 // DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
+// It updates the event object with the decoded data
 func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	var (
 		err            error
@@ -115,11 +116,14 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		event.MemoStd = memoStd
 		receiver = memoStd.Receiver
 	} else {
-		parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
+		parsedAddress, payload, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
 		if err != nil { // unreachable code
 			return errors.Wrap(err, "invalid legacy memo")
 		}
 		receiver = parsedAddress
+
+		// update the memo bytes to only contain the data
+		event.MemoBytes = payload
 	}
 
 	// ensure the receiver is valid
@@ -179,8 +183,6 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
-	message := hex.EncodeToString(event.MemoBytes)
-
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.FromAddress,
@@ -189,15 +191,15 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		event.ToAddress,
 		ob.ZetacoreClient().Chain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
+		hex.EncodeToString(event.MemoBytes),
 		event.TxHash,
 		event.BlockNumber,
 		0,
 		coin.CoinType_Gas,
 		"",
 		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
 	)
 }
