@@ -103,7 +103,7 @@ func (signer *Signer) TryProcessOutbound(
 	// query network info to get minRelayFee (typically 1000 satoshis)
 	networkInfo, err := signer.rpc.GetNetworkInfo(ctx)
 	if err != nil {
-		logger.Error().Err(err).Msgf("failed get bitcoin network info")
+		logger.Error().Err(err).Msg("failed get bitcoin network info")
 		return
 	}
 	minRelayFee := networkInfo.RelayFee
