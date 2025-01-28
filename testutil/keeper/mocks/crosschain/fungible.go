@@ -420,6 +420,36 @@ func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Contex
 	return r0, r1
 }
 
+// ProcessAbort provides a mock function with given fields: ctx, inboundSender, amount, outgoing, chainID, coinType, asset, abortAddress, revertMessage
+func (_m *CrosschainFungibleKeeper) ProcessAbort(ctx types.Context, inboundSender string, amount *big.Int, outgoing bool, chainID int64, coinType coin.CoinType, asset string, abortAddress common.Address, revertMessage []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	ret := _m.Called(ctx, inboundSender, amount, outgoing, chainID, coinType, asset, abortAddress, revertMessage)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessAbort")
+	}
+
+	var r0 *evmtypes.MsgEthereumTxResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int, bool, int64, coin.CoinType, string, common.Address, []byte) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, inboundSender, amount, outgoing, chainID, coinType, asset, abortAddress, revertMessage)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int, bool, int64, coin.CoinType, string, common.Address, []byte) *evmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, inboundSender, amount, outgoing, chainID, coinType, asset, abortAddress, revertMessage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, *big.Int, bool, int64, coin.CoinType, string, common.Address, []byte) error); ok {
+		r1 = rf(ctx, inboundSender, amount, outgoing, chainID, coinType, asset, abortAddress, revertMessage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ProcessRevert provides a mock function with given fields: ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage
 func (_m *CrosschainFungibleKeeper) ProcessRevert(ctx types.Context, inboundSender string, amount *big.Int, chainID int64, coinType coin.CoinType, asset string, revertAddress common.Address, callOnRevert bool, revertMessage []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, inboundSender, amount, chainID, coinType, asset, revertAddress, callOnRevert, revertMessage)
