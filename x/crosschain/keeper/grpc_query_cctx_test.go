@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -198,13 +199,13 @@ func TestKeeper_ZetaAccounting(t *testing.T) {
 	t.Run("should return zeta accounting if found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{
-			AbortedZetaAmount: sdk.NewUint(100),
+			AbortedZetaAmount: sdkmath.NewUint(100),
 		})
 
 		res, err := k.ZetaAccounting(ctx, nil)
 		require.NoError(t, err)
 		require.Equal(t, &types.QueryZetaAccountingResponse{
-			AbortedZetaAmount: sdk.NewUint(100).String(),
+			AbortedZetaAmount: sdkmath.NewUint(100).String(),
 		}, res)
 	})
 }

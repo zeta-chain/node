@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/ticker"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -308,6 +309,7 @@ func (ob *Observer) voteDeposit(
 		asset,
 		operatorAddress.String(),
 		eventIndex,
+		types.InboundStatus_SUCCESS,
 	)
 
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)

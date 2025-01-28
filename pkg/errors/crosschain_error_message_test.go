@@ -21,7 +21,7 @@ func Test_NewCCTXErrorMessage(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(
 			t,
-			`{"message":"message","error":"","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message"}`,
 			jsonString,
 		)
 	})
@@ -46,7 +46,7 @@ func Test_ZEvmErrorMessage(t *testing.T) {
 
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"method","contract":"0xE97Ac2CA30D30de65a6FE0Ab20EDC39a623c18df","args":"args","revert_reason":"revert_reason"}`,
+			`{"type":"contract_call_error","message":"message","error":"error_cause","method":"method","contract":"0xE97Ac2CA30D30de65a6FE0Ab20EDC39a623c18df","args":"args","revert_reason":"revert_reason"}`,
 			s,
 		)
 	})
@@ -76,7 +76,7 @@ func Test_NewCCTXErrorJsonMessage(t *testing.T) {
 		m := cctxerror.NewCCTXErrorJSONMessage("message", sampleErr)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			m,
 		)
 	})
@@ -85,14 +85,14 @@ func Test_NewCCTXErrorJsonMessage(t *testing.T) {
 		m := cctxerror.NewCCTXErrorJSONMessage("message", sampleErr)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			m,
 		)
 		errPacked := errors.New("test", 9993, m)
 		m2 := cctxerror.NewCCTXErrorJSONMessage("", errPacked)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			m2,
 		)
 	})
@@ -101,7 +101,7 @@ func Test_NewCCTXErrorJsonMessage(t *testing.T) {
 		m := cctxerror.NewCCTXErrorJSONMessage("message", sampleErr)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			m,
 		)
 		errPacked := errors.Wrap(sampleErr2, m)
@@ -109,7 +109,7 @@ func Test_NewCCTXErrorJsonMessage(t *testing.T) {
 		m2 := cctxerror.NewCCTXErrorJSONMessage("", errPacked2)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause:error_cause2:error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause:error_cause2:error_cause"}`,
 			m2,
 		)
 	})
@@ -143,7 +143,7 @@ func Test_SplitErrorMessage(t *testing.T) {
 		m := cctxerror.NewCCTXErrorJSONMessage("message", sampleErr)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			m,
 		)
 		errPacked := errors.Wrap(sampleErr2, m)
@@ -153,7 +153,7 @@ func Test_SplitErrorMessage(t *testing.T) {
 		require.Len(t, errorLists, 3)
 		require.Equal(
 			t,
-			`{"message":"message","error":"error_cause","method":"","contract":"","args":"","revert_reason":""}`,
+			`{"type":"internal_error","message":"message","error":"error_cause"}`,
 			errorLists[0],
 		)
 		require.Equal(t, "error_cause2", errorLists[1])

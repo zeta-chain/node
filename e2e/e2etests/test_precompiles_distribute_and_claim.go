@@ -258,8 +258,8 @@ func stakeThroughCosmosAPI(
 	amount *big.Int,
 ) error {
 	msg := stakingtypes.NewMsgDelegate(
-		sdk.AccAddress(staker.Bytes()),
-		validator,
+		sdk.AccAddress(staker.Bytes()).String(),
+		validator.String(),
 		sdk.Coin{
 			Denom:  config.BaseDenom,
 			Amount: math.NewIntFromBigInt(amount),
@@ -313,8 +313,8 @@ func resetDistributionTest(
 	// Clean the delegation.
 	// Delegator will always delegate on the first validator.
 	msg := stakingtypes.NewMsgUndelegate(
-		sdk.AccAddress(staker.Bytes()),
-		validator,
+		sdk.AccAddress(staker.Bytes()).String(),
+		validator.String(),
 		sdk.Coin{
 			Denom:  config.BaseDenom,
 			Amount: math.NewIntFromBigInt(amount.Div(amount, big.NewInt(1e18))),

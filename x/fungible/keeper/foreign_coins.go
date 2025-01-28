@@ -3,7 +3,8 @@ package keeper
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -52,7 +53,7 @@ func (k Keeper) RemoveForeignCoins(
 // GetAllForeignCoinsForChain returns all foreignCoins on a given chain
 func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -69,7 +70,7 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64
 // GetAllForeignCoins returns all foreignCoins
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

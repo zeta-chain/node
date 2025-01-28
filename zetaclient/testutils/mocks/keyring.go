@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 var TestKeyringPair cryptotypes.PrivKey
@@ -84,11 +85,11 @@ func (m Keyring) SaveMultisig(_ string, _ cryptotypes.PubKey) (*ckeys.Record, er
 	return nil, nil
 }
 
-func (m Keyring) Sign(_ string, _ []byte) ([]byte, cryptotypes.PubKey, error) {
+func (m Keyring) Sign(_ string, _ []byte, _ signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	return nil, nil, nil
 }
 
-func (m Keyring) SignByAddress(_ sdk.Address, _ []byte) ([]byte, cryptotypes.PubKey, error) {
+func (m Keyring) SignByAddress(_ sdk.Address, _ []byte, _ signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	return nil, nil, nil
 }
 

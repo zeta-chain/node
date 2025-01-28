@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -41,8 +42,8 @@ func TestKeeper_GetChainParamsForChain(t *testing.T) {
 				{
 					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
-					BallotThreshold:       sdk.ZeroDec(),
-					MinObserverDelegation: sdk.ZeroDec(),
+					BallotThreshold:       sdkmath.LegacyZeroDec(),
+					MinObserverDelegation: sdkmath.LegacyZeroDec(),
 				},
 			},
 		}
@@ -86,8 +87,8 @@ func TestKeeper_GetChainParams(t *testing.T) {
 				{
 					ChainId:               chains.ZetaChainPrivnet.ChainId,
 					IsSupported:           false,
-					BallotThreshold:       sdk.ZeroDec(),
-					MinObserverDelegation: sdk.ZeroDec(),
+					BallotThreshold:       sdkmath.LegacyZeroDec(),
+					MinObserverDelegation: sdkmath.LegacyZeroDec(),
 				},
 			},
 		}

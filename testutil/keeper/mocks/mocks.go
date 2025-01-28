@@ -38,7 +38,7 @@ type CrosschainFungibleKeeper interface {
 	crosschaintypes.FungibleKeeper
 }
 
-//go:generate mockery --name CrosschainAuthorityKeeper --filename authority.go --case underscore --output ./crosschain
+// TODO: investigate can not mock inline interface
 type CrosschainAuthorityKeeper interface {
 	crosschaintypes.AuthorityKeeper
 }
@@ -77,7 +77,7 @@ type FungibleEVMKeeper interface {
 	fungibletypes.EVMKeeper
 }
 
-//go:generate mockery --name FungibleAuthorityKeeper --filename authority.go --case underscore --output ./fungible
+// TODO: investigate can not mock inline interface
 type FungibleAuthorityKeeper interface {
 	fungibletypes.AuthorityKeeper
 }
@@ -120,7 +120,7 @@ type ObserverSlashingKeeper interface {
 	observertypes.SlashingKeeper
 }
 
-//go:generate mockery --name ObserverAuthorityKeeper --filename authority.go --case underscore --output ./observer
+// TODO: investigate can not mock inline interface
 type ObserverAuthorityKeeper interface {
 	observertypes.AuthorityKeeper
 }
@@ -134,7 +134,7 @@ type ObserverLightclientKeeper interface {
  * Lightclient Mocks
  */
 
-//go:generate mockery --name LightclientAuthorityKeeper --filename authority.go --case underscore --output ./lightclient
+// TODO: investigate can not mock inline interface
 type LightclientAuthorityKeeper interface {
 	lightclienttypes.AuthorityKeeper
 }

@@ -56,7 +56,7 @@ func (c *CometBFTClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.Res
 		Hash:   bytes.HexBytes{},
 		Height: 0,
 		Index:  0,
-		TxResult: abci.ResponseDeliverTx{
+		TxResult: abci.ExecTxResult{
 			Log: "",
 		},
 		Tx:    []byte{},

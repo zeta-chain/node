@@ -23,9 +23,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	amountTotal := amount + common.DefaultDepositorFee
 
 	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
+	utxos := r.ListDeployerUTXOs()
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -36,7 +34,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Send BTC to TSS address with a dummy memo
 	data := []byte("hello satoshi")
 	memo := append(contractAddr.Bytes(), data...)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos, memo)
+	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos[:1], memo)
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined

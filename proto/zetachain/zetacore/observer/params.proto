@@ -21,11 +21,11 @@ message ChainParams {
   int64 outbound_schedule_interval = 12;
   int64 outbound_schedule_lookahead = 13;
   string ballot_threshold = 14 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string min_observer_delegation = 15 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   bool is_supported = 16;

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ import (
 
 // paying 50% more than the current base gas price to buffer for potential block-by-block
 // gas price increase due to EIP1559 feemarket on ZetaChain
-var bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
+var bufferMultiplier = sdkmath.LegacyMustNewDecFromStr("1.5")
 
 // Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
 func (c *Client) Broadcast(
@@ -47,10 +48,10 @@ func (c *Client) Broadcast(
 		baseGasPrice = DefaultBaseGasPrice
 	}
 
-	reductionRate := sdktypes.MustNewDecFromStr(ante.GasPriceReductionRate)
+	reductionRate := sdkmath.LegacyMustNewDecFromStr(ante.GasPriceReductionRate)
 
 	// multiply gas price by the system tx reduction rate
-	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
+	adjustedBaseGasPrice := sdkmath.LegacyNewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -89,7 +90,7 @@ func (c *Client) Broadcast(
 	// #nosec G115 always in range
 	fee := sdktypes.NewCoins(sdktypes.NewCoin(
 		config.BaseDenom,
-		sdktypes.NewInt(int64(gasLimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt()),
+		sdkmath.NewInt(int64(gasLimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt()),
 	))
 	builder.SetFeeAmount(fee)
 
@@ -148,7 +149,7 @@ func (c *Client) SignTx(
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
 ) error {
-	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
+	return clienttx.Sign(context.TODO(), txf, name, txBuilder, overwriteSig)
 }
 
 // QueryTxResult query the result of a tx

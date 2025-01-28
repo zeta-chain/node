@@ -55,11 +55,15 @@ func (c *Contract) Unstake(
 	}
 
 	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
+	bondDenom, err := c.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
 	res, err := msgServer.Undelegate(ctx, &stakingtypes.MsgUndelegate{
 		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
-			Denom:  c.stakingKeeper.BondDenom(ctx),
+			Denom:  bondDenom,
 			Amount: math.NewIntFromBigInt(amount),
 		},
 	})
