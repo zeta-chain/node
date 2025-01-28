@@ -144,8 +144,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// initialize context
-	ctx, legacyCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
-	defer legacyCancel()
+	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
+	defer timeoutCancel()
 	ctx, cancel := context.WithCancelCause(ctx)
 
 	// route os signals to context cancellation.
