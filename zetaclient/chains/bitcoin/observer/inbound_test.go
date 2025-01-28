@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -330,6 +331,39 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 		require.Equal(t, eventExpected, event)
 	})
 
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
+		// load tx
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// mock up previous tx with 1 satoshi less than depositor fee
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+		tx.Vout[0].Value = depositorFee - 1.0/1e8
+
+		expectedEvent := *eventExpected
+		expectedEvent.Value = 0
+		expectedEvent.Status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
+		// get BTC event
+		event, err := observer.GetBtcEventWithoutWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, expectedEvent, *event)
+	})
+
 	t.Run("should get BTC inbound event from P2TR sender", func(t *testing.T) {
 		// replace vin with a P2TR vin, so the sender address will change
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
@@ -525,27 +559,6 @@ func TestGetBtcEventWithoutWitness(t *testing.T) {
 			mockDepositFeeCalculator(0.0, errors.New("rpc error")),
 		)
 		require.ErrorContains(t, err, "rpc error")
-		require.Nil(t, event)
-	})
-
-	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
-		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
-		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
-
-		// get BTC event
-		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEventWithoutWitness(
-			ctx,
-			rpcClient,
-			*tx,
-			tssAddress,
-			blockNumber,
-			log.Logger,
-			net,
-			feeCalculator,
-		)
-		require.NoError(t, err)
 		require.Nil(t, event)
 	})
 

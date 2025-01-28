@@ -192,6 +192,7 @@ message MsgVoteInbound {
 	RevertOptions revert_options = 17;
 	CallOptions call_options = 18;
 	bool is_cross_chain_call = 19;
+	InboundStatus status = 20;
 }
 ```
 

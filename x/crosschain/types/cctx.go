@@ -250,6 +250,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
 		IsCrossChainCall:       msg.IsCrossChainCall,
+		Status:                 msg.Status,
 	}
 
 	outboundParams := &OutboundParams{
@@ -269,10 +270,10 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
 	}
+
 	status := &Status{
 		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
-		ErrorMessage:        "",
 		CreatedTimestamp:    ctx.BlockHeader().Time.Unix(),
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,

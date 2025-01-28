@@ -6,6 +6,7 @@
 
 * [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
 * [3357](https://github.com/zeta-chain/node/pull/3357) - cosmos-sdk v.50.x upgrade
+* [3358](https://github.com/zeta-chain/node/pull/3358) - register aborted CCTX for Bitcoin inbound that carries insufficient depositor fee
 * [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
 
 ### Refactor
@@ -21,6 +22,7 @@
 
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
+* [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
 
 ## v25.0.0
 
