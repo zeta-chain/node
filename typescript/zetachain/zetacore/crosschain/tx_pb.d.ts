@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, InboundStatus, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -228,6 +228,11 @@ export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
    * @generated from field: int64 gas_limit = 7;
    */
   gasLimit: bigint;
+
+  /**
+   * @generated from field: string liquidity_cap = 8;
+   */
+  liquidityCap: string;
 
   constructor(data?: PartialMessage<MsgWhitelistERC20>);
 
@@ -683,6 +688,13 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: bool is_cross_chain_call = 19;
    */
   isCrossChainCall: boolean;
+
+  /**
+   * status of the inbound observation
+   *
+   * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
+   */
+  status: InboundStatus;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

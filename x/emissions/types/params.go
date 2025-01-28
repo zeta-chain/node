@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -59,8 +58,8 @@ func validateValidatorEmissionPercentage(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	dec := sdk.MustNewDecFromStr(v)
-	if dec.GT(sdk.OneDec()) {
+	dec := sdkmath.LegacyMustNewDecFromStr(v)
+	if dec.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("validator emission percentage cannot be more than 100 percent")
 	}
 	if dec.IsNegative() {
@@ -74,8 +73,8 @@ func validateObserverEmissionPercentage(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	dec := sdk.MustNewDecFromStr(v)
-	if dec.GT(sdk.OneDec()) {
+	dec := sdkmath.LegacyMustNewDecFromStr(v)
+	if dec.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("observer emission percentage cannot be more than 100 percent")
 	}
 	if dec.IsNegative() {
@@ -89,8 +88,8 @@ func validateTssEmissionPercentage(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	dec := sdk.MustNewDecFromStr(v)
-	if dec.GT(sdk.OneDec()) {
+	dec := sdkmath.LegacyMustNewDecFromStr(v)
+	if dec.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("tss emission percentage cannot be more than 100 percent")
 	}
 	if dec.IsNegative() {

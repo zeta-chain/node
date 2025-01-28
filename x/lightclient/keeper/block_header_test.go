@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/x/lightclient/types"
 )
 
-// readReceipt reads a receipt from a file.
+// readHeader reads a header from a file.
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func readHeader(filename string) (*ethtypes.Header, error) {

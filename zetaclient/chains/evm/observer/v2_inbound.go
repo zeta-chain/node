@@ -16,7 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -130,7 +130,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	events := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDeposit)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDeposit)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
@@ -198,6 +198,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(isCrossChainCall),
 	)
@@ -278,7 +279,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 	events := make([]*gatewayevm.GatewayEVMCalled, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayCall)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
@@ -334,6 +335,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
 		types.WithEVMRevertOptions(event.RevertOptions),
 	)
 }
@@ -409,7 +411,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	events := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	for iterator.Next() {
 		events = append(events, iterator.Event)
-		err := evm.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", evm.TopicsGatewayDepositAndCall)
+		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
@@ -446,7 +448,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	return filtered
 }
 
-// newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
+// newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
@@ -471,6 +473,7 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		event.Raw.Index,
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
+		types.InboundStatus_SUCCESS,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
 	)

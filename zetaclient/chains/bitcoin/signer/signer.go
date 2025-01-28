@@ -58,11 +58,8 @@ type Signer struct {
 }
 
 // New creates a new Bitcoin signer
-func New(chain chains.Chain, tss interfaces.TSSSigner, rpc RPC, logger base.Logger) *Signer {
-	return &Signer{
-		Signer: base.NewSigner(chain, tss, logger),
-		rpc:    rpc,
-	}
+func New(baseSigner *base.Signer, rpc RPC) *Signer {
+	return &Signer{Signer: baseSigner, rpc: rpc}
 }
 
 // AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx

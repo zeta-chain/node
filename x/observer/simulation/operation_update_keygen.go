@@ -52,7 +52,6 @@ func SimulateUpdateKeygen(k keeper.Keeper) simtypes.Operation {
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      policyAccount,
 			AccountKeeper:   k.GetAuthKeeper(),

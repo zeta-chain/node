@@ -185,7 +185,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(err)
 
 	// monitor block production to ensure we fail fast if there are consensus failures
-	// this is not run in an errgroup since only returning an error will not exit immedately
+	// this is not run in an errgroup since only returning an error will not exit immediately
 	// this needs to be early to quickly detect consensus failure during genesis
 	go monitorBlockProductionExit(ctx, conf)
 
@@ -298,6 +298,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+			e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
 			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinDepositTestsAdvanced := []string{

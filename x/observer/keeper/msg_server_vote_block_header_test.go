@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -42,7 +42,7 @@ func mockAddBlockHeader(m *mocks.ObserverLightclientKeeper) {
 }
 
 func TestMsgServer_VoteBlockHeader(t *testing.T) {
-	one, err := sdk.NewDecFromStr("1.0")
+	one, err := sdkmath.LegacyNewDecFromStr("1.0")
 	require.NoError(t, err)
 
 	t.Run("fails if the chain is not supported", func(t *testing.T) {

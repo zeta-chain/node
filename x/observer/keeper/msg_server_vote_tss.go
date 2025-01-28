@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -59,7 +60,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 			VoterList:            voterList,
 			Votes:                types.CreateVotes(len(voterList)),
 			ObservationType:      types.ObservationType_TSSKeyGen,
-			BallotThreshold:      sdk.MustNewDecFromStr("1.00"),
+			BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("1.00"),
 			BallotStatus:         types.BallotStatus_BallotInProgress,
 			BallotCreationHeight: ctx.BlockHeight(),
 		}

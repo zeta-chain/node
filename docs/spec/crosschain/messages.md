@@ -192,6 +192,7 @@ message MsgVoteInbound {
 	RevertOptions revert_options = 17;
 	CallOptions call_options = 18;
 	bool is_cross_chain_call = 19;
+	InboundStatus status = 20;
 }
 ```
 
@@ -211,6 +212,7 @@ message MsgWhitelistERC20 {
 	string symbol = 5;
 	uint32 decimals = 6;
 	int64 gas_limit = 7;
+	string liquidity_cap = 8;
 }
 ```
 

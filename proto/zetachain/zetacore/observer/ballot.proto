@@ -30,7 +30,7 @@ message Ballot {
   repeated VoteType votes = 4;
   ObservationType observation_type = 5;
   string ballot_threshold = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   BallotStatus ballot_status = 7;
