@@ -34,6 +34,8 @@ enum InboundStatus {
   // this field is specifically for Bitcoin when the deposit amount is less than
   // depositor fee
   INSUFFICIENT_DEPOSITOR_FEE = 1;
+  // the receiver address parsed from the inbound is invalid
+  INVALID_RECEIVER_ADDRESS = 2;
 }
 
 message InboundParams {

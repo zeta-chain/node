@@ -55,12 +55,12 @@ func Test_Category(t *testing.T) {
 		expected clienttypes.InboundCategory
 	}{
 		{
-			name: "should return InboundCategoryGood for a processable inbound event",
+			name: "should return InboundCategoryProcessable for a processable inbound event",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: clienttypes.InboundCategoryGood,
+			expected: clienttypes.InboundCategoryProcessable,
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted sender address",

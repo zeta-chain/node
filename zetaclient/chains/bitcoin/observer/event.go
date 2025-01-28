@@ -75,7 +75,7 @@ func (event *BTCInboundEvent) Category() clienttypes.InboundCategory {
 		return clienttypes.InboundCategoryDonation
 	}
 
-	return clienttypes.InboundCategoryGood
+	return clienttypes.InboundCategoryProcessable
 }
 
 // DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
@@ -159,7 +159,7 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 	logFields := map[string]any{logs.FieldTx: event.TxHash}
 
 	switch category := event.Category(); category {
-	case clienttypes.InboundCategoryGood:
+	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
@@ -215,19 +215,15 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 	}
 
-	// make a legacy message so that zetacore can process it as V1
-	msgBytes := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
-	message := hex.EncodeToString(msgBytes)
-
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.FromAddress,
 		ob.Chain().ChainId,
 		event.FromAddress,
-		event.ToAddress,
+		event.MemoStd.Receiver.Hex(),
 		ob.ZetacoreClient().Chain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
+		hex.EncodeToString(event.MemoStd.Payload),
 		event.TxHash,
 		event.BlockNumber,
 		0,
