@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
@@ -68,15 +67,6 @@ func (signer *Signer) Broadcast(ctx context.Context, signedTx *wire.MsgTx) error
 	return nil
 }
 
-// TSSToPkScript returns the TSS pkScript
-func (signer *Signer) TSSToPkScript() ([]byte, error) {
-	tssAddrP2WPKH, err := signer.TSS().PubKey().AddressBTC(signer.Chain().ChainId)
-	if err != nil {
-		return nil, err
-	}
-	return txscript.PayToAddrScript(tssAddrP2WPKH)
-}
-
 // TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
@@ -104,9 +94,10 @@ func (signer *Signer) TryProcessOutbound(
 		logs.FieldNonce:  params.TssNonce,
 	}
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
-	if err == nil {
-		lf["signer"] = signerAddress.String()
+	if err != nil {
+		return
 	}
+	lf["signer"] = signerAddress.String()
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// query network info to get minRelayFee (typically 1000 satoshis)

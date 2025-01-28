@@ -161,7 +161,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	payToSelfScript, err := signer.TSSToPkScript()
+	payToSelfScript, err := signer.TSS().PubKey().BTCPayToAddrScript(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (signer *Signer) SignTx(
 	height uint64,
 	nonce uint64,
 ) error {
-	pkScript, err := signer.TSSToPkScript()
+	pkScript, err := signer.TSS().PubKey().BTCPayToAddrScript(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
