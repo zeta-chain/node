@@ -103,13 +103,13 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:       "cctx is nil",
 		},
 		{
-			name: "coin type is not gas",
+			name: "invalid coin types",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
 				cctx.InboundParams.CoinType = coin.CoinType_ERC20
 			},
 			expected: nil,
-			errMsg:   "can only send gas token to a Bitcoin network",
+			errMsg:   "invalid coin type",
 		},
 		{
 			name: "invalid gas price",

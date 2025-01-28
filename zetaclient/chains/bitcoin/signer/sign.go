@@ -93,14 +93,12 @@ func (signer *Signer) SignWithdrawTx(
 
 	// add tx outputs
 	inputValue := selected.Value
-	err = signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
-	if err != nil {
+	if err := signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx); err != nil {
 		return nil, err
 	}
 
 	// sign the tx
-	err = signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce)
-	if err != nil {
+	if err := signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce); err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
 
