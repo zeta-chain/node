@@ -8,6 +8,8 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/emissions/keeper"
 	"github.com/zeta-chain/node/x/emissions/types"
 )
@@ -18,7 +20,12 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		simAccount, randomObserver, _, err := zetasimulation.GetRandomAccountAndObserver(
+			r,
+			ctx,
+			k.GetObserverKeeper(),
+			accounts,
+		)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -20,9 +21,9 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Fetch the account from the auth keeper which can then be used to fetch spendable coins}
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.RefundAborted, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRefundAbortedCCTX, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -46,7 +47,7 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 			}
 		}
 		if !abortedCctxFound {
-			return simtypes.NoOpMsg(types.ModuleName, types.RefundAborted, "no aborted cctx found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRefundAbortedCCTX, "no aborted cctx found"), nil, nil
 		}
 
 		msg := types.MsgRefundAbortedCCTX{
@@ -59,7 +60,7 @@ func SimulateMsgRefundAbortedCCTX(k keeper.Keeper,
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgRefundAbortedCCTX,
 				"unable to validate MsgRefundAbortedCCTX msg",
 			), nil, err
 		}

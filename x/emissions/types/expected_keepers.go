@@ -6,6 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -21,6 +22,9 @@ type ObserverKeeper interface {
 	ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks int64)
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
+	GetSupportedChains(ctx sdk.Context) []chains.Chain
+	GetNodeAccount(ctx sdk.Context, address string) (observertypes.NodeAccount, bool)
+	GetAllNodeAccount(ctx sdk.Context) []observertypes.NodeAccount
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

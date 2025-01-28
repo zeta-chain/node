@@ -11,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -24,7 +25,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -36,7 +37,12 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		}
 		// Get a random account and observer
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		simAccount, randomObserver, _, err := zetasimulation.GetRandomAccountAndObserver(
+			r,
+			ctx,
+			k.GetObserverKeeper(),
+			accounts,
+		)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -48,7 +54,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"no TSS found",
 			), nil, nil
 		}
@@ -57,7 +63,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"pending nonces object not found",
 			), nil, nil
 		}
@@ -67,7 +73,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"no pending nonces found",
 			), nil, nil
 		}
@@ -91,7 +97,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if found && tracker.MaxReached() {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"tracker is maxed",
 			), nil, nil
 		}
@@ -101,7 +107,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"no nonce to cctx found",
 			), nil, nil
 		}
@@ -111,7 +117,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddOutboundTracker,
+				TypeMsgAddOutboundTracker,
 				"no cctx found for nonce",
 			), nil, nil
 		}
@@ -127,7 +133,7 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgAddOutboundTracker,
 				"unable to validate MsgAddOutboundTracker msg",
 			), nil, err
 		}

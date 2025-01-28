@@ -9,6 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -17,20 +18,17 @@ import (
 func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		url := sdk.MsgTypeURL(&types.MsgUpdateObserver{})
-		moduleName := "zetacore"
-
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, TypeMsgUpdateObserver, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		_, randomObserver, observerList, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		_, randomObserver, observerList, err := zetasimulation.GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, TypeMsgUpdateObserver, err.Error()), nil, nil
 		}
 
 		observerMap := make(map[string]bool)
@@ -40,19 +38,19 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 
 		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, TypeMsgUpdateObserver, err.Error()), nil, nil
 		}
 
 		if len(validators) == 0 {
 			return simtypes.NoOpMsg(
 				moduleName,
-				url,
+				TypeMsgUpdateObserver,
 				"no validators found",
 			), nil, nil
 		}
 
 		newObserver := ""
-		foundNewObserver := RepeatCheck(func() bool {
+		foundNewObserver := zetasimulation.RepeatCheck(func() bool {
 			randomValidator := validators[r.Intn(len(validators))]
 			randomValidatorAddress, err := types.GetAccAddressFromOperatorAddress(randomValidator.OperatorAddress)
 			if err != nil {
@@ -72,7 +70,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		if !foundNewObserver {
 			return simtypes.NoOpMsg(
 				moduleName,
-				url,
+				TypeMsgUpdateObserver,
 				"no new observer found",
 			), nil, nil
 		}
@@ -81,7 +79,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				moduleName,
-				url,
+				TypeMsgUpdateObserver,
 				"no last block count found",
 			), nil, nil
 		}
@@ -89,7 +87,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		if int(lastBlockCount.Count) != len(observerList) {
 			return simtypes.NoOpMsg(
 				moduleName,
-				url,
+				TypeMsgUpdateObserver,
 				"observer count mismatch",
 			), nil, nil
 		}
@@ -103,7 +101,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, err
+			return simtypes.NoOpMsg(moduleName, TypeMsgUpdateObserver, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{

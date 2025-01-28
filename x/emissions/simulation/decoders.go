@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
 	"github.com/zeta-chain/node/x/emissions/types"
 )
 
@@ -18,7 +19,12 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			var withdrawableEmissionsA, withdrawableEmissionsB types.WithdrawableEmissions
 			cdc.MustUnmarshal(kvA.Value, &withdrawableEmissionsA)
 			cdc.MustUnmarshal(kvB.Value, &withdrawableEmissionsB)
-			return fmt.Sprintf("key %s value A %v value B %v", types.WithdrawableEmissionsKey, withdrawableEmissionsA, withdrawableEmissionsB)
+			return fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.WithdrawableEmissionsKey,
+				withdrawableEmissionsA,
+				withdrawableEmissionsB,
+			)
 		default:
 			panic(
 				fmt.Sprintf(
@@ -28,7 +34,5 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 				),
 			)
 		}
-
 	}
-
 }

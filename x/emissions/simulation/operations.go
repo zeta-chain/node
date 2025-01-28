@@ -1,14 +1,12 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/zeta-chain/node/x/emissions/keeper"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // Simulation operation weights constants
@@ -55,65 +53,4 @@ func WeightedOperations(
 			SimulateMsgWithdrawEmissions(k),
 		),
 	}
-}
-
-// GetRandomAccountAndObserver returns a random account and the associated observer address
-func GetRandomAccountAndObserver(
-	r *rand.Rand,
-	ctx sdk.Context,
-	k keeper.Keeper,
-	accounts []simtypes.Account,
-) (simtypes.Account, string, error) {
-	observers, found := k.GetObserverKeeper().GetObserverSet(ctx)
-	if !found {
-		return simtypes.Account{}, "", fmt.Errorf("observer set not found")
-	}
-
-	if len(observers.ObserverList) == 0 {
-		return simtypes.Account{}, "", fmt.Errorf("no observers present in observer set found")
-	}
-
-	randomObserver := ""
-	foundObserver := false
-	for i := 0; i < 10; i++ {
-		randomObserver = GetRandomObserver(r, observers.ObserverList)
-		ok := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, randomObserver)
-		if ok {
-			foundObserver = true
-			break
-		}
-	}
-
-	if !foundObserver {
-		return simtypes.Account{}, "", fmt.Errorf("no observer found")
-	}
-
-	simAccount, err := GetObserverAccount(randomObserver, accounts)
-	if err != nil {
-		return simtypes.Account{}, "", err
-	}
-	return simAccount, randomObserver, nil
-}
-
-func GetRandomObserver(r *rand.Rand, observerList []string) string {
-	idx := r.Intn(len(observerList))
-	return observerList[idx]
-}
-
-// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
-// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
-//if the other modules create transactions which affect the validator
-//and triggers any of the staking hooks defined in the observer modules
-
-func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
-	operatorAddress, err := observerTypes.GetOperatorAddressFromAccAddress(observerAddress)
-	if err != nil {
-		return simtypes.Account{}, fmt.Errorf("validator not found for observer ")
-	}
-
-	simAccount, found := simtypes.FindAccount(accounts, operatorAddress)
-	if !found {
-		return simtypes.Account{}, fmt.Errorf("operator account not found")
-	}
-	return simAccount, nil
 }

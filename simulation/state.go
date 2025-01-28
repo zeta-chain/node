@@ -17,6 +17,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -65,7 +66,8 @@ func extractBankGenesisState(
 			Coins:   sdk.NewCoins(notBondedCoins),
 		})
 	}
-	rewardAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyMustNewDecFromStr("10000000000000000.0")).RoundInt()
+
+	rewardAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyMustNewDecFromStr("10000.0")).RoundInt()
 	bankState.Balances = append(bankState.Balances, banktypes.Balance{
 		Address: emissionstypes.EmissionsModuleAddress.String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount)),

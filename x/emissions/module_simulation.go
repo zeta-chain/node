@@ -3,6 +3,7 @@ package emissions
 import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/zeta-chain/node/x/emissions/simulation"
 	"github.com/zeta-chain/node/x/emissions/types"
 )

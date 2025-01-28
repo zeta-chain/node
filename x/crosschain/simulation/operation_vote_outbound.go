@@ -14,9 +14,9 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -51,7 +51,7 @@ func operationSimulateVoteOutbound(
 		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
 		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
 		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
-		return GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -61,8 +61,8 @@ func operationSimulateVoteOutbound(
 func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 	defaultVote := chains.ReceiveStatus_success
 	alternativeVote := chains.ReceiveStatus_failed
-	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
-	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := BallotVoteSimulationMatrix()
+	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := zetasimulation.ObserverVotesSimulationMatrix()
+	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.VoteOutboundBallotVoteSimulationMatrix()
 	return func(
 		r *rand.Rand,
 		app *baseapp.BaseApp,
@@ -81,7 +81,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		_, creator, err := GetRandomAccountAndObserver(r, ctx, k, accs)
+		_, creator, _, err := zetasimulation.GetRandomAccountAndObserver(r, ctx, k.GetObserverKeeper(), accs)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -89,12 +89,12 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "tss not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "tss not found"), nil, nil
 		}
 
-		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)
+		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), from)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "unable to get asset"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to get asset"), nil, err
 		}
 
 		// Generate a new cctx and save it , which can be used to finalize the outbound
@@ -115,7 +115,11 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 		err = k.SetObserverOutboundInfo(ctx, to, &cctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to set observer outbound info"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgVoteOutbound,
+				"unable to set observer outbound info",
+			), nil, err
 		}
 
 		msg.OutboundTssNonce = cctx.GetCurrentOutboundParam().TssNonce
@@ -123,7 +127,12 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
+		simAccount, firstVoter, _, err := zetasimulation.GetRandomAccountAndObserver(
+			r,
+			ctx,
+			k.GetObserverKeeper(),
+			accs,
+		)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -136,12 +145,16 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		// THe first vote should always create a new ballot
 		_, found = k.GetObserverKeeper().GetBallot(ctx, firstMsg.Digest())
 		if found {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "ballot already exists"), nil, nil
 		}
 
 		err = firstMsg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first outbound vote"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgVoteOutbound,
+				"unable to validate first outbound vote",
+			), nil, err
 		}
 
 		tx, err := simtestutil.GenSignedMockTx(
@@ -156,14 +169,14 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to generate mock tx"), nil, err
 		}
 
 		// We can return error here as we can guarantee that the first vote will be successful.
 		// Since we query the observer set before adding votes
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to deliver tx"), nil, err
 		}
 
 		opMsg := simtypes.NewOperationMsg(&msg, true, "")
@@ -171,7 +184,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		// Add subsequent votes
 		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, authz.OutboundVoter.String(), "observer set not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "observer set not found"), nil, nil
 		}
 
 		// 1) Schedule operations for votes
@@ -199,7 +212,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			if observerAddress == firstVoter {
 				continue
 			}
-			observerAccount, err := GetObserverAccount(observerAddress, accs)
+			observerAccount, err := zetasimulation.GetObserverAccount(observerAddress, accs)
 			if err != nil {
 				continue
 			}
@@ -210,7 +223,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 
 			e := votingMsg.ValidateBasic()
 			if e != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, e
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to validate voting msg"), nil, e
 			}
 
 			fops = append(fops, simtypes.FutureOperation{

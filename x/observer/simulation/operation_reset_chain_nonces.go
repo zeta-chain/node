@@ -10,6 +10,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -18,19 +19,19 @@ import (
 func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgResetChainNonces, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		randomChain, err := GetExternalChain(ctx, k, r)
+		randomChain, err := zetasimulation.GetExternalChain(ctx, k, r)
 		if err != nil {
 			return simtypes.NoOpMsg(
 					types.ModuleName,
-					types.TypeMsgResetChainNonces,
+					TypeMsgResetChainNonces,
 					err.Error(),
 				), nil, fmt.Errorf(
 					"error getting external chain",
@@ -41,7 +42,7 @@ func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 					types.ModuleName,
-					types.TypeMsgResetChainNonces,
+					TypeMsgResetChainNonces,
 					"TSS not found",
 				), nil, fmt.Errorf(
 					"TSS not found",
@@ -49,7 +50,7 @@ func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 		}
 		pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, randomChain.ChainId)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgResetChainNonces, "Pending nonces not found"), nil,
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgResetChainNonces, "Pending nonces not found"), nil,
 				fmt.Errorf("pending nonces not found for chain %d %s", randomChain.ChainId, randomChain.ChainName)
 		}
 
@@ -64,7 +65,7 @@ func SimulateResetChainNonces(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgResetChainNonces, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{

@@ -9,6 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -18,9 +19,9 @@ import (
 func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRemoveChainParams, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRemoveChainParams, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -30,13 +31,13 @@ func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgRemoveChainParams,
+				TypeMsgRemoveChainParams,
 				"no supported chains found",
 			), nil, nil
 		}
 
 		randomExternalChain := int64(0)
-		foundExternalChain := RepeatCheck(func() bool {
+		foundExternalChain := zetasimulation.RepeatCheck(func() bool {
 			c := supportedChains[r.Intn(len(supportedChains))]
 			if !c.IsZetaChain() {
 				randomExternalChain = c.ChainId
@@ -48,7 +49,7 @@ func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 		if !foundExternalChain {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgRemoveChainParams,
+				TypeMsgRemoveChainParams,
 				"no external chain found",
 			), nil, nil
 		}
@@ -60,7 +61,7 @@ func SimulateMsgRemoveChainParams(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRemoveChainParams, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
