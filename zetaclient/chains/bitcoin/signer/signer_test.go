@@ -37,6 +37,7 @@ var TestDataDir = "../../../"
 
 type testSuite struct {
 	*signer.Signer
+	observer       *observer.Observer
 	tss            *mocks.TSS
 	client         *mocks.BitcoinClient
 	zetacoreClient *mocks.ZetacoreClient
@@ -68,12 +69,16 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	baseSigner := base.NewSigner(chain, tss, baseLogger)
 	signer := signer.New(baseSigner, rpcClient)
 
-	return &testSuite{
+	// create test suite and observer
+	suite := &testSuite{
 		Signer:         signer,
 		tss:            tss,
 		client:         rpcClient,
 		zetacoreClient: zetacoreClient,
 	}
+	suite.createObserver(t)
+
+	return suite
 }
 
 func Test_BroadcastOutbound(t *testing.T) {
@@ -101,7 +106,6 @@ func Test_BroadcastOutbound(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// setup signer and observer
 			s := newTestSuite(t, tt.chain)
-			observer := s.getNewObserver(t)
 
 			// load tx and result
 			chainID := tt.chain.ChainId
@@ -126,7 +130,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 
 			// mock the previous tx as included
 			// this is necessary to allow the 'checkTSSVin' function to pass
-			observer.SetIncludedTx(tt.nonce-1, &btcjson.GetTransactionResult{
+			s.observer.SetIncludedTx(tt.nonce-1, &btcjson.GetTransactionResult{
 				TxID: rawResult.Vin[0].Txid,
 			})
 
@@ -136,12 +140,12 @@ func Test_BroadcastOutbound(t *testing.T) {
 				msgTx,
 				tt.nonce,
 				cctx,
-				observer,
+				s.observer,
 				s.zetacoreClient,
 			)
 
 			// check if outbound is included
-			gotResult := observer.GetIncludedTx(tt.nonce)
+			gotResult := s.observer.GetIncludedTx(tt.nonce)
 			require.Equal(t, txResult, gotResult)
 		})
 	}
@@ -330,8 +334,8 @@ func makeCtx(t *testing.T) context.Context {
 	return zctx.WithAppContext(context.Background(), app)
 }
 
-// getNewObserver creates a new BTC chain observer for testing
-func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
+// createObserver creates a new BTC chain observer for test suite
+func (s *testSuite) createObserver(t *testing.T) {
 	// prepare mock arguments to create observer
 	params := mocks.MockChainParams(s.Chain().ChainId, 2)
 	ts := &metrics.TelemetryServer{}
@@ -341,16 +345,15 @@ func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 	require.NoError(t, err)
 
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create observer
-	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, logger)
+	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, baseLogger)
 	require.NoError(t, err)
 
-	ob, err := observer.New(s.Chain(), baseObserver, s.client)
+	s.observer, err = observer.New(s.Chain(), baseObserver, s.client)
 	require.NoError(t, err)
-	return ob
 }
 
 func hashFromTXID(t *testing.T, txid string) *chainhash.Hash {
