@@ -8,6 +8,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+type Type string
+
+const (
+	ContractCallError Type = "contract_call_error"
+	InternalError     Type = "internal_error"
+)
+
 // CCTXErrorMessage is used to provide a detailed error message for a cctx
 
 // The message and error fields together provide a view on what cause the outbound or revert to fail
@@ -20,18 +27,20 @@ import (
 // Method: Contract method
 // RevertReason: Reason for the revert if available
 type CCTXErrorMessage struct {
-	Message      string `json:"message"`
-	Error        string `json:"error"`
-	Method       string `json:"method"`
-	Contract     string `json:"contract"`
-	Args         string `json:"args"`
-	RevertReason string `json:"revert_reason"`
+	Type         Type   `json:"type,omitempty"`
+	Message      string `json:"message,omitempty"`
+	Error        string `json:"error,omitempty"`
+	Method       string `json:"method,omitempty"`
+	Contract     string `json:"contract,omitempty"`
+	Args         string `json:"args,omitempty"`
+	RevertReason string `json:"revert_reason,omitempty"`
 }
 
 // NewCCTXErrorMessage creates a new CCTXErrorMessage struct
 func NewCCTXErrorMessage(message string) CCTXErrorMessage {
 	return CCTXErrorMessage{
 		Message: message,
+		Type:    InternalError,
 	}
 }
 
@@ -49,6 +58,7 @@ func NewZEVMErrorMessage(
 		Contract: contract.String(),
 		Args:     fmt.Sprintf("%v", args),
 		Message:  message,
+		Type:     ContractCallError,
 	}
 	if err != nil {
 		c.Error = err.Error()
@@ -90,6 +100,7 @@ func NewCCTXErrorJSONMessage(message string, newError error) string {
 					m.Contract = parsed.Contract
 					m.Args = parsed.Args
 					m.RevertReason = parsed.RevertReason
+					m.Type = parsed.Type
 					m.WrapError(parsed.Error)
 				}
 			}
