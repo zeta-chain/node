@@ -29,8 +29,14 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	// abort if CCTX inbound observation status indicates failure
 	// this is specifically for Bitcoin inbound error 'INSUFFICIENT_DEPOSITOR_FEE'
 	if config.CCTX.InboundParams.Status == types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE {
-
-		config.CCTX.SetAbort(types.StatusMessages{StatusMessage: fmt.Sprintf("observation failed, reason %s", types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String())})
+		config.CCTX.SetAbort(
+			types.StatusMessages{
+				StatusMessage: fmt.Sprintf(
+					"observation failed, reason %s",
+					types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String(),
+				),
+			},
+		)
 		return types.CctxStatus_Aborted, nil
 	}
 

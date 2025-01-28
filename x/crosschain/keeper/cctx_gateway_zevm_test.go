@@ -121,7 +121,11 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
-			require.Contains(t, cctx.CctxStatus.StatusMessage, "outbound failed but the universal contract did not revert")
+			require.Contains(
+				t,
+				cctx.CctxStatus.StatusMessage,
+				"outbound failed but the universal contract did not revert",
+			)
 			require.True(t, strings.Contains(cctx.CctxStatus.ErrorMessage, sample.ErrSample.Error()))
 		},
 	)
