@@ -3,8 +3,11 @@ package local
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -47,7 +50,8 @@ const (
 )
 
 var (
-	TestTimeout = 20 * time.Minute
+	TestTimeout        = 20 * time.Minute
+	ErrTopLevelTimeout = errors.New("top level test timeout")
 )
 
 var noError = testutil.NoError
@@ -130,13 +134,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipPrecompiles = true
 	}
 
-	// start timer
-	go func() {
-		time.Sleep(TestTimeout)
-		logger.Error("Test timed out after %s", TestTimeout.String())
-		os.Exit(1)
-	}()
-
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
@@ -147,7 +144,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
+	defer timeoutCancel()
+	ctx, cancel := context.WithCancelCause(ctx)
+
+	// route os signals to context cancellation.
+	// using NotifyContext will ensure that the second signal
+	// will not be handled and should kill the process.
+	go func() {
+		notifyCtx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+		<-notifyCtx.Done()
+		cancel(fmt.Errorf("notify context: %w", notifyCtx.Err()))
+		stop()
+	}()
 
 	// wait for a specific height on ZetaChain
 	noError(utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger))
@@ -183,9 +192,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(err)
 
 	// monitor block production to ensure we fail fast if there are consensus failures
-	// this is not run in an errgroup since only returning an error will not exit immediately
-	// this needs to be early to quickly detect consensus failure during genesis
-	go monitorBlockProductionExit(ctx, conf)
+	go monitorBlockProductionCancel(ctx, cancel, conf)
 
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
@@ -504,7 +511,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	go monitorTxPriorityInBlocks(ctx, conf, txPriorityErrCh)
 
 	if err := eg.Wait(); err != nil {
-		deployerRunner.CtxCancel()
+		deployerRunner.CtxCancel(err)
 		monitorPriorityCancel()
 		logger.Print("❌ %v", err)
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
