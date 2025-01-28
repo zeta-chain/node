@@ -17,13 +17,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -64,6 +65,13 @@ func extractBankGenesisState(
 			Coins:   sdk.NewCoins(notBondedCoins),
 		})
 	}
+	rewardAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyMustNewDecFromStr("10000000000000000.0")).RoundInt()
+	bankState.Balances = append(bankState.Balances, banktypes.Balance{
+		Address: emissionstypes.EmissionsModuleAddress.String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount)),
+	})
+
+	bankState.Supply = bankState.Supply.Add(sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount))...)
 
 	return bankState
 }
@@ -199,6 +207,29 @@ func extractObserverGenesisState(
 		pendingNonces = append(pendingNonces, pendingNonce)
 	}
 
+	// create test ballots for reward distribution
+	ballots := make([]*observertypes.Ballot, 1000)
+	votes := make([]observertypes.VoteType, len(observers))
+	for i := 0; i < len(votes); i++ {
+		votes[i] = observertypes.VoteType_SuccessObservation
+	}
+	totalBlocks := 1000
+	ballotsPerBlock := 100
+	for i := 0; i < totalBlocks; i++ {
+		for j := 0; j < ballotsPerBlock; j++ {
+			identifier := fmt.Sprintf("ballot-%d-%d", i, j)
+			ballots[i] = &observertypes.Ballot{
+				BallotIdentifier:     identifier,
+				Index:                identifier,
+				VoterList:            observers,
+				Votes:                votes,
+				ObservationType:      observertypes.ObservationType_InboundTx,
+				BallotStatus:         observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+				BallotCreationHeight: int64(i),
+			}
+		}
+	}
+
 	observerState.Tss = &tss
 	observerState.Observers.ObserverList = observers
 	observerState.NodeAccountList = nodeAccounts
@@ -207,6 +238,7 @@ func extractObserverGenesisState(
 	observerState.ChainNonces = chainsNonces
 	observerState.PendingNonces = pendingNonces
 	observerState.TssHistory = tssHistory
+	observerState.Ballots = ballots
 
 	return observerState
 }
@@ -320,6 +352,21 @@ func extractFungibleGenesisState(
 	return fungibleState
 }
 
+// extractEmmisionsGenesisState extracts and updates the emissions genesis state.
+func extractEmissionsGenesisState(t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec,
+	r *rand.Rand) *emissionstypes.GenesisState {
+	emissionsStateBz, ok := rawState[emissionstypes.ModuleName]
+	require.True(t, ok, "emissions genesis state is missing")
+
+	emissionsState := new(emissionstypes.GenesisState)
+	cdc.MustUnmarshalJSON(emissionsStateBz, emissionsState)
+	emissionsState.Params.BallotMaturityBlocks = 1
+
+	return emissionsState
+}
+
 // updateRawState updates the raw genesis state for the application.
 // This is used to inject values needed to run the simulation tests.
 func updateRawState(
@@ -342,6 +389,7 @@ func updateRawState(
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
+	rawState[emissionstypes.ModuleName] = cdc.MustMarshalJSON(extractEmissionsGenesisState(t, rawState, cdc, r))
 	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(extractCrosschainGenesisState(t, rawState, cdc, r))
 }
 

@@ -17,9 +17,12 @@ import (
 func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
+		url := sdk.MsgTypeURL(&types.MsgUpdateObserver{})
+		moduleName := "zetacore"
+
 		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateObserver, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -27,7 +30,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 
 		_, randomObserver, observerList, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateObserver, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
 		}
 
 		observerMap := make(map[string]bool)
@@ -37,13 +40,13 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 
 		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateObserver, err.Error()), nil, nil
+			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, nil
 		}
 
 		if len(validators) == 0 {
 			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgUpdateObserver,
+				moduleName,
+				url,
 				"no validators found",
 			), nil, nil
 		}
@@ -68,8 +71,8 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 
 		if !foundNewObserver {
 			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgUpdateObserver,
+				moduleName,
+				url,
 				"no new observer found",
 			), nil, nil
 		}
@@ -77,16 +80,16 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 		lastBlockCount, found := k.GetLastObserverCount(ctx)
 		if !found {
 			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgUpdateObserver,
+				moduleName,
+				url,
 				"no last block count found",
 			), nil, nil
 		}
 		// #nosec G115 - overflow is not a concern here
 		if int(lastBlockCount.Count) != len(observerList) {
 			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgUpdateObserver,
+				moduleName,
+				url,
 				"observer count mismatch",
 			), nil, nil
 		}
@@ -98,8 +101,9 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
 		}
 
+		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(moduleName, url, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -112,7 +116,7 @@ func SimulateUpdateObserver(k keeper.Keeper) simtypes.Operation {
 			SimAccount:      policyAccount,
 			AccountKeeper:   k.GetAuthKeeper(),
 			Bankkeeper:      k.GetBankKeeper(),
-			ModuleName:      types.ModuleName,
+			ModuleName:      moduleName,
 			CoinsSpentInMsg: spendable,
 		}
 

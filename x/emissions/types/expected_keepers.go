@@ -12,13 +12,15 @@ import (
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
-	// Methods imported from account should be defined here
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 type ObserverKeeper interface {
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val observertypes.BallotListForHeight, found bool)
 	ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks int64)
+	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
+	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -31,7 +33,7 @@ type BankKeeper interface {
 		amt sdk.Coins,
 	) error
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	// Methods imported from bank should be defined here
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 type StakingKeeper interface {

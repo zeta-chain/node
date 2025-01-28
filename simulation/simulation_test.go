@@ -193,6 +193,7 @@ func TestFullAppSimulation(t *testing.T) {
 	config.ChainID = SimAppChainID
 	config.BlockMaxGas = SimBlockMaxGas
 	config.DBBackend = SimDBBackend
+	config.ExportStatsPath = "stats.json"
 
 	db, dir, logger, skip, err := cosmossimutils.SetupSimulation(
 		config,

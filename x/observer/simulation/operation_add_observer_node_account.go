@@ -49,7 +49,7 @@ func SimulateAddObserverNodeAccount(k keeper.Keeper) simtypes.Operation {
 		if len(validators) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgUpdateObserver,
+				types.TypeMsgAddObserver,
 				"no validators found",
 			), nil, nil
 		}
