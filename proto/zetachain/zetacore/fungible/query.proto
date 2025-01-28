@@ -6,11 +6,13 @@ import "zetachain/zetacore/fungible/foreign_coins.proto";
 import "zetachain/zetacore/fungible/system_contract.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/fungible/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  option (cosmos.msg.v1.service) = true;
   // Queries a ForeignCoins by index.
   rpc ForeignCoins(QueryGetForeignCoinsRequest)
       returns (QueryGetForeignCoinsResponse) {

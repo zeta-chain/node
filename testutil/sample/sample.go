@@ -43,7 +43,7 @@ func Rand() *rand.Rand {
 func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 	seed := []byte(strconv.Itoa(r.Int()))
 	val, err := stakingtypes.NewValidator(
-		ValAddress(r),
+		ValAddress(r).String(),
 		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
 		stakingtypes.Description{})
 	require.NoError(t, err)
@@ -84,7 +84,7 @@ func StringRandom(r *rand.Rand, length int) string {
 
 // Coins returns a sample sdk.Coins
 func Coins() sdk.Coins {
-	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(42)))
 }
 
 // Uint64InRange returns a sample uint64 in the given ranges
@@ -118,8 +118,9 @@ func IntInRange(low, high int64) sdkmath.Int {
 	i := Int64InRange(low, high)
 	return sdkmath.NewInt(i)
 }
+
 func AppState(t *testing.T) map[string]json.RawMessage {
-	appState, err := genutiltypes.GenesisStateFromGenDoc(*GenDoc(t))
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(AppGenesis(t))
 	require.NoError(t, err)
 	return appState
 }

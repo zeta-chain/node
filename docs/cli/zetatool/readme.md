@@ -1,55 +1,30 @@
-# Zeta Tool
+# ZetaTool
 
-Currently, has only one subcommand which finds inbound transactions or deposits that weren't observed on a particular
-network. `filterdeposit`
+ZetaTool is a utility CLI for Zetachain.It currently provides a command to fetch the ballot/cctx identifier from the inbound hash
 
-## Configuring 
+## Installation
+Use the target : `make install-zetatool`
 
-#### RPC endpoints
-Configuring the tool for specific networks will require different reliable endpoints. For example, if you wanted to 
-configure an ethereum rpc endpoint, then you will have to find an evm rpc endpoint for eth mainnet and set the field: 
-`EthRPCURL`
+## Usage 
 
-#### Zeta URL
-You will need to find an endpoint for zetachain and set the field: `ZetaURL`
+### Fetching the Ballot Identifier
 
-#### Contract Addresses
-Depending on the network, connector and custody contract addresses must be set using these fields: `ConnectorAddress`,
-`CustodyAddress`
-
-If a configuration file is not provided, a default config will be generated under the name 
-`zetatool_config.json`. Below is an example of a configuration file used for mainnet: 
-
-#### Etherscan API Key
-In order to make requests to etherscan, an api key will need to be configured.
-
+### Command
+```shell
+zetatool get-ballot [inboundHash] [chainID] --config <filename.json>
 ```
-{
- "ZetaURL": "",
- "BtcExplorerURL": "https://blockstream.info/api/",
- "EthRPCURL": "https://ethereum-rpc.publicnode.com",
- "EtherscanAPIkey": "",
- "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
- "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
-}
+### Example
+```shell
+zetatool get-ballot 0x61008d7f79b2955a15e3cb95154a80e19c7385993fd0e083ff0cbe0b0f56cb9a 1
+{"level":"info","time":"2025-01-20T11:30:47-05:00","message":"ballot identifier: 0xae189ab5cd884af784835297ac43eb55deb8a7800023534c580f44ee2b3eb5ed"}
 ```
 
-## Running Tool
+- `inboundHash`: The inbound hash of the transaction for which the ballot identifier is to be fetched
+- `chainID`: The chain ID of the chain to which the transaction belongs
+- `config`: [Optional] The path to the configuration file. When not provided, the configuration in the file is user. A sample config is provided at `cmd/zetatool/config/sample_config.json`
 
-There are two targets available:
+The Config contains the rpcs needed for the tool to function,
+if not provided the tool automatically uses the default rpcs.It is able to fetch the rpc needed using the chain ID
 
-```
-filter-missed-btc: install-zetatool
-	./tool/filter_missed_deposits/filter_missed_btc.sh
+The command returns a ballot identifier for the given inbound hash.
 
-filter-missed-eth: install-zetatool
-	./tool/filter_missed_deposits/filter_missed_eth.sh
-```
-
-Running the commands can be simply done through the makefile in the node repo:
-
-```
-make filter-missed-btc
-or ...
-make filter-missed-eth
-```

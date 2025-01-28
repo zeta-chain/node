@@ -7,11 +7,13 @@ import "zetachain/zetacore/authority/authorization.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/authority/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  option (cosmos.msg.v1.service) = true;
   // Queries Policies
   rpc Policies(QueryGetPoliciesRequest) returns (QueryGetPoliciesResponse) {
     option (google.api.http).get = "/zeta-chain/authority/policies";

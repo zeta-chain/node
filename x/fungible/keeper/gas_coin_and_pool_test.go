@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"errors"
-	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -51,7 +52,7 @@ func setupGasCoin(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
-	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 
 	return addr
@@ -84,7 +85,7 @@ func deployZRC20(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
-	foreignCoin.LiquidityCap = sdk.NewUint(1e18).MulUint64(1e12)
+	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 
 	return addr
@@ -112,7 +113,7 @@ func setupZRC20Pool(
 	err = bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(liquidityAmount))),
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(liquidityAmount))),
 	)
 	require.NoError(t, err)
 

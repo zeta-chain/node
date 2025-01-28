@@ -6,11 +6,13 @@ import "zetachain/zetacore/authority/chain_info.proto";
 import "zetachain/zetacore/authority/authorization.proto";
 import "zetachain/zetacore/pkg/chains/chains.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/authority/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
   rpc UpdateChainInfo(MsgUpdateChainInfo) returns (MsgUpdateChainInfoResponse);
   rpc RemoveChainInfo(MsgRemoveChainInfo) returns (MsgRemoveChainInfoResponse);
@@ -24,6 +26,7 @@ service Msg {
 // Adds an authorization to the chain. If the authorization already exists, it
 // will be updated.
 message MsgAddAuthorization {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string msg_url = 2;
   PolicyType authorized_policy = 3;
@@ -35,6 +38,7 @@ message MsgAddAuthorizationResponse {}
 // MsgRemoveAuthorization defines the MsgRemoveAuthorization service.
 // Removes an authorization from the chain.
 message MsgRemoveAuthorization {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string msg_url = 2;
 }
@@ -45,6 +49,7 @@ message MsgRemoveAuthorizationResponse {}
 
 // MsgUpdatePolicies defines the MsgUpdatePolicies service.
 message MsgUpdatePolicies {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   Policies policies = 2 [ (gogoproto.nullable) = false ];
 }
@@ -54,6 +59,7 @@ message MsgUpdatePoliciesResponse {}
 
 // MsgUpdateChainInfo defines the MsgUpdateChainInfo service.
 message MsgUpdateChainInfo {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   pkg.chains.Chain chain = 3 [ (gogoproto.nullable) = false ];
 
@@ -66,6 +72,7 @@ message MsgUpdateChainInfoResponse {}
 
 // MsgRemoveChainInfo defines the MsgRemoveChainInfo service.
 message MsgRemoveChainInfo {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   int64 chain_id = 2;
 }
