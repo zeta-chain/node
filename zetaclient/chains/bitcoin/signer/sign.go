@@ -34,6 +34,10 @@ func (signer *Signer) SignWithdrawTx(
 	ob *observer.Observer,
 ) (*wire.MsgTx, error) {
 	nonceMark := chains.NonceMarkAmount(txData.nonce)
+
+	// we don't know how many UTXOs will be used beforehand, so we do
+	// a conservative estimation using the maximum size of the outbound tx:
+	// estimateFee = feeRate * maxTxSize
 	estimateFee := float64(txData.feeRate*common.OutboundBytesMax) / 1e8
 	totalAmount := txData.amount + estimateFee + float64(nonceMark)*1e-8
 
