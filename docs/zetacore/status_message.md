@@ -53,6 +53,7 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
 ### ErrorMessage and ErrorMessageRevert fields and how to interpret them
 - The ErrorMessage and ErrorMessageRevert would contain the following fields. The protocol generates the fields tagged as internal.
 ```
+  - type : Type of error ,Supported types are internal_error(error from the protocol), contract_call_error (error from ZEVM call)
   - message [Internal]: A message from the protocol to explain the error
   - error : Error message related to the call
   - method: The method that was called by the protocol
@@ -60,16 +61,16 @@ A cctx can have a maximum of two outbound params. We can refer to the first outb
   - args:The arguments that were used for this call
   - revert_reason: Revert reason from the smart contract call, if any
 ```
-Sample error message for a failed deposit
+Sample error message for a failed deposit (Note empty fields are discarded by default)
 
 ```json
 {
- "message": "contract call failed when calling EVM with data",
- "method": "depositAndCall0",
- "contract": "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
- "args": "[{[]0xdFb74337c53141bf912101b0Ee770FA8e2DCB921 1337} 0x13A0c5930C028511Dc02665E7285134B6d11A5f410000000000000000 0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca [114 101 118 101114 116]]",
- "error": "execution reverted: ret 0x: evm transaction execution failed",
- "revert_reason": ""
+  "type": "contract_call_error",
+  "message": "contract call failed when calling EVM with data",
+  "method": "depositAndCall0",
+  "contract": "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+  "args": "[{[]0xdFb74337c53141bf912101b0Ee770FA8e2DCB921 1337} 0x13A0c5930C028511Dc02665E7285134B6d11A5f410000000000000000 0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca [114 101 118 101114 116]]",
+  "error": "execution reverted: ret 0x: evm transaction execution failed",
 }
 ```
 
