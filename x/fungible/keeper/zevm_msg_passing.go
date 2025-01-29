@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+
+	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // ZETADepositAndCallContract deposits native ZETA to the to address if its an account or if the account does not exist yet
@@ -18,10 +22,14 @@ func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
 	data []byte,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, to)
+
 	if acc == nil || !acc.IsContract() {
 		err := k.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(
+				types.ErrDepositZetaToEvmAccount,
+				fmt.Sprintf("to: %s, amount: %s err %s", to.String(), inboundAmount.String(), err.Error()),
+			)
 		}
 		return nil, nil
 	}

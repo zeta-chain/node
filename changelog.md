@@ -16,6 +16,8 @@
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 * [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
+* [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
+
 
 ### Fixes
 
