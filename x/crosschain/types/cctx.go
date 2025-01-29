@@ -117,7 +117,11 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 
 	// in protocol contract V1, developers can specify a revert address for Bitcoin chains
 	// TODO: remove this V1 logic after switching Bitcoin to V2 architecture
-	// https://github.com/zeta-chain/node/issues/2711
+	// NOTE: this logic was not removed directly in https://github.com/zeta-chain/node/issues/2711
+	// because it there could still be pending V1 Bitcoin CCTXs during at the time of the upgrade switching to V2
+	// this logic is needed to correctly process the reverted CCTXs that were created before the upgrade
+	// it can be removed after all the pending V1 Bitcoin CCTXs are processed
+	//
 	revertReceiver := m.InboundParams.Sender
 	if m.ProtocolContractVersion == ProtocolContractVersion_V1 &&
 		chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
@@ -131,9 +135,15 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	// if not specified, the sender address is used
 	// note: this option is current only support for EVM type chains
 	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
-		revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
-		if valid {
-			revertReceiver = revertAddress.Hex()
+		if chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+			if m.RevertOptions.RevertAddress != "" {
+				revertReceiver = m.RevertOptions.RevertAddress
+			}
+		} else {
+			revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
+			if valid {
+				revertReceiver = revertAddress.Hex()
+			}
 		}
 	}
 
