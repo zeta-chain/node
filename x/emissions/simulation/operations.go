@@ -3,11 +3,15 @@ package simulation
 import (
 	"math/rand"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/x/emissions/keeper"
+	"github.com/zeta-chain/node/x/emissions/types"
 )
+
+var TypeMsgWithdrawEmission = sdk.MsgTypeURL(&types.MsgWithdrawEmission{})
 
 // Simulation operation weights constants
 // Operation weights are used by the simulation program to simulate the weight of different operations.

@@ -29,7 +29,11 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			accounts,
 		)
 		if err != nil {
-			return simtypes.OperationMsg{}, nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgVoteGasPrice,
+				err.Error(),
+			), nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -55,8 +59,13 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// System contracts are deployed on the first block, so we cannot vote on gas prices before that
-		if ctx.BlockHeight() <= 1 {
-			return simtypes.NewOperationMsg(&msg, true, "block height less than 1"), nil, nil
+		_, found := k.GetFungibleKeeper().GetSystemContract(ctx)
+		if !found {
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgVoteGasPrice,
+				"System contracts not available yet",
+			), nil, nil
 		}
 
 		err = msg.ValidateBasic()
@@ -82,6 +91,6 @@ func SimulateMsgVoteGasPrice(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

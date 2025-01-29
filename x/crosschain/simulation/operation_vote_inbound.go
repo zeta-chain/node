@@ -49,7 +49,7 @@ func operationSimulateVoteInbound(
 		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
 		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
 		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
-		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, false)
 	}
 }
 
@@ -84,17 +84,17 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "crosschain flags not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "crosschain flags not found"), nil, nil
 		}
 
 		// Return early if inbound is not enabled.
 		if !cf.IsInboundEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound is not enabled"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "inbound is not enabled"), nil, nil
 		}
 
 		// Return early if the inbound has already been finalized.
 		if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound already finalized"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "inbound already finalized"), nil, nil
 		}
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
@@ -148,8 +148,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "unable to deliver tx"), nil, err
 		}
-
-		opMsg := simtypes.NewOperationMsg(&msg, true, "")
+		opMsg := zetasimulation.OperationMessage(&msg)
 
 		// Add subsequent votes
 		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)

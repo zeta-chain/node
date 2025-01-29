@@ -49,7 +49,7 @@ func operationSimulateVoteTss(
 		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
 		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
 		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
-		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, false)
 	}
 }
 
@@ -139,7 +139,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(&msg, true, "")
+		opMsg := zetasimulation.OperationMessage(&msg)
 
 		var fops []simtypes.FutureOperation
 

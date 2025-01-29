@@ -27,7 +27,11 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 			accounts,
 		)
 		if err != nil {
-			return simtypes.OperationMsg{}, nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgWithdrawEmission,
+				"cant to fetch a observer account",
+			), nil, err
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -36,7 +40,7 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.MsgWithdrawEmissionType,
+				TypeMsgWithdrawEmission,
 				"no emissions found",
 			), nil, nil
 		}
@@ -44,7 +48,7 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 		if availableEmissions.Amount.IsZero() {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.MsgWithdrawEmissionType,
+				TypeMsgWithdrawEmission,
 				"no emissions available to withdraw",
 			), nil, nil
 		}
@@ -53,7 +57,7 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 		amount, err := simtypes.RandPositiveInt(r, availableEmissions.Amount)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName,
-				types.MsgWithdrawEmissionType,
+				TypeMsgWithdrawEmission,
 				"unable to generate random amount",
 			), nil, err
 		}
@@ -66,7 +70,11 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgWithdrawEmission"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgWithdrawEmission,
+				"unable to validate MsgWithdrawEmission",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -83,6 +91,6 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

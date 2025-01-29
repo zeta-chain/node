@@ -86,6 +86,6 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			ModuleName:    types.ModuleName,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

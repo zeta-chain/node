@@ -357,8 +357,7 @@ func extractFungibleGenesisState(
 // extractEmmisionsGenesisState extracts and updates the emissions genesis state.
 func extractEmissionsGenesisState(t *testing.T,
 	rawState map[string]json.RawMessage,
-	cdc codec.Codec,
-	r *rand.Rand) *emissionstypes.GenesisState {
+	cdc codec.Codec) *emissionstypes.GenesisState {
 	emissionsStateBz, ok := rawState[emissionstypes.ModuleName]
 	require.True(t, ok, "emissions genesis state is missing")
 
@@ -391,7 +390,7 @@ func updateRawState(
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
-	rawState[emissionstypes.ModuleName] = cdc.MustMarshalJSON(extractEmissionsGenesisState(t, rawState, cdc, r))
+	rawState[emissionstypes.ModuleName] = cdc.MustMarshalJSON(extractEmissionsGenesisState(t, rawState, cdc))
 	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(extractCrosschainGenesisState(t, rawState, cdc, r))
 }
 
