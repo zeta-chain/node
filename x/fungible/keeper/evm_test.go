@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+
 	"math/big"
 	"testing"
 
@@ -541,7 +542,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		err = sdkk.BankKeeper.MintCoins(
 			ctx,
 			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))),
+			sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amount))),
 		)
 		require.NoError(t, err)
 
@@ -718,7 +719,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.True(t, types.IsContractReverted(res, err))
 
 		// check reason is included for revert error
-		require.ErrorContains(t, err, fmt.Sprintf("reason: %s", utils.ErrHashRevertFoo))
+		require.Contains(t, err.Error(), fmt.Sprintf("\"revert_reason\":\"%s\"", utils.ErrHashRevertFoo))
 
 		res, err = k.CallEVM(
 			ctx,
@@ -765,7 +766,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.False(t, types.IsContractReverted(res, err))
 		require.NotContains(t, err.Error(), "reason:")
 
-		// No revert with successfull call
+		// No revert with successful call
 		res, err = k.CallEVM(
 			ctx,
 			*abi,

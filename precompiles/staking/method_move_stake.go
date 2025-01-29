@@ -62,12 +62,17 @@ func (c *Contract) MoveStake(
 	}
 
 	msgServer := stakingkeeper.NewMsgServerImpl(&c.stakingKeeper)
+	bondDenom, err := c.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
 		DelegatorAddress:    sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorSrcAddress: validatorSrcAddress,
 		ValidatorDstAddress: validatorDstAddress,
 		Amount: sdk.Coin{
-			Denom:  c.stakingKeeper.BondDenom(ctx),
+			Denom:  bondDenom,
 			Amount: math.NewIntFromBigInt(amount),
 		},
 	})

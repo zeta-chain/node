@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -18,24 +17,24 @@ import (
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
-	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
-	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
-	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
-	SetAccount(ctx sdk.Context, acc types.AccountI)
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetSequence(ctx context.Context, addr sdk.AccAddress) (uint64, error)
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
 }
 
 type BankKeeper interface {
 	SendCoinsFromModuleToAccount(
-		ctx sdk.Context,
+		ctx context.Context,
 		senderModule string,
 		recipientAddr sdk.AccAddress,
 		amt sdk.Coins,
 	) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetSupply(ctx context.Context, denom string) sdk.Coin
 }
 
 type ObserverKeeper interface {

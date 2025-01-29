@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +33,7 @@ func TestKeeper_ShowAvailableEmissions(t *testing.T) {
 		res, err := k.ShowAvailableEmissions(wctx, req)
 		require.NoError(t, err)
 		expectedRes := &types.QueryShowAvailableEmissionsResponse{
-			Amount: sdk.NewCoin(config.BaseDenom, sdk.ZeroInt()).String(),
+			Amount: sdk.NewCoin(config.BaseDenom, sdkmath.ZeroInt()).String(),
 		}
 		require.Equal(t, expectedRes, res)
 	})

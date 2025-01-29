@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -59,7 +58,7 @@ const (
 )
 
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper) simulation.WeightedOperations {
+	appParams simtypes.AppParams, k keeper.Keeper) simulation.WeightedOperations {
 	var (
 		weightAddOutboundTracker            int
 		weightAddInboundTracker             int
@@ -76,79 +75,79 @@ func WeightedOperations(
 		weightUpdateERC20CustodyPauseStatus int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddOutboundTracker, &weightAddOutboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightAddOutboundTracker = DefaultWeightAddOutboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightAddInboundTracker, &weightAddInboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightAddInboundTracker, &weightAddInboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightAddInboundTracker = DefaultWeightAddInboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightRemoveOutboundTracker, &weightRemoveOutboundTracker, nil,
+	appParams.GetOrGenerate(OpWeightRemoveOutboundTracker, &weightRemoveOutboundTracker, nil,
 		func(_ *rand.Rand) {
 			weightRemoveOutboundTracker = DefaultWeightRemoveOutboundTracker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteGasPrice, &weightVoteGasPrice, nil,
+	appParams.GetOrGenerate(OpWeightVoteGasPrice, &weightVoteGasPrice, nil,
 		func(_ *rand.Rand) {
 			weightVoteGasPrice = DefaultWeightVoteGasPrice
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteOutbound, &weightVoteOutbound, nil,
+	appParams.GetOrGenerate(OpWeightVoteOutbound, &weightVoteOutbound, nil,
 		func(_ *rand.Rand) {
 			weightVoteOutbound = DefaultWeightVoteOutbound
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightVoteInbound, &weightVoteInbound, nil,
+	appParams.GetOrGenerate(OpWeightVoteInbound, &weightVoteInbound, nil,
 		func(_ *rand.Rand) {
 			weightVoteInbound = DefaultWeightVoteInbound
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightWhitelistERC20, &weightWhitelistERC20, nil,
+	appParams.GetOrGenerate(OpWeightWhitelistERC20, &weightWhitelistERC20, nil,
 		func(_ *rand.Rand) {
 			weightWhitelistERC20 = DefaultWeightWhitelistERC20
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMigrateTssFunds, &weightMigrateTssFunds, nil,
+	appParams.GetOrGenerate(OpWeightMigrateTssFunds, &weightMigrateTssFunds, nil,
 		func(_ *rand.Rand) {
 			weightMigrateTssFunds = DefaultWeightMigrateTssFunds
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightUpdateTssAddress, &weightUpdateTssAddress, nil,
+	appParams.GetOrGenerate(OpWeightUpdateTssAddress, &weightUpdateTssAddress, nil,
 		func(_ *rand.Rand) {
 			weightUpdateTssAddress = DefaultWeightUpdateTssAddress
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightAbortStuckCCTX, &weightAbortStuckCCTX, nil,
+	appParams.GetOrGenerate(OpWeightAbortStuckCCTX, &weightAbortStuckCCTX, nil,
 		func(_ *rand.Rand) {
 			weightAbortStuckCCTX = DefaultWeightAbortStuckCCTX
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightUpdateRateLimiterFlags, &weightUpdateRateLimiterFlags, nil,
+	appParams.GetOrGenerate(OpWeightUpdateRateLimiterFlags, &weightUpdateRateLimiterFlags, nil,
 		func(_ *rand.Rand) {
 			weightUpdateRateLimiterFlags = DefaultWeightUpdateRateLimiterFlags
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightRefundAbortedCCTX, &weightRefundAbortedCCTX, nil,
+	appParams.GetOrGenerate(OpWeightRefundAbortedCCTX, &weightRefundAbortedCCTX, nil,
 		func(_ *rand.Rand) {
 			weightRefundAbortedCCTX = DefaultWeightRefundAbortedCCTX
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightUpdateERC20CustodyPauseStatus, &weightUpdateERC20CustodyPauseStatus, nil,
+	appParams.GetOrGenerate(OpWeightUpdateERC20CustodyPauseStatus, &weightUpdateERC20CustodyPauseStatus, nil,
 		func(_ *rand.Rand) {
 			weightUpdateERC20CustodyPauseStatus = DefaultWeightUpdateERC20CustodyPauseStatus
 		},
@@ -284,12 +283,16 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(
+			txCtx.ModuleName,
+			sdk.MsgTypeURL(txCtx.Msg),
+			"message doesn't leave room for fees",
+		), nil, err
 	}
 
 	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(txCtx, fees)
 }
@@ -313,15 +316,15 @@ func GenAndDeliverTx(
 		txCtx.SimAccount.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, nil
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil, nil
 }
 
 func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {

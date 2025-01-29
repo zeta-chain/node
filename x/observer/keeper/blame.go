@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -26,7 +27,7 @@ func (k Keeper) GetBlame(ctx sdk.Context, index string) (val types.Blame, found 
 
 func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []types.Blame) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.Blame
@@ -59,7 +60,7 @@ func (k Keeper) GetBlamesByChainAndNonce(
 ) (BlameRecords []*types.Blame, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
 	blamePrefix := types.GetBlamePrefix(chainID, nonce)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(blamePrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(blamePrefix))
 	defer iterator.Close()
 	found = false
 	for ; iterator.Valid(); iterator.Next() {

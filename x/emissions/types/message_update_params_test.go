@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 
 	t.Run("invalid if params are invalid", func(t *testing.T) {
 		params := types.NewParams()
-		params.BlockRewardAmount = sdk.MustNewDecFromStr("-10.0")
+		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("-10.0")
 		msg := types.MsgUpdateParams{
 			Authority: sample.AccAddress(),
 			Params:    params,

@@ -20,7 +20,7 @@ import (
 
 	types "github.com/zeta-chain/node/x/crosschain/types"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	zerolog "github.com/rs/zerolog"

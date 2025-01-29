@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -108,7 +107,8 @@ func Test_ZRC20Transfer(t *testing.T) {
 
 	// Make sure sample.EthAddress() exists as an ethermint account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
+	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	t.Run("should fail when owner is zero address", func(t *testing.T) {
 		_, err := ts.fungibleKeeper.ZRC20Transfer(
@@ -170,7 +170,8 @@ func Test_ZRC20TransferFrom(t *testing.T) {
 
 	// Make sure sample.EthAddress() exists as an ethermint account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
-	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, authtypes.NewBaseAccount(accAddress, nil, 0, 0))
+	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
+	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	t.Run("should fail when from is zero address", func(t *testing.T) {
 		_, err := ts.fungibleKeeper.ZRC20TransferFrom(

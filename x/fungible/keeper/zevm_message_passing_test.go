@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
@@ -148,7 +149,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		errorMint := errors.New("", 10, "error minting coins")
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
@@ -161,7 +162,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 			data,
 			cctxIndexBytes,
 		)
-		require.ErrorIs(t, err, errorMint)
+		require.ErrorContains(t, err, errorMint.Error())
 	})
 }
 
@@ -301,7 +302,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		errorMint := errors.New("", 101, "error minting coins")
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 

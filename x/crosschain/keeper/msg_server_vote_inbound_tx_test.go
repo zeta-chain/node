@@ -26,7 +26,8 @@ import (
 )
 
 func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest.ZetaKeepers) []string {
-	validators := k.GetStakingKeeper().GetAllValidators(ctx)
+	validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+	require.NoError(t, err)
 
 	validatorAddressListFormatted := make([]string, len(validators))
 	for i, validator := range validators {
@@ -104,7 +105,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		// Convert the validator address into a user address.
-		validators := k.GetStakingKeeper().GetAllValidators(ctx)
+		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+		require.NoError(t, err)
 		validatorAddress := validators[0].OperatorAddress
 		valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
 		addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
@@ -137,7 +139,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Asset:       "",
 			EventIndex:  1,
 		}
-		_, err := msgServer.VoteInbound(
+		_, err = msgServer.VoteInbound(
 			ctx,
 			msg,
 		)
@@ -304,7 +306,7 @@ func TestStatus_UpdateCctxStatus(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, test.Msg, "")
+			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, types.StatusMessages{StatusMessage: test.Msg})
 			if test.IsErr {
 				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {

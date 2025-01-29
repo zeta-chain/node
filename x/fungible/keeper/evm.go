@@ -31,6 +31,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	ccctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -166,7 +167,7 @@ func (k Keeper) DeployZRC20Contract(
 	newCoin.ForeignChainId = chain.ChainId
 	newCoin.GasLimit = gasLimit.Uint64()
 	if liquidityCap == nil {
-		liquidityCap = ptr.Ptr(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
+		liquidityCap = ptr.Ptr(sdkmath.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
 	}
 	newCoin.LiquidityCap = *liquidityCap
 	k.SetForeignCoins(ctx, newCoin)
@@ -373,12 +374,12 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 
 	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
 	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
 
 	return k.CallEVM(
@@ -671,26 +672,27 @@ func (k Keeper) CallEVM(
 	if err != nil {
 		return nil, cosmoserrors.Wrap(
 			types.ErrABIPack,
-			cosmoserrors.Wrap(err, "failed to create transaction data").Error(),
+			fmt.Sprintf("failed to create transaction data: %s", err.Error()),
 		)
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf(
-			"contract call failed: method '%s', contract '%s', args: %v",
-			method,
-			contract.Hex(),
-			args,
-		)
-
-		// if it is a revert error then add the revert reason to the error message
+		// create an error message
+		errMessage := ccctxerror.NewZEVMErrorMessage(method, contract, args, types.ErrCallEvmWithData.Error(), err)
+		// if it is a revert error and the revert reason is available, then add it
 		revertErr, ok := err.(*evmtypes.RevertError)
 		if ok {
-			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
+			errMessage.AddRevertReason(revertErr.ErrorData())
 		}
-		return resp, cosmoserrors.Wrap(err, errMes)
+		// Marshall the error message into a JSON string. If it fails, return the string representation of the error message
+		errString, err := errMessage.ToJSON()
+		if err != nil {
+			return resp, fmt.Errorf("json marshalling failed %s,%s", err.Error(), errMessage.String())
+		}
+		// The JSON string already contains all the necessary information we do not need to wrap
+		return resp, errors.New(errString)
 	}
 	return resp, nil
 }

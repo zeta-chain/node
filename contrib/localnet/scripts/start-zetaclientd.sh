@@ -41,10 +41,10 @@ while [ ! -f ~/.ssh/authorized_keys ]; do
     sleep 1
 done
 
-# need to wait for zetacore0 to be up
-while ! curl -s -o /dev/null zetacore0:26657/status ; do
-    echo "Waiting for zetacore0 rpc"
-    sleep 10
+# need to wait for zetacore0 block 1 to be available
+while curl -s zetacore0:26657/block?height=1 | jq -e '.error != null' > /dev/null; do
+    echo "Waiting for zetacore0 block 1"
+    sleep 5
 done
 
 # read HOTKEY_BACKEND env var for hotkey keyring backend and set default to test
