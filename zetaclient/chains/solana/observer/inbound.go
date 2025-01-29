@@ -228,7 +228,7 @@ func FilterInboundEvents(
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID:    senderChainID,
 					Sender:           deposit.Sender,
-					Receiver:         "", // receiver will be pulled out from memo later
+					Receiver:         deposit.Receiver,
 					TxOrigin:         deposit.Sender,
 					Amount:           deposit.Amount,
 					Memo:             deposit.Memo,
@@ -255,7 +255,7 @@ func FilterInboundEvents(
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID:    senderChainID,
 					Sender:           deposit.Sender,
-					Receiver:         "", // receiver will be pulled out from memo later
+					Receiver:         deposit.Receiver,
 					TxOrigin:         deposit.Sender,
 					Amount:           deposit.Amount,
 					Memo:             deposit.Memo,
@@ -278,19 +278,6 @@ func FilterInboundEvents(
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
 func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent) *crosschaintypes.MsgVoteInbound {
-	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
-		logs.FieldTx:     event.TxHash,
-	}
-
-	// decode event memo bytes to get the receiver
-	err := event.DecodeMemo()
-	if err != nil {
-		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
-		return nil
-	}
-
 	// check if the event is processable
 	if !ob.IsEventProcessable(*event) {
 		return nil

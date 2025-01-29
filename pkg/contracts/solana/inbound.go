@@ -3,6 +3,7 @@ package solana
 import (
 	"fmt"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 )
@@ -15,6 +16,7 @@ const (
 // Deposit represents a deposit instruction from a Solana transaction to ZetaChain
 type Deposit struct {
 	Sender           string
+	Receiver         string
 	Amount           uint64
 	Memo             []byte
 	Slot             uint64
@@ -65,8 +67,14 @@ func tryParseAsDeposit(
 		return nil, err
 	}
 
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Deposit{
 		Sender:           sender,
+		Receiver:         receiver,
 		Amount:           inst.Amount,
 		Memo:             []byte{},
 		Slot:             slot,
@@ -96,6 +104,11 @@ func tryParseAsDepositAndCall(
 		return nil, nil
 	}
 
+	receiver, err := parseReceiver(instDepositAndCall.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	// get the sender address (skip if unable to parse signer address)
 	sender, err := getSignerDeposit(tx, &instruction)
 	if err != nil {
@@ -103,6 +116,7 @@ func tryParseAsDepositAndCall(
 	}
 	return &Deposit{
 		Sender:           sender,
+		Receiver:         receiver,
 		Amount:           instDepositAndCall.Amount,
 		Memo:             instDepositAndCall.Memo,
 		Slot:             slot,
@@ -154,8 +168,14 @@ func tryParseAsDepositSPL(
 		return nil, err
 	}
 
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Deposit{
 		Sender:           sender,
+		Receiver:         receiver,
 		Amount:           inst.Amount,
 		Memo:             []byte{},
 		Slot:             slot,
@@ -185,6 +205,11 @@ func tryParseAsDepositSPLAndCall(
 		return nil, nil
 	}
 
+	receiver, err := parseReceiver(instDepositAndCall.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	// get the sender and spl addresses
 	sender, spl, err := getSignerAndSPLFromDepositSPLAccounts(tx, &instruction)
 	if err != nil {
@@ -192,6 +217,7 @@ func tryParseAsDepositSPLAndCall(
 	}
 	return &Deposit{
 		Sender:           sender,
+		Receiver:         receiver,
 		Amount:           instDepositAndCall.Amount,
 		Memo:             instDepositAndCall.Memo,
 		Slot:             slot,
@@ -249,4 +275,14 @@ func getSignerAndSPLFromDepositSPLAccounts(
 	spl := instructionAccounts[3].PublicKey.String()
 
 	return signer, spl, nil
+}
+
+// parseReceiver parses the receiver bytes into a Ethereum address string
+func parseReceiver(receiver [20]byte) (string, error) {
+	addr := ethcommon.BytesToAddress(receiver[:ethcommon.AddressLength])
+	if addr == (ethcommon.Address{}) {
+		return "", fmt.Errorf("invalid receiver address: %v", receiver)
+	}
+
+	return addr.Hex(), nil
 }

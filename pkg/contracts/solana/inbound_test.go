@@ -55,14 +55,14 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// solana e2e user evm account
-	expectedMemo, err := hex.DecodeString("103fd9224f00ce3013e95629e52dfc31d805d68d")
 	require.NoError(t, err)
 	expectedDeposit := &Deposit{
-		Sender: sender,
-		Amount: 12000000,
-		Memo:   expectedMemo,
-		Slot:   txResult.Slot,
-		Asset:  "",
+		Sender:           sender,
+		Amount:           12000000,
+		Memo:             []byte{},
+		Slot:             txResult.Slot,
+		Asset:            "",
+		IsCrossChainCall: false,
 	}
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
