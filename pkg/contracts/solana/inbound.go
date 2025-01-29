@@ -12,12 +12,14 @@ const (
 	MaxSignaturesPerTicker = 100
 )
 
+// Deposit represents a deposit instruction from a Solana transaction to ZetaChain
 type Deposit struct {
-	Sender string
-	Amount uint64
-	Memo   []byte
-	Slot   uint64
-	Asset  string
+	Sender           string
+	Amount           uint64
+	Memo             []byte
+	Slot             uint64
+	Asset            string
+	IsCrossChainCall bool
 }
 
 // ParseInboundAsDeposit tries to parse an instruction as a 'deposit' or 'deposit_and_call'.
@@ -64,11 +66,12 @@ func tryParseAsDeposit(
 	}
 
 	return &Deposit{
-		Sender: sender,
-		Amount: inst.Amount,
-		Memo:   inst.Receiver[:],
-		Slot:   slot,
-		Asset:  "", // no asset for gas token SOL
+		Sender:           sender,
+		Amount:           inst.Amount,
+		Memo:             []byte{},
+		Slot:             slot,
+		Asset:            "", // no asset for gas token SOL
+		IsCrossChainCall: false,
 	}, nil
 }
 
@@ -99,11 +102,12 @@ func tryParseAsDepositAndCall(
 		return nil, err
 	}
 	return &Deposit{
-		Sender: sender,
-		Amount: instDepositAndCall.Amount,
-		Memo:   append(instDepositAndCall.Receiver[:], instDepositAndCall.Memo...),
-		Slot:   slot,
-		Asset:  "", // no asset for gas token SOL
+		Sender:           sender,
+		Amount:           instDepositAndCall.Amount,
+		Memo:             instDepositAndCall.Memo,
+		Slot:             slot,
+		Asset:            "", // no asset for gas token SOL
+		IsCrossChainCall: true,
 	}, nil
 }
 
@@ -151,11 +155,12 @@ func tryParseAsDepositSPL(
 	}
 
 	return &Deposit{
-		Sender: sender,
-		Amount: inst.Amount,
-		Memo:   inst.Receiver[:],
-		Slot:   slot,
-		Asset:  spl,
+		Sender:           sender,
+		Amount:           inst.Amount,
+		Memo:             []byte{},
+		Slot:             slot,
+		Asset:            spl,
+		IsCrossChainCall: false,
 	}, nil
 }
 
@@ -186,11 +191,12 @@ func tryParseAsDepositSPLAndCall(
 		return nil, err
 	}
 	return &Deposit{
-		Sender: sender,
-		Amount: instDepositAndCall.Amount,
-		Memo:   append(instDepositAndCall.Receiver[:], instDepositAndCall.Memo...),
-		Slot:   slot,
-		Asset:  spl,
+		Sender:           sender,
+		Amount:           instDepositAndCall.Amount,
+		Memo:             instDepositAndCall.Memo,
+		Slot:             slot,
+		Asset:            spl,
+		IsCrossChainCall: true,
 	}, nil
 }
 
