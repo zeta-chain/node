@@ -381,6 +381,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			CoinType:                coin.CoinType_Gas,
 			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
 			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // always empty with legacy memo
+			IsCrossChainCall:        true,
 		}
 
 		// create new inbound vote V1

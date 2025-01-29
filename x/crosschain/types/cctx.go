@@ -121,7 +121,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	// because it there could still be pending V1 Bitcoin CCTXs during at the time of the upgrade switching to V2
 	// this logic is needed to correctly process the reverted CCTXs that were created before the upgrade
 	// it can be removed after all the pending V1 Bitcoin CCTXs are processed
-	//
+	// https://github.com/zeta-chain/node/issues/3431
 	revertReceiver := m.InboundParams.Sender
 	if m.ProtocolContractVersion == ProtocolContractVersion_V1 &&
 		chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
