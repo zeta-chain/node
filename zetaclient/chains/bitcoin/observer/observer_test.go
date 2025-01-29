@@ -9,7 +9,6 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -24,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -299,8 +299,8 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	require.NoError(t, err)
 
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -310,7 +310,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		100,
 		nil,
 		database,
-		logger,
+		baseLogger,
 	)
 	require.NoError(t, err)
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -20,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 const (
@@ -55,13 +55,13 @@ func createTestObserver(
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
-	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, database, logger, nil)
+	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, database, baseLogger, nil)
 	require.NoError(t, err)
 
 	return ob
