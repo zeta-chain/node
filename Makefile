@@ -235,6 +235,10 @@ start-localnet-skip-build:
 stop-localnet:
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
 
+# delete any volume ending in persist
+clear-localnet-persistence:
+	docker volume rm $(docker volume ls -qf "label=localnet=true")
+
 ###############################################################################
 ###                         E2E tests               						###
 ###############################################################################
