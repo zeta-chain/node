@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -248,7 +248,7 @@ func FilterAndParseIncomingTx(
 //   - a valid MsgVoteInbound message, or
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
-func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
+func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *types.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
@@ -285,7 +285,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil
-// it uses witness data to extract the sender address, except for mainnet
+// it uses witness data to extract the sender address
 func GetBtcEvent(
 	ctx context.Context,
 	rpc RPC,
@@ -296,101 +296,7 @@ func GetBtcEvent(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	if netParams.Name == chaincfg.MainNetParams.Name {
-		return GetBtcEventWithoutWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
-	}
-
 	return GetBtcEventWithWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
-}
-
-// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
-// Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
-// TODO(revamp): simplify this function
-func GetBtcEventWithoutWitness(
-	ctx context.Context,
-	rpc RPC,
-	tx btcjson.TxRawResult,
-	tssAddress string,
-	blockNumber uint64,
-	logger zerolog.Logger,
-	netParams *chaincfg.Params,
-	feeCalculator common.DepositorFeeCalculator,
-) (*BTCInboundEvent, error) {
-	var (
-		found        bool
-		value        float64
-		depositorFee float64
-		memo         []byte
-	)
-
-	if len(tx.Vout) >= 2 {
-		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
-		vout0 := tx.Vout[0]
-		script := vout0.ScriptPubKey.Hex
-		if len(script) == 44 && script[:4] == "0014" {
-			// P2WPKH output: 0x00 + 20 bytes of pubkey hash
-			receiver, err := common.DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
-			if err != nil { // should never happen
-				return nil, err
-			}
-
-			// skip irrelevant tx to us
-			if receiver != tssAddress {
-				return nil, nil
-			}
-
-			// calculate depositor fee
-			depositorFee, err = feeCalculator(ctx, rpc, &tx, netParams)
-			if err != nil {
-				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
-			}
-
-			// deposit amount has to be no less than the minimum depositor fee
-			if vout0.Value < depositorFee {
-				logger.Info().
-					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
-				return nil, nil
-			}
-			value = vout0.Value - depositorFee
-
-			// 2nd vout must be a valid OP_RETURN memo
-			vout1 := tx.Vout[1]
-			memo, found, err = common.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
-			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
-				return nil, nil
-			}
-		}
-	}
-	// event found, get sender address
-	if found {
-		if len(tx.Vin) == 0 { // should never happen
-			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
-		}
-
-		// get sender address by input (vin)
-		fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
-		if err != nil {
-			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
-		}
-
-		// skip this tx and move on (e.g., due to unknown script type)
-		// we don't know whom to refund if this tx gets reverted in zetacore
-		if fromAddress == "" {
-			return nil, nil
-		}
-
-		return &BTCInboundEvent{
-			FromAddress:  fromAddress,
-			ToAddress:    tssAddress,
-			Value:        value,
-			DepositorFee: depositorFee,
-			MemoBytes:    memo,
-			BlockNumber:  blockNumber,
-			TxHash:       tx.Txid,
-		}, nil
-	}
-	return nil, nil
 }
 
 // GetSenderAddressByVin get the sender address from the transaction input (vin)

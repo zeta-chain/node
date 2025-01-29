@@ -20,7 +20,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
@@ -56,8 +55,6 @@ type ChainSigner interface {
 	TryProcessOutbound(
 		ctx context.Context,
 		cctx *crosschaintypes.CrossChainTx,
-		outboundProc *outboundprocessor.Processor,
-		outboundID string,
 		observer ChainObserver,
 		zetacoreClient ZetacoreClient,
 		height uint64,

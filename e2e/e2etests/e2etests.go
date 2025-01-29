@@ -83,6 +83,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
+	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
@@ -144,6 +145,7 @@ const (
 	TestDeploy                         = "deploy"
 	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
 	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
+	TestOperationAddLiquiditySPLName   = "add_liquidity_spl"
 
 	/*
 	 Stateful precompiled contracts tests
@@ -303,6 +305,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHWithdrawAndCallRevertWithWithdraw,
+		runner.WithMinimumVersion("v26.0.0"),
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
@@ -657,6 +660,13 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinStdMemoInscribedDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		"deposit Bitcoin into ZEVM that aborts due to insufficient deposit fee",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositAndAbortWithLowDepositFee,
+		runner.WithMinimumVersion("v27.0.0"),
+	),
+	runner.NewE2ETest(
 		TestBitcoinWithdrawSegWitName,
 		"withdraw BTC from ZEVM to a SegWit address",
 		[]runner.ArgDefinition{
@@ -938,6 +948,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amountERC20", DefaultValue: "50000000000000000000"},
 		},
 		TestOperationAddLiquidityERC20,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquiditySPLName,
+		"add liquidity to the ZETA/SPL pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountSPL", DefaultValue: "50000000000000000000"},
+		},
+		TestOperationAddLiquiditySPL,
 	),
 	/*
 	 Stateful precompiled contracts tests

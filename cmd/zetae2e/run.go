@@ -99,8 +99,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
 
 	var runnerOpts []runner.E2ERunnerOption
 

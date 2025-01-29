@@ -12,10 +12,10 @@ import (
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 // TON represents TON observer-signer components that is responsible
@@ -24,7 +24,6 @@ type TON struct {
 	scheduler *scheduler.Scheduler
 	observer  *observer.Observer
 	signer    *signer.Signer
-	proc      *outboundprocessor.Processor
 }
 
 // New TON constructor.
@@ -33,7 +32,6 @@ func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *si
 		scheduler: scheduler,
 		observer:  observer,
 		signer:    signer,
-		proc:      outboundprocessor.NewProcessor(observer.Logger().Outbound),
 	}
 }
 
@@ -140,8 +138,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	for i := range cctxList {
 		cctx := cctxList[i]
-		params := cctx.GetCurrentOutboundParam()
-		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, params.TssNonce)
+		outboundID := base.OutboundIDFromCCTX(cctx)
 
 		if err := t.processCCTX(ctx, outboundID, cctx, zetaHeight); err != nil {
 			t.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX failed")
@@ -153,7 +150,7 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 func (t *TON) processCCTX(ctx context.Context, outboundID string, cctx *types.CrossChainTx, zetaHeight uint64) error {
 	switch {
-	case t.proc.IsOutboundActive(outboundID):
+	case t.signer.IsOutboundActive(outboundID):
 		//noop
 		return nil
 	case cctx.GetCurrentOutboundParam().ReceiverChainId != t.observer.Chain().ChainId:
@@ -168,16 +165,11 @@ func (t *TON) processCCTX(ctx context.Context, outboundID string, cctx *types.Cr
 	case !continueKeySign:
 		t.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
 		return nil
-	case t.proc.IsOutboundActive(outboundID):
-		// outbound is already being processed
-		return nil
 	}
 
 	go t.signer.TryProcessOutbound(
 		ctx,
 		cctx,
-		t.proc,
-		outboundID,
 		t.observer.ZetacoreClient(),
 		zetaHeight,
 	)

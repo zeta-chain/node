@@ -6,7 +6,9 @@
 
 * [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
 * [3357](https://github.com/zeta-chain/node/pull/3357) - cosmos-sdk v.50.x upgrade
+* [3358](https://github.com/zeta-chain/node/pull/3358) - register aborted CCTX for Bitcoin inbound that carries insufficient depositor fee
 * [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
+* [3425](https://github.com/zeta-chain/node/pull/3425) - enable inscription parsing on Bitcoin mainnet
 
 ### Refactor
 
@@ -15,7 +17,20 @@
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 * [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
+* [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
 * [3418](https://github.com/zeta-chain/node/pull/3418) - orchestrator V2: TON observer-signer
+
+
+### Fixes
+
+* [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
+* [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
+
+## v26.0.0
+
+### Features
+
+* [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 
 ### Fixes
 
