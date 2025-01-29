@@ -69,8 +69,8 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 		utxosFiltered = append(utxosFiltered, utxo)
 	}
 
-	ob.Mu().Lock()
 	ob.TelemetryServer().SetNumberOfUTXOs(len(utxosFiltered))
+	ob.Mu().Lock()
 	ob.utxos = utxosFiltered
 	ob.Mu().Unlock()
 	return nil
