@@ -6,16 +6,13 @@ import (
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/pkg/ticker"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	gasconst "github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -50,47 +47,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cc.CrossC
 	return false, nil
 }
 
-// watchOutbound watches outbound transactions and caches them in-memory so they can be used later in
-// VoteOutboundIfConfirmed
-func (ob *Observer) watchOutbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	var (
-		initialInterval = ticker.DurationFromUint64Seconds(ob.ChainParams().OutboundTicker)
-		sampledLogger   = ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-	)
-
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		if !app.IsOutboundObservationEnabled() {
-			sampledLogger.Info().Msg("WatchOutbound: outbound observation is disabled")
-			return nil
-		}
-
-		if err := ob.observeOutboundTrackers(ctx); err != nil {
-			ob.Logger().Outbound.Err(err).Msg("WatchOutbound: observeOutboundTrackers error")
-		}
-
-		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().OutboundTicker)
-		t.SetInterval(newInterval)
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		initialInterval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Outbound, "WatchOutbound"),
-	)
-}
-
-// observeOutboundTrackers pulls outbounds trackers from zetacore,
+// ObserveOutbound pulls outbounds trackers from zetacore,
 // fetches txs from TON and stores them in memory for further use.
-func (ob *Observer) observeOutboundTrackers(ctx context.Context) error {
+func (ob *Observer) ObserveOutbound(ctx context.Context) error {
 	var (
 		chainID  = ob.Chain().ChainId
 		zetacore = ob.ZetacoreClient()

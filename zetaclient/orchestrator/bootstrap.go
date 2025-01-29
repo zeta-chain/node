@@ -5,17 +5,11 @@ import (
 
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/ton"
 
-	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
-	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
-	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
-	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -138,25 +132,8 @@ func syncSignerMap(
 
 			addSigner(chainID, signer)
 		case chain.IsTON():
-			cfg, found := app.Config().GetTONConfig()
-			if !found {
-				logger.Std.Warn().Msgf("Unable to find TON config for chain %d", chainID)
-				continue
-			}
-
-			tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to create TON client for chain %d", chainID)
-				continue
-			}
-
-			tonSigner := tonsigner.New(
-				base.NewSigner(*rawChain, tss, logger),
-				tonClient,
-				gateway,
-			)
-
-			addSigner(chainID, tonSigner)
+			// managed by orchestrator V2
+			continue
 		default:
 			logger.Std.Warn().
 				Int64("signer.chain_id", chain.ID()).
@@ -297,47 +274,9 @@ func syncObserverMap(
 
 			addObserver(chainID, solObserver)
 		case chain.IsTON():
-			cfg, found := app.Config().GetTONConfig()
-			if !found {
-				logger.Std.Warn().Msgf("Unable to find chain params for TON chain %d", chainID)
-				continue
-			}
+			// managed by orchestrator V2
+			continue
 
-			database, err := db.NewFromSqlite(dbpath, chainName, true)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("unable to open database for TON chain %d", chainID)
-				continue
-			}
-
-			baseObserver, err := base.NewObserver(
-				*rawChain,
-				*params,
-				client,
-				tss,
-				base.DefaultBlockCacheSize,
-				ts,
-				database,
-				logger,
-			)
-
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to create base observer for TON chain %d", chainID)
-				continue
-			}
-
-			tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to create TON client for chain %d", chainID)
-				continue
-			}
-
-			tonObserver, err := tonobserver.New(baseObserver, tonClient, gateway)
-			if err != nil {
-				logger.Std.Error().Err(err).Msgf("Unable to create TON observer for chain %d", chainID)
-				continue
-			}
-
-			addObserver(chainID, tonObserver)
 		default:
 			logger.Std.Warn().
 				Int64("observer.chain_id", chain.ID()).
@@ -350,24 +289,4 @@ func syncObserverMap(
 	mapDeleteMissingKeys(observerMap, presentChainIDs, onBeforeRemove)
 
 	return added, removed, nil
-}
-
-func makeTONClient(
-	ctx context.Context,
-	cfg config.TONConfig,
-	gatewayAddr string,
-) (*liteapi.Client, *toncontracts.Gateway, error) {
-	client, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Unable to create TON liteapi")
-	}
-
-	gatewayID, err := ton.ParseAccountID(gatewayAddr)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Unable to parse gateway address %q", gatewayAddr)
-	}
-
-	gw := toncontracts.NewGateway(gatewayID)
-
-	return client, gw, nil
 }
