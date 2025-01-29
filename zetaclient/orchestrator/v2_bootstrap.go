@@ -24,7 +24,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
-	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -148,22 +147,29 @@ func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, err
 		return nil, errors.Wrap(errSkipChain, "unable to find TON config")
 	}
 
+	gatewayID, err := tontools.ParseAccountID(chain.Params().GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse gateway address %q", chain.Params().GatewayAddress)
+	}
+
+	gw := toncontracts.NewGateway(gatewayID)
+
+	lightClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create TON liteapi")
+	}
+
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	tonClient, gateway, err := makeTONClient(ctx, cfg, chain.Params().GatewayAddress)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create TON client")
-	}
-
-	observer, err := tonobserver.New(baseObserver, tonClient, gateway)
+	observer, err := tonobserver.New(baseObserver, lightClient, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), tonClient, gateway)
+	signer := tonsigner.New(oc.newBaseSigner(chain), lightClient, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
@@ -212,24 +218,4 @@ func btcDatabaseFileName(chain chains.Chain) string {
 	default:
 		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
 	}
-}
-
-func makeTONClient(
-	ctx context.Context,
-	cfg config.TONConfig,
-	gatewayAddr string,
-) (*liteapi.Client, *toncontracts.Gateway, error) {
-	client, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Unable to create TON liteapi")
-	}
-
-	gatewayID, err := tontools.ParseAccountID(gatewayAddr)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Unable to parse gateway address %q", gatewayAddr)
-	}
-
-	gw := toncontracts.NewGateway(gatewayID)
-
-	return client, gw, nil
 }

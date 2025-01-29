@@ -22,11 +22,14 @@ const (
 	maxTransactionsPerTick = 100
 )
 
-// ObserveGateway observes Gateway's account for new transactions.
+// ObserveInbound observes Gateway's account for new transactions [INBOUND AND OUTBOUND]
+//
 // Due to TON's architecture we have to scan for all net-new transactions.
 // The main purpose is to observe inbounds from TON.
 // Note that we might also have *outbounds* here (if a signer broadcasts a tx, it will be observed here).
-func (ob *Observer) ObserveGateway(ctx context.Context) error {
+//
+// The name `ObserveInbound` is used for consistency with other chains.
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}

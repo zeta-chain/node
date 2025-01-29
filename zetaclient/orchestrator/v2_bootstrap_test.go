@@ -118,7 +118,7 @@ func TestBootstrap(t *testing.T) {
 	})
 
 	t.Run("TON", func(t *testing.T) {
-		// TODO
+		// TODO: mock TON liteServer with real calls
 		// https://github.com/zeta-chain/node/issues/3419
 
 		t.Skip("Depends on lite-server mocks")
