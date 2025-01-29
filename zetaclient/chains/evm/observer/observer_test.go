@@ -71,6 +71,7 @@ func getAppContext(
 		nil,
 		chainParams,
 		*sample.CrosschainFlags(),
+		sample.OperationalFlags(),
 	)
 	require.NoError(t, err)
 

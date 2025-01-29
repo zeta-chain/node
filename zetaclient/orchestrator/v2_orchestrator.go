@@ -7,7 +7,6 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -218,14 +216,9 @@ var (
 )
 
 func (oc *V2) updateMetrics(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
+	block, sleepDuration, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
-		return err
-	}
-
-	block, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable get block from context")
+		return errors.Wrap(err, "unable get block from context")
 	}
 
 	zetacore := oc.deps.Zetacore
@@ -234,8 +227,6 @@ func (oc *V2) updateMetrics(ctx context.Context) error {
 	zetaBlockHeight := block.Block.Height
 
 	// 0. Set block metrics
-	sleepDuration := calcBlockSleep(app.GetOperationalFlags(), block)
-
 	metrics.CoreBlockLatency.Set(time.Since(block.Block.Time).Seconds())
 	metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
 
@@ -365,20 +356,4 @@ func newLoggers(baseLogger base.Logger) loggers {
 		sampled: std.Sample(&zerolog.BasicSampler{N: 10}),
 		base:    baseLogger,
 	}
-}
-
-// calcBlockSleep calculates block sleep duration based on a given operational flags and block.
-// Sleep duration represents artificial "lag" before processing outbound transactions.
-func calcBlockSleep(flags observertypes.OperationalFlags, block types.EventDataNewBlock) time.Duration {
-	offset := flags.SignerBlockTimeOffset
-	if offset == nil {
-		return 0
-	}
-
-	sleepDuration := time.Until(block.Block.Time.Add(*offset))
-	if sleepDuration < 0 {
-		return 0
-	}
-
-	return sleepDuration
 }
