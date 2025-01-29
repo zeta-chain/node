@@ -6,11 +6,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
 // SaveBroadcastedTx saves successfully broadcasted transaction
-func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
+func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) error {
 	outboundID := ob.OutboundID(nonce)
 	ob.Mu().Lock()
 	ob.tssOutboundHashes[txHash] = true
@@ -19,11 +20,14 @@ func (ob *Observer) SaveBroadcastedTx(txHash string, nonce uint64) {
 
 	broadcastEntry := clienttypes.ToOutboundHashSQLType(txHash, outboundID)
 	if err := ob.DB().Client().Save(&broadcastEntry).Error; err != nil {
-		ob.logger.Outbound.Error().
-			Err(err).
-			Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outbound %s", txHash, outboundID)
+		return errors.Wrapf(err, "failed to save broadcasted outbound hash %s for %s", txHash, outboundID)
 	}
-	ob.logger.Outbound.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outbound %s", txHash, outboundID)
+	ob.logger.Outbound.Info().
+		Str(logs.FieldTx, txHash).
+		Str(logs.FieldOutboundID, outboundID).
+		Msg("saved broadcasted outbound hash to db")
+
+	return nil
 }
 
 // LoadLastBlockScanned loads the last scanned block from the database

@@ -15,25 +15,52 @@ import (
 )
 
 func Test_SaveBroadcastedTx(t *testing.T) {
-	t.Run("should be able to save broadcasted tx", func(t *testing.T) {
-		// test data
-		nonce := uint64(1)
-		txHash := sample.BtcHash().String()
+	tests := []struct {
+		name    string
+		wantErr string
+	}{
+		{
+			name:    "should be able to save broadcasted tx",
+			wantErr: "",
+		},
+		{
+			name:    "should fail on db error",
+			wantErr: "failed to save broadcasted outbound hash",
+		},
+	}
 
-		// create observer and open db
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			// test data
+			nonce := uint64(1)
+			txHash := sample.BtcHash().String()
+			dbPath := sample.CreateTempDir(t)
+			ob := newTestSuite(t, chains.BitcoinMainnet, dbPath)
+			if tt.wantErr != "" {
+				// delete db to simulate db error
+				os.RemoveAll(dbPath)
+			}
 
-		// save a test tx
-		ob.SaveBroadcastedTx(txHash, nonce)
+			// ACT
+			// save a test tx
+			err := ob.SaveBroadcastedTx(txHash, nonce)
 
-		// check if the txHash is a TSS outbound
-		require.True(t, ob.IsTSSTransaction(txHash))
+			// ASSERT
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
 
-		// get the broadcasted tx
-		gotHash, found := ob.GetBroadcastedTx(nonce)
-		require.True(t, found)
-		require.Equal(t, txHash, gotHash)
-	})
+			// should always save broadcasted outbound to memory
+			gotHash, found := ob.GetBroadcastedTx(nonce)
+			require.True(t, found)
+			require.Equal(t, txHash, gotHash)
+			require.True(t, ob.IsTSSTransaction(txHash))
+		})
+	}
 }
 
 func Test_LoadLastBlockScanned(t *testing.T) {
