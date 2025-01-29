@@ -123,10 +123,12 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	var (
 		chainID = e.observer.Chain().ChainId

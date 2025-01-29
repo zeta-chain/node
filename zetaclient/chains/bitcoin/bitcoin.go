@@ -121,18 +121,17 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	var (
-		lookahead = b.observer.ChainParams().OutboundScheduleLookahead
-		chainID   = b.observer.Chain().ChainId
-	)
-
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
+	chainID := b.observer.Chain().ChainId
+	lookahead := b.observer.ChainParams().OutboundScheduleLookahead
 
 	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
 	if err != nil {

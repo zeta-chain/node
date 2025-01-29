@@ -121,15 +121,16 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	chainID := t.observer.Chain().ChainId
-
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
+	chainID := t.observer.Chain().ChainId
 
 	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
 	if err != nil {
