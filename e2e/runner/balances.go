@@ -23,6 +23,7 @@ type AccountBalances struct {
 	ZetaERC20 *big.Int
 	ZetaBTC   *big.Int
 	ZetaSOL   *big.Int
+	ZetaSPL   *big.Int
 	EvmETH    *big.Int
 	EvmZETA   *big.Int
 	EvmERC20  *big.Int
@@ -71,6 +72,10 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaSol, err := r.getZRC20BalanceSafe(r.SOLZRC20)
 	if err != nil {
 		return AccountBalances{}, fmt.Errorf("get sol zrc20 balance: %w", err)
+	}
+	zetaSPL, err := r.getZRC20BalanceSafe(r.SPLZRC20)
+	if err != nil {
+		return AccountBalances{}, fmt.Errorf("get spl zrc20 balance: %w", err)
 	}
 
 	// evm
@@ -140,6 +145,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaERC20: zetaErc20,
 		ZetaBTC:   zetaBtc,
 		ZetaSOL:   zetaSol,
+		ZetaSPL:   zetaSPL,
 		EvmETH:    evmEth,
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
@@ -190,6 +196,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
 	r.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
 	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
+	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
 
 	// evm
 	r.Logger.Print("EVM:")
