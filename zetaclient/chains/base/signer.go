@@ -114,15 +114,15 @@ func (s *Signer) Unlock() {
 
 // MarkOutboundActive marks the outbound as active.
 func (s *Signer) MarkOutbound(outboundID string, active bool) {
-	// noop
-	if s.IsOutboundActive(outboundID) == active {
-		return
-	}
-
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if active {
+	startedAt, found := s.activeOutbounds[outboundID]
+
+	switch {
+	case active == found:
+		// noop
+	case active:
 		now := time.Now().UTC()
 		s.activeOutbounds[outboundID] = now
 
@@ -132,24 +132,18 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 			Time("outbound.timestamp", now).
 			Int("outbound.total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
+	default:
+		timeTaken := time.Since(startedAt)
 
-		return
+		s.logger.Std.Info().
+			Bool("outbound.active", active).
+			Str("outbound.id", outboundID).
+			Dur("outbound.time_taken", timeTaken).
+			Int("outbound.total", len(s.activeOutbounds)).
+			Msg("MarkOutbound")
+
+		delete(s.activeOutbounds, outboundID)
 	}
-
-	startedAt, found := s.activeOutbounds[outboundID]
-	if !found {
-		return
-	}
-
-	timeTaken := time.Since(startedAt)
-	delete(s.activeOutbounds, outboundID)
-
-	s.logger.Std.Info().
-		Bool("outbound.active", active).
-		Str("outbound.id", outboundID).
-		Dur("outbound.time_taken", timeTaken).
-		Int("outbound.total", len(s.activeOutbounds)).
-		Msg("MarkOutbound")
 }
 
 func (s *Signer) IsOutboundActive(outboundID string) bool {
