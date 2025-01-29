@@ -62,7 +62,7 @@ func (signer *Signer) SignWithdrawTx(
 
 	// build tx and add inputs
 	tx := wire.NewMsgTx(wire.TxVersion)
-	inAmounts, err := signer.AddTxInputs(tx, selected.UTXOs)
+	inAmounts, err := AddTxInputs(tx, selected.UTXOs)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (signer *Signer) SignWithdrawTx(
 }
 
 // AddTxInputs adds the inputs to the tx and returns input amounts
-func (signer *Signer) AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, error) {
+func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, error) {
 	amounts := make([]int64, len(utxos))
 	for i, utxo := range utxos {
 		hash, err := chainhash.NewHashFromStr(utxo.TxID)

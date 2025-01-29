@@ -72,12 +72,9 @@ func Test_AddTxInputs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// setup signer
-			s := newTestSuite(t, chains.BitcoinMainnet)
-
 			// create tx msg and add inputs
 			tx := wire.NewMsgTx(wire.TxVersion)
-			inAmounts, err := s.AddTxInputs(tx, tt.utxos)
+			inAmounts, err := signer.AddTxInputs(tx, tt.utxos)
 
 			// assert
 			if tt.fail {
@@ -306,7 +303,7 @@ func Test_SignTx(t *testing.T) {
 					Amount:  amount,
 				})
 			}
-			inAmounts, err := s.AddTxInputs(tx, utxos)
+			inAmounts, err := signer.AddTxInputs(tx, utxos)
 			require.NoError(t, err)
 			require.Len(t, inAmounts, len(tt.inputs))
 
