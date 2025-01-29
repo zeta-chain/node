@@ -115,7 +115,11 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 }
 
 // GetEstimatedFeeRate gets estimated smart fee rate (sat/vB) targeting given block confirmation
-func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error) {
+func (c *Client) GetEstimatedFeeRate(
+	ctx context.Context,
+	confTarget int64,
+	regnet bool,
+) (satsPerByte int64, err error) {
 	// RPC 'EstimateSmartFee' is not available in regnet
 	if regnet {
 		return FeeRateRegnet, nil
