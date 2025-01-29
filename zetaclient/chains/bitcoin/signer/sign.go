@@ -137,6 +137,9 @@ func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, er
 // 1st output: the nonce-mark btc to TSS itself
 // 2nd output: the payment to the recipient
 // 3rd output: the remaining btc to TSS itself
+//
+// Note: float64 is used for for 'inputValue' because UTXOs struct uses float64.
+// But we need to use 'int64' for the outputs because NewTxOut expects int64.
 func (signer *Signer) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,
 	to btcutil.Address,
@@ -220,9 +223,12 @@ func (signer *Signer) SignTx(
 	// sign the tx with TSS
 	sig65Bs, err := signer.TSS().SignBatch(ctx, witnessHashes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
-		return fmt.Errorf("SignBatch failed: %v", err)
+		return errors.Wrap(err, "SignBatch failed")
 	}
 
+	// add witnesses to the tx
+	pkCompressed := signer.TSS().PubKey().Bytes(true)
+	hashType := txscript.SigHashAll
 	for ix := range tx.TxIn {
 		sig65B := sig65Bs[ix]
 		R := &btcec.ModNScalar{}
@@ -231,8 +237,6 @@ func (signer *Signer) SignTx(
 		S.SetBytes((*[32]byte)(sig65B[32:64]))
 		sig := btcecdsa.NewSignature(R, S)
 
-		pkCompressed := signer.TSS().PubKey().Bytes(true)
-		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
 	}
