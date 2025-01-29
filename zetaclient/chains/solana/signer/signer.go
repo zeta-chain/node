@@ -24,7 +24,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 const (
@@ -112,15 +111,16 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	outboundProc *outboundprocessor.Processor,
-	outboundID string,
 	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
-		outboundProc.EndTryProcess(outboundID)
+		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
 			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
 		}

@@ -26,7 +26,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -239,14 +238,15 @@ func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) e
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	outboundProc *outboundprocessor.Processor,
-	outboundID string,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
-		outboundProc.EndTryProcess(outboundID)
+		signer.MarkOutbound(outboundID, false)
 		if r := recover(); r != nil {
 			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, r)
 		}
