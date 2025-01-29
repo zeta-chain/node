@@ -678,6 +678,7 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 	appContext := zctx.New(cfg, nil, zerolog.New(zerolog.NewTestWriter(t)))
 
 	ccFlags := sample.CrosschainFlags()
+	opFlags := sample.OperationalFlags()
 
 	// feed chain params
 	err := appContext.Update(
@@ -685,6 +686,7 @@ func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
 		nil,
 		params,
 		*ccFlags,
+		opFlags,
 	)
 	require.NoError(t, err, "failed to update app context")
 

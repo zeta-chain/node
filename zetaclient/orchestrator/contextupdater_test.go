@@ -3,12 +3,14 @@ package orchestrator
 import (
 	"context"
 	"testing"
+	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/ptr"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -37,6 +39,11 @@ func Test_UpdateAppContext(t *testing.T) {
 			IsInboundEnabled:  true,
 			IsOutboundEnabled: true,
 		}
+		opFlags := observertypes.OperationalFlags{
+			RestartHeight:         123,
+			SignerBlockTimeOffset: ptr.Ptr(time.Second),
+			MinimumVersion:        "",
+		}
 
 		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
 		zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil)
@@ -44,6 +51,7 @@ func Test_UpdateAppContext(t *testing.T) {
 		zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil)
 		zetacore.On("GetChainParams", mock.Anything).Return(newParams, nil)
 		zetacore.On("GetCrosschainFlags", mock.Anything).Return(ccFlags, nil)
+		zetacore.On("GetOperationalFlags", mock.Anything).Return(opFlags, nil)
 
 		// ACT
 		err := UpdateAppContext(ctx, app, zetacore, logger)
@@ -54,6 +62,9 @@ func Test_UpdateAppContext(t *testing.T) {
 		// New chains should be added
 		_, err = app.GetChain(btc.ChainId)
 		require.NoError(t, err)
+
+		// Check OP flags
+		require.Equal(t, opFlags.RestartHeight, app.GetOperationalFlags().RestartHeight)
 	})
 
 	t.Run("Upgrade plan detected", func(t *testing.T) {

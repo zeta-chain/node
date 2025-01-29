@@ -250,8 +250,9 @@ func newAppContext(
 	appContext := zctx.New(cfg, nil, logger)
 
 	ccFlags := sample.CrosschainFlags()
+	opFlags := sample.OperationalFlags()
 
-	err := appContext.Update(chainList, nil, params, *ccFlags)
+	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags)
 	require.NoError(t, err, "failed to update app context")
 
 	ctx := zctx.WithAppContext(context.Background(), appContext)
