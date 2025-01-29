@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 const (
@@ -72,18 +73,17 @@ func (signer *Signer) SignWithdrawTx(
 	if err != nil {
 		return nil, err
 	}
-	if txData.txSize < common.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.Logger().Std.Info().
-			Msgf("txSize %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", txData.txSize, txSize, txData.nonce)
-	}
+	logger := signer.Logger().Std.With().
+		Int64("txData.txSize", txData.txSize).
+		Int64("tx.size", txSize).
+		Uint64(logs.FieldNonce, txData.nonce).
+		Logger()
 	if txSize < common.OutboundBytesMin { // outbound shouldn't be blocked by low sizeLimit
-		signer.Logger().Std.Warn().
-			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, common.OutboundBytesMin)
+		logger.Warn().Msg("txSize is less than outboundBytesMin")
 		txSize = common.OutboundBytesMin
 	}
 	if txSize > common.OutboundBytesMax { // in case of accident
-		signer.Logger().Std.Warn().
-			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, common.OutboundBytesMax)
+		logger.Warn().Msgf("txSize is greater than outboundBytesMax")
 		txSize = common.OutboundBytesMax
 	}
 
