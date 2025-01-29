@@ -298,6 +298,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestBitcoinStdMemoDepositAndCallName,
 			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+			e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
 			e2etests.TestCrosschainSwapName,
 		}
 		bitcoinDepositTestsAdvanced := []string{
