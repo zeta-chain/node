@@ -2,9 +2,11 @@ package orchestrator
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -26,6 +28,8 @@ type V2 struct {
 
 	chains map[int64]ObserverSigner
 	mu     sync.RWMutex
+
+	operatorBalance sdkmath.Int
 
 	logger loggers
 }
@@ -79,11 +83,12 @@ func (oc *V2) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(app.Config().ConfigUpdateTicker)
 	})
 
-	// every other block
+	// every other block, regardless of block events from zetacore
 	syncInterval := scheduler.Interval(2 * constant.ZetaBlockTime)
 
 	oc.scheduler.Register(ctx, oc.UpdateContext, opts("update_context", contextInterval)...)
 	oc.scheduler.Register(ctx, oc.SyncChains, opts("sync_chains", syncInterval)...)
+	oc.scheduler.Register(ctx, oc.updateMetrics, opts("update_metrics", syncInterval)...)
 
 	return nil
 }
@@ -194,6 +199,49 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 			Int("chains.removed", removed).
 			Msg("Synced observer-signers")
 	}
+
+	return nil
+}
+
+var (
+	zero   = sdkmath.NewInt(0)
+	maxInt = sdkmath.NewInt(math.MaxInt64)
+)
+
+func (oc *V2) updateMetrics(ctx context.Context) error {
+	block, ok := scheduler.BlockFromContext(ctx)
+	if !ok {
+		return errors.New("unable get block from context")
+	}
+
+	zetaBlockHeight := block.Block.Height
+	zetacore := oc.deps.Zetacore
+	ts := oc.deps.Telemetry
+
+	// 0. Set last block number & latency
+	ts.SetCoreBlockNumber(zetaBlockHeight)
+
+	blockTimeLatency := time.Since(block.Block.Time)
+	metrics.CoreBlockLatency.Set(blockTimeLatency.Seconds())
+
+	// 1. Fetch hot key balance
+	balance, err := zetacore.GetZetaHotKeyBalance(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get hot key balance")
+	}
+
+	// 2. Set it within orchestrator
+	oc.operatorBalance = balance
+
+	// 3. Update telemetry
+	diff := oc.operatorBalance.Sub(balance)
+	if diff.GT(zero) && diff.LT(maxInt) {
+		ts.AddFeeEntry(zetaBlockHeight, diff.Int64())
+	}
+
+	// 4. Update metrics
+	burnRate := ts.HotKeyBurnRate.GetBurnRate().Int64()
+	metrics.HotKeyBurnRate.Set(float64(burnRate))
 
 	return nil
 }
