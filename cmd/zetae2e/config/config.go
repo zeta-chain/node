@@ -12,7 +12,7 @@ import (
 func RunnerFromConfig(
 	ctx context.Context,
 	name string,
-	ctxCancel context.CancelFunc,
+	ctxCancel context.CancelCauseFunc,
 	conf config.Config,
 	account config.Account,
 	logger *runner.Logger,

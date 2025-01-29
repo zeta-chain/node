@@ -146,7 +146,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, senderChain, observer)
 
-		// Successfully mock SaveSuccessfulOutbound
+		// Successfully mock HandleValidOutbound
 		expectedNumberOfOutboundParams := 1
 		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss, expectedNumberOfOutboundParams)
 
@@ -452,7 +452,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 		// Successfully mock GetSupportedChainFromChainID
 		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
 
-		//Successfully mock SaveFailedOutbound
+		//Successfully mock HandleInvalidOutbound
 		expectedNumberOfOutboundParams := 1
 		keepertest.MockSaveOutbound(observerMock, ctx, cctx, tss, expectedNumberOfOutboundParams)
 
@@ -592,7 +592,7 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+		k.HandleInvalidOutbound(ctx, cctx, errors.New(sample.String()), sample.Tss().TssPubkey)
 
 		//ASSERT
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
@@ -619,7 +619,7 @@ func TestKeeper_SaveFailedOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.Tss().TssPubkey)
+		k.HandleInvalidOutbound(ctx, cctx, errors.New(sample.String()), sample.Tss().TssPubkey)
 
 		//ASSERT
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
@@ -648,7 +648,7 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.SaveSuccessfulOutbound(ctx, cctx, sample.Tss().TssPubkey)
+		k.HandleValidOutbound(ctx, cctx, sample.Tss().TssPubkey)
 
 		//ASSERT
 		_, found := k.GetOutboundTracker(
@@ -674,7 +674,7 @@ func TestKeeper_SaveSuccessfulOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 
 		//ACT
-		k.SaveSuccessfulOutbound(ctx, cctx, sample.Tss().TssPubkey)
+		k.HandleValidOutbound(ctx, cctx, sample.Tss().TssPubkey)
 
 		//ASSERT
 		for _, outboundParams := range cctx.OutboundParams {
