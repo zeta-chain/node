@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -74,6 +76,11 @@ func (oc *V2) Start(ctx context.Context) error {
 		return err
 	}
 
+	newBlocksChan, err := oc.deps.Zetacore.NewBlockSubscriber(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to subscribe to new block")
+	}
+
 	// syntax sugar
 	opts := func(name string, opts ...scheduler.Opt) []scheduler.Opt {
 		return append(opts, scheduler.GroupName(schedulerGroup), scheduler.Name(name))
@@ -86,9 +93,11 @@ func (oc *V2) Start(ctx context.Context) error {
 	// every other block, regardless of block events from zetacore
 	syncInterval := scheduler.Interval(2 * constant.ZetaBlockTime)
 
+	blocksTicker := scheduler.BlockTicker(newBlocksChan)
+
 	oc.scheduler.Register(ctx, oc.UpdateContext, opts("update_context", contextInterval)...)
 	oc.scheduler.Register(ctx, oc.SyncChains, opts("sync_chains", syncInterval)...)
-	oc.scheduler.Register(ctx, oc.updateMetrics, opts("update_metrics", syncInterval)...)
+	oc.scheduler.Register(ctx, oc.updateMetrics, opts("update_metrics", blocksTicker)...)
 
 	return nil
 }
@@ -209,20 +218,28 @@ var (
 )
 
 func (oc *V2) updateMetrics(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	block, ok := scheduler.BlockFromContext(ctx)
 	if !ok {
 		return errors.New("unable get block from context")
 	}
 
-	zetaBlockHeight := block.Block.Height
 	zetacore := oc.deps.Zetacore
 	ts := oc.deps.Telemetry
 
-	// 0. Set last block number & latency
-	ts.SetCoreBlockNumber(zetaBlockHeight)
+	zetaBlockHeight := block.Block.Height
 
-	blockTimeLatency := time.Since(block.Block.Time)
-	metrics.CoreBlockLatency.Set(blockTimeLatency.Seconds())
+	// 0. Set block metrics
+	sleepDuration := calcBlockSleep(app.GetOperationalFlags(), block)
+
+	metrics.CoreBlockLatency.Set(time.Since(block.Block.Time).Seconds())
+	metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
+
+	ts.SetCoreBlockNumber(zetaBlockHeight)
 
 	// 1. Fetch hot key balance
 	balance, err := zetacore.GetZetaHotKeyBalance(ctx)
@@ -348,4 +365,20 @@ func newLoggers(baseLogger base.Logger) loggers {
 		sampled: std.Sample(&zerolog.BasicSampler{N: 10}),
 		base:    baseLogger,
 	}
+}
+
+// calcBlockSleep calculates block sleep duration based on a given operational flags and block.
+// Sleep duration represents artificial "lag" before processing outbound transactions.
+func calcBlockSleep(flags observertypes.OperationalFlags, block types.EventDataNewBlock) time.Duration {
+	offset := flags.SignerBlockTimeOffset
+	if offset == nil {
+		return 0
+	}
+
+	sleepDuration := time.Until(block.Block.Time.Add(*offset))
+	if sleepDuration < 0 {
+		return 0
+	}
+
+	return sleepDuration
 }
