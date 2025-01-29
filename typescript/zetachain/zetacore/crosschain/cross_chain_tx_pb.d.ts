@@ -429,6 +429,14 @@ export declare class Status extends Message<Status> {
    */
   createdTimestamp: bigint;
 
+  /**
+   * error_message_revert carries information about the revert outbound tx ,
+   * which is created if the first outbound tx fails
+   *
+   * @generated from field: string error_message_revert = 7;
+   */
+  errorMessageRevert: string;
+
   constructor(data?: PartialMessage<Status>);
 
   static readonly runtime: typeof proto3;

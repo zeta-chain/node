@@ -121,12 +121,10 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 			require.Equal(t, types.CctxStatus_Aborted, newStatus)
-			require.True(
+			require.Contains(
 				t,
-				strings.Contains(
-					cctx.CctxStatus.StatusMessage,
-					"error during deposit that is not smart contract revert",
-				),
+				cctx.CctxStatus.StatusMessage,
+				"outbound failed but the universal contract did not revert",
 			)
 			require.True(t, strings.Contains(cctx.CctxStatus.ErrorMessage, sample.ErrSample.Error()))
 		},

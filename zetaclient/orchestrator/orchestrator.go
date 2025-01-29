@@ -23,12 +23,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/ratelimiter"
 )
 
@@ -55,9 +55,6 @@ type Orchestrator struct {
 
 	// observerMap contains the chain observers indexed by chainID
 	observerMap map[int64]interfaces.ChainObserver
-
-	// outbound processor
-	outboundProc *outboundprocessor.Processor
 
 	// last operator balance
 	lastOperatorBalance sdkmath.Int
@@ -112,7 +109,6 @@ func New(
 		signerMap:   signerMap,
 		observerMap: observerMap,
 
-		outboundProc:        outboundprocessor.NewProcessor(logger.Std),
 		lastOperatorBalance: balance,
 
 		// observer & signer props
@@ -430,8 +426,18 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	signer interfaces.ChainSigner,
 ) {
 	solObserver, ok := observer.(*solanaobserver.Observer)
-	if !ok { // should never happen
+
+	// should never happen
+	if !ok {
 		oc.logger.Error().Msgf("ScheduleCctxSolana: chain observer is not a solana observer")
+		return
+	}
+
+	solSigner, ok := signer.(*solanasigner.Signer)
+
+	// should never happen
+	if !ok {
+		oc.logger.Error().Msgf("ScheduleCctxSolana: chain signer is not a solana signer")
 		return
 	}
 
@@ -445,7 +451,7 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 	for _, cctx := range cctxList {
 		params := cctx.GetCurrentOutboundParam()
 		nonce := params.TssNonce
-		outboundID := outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+		outboundID := base.OutboundIDFromCCTX(cctx)
 
 		if params.ReceiverChainId != chainID {
 			oc.logger.Error().
@@ -472,15 +478,16 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			continue
 		}
 
+		// noop
+		if solSigner.IsOutboundActive(outboundID) {
+			continue
+		}
+
 		// schedule a TSS keysign
-		if nonce%interval == zetaHeight%interval && !oc.outboundProc.IsOutboundActive(outboundID) {
-			oc.outboundProc.StartTryProcess(outboundID)
-			oc.logger.Debug().Msgf("ScheduleCctxSolana: sign outbound %s with value %d", outboundID, params.Amount)
+		if nonce%interval == zetaHeight%interval {
 			go signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				oc.outboundProc,
-				outboundID,
 				observer,
 				oc.zetacoreClient,
 				zetaHeight,
@@ -504,7 +511,8 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 		return
 	}
 
-	if _, ok := signer.(*tonsigner.Signer); !ok {
+	tonSigner, ok := signer.(*tonsigner.Signer)
+	if !ok {
 		oc.logger.Error().Msg("ScheduleCCTXTON: signer is not TON")
 		return
 	}
@@ -523,12 +531,17 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 			cctx       = cctxList[i]
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		if params.ReceiverChainId != chainID {
 			// should not happen
 			oc.logger.Error().Msgf("ScheduleCCTXTON: outbound chain id mismatch (got %d)", params.ReceiverChainId)
+			continue
+		}
+
+		// outbound is already being processed
+		if tonSigner.IsOutboundActive(outboundID) {
 			continue
 		}
 
@@ -554,8 +567,6 @@ func (oc *Orchestrator) ScheduleCCTXTON(
 			signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				oc.outboundProc,
-				outboundID,
 				observer,
 				oc.zetacoreClient,
 				zetaHeight,

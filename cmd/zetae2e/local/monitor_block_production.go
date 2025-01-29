@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -12,12 +11,11 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 )
 
-// monitorBlockProductionExit calls monitorBlockProduction and exits upon any error
-func monitorBlockProductionExit(ctx context.Context, conf config.Config) {
+// monitorBlockProductionCancel calls monitorBlockProduction and exits upon any error
+func monitorBlockProductionCancel(ctx context.Context, cancel context.CancelCauseFunc, conf config.Config) {
 	err := monitorBlockProduction(ctx, conf)
 	if err != nil {
-		fmt.Printf("❌ block monitor: %v\n", err)
-		os.Exit(2)
+		cancel(err)
 	}
 }
 

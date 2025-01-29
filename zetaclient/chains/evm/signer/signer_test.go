@@ -22,7 +22,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -75,11 +74,6 @@ func newTestSuite(t *testing.T) *testSuite {
 
 func (ts *testSuite) EvmSigner() ethtypes.Signer {
 	return ts.client.Signer
-}
-
-func getNewOutboundProcessor() *outboundprocessor.Processor {
-	logger := zerolog.Logger{}
-	return outboundprocessor.NewProcessor(logger)
 }
 
 func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
@@ -145,7 +139,6 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	// Setup evm signer
 	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
-	processor := getNewOutboundProcessor()
 
 	// Attach mock EVM client to the signer
 	evmSigner.evmMock.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
@@ -156,7 +149,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
 
-	evmSigner.TryProcessOutbound(ctx, cctx, processor, "123", client, 123)
+	evmSigner.TryProcessOutbound(ctx, cctx, client, 123)
 
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()

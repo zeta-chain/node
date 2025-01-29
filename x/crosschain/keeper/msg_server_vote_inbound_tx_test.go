@@ -306,7 +306,7 @@ func TestStatus_UpdateCctxStatus(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, test.Msg, "")
+			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, types.StatusMessages{StatusMessage: test.Msg})
 			if test.IsErr {
 				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {
