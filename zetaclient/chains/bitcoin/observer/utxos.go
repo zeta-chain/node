@@ -29,12 +29,6 @@ type SelectedUTXOs struct {
 
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
 func (ob *Observer) FetchUTXOs(ctx context.Context) error {
-	defer func() {
-		if err := recover(); err != nil {
-			ob.logger.UTXOs.Error().Msgf("BTC FetchUTXOs: caught panic error: %v", err)
-		}
-	}()
-
 	// this is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
 
