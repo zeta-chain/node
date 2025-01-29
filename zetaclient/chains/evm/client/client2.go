@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -59,6 +60,10 @@ type hexBig big.Int
 // See https://github.com/zeta-chain/node/issues/3386
 // See https://github.com/ethereum/go-ethereum/issues/29407
 func (c *Client) BlockByNumber2(ctx context.Context, blockNumber *big.Int) (*Block, error) {
+	if blockNumber == nil || blockNumber.Sign() < 0 {
+		return nil, errors.New("invalid block number")
+	}
+
 	raw, err := c.call(ctx, "eth_getBlockByNumber", hexutil.EncodeBig(blockNumber), true)
 	if err != nil {
 		return nil, errors.Wrapf(err, "block %d", blockNumber.Uint64())
@@ -220,9 +225,12 @@ func parseInt(value string) (int, error) {
 	value = strings.TrimPrefix(value, "0x")
 
 	i, err := strconv.ParseInt(value, 16, 64)
-	if err != nil {
+	switch {
+	case err != nil:
 		return 0, errors.Wrap(err, value)
+	case i < math.MinInt || i > math.MaxInt:
+		return 0, errors.Errorf("parsed value %d out of int range", i)
+	default:
+		return int(i), nil
 	}
-
-	return int(i), nil
 }
