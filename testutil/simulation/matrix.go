@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// TssVoteSimulationMatrix returns a transition matrix and a state array for the TSS ballot vote simulation
+// TSSVoteSimulationMatrix returns a transition matrix and a state array for the TSS ballot vote simulation
 // This simulates the vote cast for the TSS creation ballot
 func TSSVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
