@@ -6,8 +6,10 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	tontools "github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
@@ -17,6 +19,10 @@ import (
 	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 )
@@ -114,6 +120,49 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	}
 
 	return evm.New(oc.scheduler, observer, signer), nil
+}
+
+func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
+	// should not happen
+	if !chain.IsTON() {
+		return nil, errors.New("chain is not TON")
+	}
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, found := app.Config().GetTONConfig()
+	if !found {
+		return nil, errors.Wrap(errSkipChain, "unable to find TON config")
+	}
+
+	gatewayID, err := tontools.ParseAccountID(chain.Params().GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse gateway address %q", chain.Params().GatewayAddress)
+	}
+
+	gw := toncontracts.NewGateway(gatewayID)
+
+	lightClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create TON liteapi")
+	}
+
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	observer, err := tonobserver.New(baseObserver, lightClient, gw)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create observer")
+	}
+
+	signer := tonsigner.New(oc.newBaseSigner(chain), lightClient, gw)
+
+	return ton.New(oc.scheduler, observer, signer), nil
 }
 
 func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {

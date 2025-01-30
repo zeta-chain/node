@@ -7,15 +7,12 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -24,58 +21,16 @@ const (
 	// TODO: move to config
 	// https://github.com/zeta-chain/node/issues/3086
 	maxTransactionsPerTick = 100
-	// zero log sample rate for sampled logger (to avoid spamming logs)
-	logSampleRate = 10
 )
 
-// watchInbound watches for new txs to Gateway's account.
-func (ob *Observer) watchInbound(ctx context.Context) error {
-	return ob.inboundTicker(ctx, "WatchInbound", ob.observeGateway)
-}
-
-func (ob *Observer) watchInboundTracker(ctx context.Context) error {
-	return ob.inboundTicker(ctx, "WatchInboundTracker", ob.processInboundTrackers)
-}
-
-func (ob *Observer) inboundTicker(ctx context.Context, taskName string, taskFunc func(context.Context) error) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: logSampleRate})
-
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		if !app.IsInboundObservationEnabled() {
-			sampledLogger.Info().Msgf("%s: inbound observation is disabled", taskName)
-			return nil
-		}
-
-		if err := taskFunc(ctx); err != nil {
-			ob.Logger().Inbound.Err(err).Msgf("%s failed", taskName)
-		}
-
-		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-		t.SetInterval(newInterval)
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		initialInterval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Inbound, taskName),
-	)
-}
-
-// observeGateway observes Gateway's account for new transactions.
-// Due to TON architecture we have to scan for all net-new transactions.
+// ObserveInbound observes Gateway's account for new transactions [INBOUND AND OUTBOUND]
+//
+// Due to TON's architecture we have to scan for all net-new transactions.
 // The main purpose is to observe inbounds from TON.
 // Note that we might also have *outbounds* here (if a signer broadcasts a tx, it will be observed here).
-func (ob *Observer) observeGateway(ctx context.Context) error {
+//
+// The name `ObserveInbound` is used for consistency with other chains.
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}
@@ -165,8 +120,8 @@ func (ob *Observer) observeGateway(ctx context.Context) error {
 	return nil
 }
 
-// processInboundTrackers handles adhoc trackers that were somehow missed by
-func (ob *Observer) processInboundTrackers(ctx context.Context) error {
+// ObserveInboundTrackers handles adhoc trackers that were somehow missed by
+func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return errors.Wrap(err, "unable to get inbound trackers")

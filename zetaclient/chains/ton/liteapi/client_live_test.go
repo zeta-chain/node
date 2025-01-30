@@ -16,7 +16,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
+	zetatonconfig "github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -170,14 +170,14 @@ func TestClient(t *testing.T) {
 
 	t.Run("GetGasConfig", func(t *testing.T) {
 		// ACT #1
-		gas, err := zetaton.FetchGasConfig(ctx, client)
+		gas, err := zetatonconfig.FetchGasConfig(ctx, client)
 
 		// ASSERT #1
 		require.NoError(t, err)
 		require.NotEmpty(t, gas)
 
 		// ACT #2
-		gasPrice, err := zetaton.ParseGasPrice(gas)
+		gasPrice, err := zetatonconfig.ParseGasPrice(gas)
 
 		// ASSERT #2
 		require.NoError(t, err)
