@@ -48,7 +48,6 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	// Now we want to make sure the cctx is reverted with expected error message
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	r.Logger.Print(cctx.String())
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrCannotProcessWithdrawal.Error())
 
