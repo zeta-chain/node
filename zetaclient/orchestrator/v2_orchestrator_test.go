@@ -168,9 +168,10 @@ func newTestSuite(t *testing.T) *testSuite {
 	// Mock zetacore blocks
 	zetacore.On("NewBlockSubscriber", mock.Anything).Return(ts.blockProducer).Maybe()
 
-	// Mock CCTX (stub for now)
-	// ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
+	// Mock CCTX-related calls (stubs for now)
 	zetacore.On("ListPendingCCTX", mock.Anything, mock.Anything).Return(nil, uint64(0), nil).Maybe()
+	zetacore.On("GetInboundTrackersForChain", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	zetacore.On("GetAllOutboundTrackerByChain", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 
