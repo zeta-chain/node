@@ -159,9 +159,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 			// https://github.com/zeta-chain/node/issues/3301
 			continue
 		case chain.IsTON():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3300
-			continue
+			observerSigner, err = oc.bootstrapTON(ctx, chain)
 		}
 
 		switch {

@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/liteclient"
@@ -55,8 +54,6 @@ const (
 
 const signaturesHashSize = 1024
 
-var _ interfaces.ChainSigner = (*Signer)(nil)
-
 // New Signer constructor.
 func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gateway) *Signer {
 	sigCache, _ := lru.New(signaturesHashSize)
@@ -74,7 +71,6 @@ func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gatew
 func (s *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *cc.CrossChainTx,
-	_ interfaces.ChainObserver,
 	zetacore interfaces.ZetacoreClient,
 	zetaBlockHeight uint64,
 ) {
@@ -292,10 +288,3 @@ func (s *Signer) SetGatewayAddress(addr string) {
 	s.gateway = toncontracts.NewGateway(acc)
 	s.Unlock()
 }
-
-// not used
-
-func (s *Signer) GetZetaConnectorAddress() (_ ethcommon.Address) { return }
-func (s *Signer) GetERC20CustodyAddress() (_ ethcommon.Address)  { return }
-func (s *Signer) SetZetaConnectorAddress(_ ethcommon.Address)    {}
-func (s *Signer) SetERC20CustodyAddress(_ ethcommon.Address)     {}

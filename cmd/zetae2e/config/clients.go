@@ -19,7 +19,7 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
+	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -135,7 +135,7 @@ func getTONClient(ctx context.Context, sidecarURL string) (*tonrunner.Client, er
 	// It might take some time to bootstrap the sidecar
 	cfg, err := retry.DoTypedWithRetry(
 		func() (*tonconfig.GlobalConfigurationFile, error) {
-			return tonconfig.ConfigFromURL(ctx, sidecar.LiteServerURL())
+			return tonconfig.FromURL(ctx, sidecar.LiteServerURL())
 		},
 	)
 
