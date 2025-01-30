@@ -7,7 +7,7 @@ import (
 
 // TssVoteSimulationMatrix returns a transition matrix and a state array for the TSS ballot vote simulation
 // This simulates the vote cast for the TSS creation ballot
-func TssVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+func TSSVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{70, 10},
 		{30, 10},
