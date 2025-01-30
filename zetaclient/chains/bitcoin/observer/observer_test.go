@@ -308,7 +308,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		zetacore,
 		tss,
 		100,
-		nil,
+		&metrics.TelemetryServer{},
 		database,
 		baseLogger,
 	)
