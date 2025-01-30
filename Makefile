@@ -290,7 +290,7 @@ start-e2e-consensus-test: e2e-images
 	@echo "--> Starting e2e consensus test"
 	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
 	export ZETACORE1_PLATFORM=linux/amd64 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-stress-test: e2e-images
 	@echo "--> Starting stress test"
@@ -468,16 +468,6 @@ release:
 ###                     Local Mainnet Development                           ###
 ###############################################################################
 
-#BTC
-start-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-stop-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
-
-clean-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
-
 #ETHEREUM
 start-eth-node-mainnet:
 	cd contrib/rpc/ethereum && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
@@ -491,9 +481,6 @@ clean-eth-node-mainnet:
 ###############################################################################
 ###                               Debug Tools                               ###
 ###############################################################################
-
-filter-missed-btc: install-zetatool
-	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json
 
 filter-missed-eth: install-zetatool
 	zetatool filterdeposit eth \
