@@ -7,13 +7,13 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-// TestOperationAddLiquidityETH is an operational test to add liquidity in gas token
-func TestOperationAddLiquidityETH(r *runner.E2ERunner, args []string) {
+// TestOperationAddLiquiditySPL is an operational test to add liquidity in spl token
+func TestOperationAddLiquiditySPL(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	liqZETA := utils.ParseBigInt(r, args[0])
-	liqETH := utils.ParseBigInt(r, args[1])
+	liqSPL := utils.ParseBigInt(r, args[1])
 
 	// perform the add liquidity
-	r.AddLiquidityETH(liqZETA, liqETH)
+	r.AddLiquiditySPL(liqZETA, liqSPL)
 }
