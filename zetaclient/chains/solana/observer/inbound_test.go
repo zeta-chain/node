@@ -2,6 +2,7 @@ package observer_test
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -73,19 +74,19 @@ func Test_FilterInboundEvents(t *testing.T) {
 
 	// expected result
 	sender := "HgTpiVRvjUPUcWLzdmCgdadu1GceJNgBWLoN9r66p8o3"
-	expectedMemo := []byte{109, 163, 11, 250, 101, 232, 90, 22, 176, 91, 206, 56, 70, 51, 158, 210, 188, 116, 99, 22}
 	eventExpected := &clienttypes.InboundEvent{
-		SenderChainID: chain.ChainId,
-		Sender:        sender,
-		Receiver:      "",
-		TxOrigin:      sender,
-		Amount:        100000000,
-		Memo:          expectedMemo,
-		BlockNumber:   txResult.Slot,
-		TxHash:        txHash,
-		Index:         0, // not a EVM smart contract call
-		CoinType:      coin.CoinType_Gas,
-		Asset:         "", // no asset for gas token SOL
+		SenderChainID:    chain.ChainId,
+		Sender:           sender,
+		Receiver:         "0x6dA30bFA65E85a16b05bCE3846339ed2BC746316",
+		TxOrigin:         sender,
+		Amount:           100000000,
+		Memo:             []byte{},
+		BlockNumber:      txResult.Slot,
+		TxHash:           txHash,
+		Index:            0, // not a EVM smart contract call
+		CoinType:         coin.CoinType_Gas,
+		Asset:            "", // no asset for gas token SOL
+		IsCrossChainCall: false,
 	}
 
 	t.Run("should filter inbound event deposit SOL", func(t *testing.T) {
@@ -120,21 +121,14 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	t.Run("should return vote msg for valid event", func(t *testing.T) {
 		sender := sample.SolanaAddress(t)
 		receiver := sample.EthAddress()
-		event := sample.InboundEvent(chain.ChainId, sender, "", 1280, receiver.Bytes())
+		message := sample.Bytes()
+		event := sample.InboundEvent(chain.ChainId, sender, receiver.Hex(), 1280, message)
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.NotNil(t, msg)
 		require.Equal(t, sender, msg.Sender)
 		require.Equal(t, receiver.Hex(), msg.Receiver)
-	})
-
-	t.Run("should return nil if failed to decode memo", func(t *testing.T) {
-		sender := sample.SolanaAddress(t)
-		memo := []byte("a memo too short")
-		event := sample.InboundEvent(chain.ChainId, sender, sender, 1280, memo)
-
-		msg := ob.BuildInboundVoteMsgFromEvent(event)
-		require.Nil(t, msg)
+		require.Equal(t, hex.EncodeToString(message), msg.Message)
 	})
 
 	t.Run("should return nil if event is not processable", func(t *testing.T) {
