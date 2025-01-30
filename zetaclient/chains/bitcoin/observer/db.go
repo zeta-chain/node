@@ -43,7 +43,7 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	if ob.LastBlockScanned() == 0 {
 		blockNumber, err := ob.rpc.GetBlockCount(ctx)
 		if err != nil {
-			return errors.Wrapf(err, "error GetBlockCount for chain %d", ob.Chain().ChainId)
+			return errors.Wrap(err, "unable to get block count")
 		}
 		// #nosec G115 always positive
 		ob.WithLastBlockScanned(uint64(blockNumber))

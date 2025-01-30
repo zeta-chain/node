@@ -105,7 +105,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 		// load last block scanned
 		err := obOther.LoadLastBlockScanned(ctx)
-		require.ErrorContains(t, err, "rpc error")
+		require.ErrorContains(t, err, "unable to get block count")
 	})
 	t.Run("should use hardcode block 100 for regtest", func(t *testing.T) {
 		// use regtest chain
