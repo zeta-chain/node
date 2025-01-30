@@ -144,13 +144,12 @@ func (signer *Signer) BroadcastOutbound(
 	txHash := tx.TxID()
 
 	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "BroadcastOutbound",
-		logs.FieldNonce:  nonce,
-		logs.FieldTx:     txHash,
-		logs.FieldCctx:   cctx.Index,
-	}
-	logger := signer.Logger().Std
+	logger := signer.Logger().Std.With().
+		Str(logs.FieldMethod, "BroadcastOutbound").
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txHash).
+		Str(logs.FieldCctx, cctx.Index).
+		Logger()
 
 	// try broacasting tx with backoff in case of RPC error
 	broadcast := func() error {
@@ -160,28 +159,27 @@ func (signer *Signer) BroadcastOutbound(
 	bo := backoff.NewConstantBackOff(broadcastBackoff)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, broadcastRetries)
 	if err := retry.DoWithBackoff(broadcast, boWithMaxRetries); err != nil {
-		logger.Error().Err(err).Fields(lf).Msgf("unable to broadcast Bitcoin outbound")
+		logger.Error().Err(err).Msgf("unable to broadcast Bitcoin outbound")
 	}
-	logger.Info().Fields(lf).Msg("broadcasted Bitcoin outbound successfully")
+	logger.Info().Msg("broadcasted Bitcoin outbound successfully")
 
 	// save tx local db and ignore db error.
 	// db error is not critical and should not block outbound tracker.
 	if err := ob.SaveBroadcastedTx(txHash, nonce); err != nil {
-		logger.Error().Err(err).Fields(lf).Msg("unable to save broadcasted Bitcoin outbound")
+		logger.Error().Err(err).Msg("unable to save broadcasted Bitcoin outbound")
 	}
 
 	// add tx to outbound tracker so that all observers know about it
 	zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
 	if err != nil {
-		logger.Err(err).Fields(lf).Msg("unable to add Bitcoin outbound tracker")
+		logger.Err(err).Msg("unable to add Bitcoin outbound tracker")
 	} else {
-		lf[logs.FieldZetaTx] = zetaHash
-		logger.Info().Fields(lf).Msg("add Bitcoin outbound tracker successfully")
+		logger.Info().Str(logs.FieldZetaTx, zetaHash).Msg("add Bitcoin outbound tracker successfully")
 	}
 
 	// try including this outbound as early as possible, no need to wait for outbound tracker
 	_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)
 	if included {
-		logger.Info().Fields(lf).Msg("included newly broadcasted Bitcoin outbound")
+		logger.Info().Msg("included newly broadcasted Bitcoin outbound")
 	}
 }
