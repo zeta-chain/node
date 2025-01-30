@@ -61,7 +61,6 @@ const (
 	DefaultWeightMsgTypeMsgResetChainNonces            = 5
 	DefaultWeightMsgTypeMsgUpdateGasPriceIncreaseFlags = 10
 	DefaultWeightMsgTypeMsgAddObserver                 = 5
-	moduleName                                         = observertypes.ModuleName
 )
 
 // WeightedOperations for observer module

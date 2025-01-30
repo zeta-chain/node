@@ -62,7 +62,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 	defaultVote := chains.ReceiveStatus_success
 	alternativeVote := chains.ReceiveStatus_failed
 	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := zetasimulation.ObserverVotesSimulationMatrix()
-	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.VoteOutboundBallotVoteSimulationMatrix()
+	ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.OutboundVoteStatusSimulationMatrix()
 	return func(
 		r *rand.Rand,
 		app *baseapp.BaseApp,

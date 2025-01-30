@@ -64,7 +64,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		yesVote := chains.ReceiveStatus_success
 		noVote := chains.ReceiveStatus_failed
-		ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.VoteTssBallotVoteSimulationMatrix()
+		ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.TssVoteSimulationMatrix()
 		nodeAccounts := k.GetAllNodeAccount(ctx)
 		numVotes := len(nodeAccounts)
 		ballotVotesState = ballotVotesTransitionMatrix.NextState(r, ballotVotesState)

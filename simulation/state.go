@@ -34,6 +34,13 @@ import (
 const (
 	StakePerAccount           = "stake_per_account"
 	InitiallyBondedValidators = "initially_bonded_validators"
+	// blocksForEmissions supplies the number of blocks to be used for testing emissions.
+	//It is used to calculate the total amount of tokens to fund the emission pool with
+	// and also to create sample ballots
+	// which would then be used to distribute those emissions per block
+	blocksForEmissions = 100
+	// ballotPerBlock supplies the number of ballots to be created per block
+	ballotPerBlock = 100
 )
 
 // extractBankGenesisState extracts and updates the bank genesis state.
@@ -67,13 +74,14 @@ func extractBankGenesisState(
 		})
 	}
 
-	rewardAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyMustNewDecFromStr("10000.0")).RoundInt()
+	// Fund the emission pool to start the distribution process
+	emissionsAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyNewDec(blocksForEmissions)).RoundInt()
 	bankState.Balances = append(bankState.Balances, banktypes.Balance{
 		Address: emissionstypes.EmissionsModuleAddress.String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount)),
+		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionsAmount)),
 	})
 
-	bankState.Supply = bankState.Supply.Add(sdk.NewCoins(sdk.NewCoin(config.BaseDenom, rewardAmount))...)
+	bankState.Supply = bankState.Supply.Add(sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionsAmount))...)
 
 	return bankState
 }
@@ -209,18 +217,22 @@ func extractObserverGenesisState(
 		pendingNonces = append(pendingNonces, pendingNonce)
 	}
 
+	var (
+		totalBlocks     = blocksForEmissions
+		ballotsPerBlock = ballotPerBlock
+	)
+
 	// create test ballots for reward distribution
-	ballots := make([]*observertypes.Ballot, 1000)
+	ballots := make([]*observertypes.Ballot, ballotsPerBlock*totalBlocks)
 	votes := make([]observertypes.VoteType, len(observers))
 	for i := 0; i < len(votes); i++ {
 		votes[i] = observertypes.VoteType_SuccessObservation
 	}
-	totalBlocks := 1000
-	ballotsPerBlock := 100
+
 	for i := 0; i < totalBlocks; i++ {
 		for j := 0; j < ballotsPerBlock; j++ {
 			identifier := fmt.Sprintf("ballot-%d-%d", i, j)
-			ballots[i] = &observertypes.Ballot{
+			ballots[i+j] = &observertypes.Ballot{
 				BallotIdentifier:     identifier,
 				Index:                identifier,
 				VoterList:            observers,
@@ -355,6 +367,7 @@ func extractFungibleGenesisState(
 }
 
 // extractEmmisionsGenesisState extracts and updates the emissions genesis state.
+// 1 is set as the ballot maturity blocks.This is done to start the distribution process from height 2
 func extractEmissionsGenesisState(t *testing.T,
 	rawState map[string]json.RawMessage,
 	cdc codec.Codec) *emissionstypes.GenesisState {

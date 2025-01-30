@@ -23,9 +23,11 @@
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
 * [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
 
-## v25.0.0
+### Tests
 
-## Unreleased
+* [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
+
+## v25.0.0
 
 ## Refactor
 

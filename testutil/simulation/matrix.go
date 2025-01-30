@@ -5,7 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-func VoteTssBallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+// TssVoteSimulationMatrix returns a transition matrix and a state array for the TSS ballot vote simulation
+// This simulates the vote cast for the TSS creation ballot
+func TssVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{70, 10},
 		{30, 10},
@@ -20,7 +22,9 @@ func VoteTssBallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, 
 	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
 }
 
-func VoteOutboundBallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
+// OutboundVoteStatusSimulationMatrix returns a transition matrix and a state array for the outbound vote simulation
+// This simulates the ReceiveStatus field of the outbound vote
+func OutboundVoteStatusSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{70, 10, 20},
 		{20, 30, 30},
@@ -37,6 +41,8 @@ func VoteOutboundBallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []floa
 	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
 }
 
+// ObserverVotesSimulationMatrix returns a transition matrix and a state array for the observer votes simulation.
+// This is used to simulate the number of votes that will be cast by the observers for both inbound and outbound votes
 func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
 	observerVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
 		{20, 10, 0, 0, 0, 0},

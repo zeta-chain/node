@@ -8,32 +8,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const DefaultRetryCount = 10
 
-type ObserverKeeper interface {
-	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
-	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
-	GetSupportedChains(ctx sdk.Context) []chains.Chain
-	GetNodeAccount(ctx sdk.Context, address string) (observertypes.NodeAccount, bool)
-	GetAllNodeAccount(ctx sdk.Context) []observertypes.NodeAccount
-}
-
-type AuthorityKeeper interface {
-	CheckAuthorization(ctx sdk.Context, msg sdk.Msg) error
-	GetAdditionalChainList(ctx sdk.Context) (list []chains.Chain)
-	GetPolicies(ctx sdk.Context) (val authoritytypes.Policies, found bool)
-}
-
-type FungibleKeeper interface {
-	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
-	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
-}
-
+// GetPolicyAccount returns the simulation account associated with the policy address
 func GetPolicyAccount(ctx sdk.Context, k AuthorityKeeper, accounts []simtypes.Account) (simtypes.Account, error) {
 	policies, found := k.GetPolicies(ctx)
 	if !found {
@@ -55,6 +35,7 @@ func GetPolicyAccount(ctx sdk.Context, k AuthorityKeeper, accounts []simtypes.Ac
 	return simAccount, nil
 }
 
+// GetAsset returns the asset associated with the chainID
 func GetAsset(ctx sdk.Context, k FungibleKeeper, chainID int64) (string, error) {
 	foreignCoins := k.GetAllForeignCoins(ctx)
 	asset := ""
@@ -68,6 +49,7 @@ func GetAsset(ctx sdk.Context, k FungibleKeeper, chainID int64) (string, error) 
 	return asset, fmt.Errorf("asset not found for chain %d", chainID)
 }
 
+// GetExternalChain returns a random external chain from the list of supported chains
 func GetExternalChain(ctx sdk.Context, k ObserverKeeper, r *rand.Rand) (chains.Chain, error) {
 	supportedChains := k.GetSupportedChains(ctx)
 	if len(supportedChains) == 0 {
@@ -133,6 +115,7 @@ func GetRandomAccountAndObserver(
 	return simAccount, randomObserver, observerList, nil
 }
 
+// GetRandomNodeAccount returns a random node account and the associated simulation account
 func GetRandomNodeAccount(
 	r *rand.Rand,
 	ctx sdk.Context,
@@ -154,16 +137,13 @@ func GetRandomNodeAccount(
 	return simAccount, randomNodeAccount, nil
 }
 
+// GetRandomObserver returns a random observer address from the list of observers
 func GetRandomObserver(r *rand.Rand, observerList []string) string {
 	idx := r.Intn(len(observerList))
 	return observerList[idx]
 }
 
-// GetSimAccount returns the account associated with the observer address from the list of accounts provided
-// GetSimAccount can fail if all the observers are removed from the observer set ,this can happen
-//if the other modules create transactions which affect the validator
-//and triggers any of the staking hooks defined in the observer modules
-
+// GetSimAccount returns the simulation account associated with the observer address
 func GetSimAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
 	operatorAddress, err := observertypes.GetOperatorAddressFromAccAddress(observerAddress)
 	if err != nil {
@@ -177,16 +157,13 @@ func GetSimAccount(observerAddress string, accounts []simtypes.Account) (simtype
 	return simAccount, nil
 }
 
-// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
-// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
-//if the other modules create transactions which affect the validator
-//and triggers any of the staking hooks defined in the observer modules
-
+// GetRandomChainID returns a random chainID from the list of chains
 func GetRandomChainID(r *rand.Rand, chains []chains.Chain) int64 {
 	idx := r.Intn(len(chains))
 	return chains[idx].ChainId
 }
 
+// GetObserverAccount returns the simulation account associated with the observer address
 func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
 	operatorAddress, err := observertypes.GetOperatorAddressFromAccAddress(observerAddress)
 	if err != nil {
@@ -200,6 +177,7 @@ func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (si
 	return simAccount, nil
 }
 
+// RepeatCheck checks the function for a number of times and returns true if the function returns true
 func RepeatCheck(fn func() bool) bool {
 	for i := 0; i < DefaultRetryCount; i++ {
 		if fn() {

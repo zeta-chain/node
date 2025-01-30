@@ -64,7 +64,7 @@ func GenAndDeliverTxNoError(
 
 	// Do not return error here, this method of delivery is used when we are not certain if the tx can fail or succeed.
 	// Example:
-	//When adding future operations , for votes ,
+	//When adding future operations, for votes,
 	//we don't know if the vote will pass or fail.This is
 	//because the observer set might change in the next block and cause the vote to fail.
 	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
@@ -104,14 +104,11 @@ func GenAndDeliverTxWithError(
 	return OperationMessage(txCtx.Msg), nil, nil
 }
 
-// NewOperationMsg parses the msg type to extract the module name and returns a new OperationMsg
+// OperationMessage parses the msg type to extract the module name and returns a new OperationMsg
 // We use this instead of the default provided by the sdk because , the default implementation uses the second element of the split
-// default implementation:
-// "cosmos.bank.v1beta1.MsgSend" => "bank" [Second element,this position is hardcoded]
-// our implementation:
-// which is not correct for us , since our urls are in the format , //We need to usr the third element instead of the second
-// "zetachain.zetacore.crosschain.MsgVoteInbound` . => "crosschain" [Third element]
-
+// default implementation: "cosmos.bank.v1beta1.MsgSend" => "bank" [Second element,this position is hardcoded]
+// This is not accurate for us , since our urls are of the format "zetachain.zetacore.crosschain.MsgVoteInbound"
+// and we need to fetch the third element
 func OperationMessage(msg proto.Message) simtypes.OperationMsg {
 	msgType := sdk.MsgTypeURL(msg)
 	parts := strings.Split(msgType, ".")
