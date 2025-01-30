@@ -31,41 +31,6 @@ const (
 	Descending Order = "DESC"
 )
 
-type ChainObserver interface {
-	// Start starts the observer
-	Start(ctx context.Context)
-
-	// Stop stops the observer
-	Stop()
-
-	// ChainParams returns observer chain params (might be out of date with zetacore)
-	ChainParams() observertypes.ChainParams
-
-	// SetChainParams sets observer chain params
-	SetChainParams(observertypes.ChainParams)
-
-	// VoteOutboundIfConfirmed checks outbound status and returns (continueKeySign, error)
-	// todo we should make this simpler.
-	VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error)
-}
-
-// ChainSigner is the interface to sign transactions for a chain
-type ChainSigner interface {
-	TryProcessOutbound(
-		ctx context.Context,
-		cctx *crosschaintypes.CrossChainTx,
-		observer ChainObserver,
-		zetacoreClient ZetacoreClient,
-		height uint64,
-	)
-	SetZetaConnectorAddress(address ethcommon.Address)
-	SetERC20CustodyAddress(address ethcommon.Address)
-	GetZetaConnectorAddress() ethcommon.Address
-	GetERC20CustodyAddress() ethcommon.Address
-	SetGatewayAddress(address string)
-	GetGatewayAddress() string
-}
-
 type ZetacoreVoter interface {
 	PostVoteGasPrice(
 		ctx context.Context,

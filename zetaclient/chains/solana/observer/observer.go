@@ -1,19 +1,14 @@
 package observer
 
 import (
-	"context"
-
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/bg"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 )
-
-var _ interfaces.ChainObserver = (*Observer)(nil)
 
 // Observer is the observer for the Solana chain
 type Observer struct {
