@@ -26,6 +26,10 @@
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
 * [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
 
+### Tests
+
+* [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
+
 ## v26.0.0
 
 ### Features
@@ -37,9 +41,6 @@
 * [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
 
-### Tests
-
-* [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
 
 ## v25.0.0
 
