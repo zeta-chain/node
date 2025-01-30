@@ -28,7 +28,15 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"withdrawable emissions", fmt.Sprintf("key %s value A %v value B %v", types.WithdrawableEmissionsKey, withdrawableEmissions, withdrawableEmissions)},
+		{
+			"withdrawable emissions",
+			fmt.Sprintf(
+				"key %s value A %v value B %v",
+				types.WithdrawableEmissionsKey,
+				withdrawableEmissions,
+				withdrawableEmissions,
+			),
+		},
 	}
 
 	for i, tt := range tests {
