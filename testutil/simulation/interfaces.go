@@ -2,6 +2,7 @@ package simulation
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"

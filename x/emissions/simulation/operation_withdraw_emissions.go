@@ -31,7 +31,7 @@ func SimulateMsgWithdrawEmissions(k keeper.Keeper) simtypes.Operation {
 				types.ModuleName,
 				TypeMsgWithdrawEmission,
 				"unable to fetch an observer account",
-			), nil, err
+			), nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
