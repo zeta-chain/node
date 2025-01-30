@@ -256,7 +256,7 @@ func Test_BlockCache(t *testing.T) {
 
 		// feed block to JSON rpc client
 		block := &client.Block{Number: 100}
-		ts.evmMock.On("BlockByNumber2", mock.Anything, mock.Anything).Return(block, nil)
+		ts.evmMock.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 
 		// get block header from observer, fallback to JSON RPC
 		result, err := ts.Observer.GetBlockByNumberCached(ts.ctx, uint64(100))

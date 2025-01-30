@@ -24,12 +24,12 @@ type EVMRPCClient struct {
 	mock.Mock
 }
 
-// BlockByNumber2 provides a mock function with given fields: ctx, number
-func (_m *EVMRPCClient) BlockByNumber2(ctx context.Context, number *big.Int) (*client.Block, error) {
+// BlockByNumberCustom provides a mock function with given fields: ctx, number
+func (_m *EVMRPCClient) BlockByNumberCustom(ctx context.Context, number *big.Int) (*client.Block, error) {
 	ret := _m.Called(ctx, number)
 
 	if len(ret) == 0 {
-		panic("no return value specified for BlockByNumber2")
+		panic("no return value specified for BlockByNumberCustom")
 	}
 
 	var r0 *client.Block
@@ -461,12 +461,12 @@ func (_m *EVMRPCClient) TransactionByHash(ctx context.Context, hash common.Hash)
 	return r0, r1, r2
 }
 
-// TransactionByHash2 provides a mock function with given fields: ctx, hash
-func (_m *EVMRPCClient) TransactionByHash2(ctx context.Context, hash string) (*client.Transaction, error) {
+// TransactionByHashCustom provides a mock function with given fields: ctx, hash
+func (_m *EVMRPCClient) TransactionByHashCustom(ctx context.Context, hash string) (*client.Transaction, error) {
 	ret := _m.Called(ctx, hash)
 
 	if len(ret) == 0 {
-		panic("no return value specified for TransactionByHash2")
+		panic("no return value specified for TransactionByHashCustom")
 	}
 
 	var r0 *client.Transaction

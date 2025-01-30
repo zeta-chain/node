@@ -456,7 +456,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				// feed block number and receipt to mock client
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
-				m.On("BlockByNumber2", mock.Anything, mock.Anything).Return(block, nil)
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			errMsg: "",
 		},
@@ -465,9 +465,9 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			mockEVMClient: func(m *mocks.EVMRPCClient) {
 				// feed block number to allow construction of observer
 				m.On("BlockNumber", mock.Anything).Unset()
-				m.On("BlockByNumber2", mock.Anything, mock.Anything).Unset()
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Unset()
 				m.On("BlockNumber", mock.Anything).Return(uint64(0), errors.New("RPC error"))
-				m.On("BlockByNumber2", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
 			},
 			errMsg: "error getting block",
 		},
@@ -477,7 +477,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				// feed block number but RPC error on getting receipt
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
-				m.On("BlockByNumber2", mock.Anything, mock.Anything).Return(block, nil)
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			errMsg: "error getting receipt",
 		},

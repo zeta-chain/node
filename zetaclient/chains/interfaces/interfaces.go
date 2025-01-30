@@ -163,8 +163,8 @@ type EVMRPCClient interface {
 		index uint,
 	) (ethcommon.Address, error)
 
-	BlockByNumber2(ctx context.Context, number *big.Int) (*ethclient.Block, error)
-	TransactionByHash2(ctx context.Context, hash string) (*ethclient.Transaction, error)
+	BlockByNumberCustom(ctx context.Context, number *big.Int) (*ethclient.Block, error)
+	TransactionByHashCustom(ctx context.Context, hash string) (*ethclient.Transaction, error)
 	HealthCheck(ctx context.Context) (time.Time, error)
 }
 

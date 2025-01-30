@@ -177,7 +177,7 @@ func (ob *Observer) CheckTxInclusion(ctx context.Context, tx *ethtypes.Transacti
 
 // TransactionByHash query transaction by hash via JSON-RPC
 func (ob *Observer) TransactionByHash(ctx context.Context, txHash string) (*client.Transaction, bool, error) {
-	tx, err := ob.evmClient.TransactionByHash2(ctx, txHash)
+	tx, err := ob.evmClient.TransactionByHashCustom(ctx, txHash)
 	if err != nil {
 		return nil, false, err
 	}
@@ -220,7 +220,7 @@ func (ob *Observer) RemoveCachedBlock(blockNumber uint64) {
 
 // BlockByNumber query block by number via JSON-RPC
 func (ob *Observer) BlockByNumber(ctx context.Context, blockNumber int) (*client.Block, error) {
-	block, err := ob.evmClient.BlockByNumber2(ctx, big.NewInt(int64(blockNumber)))
+	block, err := ob.evmClient.BlockByNumberCustom(ctx, big.NewInt(int64(blockNumber)))
 	if err != nil {
 		return nil, err
 	}

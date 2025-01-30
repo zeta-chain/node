@@ -47,7 +47,7 @@ func TestLiveClient(t *testing.T) {
 		})
 	})
 
-	t.Run("BlockByNumber2", func(t *testing.T) {
+	t.Run("BlockByNumberCustom", func(t *testing.T) {
 		for _, tt := range []struct {
 			name        string
 			endpoint    string
@@ -96,7 +96,7 @@ func TestLiveClient(t *testing.T) {
 
 				time.Sleep(1 * time.Second)
 
-				v2, errV2 := ts.BlockByNumber2(ts.ctx, bn)
+				v2, errV2 := ts.BlockByNumberCustom(ts.ctx, bn)
 
 				// ASSERT
 				tt.assert(t, v1, errV1, v2, errV2)
@@ -125,7 +125,7 @@ func TestLiveClient(t *testing.T) {
 		}
 	})
 
-	t.Run("TransactionByHash2", func(t *testing.T) {
+	t.Run("TransactionByHashCustom", func(t *testing.T) {
 		for _, tt := range []struct {
 			name     string
 			endpoint string
@@ -170,7 +170,7 @@ func TestLiveClient(t *testing.T) {
 
 				time.Sleep(1 * time.Second)
 
-				v2, errV2 := ts.TransactionByHash2(ts.ctx, tt.txHash)
+				v2, errV2 := ts.TransactionByHashCustom(ts.ctx, tt.txHash)
 
 				// ASSERT
 				tt.assert(t, v1, errV1, v2, errV2)

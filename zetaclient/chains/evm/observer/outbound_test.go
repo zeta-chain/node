@@ -449,7 +449,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 	t.Run("should filter nothing on RPC error", func(t *testing.T) {
 		ob := newTestSuite(t)
 
-		ob.evmMock.On("BlockByNumber2", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
+		ob.evmMock.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)

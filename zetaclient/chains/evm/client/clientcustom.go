@@ -54,12 +54,12 @@ type Transaction struct {
 type hexInt int
 type hexBig big.Int
 
-// BlockByNumber2 is alternative to geth BlockByNumber that supports NON-ETH chains.
+// BlockByNumberCustom is alternative to geth BlockByNumber that supports NON-ETH chains.
 // For example, OP stack has different tx types that result in err="transaction type not supported"
 //
 // See https://github.com/zeta-chain/node/issues/3386
 // See https://github.com/ethereum/go-ethereum/issues/29407
-func (c *Client) BlockByNumber2(ctx context.Context, blockNumber *big.Int) (*Block, error) {
+func (c *Client) BlockByNumberCustom(ctx context.Context, blockNumber *big.Int) (*Block, error) {
 	if blockNumber == nil || blockNumber.Sign() < 0 {
 		return nil, errors.New("invalid block number")
 	}
@@ -72,9 +72,9 @@ func (c *Client) BlockByNumber2(ctx context.Context, blockNumber *big.Int) (*Blo
 	return parseBlock(raw)
 }
 
-// TransactionByHash2 is alternative to geth TransactionByHash that supports NON-ETH chains.
+// TransactionByHashCustom is alternative to geth TransactionByHash that supports NON-ETH chains.
 // See BlockByNumber2.
-func (c *Client) TransactionByHash2(ctx context.Context, hash string) (*Transaction, error) {
+func (c *Client) TransactionByHashCustom(ctx context.Context, hash string) (*Transaction, error) {
 	raw, err := c.call(ctx, "eth_getTransactionByHash", hash)
 	if err != nil {
 		return nil, errors.Wrapf(err, "transaction %s", hash)
