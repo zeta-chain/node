@@ -44,7 +44,11 @@ func (signer *Signer) SignWithdrawTx(
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
 	if err := ob.FetchUTXOs(ctx); err != nil {
-		signer.Logger().Std.Error().Err(err).Uint64("nonce", txData.nonce).Msg("SignWithdrawTx: FetchUTXOs failed")
+		signer.Logger().
+			Std.Error().
+			Err(err).
+			Uint64(logs.FieldNonce, txData.nonce).
+			Msg("FetchUTXOs failed")
 	}
 
 	// select N UTXOs to cover the total expense
@@ -73,33 +77,28 @@ func (signer *Signer) SignWithdrawTx(
 	if err != nil {
 		return nil, err
 	}
-	logger := signer.Logger().Std.With().
-		Int64("txData.txSize", txData.txSize).
-		Int64("tx.size", txSize).
-		Uint64(logs.FieldNonce, txData.nonce).
-		Logger()
-	if txSize < common.OutboundBytesMin { // outbound shouldn't be blocked by low sizeLimit
-		logger.Warn().Msg("txSize is less than outboundBytesMin")
-		txSize = common.OutboundBytesMin
-	}
-	if txSize > common.OutboundBytesMax { // in case of accident
-		logger.Warn().Msgf("txSize is greater than outboundBytesMax")
+	logger := signer.Logger().Std.With().Uint64("tx.nonce", txData.nonce).Int64("tx.size", txSize).Logger()
+	if txSize > common.OutboundBytesMax {
+		// in case of accident
+		logger.Warn().Msg("tx size is greater than outboundBytesMax")
 		txSize = common.OutboundBytesMax
 	}
 
 	// fee calculation
-	// #nosec G115 always in range (checked above)
 	fees := txSize * txData.feeRate
-	signer.Logger().
-		Std.Info().
-		Msgf("bitcoin outbound nonce %d feeRate %d size %d fees %d consolidated %d utxos of value %v",
-			txData.nonce, txData.feeRate, txSize, fees, selected.ConsolidatedUTXOs, selected.ConsolidatedValue)
 
 	// add tx outputs
 	inputValue := selected.Value
 	if err := signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx); err != nil {
 		return nil, err
 	}
+	signer.Logger().
+		Std.Info().
+		Int64("tx.rate", txData.feeRate).
+		Int64("tx.fees", fees).
+		Uint16("tx.consolidated_utxos", selected.ConsolidatedUTXOs).
+		Float64("tx.consolidated_value", selected.ConsolidatedValue).
+		Msg("signing bitcoin outbound")
 
 	// sign the tx
 	if err := signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce); err != nil {

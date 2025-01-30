@@ -88,7 +88,6 @@ func (signer *Signer) TryProcessOutbound(
 	}()
 
 	// prepare logger
-	chain := signer.Chain()
 	params := cctx.GetCurrentOutboundParam()
 	lf := map[string]any{
 		logs.FieldMethod: "TryProcessOutbound",
@@ -115,7 +114,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// setup outbound data
-	txData, err := NewOutboundData(cctx, chain.ChainId, height, minRelayFee, logger, signer.Logger().Compliance)
+	txData, err := NewOutboundData(cctx, height, minRelayFee, logger, signer.Logger().Compliance)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
 		return

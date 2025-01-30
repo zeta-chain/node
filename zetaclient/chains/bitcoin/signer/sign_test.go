@@ -6,20 +6,131 @@ import (
 	"reflect"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
+
+func Test_SignWithdrawTx(t *testing.T) {
+	net := &chaincfg.MainNetParams
+
+	// make sample cctx
+	mkCCTX := func(t *testing.T) *crosschaintypes.CrossChainTx {
+		cctx := sample.CrossChainTx(t, "0x123")
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.GetCurrentOutboundParam().GasPrice = "10"
+		cctx.GetCurrentOutboundParam().Receiver = sample.BTCAddressP2WPKH(t, sample.Rand(), net).String()
+		cctx.GetCurrentOutboundParam().ReceiverChainId = chains.BitcoinMainnet.ChainId
+		cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
+		cctx.GetCurrentOutboundParam().CallOptions = &crosschaintypes.CallOptions{GasLimit: 254}
+		cctx.GetCurrentOutboundParam().TssNonce = 0
+		return cctx
+	}
+
+	// helper function to create tx data
+	mkTxData := func(height uint64, minRelayFee float64) signer.OutboundData {
+		cctx := mkCCTX(t)
+		txData, err := signer.NewOutboundData(cctx, height, minRelayFee, zerolog.Nop(), zerolog.Nop())
+		require.NoError(t, err)
+		return *txData
+	}
+
+	tests := []struct {
+		name           string
+		chain          chains.Chain
+		txData         signer.OutboundData
+		failFetchUTXOs bool
+		failSignTx     bool
+		fail           bool
+	}{
+		{
+			name:   "should sign withdraw tx successfully",
+			chain:  chains.BitcoinMainnet,
+			txData: mkTxData(101, 0.00001),
+		},
+		{
+			name:           "should fail if no UTXOs fetched due to RPC error",
+			chain:          chains.BitcoinMainnet,
+			txData:         mkTxData(101, 0.00001),
+			failFetchUTXOs: true,
+			fail:           true,
+		},
+		{
+			name:       "should fail if TSS keysign fails",
+			chain:      chains.BitcoinMainnet,
+			txData:     mkTxData(101, 0.00001),
+			failSignTx: true,
+			fail:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			// setup signer
+			s := newTestSuite(t, tt.chain)
+			btcAddress, err := s.TSS().PubKey().AddressBTC(tt.chain.ChainId)
+			require.NoError(t, err)
+			tssAddress := btcAddress.EncodeAddress()
+
+			// mock up pending nonces
+			pendingNonces := observertypes.PendingNonces{}
+			s.zetacoreClient.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).
+				Maybe().
+				Return(pendingNonces, nil)
+
+			// mock up utxos
+			utxos := []btcjson.ListUnspentResult{}
+			utxos = append(utxos, btcjson.ListUnspentResult{Address: tssAddress, Amount: 1.0, Confirmations: 1})
+			if !tt.failFetchUTXOs {
+				s.client.On("ListUnspentMinMaxAddresses", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(utxos, nil)
+			} else {
+				s.client.On("ListUnspentMinMaxAddresses", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
+			}
+
+			// mock up TSS SignBatch error
+			if tt.failSignTx {
+				s.tss.Pause()
+			}
+
+			// ACT
+			// sign withdraw tx
+			ctx := context.Background()
+			tx, err := s.SignWithdrawTx(ctx, &tt.txData, s.observer)
+
+			// ASSERT
+			if tt.fail {
+				require.Error(t, err)
+				require.Nil(t, tx)
+				return
+			}
+			require.NoError(t, err)
+
+			// check tx signature
+			for i := range tx.TxIn {
+				require.Len(t, tx.TxIn[i].Witness, 2)
+			}
+		})
+	}
+}
 
 func Test_AddTxInputs(t *testing.T) {
 	r := sample.Rand()

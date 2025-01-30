@@ -19,9 +19,6 @@ import (
 
 // OutboundData is a data structure containing necessary data to construct a BTC outbound transaction
 type OutboundData struct {
-	// chainID is the external chain ID
-	chainID int64
-
 	// to is the recipient address
 	to btcutil.Address
 
@@ -51,7 +48,6 @@ type OutboundData struct {
 // NewOutboundData creates OutboundData from the given CCTX.
 func NewOutboundData(
 	cctx *types.CrossChainTx,
-	chainID int64,
 	height uint64,
 	minRelayFee float64,
 	logger, loggerCompliance zerolog.Logger,
@@ -93,6 +89,10 @@ func NewOutboundData(
 	amountSats := params.Amount.BigInt().Int64()
 
 	// check gas limit
+	if params.CallOptions == nil {
+		// never happens, 'GetCurrentOutboundParam' will create it
+		return nil, errors.New("call options is nil")
+	}
 	if params.CallOptions.GasLimit > math.MaxInt64 {
 		return nil, fmt.Errorf("invalid gas limit %d", params.CallOptions.GasLimit)
 	}
@@ -106,7 +106,7 @@ func NewOutboundData(
 	restrictedCCTX := compliance.IsCctxRestricted(cctx)
 	if restrictedCCTX {
 		compliance.PrintComplianceLog(logger, loggerCompliance,
-			true, chainID, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
+			true, params.ReceiverChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
 	}
 
 	// check dust amount
@@ -123,7 +123,6 @@ func NewOutboundData(
 	}
 
 	return &OutboundData{
-		chainID:    chainID,
 		to:         to,
 		amount:     amount,
 		amountSats: amountSats,
