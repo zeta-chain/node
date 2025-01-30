@@ -49,10 +49,11 @@ func TestLiveClient(t *testing.T) {
 
 	t.Run("BlockByNumber2", func(t *testing.T) {
 		for _, tt := range []struct {
-			name     string
-			endpoint string
-			block    uint64
-			assert   func(t *testing.T, v1 *geth.Block, errV1 error, v2 *Block, errV2 error)
+			name        string
+			endpoint    string
+			block       uint64
+			checkHeader bool
+			assert      func(t *testing.T, v1 *geth.Block, errV1 error, v2 *Block, errV2 error)
 		}{
 			{
 				name:     "Both work for ETH",
@@ -68,9 +69,10 @@ func TestLiveClient(t *testing.T) {
 				},
 			},
 			{
-				name:     "Only V2 works for BASE",
-				endpoint: URLBaseMainnet,
-				block:    25609323,
+				name:        "Only V2 works for BASE",
+				endpoint:    URLBaseMainnet,
+				block:       25609323,
+				checkHeader: true,
 				assert: func(t *testing.T, v1 *geth.Block, errV1 error, v2 *Block, errV2 error) {
 					require.ErrorContains(t, errV1, "transaction type not supported")
 					require.NoError(t, errV2)
@@ -98,6 +100,27 @@ func TestLiveClient(t *testing.T) {
 
 				// ASSERT
 				tt.assert(t, v1, errV1, v2, errV2)
+
+				if !tt.checkHeader {
+					return
+				}
+
+				t.Run("HeaderByNumber works regardless of L2", func(t *testing.T) {
+					// ARRANGE
+					// RPC rate limit
+					time.Sleep(time.Second)
+
+					// ACT
+					header, err := ts.HeaderByNumber(ts.ctx, bn)
+
+					// ASSERT
+					require.NoError(t, err)
+					require.NotNil(t, header)
+					require.Equal(t,
+						strings.ToLower(v2.Hash),
+						strings.ToLower(header.Hash().String()),
+					)
+				})
 			})
 		}
 	})
