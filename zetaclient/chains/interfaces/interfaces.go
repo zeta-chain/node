@@ -153,7 +153,6 @@ type EVMRPCClient interface {
 	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
 	SuggestGasPrice(ctx context.Context) (*big.Int, error)
 	BlockNumber(ctx context.Context) (uint64, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*ethtypes.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)

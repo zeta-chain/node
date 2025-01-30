@@ -24,36 +24,6 @@ type EVMRPCClient struct {
 	mock.Mock
 }
 
-// BlockByNumber provides a mock function with given fields: ctx, number
-func (_m *EVMRPCClient) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
-	ret := _m.Called(ctx, number)
-
-	if len(ret) == 0 {
-		panic("no return value specified for BlockByNumber")
-	}
-
-	var r0 *types.Block
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *big.Int) (*types.Block, error)); ok {
-		return rf(ctx, number)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *big.Int) *types.Block); ok {
-		r0 = rf(ctx, number)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Block)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *big.Int) error); ok {
-		r1 = rf(ctx, number)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // BlockByNumber2 provides a mock function with given fields: ctx, number
 func (_m *EVMRPCClient) BlockByNumber2(ctx context.Context, number *big.Int) (*client.Block, error) {
 	ret := _m.Called(ctx, number)
