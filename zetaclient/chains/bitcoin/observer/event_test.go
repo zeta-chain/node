@@ -357,7 +357,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 	ob := newTestSuite(t, chain)
 	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
-	t.Run("should create new inbound vote msg 2", func(t *testing.T) {
+	t.Run("should create new inbound vote msg V2", func(t *testing.T) {
 		// create test event
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
 
