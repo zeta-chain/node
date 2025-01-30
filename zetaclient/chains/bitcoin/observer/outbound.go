@@ -220,10 +220,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce(ctx context.Context) {
+	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refreshPendingNonce").Logger()
+
 	// get pending nonces from zetacore
 	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
 	if err != nil {
-		ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting pending nonces")
+		logger.Error().Err(err).Msg("error getting pending nonces")
 	}
 
 	// increase pending nonce if lagged behind
@@ -233,13 +235,12 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 		// get the last included outbound hash
 		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1, false)
 		if err != nil {
-			ob.logger.Chain.Error().Err(err).Msg("refreshPendingNonce: error getting last outbound txid")
+			logger.Error().Err(err).Msg("error getting last outbound txid")
 		}
 
 		// set 'NonceLow' as the new pending nonce
 		ob.SetPendingNonce(nonceLow)
-		ob.logger.Chain.Info().
-			Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", nonceLow, txid)
+		logger.Info().Uint64("pending_nonce", nonceLow).Str(logs.FieldTx, txid).Msg("increased pending nonce")
 	}
 }
 
@@ -343,13 +344,14 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		if nonce >= ob.pendingNonce {
 			ob.pendingNonce = nonce + 1
 		}
-		ob.logger.Outbound.Info().Fields(lf).Msgf("included new bitcoin outbound, pending nonce %d", ob.pendingNonce)
+		lf["pending_nonce"] = ob.pendingNonce
+		ob.logger.Outbound.Info().Fields(lf).Msg("included new bitcoin outbound")
 	} else if txHash == res.TxID {
 		// for existing hash:
 		//   - update tx result because confirmations may increase
 		ob.includedTxResults[outboundID] = getTxResult
 		if getTxResult.Confirmations > res.Confirmations {
-			ob.logger.Outbound.Info().Msgf("bitcoin outbound got %d confirmations", getTxResult.Confirmations)
+			ob.logger.Outbound.Info().Fields(lf).Msgf("bitcoin outbound got %d confirmations", getTxResult.Confirmations)
 		}
 	} else {
 		// for other hash:
@@ -357,7 +359,8 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		// we can't tell which txHash is true, so we remove all to be safe
 		delete(ob.tssOutboundHashes, res.TxID)
 		delete(ob.includedTxResults, outboundID)
-		ob.logger.Outbound.Error().Msgf("setIncludedTx: duplicate payment by bitcoin outbound %s outboundID %s, prior outbound %s", txHash, outboundID, res.TxID)
+		lf["prior_outbound"] = res.TxID
+		ob.logger.Outbound.Error().Fields(lf).Msg("be alert for duplicate payment")
 	}
 }
 
