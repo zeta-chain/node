@@ -7,17 +7,14 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -39,8 +36,6 @@ const (
 	broadcastRetries = 7
 )
 
-var _ interfaces.ChainSigner = (*Signer)(nil)
-
 // Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
@@ -59,45 +54,40 @@ type Signer struct {
 	pda solana.PublicKey
 }
 
-// NewSigner creates a new Solana signer
-func NewSigner(
-	chain chains.Chain,
-	chainParams observertypes.ChainParams,
+// New Signer constructor.
+func New(
+	baseSigner *base.Signer,
 	solClient interfaces.SolanaRPCClient,
-	tss interfaces.TSSSigner,
+	gatewayAddress string,
 	relayerKey *keys.RelayerKey,
-	logger base.Logger,
 ) (*Signer, error) {
-	// create base signer
-	baseSigner := base.NewSigner(chain, tss, logger)
-
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", gatewayAddress)
 	}
 
-	// create Solana signer
-	signer := &Signer{
-		Signer:    baseSigner,
-		client:    solClient,
-		gatewayID: gatewayID,
-		pda:       pda,
-	}
+	var rk *solana.PrivateKey
 
-	// construct Solana private key if present
 	if relayerKey != nil {
-		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+		pk, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to construct solana private key")
 		}
-		signer.relayerKey = &privKey
-		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
+
+		rk = &pk
+		baseSigner.Logger().Std.Info().Stringer("relayer_key", rk.PublicKey()).Msg("Loaded relayer key")
 	} else {
-		logger.Std.Info().Msg("Solana relayer key is not provided")
+		baseSigner.Logger().Std.Info().Msg("Solana relayer key is not provided")
 	}
 
-	return signer, nil
+	return &Signer{
+		Signer:     baseSigner,
+		client:     solClient,
+		gatewayID:  gatewayID,
+		relayerKey: rk,
+		pda:        pda,
+	}, nil
 }
 
 // HasRelayerKey returns true if the signer has a relayer key
@@ -111,7 +101,6 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
@@ -429,20 +418,4 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 	}
 	solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
-}
-
-// TODO: get rid of below four functions for Solana and Bitcoin
-// https://github.com/zeta-chain/node/issues/2532
-func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
-}
-
-func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
-
-func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
 }

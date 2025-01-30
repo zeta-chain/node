@@ -167,9 +167,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		case chain.IsEVM():
 			observerSigner, err = oc.bootstrapEVM(ctx, chain)
 		case chain.IsSolana():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3301
-			continue
+			observerSigner, err = oc.bootstrapSolana(ctx, chain)
 		case chain.IsTON():
 			observerSigner, err = oc.bootstrapTON(ctx, chain)
 		}

@@ -8,13 +8,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 var _ interfaces.ChainObserver = (*Observer)(nil)
@@ -22,7 +18,7 @@ var _ interfaces.ChainObserver = (*Observer)(nil)
 // Observer is the observer for the Solana chain
 type Observer struct {
 	// base.Observer implements the base chain observer
-	base.Observer
+	*base.Observer
 
 	// solClient is the Solana RPC client that interacts with the Solana chain
 	solClient interfaces.SolanaRPCClient
@@ -39,39 +35,19 @@ type Observer struct {
 
 // NewObserver returns a new Solana chain observer
 func NewObserver(
-	chain chains.Chain,
+	baseObserver *base.Observer,
 	solClient interfaces.SolanaRPCClient,
-	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	db *db.DB,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
+	gatewayAddress string,
 ) (*Observer, error) {
-	// create base observer
-	baseObserver, err := base.NewObserver(
-		chain,
-		chainParams,
-		zetacoreClient,
-		tss,
-		base.DefaultBlockCacheSize,
-		ts,
-		db,
-		logger,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", gatewayAddress)
 	}
 
 	// create solana observer
 	ob := &Observer{
-		Observer:           *baseObserver,
+		Observer:           baseObserver,
 		solClient:          solClient,
 		gatewayID:          gatewayID,
 		pda:                pda,
@@ -81,31 +57,6 @@ func NewObserver(
 	ob.Observer.LoadLastTxScanned()
 
 	return ob, nil
-}
-
-// Start starts the Go routine processes to observe the Solana chain
-func (ob *Observer) Start(ctx context.Context) {
-	if ok := ob.Observer.Start(); !ok {
-		ob.Logger().Chain.Info().Msgf("observer is already started for chain %d", ob.Chain().ChainId)
-		return
-	}
-
-	ob.Logger().Chain.Info().Msgf("observer is starting for chain %d", ob.Chain().ChainId)
-
-	// watch Solana chain for incoming txs and post votes to zetacore
-	bg.Work(ctx, ob.WatchInbound, bg.WithName("WatchInbound"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch Solana chain for outbound trackers
-	bg.Work(ctx, ob.WatchOutbound, bg.WithName("WatchOutbound"), bg.WithLogger(ob.Logger().Outbound))
-
-	// watch Solana chain for fee rate and post to zetacore
-	bg.Work(ctx, ob.WatchGasPrice, bg.WithName("WatchGasPrice"), bg.WithLogger(ob.Logger().GasPrice))
-
-	// watch zetacore for Solana inbound trackers
-	bg.Work(ctx, ob.WatchInboundTracker, bg.WithName("WatchInboundTracker"), bg.WithLogger(ob.Logger().Inbound))
-
-	// watch RPC status of the Solana chain
-	bg.Work(ctx, ob.watchRPCStatus, bg.WithName("watchRPCStatus"), bg.WithLogger(ob.Logger().Chain))
 }
 
 // LoadLastTxScanned loads the last scanned tx from the database.

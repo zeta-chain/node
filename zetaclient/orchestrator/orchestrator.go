@@ -4,10 +4,8 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	"math"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -16,10 +14,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/zeta-chain/node/pkg/bg"
-	"github.com/zeta-chain/node/pkg/constant"
 	zetamath "github.com/zeta-chain/node/pkg/math"
-	"github.com/zeta-chain/node/pkg/ticker"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	solanaobserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
@@ -61,9 +56,6 @@ type Orchestrator struct {
 	tss         interfaces.TSSSigner
 	dbDirectory string
 	baseLogger  base.Logger
-
-	// signerBlockTimeOffset
-	signerBlockTimeOffset time.Duration
 
 	// misc
 	logger  multiLogger
@@ -130,13 +122,6 @@ func (oc *Orchestrator) Start(ctx context.Context) error {
 	oc.logger.Info().Str("signer", signerAddress.String()).Msg("Starting orchestrator")
 
 	bg.Work(ctx, oc.runScheduler, bg.WithName("runScheduler"), bg.WithLogger(oc.logger.Logger))
-	bg.Work(ctx, oc.runObserverSignerSync, bg.WithName("runObserverSignerSync"), bg.WithLogger(oc.logger.Logger))
-	bg.Work(
-		ctx,
-		oc.runSyncObserverOperationalFlags,
-		bg.WithName("runSyncObserverOperationalFlags"),
-		bg.WithLogger(oc.logger.Logger),
-	)
 
 	return nil
 }
@@ -301,38 +286,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 		case newBlock := <-newBlockChan:
 			bn := newBlock.Block.Height
 
-			blockTimeLatency := time.Since(newBlock.Block.Time)
-			blockTimeLatencySeconds := blockTimeLatency.Seconds()
-			metrics.CoreBlockLatency.Set(blockTimeLatencySeconds)
-
-			if blockTimeLatencySeconds > 15 {
-				oc.logger.Warn().
-					Float64("latency", blockTimeLatencySeconds).
-					Msgf("runScheduler: core block latency too high")
-				continue
-			}
-
-			sleepDuration := time.Until(newBlock.Block.Time.Add(oc.signerBlockTimeOffset))
-			if sleepDuration < 0 {
-				sleepDuration = 0
-			}
-			metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
-			time.Sleep(sleepDuration)
-
-			balance, err := oc.zetacoreClient.GetZetaHotKeyBalance(ctx)
-			if err != nil {
-				oc.logger.Error().Err(err).Msgf("couldn't get operator balance")
-			} else {
-				diff := oc.lastOperatorBalance.Sub(balance)
-				if diff.GT(sdkmath.NewInt(0)) && diff.LT(sdkmath.NewInt(math.MaxInt64)) {
-					oc.ts.AddFeeEntry(bn, diff.Int64())
-					oc.lastOperatorBalance = balance
-				}
-			}
-
-			// set current hot key burn rate
-			metrics.HotKeyBurnRate.Set(float64(oc.ts.HotKeyBurnRate.GetBurnRate().Int64()))
-
 			// get chain ids without zeta chain
 			chainIDs := lo.FilterMap(app.ListChains(), func(c zctx.Chain, _ int) (int64, bool) {
 				return c.ID(), !c.IsZeta()
@@ -355,8 +308,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 				if chain.IsBitcoin() || chain.IsEVM() || chain.IsTON() {
 					continue
 				}
-
-				// todo move metrics to v2
 
 				chainID := chain.ID()
 
@@ -408,9 +359,6 @@ func (oc *Orchestrator) runScheduler(ctx context.Context) error {
 					continue
 				}
 			}
-
-			// update last processed block number
-			oc.ts.SetCoreBlockNumber(bn)
 		}
 	}
 }
@@ -493,108 +441,4 @@ func (oc *Orchestrator) ScheduleCctxSolana(
 			)
 		}
 	}
-}
-
-// runObserverSignerSync runs a blocking ticker that observes chain changes from zetacore
-// and optionally (de)provisions respective observers and signers.
-func (oc *Orchestrator) runObserverSignerSync(ctx context.Context) error {
-	// every other block
-	const cadence = 2 * constant.ZetaBlockTime
-
-	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := oc.syncObserverSigner(ctx); err != nil {
-			oc.logger.Error().Err(err).Msg("syncObserverSigner failed")
-		}
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		cadence,
-		task,
-		ticker.WithLogger(oc.logger.Logger, "SyncObserverSigner"),
-		ticker.WithStopChan(oc.stop),
-	)
-}
-
-// syncs and provisions observers & signers.
-// Note that zctx.AppContext Update is a responsibility of another component
-// See zetacore.Client{}.UpdateAppContextWorker
-func (oc *Orchestrator) syncObserverSigner(ctx context.Context) error {
-	oc.mu.Lock()
-	defer oc.mu.Unlock()
-
-	client := oc.zetacoreClient
-
-	added, removed, err := syncObserverMap(ctx, client, oc.tss, oc.dbDirectory, oc.baseLogger, oc.ts, &oc.observerMap)
-	if err != nil {
-		return errors.Wrap(err, "syncObserverMap failed")
-	}
-
-	if added+removed > 0 {
-		oc.logger.Info().
-			Int("observer.added", added).
-			Int("observer.removed", removed).
-			Msg("synced observers")
-	}
-
-	added, removed, err = syncSignerMap(ctx, oc.tss, oc.baseLogger, &oc.signerMap)
-	if err != nil {
-		return errors.Wrap(err, "syncSignerMap failed")
-	}
-
-	if added+removed > 0 {
-		oc.logger.Info().
-			Int("signer.added", added).
-			Int("signer.removed", removed).
-			Msg("synced signers")
-	}
-
-	return nil
-}
-
-func (oc *Orchestrator) runSyncObserverOperationalFlags(ctx context.Context) error {
-	// every other block
-	const cadence = 2 * constant.ZetaBlockTime
-
-	task := func(ctx context.Context, _ *ticker.Ticker) error {
-		if err := oc.syncObserverOperationalFlags(ctx); err != nil {
-			oc.logger.Error().Err(err).Msg("syncObserverOperationalFlags failed")
-		}
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		cadence,
-		task,
-		ticker.WithLogger(oc.logger.Logger, "SyncObserverOperationalFlags"),
-		ticker.WithStopChan(oc.stop),
-	)
-}
-
-func (oc *Orchestrator) syncObserverOperationalFlags(ctx context.Context) error {
-	client := oc.zetacoreClient
-	flags, err := client.GetOperationalFlags(ctx)
-	if err != nil {
-		return fmt.Errorf("get operational flags: %w", err)
-	}
-
-	oc.mu.Lock()
-	defer oc.mu.Unlock()
-	newSignerBlockTimeOffsetPtr := flags.SignerBlockTimeOffset
-	if newSignerBlockTimeOffsetPtr == nil {
-		return nil
-	}
-	newSignerBlockTimeOffset := *newSignerBlockTimeOffsetPtr
-	if oc.signerBlockTimeOffset != newSignerBlockTimeOffset {
-		oc.logger.Info().
-			Dur("offset", newSignerBlockTimeOffset).
-			Msg("block time offset updated")
-		oc.signerBlockTimeOffset = newSignerBlockTimeOffset
-	}
-
-	return nil
 }

@@ -23,7 +23,7 @@ func BlockFromContext(ctx context.Context) (cometbft.EventDataNewBlock, bool) {
 	return blockEvent, ok
 }
 
-// BlockFromContextWithDelay a combination of BlockFromContext
+// BlockFromContextWithDelay a combination of BlockFromContext and BlockDelay
 func BlockFromContextWithDelay(ctx context.Context) (cometbft.EventDataNewBlock, time.Duration, error) {
 	blockEvent, ok := BlockFromContext(ctx)
 	if !ok {
@@ -41,7 +41,10 @@ func BlockFromContextWithDelay(ctx context.Context) (cometbft.EventDataNewBlock,
 }
 
 // BlockDelay calculates block sleep delay based on a given operational flags and a block.
-// Use case: sleep duration represents artificial "lag" before processing outbound transactions.
+// Sleep duration represents artificial "lag" before processing outbound transactions.
+//
+// Use-case: coordinate outbound signatures between different observer-signers that
+// might be located in different regions (e.g. Alice is in EU, Bob is in US)
 func BlockDelay(flags observertypes.OperationalFlags, block cometbft.EventDataNewBlock) time.Duration {
 	offset := flags.SignerBlockTimeOffset
 	if offset == nil {

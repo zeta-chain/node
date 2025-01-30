@@ -150,11 +150,14 @@ func newTestSuite(t *testing.T) *testSuite {
 		tss:       tss,
 	}
 
+	// todo mock zetacore blocks
+
 	// Mock basic zetacore methods
 	zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil).Maybe()
 	zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetCrosschainFlags", mock.Anything).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
+	zetacore.On("GetOperationalFlags", mock.Anything).Return(appCtx.GetOperationalFlags()).Maybe()
 
 	// Mock chain-related methods as dynamic getters
 	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains).Maybe()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	tontools "github.com/tonkeeper/tongo/ton"
@@ -20,12 +21,16 @@ import (
 	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	evmobserver "github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	evmsigner "github.com/zeta-chain/node/zetaclient/chains/evm/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/solana"
+	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
+	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
+	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -129,6 +134,57 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	}
 
 	return evm.New(oc.scheduler, observer, signer), nil
+}
+
+func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.Solana, error) {
+	// should not happen
+	if !chain.IsSolana() {
+		return nil, errors.New("chain is not Solana")
+	}
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, found := app.Config().GetSolanaConfig()
+	if !found {
+		return nil, errors.Wrap(errSkipChain, "unable to find solana config")
+	}
+
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	gwAddress := chain.Params().GatewayAddress
+
+	rpcClient := solrpc.New(cfg.Endpoint)
+	if rpcClient == nil {
+		return nil, errors.New("unable to create rpc client")
+	}
+
+	observer, err := solbserver.NewObserver(baseObserver, rpcClient, gwAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create observer")
+	}
+
+	// try loading Solana relayer key if present
+	password := chain.RelayerKeyPassword()
+	relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), chain.RawChain().Network, password)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to load relayer key")
+	}
+
+	baseSigner := oc.newBaseSigner(chain)
+
+	// create Solana signer
+	signer, err := solanasigner.New(baseSigner, rpcClient, gwAddress, relayerKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create signer")
+	}
+
+	return solana.New(oc.scheduler, observer, signer), nil
 }
 
 func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
