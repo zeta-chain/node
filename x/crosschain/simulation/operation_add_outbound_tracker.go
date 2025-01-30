@@ -44,7 +44,10 @@ func SimulateMsgAddOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			accounts,
 		)
 		if err != nil {
-			return simtypes.OperationMsg{}, nil, nil
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgAddOutboundTracker,
+				"unable to find a observer"), nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, simAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())

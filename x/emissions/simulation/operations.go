@@ -28,27 +28,19 @@ var TypeMsgWithdrawEmission = sdk.MsgTypeURL(&types.MsgWithdrawEmission{})
 
 const (
 	DefaultWeightMsgWithdrawEmissionType = 100
-	DefaultWeightMsgUpdateParams         = 100
 
-	OpWeightMsgWithdrawEmissionType = "op_weight_msg_withdraw_emission_type"
-	OpWeightMsgUpdateParams         = "op_weight_msg_update_params"
+	OpWeightMsgWithdrawEmissionType = "op_weight_msg_withdraw_emission_type" // #nosec G101 not a hardcoded credential 	// #nosec G101 not a hardcoded credential
 )
 
 func WeightedOperations(
 	appParams simtypes.AppParams, k keeper.Keeper) simulation.WeightedOperations {
 	var (
 		weightMsgWithdrawEmissionType int
-		weightMsgUpdateParams         int
 	)
 
 	appParams.GetOrGenerate(OpWeightMsgWithdrawEmissionType, &weightMsgWithdrawEmissionType, nil,
 		func(_ *rand.Rand) {
 			weightMsgWithdrawEmissionType = DefaultWeightMsgWithdrawEmissionType
-		})
-
-	appParams.GetOrGenerate(OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
 		})
 
 	return simulation.WeightedOperations{
