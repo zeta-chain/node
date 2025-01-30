@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -26,7 +29,14 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	// abort if CCTX inbound observation status indicates failure
 	// this is specifically for Bitcoin inbound error 'INSUFFICIENT_DEPOSITOR_FEE'
 	if config.CCTX.InboundParams.Status == types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE {
-		config.CCTX.SetAbort("observation failed", types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String())
+		config.CCTX.SetAbort(
+			types.StatusMessages{
+				StatusMessage: fmt.Sprintf(
+					"observation failed, reason %s",
+					types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String(),
+				),
+			},
+		)
 		return types.CctxStatus_Aborted, nil
 	}
 
@@ -36,9 +46,10 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		config.CCTX.SetAbort(
-			"error during deposit that is not smart contract revert",
-			err.Error())
+		config.CCTX.SetAbort(types.StatusMessages{
+			StatusMessage:        "outbound failed but the universal contract did not revert",
+			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("failed to deposit tokens in ZEVM", err),
+		})
 		return types.CctxStatus_Aborted, err
 	}
 

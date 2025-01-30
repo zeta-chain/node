@@ -1,4 +1,4 @@
-package ton
+package config
 
 import (
 	"context"
@@ -15,19 +15,19 @@ import (
 
 type GlobalConfigurationFile = config.GlobalConfigurationFile
 
-// ConfigGetter represents LiteAPI config params getter.
+// Getter represents LiteAPI config params getter.
 // Don't be confused because config param in this case represent on-chain params,
 // not lite-client's ADNL json config to connect to the network.
 //
 // Read more at https://docs.ton.org/develop/howto/blockchain-configs
-type ConfigGetter interface {
+type Getter interface {
 	GetConfigParams(ctx context.Context, mode liteapi.ConfigMode, params []uint32) (tlb.ConfigParams, error)
 }
 
-// ConfigFromURL downloads & parses lite server config.
+// FromURL downloads & parses lite server config.
 //
 //nolint:gosec
-func ConfigFromURL(ctx context.Context, url string) (*GlobalConfigurationFile, error) {
+func FromURL(ctx context.Context, url string) (*GlobalConfigurationFile, error) {
 	const timeout = 3 * time.Second
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -52,21 +52,22 @@ func ConfigFromURL(ctx context.Context, url string) (*GlobalConfigurationFile, e
 	return config.ParseConfig(res.Body)
 }
 
-func ConfigFromPath(path string) (*GlobalConfigurationFile, error) {
+// FromPath parses config file from path.
+func FromPath(path string) (*GlobalConfigurationFile, error) {
 	return config.ParseConfigFile(path)
 }
 
-// ConfigFromSource returns a parsed configuration file from a URL or a file path.
-func ConfigFromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
+// FromSource returns a parsed configuration file from a URL or a file path.
+func FromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
 	if u, err := url.Parse(urlOrPath); err == nil {
-		return ConfigFromURL(ctx, u.String())
+		return FromURL(ctx, u.String())
 	}
 
-	return ConfigFromPath(urlOrPath)
+	return FromPath(urlOrPath)
 }
 
 // FetchGasConfig fetches gas price from the config.
-func FetchGasConfig(ctx context.Context, getter ConfigGetter) (tlb.GasLimitsPrices, error) {
+func FetchGasConfig(ctx context.Context, getter Getter) (tlb.GasLimitsPrices, error) {
 	// https://docs.ton.org/develop/howto/blockchain-configs
 	// https://tonviewer.com/config#21
 	const configKeyGas = 21

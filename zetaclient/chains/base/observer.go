@@ -131,21 +131,21 @@ func (ob *Observer) Stop() {
 	defer ob.mu.Unlock()
 
 	if !ob.started {
-		ob.logger.Chain.Info().Msgf("Observer already stopped for chain %d", ob.Chain().ChainId)
+		ob.logger.Chain.Info().Msg("Observer already stopped")
 		return
 	}
 
-	ob.logger.Chain.Info().Msgf("Stopping observer for chain %d", ob.Chain().ChainId)
+	ob.logger.Chain.Info().Msg("Stopping observer")
 
 	close(ob.stop)
 	ob.started = false
 
 	// close database
 	if err := ob.db.Close(); err != nil {
-		ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
+		ob.Logger().Chain.Error().Err(err).Msg("Unable to close db")
 	}
 
-	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
+	ob.Logger().Chain.Info().Msgf("observer stopped")
 }
 
 // Chain returns the chain for the observer.
