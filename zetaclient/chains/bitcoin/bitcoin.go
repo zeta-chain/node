@@ -89,11 +89,11 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(b.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
-	register(b.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(b.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(b.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)

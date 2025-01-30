@@ -97,11 +97,11 @@ func (s *Solana) Start(ctx context.Context) error {
 	}
 
 	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(s.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
 	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
-	register(s.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(s.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX scheduler (every zetachain block)
 	register(s.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)

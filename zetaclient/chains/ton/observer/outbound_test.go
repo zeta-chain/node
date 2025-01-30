@@ -59,7 +59,7 @@ func TestOutbound(t *testing.T) {
 		ts.MockCCTXByNonce(cctx)
 
 		// ACT
-		err = ob.ObserveOutbound(ts.ctx)
+		err = ob.ProcessOutboundTrackers(ts.ctx)
 
 		// ASSERT
 		require.NoError(t, err)

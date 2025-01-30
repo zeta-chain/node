@@ -9,8 +9,8 @@ import (
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 )
 
-// ObserveInboundTrackers processes inbound trackers
-func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
+// ProcessInboundTrackers processes inbound trackers
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
 	if err != nil {

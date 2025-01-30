@@ -27,8 +27,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ObserverOutbound processes outbound trackers
-func (ob *Observer) ObserverOutbound(ctx context.Context) error {
+// ProcessOutboundTrackers processes outbound trackers
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
 	if err != nil {
