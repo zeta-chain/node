@@ -59,7 +59,7 @@ type Deposit struct {
 
 // Memo casts deposit to memo bytes
 func (d Deposit) Memo() []byte {
-	return d.Recipient.Bytes()
+	return []byte{}
 }
 
 // AsBody casts struct as internal message body.
@@ -77,13 +77,7 @@ type DepositAndCall struct {
 
 // Memo casts deposit to call to memo bytes
 func (d DepositAndCall) Memo() []byte {
-	recipient := d.Recipient.Bytes()
-	out := make([]byte, 0, len(recipient)+len(d.CallData))
-
-	out = append(out, recipient...)
-	out = append(out, d.CallData...)
-
-	return out
+	return d.CallData
 }
 
 // AsBody casts struct to internal message body.
