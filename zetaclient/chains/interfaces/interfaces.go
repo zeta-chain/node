@@ -31,7 +31,6 @@ const (
 	Descending Order = "DESC"
 )
 
-// ChainObserver is the interface for chain observer
 type ChainObserver interface {
 	// Start starts the observer
 	Start(ctx context.Context)

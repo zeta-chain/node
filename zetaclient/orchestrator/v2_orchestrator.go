@@ -21,7 +21,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// V2 represents the orchestrator V2 while they co-exist with Orchestrator.
+// V2 represents the orchestrator V2.
+// Will be renamed to `Orchestrator` in the following PR to avoid merge conflicts.
 type V2 struct {
 	deps      *Dependencies
 	scheduler *scheduler.Scheduler

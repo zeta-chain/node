@@ -263,6 +263,30 @@ func newAppContext(
 	return ctx, appContext
 }
 
+func parseChainsWithParams(t *testing.T, chainsOrParams ...any) ([]chains.Chain, []*observertypes.ChainParams) {
+	var (
+		supportedChains = make([]chains.Chain, 0, len(chainsOrParams))
+		obsParams       = make([]*observertypes.ChainParams, 0, len(chainsOrParams))
+	)
+
+	for _, something := range chainsOrParams {
+		switch tt := something.(type) {
+		case *chains.Chain:
+			supportedChains = append(supportedChains, *tt)
+		case chains.Chain:
+			supportedChains = append(supportedChains, tt)
+		case *observertypes.ChainParams:
+			obsParams = append(obsParams, tt)
+		case observertypes.ChainParams:
+			obsParams = append(obsParams, &tt)
+		default:
+			t.Fatalf("parse chains and params: unsupported type %T (%+v)", tt, tt)
+		}
+	}
+
+	return supportedChains, obsParams
+}
+
 func chainsContain(list []zctx.Chain, ids ...int64) bool {
 	set := make(map[int64]struct{}, len(list))
 	for _, chain := range list {
