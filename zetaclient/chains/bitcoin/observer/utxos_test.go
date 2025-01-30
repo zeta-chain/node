@@ -227,7 +227,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 // helper function to create a test suite with UTXOs
 func newTestSuitWithUTXOs(t *testing.T) (*testSuite, []btcjson.ListUnspentResult) {
 	// create test observer
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	ob := newTestSuite(t, chains.BitcoinMainnet)
 
 	// get test UTXOs
 	tssAddress, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
@@ -255,7 +255,7 @@ func createTestSuitWithUTXOsAndNonceMark(
 	txid string,
 ) (*testSuite, []btcjson.ListUnspentResult) {
 	// create test observer
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	ob := newTestSuite(t, chains.BitcoinMainnet)
 
 	// make a nonce mark UTXO
 	tssAddress, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)

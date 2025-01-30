@@ -167,7 +167,7 @@ func Test_NewObserver(t *testing.T) {
 func Test_BlockCache(t *testing.T) {
 	t.Run("should add and get block from cache", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// feed block hash, header and block to btc client
 		hash := sample.BtcHash()
@@ -191,7 +191,7 @@ func Test_BlockCache(t *testing.T) {
 	})
 	t.Run("should fail if stored type is not BlockNHeader", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// add a string to cache
 		blockNumber := int64(100)
@@ -206,7 +206,7 @@ func Test_BlockCache(t *testing.T) {
 
 func Test_SetPendingNonce(t *testing.T) {
 	// create observer
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	ob := newTestSuite(t, chains.BitcoinMainnet)
 
 	// ensure pending nonce is 0
 	require.Zero(t, ob.GetPendingNonce())
@@ -219,7 +219,7 @@ func Test_SetPendingNonce(t *testing.T) {
 
 func TestConfirmationThreshold(t *testing.T) {
 	chain := chains.BitcoinMainnet
-	ob := newTestSuite(t, chain, "")
+	ob := newTestSuite(t, chain)
 
 	t.Run("should return confirmations in chain param", func(t *testing.T) {
 		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
@@ -266,13 +266,26 @@ type testSuite struct {
 	client   *mocks.BitcoinClient
 	zetacore *mocks.ZetacoreClient
 	db       *db.DB
+	dbPath   string
 }
 
-func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
-	ctx := context.Background()
+type Opt func(t *testSuite)
+
+// optDBPath is an option to set custom db path
+func optDBPath(dbPath string) Opt {
+	return func(t *testSuite) {
+		t.dbPath = dbPath
+	}
+}
+
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...Opt) *testSuite {
+	// create test suite with options
+	s := &testSuite{ctx: context.Background()}
+	for _, opt := range opts {
+		opt(s)
+	}
 
 	require.True(t, chain.IsBitcoinChain())
-
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
 	client := mocks.NewBitcoinClient(t)
@@ -290,11 +303,11 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	// create test database
 	var err error
 	var database *db.DB
-	if dbPath == "" {
+	if s.dbPath == "" {
 		database, err = db.NewFromSqliteInMemory(true)
 	} else {
-		database, err = db.NewFromSqlite(dbPath, "test.db", true)
-		t.Cleanup(func() { os.RemoveAll(dbPath) })
+		database, err = db.NewFromSqlite(s.dbPath, "test.db", true)
+		t.Cleanup(func() { os.RemoveAll(s.dbPath) })
 	}
 	require.NoError(t, err)
 
@@ -317,11 +330,11 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	ob, err := observer.New(chain, baseObserver, client)
 	require.NoError(t, err)
 
-	return &testSuite{
-		ctx:      ctx,
-		Observer: ob,
-		client:   client,
-		zetacore: zetacore,
-		db:       database,
-	}
+	// set test suite fields
+	s.Observer = ob
+	s.client = client
+	s.zetacore = zetacore
+	s.db = database
+
+	return s
 }

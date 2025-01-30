@@ -158,7 +158,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	// create test observer
-	ob := newTestSuite(t, chain, "")
+	ob := newTestSuite(t, chain)
 	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
 	// test cases
