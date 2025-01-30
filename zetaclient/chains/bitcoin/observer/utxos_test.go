@@ -4,14 +4,24 @@ import (
 	"context"
 	"math"
 	"testing"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"golang.org/x/exp/rand"
 
 	"github.com/zeta-chain/node/pkg/chains"
 )
+
+func Test_FetchUTXOs(t *testing.T) {
+	// create test suite
+	ob, utxos := newTestSuitWithUTXOs(t)
+
+	// check number of UTXOs again
+	require.Equal(t, len(utxos), ob.TelemetryServer().GetNumberOfUTXOs())
+}
 
 func Test_SelectUTXOs(t *testing.T) {
 	ctx := context.Background()
@@ -300,5 +310,12 @@ func getTestUTXOs(owner string) []btcjson.ListUnspentResult {
 			Confirmations: 1,
 		})
 	}
+
+	// shuffle the UTXOs, zetaclient will always sort them
+	rand.Seed(uint64(time.Now().Second()))
+	rand.Shuffle(len(utxos), func(i, j int) {
+		utxos[i], utxos[j] = utxos[j], utxos[i]
+	})
+
 	return utxos
 }
