@@ -19,7 +19,7 @@
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 * [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
 * [3418](https://github.com/zeta-chain/node/pull/3418) - orchestrator V2: TON observer-signer
-
+* [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
 
 ### Fixes
 
