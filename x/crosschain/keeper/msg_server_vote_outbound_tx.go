@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
 )
@@ -123,10 +124,13 @@ func (k msgServer) VoteOutbound(
 	// We use the current TSS pubkey to finalize the outbound.
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		k.SaveFailedOutbound(ctx, &cctx, err.Error(), tss.TssPubkey)
+		// The validate function for the outbound returns an error, which means that the outbound is invalid and should instead be aborted directly
+		// Irrespective of what the Ballot status is
+		k.HandleInvalidOutbound(ctx, &cctx, err, tss.TssPubkey)
 		return &types.MsgVoteOutboundResponse{}, nil
 	}
-	k.SaveSuccessfulOutbound(ctx, &cctx, tss.TssPubkey)
+	// The outbound is valid, the HandleValidOutbound function would save the required status changes
+	k.HandleValidOutbound(ctx, &cctx, tss.TssPubkey)
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
@@ -185,23 +189,26 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 }
 
 /*
-SaveFailedOutbound saves a failed outbound transaction.It does the following things in one function:
+HandleInvalidOutbound saves an invalid outbound transaction. It does the following things in one function:
 
  1. Change the status of the CCTX to Aborted
 
  2. Save the outbound
 */
 
-func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, tssPubkey string) {
-	cctx.SetAbort("", errMessage)
-	ctx.Logger().Error(errMessage)
+func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, err error, tssPubkey string) {
+	cctx.SetAbort(types.StatusMessages{
+		StatusMessage:        "outbound failed unable to process",
+		ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("", err),
+	})
+	ctx.Logger().Error(err.Error())
 	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
 
-// SaveSuccessfulOutbound saves a successful outbound transaction.
+// HandleValidOutbound saves a successful outbound transaction.
 // This function does not set the CCTX status, therefore all successful outbound transactions need
 // to have their status set during processing
-func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
+func (k Keeper) HandleValidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
 	k.SaveOutbound(ctx, cctx, tssPubkey)
 }
 

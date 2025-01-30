@@ -79,7 +79,7 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 				continue
 			}
 
-			c.logger.Info().Int64("height", newBlockEvent.Block.Height).Msg("Received new block event")
+			c.logger.Debug().Int64("height", newBlockEvent.Block.Height).Msg("Received new block event")
 
 			blockChan <- newBlockEvent
 		}
