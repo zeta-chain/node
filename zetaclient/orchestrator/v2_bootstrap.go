@@ -164,7 +164,7 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 		return nil, errors.New("unable to create rpc client")
 	}
 
-	observer, err := solbserver.NewObserver(baseObserver, rpcClient, gwAddress)
+	observer, err := solbserver.New(baseObserver, rpcClient, gwAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}

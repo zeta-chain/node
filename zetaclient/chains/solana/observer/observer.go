@@ -32,12 +32,8 @@ type Observer struct {
 	finalizedTxResults map[string]*rpc.GetTransactionResult
 }
 
-// NewObserver returns a new Solana chain observer
-func NewObserver(
-	baseObserver *base.Observer,
-	solClient interfaces.SolanaRPCClient,
-	gatewayAddress string,
-) (*Observer, error) {
+// New Observer constructor
+func New(baseObserver *base.Observer, solClient interfaces.SolanaRPCClient, gatewayAddress string) (*Observer, error) {
 	// parse gateway ID and PDA
 	gatewayID, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
 	if err != nil {

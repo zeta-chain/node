@@ -135,7 +135,9 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 	time.Sleep(delay)
 
 	var (
-		chainID    = s.observer.Chain().ChainId
+		chainID = s.observer.Chain().ChainId
+
+		// #nosec G115 positive
 		zetaHeight = uint64(zetaBlock.Block.Height)
 
 		// #nosec G115 positive

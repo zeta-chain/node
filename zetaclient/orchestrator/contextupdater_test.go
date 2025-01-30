@@ -1,21 +1,17 @@
 package orchestrator
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
-	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/config"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 func Test_UpdateAppContext(t *testing.T) {
@@ -29,10 +25,10 @@ func Test_UpdateAppContext(t *testing.T) {
 
 	t.Run("Updates app context", func(t *testing.T) {
 		var (
-			ctx      = context.Background()
-			app      = createAppContext(t, eth, ethParams)
-			zetacore = mocks.NewZetacoreClient(t)
-			logger   = zerolog.New(zerolog.NewTestWriter(t))
+			logger                 = testlog.New(t).Logger
+			chainList, chainParams = parseChainsWithParams(t, eth, ethParams)
+			ctx, app               = newAppContext(t, logger, chainList, chainParams)
+			zetacore               = mocks.NewZetacoreClient(t)
 		)
 
 		// Given zetacore client that has eth and btc chains
@@ -73,10 +69,10 @@ func Test_UpdateAppContext(t *testing.T) {
 	t.Run("Upgrade plan detected", func(t *testing.T) {
 		// ARRANGE
 		var (
-			ctx      = context.Background()
-			app      = createAppContext(t, eth, ethParams)
-			zetacore = mocks.NewZetacoreClient(t)
-			logger   = zerolog.New(zerolog.NewTestWriter(t))
+			logger                 = testlog.New(t).Logger
+			chainList, chainParams = parseChainsWithParams(t, eth, ethParams)
+			ctx, app               = newAppContext(t, logger, chainList, chainParams)
+			zetacore               = mocks.NewZetacoreClient(t)
 		)
 
 		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
@@ -91,51 +87,4 @@ func Test_UpdateAppContext(t *testing.T) {
 		// ASSERT
 		require.ErrorIs(t, err, ErrUpgradeRequired)
 	})
-}
-
-func createAppContext(t *testing.T, chainsOrParams ...any) *zctx.AppContext {
-	supportedChains, obsParams := parseChainsWithParams(t, chainsOrParams...)
-
-	cfg := config.New(false)
-
-	// Mock config
-	for _, c := range supportedChains {
-		switch {
-		case chains.IsEVMChain(c.ChainId, nil):
-			cfg.EVMChainConfigs[c.ChainId] = config.EVMConfig{Endpoint: "localhost"}
-		case chains.IsBitcoinChain(c.ChainId, nil):
-			cfg.BTCChainConfigs[c.ChainId] = config.BTCConfig{RPCHost: "localhost"}
-		case chains.IsSolanaChain(c.ChainId, nil):
-			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
-		case chains.IsTONChain(c.ChainId, nil):
-			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
-		default:
-			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
-		}
-	}
-
-	// chain params
-	params := map[int64]*observertypes.ChainParams{}
-	for i := range obsParams {
-		cp := obsParams[i]
-		params[cp.ChainId] = cp
-	}
-
-	// new AppContext
-	appContext := zctx.New(cfg, nil, zerolog.New(zerolog.NewTestWriter(t)))
-
-	ccFlags := sample.CrosschainFlags()
-	opFlags := sample.OperationalFlags()
-
-	// feed chain params
-	err := appContext.Update(
-		supportedChains,
-		nil,
-		params,
-		*ccFlags,
-		opFlags,
-	)
-	require.NoError(t, err, "failed to update app context")
-
-	return appContext
 }
