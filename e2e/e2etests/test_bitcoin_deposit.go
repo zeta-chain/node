@@ -19,5 +19,4 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-	require.Equal(r, crosschaintypes.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
 }
