@@ -148,7 +148,7 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 	}
 
 	// load broadcasted transactions
-	if err = ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.loadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 

@@ -58,16 +58,19 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 	return nil
 }
 
-// LoadBroadcastedTxMap loads broadcasted transactions from the database
-func (ob *Observer) LoadBroadcastedTxMap() error {
+// loadBroadcastedTxMap loads broadcasted transactions from the database
+func (ob *Observer) loadBroadcastedTxMap() error {
 	var broadcastedTransactions []clienttypes.OutboundHashSQLType
-	if err := ob.DB().Client().Find(&broadcastedTransactions).Error; err != nil {
-		ob.logger.Chain.Error().Err(err).Msgf("error iterating over db for chain %d", ob.Chain().ChainId)
-		return err
+
+	tx := ob.DB().Client().Find(&broadcastedTransactions)
+	if tx.Error != nil {
+		return errors.Wrap(tx.Error, "unable to find broadcasted txs")
 	}
+
 	for _, entry := range broadcastedTransactions {
 		ob.tssOutboundHashes[entry.Hash] = true
 		ob.broadcastedTx[entry.Key] = entry.Hash
 	}
+
 	return nil
 }

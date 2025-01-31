@@ -132,10 +132,6 @@ func Test_LoadBroadcastedTxMap(t *testing.T) {
 		// create new observer using same db path
 		obNew := newTestSuite(t, chains.BitcoinMainnet, optDBPath(dbPath))
 
-		// load broadcasted tx map to new observer
-		err := obNew.LoadBroadcastedTxMap()
-		require.NoError(t, err)
-
 		// check if the txHash is a TSS outbound
 		require.True(t, obNew.IsTSSTransaction(txHash))
 
