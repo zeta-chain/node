@@ -21,9 +21,13 @@
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
 * [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
+* [3426](https://github.com/zeta-chain/node/pull/3426) - use protocol contracts V2 with Bitcoin deposits
 * [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
 * [3418](https://github.com/zeta-chain/node/pull/3418) - orchestrator V2: TON observer-signer
+* [3438](https://github.com/zeta-chain/node/pull/3438) - orchestrator V2: SOl observer-signer. Drop V1.
 * [3440](https://github.com/zeta-chain/node/pull/3440) - remove unused method `FilterSolanaInboundEvents`
+* [3428](https://github.com/zeta-chain/node/pull/3428) - zetaclient: converge EVM clients.
+
 
 ### Fixes
 
@@ -42,8 +46,6 @@
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
 
 ## v25.0.0
-
-## Unreleased
 
 ## Refactor
 

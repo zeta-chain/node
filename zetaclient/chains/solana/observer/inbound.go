@@ -3,7 +3,6 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
@@ -16,7 +15,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -26,45 +24,6 @@ const (
 	// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
 	MaxSignaturesPerTicker = 100
 )
-
-// WatchInbound watches Solana chain for inbounds on a ticker.
-func (ob *Observer) WatchInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("Solana_WatchInbound_%d", ob.Chain().ChainId),
-		ob.ChainParams().InboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-	defer ticker.Stop()
-
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
-				continue
-			}
-			err := ob.ObserveInbound(ctx)
-			if err != nil {
-				ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
-			}
-		case <-ob.StopChannel():
-			ob.Logger().Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
@@ -321,7 +280,7 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 	logFields := map[string]any{logs.FieldTx: event.TxHash}
 
 	switch category := event.Category(); category {
-	case clienttypes.InboundCategoryGood:
+	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")

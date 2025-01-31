@@ -38,24 +38,26 @@ func MockSolanaObserver(
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	// create observer
-	ob, err := observer.NewObserver(
+	baseObserver, err := base.NewObserver(
 		chain,
-		solClient,
 		chainParams,
 		zetacoreClient,
 		tss,
+		1000,
+		nil,
 		database,
 		base.DefaultLogger(),
-		nil,
 	)
+	require.NoError(t, err)
+
+	ob, err := observer.New(baseObserver, solClient, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	return ob
 }
 
 func Test_LoadLastTxScanned(t *testing.T) {
-	// parepare params
+	// prepare params
 	chain := chains.SolanaDevnet
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)
