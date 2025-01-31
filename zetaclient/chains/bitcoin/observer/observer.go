@@ -163,8 +163,7 @@ func (ob *Observer) GetPendingNonce() uint64 {
 	return ob.pendingNonce
 }
 
-// SetPendingNonce sets the artificial pending nonce
-func (ob *Observer) SetPendingNonce(nonce uint64) {
+func (ob *Observer) setPendingNonce(nonce uint64) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	ob.pendingNonce = nonce

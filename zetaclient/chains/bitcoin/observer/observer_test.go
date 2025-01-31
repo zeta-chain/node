@@ -206,19 +206,6 @@ func Test_BlockCache(t *testing.T) {
 	})
 }
 
-func Test_SetPendingNonce(t *testing.T) {
-	// create observer
-	ob := newTestSuite(t, chains.BitcoinMainnet)
-
-	// ensure pending nonce is 0
-	require.Zero(t, ob.GetPendingNonce())
-
-	// set and get pending nonce
-	nonce := uint64(100)
-	ob.SetPendingNonce(nonce)
-	require.Equal(t, nonce, ob.GetPendingNonce())
-}
-
 func TestConfirmationThreshold(t *testing.T) {
 	chain := chains.BitcoinMainnet
 	ob := newTestSuite(t, chain)

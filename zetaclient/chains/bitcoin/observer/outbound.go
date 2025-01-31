@@ -239,7 +239,7 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.SetPendingNonce(nonceLow)
+		ob.setPendingNonce(nonceLow)
 		logger.Info().Uint64("pending_nonce", nonceLow).Str(logs.FieldTx, txid).Msg("increased pending nonce")
 	}
 }
