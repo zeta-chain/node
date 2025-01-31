@@ -3,6 +3,7 @@ package solana
 import (
 	"fmt"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 )
@@ -12,12 +13,15 @@ const (
 	MaxSignaturesPerTicker = 100
 )
 
+// Deposit represents a deposit instruction from a Solana transaction to ZetaChain
 type Deposit struct {
-	Sender string
-	Amount uint64
-	Memo   []byte
-	Slot   uint64
-	Asset  string
+	Sender           string
+	Receiver         string
+	Amount           uint64
+	Memo             []byte
+	Slot             uint64
+	Asset            string
+	IsCrossChainCall bool
 }
 
 // ParseInboundAsDeposit tries to parse an instruction as a 'deposit' or 'deposit_and_call'.
@@ -63,12 +67,19 @@ func tryParseAsDeposit(
 		return nil, err
 	}
 
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Deposit{
-		Sender: sender,
-		Amount: inst.Amount,
-		Memo:   inst.Receiver[:],
-		Slot:   slot,
-		Asset:  "", // no asset for gas token SOL
+		Sender:           sender,
+		Receiver:         receiver,
+		Amount:           inst.Amount,
+		Memo:             []byte{},
+		Slot:             slot,
+		Asset:            "", // no asset for gas token SOL
+		IsCrossChainCall: false,
 	}, nil
 }
 
@@ -93,17 +104,24 @@ func tryParseAsDepositAndCall(
 		return nil, nil
 	}
 
+	receiver, err := parseReceiver(instDepositAndCall.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	// get the sender address (skip if unable to parse signer address)
 	sender, err := getSignerDeposit(tx, &instruction)
 	if err != nil {
 		return nil, err
 	}
 	return &Deposit{
-		Sender: sender,
-		Amount: instDepositAndCall.Amount,
-		Memo:   append(instDepositAndCall.Receiver[:], instDepositAndCall.Memo...),
-		Slot:   slot,
-		Asset:  "", // no asset for gas token SOL
+		Sender:           sender,
+		Receiver:         receiver,
+		Amount:           instDepositAndCall.Amount,
+		Memo:             instDepositAndCall.Memo,
+		Slot:             slot,
+		Asset:            "", // no asset for gas token SOL
+		IsCrossChainCall: true,
 	}, nil
 }
 
@@ -150,12 +168,19 @@ func tryParseAsDepositSPL(
 		return nil, err
 	}
 
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Deposit{
-		Sender: sender,
-		Amount: inst.Amount,
-		Memo:   inst.Receiver[:],
-		Slot:   slot,
-		Asset:  spl,
+		Sender:           sender,
+		Receiver:         receiver,
+		Amount:           inst.Amount,
+		Memo:             []byte{},
+		Slot:             slot,
+		Asset:            spl,
+		IsCrossChainCall: false,
 	}, nil
 }
 
@@ -180,17 +205,24 @@ func tryParseAsDepositSPLAndCall(
 		return nil, nil
 	}
 
+	receiver, err := parseReceiver(instDepositAndCall.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
 	// get the sender and spl addresses
 	sender, spl, err := getSignerAndSPLFromDepositSPLAccounts(tx, &instruction)
 	if err != nil {
 		return nil, err
 	}
 	return &Deposit{
-		Sender: sender,
-		Amount: instDepositAndCall.Amount,
-		Memo:   append(instDepositAndCall.Receiver[:], instDepositAndCall.Memo...),
-		Slot:   slot,
-		Asset:  spl,
+		Sender:           sender,
+		Receiver:         receiver,
+		Amount:           instDepositAndCall.Amount,
+		Memo:             instDepositAndCall.Memo,
+		Slot:             slot,
+		Asset:            spl,
+		IsCrossChainCall: true,
 	}, nil
 }
 
@@ -243,4 +275,14 @@ func getSignerAndSPLFromDepositSPLAccounts(
 	spl := instructionAccounts[3].PublicKey.String()
 
 	return signer, spl, nil
+}
+
+// parseReceiver parses the receiver bytes into a Ethereum address string
+func parseReceiver(receiver [20]byte) (string, error) {
+	addr := ethcommon.BytesToAddress(receiver[:ethcommon.AddressLength])
+	if addr == (ethcommon.Address{}) {
+		return "", fmt.Errorf("invalid receiver address: %v", receiver)
+	}
+
+	return addr.Hex(), nil
 }
