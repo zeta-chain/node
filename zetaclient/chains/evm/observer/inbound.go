@@ -33,8 +33,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ObserveInboundTrackers observes inbound trackers from zetacore
-func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
+// ProcessInboundTrackers observes inbound trackers from zetacore
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err

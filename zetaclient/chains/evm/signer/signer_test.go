@@ -208,6 +208,7 @@ func makeCtx(t *testing.T) context.Context {
 			chains.BscMainnet.ChainId: &bscParams,
 		},
 		observertypes.CrosschainFlags{},
+		observertypes.OperationalFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")
 

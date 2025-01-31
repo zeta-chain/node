@@ -427,7 +427,7 @@ func TestInboundTracker(t *testing.T) {
 	ts.OnGetInboundTrackersForChain(trackers).Once()
 
 	// ACT
-	err = ob.ObserveInboundTrackers(ts.ctx)
+	err = ob.ProcessInboundTrackers(ts.ctx)
 
 	// ARRANGE
 	require.NoError(t, err)
