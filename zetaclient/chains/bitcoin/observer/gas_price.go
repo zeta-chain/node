@@ -30,7 +30,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 			return errors.Wrapf(err, "unable to get recent fee rate")
 		}
 	case chains.NetworkType_mainnet:
-		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, false)
+		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}

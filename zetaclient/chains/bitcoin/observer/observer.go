@@ -35,7 +35,7 @@ type RPC interface {
 		res *btcjson.GetTransactionResult,
 	) (btcjson.TxRawResult, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
 
 	EstimateSmartFee(
@@ -148,7 +148,7 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 	}
 
 	// load broadcasted transactions
-	if err = ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.loadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
@@ -163,8 +163,7 @@ func (ob *Observer) GetPendingNonce() uint64 {
 	return ob.pendingNonce
 }
 
-// SetPendingNonce sets the artificial pending nonce
-func (ob *Observer) SetPendingNonce(nonce uint64) {
+func (ob *Observer) setPendingNonce(nonce uint64) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	ob.pendingNonce = nonce

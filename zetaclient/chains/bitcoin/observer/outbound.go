@@ -220,7 +220,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce(ctx context.Context) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refreshPendingNonce").Logger()
+	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refresh_pending_nonce").Logger()
 
 	// get pending nonces from zetacore
 	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
@@ -233,51 +233,48 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	nonceLow := uint64(p.NonceLow)
 	if nonceLow > ob.GetPendingNonce() {
 		// get the last included outbound hash
-		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1, false)
+		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1)
 		if err != nil {
 			logger.Error().Err(err).Msg("error getting last outbound txid")
 		}
 
 		// set 'NonceLow' as the new pending nonce
-		ob.SetPendingNonce(nonceLow)
+		ob.setPendingNonce(nonceLow)
 		logger.Info().Uint64("pending_nonce", nonceLow).Str(logs.FieldTx, txid).Msg("increased pending nonce")
 	}
 }
 
 // getOutboundHashByNonce gets the outbound hash for given nonce.
 // test is true for unit test only
-func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64, test bool) (string, error) {
+func (ob *Observer) getOutboundHashByNonce(ctx context.Context, nonce uint64) (string, error) {
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
 	if res := ob.GetIncludedTx(nonce); res != nil {
 		return res.TxID, nil
 	}
-	if !test { // if not unit test, get cctx from zetacore
-		send, err := ob.ZetacoreClient().GetCctxByNonce(ctx, ob.Chain().ChainId, nonce)
-		if err != nil {
-			return "", errors.Wrapf(err, "getOutboundHashByNonce: error getting cctx for nonce %d", nonce)
-		}
-		txid := send.GetCurrentOutboundParam().Hash
-		if txid == "" {
-			return "", fmt.Errorf("getOutboundHashByNonce: cannot find outbound txid for nonce %d", nonce)
-		}
-		// make sure it's a real Bitcoin txid
-		_, getTxResult, err := ob.rpc.GetTransactionByStr(ctx, txid)
-		if err != nil {
-			return "", errors.Wrapf(
-				err,
-				"getOutboundHashByNonce: error getting outbound result for nonce %d hash %s",
-				nonce,
-				txid,
-			)
-		}
-		if getTxResult.Confirmations <= 0 { // just a double check
-			return "", fmt.Errorf("getOutboundHashByNonce: outbound txid %s for nonce %d is not included", txid, nonce)
-		}
-		return txid, nil
+
+	send, err := ob.ZetacoreClient().GetCctxByNonce(ctx, ob.Chain().ChainId, nonce)
+	if err != nil {
+		return "", errors.Wrapf(err, "error getting cctx for nonce %d", nonce)
 	}
-	return "", fmt.Errorf("getOutboundHashByNonce: cannot find outbound txid for nonce %d", nonce)
+
+	txid := send.GetCurrentOutboundParam().Hash
+	if txid == "" {
+		return "", fmt.Errorf("cannot find outbound txid for nonce %d", nonce)
+	}
+
+	// make sure it's a real Bitcoin txid
+	_, getTxResult, err := ob.rpc.GetTransactionByStr(ctx, txid)
+	switch {
+	case err != nil:
+		return "", errors.Wrapf(err, "error getting outbound result for nonce %d hash %s", nonce, txid)
+	case getTxResult.Confirmations <= 0:
+		// just a double check
+		return "", fmt.Errorf("outbound txid %s for nonce %d is not included", txid, nonce)
+	}
+
+	return txid, nil
 }
 
 // checkTxInclusion checks if a txHash is included and returns (txResult, included)
@@ -432,7 +429,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outbound
 		if nonce > 0 && i == 0 {
-			preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1, false)
+			preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1)
 			if err != nil {
 				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
 			}
