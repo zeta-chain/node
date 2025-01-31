@@ -138,7 +138,7 @@ func (s *Signer) MarkOutbound(outboundID string, active bool) {
 		s.logger.Std.Info().
 			Bool("outbound.active", active).
 			Str("outbound.id", outboundID).
-			Dur("outbound.time_taken", timeTaken).
+			Float64("outbound.time_taken", timeTaken.Seconds()).
 			Int("outbound.total", len(s.activeOutbounds)).
 			Msg("MarkOutbound")
 

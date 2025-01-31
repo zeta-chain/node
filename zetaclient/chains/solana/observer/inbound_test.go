@@ -43,16 +43,19 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
 
-	ob, err := observer.NewObserver(
+	baseObserver, err := base.NewObserver(
 		chain,
-		nil,
 		*chainParams,
 		zetacoreClient,
 		nil,
+		1000,
+		nil,
 		database,
 		base.DefaultLogger(),
-		nil,
 	)
+	require.NoError(t, err)
+
+	ob, err := observer.New(baseObserver, nil, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
@@ -110,7 +113,19 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	ob, err := observer.NewObserver(chain, nil, *params, zetacoreClient, nil, database, base.DefaultLogger(), nil)
+	baseObserver, err := base.NewObserver(
+		chain,
+		*params,
+		zetacoreClient,
+		nil,
+		1000,
+		nil,
+		database,
+		base.DefaultLogger(),
+	)
+	require.NoError(t, err)
+
+	ob, err := observer.New(baseObserver, nil, params.GatewayAddress)
 	require.NoError(t, err)
 
 	// create test compliance config
@@ -146,7 +161,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 }
 
 func Test_IsEventProcessable(t *testing.T) {
-	// parepare params
+	// prepare params
 	chain := chains.SolanaDevnet
 	params := sample.ChainParams(chain.ChainId)
 	params.GatewayAddress = sample.SolanaAddress(t)

@@ -38,9 +38,7 @@ require (
 	github.com/libp2p/go-libp2p v0.27.8
 	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/multiformats/go-multiaddr v0.9.0
-	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/near/borsh-go v0.3.1
-	github.com/onrik/ethrpc v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rakyll/statik v0.1.7
@@ -77,7 +75,7 @@ require (
 	cloud.google.com/go/iam v1.1.9 // indirect
 	cloud.google.com/go/storage v1.41.0 // indirect
 	cosmossdk.io/api v0.7.6 // indirect
-	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/log v1.4.1

@@ -7,9 +7,9 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -114,7 +114,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 
 	tests := []struct {
 		name string
-		tx   *ethrpc.Transaction
+		tx   *client.Transaction
 		fail bool
 		msg  string
 	}{
@@ -131,7 +131,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for empty hash",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.Hash = ""
 				return tx
@@ -141,7 +141,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative nonce",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.Nonce = -1
 				return tx
@@ -151,7 +151,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for empty from address",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.From = ""
 				return tx
@@ -161,7 +161,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for invalid from address",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.From = "0x"
 				return tx
@@ -171,7 +171,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should pass for empty to address",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.To = ""
 				return tx
@@ -180,7 +180,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for invalid to address",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.To = "0xinvalid"
 				return tx
@@ -190,9 +190,9 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative value",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
-				tx.Value = *big.NewInt(-1)
+				tx.Value = big.NewInt(-1)
 				return tx
 			}(),
 			fail: true,
@@ -200,7 +200,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative gas",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.Gas = -1
 				return tx
@@ -210,9 +210,9 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative gas price",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
-				tx.GasPrice = *big.NewInt(-1)
+				tx.GasPrice = big.NewInt(-1)
 				return tx
 			}(),
 			fail: true,
@@ -220,7 +220,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should remove '0x' prefix from input data",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				return tx
 			}(),
@@ -228,7 +228,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "nil block number should pass",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.BlockNumber = nil
 				return tx
@@ -237,7 +237,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative block number",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				negBlockNumber := -1
 				tx.BlockNumber = &negBlockNumber
@@ -248,7 +248,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for empty block hash",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.BlockHash = ""
 				return tx
@@ -258,7 +258,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "nil transaction index should fail",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.TransactionIndex = nil
 				return tx
@@ -268,7 +268,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for negative transaction index",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				negTransactionIndex := -1
 				tx.TransactionIndex = &negTransactionIndex
@@ -279,7 +279,7 @@ func TestCheckEvmTransactionTable(t *testing.T) {
 		},
 		{
 			name: "should fail for invalid input data",
-			tx: func() *ethrpc.Transaction {
+			tx: func() *client.Transaction {
 				tx := testutils.LoadEVMInbound(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 				tx.Input = "03befinvalid"
 				return tx
@@ -353,7 +353,7 @@ func TestCheckEvmTransaction(t *testing.T) {
 	})
 	t.Run("should fail for negative value", func(t *testing.T) {
 		tx := testutils.LoadEVMInbound(t, TestDataDir, 1, inboundHash, coin.CoinType_Gas)
-		tx.Value = *big.NewInt(-1)
+		tx.Value = big.NewInt(-1)
 		err := ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "value -1 is negative")
 	})
@@ -365,7 +365,7 @@ func TestCheckEvmTransaction(t *testing.T) {
 	})
 	t.Run("should fail for negative gas price", func(t *testing.T) {
 		tx := testutils.LoadEVMInbound(t, TestDataDir, 1, inboundHash, coin.CoinType_Gas)
-		tx.GasPrice = *big.NewInt(-1)
+		tx.GasPrice = big.NewInt(-1)
 		err := ValidateEvmTransaction(tx)
 		require.ErrorContains(t, err, "gas price -1 is negative")
 	})
