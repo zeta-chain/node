@@ -175,12 +175,12 @@ func TestScheduler(t *testing.T) {
 		// ASSERT
 		assert.Equal(t, int32(6), counter)
 
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":1,"ticker.new_interval":50`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":50,"ticker.new_interval":100`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":100,"ticker.new_interval":150`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":150,"ticker.new_interval":200`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":200,"ticker.new_interval":250`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":250,"ticker.new_interval":300`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.001,"ticker.new_interval":0.05`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.05,"ticker.new_interval":0.1`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.1,"ticker.new_interval":0.15`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.15,"ticker.new_interval":0.2`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.2,"ticker.new_interval":0.25`)
+		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.25,"ticker.new_interval":0.3`)
 	})
 
 	t.Run("Multiple tasks in different groups", func(t *testing.T) {

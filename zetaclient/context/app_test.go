@@ -2,11 +2,13 @@ package context
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -22,6 +24,11 @@ func TestAppContext(t *testing.T) {
 			IsInboundEnabled:      true,
 			IsOutboundEnabled:     true,
 			GasPriceIncreaseFlags: nil,
+		}
+
+		opFlags = types.OperationalFlags{
+			RestartHeight:         123,
+			SignerBlockTimeOffset: ptr.Ptr(time.Second),
 		}
 	)
 
@@ -81,7 +88,7 @@ func TestAppContext(t *testing.T) {
 		}
 
 		// ACT
-		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags)
+		err = appContext.Update(newChains, additionalChains, chainParams, ccFlags, opFlags)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -113,6 +120,12 @@ func TestAppContext(t *testing.T) {
 		// Check config
 		assert.Equal(t, "satoshi", appContext.Config().BTCChainConfigs[111].RPCUsername)
 
+		// Check cc flags
+		assert.True(t, appContext.GetCrossChainFlags().IsInboundEnabled)
+
+		// Check operational flags
+		assert.Equal(t, time.Second, *appContext.GetOperationalFlags().SignerBlockTimeOffset)
+
 		t.Run("edge-cases", func(t *testing.T) {
 			for _, tt := range []struct {
 				name   string
@@ -122,7 +135,7 @@ func TestAppContext(t *testing.T) {
 				{
 					name: "update with empty chains results in an error",
 					act: func(a *AppContext) error {
-						return appContext.Update(newChains, nil, nil, ccFlags)
+						return appContext.Update(newChains, nil, nil, ccFlags, opFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "no chain params present")
@@ -143,7 +156,7 @@ func TestAppContext(t *testing.T) {
 						chainParamsWithOpt := maps.Clone(chainParams)
 						chainParamsWithOpt[opParams.ChainId] = opParams
 
-						return a.Update(chainsWithOpt, additionalChains, chainParamsWithOpt, ccFlags)
+						return a.Update(chainsWithOpt, additionalChains, chainParamsWithOpt, ccFlags, opFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorIs(t, err, ErrChainNotSupported)
@@ -154,7 +167,7 @@ func TestAppContext(t *testing.T) {
 					name: "trying to add zeta chain without chain params is allowed",
 					act: func(a *AppContext) error {
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
-						return a.Update(chainsWithZeta, additionalChains, chainParams, ccFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParams, ccFlags, opFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -176,7 +189,7 @@ func TestAppContext(t *testing.T) {
 
 						chainsWithZeta := append(newChains, chains.ZetaChainMainnet)
 
-						return a.Update(chainsWithZeta, additionalChains, chainParamsWithZeta, ccFlags)
+						return a.Update(chainsWithZeta, additionalChains, chainParamsWithZeta, ccFlags, opFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.NoError(t, err)
@@ -199,7 +212,7 @@ func TestAppContext(t *testing.T) {
 						updatedChainParams[maticParams.ChainId] = maticParams
 						delete(updatedChainParams, chains.ZetaChainMainnet.ChainId)
 
-						return a.Update(newChains, additionalChains, updatedChainParams, ccFlags)
+						return a.Update(newChains, additionalChains, updatedChainParams, ccFlags, opFlags)
 					},
 					assert: func(t *testing.T, a *AppContext, err error) {
 						assert.ErrorContains(t, err, "unable to locate fresh chain 137 based on chain params")

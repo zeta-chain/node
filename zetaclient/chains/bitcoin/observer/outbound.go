@@ -27,7 +27,7 @@ const (
 	minTxConfirmations = 0
 )
 
-func (ob *Observer) ObserveOutbound(ctx context.Context) error {
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, chainID, interfaces.Ascending)
 	if err != nil {

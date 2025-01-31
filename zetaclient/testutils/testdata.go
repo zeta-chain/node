@@ -11,13 +11,12 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	testcctx "github.com/zeta-chain/node/zetaclient/testdata/cctx"
-	testtypes "github.com/zeta-chain/node/zetaclient/testutils/types"
 )
 
 const (
@@ -95,16 +94,17 @@ func LoadCctxByNonce(
 }
 
 // LoadEVMBlock loads archived evm block from file
-func LoadEVMBlock(t *testing.T, dir string, chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block {
+func LoadEVMBlock(t *testing.T, dir string, chainID int64, blockNumber uint64, trimmed bool) *evmclient.Block {
 	name := path.Join(dir, TestDataPathEVM, FileNameEVMBlock(chainID, blockNumber, trimmed))
 
 	// load archived block
 	jsonMessage := LoadJSONRawMessageFromFile(t, name)
-	blockProxy := new(testtypes.ProxyBlockWithTransactions)
-	err := json.Unmarshal(jsonMessage, blockProxy)
+	var block evmclient.Block
+	err := json.Unmarshal(jsonMessage, &block)
 	require.NoError(t, err)
+	require.Equal(t, blockNumber, uint64(block.Number))
 
-	return blockProxy.ToBlock()
+	return &block
 }
 
 // LoadBTCMsgTx loads archived Bitcoin MsgTx from file
@@ -168,10 +168,10 @@ func LoadEVMInbound(
 	dir string,
 	chainID int64,
 	inboundHash string,
-	coinType coin.CoinType) *ethrpc.Transaction {
+	coinType coin.CoinType) *evmclient.Transaction {
 	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMInbound(chainID, inboundHash, coinType, false))
 
-	tx := &ethrpc.Transaction{}
+	tx := &evmclient.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
 	return tx
 }
@@ -196,7 +196,7 @@ func LoadEVMInboundNReceipt(
 	dir string,
 	chainID int64,
 	inboundHash string,
-	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
+	coinType coin.CoinType) (*evmclient.Transaction, *ethtypes.Receipt) {
 	// load archived inbound and receipt
 	tx := LoadEVMInbound(t, dir, chainID, inboundHash, coinType)
 	receipt := LoadEVMInboundReceipt(t, dir, chainID, inboundHash, coinType)
@@ -210,10 +210,10 @@ func LoadEVMInboundDonation(
 	dir string,
 	chainID int64,
 	inboundHash string,
-	coinType coin.CoinType) *ethrpc.Transaction {
+	coinType coin.CoinType) *evmclient.Transaction {
 	nameTx := path.Join(dir, TestDataPathEVM, FileNameEVMInbound(chainID, inboundHash, coinType, true))
 
-	tx := &ethrpc.Transaction{}
+	tx := &evmclient.Transaction{}
 	LoadObjectFromJSONFile(t, &tx, nameTx)
 	return tx
 }
@@ -238,7 +238,7 @@ func LoadEVMInboundNReceiptDonation(
 	dir string,
 	chainID int64,
 	inboundHash string,
-	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
+	coinType coin.CoinType) (*evmclient.Transaction, *ethtypes.Receipt) {
 	// load archived donation inbound and receipt
 	tx := LoadEVMInboundDonation(t, dir, chainID, inboundHash, coinType)
 	receipt := LoadEVMInboundReceiptDonation(t, dir, chainID, inboundHash, coinType)
@@ -252,7 +252,7 @@ func LoadEVMInboundNReceiptNCctx(
 	dir string,
 	chainID int64,
 	inboundHash string,
-	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt, *crosschaintypes.CrossChainTx) {
+	coinType coin.CoinType) (*evmclient.Transaction, *ethtypes.Receipt, *crosschaintypes.CrossChainTx) {
 	// load archived inbound, receipt and cctx
 	tx := LoadEVMInbound(t, dir, chainID, inboundHash, coinType)
 	receipt := LoadEVMInboundReceipt(t, dir, chainID, inboundHash, coinType)
@@ -369,7 +369,7 @@ func SaveObjectToJSONFile(obj interface{}, filename string) error {
 
 // SaveEVMBlockTrimTxInput trims tx input data from a block and saves it to a file
 // NOTE: this function is not used in the tests but used when creating test data
-func SaveEVMBlockTrimTxInput(block *ethrpc.Block, filename string) error {
+func SaveEVMBlockTrimTxInput(block *evmclient.Block, filename string) error {
 	for i := range block.Transactions {
 		block.Transactions[i].Input = "0x"
 	}

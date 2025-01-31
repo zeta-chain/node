@@ -40,6 +40,15 @@ contract Example {
         uint256 amount,
         bytes calldata message
     ) external {
+        onCall(context, zrc20, amount, message);
+    }
+
+    function onCall(
+        zContext calldata context,
+        address zrc20,
+        uint256 amount,
+        bytes calldata message
+    ) public {
         bar = amount;
         lastMessage = message;
     }

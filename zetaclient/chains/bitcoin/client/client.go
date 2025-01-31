@@ -149,7 +149,8 @@ func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse,
 	defer func() {
 		c.recordMetrics(method, start, out, err)
 		c.logger.Debug().Err(err).
-			Str("rpc.method", method).Dur("rpc.duration", time.Since(start)).
+			Str("rpc.method", method).
+			Float64("rpc.duration", time.Since(start).Seconds()).
 			Msg("Sent request")
 	}()
 

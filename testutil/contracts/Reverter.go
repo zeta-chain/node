@@ -26,6 +26,7 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
 // ReverterzContext is an auto generated low-level Go binding around an user-defined struct.
@@ -37,8 +38,8 @@ type ReverterzContext struct {
 
 // ReverterMetaData contains all meta data concerning the Reverter contract.
 var ReverterMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"Foo\",\"type\":\"error\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structReverter.zContext\",\"name\":\"context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x6080604052348015600f57600080fd5b5061027f8061001f6000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c8063de43156e14610030575b600080fd5b61004a600480360381019061004591906101a5565b61004c565b005b6040517fbfb4ebcf00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b600080fd5b600080fd5b600080fd5b6000606082840312156100a3576100a2610088565b5b81905092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006100d7826100ac565b9050919050565b6100e7816100cc565b81146100f257600080fd5b50565b600081359050610104816100de565b92915050565b6000819050919050565b61011d8161010a565b811461012857600080fd5b50565b60008135905061013a81610114565b92915050565b600080fd5b600080fd5b600080fd5b60008083601f84011261016557610164610140565b5b8235905067ffffffffffffffff81111561018257610181610145565b5b60208301915083600182028301111561019e5761019d61014a565b5b9250929050565b6000806000806000608086880312156101c1576101c061007e565b5b600086013567ffffffffffffffff8111156101df576101de610083565b5b6101eb8882890161008d565b95505060206101fc888289016100f5565b945050604061020d8882890161012b565b935050606086013567ffffffffffffffff81111561022e5761022d610083565b5b61023a8882890161014f565b9250925050929550929590935056fea26469706673582212209d6fef8c2cffe61b2d6b1a5bf4d6f71d1ade0e1a1e6a8c8e9f09fe1c28a520d164736f6c63430008190033",
+	ABI: "[{\"inputs\":[],\"name\":\"Foo\",\"type\":\"error\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structReverter.zContext\",\"name\":\"context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structReverter.zContext\",\"name\":\"context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x6080604052348015600f57600080fd5b506102ba8061001f6000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c80635bcfd6161461003b578063de43156e14610057575b600080fd5b610055600480360381019061005091906101e0565b610073565b005b610071600480360381019061006c91906101e0565b6100a5565b005b6040517fbfb4ebcf00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b6100b28585858585610073565b5050505050565b600080fd5b600080fd5b600080fd5b6000606082840312156100de576100dd6100c3565b5b81905092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000610112826100e7565b9050919050565b61012281610107565b811461012d57600080fd5b50565b60008135905061013f81610119565b92915050565b6000819050919050565b61015881610145565b811461016357600080fd5b50565b6000813590506101758161014f565b92915050565b600080fd5b600080fd5b600080fd5b60008083601f8401126101a05761019f61017b565b5b8235905067ffffffffffffffff8111156101bd576101bc610180565b5b6020830191508360018202830111156101d9576101d8610185565b5b9250929050565b6000806000806000608086880312156101fc576101fb6100b9565b5b600086013567ffffffffffffffff81111561021a576102196100be565b5b610226888289016100c8565b955050602061023788828901610130565b945050604061024888828901610166565b935050606086013567ffffffffffffffff811115610269576102686100be565b5b6102758882890161018a565b9250925050929550929590935056fea2646970667358221220a7ad1881a453cbf7569a6a918894fa032e56cd977fe96c70d0fb9cf9c97d6bc264736f6c634300081a0033",
 }
 
 // ReverterABI is the input ABI used to generate the binding from.
@@ -163,11 +164,11 @@ func NewReverterFilterer(address common.Address, filterer bind.ContractFilterer)
 
 // bindReverter binds a generic wrapper to an already deployed contract.
 func bindReverter(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ReverterABI))
+	parsed, err := ReverterMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -206,6 +207,27 @@ func (_Reverter *ReverterTransactorRaw) Transfer(opts *bind.TransactOpts) (*type
 // Transact invokes the (paid) contract method with params as input values.
 func (_Reverter *ReverterTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Reverter.Contract.contract.Transact(opts, method, params...)
+}
+
+// OnCall is a paid mutator transaction binding the contract method 0x5bcfd616.
+//
+// Solidity: function onCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterTransactor) OnCall(opts *bind.TransactOpts, context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.contract.Transact(opts, "onCall", context, zrc20, amount, message)
+}
+
+// OnCall is a paid mutator transaction binding the contract method 0x5bcfd616.
+//
+// Solidity: function onCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterSession) OnCall(context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.Contract.OnCall(&_Reverter.TransactOpts, context, zrc20, amount, message)
+}
+
+// OnCall is a paid mutator transaction binding the contract method 0x5bcfd616.
+//
+// Solidity: function onCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterTransactorSession) OnCall(context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.Contract.OnCall(&_Reverter.TransactOpts, context, zrc20, amount, message)
 }
 
 // OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.

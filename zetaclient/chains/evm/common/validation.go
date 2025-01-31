@@ -7,8 +7,9 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 )
 
 // ValidateEvmTxLog checks the basics of an EVM tx log
@@ -31,7 +32,7 @@ func ValidateEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHas
 // ValidateEvmTransaction checks the basics of an EVM transaction
 // Note: these checks are to ensure the transaction is well-formed
 // and can be safely used for further processing by zetaclient
-func ValidateEvmTransaction(tx *ethrpc.Transaction) error {
+func ValidateEvmTransaction(tx *client.Transaction) error {
 	if tx == nil {
 		return fmt.Errorf("transaction is nil")
 	}

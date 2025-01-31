@@ -7,9 +7,6 @@ import (
 )
 
 const (
-	// MockEVMRPCEndpoint is the endpoint to enable the mock EVM RPC client
-	MockEVMRPCEndpoint = "MockEVMRPCEnabled"
-
 	// TSSAddressEVMMainnet TSSAddressBTCMainnet TSSPubKeyMainnet actual mainnet pub key & addresses
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"

@@ -55,13 +55,17 @@ func createTestObserver(
 	database, err := db.NewFromSqliteInMemory(true)
 	require.NoError(t, err)
 
-	logger := testlog.New(t)
-	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
+	testLogger := testlog.New(t)
+	logger := base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = GatewayAddressTest
-	ob, err := observer.NewObserver(chain, solClient, *chainParams, nil, tss, database, baseLogger, nil)
+
+	baseObserver, err := base.NewObserver(chain, *chainParams, nil, tss, 1000, nil, database, logger)
+	require.NoError(t, err)
+
+	ob, err := observer.New(baseObserver, solClient, chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	return ob
