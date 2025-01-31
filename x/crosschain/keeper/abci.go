@@ -17,6 +17,11 @@ import (
 const (
 	// RemainingFeesToStabilityPoolPercent is the percentage of remaining fees used to fund the gas stability pool
 	RemainingFeesToStabilityPoolPercent = 95
+
+	// GasPriceUpdateRetryIntervalBTC is the time to wait before each retry of Bitcoin gas price increase.
+	// Bitcoin block time is 10 minutes, so the interval needs to be longer than 20 minutes (10 min * 2 blocks).
+	// 40 minutes is chosen to be a mild interval to balance the finality and the sensitivity to fee marget changes.
+	GasPriceUpdateRetryIntervalBTC = time.Minute * 40
 )
 
 // CheckAndUpdateCCTXGasPriceFunc is a function type for checking and updating the gas price of a cctx
@@ -118,13 +123,7 @@ func CheckAndUpdateCCTXGasPrice(
 		return math.ZeroUint(), math.ZeroUint(), nil
 	}
 
-	// skip if retry interval is not reached
-	lastUpdated := time.Unix(cctx.CctxStatus.LastUpdateTimestamp, 0)
-	if ctx.BlockTime().Before(lastUpdated.Add(flags.RetryInterval)) {
-		return math.ZeroUint(), math.ZeroUint(), nil
-	}
-
-	// compute gas price increase
+	// get latest median gas price and priority fee
 	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	medianGasPrice, medianPriorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
@@ -155,6 +154,12 @@ func CheckAndUpdateCCTXGasPriceEVM(
 	cctx types.CrossChainTx,
 	flags observertypes.GasPriceIncreaseFlags,
 ) (gasPriceIncrease math.Uint, additionalFees math.Uint, err error) {
+	// skip if retry interval is not reached
+	lastUpdated := time.Unix(cctx.CctxStatus.LastUpdateTimestamp, 0)
+	if ctx.BlockTime().Before(lastUpdated.Add(flags.RetryInterval)) {
+		return math.ZeroUint(), math.ZeroUint(), nil
+	}
+
 	// compute gas price increase
 	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	gasPriceIncrease = medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
@@ -205,19 +210,57 @@ func CheckAndUpdateCCTXGasPriceEVM(
 	return gasPriceIncrease, additionalFees, nil
 }
 
-// CheckAndUpdateCCTXGasPriceBTC updates the fee rate for the given Bitcoin chain CCTX
+// CheckAndUpdateCCTXGasPriceBTC updates the gas price for the given Bitcoin chain CCTX
 func CheckAndUpdateCCTXGasPriceBTC(
 	ctx sdk.Context,
 	k Keeper,
 	medianGasPrice math.Uint,
 	cctx types.CrossChainTx,
 ) (gasPriceIncrease math.Uint, additionalFees math.Uint, err error) {
-	// zetacore simply update 'GasPriorityFee', and zetaclient will use it to schedule RBF tx
-	// there is no priority fee in Bitcoin, the 'GasPriorityFee' is repurposed to store latest fee rate in sat/vB
-	cctx.GetCurrentOutboundParam().GasPriorityFee = medianGasPrice.String()
+	// skip if Bitcoin gas price retry interval is not reached
+	lastUpdated := time.Unix(cctx.CctxStatus.LastUpdateTimestamp, 0)
+	if ctx.BlockTime().Before(lastUpdated.Add(GasPriceUpdateRetryIntervalBTC)) {
+		return math.ZeroUint(), math.ZeroUint(), nil
+	}
+
+	// get current gas price
+	currentGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
+	if err != nil {
+		return math.ZeroUint(), math.ZeroUint(), err
+	}
+
+	// use latest median gas price as new gas price, the reasons are:
+	// 1. the goal is to increase the average gas price of all the stuck txs to market level
+	// 2. zetaclient can't replace stuck tx individually, it only gives more funds to the last stuck tx (child tx)
+	// 3. updating all pending CCTXs to the same 'mediaGasPrice' number simplyfies the calculation in zetaclient
+	newGasPrice := medianGasPrice
+	if math.NewUint(currentGasPrice).GTE(newGasPrice) {
+		return math.ZeroUint(), math.ZeroUint(), nil
+	}
+
+	// compute gas price increase
+	gasPriceIncrease = newGasPrice.SubUint64(currentGasPrice)
+
+	// withdraw additional fees from the gas stability pool
+	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
+	gasLimit := math.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
+	additionalFees = gasLimit.Mul(gasPriceIncrease)
+	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
+		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
+			types.ErrNotEnoughFunds,
+			fmt.Sprintf(
+				"cannot withdraw %s satoshis from gas stability pool, error: %s",
+				additionalFees.String(),
+				err.Error(),
+			),
+		)
+	}
+
+	// set new gas price and last update timestamp
+	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
 	k.SetCrossChainTx(ctx, cctx)
 
-	return math.ZeroUint(), math.ZeroUint(), nil
+	return gasPriceIncrease, additionalFees, nil
 }
 
 // IsCCTXGasPriceUpdateSupported checks if the given chain supports gas price update
