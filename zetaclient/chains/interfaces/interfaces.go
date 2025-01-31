@@ -4,6 +4,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -13,12 +14,12 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-	"github.com/onrik/ethrpc"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	ethclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
@@ -141,12 +142,14 @@ type ZetacoreClient interface {
 }
 
 // EVMRPCClient is the interface for EVM RPC client
+// TODO https://github.com/zeta-chain/node/issues/3107
+//
+//go:generate mockery --name EVMRPCClient --filename evm_rpc.go --case underscore --output ../../testutils/mocks
 type EVMRPCClient interface {
 	bind.ContractBackend
 	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
 	SuggestGasPrice(ctx context.Context) (*big.Int, error)
 	BlockNumber(ctx context.Context) (uint64, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*ethtypes.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
@@ -156,6 +159,10 @@ type EVMRPCClient interface {
 		block ethcommon.Hash,
 		index uint,
 	) (ethcommon.Address, error)
+
+	BlockByNumberCustom(ctx context.Context, number *big.Int) (*ethclient.Block, error)
+	TransactionByHashCustom(ctx context.Context, hash string) (*ethclient.Transaction, error)
+	HealthCheck(ctx context.Context) (time.Time, error)
 }
 
 // SolanaRPCClient is the interface for Solana RPC client
@@ -195,12 +202,6 @@ type SolanaRPCClient interface {
 		transaction *solana.Transaction,
 		opts solrpc.TransactionOpts,
 	) (solana.Signature, error)
-}
-
-// EVMJSONRPCClient is the interface for EVM JSON RPC client
-type EVMJSONRPCClient interface {
-	EthGetBlockByNumber(number int, withTransactions bool) (*ethrpc.Block, error)
-	EthGetTransactionByHash(hash string) (*ethrpc.Transaction, error)
 }
 
 // TSSSigner is the interface for TSS signer

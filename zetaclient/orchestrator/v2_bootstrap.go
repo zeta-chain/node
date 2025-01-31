@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	tontools "github.com/tonkeeper/tongo/ton"
 
@@ -26,7 +25,6 @@ import (
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 const btcBlocksPerDay = 144
@@ -89,24 +87,17 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 		return nil, errors.Wrap(errSkipChain, "unable to find evm config")
 	}
 
-	httpClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create http client (%s)", cfg.Endpoint)
-	}
-
 	evmClient, err := evmclient.NewFromEndpoint(ctx, cfg.Endpoint)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to create evm client (%s)", cfg.Endpoint)
 	}
-
-	evmJSONRPCClient := ethrpc.NewEthRPC(cfg.Endpoint, ethrpc.WithHttpClient(httpClient))
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := evmobserver.New(baseObserver, evmClient, evmJSONRPCClient)
+	observer, err := evmobserver.New(baseObserver, evmClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
