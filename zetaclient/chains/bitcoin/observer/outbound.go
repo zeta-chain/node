@@ -220,7 +220,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *Observer) refreshPendingNonce(ctx context.Context) {
-	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refreshPendingNonce").Logger()
+	logger := ob.logger.Outbound.With().Str(logs.FieldMethod, "refresh_pending_nonce").Logger()
 
 	// get pending nonces from zetacore
 	p, err := ob.ZetacoreClient().GetPendingNoncesByChain(ctx, ob.Chain().ChainId)
