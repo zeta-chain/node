@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/onrik/ethrpc"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -29,6 +28,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
 // the relative path to the testdata directory
@@ -80,15 +80,19 @@ func getAppContext(
 }
 
 func Test_NewObserver(t *testing.T) {
+	ctx := context.Background()
+
 	// use Ethereum chain for testing
 	chain := chains.Ethereum
 	params := mocks.MockChainParams(chain.ChainId, 10)
 
 	// create evm client with mocked block number 1000
-	evmMock := mocks.NewEVMRPCClient(t)
-	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+	evmServer := testrpc.NewEVMServer(t)
+	evmServer.SetChainID(int(chain.ChainId))
+	evmServer.SetBlockNumber(1000)
 
-	evmClient := client.New(evmMock, nil)
+	evmClient, err := client.NewFromEndpoint(ctx, evmServer.Endpoint)
+	require.NoError(t, err)
 
 	// test cases
 	tests := []struct {
@@ -96,7 +100,6 @@ func Test_NewObserver(t *testing.T) {
 		evmCfg      config.EVMConfig
 		chainParams observertypes.ChainParams
 		evmClient   *client.Client
-		evmJSONRPC  interfaces.EVMJSONRPCClient
 		tss         interfaces.TSSSigner
 		logger      base.Logger
 		before      func()
@@ -112,7 +115,6 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   evmClient,
-			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSS(t),
 			logger:      base.Logger{},
 			ts:          nil,
@@ -126,16 +128,20 @@ func Test_NewObserver(t *testing.T) {
 			chainParams: params,
 			evmClient: func() *client.Client {
 				// create mock evm client with RPC error
-				evmMock2 := mocks.NewEVMRPCClient(t)
-				evmMock2.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
-				return client.New(evmMock2, nil)
+				evmServer := testrpc.NewEVMServer(t)
+				evmServer.SetChainID(int(chain.ChainId))
+				evmServer.SetBlockNumberFailure(fmt.Errorf("error RPC"))
+
+				c, err := client.NewFromEndpoint(ctx, evmServer.Endpoint)
+				require.NoError(t, err)
+
+				return c
 			}(),
-			evmJSONRPC: mocks.NewMockJSONRPCClient(),
-			tss:        mocks.NewTSS(t),
-			logger:     base.Logger{},
-			ts:         nil,
-			fail:       true,
-			message:    "error RPC",
+			tss:     mocks.NewTSS(t),
+			logger:  base.Logger{},
+			ts:      nil,
+			fail:    true,
+			message: "json-rpc error",
 		},
 		{
 			name: "should fail on invalid ENV var",
@@ -144,7 +150,6 @@ func Test_NewObserver(t *testing.T) {
 			},
 			chainParams: params,
 			evmClient:   evmClient,
-			evmJSONRPC:  mocks.NewMockJSONRPCClient(),
 			tss:         mocks.NewTSS(t),
 			before: func() {
 				envVar := base.EnvVarLatestBlockByChain(chain)
@@ -189,7 +194,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.logger,
 			)
 			require.NoError(t, err)
-			ob, err := observer.New(baseObserver, tt.evmClient, tt.evmJSONRPC)
+			ob, err := observer.New(baseObserver, tt.evmClient)
 
 			// check result
 			if tt.fail {
@@ -208,7 +213,6 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 
 	// create observer using mock evm client
 	ob := newTestSuite(t)
-	ob.evmMock.On("BlockNumber", mock.Anything).Return(uint64(100), nil)
 
 	t.Run("should load last block scanned", func(t *testing.T) {
 		// create db and write 123 as last block scanned
@@ -252,16 +256,16 @@ func Test_BlockCache(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// feed block to JSON rpc client
-		block := &ethrpc.Block{Number: 100}
-		ts.rpcClient.WithBlock(block)
+		block := &client.Block{Number: 100}
+		ts.evmMock.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 
 		// get block header from observer, fallback to JSON RPC
-		result, err := ts.Observer.GetBlockByNumberCached(uint64(100))
+		result, err := ts.Observer.GetBlockByNumberCached(ts.ctx, uint64(100))
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 
 		// get block header from cache
-		result, err = ts.Observer.GetBlockByNumberCached(uint64(100))
+		result, err = ts.Observer.GetBlockByNumberCached(ts.ctx, uint64(100))
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 	})
@@ -274,8 +278,8 @@ func Test_BlockCache(t *testing.T) {
 		ts.BlockCache().Add(blockNumber, "a string value")
 
 		// get result header from cache
-		result, err := ts.Observer.GetBlockByNumberCached(blockNumber)
-		require.ErrorContains(t, err, "cached value is not of type *ethrpc.Block")
+		result, err := ts.Observer.GetBlockByNumberCached(ts.ctx, blockNumber)
+		require.ErrorContains(t, err, "cached value is not of type *client.Block")
 		require.Nil(t, result)
 	})
 	t.Run("should be able to remove block from cache", func(t *testing.T) {
@@ -287,11 +291,11 @@ func Test_BlockCache(t *testing.T) {
 		ts.RemoveCachedBlock(blockNumber)
 
 		// add a block
-		block := &ethrpc.Block{Number: 123}
+		block := &client.Block{Number: 123}
 		ts.BlockCache().Add(blockNumber, block)
 
 		// block should be in cache
-		result, err := ts.GetBlockByNumberCached(blockNumber)
+		result, err := ts.GetBlockByNumberCached(ts.ctx, blockNumber)
 		require.NoError(t, err)
 		require.EqualValues(t, block, result)
 
@@ -320,7 +324,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	ts.BlockCache().Add(blockNumber, block)
 
 	t.Run("should pass for archived outbound", func(t *testing.T) {
-		err := ts.CheckTxInclusion(tx, receipt)
+		err := ts.CheckTxInclusion(ts.ctx, tx, receipt)
 		require.NoError(t, err)
 	})
 	t.Run("should fail on tx index out of range", func(t *testing.T) {
@@ -328,7 +332,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 		copyReceipt := *receipt
 		// #nosec G115 non negative value
 		copyReceipt.TransactionIndex = uint(len(block.Transactions))
-		err := ts.CheckTxInclusion(tx, &copyReceipt)
+		err := ts.CheckTxInclusion(ts.ctx, tx, &copyReceipt)
 		require.ErrorContains(t, err, "out of range")
 	})
 	t.Run("should fail on tx hash mismatch", func(t *testing.T) {
@@ -338,7 +342,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 		ts.BlockCache().Add(blockNumber, block)
 
 		// check inclusion should fail
-		err := ts.CheckTxInclusion(tx, receipt)
+		err := ts.CheckTxInclusion(ts.ctx, tx, receipt)
 		require.ErrorContains(t, err, "has different hash")
 
 		// wrong block should be removed from cache
@@ -384,9 +388,7 @@ type testSuite struct {
 	chainParams *observertypes.ChainParams
 	tss         *mocks.TSS
 	zetacore    *mocks.ZetacoreClient
-	rpcClient   *mocks.MockJSONRPCClient
 	evmMock     *mocks.EVMRPCClient
-	evmClient   *client.Client
 }
 
 type testSuiteConfig struct {
@@ -410,11 +412,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	evmMock := mocks.NewEVMRPCClient(t)
-	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
-
-	evmClient := client.New(evmMock, nil)
-
-	rpcClient := mocks.NewMockJSONRPCClient()
+	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil).Maybe()
 
 	zetacore := mocks.NewZetacoreClient(t).
 		WithKeys(&keys.Keys{}).
@@ -433,7 +431,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
 	require.NoError(t, err)
 
-	ob, err := observer.New(baseObserver, evmClient, rpcClient)
+	ob, err := observer.New(baseObserver, evmMock)
 	require.NoError(t, err)
 	ob.WithLastBlock(1)
 
@@ -444,8 +442,6 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 		chainParams: &chainParams,
 		tss:         tss,
 		zetacore:    zetacore,
-		rpcClient:   rpcClient,
 		evmMock:     evmMock,
-		evmClient:   evmClient,
 	}
 }

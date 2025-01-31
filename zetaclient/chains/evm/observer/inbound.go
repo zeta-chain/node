@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
@@ -24,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -42,7 +42,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 	for _, tracker := range trackers {
 		// query tx and receipt
-		tx, _, err := ob.TransactionByHash(tracker.TxHash)
+		tx, _, err := ob.TransactionByHash(ctx, tracker.TxHash)
 		if err != nil {
 			return errors.Wrapf(
 				err,
@@ -342,7 +342,7 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 		if event.Raw.BlockNumber > beingScanned {
 			beingScanned = event.Raw.BlockNumber
 		}
-		tx, _, err := ob.TransactionByHash(event.Raw.TxHash.Hex())
+		tx, _, err := ob.TransactionByHash(ctx, event.Raw.TxHash.Hex())
 		if err != nil {
 			ob.Logger().Inbound.Error().Err(err).Msgf(
 				"ObserveERC20Deposited: error getting transaction for inbound %s chain %d", event.Raw.TxHash, ob.Chain().ChainId)
@@ -398,7 +398,7 @@ func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock 
 // CheckAndVoteInboundTokenZeta checks and votes on the given inbound Zeta token
 func (ob *Observer) CheckAndVoteInboundTokenZeta(
 	ctx context.Context,
-	tx *ethrpc.Transaction,
+	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
 ) (string, error) {
@@ -453,7 +453,7 @@ func (ob *Observer) CheckAndVoteInboundTokenZeta(
 // CheckAndVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
 func (ob *Observer) CheckAndVoteInboundTokenERC20(
 	ctx context.Context,
-	tx *ethrpc.Transaction,
+	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
 ) (string, error) {
@@ -504,7 +504,7 @@ func (ob *Observer) CheckAndVoteInboundTokenERC20(
 // CheckAndVoteInboundTokenGas checks and votes on the given inbound gas token
 func (ob *Observer) CheckAndVoteInboundTokenGas(
 	ctx context.Context,
-	tx *ethrpc.Transaction,
+	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 	vote bool,
 ) (string, error) {
@@ -657,7 +657,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 
 // BuildInboundVoteMsgForTokenSentToTSS builds a inbound vote message for a token sent to TSS
 func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
-	tx *ethrpc.Transaction,
+	tx *client.Transaction,
 	sender ethcommon.Address,
 	blockNumber uint64,
 ) *types.MsgVoteInbound {
@@ -692,7 +692,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 		sender.Hex(),
 		sender.Hex(),
 		ob.ZetacoreClient().Chain().ChainId,
-		sdkmath.NewUintFromBigInt(&tx.Value),
+		sdkmath.NewUintFromBigInt(tx.Value),
 		message,
 		tx.Hash,
 		blockNumber,
@@ -707,7 +707,7 @@ func (ob *Observer) BuildInboundVoteMsgForTokenSentToTSS(
 
 // ObserveTSSReceiveInBlock queries the incoming gas asset to TSS address in a single block and posts votes
 func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber uint64) error {
-	block, err := ob.GetBlockByNumberCached(blockNumber)
+	block, err := ob.GetBlockByNumberCached(ctx, blockNumber)
 	if err != nil {
 		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
 	}
