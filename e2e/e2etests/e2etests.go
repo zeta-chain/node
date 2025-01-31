@@ -145,6 +145,7 @@ const (
 	TestDeploy                         = "deploy"
 	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
 	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
+	TestOperationAddLiquiditySPLName   = "add_liquidity_spl"
 
 	/*
 	 Stateful precompiled contracts tests
@@ -947,6 +948,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amountERC20", DefaultValue: "50000000000000000000"},
 		},
 		TestOperationAddLiquidityERC20,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquiditySPLName,
+		"add liquidity to the ZETA/SPL pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountSPL", DefaultValue: "50000000000000000000"},
+		},
+		TestOperationAddLiquiditySPL,
 	),
 	/*
 	 Stateful precompiled contracts tests

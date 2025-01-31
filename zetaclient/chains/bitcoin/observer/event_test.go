@@ -55,12 +55,12 @@ func Test_Category(t *testing.T) {
 		expected clienttypes.InboundCategory
 	}{
 		{
-			name: "should return InboundCategoryGood for a processable inbound event",
+			name: "should return InboundCategoryProcessable for a processable inbound event",
 			event: &observer.BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: clienttypes.InboundCategoryGood,
+			expected: clienttypes.InboundCategoryProcessable,
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted sender address",
@@ -357,7 +357,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 	ob := newTestSuite(t, chain, "")
 	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
 
-	t.Run("should create new inbound vote msg V1", func(t *testing.T) {
+	t.Run("should create new inbound vote msg V2", func(t *testing.T) {
 		// create test event
 		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
 
@@ -379,8 +379,9 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 				GasLimit: 0,
 			},
 			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1,
-			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // ignored by V1
+			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
+			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // always empty with legacy memo
+			IsCrossChainCall:        true,
 		}
 
 		// create new inbound vote V1
@@ -416,12 +417,12 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 		amountSats := big.NewInt(1000)
 
 		// expected vote
-		memoBytesExpected := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
+		memoBytesExpected := event.MemoStd.Payload
 		expectedVote := crosschaintypes.MsgVoteInbound{
 			Sender:             event.FromAddress,
 			SenderChainId:      chain.ChainId,
 			TxOrigin:           event.FromAddress,
-			Receiver:           event.ToAddress,
+			Receiver:           event.MemoStd.Receiver.Hex(),
 			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
 			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
 			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
@@ -431,13 +432,13 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 				GasLimit: 0,
 			},
 			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1,
+			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
 			RevertOptions: crosschaintypes.RevertOptions{
 				RevertAddress: revertOptions.RevertAddress, // should be overridden by revert address
 			},
 		}
 
-		// create new inbound vote V1 with standard memo
+		// create new inbound vote V2 with standard memo
 		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
 		require.Equal(t, expectedVote, *vote)
 	})

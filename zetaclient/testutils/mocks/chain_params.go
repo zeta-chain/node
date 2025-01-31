@@ -24,6 +24,11 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		erc20CustodyAddr = a.Hex()
 	}
 
+	gwAddress := ""
+	if gw, ok := testutils.GatewayAddresses[chainID]; ok {
+		gwAddress = gw
+	}
+
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           confirmation,
@@ -38,6 +43,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		OutboundScheduleLookahead:   60,
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
+		GatewayAddress:              gwAddress,
 		IsSupported:                 true,
 	}
 }

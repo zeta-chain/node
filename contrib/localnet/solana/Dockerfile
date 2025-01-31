@@ -1,4 +1,4 @@
-FROM ghcr.io/zeta-chain/solana-docker:1.18.15
+FROM ghcr.io/zeta-chain/solana-docker:2.0.24
 
 WORKDIR /data
 COPY ./start-solana.sh /usr/bin/start-solana.sh

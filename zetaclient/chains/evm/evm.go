@@ -12,18 +12,17 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 type EVM struct {
 	scheduler *scheduler.Scheduler
 	observer  *observer.Observer
 	signer    *signer.Signer
-	proc      *outboundprocessor.Processor
 }
 
 const (
@@ -34,20 +33,11 @@ const (
 	outboundLookBackFactor = 1.0
 )
 
-func New(
-	scheduler *scheduler.Scheduler,
-	observer *observer.Observer,
-	signer *signer.Signer,
-) *EVM {
-	// TODO move this to base signer
-	// https://github.com/zeta-chain/node/issues/3330
-	proc := outboundprocessor.NewProcessor(observer.Logger().Outbound)
-
+func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *EVM {
 	return &EVM{
 		scheduler: scheduler,
 		observer:  observer,
 		signer:    signer,
-		proc:      proc,
 	}
 }
 
@@ -105,10 +95,10 @@ func (e *EVM) Start(ctx context.Context) error {
 
 	// Observers
 	register(e.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(e.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(e.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(e.observer.CheckRPCStatus, "check_rpc_status")
-	register(e.observer.ObserverOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(e.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
@@ -133,10 +123,12 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	var (
 		chainID = e.observer.Chain().ChainId
@@ -173,7 +165,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		var (
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		switch {
@@ -198,7 +190,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		case !continueKeysign:
 			e.outboundLogger(outboundID).Info().Msg("Schedule CCTX: outbound already processed")
 			continue
-		case e.proc.IsOutboundActive(outboundID):
+		case e.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
 			continue
 		}
@@ -225,13 +217,9 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 
 		// otherwise, the normal interval is used
 		if nonce%scheduleInterval == zetaHeight%scheduleInterval {
-			e.proc.StartTryProcess(outboundID)
-
 			go e.signer.TryProcessOutbound(
 				ctx,
 				cctx,
-				e.proc,
-				outboundID,
 				e.observer.ZetacoreClient(),
 				zetaHeight,
 			)
