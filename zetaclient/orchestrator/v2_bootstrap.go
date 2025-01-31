@@ -169,7 +169,8 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	// try loading Solana relayer key if present
+	// Try loading Solana relayer key if present
+	// Note that relayerKey might be nil if the key is not present. It's okay.
 	password := chain.RelayerKeyPassword()
 	relayerKey, err := keys.LoadRelayerKey(app.Config().GetRelayerKeyPath(), chain.RawChain().Network, password)
 	if err != nil {
