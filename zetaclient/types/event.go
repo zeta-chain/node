@@ -21,8 +21,8 @@ const (
 	// InboundCategoryUnknown represents an unknown inbound
 	InboundCategoryUnknown InboundCategory = iota
 
-	// InboundCategoryGood represents a processable inbound
-	InboundCategoryGood
+	// InboundCategoryProcessable represents a processable inbound
+	InboundCategoryProcessable
 
 	// InboundCategoryDonation represents a donation inbound
 	InboundCategoryDonation
@@ -113,5 +113,5 @@ func (event *InboundEvent) Category() InboundCategory {
 		return InboundCategoryDonation
 	}
 
-	return InboundCategoryGood
+	return InboundCategoryProcessable
 }

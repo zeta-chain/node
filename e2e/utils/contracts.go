@@ -24,11 +24,8 @@ func MustHaveCalledExampleContract(
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		bar.Cmp(amount),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		amount.String(),
+		amount.Uint64(),
+		bar.Uint64(),
 	)
 }
 
@@ -43,11 +40,8 @@ func MustHaveCalledExampleContractWithMsg(
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		bar.Cmp(amount),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		amount.String(),
+		amount.Uint64(),
+		bar.Uint64(),
 	)
 
 	lastMsg, err := contract.LastMessage(&bind.CallOpts{})
