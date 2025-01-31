@@ -56,7 +56,7 @@ func TestLiveClient(t *testing.T) {
 			assert      func(t *testing.T, v1 *geth.Block, errV1 error, v2 *Block, errV2 error)
 		}{
 			{
-				name:     "Both work for ETH",
+				name:     "both work for ETH",
 				endpoint: URLEthMainnet,
 				block:    21718032,
 				assert: func(t *testing.T, v1 *geth.Block, errV1 error, v2 *Block, errV2 error) {
@@ -69,7 +69,7 @@ func TestLiveClient(t *testing.T) {
 				},
 			},
 			{
-				name:        "Only V2 works for BASE",
+				name:        "only v2 works for BASE",
 				endpoint:    URLBaseMainnet,
 				block:       25609323,
 				checkHeader: true,
@@ -133,7 +133,7 @@ func TestLiveClient(t *testing.T) {
 			assert   func(t *testing.T, v1 *geth.Transaction, errV1 error, v2 *Transaction, errV2 error)
 		}{
 			{
-				name:     "Both work for BASE",
+				name:     "both work for BASE",
 				endpoint: URLBaseMainnet,
 				txHash:   "0xc2df77353c26eb282eb988a00f643e96d819fac20bb8bc1cfa3f4d6928be9fca",
 				assert: func(t *testing.T, v1 *geth.Transaction, errV1 error, v2 *Transaction, errV2 error) {

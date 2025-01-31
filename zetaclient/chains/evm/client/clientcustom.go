@@ -73,7 +73,7 @@ func (c *Client) BlockByNumberCustom(ctx context.Context, blockNumber *big.Int) 
 }
 
 // TransactionByHashCustom is alternative to geth TransactionByHash that supports NON-ETH chains.
-// See BlockByNumber2.
+// See BlockByNumberCustom.
 func (c *Client) TransactionByHashCustom(ctx context.Context, hash string) (*Transaction, error) {
 	raw, err := c.call(ctx, "eth_getTransactionByHash", hash)
 	if err != nil {
