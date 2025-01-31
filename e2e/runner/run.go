@@ -30,7 +30,7 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	startTime := time.Now()
 	// note: spacing is padded to width of completed message
-	r.Logger.Print("⏳ running   - %s", e2eTest.Description)
+	r.Logger.Print("⏳ running   - %s", e2eTest.Name)
 
 	// run e2e test, if args are not provided, use default args
 	args := e2eTest.Args
