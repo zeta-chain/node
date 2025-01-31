@@ -12,7 +12,7 @@
 
 ### Features
 
-* [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore feed latest gas price to pending Bitcoin cctxs
+* [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase gas price in pending Bitcoin cctxs and burns additional gas fees
 
 ### Refactor
 
