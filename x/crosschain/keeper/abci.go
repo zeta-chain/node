@@ -19,7 +19,7 @@ const (
 	RemainingFeesToStabilityPoolPercent = 95
 
 	// GasPriceUpdateRetryIntervalBTC is the time to wait before each retry of Bitcoin gas price increase.
-	// Bitcoin block time is 10 minutes, so the interval needs to be longer than 20 minutes (10 min * 2 blocks).
+	// Bitcoin block time is 10 minutes, so the interval needs to be longer than confirmation time (10 min * 2 blocks).
 	// 40 minutes is chosen to be a mild interval to balance the finality and the sensitivity to fee marget changes.
 	GasPriceUpdateRetryIntervalBTC = time.Minute * 40
 )
@@ -161,7 +161,6 @@ func CheckAndUpdateCCTXGasPriceEVM(
 	}
 
 	// compute gas price increase
-	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	gasPriceIncrease = medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
 
 	// compute new gas price
@@ -193,6 +192,7 @@ func CheckAndUpdateCCTXGasPriceEVM(
 	}
 
 	// withdraw additional fees from the gas stability pool
+	chainID := cctx.GetCurrentOutboundParam().ReceiverChainId
 	gasLimit := math.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 	additionalFees = gasLimit.Mul(gasPriceIncrease)
 	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
