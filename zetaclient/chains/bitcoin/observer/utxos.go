@@ -92,7 +92,6 @@ func (ob *Observer) SelectUTXOs(
 	utxosToSpend uint16,
 	nonce uint64,
 	consolidateRank uint16,
-	test bool,
 ) (SelectedUTXOs, error) {
 	idx := -1
 	if nonce == 0 {
@@ -101,7 +100,7 @@ func (ob *Observer) SelectUTXOs(
 		defer ob.Mu().Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
-		preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1, test)
+		preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1)
 		if err != nil {
 			return SelectedUTXOs{}, err
 		}

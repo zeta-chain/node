@@ -2,6 +2,7 @@ package observer_test
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"os"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -266,31 +268,30 @@ type testSuite struct {
 	client   *mocks.BitcoinClient
 	zetacore *mocks.ZetacoreClient
 	db       *db.DB
-	dbPath   string
 }
 
-type Opt func(t *testSuite)
-
-// optDBPath is an option to set custom db path
-func optDBPath(dbPath string) Opt {
-	return func(t *testSuite) {
-		t.dbPath = dbPath
-	}
+type testSuiteOpts struct {
+	dbPath string
 }
 
-func newTestSuite(t *testing.T, chain chains.Chain, opts ...Opt) *testSuite {
+type opt func(t *testSuiteOpts)
+
+// withDatabasePath is an option to set custom db path
+func withDatabasePath(dbPath string) opt {
+	return func(t *testSuiteOpts) { t.dbPath = dbPath }
+}
+
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	// create test suite with options
-	s := &testSuite{ctx: context.Background()}
+	var testOpts testSuiteOpts
 	for _, opt := range opts {
-		opt(s)
+		opt(&testOpts)
 	}
 
 	require.True(t, chain.IsBitcoinChain())
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
 	client := mocks.NewBitcoinClient(t)
-	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
-
 	zetacore := mocks.NewZetacoreClient(t)
 
 	var tss interfaces.TSSSigner
@@ -300,20 +301,22 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...Opt) *testSuite {
 		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
 	}
 
-	// create test database
-	var err error
-	var database *db.DB
-	if s.dbPath == "" {
-		database, err = db.NewFromSqliteInMemory(true)
-	} else {
-		database, err = db.NewFromSqlite(s.dbPath, "test.db", true)
-		t.Cleanup(func() { os.RemoveAll(s.dbPath) })
-	}
-	require.NoError(t, err)
-
 	// create logger
 	logger := testlog.New(t)
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
+
+	var database *db.DB
+	var err error
+	if testOpts.dbPath == "" {
+		database, err = db.NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+	} else {
+		database, err = db.NewFromSqlite(testOpts.dbPath, "test.db", true)
+		require.NoError(t, err)
+		t.Cleanup(func() { os.RemoveAll(testOpts.dbPath) })
+	}
+
+	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -330,11 +333,23 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...Opt) *testSuite {
 	ob, err := observer.New(chain, baseObserver, client)
 	require.NoError(t, err)
 
-	// set test suite fields
-	s.Observer = ob
-	s.client = client
-	s.zetacore = zetacore
-	s.db = database
+	ts := &testSuite{
+		ctx:      context.Background(),
+		client:   client,
+		zetacore: zetacore,
+		db:       database,
+		Observer: ob,
+	}
 
-	return s
+	ts.zetacore.
+		On("GetCctxByNonce", mock.Anything, mock.Anything, mock.Anything).
+		Return(ts.mockGetCCTXByNonce).
+		Maybe()
+
+	return ts
+}
+
+func (ts *testSuite) mockGetCCTXByNonce(_ context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	// implement custom logic here if needed (e.g. mock)
+	return nil, errors.New("not implemented")
 }

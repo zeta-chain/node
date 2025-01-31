@@ -58,7 +58,6 @@ func (signer *Signer) SignWithdrawTx(
 		MaxNoOfInputsPerTx,
 		txData.nonce,
 		consolidationRank,
-		false,
 	)
 	if err != nil {
 		return nil, err

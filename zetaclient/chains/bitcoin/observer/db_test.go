@@ -37,7 +37,7 @@ func Test_SaveBroadcastedTx(t *testing.T) {
 			nonce := uint64(1)
 			txHash := sample.BtcHash().String()
 			dbPath := sample.CreateTempDir(t)
-			ob := newTestSuite(t, chains.BitcoinMainnet, optDBPath(dbPath))
+			ob := newTestSuite(t, chains.BitcoinMainnet, withDatabasePath(dbPath))
 			if tt.wantErr != "" {
 				// delete db to simulate db error
 				os.RemoveAll(dbPath)
@@ -126,11 +126,11 @@ func Test_LoadBroadcastedTxMap(t *testing.T) {
 
 		// create observer and save a test tx
 		dbPath := sample.CreateTempDir(t)
-		obOld := newTestSuite(t, chains.BitcoinMainnet, optDBPath(dbPath))
+		obOld := newTestSuite(t, chains.BitcoinMainnet, withDatabasePath(dbPath))
 		obOld.SaveBroadcastedTx(txHash, nonce)
 
 		// create new observer using same db path
-		obNew := newTestSuite(t, chains.BitcoinMainnet, optDBPath(dbPath))
+		obNew := newTestSuite(t, chains.BitcoinMainnet, withDatabasePath(dbPath))
 
 		// check if the txHash is a TSS outbound
 		require.True(t, obNew.IsTSSTransaction(txHash))

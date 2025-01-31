@@ -31,7 +31,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 0.01, nonce = 0
 		// 		output: [0.01], 0.01
 		ob, utxos := newTestSuitWithUTXOs(t)
-		selected, err := ob.SelectUTXOs(ctx, 0.01, 5, 0, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.01, 5, 0, math.MaxUint16)
 		require.NoError(t, err)
 		require.Equal(t, 0.01, selected.Value)
 		require.Equal(t, utxos[0:1], selected.UTXOs)
@@ -41,18 +41,18 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 		// 		output: error
 		ob, _ := newTestSuitWithUTXOs(t)
-		selected, err := ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16)
 		require.Error(t, err)
 		require.Nil(t, selected.UTXOs)
 		require.Zero(t, selected.Value)
-		require.ErrorContains(t, err, "cannot find outbound txid for nonce 0")
+		require.ErrorContains(t, err, "error getting cctx for nonce 0")
 	})
 
 	t.Run("nonce = 1, should pass when nonce mark 0 is set", func(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 		// 		output: [0.00002, 0.01, 0.12, 0.18, 0.24], 0.55002
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 0, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16)
 		require.NoError(t, err)
 		require.Equal(t, 0.55002, selected.Value)
 		require.Equal(t, utxos[0:5], selected.UTXOs)
@@ -62,7 +62,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 1.0, nonce = 2
 		// 		output: [0.00002001, 0.01, 0.12, 0.18, 0.24, 0.5], 1.05002001
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 1, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 1.0, 5, 2, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 1.0, 5, 2, math.MaxUint16)
 		require.NoError(t, err)
 		require.InEpsilon(t, 1.05002001, selected.Value, 1e-8)
 		require.Equal(t, utxos[0:6], selected.UTXOs)
@@ -72,7 +72,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 8.05, nonce = 3
 		// 		output: [0.00002002, 0.24, 0.5, 1.26, 2.97, 3.28], 8.25002002
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 2, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 8.05, 5, 3, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 8.05, 5, 3, math.MaxUint16)
 		require.NoError(t, err)
 		require.InEpsilon(t, 8.25002002, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[0]}, utxos[4:9]...)
@@ -83,7 +83,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 0.503, nonce = 24105432
 		// 		output: [0.24107432, 0.01, 0.12, 0.18, 0.24], 0.7910731
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 24105431, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 0.503, 5, 24105432, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.503, 5, 24105432, math.MaxUint16)
 		require.NoError(t, err)
 		require.InEpsilon(t, 0.79107431, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[4]}, utxos[0:4]...)
@@ -94,7 +94,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 1.0, nonce = 24105433
 		// 		output: [0.24107432, 0.12, 0.18, 0.24, 0.5], 1.28107432
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 24105432, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 1.0, 5, 24105433, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 1.0, 5, 24105433, math.MaxUint16)
 		require.NoError(t, err)
 		require.InEpsilon(t, 1.28107432, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[4]}, utxos[1:4]...)
@@ -106,7 +106,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 16.03
 		// 		output: [0.24107432, 1.26, 2.97, 3.28, 5.16, 8.72], 21.63107432
 		ob, utxos := createTestSuitWithUTXOsAndNonceMark(t, 24105432, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 16.03, 5, 24105433, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 16.03, 5, 24105433, math.MaxUint16)
 		require.NoError(t, err)
 		require.InEpsilon(t, 21.63107432, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[4]}, utxos[6:11]...)
@@ -117,7 +117,7 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 21.64
 		// 		output: error
 		ob, _ := createTestSuitWithUTXOsAndNonceMark(t, 24105432, dummyTxID)
-		selected, err := ob.SelectUTXOs(ctx, 21.64, 5, 24105433, math.MaxUint16, true)
+		selected, err := ob.SelectUTXOs(ctx, 21.64, 5, 24105433, math.MaxUint16)
 		require.Error(t, err)
 		require.Nil(t, selected.UTXOs)
 		require.Zero(t, selected.Value)
@@ -135,7 +135,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 10, amount = 0.01, nonce = 1, rank = 10
 		// output: [0.00002, 0.01], 0.01002
-		res, err := ob.SelectUTXOs(ctx, 0.01, 10, 1, 10, true)
+		res, err := ob.SelectUTXOs(ctx, 0.01, 10, 1, 10)
 		require.NoError(t, err)
 		require.Equal(t, 0.01002, res.Value)
 		require.Equal(t, utxos[0:2], res.UTXOs)
@@ -149,7 +149,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 9, amount = 0.01, nonce = 1, rank = 9
 		// output: [0.00002, 0.01, 0.12], 0.13002
-		selected, err := ob.SelectUTXOs(ctx, 0.01, 9, 1, 9, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.01, 9, 1, 9)
 		require.NoError(t, err)
 		require.Equal(t, 0.13002, selected.Value)
 		require.Equal(t, utxos[0:3], selected.UTXOs)
@@ -163,7 +163,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 5, amount = 0.01, nonce = 0, rank = 5
 		// output: [0.00002, 0.014, 1.26, 0.5, 0.2], 2.01002
-		selected, err := ob.SelectUTXOs(ctx, 0.01, 5, 1, 5, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.01, 5, 1, 5)
 		require.NoError(t, err)
 		require.Equal(t, 2.01002, selected.Value)
 		expected := make([]btcjson.ListUnspentResult, 2)
@@ -182,7 +182,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 12, amount = 0.01, nonce = 0, rank = 1
 		// output: [0.00002, 0.01, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18, 0.12], 22.44002
-		selected, err := ob.SelectUTXOs(ctx, 0.01, 12, 1, 1, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.01, 12, 1, 1)
 		require.NoError(t, err)
 		require.Equal(t, 22.44002, selected.Value)
 		expected := make([]btcjson.ListUnspentResult, 2)
@@ -201,7 +201,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
 		// output: [0.24107431, 0.01, 0.12, 1.26, 0.5, 0.24], 2.37107431
-		selected, err := ob.SelectUTXOs(ctx, 0.13, 5, 24105432, 5, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.13, 5, 24105432, 5)
 		require.NoError(t, err)
 		require.InEpsilon(t, 2.37107431, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[4]}, utxos[0:2]...)
@@ -219,7 +219,7 @@ func Test_SelectUTXOs_Consolidation(t *testing.T) {
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1
 		// output: [0.24107431, 0.01, 0.12, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18], 22.68107431
-		selected, err := ob.SelectUTXOs(ctx, 0.13, 12, 24105432, 1, true)
+		selected, err := ob.SelectUTXOs(ctx, 0.13, 12, 24105432, 1)
 		require.NoError(t, err)
 		require.InEpsilon(t, 22.68107431, selected.Value, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{utxos[4]}, utxos[0:2]...)
