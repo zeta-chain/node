@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -327,7 +328,8 @@ func makeCtx(t *testing.T) context.Context {
 		map[int64]*observertypes.ChainParams{
 			chain.ChainId: &btcParams,
 		},
-		observertypes.CrosschainFlags{},
+		*sample.CrosschainFlags(),
+		sample.OperationalFlags(),
 	)
 	require.NoError(t, err, "unable to update app context")
 

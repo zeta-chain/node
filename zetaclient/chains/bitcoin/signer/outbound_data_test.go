@@ -64,33 +64,6 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg: "",
 		},
 		{
-			name: "create new outbound data using current gas rate instead of old rate",
-			cctx: sample.CrossChainTx(t, "0x123"),
-			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
-				cctx.InboundParams.CoinType = coin.CoinType_Gas
-				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
-				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
-				cctx.GetCurrentOutboundParam().GasPriorityFee = "15"         // 15 sats/vByte
-				cctx.GetCurrentOutboundParam().TssNonce = 1
-			},
-			height:      101,
-			minRelayFee: 0.00001, // 1000 sat/KB
-			expected: &OutboundData{
-				to:         receiver,
-				amount:     0.1,
-				amountSats: 10000000,
-				feeRate:    16, // 15 + 1 (minRelayFee)
-				txSize:     254,
-				nonce:      1,
-				height:     101,
-				cancelTx:   false,
-			},
-			errMsg: "",
-		},
-		{
 			name:         "cctx is nil",
 			cctx:         nil,
 			cctxModifier: nil,

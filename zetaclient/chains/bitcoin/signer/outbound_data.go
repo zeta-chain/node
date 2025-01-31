@@ -62,17 +62,10 @@ func NewOutboundData(
 		return nil, fmt.Errorf("invalid coin type %s", cctx.InboundParams.CoinType.String())
 	}
 
-	// initial fee rate
+	// parse fee rate
 	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
 	if err != nil || feeRate <= 0 {
 		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
-	}
-
-	// use current gas rate if fed by zetacore
-	newRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-	if err == nil && newRate > 0 && newRate != feeRate {
-		logger.Info().Msgf("use new fee rate %d sat/vB instead of %d sat/vB", newRate, feeRate)
-		feeRate = newRate
 	}
 
 	// check receiver address
