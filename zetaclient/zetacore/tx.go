@@ -90,7 +90,7 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 // PostOutboundTracker adds an outbound tracker
 func (c *Client) PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error) {
 	// don't report if the tracker already contains the txHash
-	tracker, err := c.GetOutboundTracker(ctx, chains.Chain{ChainId: chainID}, nonce)
+	tracker, err := c.GetOutboundTracker(ctx, chainID, nonce)
 	if err == nil {
 		for _, hash := range tracker.HashList {
 			if strings.EqualFold(hash.TxHash, txHash) {

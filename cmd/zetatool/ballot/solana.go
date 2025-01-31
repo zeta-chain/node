@@ -1,52 +1,55 @@
-package inbound
+package ballot
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-	"github.com/rs/zerolog"
+	"github.com/zeta-chain/node/cmd/zetatool/context"
 
-	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/cmd/zetatool/cctx"
+
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	"github.com/zeta-chain/node/pkg/rpc"
+
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
-func solanaInboundBallotIdentifier(ctx context.Context,
-	cfg config.Config,
-	zetacoreClient rpc.Clients,
-	inboundHash string,
-	inboundChain chains.Chain,
-	zetaChainID int64,
-	logger zerolog.Logger) (string, error) {
+func solanaInboundBallotIdentifier(ctx context.Context) (cctx.CCTXDetails, error) {
+	var (
+		inboundHash    = ctx.GetInboundHash()
+		cctxDetails    = cctx.NewCCTXDetails()
+		inboundChain   = ctx.GetInboundChain()
+		zetacoreClient = ctx.GetZetaCoreClient()
+		zetaChainID    = ctx.GetConfig().ZetaChainID
+		cfg            = ctx.GetConfig()
+		logger         = ctx.GetLogger()
+		goCtx          = ctx.GetContext()
+	)
 	solClient := solrpc.New(cfg.SolanaRPC)
 	if solClient == nil {
-		return "", fmt.Errorf("error creating rpc client")
+		return cctxDetails, fmt.Errorf("error creating rpc client")
 	}
 
 	signature := solana.MustSignatureFromBase58(inboundHash)
 
-	txResult, err := solanarpc.GetTransaction(ctx, solClient, signature)
+	txResult, err := solanarpc.GetTransaction(goCtx, solClient, signature)
 	if err != nil {
-		return "", fmt.Errorf("error getting transaction: %w", err)
+		return cctxDetails, fmt.Errorf("error getting transaction: %w", err)
 	}
 
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(context.Background(), inboundChain.ChainId)
+	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
 	if err != nil {
-		return "", fmt.Errorf("failed to get chain params: %w", err)
+		return cctxDetails, fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	gatewayID, _, err := solanacontracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
 	if err != nil {
-		return "", fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
+		return cctxDetails, fmt.Errorf("cannot parse gateway address: %s, err: %w", chainParams.GatewayAddress, err)
 	}
 
 	events, err := observer.FilterInboundEvents(txResult,
@@ -56,7 +59,7 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 	)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to filter solana inbound events: %w", err)
+		return cctxDetails, fmt.Errorf("failed to filter solana inbound events: %w", err)
 	}
 
 	msg := &crosschaintypes.MsgVoteInbound{}
@@ -65,11 +68,14 @@ func solanaInboundBallotIdentifier(ctx context.Context,
 	for _, event := range events {
 		msg, err = voteMsgFromSolEvent(event, zetaChainID)
 		if err != nil {
-			return "", fmt.Errorf("failed to create vote message: %w", err)
+			return cctxDetails, fmt.Errorf("failed to create vote message: %w", err)
 		}
 	}
 
-	return fmt.Sprintf("ballot identifier: %s", msg.Digest()), nil
+	cctxDetails.CCCTXIdentifier = msg.Digest()
+	cctxDetails.Status = cctx.PendingInboundVoting
+
+	return cctxDetails, nil
 }
 
 // voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
