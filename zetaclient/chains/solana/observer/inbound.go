@@ -185,17 +185,18 @@ func FilterInboundEvents(
 			} else if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: senderChainID,
-					Sender:        deposit.Sender,
-					Receiver:      "", // receiver will be pulled out from memo later
-					TxOrigin:      deposit.Sender,
-					Amount:        deposit.Amount,
-					Memo:          deposit.Memo,
-					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:        tx.Signatures[0].String(),
-					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:      coin.CoinType_Gas,
-					Asset:         deposit.Asset,
+					SenderChainID:    senderChainID,
+					Sender:           deposit.Sender,
+					Receiver:         deposit.Receiver,
+					TxOrigin:         deposit.Sender,
+					Amount:           deposit.Amount,
+					Memo:             deposit.Memo,
+					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_Gas,
+					Asset:            deposit.Asset,
+					IsCrossChainCall: deposit.IsCrossChainCall,
 				})
 				logger.Info().Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
@@ -211,17 +212,18 @@ func FilterInboundEvents(
 			} else if deposit != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: senderChainID,
-					Sender:        deposit.Sender,
-					Receiver:      "", // receiver will be pulled out from memo later
-					TxOrigin:      deposit.Sender,
-					Amount:        deposit.Amount,
-					Memo:          deposit.Memo,
-					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:        tx.Signatures[0].String(),
-					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:      coin.CoinType_ERC20,
-					Asset:         deposit.Asset,
+					SenderChainID:    senderChainID,
+					Sender:           deposit.Sender,
+					Receiver:         deposit.Receiver,
+					TxOrigin:         deposit.Sender,
+					Amount:           deposit.Amount,
+					Memo:             deposit.Memo,
+					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_ERC20,
+					Asset:            deposit.Asset,
+					IsCrossChainCall: deposit.IsCrossChainCall,
 				})
 				logger.Info().Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
 			}
@@ -235,19 +237,6 @@ func FilterInboundEvents(
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
 func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent) *crosschaintypes.MsgVoteInbound {
-	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
-		logs.FieldTx:     event.TxHash,
-	}
-
-	// decode event memo bytes to get the receiver
-	err := event.DecodeMemo()
-	if err != nil {
-		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
-		return nil
-	}
-
 	// check if the event is processable
 	if !ob.IsEventProcessable(*event) {
 		return nil
@@ -269,9 +258,10 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		event.CoinType,
 		event.Asset,
 		0, // not a smart contract call
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // not used
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
 	)
 }
 
