@@ -167,47 +167,53 @@ func EvmInboundBallotIdentifier(ctx *context.Context) (cctx.CCTXDetails, error) 
 	return cctxDetails, nil
 }
 
+// CheckOutboundTx checks if the outbound transaction is confirmed on the outbound chain.
+// If it's confirmed, we update the status to PendingOutboundVoting or PendingRevertVoting. Which means that the confirmation is done and we are not waiting for observers to vote
+// Transition Status PendingConfirmation -> Status PendingVoting
 func CheckOutboundTx(ctx *context.Context, cctxDetails *cctx.CCTXDetails) error {
 	var (
-		inboundHash     = ctx.GetInboundHash()
-		outboundChainID = cctxDetails.OutboundChainID
-		zetacoreClient  = ctx.GetZetaCoreClient()
-		zetaChainID     = ctx.GetConfig().ZetaChainID
-		goCtx           = ctx.GetContext()
+		txHashList     = cctxDetails.OutboundTrackerHashList
+		outboundChain  = cctxDetails.OutboundChain
+		zetacoreClient = ctx.GetZetaCoreClient()
+		goCtx          = ctx.GetContext()
 	)
 
-	outboundChain, found := chains.GetChainFromChainID(outboundChainID, []chains.Chain{})
-	if !found {
-		return fmt.Errorf("chain not supported,chain id: %d", outboundChainID)
-	}
-
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChainID)
+	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %v", err)
 	}
 
+	// create evm client for the observation chain
 	evmClient, err := getEvmClient(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create evm client: %v", err)
 	}
 
-	// create evm client for the observation chain
-	tx, receipt, err := getEvmTx(ctx, evmClient, inboundHash, outboundChain)
-	if err != nil {
-		return fmt.Errorf("failed to get tx: %v", err)
-	}
-	// Signer is unused
-	c := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-	confirmed, err := c.IsTxConfirmed(goCtx, inboundHash, chainParams.ConfirmationCount)
-	if err != nil {
-		return fmt.Errorf("unable to confirm tx: %w", err)
-	}
-	if !confirmed {
-		cctxDetails.Status = cctx.PendingInboundConfirmation
-	} else {
-		cctxDetails.Status = cctx.PendingInboundVoting
-	}
+	foundConfirmedTx := false
 
+	// If one of the hash is confirmed, we update the status to pending voting
+	// There might be a condition where we have multiple txs and the wrong tx is confirmed.
+	//To verify that we need, check CCTX data
+	for _, hash := range txHashList {
+		tx, _, err := getEvmTx(ctx, evmClient, hash, outboundChain)
+		if err != nil {
+			continue
+		}
+		// Signer is unused
+		c := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
+		confirmed, err := c.IsTxConfirmed(goCtx, hash, chainParams.ConfirmationCount)
+		if err != nil {
+			continue
+		}
+		if confirmed {
+			foundConfirmedTx = true
+			break
+		}
+	}
+	if foundConfirmedTx {
+		cctxDetails.UpdateToPendingVoting()
+	}
+	return nil
 }
 
 func getEvmClient(ctx *context.Context) (*ethclient.Client, error) {
@@ -230,7 +236,7 @@ func getEvmTx(
 	ctx *context.Context,
 	evmClient *ethclient.Client,
 	inboundHash string,
-	inboundChain chains.Chain,
+	chain chains.Chain,
 ) (*ethtypes.Transaction, *ethtypes.Receipt, error) {
 
 	goCtx := ctx.GetContext()
@@ -238,10 +244,10 @@ func getEvmTx(
 	hash := ethcommon.HexToHash(inboundHash)
 	tx, isPending, err := evmClient.TransactionByHash(goCtx, hash)
 	if err != nil {
-		return nil, nil, fmt.Errorf("tx not found on chain: %w,chainID: %d", err, inboundChain.ChainId)
+		return nil, nil, fmt.Errorf("tx not found on chain: %w,chainID: %d", err, chain.ChainId)
 	}
 	if isPending {
-		return nil, nil, fmt.Errorf("tx is still pending on chain: %d", inboundChain.ChainId)
+		return nil, nil, fmt.Errorf("tx is still pending on chain: %d", chain.ChainId)
 	}
 	receipt, err := evmClient.TransactionReceipt(goCtx, hash)
 	if err != nil {

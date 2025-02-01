@@ -42,11 +42,10 @@ func GetInboundBallot(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get ballot identifier: %w", err)
 	}
-
-	msg := fmt.Sprintf("ballot identifier: %s", ballotIdentifierMessage.CCCTXIdentifier)
 	if ballotIdentifierMessage.Status == cctx.PendingInboundConfirmation {
-		msg = fmt.Sprintf("%s, warning : inbound hash might not be confirmed yet ", msg)
+		log.Print("Ballot Identifier: , warning the inbound hash might not be confirmed yet", ballotIdentifierMessage.CCCTXIdentifier)
+		return nil
 	}
-	log.Info().Msgf("%s", msg)
+	log.Print("Ballot Identifier: ", ballotIdentifierMessage.CCCTXIdentifier)
 	return nil
 }

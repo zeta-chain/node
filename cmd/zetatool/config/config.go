@@ -18,9 +18,9 @@ const (
 
 func TestnetConfig() *Config {
 	return &Config{
-		ZetaChainRPC: "https://zetachain-testnet-grpc.itrocket.net:443",
+		ZetaChainRPC: "https://zetachain-athens.g.allthatnode.com/archive/tendermint",
 		EthereumRPC:  "https://ethereum-sepolia-rpc.publicnode.com",
-		ZetaChainID:  101,
+		ZetaChainID:  7001,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
@@ -64,6 +64,7 @@ func MainnetConfig() *Config {
 	}
 }
 
+// PrivateNetConfig returns a config for a private network, used for localnet testing
 func PrivateNetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "http://127.0.0.1:26657",

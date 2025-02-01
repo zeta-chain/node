@@ -23,7 +23,7 @@ import (
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
-func btcInboundBallotIdentifier(ctx context.Context) (cctx.CCTXDetails, error) {
+func btcInboundBallotIdentifier(ctx *context.Context) (cctx.CCTXDetails, error) {
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		cctxDetails    = cctx.NewCCTXDetails()
@@ -86,7 +86,7 @@ func btcInboundBallotIdentifier(ctx context.Context) (cctx.CCTXDetails, error) {
 }
 
 func bitcoinBallotIdentifier(
-	ctx context.Context,
+	ctx *context.Context,
 	btcClient *client.Client,
 	params *chaincfg.Params,
 	tss string,

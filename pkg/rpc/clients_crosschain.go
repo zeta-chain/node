@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"github.com/zeta-chain/node/pkg/chains"
 	"google.golang.org/grpc"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -129,10 +130,10 @@ func (c *Clients) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.
 // GetOutboundTracker returns the outbound tracker for a chain and nonce
 func (c *Clients) GetOutboundTracker(
 	ctx context.Context,
-	chainID int64,
+	chain chains.Chain,
 	nonce uint64,
 ) (*types.OutboundTracker, error) {
-	in := &types.QueryGetOutboundTrackerRequest{ChainID: chainID, Nonce: nonce}
+	in := &types.QueryGetOutboundTrackerRequest{ChainID: chain.ChainId, Nonce: nonce}
 
 	resp, err := c.Crosschain.OutboundTracker(ctx, in)
 	if err != nil {

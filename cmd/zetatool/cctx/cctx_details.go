@@ -1,27 +1,20 @@
 package cctx
 
-import crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+import (
+	"fmt"
 
-type Status int
-
-const (
-	Unknown                     Status = iota
-	PendingInboundConfirmation  Status = 1
-	PendingInboundVoting        Status = 2
-	PendingOutbound             Status = 3
-	OutboundMined               Status = 4
-	PendingRevert               Status = 5
-	Reverted                    Status = 6
-	PendingOutboundConfirmation Status = 7
-	PendingRevertConfirmation   Status = 8
-	Aborted                     Status = 9
+	"github.com/zeta-chain/node/cmd/zetatool/context"
+	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 type CCTXDetails struct {
-	CCCTXIdentifier         string   `json:"cctx_identifier"`
-	Status                  Status   `json:"status"`
-	OutboundChainID         int64    `json:"outbound_chain_id"`
-	OutboundTrackerHashList []string `json:"outbound_tracker_hash_list"`
+	CCCTXIdentifier         string       `json:"cctx_identifier"`
+	Status                  Status       `json:"status"`
+	OutboundChain           chains.Chain `json:"outbound_chain_id"`
+	OutboundTssNonce        uint64       `json:"outbound_tss_nonce"`
+	OutboundTrackerHashList []string     `json:"outbound_tracker_hash_list"`
+	Message                 string       `json:"message"`
 }
 
 func NewCCTXDetails() CCTXDetails {
@@ -48,6 +41,110 @@ func (c *CCTXDetails) UpdateStatusFromZetacoreCCTX(status crosschaintypes.CctxSt
 	}
 }
 
-func (c *CCTXDetails) IsPendingConfirmation() bool {
+func (c *CCTXDetails) IsPending() bool {
 	return c.Status == PendingOutbound || c.Status == PendingRevert
+}
+
+func (c *CCTXDetails) IsPendingConfirmation() bool {
+	return c.Status == PendingOutboundConfirmation || c.Status == PendingRevertConfirmation
+}
+
+func (c *CCTXDetails) Print() string {
+	return fmt.Sprintf("CCTX: %s Status: %s Message: %s", c.CCCTXIdentifier, c.Status.String(), c.Message)
+}
+
+func (c *CCTXDetails) UpdateCCTXStatus(ctx *context.Context) {
+	var (
+		zetacoreClient = ctx.GetZetaCoreClient()
+		goCtx          = ctx.GetContext()
+	)
+
+	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCCTXIdentifier)
+	if err != nil {
+		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
+		return
+	}
+
+	c.UpdateStatusFromZetacoreCCTX(CCTX.CctxStatus.Status)
+
+	return
+}
+
+func (c *CCTXDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
+	var (
+		zetacoreClient = ctx.GetZetaCoreClient()
+		goCtx          = ctx.GetContext()
+	)
+	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCCTXIdentifier)
+	if err != nil {
+		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
+	}
+	chainId := CCTX.GetCurrentOutboundParam().ReceiverChainId
+
+	// This is almost impossible to happen as the cctx would not have been created if the chain was not supported
+	chain, found := chains.GetChainFromChainID(chainId, []chains.Chain{})
+	if !found {
+		c.Message = fmt.Sprintf("receiver chain not supported,chain id: %d", chainId)
+	}
+	c.OutboundChain = chain
+	c.OutboundTssNonce = CCTX.GetCurrentOutboundParam().TssNonce
+	return
+}
+
+func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
+	var (
+		zetacoreClient = ctx.GetZetaCoreClient()
+		goCtx          = ctx.GetContext()
+		outboundChain  = c.OutboundChain
+		outboundNonce  = c.OutboundTssNonce
+	)
+
+	if !c.IsPending() {
+		return
+	}
+
+	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain, outboundNonce)
+	// tracker is found that means the outbound has broadcasted but we are waiting for confirmations
+	if err == nil && tracker != nil {
+		c.updateToPendingConfirmation()
+		var hashList []string
+		for _, hash := range tracker.HashList {
+			hashList = append(hashList, hash.TxHash)
+		}
+		c.OutboundTrackerHashList = hashList
+		return
+	}
+	// the cctx is in pending state by the outbound signing has not been done
+	c.updateToPendingSigning()
+	return
+}
+
+// 1 - Signing
+func (c *CCTXDetails) updateToPendingSigning() {
+	switch {
+	case c.Status == PendingOutbound:
+		c.Status = PendingOutboundSigning
+	case c.Status == PendingRevert:
+		c.Status = PendingRevertSigning
+	}
+}
+
+// 2 - Confirmation
+func (c *CCTXDetails) updateToPendingConfirmation() {
+	switch {
+	case c.Status == PendingOutbound:
+		c.Status = PendingOutboundConfirmation
+	case c.Status == PendingRevert:
+		c.Status = PendingRevertConfirmation
+	}
+}
+
+// UpdateToPendingVoting 3 - Voting
+func (c *CCTXDetails) UpdateToPendingVoting() {
+	switch {
+	case c.Status == PendingOutboundConfirmation:
+		c.Status = PendingOutboundVoting
+	case c.Status == PendingRevertConfirmation:
+		c.Status = PendingRevertVoting
+	}
 }

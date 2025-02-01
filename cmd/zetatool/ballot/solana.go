@@ -19,7 +19,7 @@ import (
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
-func solanaInboundBallotIdentifier(ctx context.Context) (cctx.CCTXDetails, error) {
+func solanaInboundBallotIdentifier(ctx *context.Context) (cctx.CCTXDetails, error) {
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		cctxDetails    = cctx.NewCCTXDetails()
