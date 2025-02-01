@@ -17,11 +17,6 @@ import (
 const (
 	// RemainingFeesToStabilityPoolPercent is the percentage of remaining fees used to fund the gas stability pool
 	RemainingFeesToStabilityPoolPercent = 95
-
-	// GasPriceUpdateRetryIntervalBTC is the time to wait before each retry of Bitcoin gas price increase.
-	// Bitcoin block time is 10 minutes, so the interval needs to be longer than confirmation time (10 min * 2 blocks).
-	// 40 minutes is chosen to be a mild interval to balance the finality and the sensitivity to fee marget changes.
-	GasPriceUpdateRetryIntervalBTC = time.Minute * 40
 )
 
 // CheckAndUpdateCCTXGasPriceFunc is a function type for checking and updating the gas price of a cctx
@@ -139,7 +134,7 @@ func CheckAndUpdateCCTXGasPrice(
 	case chains.IsEVMChain(chainID, additionalChains):
 		return CheckAndUpdateCCTXGasPriceEVM(ctx, k, medianGasPrice, medianPriorityFee, cctx, flags)
 	case chains.IsBitcoinChain(chainID, additionalChains):
-		return CheckAndUpdateCCTXGasPriceBTC(ctx, k, medianGasPrice, cctx)
+		return CheckAndUpdateCCTXGasPriceBTC(ctx, k, medianGasPrice, cctx, flags)
 	default:
 		return math.ZeroUint(), math.ZeroUint(), nil
 	}
@@ -216,10 +211,17 @@ func CheckAndUpdateCCTXGasPriceBTC(
 	k Keeper,
 	medianGasPrice math.Uint,
 	cctx types.CrossChainTx,
+	flags observertypes.GasPriceIncreaseFlags,
 ) (gasPriceIncrease math.Uint, additionalFees math.Uint, err error) {
+	// check retry interval -- use default interval if not set
+	retryIntervalBTC := flags.RetryIntervalBTC
+	if retryIntervalBTC <= 0 {
+		retryIntervalBTC = observertypes.DefaultGasPriceIncreaseFlags.RetryIntervalBTC
+	}
+
 	// skip if Bitcoin gas price retry interval is not reached
 	lastUpdated := time.Unix(cctx.CctxStatus.LastUpdateTimestamp, 0)
-	if ctx.BlockTime().Before(lastUpdated.Add(GasPriceUpdateRetryIntervalBTC)) {
+	if ctx.BlockTime().Before(lastUpdated.Add(retryIntervalBTC)) {
 		return math.ZeroUint(), math.ZeroUint(), nil
 	}
 

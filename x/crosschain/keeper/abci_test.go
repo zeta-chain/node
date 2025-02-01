@@ -484,13 +484,15 @@ func Test_CheckAndUpdateCCTXGasPriceEVM(t *testing.T) {
 func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 	sampleTimestamp := time.Now()
 	chainID := chains.BitcoinMainnet.ChainId
-	gasRateUpdateInterval := keeper.GasPriceUpdateRetryIntervalBTC
+	flags := observertypes.DefaultGasPriceIncreaseFlags
+	gasRateUpdateInterval := flags.RetryIntervalBTC
 	retryIntervalReached := sampleTimestamp.Add(gasRateUpdateInterval + time.Second)
 	retryIntervalNotReached := sampleTimestamp.Add(gasRateUpdateInterval - time.Second)
 
 	tt := []struct {
 		name                                   string
 		cctx                                   types.CrossChainTx
+		flags                                  observertypes.GasPriceIncreaseFlags
 		blockTimestamp                         time.Time
 		medianGasPrice                         uint64
 		withdrawFromGasStabilityPoolReturn     error
@@ -502,6 +504,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name:                                   "can update fee rate",
 			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "10", 200),
+			flags:                                  flags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         12,
 			withdrawFromGasStabilityPoolReturn:     nil,
@@ -512,6 +515,17 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name:                                   "skip if retry interval is not reached",
 			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "10", 200),
+			flags:                                  flags,
+			blockTimestamp:                         retryIntervalNotReached,
+			medianGasPrice:                         12,
+			expectWithdrawFromGasStabilityPoolCall: false,
+			expectedGasPriceIncrease:               math.NewUint(0),
+			expectedAdditionalFees:                 math.NewUint(0),
+		},
+		{
+			name:                                   "default interval used if not defined",
+			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "10", 200),
+			flags:                                  observertypes.GasPriceIncreaseFlags{}, // interval not set
 			blockTimestamp:                         retryIntervalNotReached,
 			medianGasPrice:                         12,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -521,6 +535,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name:                                   "returns error if can't get CCTX gas price",
 			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "invalid_gas_price", 200),
+			flags:                                  flags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         12,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -531,6 +546,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name:                                   "skip if current gas price is equal or higher than median gas price",
 			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "10", 200),
+			flags:                                  flags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         10,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -540,6 +556,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		{
 			name:                                   "returns error if can't withdraw from gas stability pool",
 			cctx:                                   mkCustomCCTX(t, sampleTimestamp, chainID, "10", 200),
+			flags:                                  flags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         12,
 			expectWithdrawFromGasStabilityPoolCall: true,
@@ -578,6 +595,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 				*k,
 				math.NewUint(tc.medianGasPrice),
 				tc.cctx,
+				tc.flags,
 			)
 
 			// ASSERT

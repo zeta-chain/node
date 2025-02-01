@@ -14,7 +14,7 @@ import (
 
 func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs]",
+		Use:   "update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs] [retryIntervalBTC]",
 		Short: "Update the gas price increase flags",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -43,6 +43,10 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			retryIntervalBTC, err := strconv.ParseInt(args[5], 10, 64)
+			if err != nil {
+				return err
+			}
 			gasPriceIncreaseFlags := types.GasPriceIncreaseFlags{
 				EpochLength:   epochLength,
 				RetryInterval: time.Duration(retryInterval),
@@ -51,7 +55,9 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 				// #nosec G115 bitsize set to 32
 				GasPriceIncreaseMax: uint32(gasPriceIncreaseMax),
 				// #nosec G115 bitsize set to 32
-				MaxPendingCctxs: uint32(maxPendingCctxs)}
+				MaxPendingCctxs:  uint32(maxPendingCctxs),
+				RetryIntervalBTC: time.Duration(retryIntervalBTC),
+			}
 			msg := types.NewMsgUpdateGasPriceIncreaseFlags(clientCtx.GetFromAddress().String(), gasPriceIncreaseFlags)
 			err = msg.ValidateBasic()
 			if err != nil {

@@ -317,6 +317,7 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 		RetryInterval:           1,
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+		RetryIntervalBTC:        2,
 	}
 }
 
@@ -328,6 +329,7 @@ func GasPriceIncreaseFlagsFromRand(r *rand.Rand) types.GasPriceIncreaseFlags {
 		RetryInterval:           time.Duration(r.Intn(maxValue-minValue) + minValue),
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+		RetryIntervalBTC:        time.Duration(r.Intn(maxValue-minValue) + minValue),
 	}
 }
 
