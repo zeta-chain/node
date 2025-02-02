@@ -139,7 +139,7 @@ func (c *CCTXDetails) btcInboundBallotIdentifier(ctx *context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get bitcoin ballot identifier: %w", err)
 	}
-	c.CCCTXIdentifier = cctxIdentifier
+	c.CCTXIdentifier = cctxIdentifier
 	c.updateInboundConfirmation(isConfirmed)
 	return nil
 }
@@ -263,7 +263,7 @@ func (c *CCTXDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 		return fmt.Errorf("irrelevant transaction , not sent to any known address txHash: %s", inboundHash)
 	}
 
-	c.CCCTXIdentifier = msg.Digest()
+	c.CCTXIdentifier = msg.Digest()
 	c.updateInboundConfirmation(isConfirmed)
 	return nil
 }
@@ -320,7 +320,7 @@ func (c *CCTXDetails) solanaInboundBallotIdentifier(ctx *context.Context) error 
 		}
 	}
 
-	c.CCCTXIdentifier = msg.Digest()
+	c.CCTXIdentifier = msg.Digest()
 	c.Status = PendingInboundVoting
 
 	return nil

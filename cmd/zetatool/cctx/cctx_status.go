@@ -1,5 +1,6 @@
 package cctx
 
+// Status represents the status of a CCTX transaction, it is more granular than the status present on zetacore
 type Status int
 
 const (

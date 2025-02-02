@@ -29,7 +29,7 @@ func CheckInBoundTx(ctx *context.Context, cctxDetails *CCTXDetails) error {
 		return fmt.Errorf("inbound hash more than one cctx %s", inboundHash)
 	}
 
-	cctxDetails.CCCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]
+	cctxDetails.CCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]
 	cctxDetails.Status = PendingOutbound
 	return nil
 }

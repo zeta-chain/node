@@ -8,8 +8,9 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// CCTXDetails represents the status of a CCTX transaction
 type CCTXDetails struct {
-	CCCTXIdentifier         string       `json:"cctx_identifier"`
+	CCTXIdentifier          string       `json:"cctx_identifier"`
 	Status                  Status       `json:"status"`
 	OutboundChain           chains.Chain `json:"outbound_chain_id"`
 	OutboundTssNonce        uint64       `json:"outbound_tss_nonce"`
@@ -19,8 +20,8 @@ type CCTXDetails struct {
 
 func NewCCTXDetails() *CCTXDetails {
 	return &CCTXDetails{
-		CCCTXIdentifier: "",
-		Status:          Unknown,
+		CCTXIdentifier: "",
+		Status:         Unknown,
 	}
 }
 
@@ -50,11 +51,11 @@ func (c *CCTXDetails) IsPendingConfirmation() bool {
 }
 
 func (c *CCTXDetails) Print() string {
-	return fmt.Sprintf("CCTX: %s Status: %s", c.CCCTXIdentifier, c.Status.String())
+	return fmt.Sprintf("CCTX: %s Status: %s", c.CCTXIdentifier, c.Status.String())
 }
 
 func (c *CCTXDetails) DebugPrint() string {
-	return fmt.Sprintf("CCTX: %s Status: %s Message: %s", c.CCCTXIdentifier, c.Status.String(), c.Message)
+	return fmt.Sprintf("CCTX: %s Status: %s Message: %s", c.CCTXIdentifier, c.Status.String(), c.Message)
 }
 
 func (c *CCTXDetails) UpdateCCTXStatus(ctx *context.Context) {
@@ -63,7 +64,7 @@ func (c *CCTXDetails) UpdateCCTXStatus(ctx *context.Context) {
 		goCtx          = ctx.GetContext()
 	)
 
-	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCCTXIdentifier)
+	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 		return
@@ -79,7 +80,7 @@ func (c *CCTXDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 		zetacoreClient = ctx.GetZetaCoreClient()
 		goCtx          = ctx.GetContext()
 	)
-	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCCTXIdentifier)
+	CCTX, err := zetacoreClient.GetCctxByHash(goCtx, c.CCTXIdentifier)
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 	}

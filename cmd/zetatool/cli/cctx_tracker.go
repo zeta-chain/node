@@ -61,7 +61,7 @@ func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.CCTXDetails, error) {
 		return cctxDetails, fmt.Errorf("failed to get ballot identifier: %v", err)
 	}
 	// Reject unknown status , as it is not valid
-	if cctxDetails.Status == cctx.Unknown || cctxDetails.CCCTXIdentifier == "" {
+	if cctxDetails.Status == cctx.Unknown || cctxDetails.CCTXIdentifier == "" {
 		return cctxDetails, fmt.Errorf("unknown status")
 	}
 

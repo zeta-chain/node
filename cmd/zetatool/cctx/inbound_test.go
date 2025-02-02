@@ -62,8 +62,8 @@ func Test_InboundBallotIdentifier(t *testing.T) {
 			c := cctx.NewCCTXDetails()
 			err = c.CheckInbound(ctx)
 			require.NoError(t, err)
-			if !tc.expectError && c.CCCTXIdentifier != tc.expectedBallotIdentifier {
-				t.Errorf("expected %s, got %s", tc.expectedBallotIdentifier, c.CCCTXIdentifier)
+			if !tc.expectError && c.CCTXIdentifier != tc.expectedBallotIdentifier {
+				t.Errorf("expected %s, got %s", tc.expectedBallotIdentifier, c.CCTXIdentifier)
 			}
 		})
 	}
