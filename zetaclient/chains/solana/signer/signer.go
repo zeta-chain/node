@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -327,7 +327,15 @@ func (signer *Signer) prepareExecuteTx(
 
 	// sign gateway withdraw message by TSS
 	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
-	msgExecute, err := signer.createAndSignMsgExecute(ctx, params, height, sender, msg.Data, remainingAccounts, cancelTx)
+	msgExecute, err := signer.createAndSignMsgExecute(
+		ctx,
+		params,
+		height,
+		sender,
+		msg.Data,
+		remainingAccounts,
+		cancelTx,
+	)
 	if err != nil {
 		return nil, err
 	}

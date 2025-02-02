@@ -144,7 +144,13 @@ type MsgExecute struct {
 }
 
 // NewMsgExecute returns a new execute message
-func NewMsgExecute(chainID, nonce, amount uint64, to solana.PublicKey, sender [20]byte, data []byte, remainingAccounts []*solana.AccountMeta) *MsgExecute {
+func NewMsgExecute(
+	chainID, nonce, amount uint64,
+	to solana.PublicKey,
+	sender [20]byte,
+	data []byte,
+	remainingAccounts []*solana.AccountMeta,
+) *MsgExecute {
 	return &MsgExecute{
 		chainID:           chainID,
 		nonce:             nonce,
