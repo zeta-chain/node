@@ -17,8 +17,8 @@ type CCTXDetails struct {
 	Message                 string       `json:"message"`
 }
 
-func NewCCTXDetails() CCTXDetails {
-	return CCTXDetails{
+func NewCCTXDetails() *CCTXDetails {
+	return &CCTXDetails{
 		CCCTXIdentifier: "",
 		Status:          Unknown,
 	}
@@ -50,6 +50,10 @@ func (c *CCTXDetails) IsPendingConfirmation() bool {
 }
 
 func (c *CCTXDetails) Print() string {
+	return fmt.Sprintf("CCTX: %s Status: %s", c.CCCTXIdentifier, c.Status.String())
+}
+
+func (c *CCTXDetails) DebugPrint() string {
 	return fmt.Sprintf("CCTX: %s Status: %s Message: %s", c.CCCTXIdentifier, c.Status.String(), c.Message)
 }
 
@@ -106,7 +110,7 @@ func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain, outboundNonce)
 	// tracker is found that means the outbound has broadcasted but we are waiting for confirmations
 	if err == nil && tracker != nil {
-		c.updateToPendingConfirmation()
+		c.updateOutboundConfirmation()
 		var hashList []string
 		for _, hash := range tracker.HashList {
 			hashList = append(hashList, hash.TxHash)
@@ -115,12 +119,19 @@ func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 		return
 	}
 	// the cctx is in pending state by the outbound signing has not been done
-	c.updateToPendingSigning()
+	c.updateOutboundSigning()
 	return
 }
 
+func (c *CCTXDetails) updateInboundConfirmation(isConfirmed bool) {
+	c.Status = PendingInboundConfirmation
+	if isConfirmed {
+		c.Status = PendingInboundVoting
+	}
+}
+
 // 1 - Signing
-func (c *CCTXDetails) updateToPendingSigning() {
+func (c *CCTXDetails) updateOutboundSigning() {
 	switch {
 	case c.Status == PendingOutbound:
 		c.Status = PendingOutboundSigning
@@ -130,7 +141,7 @@ func (c *CCTXDetails) updateToPendingSigning() {
 }
 
 // 2 - Confirmation
-func (c *CCTXDetails) updateToPendingConfirmation() {
+func (c *CCTXDetails) updateOutboundConfirmation() {
 	switch {
 	case c.Status == PendingOutbound:
 		c.Status = PendingOutboundConfirmation
@@ -139,8 +150,8 @@ func (c *CCTXDetails) updateToPendingConfirmation() {
 	}
 }
 
-// UpdateToPendingVoting 3 - Voting
-func (c *CCTXDetails) UpdateToPendingVoting() {
+// UpdateOutboundVoting 3 - Voting
+func (c *CCTXDetails) UpdateOutboundVoting() {
 	switch {
 	case c.Status == PendingOutboundConfirmation:
 		c.Status = PendingOutboundVoting

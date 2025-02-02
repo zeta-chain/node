@@ -46,7 +46,7 @@ func (s Status) String() string {
 	case PendingRevertSigning:
 		return "PendingRevertSigning"
 	case PendingOutboundVoting:
-		return "PEndingOutboundVoting"
+		return "PendingOutboundVoting"
 	default:
 		return "Unknown"
 	}

@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,7 @@ func TestETHWithdraw(r *runner.E2ERunner, args []string) {
 	// perform the withdraw
 	tx := r.ETHWithdraw(r.EVMAddress(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
+	fmt.Println("withdraw tx", tx.Hash().Hex())
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")

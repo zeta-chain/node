@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/node/cmd/zetatool/ballot"
 	"github.com/zeta-chain/node/cmd/zetatool/cctx"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	zetacontext "github.com/zeta-chain/node/cmd/zetatool/context"
@@ -38,14 +37,16 @@ func GetInboundBallot(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create context: %w", err)
 	}
 
-	ballotIdentifierMessage, err := ballot.GetBallotIdentifier(ctx)
+	cctxDetails := cctx.NewCCTXDetails()
+
+	err = cctxDetails.CheckInbound(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get ballot identifier: %w", err)
 	}
-	if ballotIdentifierMessage.Status == cctx.PendingInboundConfirmation {
-		log.Print("Ballot Identifier: , warning the inbound hash might not be confirmed yet", ballotIdentifierMessage.CCCTXIdentifier)
+	if cctxDetails.Status == cctx.PendingInboundConfirmation {
+		log.Print("Ballot Identifier: %s, warning the inbound hash might not be confirmed yet", cctxDetails.CCCTXIdentifier)
 		return nil
 	}
-	log.Print("Ballot Identifier: ", ballotIdentifierMessage.CCCTXIdentifier)
+	log.Print("Ballot Identifier: ", cctxDetails.CCCTXIdentifier)
 	return nil
 }

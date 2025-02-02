@@ -1,4 +1,4 @@
-package ballot
+package chains
 
 import (
 	"encoding/hex"
@@ -9,83 +9,15 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/node/cmd/zetatool/cctx"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
-
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	zetaclientObserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
-func btcInboundBallotIdentifier(ctx *context.Context) (cctx.CCTXDetails, error) {
-	var (
-		inboundHash    = ctx.GetInboundHash()
-		cctxDetails    = cctx.NewCCTXDetails()
-		inboundChain   = ctx.GetInboundChain()
-		zetacoreClient = ctx.GetZetaCoreClient()
-		zetaChainID    = ctx.GetConfig().ZetaChainID
-		cfg            = ctx.GetConfig()
-		logger         = ctx.GetLogger()
-		goCtx          = ctx.GetContext()
-	)
-
-	params, err := chains.BitcoinNetParamsFromChainID(inboundChain.ChainId)
-	if err != nil {
-		return cctxDetails, fmt.Errorf("unable to get bitcoin net params from chain id: %w", err)
-	}
-
-	connCfg := zetaclientConfig.BTCConfig{
-		RPCUsername: cfg.BtcUser,
-		RPCPassword: cfg.BtcPassword,
-		RPCHost:     cfg.BtcHost,
-		RPCParams:   params.Name,
-	}
-
-	rpcClient, err := client.New(connCfg, inboundChain.ChainId, logger)
-	if err != nil {
-		return cctxDetails, fmt.Errorf("unable to create rpc client: %w", err)
-	}
-
-	err = rpcClient.Ping(goCtx)
-	if err != nil {
-		return cctxDetails, fmt.Errorf("error ping the bitcoin server: %w", err)
-	}
-
-	res, err := zetacoreClient.Observer.GetTssAddress(goCtx, &types.QueryGetTssAddressRequest{})
-	if err != nil {
-		return cctxDetails, fmt.Errorf("failed to get tss address: %w", err)
-	}
-	tssBtcAddress := res.GetBtc()
-
-	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, inboundChain.ChainId)
-	if err != nil {
-		return cctxDetails, fmt.Errorf("failed to get chain params: %w", err)
-	}
-
-	err = bitcoinBallotIdentifier(
-		ctx,
-		rpcClient,
-		params,
-		tssBtcAddress,
-		inboundHash,
-		inboundChain.ChainId,
-		zetaChainID,
-		chainParams.ConfirmationCount,
-		&cctxDetails,
-	)
-	if err != nil {
-		return cctxDetails, fmt.Errorf("failed to get bitcoin ballot identifier: %w", err)
-	}
-	return cctxDetails, nil
-}
-
-func bitcoinBallotIdentifier(
+func BitcoinBallotIdentifier(
 	ctx *context.Context,
 	btcClient *client.Client,
 	params *chaincfg.Params,
@@ -94,34 +26,32 @@ func bitcoinBallotIdentifier(
 	senderChainID int64,
 	zetacoreChainID int64,
 	confirmationCount uint64,
-	cctxDetails *cctx.CCTXDetails,
-) error {
+) (cctxIdentifier string, isConfirmed bool, err error) {
 	var (
 		goCtx = ctx.GetContext()
 	)
 
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
-		return err
+		return
 	}
 	tx, err := btcClient.GetRawTransactionVerbose(goCtx, hash)
 	if err != nil {
-		return err
+		return
 	}
-	if tx.Confirmations < confirmationCount {
-		cctxDetails.Status = cctx.PendingInboundConfirmation
-	} else {
-		cctxDetails.Status = cctx.PendingInboundVoting
+
+	if tx.Confirmations >= confirmationCount {
+		isConfirmed = true
 	}
 
 	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
 	if err != nil {
-		return err
+		return
 	}
 
 	blockVb, err := btcClient.GetBlockVerbose(goCtx, blockHash)
 	if err != nil {
-		return err
+		return
 	}
 
 	event, err := zetaclientObserver.GetBtcEvent(
@@ -135,28 +65,33 @@ func bitcoinBallotIdentifier(
 		common.CalcDepositorFee,
 	)
 	if err != nil {
-		return fmt.Errorf("error getting btc event: %w", err)
+		return
 	}
 	if event == nil {
-		return fmt.Errorf("no event built for btc sent to TSS")
+		err = fmt.Errorf("no event built for btc sent to TSS")
+		return
 	}
 
-	return identifierFromBtcEvent(event, senderChainID, zetacoreChainID, cctxDetails)
+	cctxIdentifier, err = identifierFromBtcEvent(event, senderChainID, zetacoreChainID)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 	senderChainID int64,
-	zetacoreChainID int64, cctxDetails *cctx.CCTXDetails) error {
+	zetacoreChainID int64) (cctxIdentifier string, err error) {
 	// decode event memo bytes
-	err := event.DecodeMemoBytes(senderChainID)
+	err = event.DecodeMemoBytes(senderChainID)
 	if err != nil {
-		return fmt.Errorf("error decoding memo bytes: %w", err)
+		return
 	}
 
 	// convert the amount to integer (satoshis)
 	amountSats, err := common.GetSatoshis(event.Value)
 	if err != nil {
-		return fmt.Errorf("error converting amount to satoshis: %w", err)
+		return
 	}
 	amountInt := big.NewInt(amountSats)
 
@@ -172,11 +107,11 @@ func identifierFromBtcEvent(event *zetaclientObserver.BTCInboundEvent,
 		}
 	}
 	if msg == nil {
-		return fmt.Errorf("failed to create vote message")
+		return
 	}
 
-	cctxDetails.CCCTXIdentifier = msg.Digest()
-	return nil
+	cctxIdentifier = msg.Digest()
+	return
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

@@ -14,6 +14,7 @@ var AppFs = afero.NewOsFs()
 const (
 	FlagConfig         = "config"
 	defaultCfgFileName = "zetatool_config.json"
+	FlagDebug          = "debug"
 )
 
 func TestnetConfig() *Config {

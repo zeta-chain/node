@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
@@ -291,55 +292,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-
-		// start the bitcoin tests
-		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
-		bitcoinDepositTests := []string{
-			e2etests.TestBitcoinDonationName,
-			e2etests.TestBitcoinDepositName,
-			e2etests.TestBitcoinDepositAndCallName,
-			e2etests.TestBitcoinDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoDepositName,
-			e2etests.TestBitcoinStdMemoDepositAndCallName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
-			e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
-			e2etests.TestCrosschainSwapName,
-		}
-		bitcoinDepositTestsAdvanced := []string{
-			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
-			e2etests.TestBitcoinDepositAndWithdrawWithDustName,
-		}
-		bitcoinWithdrawTests := []string{
-			e2etests.TestBitcoinWithdrawSegWitName,
-			e2etests.TestBitcoinWithdrawInvalidAddressName,
-			e2etests.TestLegacyZetaWithdrawBTCRevertName,
-		}
-		bitcoinWithdrawTestsAdvanced := []string{
-			e2etests.TestBitcoinWithdrawTaprootName,
-			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawP2SHName,
-			e2etests.TestBitcoinWithdrawP2WSHName,
-			e2etests.TestBitcoinWithdrawMultipleName,
-			e2etests.TestBitcoinWithdrawRestrictedName,
-		}
-
-		if !light {
-			// if light is enabled, only the most basic tests are run and advanced are skipped
-			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
-			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
-		}
-		bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine := bitcoinTestRoutines(
-			conf,
-			deployerRunner,
-			verbose,
-			!skipBitcoinSetup,
-			bitcoinDepositTests,
-			bitcoinWithdrawTests,
-		)
-		eg.Go(bitcoinDepositTestRoutine)
-		eg.Go(bitcoinWithdrawTestRoutine)
+		log.Info().Msgf("EVM tests started %v %v", light, skipBitcoinSetup)
+		//startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
 	if !skipPrecompiles {

@@ -7,9 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/node/cmd/zetatool/ballot"
 	"github.com/zeta-chain/node/cmd/zetatool/cctx"
-	zetatoolchains "github.com/zeta-chain/node/cmd/zetatool/chains"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	zetatoolcontext "github.com/zeta-chain/node/cmd/zetatool/context"
 )
@@ -43,18 +41,22 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to track cctx: %w", err)
 	}
+	if cmd.Flag(config.FlagDebug).Changed {
+		log.Info().Msg(cctxDetails.DebugPrint())
+		return nil
+	}
 	log.Info().Msg(cctxDetails.Print())
 	return nil
 }
 
-func trackCCTX(ctx *zetatoolcontext.Context) (cctx.CCTXDetails, error) {
+func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.CCTXDetails, error) {
 
 	var (
-		cctxDetails = cctx.CCTXDetails{}
+		cctxDetails = cctx.NewCCTXDetails()
 		err         error
 	)
 	// Get the ballot identifier for the inbound transaction and confirm that cctx status in atleast either PendingInboundConfirmation or PendingInboundVoting
-	cctxDetails, err = ballot.GetBallotIdentifier(ctx)
+	err = cctxDetails.CheckInbound(ctx)
 	if err != nil {
 		return cctxDetails, fmt.Errorf("failed to get ballot identifier: %v", err)
 	}
@@ -65,7 +67,7 @@ func trackCCTX(ctx *zetatoolcontext.Context) (cctx.CCTXDetails, error) {
 
 	// At this point, we have confirmed the inbound hash is valid, and it was sent to valid address.We can show some information to the user.
 	// Add any error messages to the message field of the response instead of throwing an error
-	// Update cctx status from zetacore , if cctx is not found, it will continue to be in the status retuned by GetBallotIdentifier function PendingInboundVoting or PendingInboundConfirmation
+	// Update cctx status from zetacore , if cctx is not found, it will continue to be in the status retuned by CheckInbound function PendingInboundVoting or PendingInboundConfirmation
 	cctxDetails.UpdateCCTXStatus(ctx)
 
 	// The cctx details now have status from zetacore, we have not tried to a get more granular status from the outbound chain yet.
@@ -88,12 +90,9 @@ func trackCCTX(ctx *zetatoolcontext.Context) (cctx.CCTXDetails, error) {
 	}
 
 	// Check outbound tx , we are waiting for the outbound tx to be confirmed
-	switch {
-	case cctxDetails.OutboundChain.IsEVMChain():
-		err = zetatoolchains.CheckOutboundTx(ctx, &cctxDetails)
-		if err != nil {
-			return cctxDetails, err
-		}
+	err = cctxDetails.CheckOutbound(ctx)
+	if err != nil {
+		return cctxDetails, err
 	}
 	return cctxDetails, nil
 }
