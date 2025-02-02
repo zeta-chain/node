@@ -39,6 +39,19 @@ var (
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
+	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
+	// TODO: merge current IDL generation PR and update this
+	DiscriminatorExecute = [8]byte{
+		130,
+		221,
+		242,
+		154,
+		13,
+		193,
+		189,
+		29,
+	}
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
 
@@ -61,4 +74,14 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
 	return gatewayID, pda, err
+}
+
+func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
+	seed := []byte("connected")
+	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, connected)
+	if err != nil {
+		return solana.PublicKey{}, err
+	}
+
+	return pdaComputed, nil
 }

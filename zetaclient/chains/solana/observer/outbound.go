@@ -303,7 +303,12 @@ func ParseGatewayInstruction(
 	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
 	switch coinType {
 	case coin.CoinType_Gas:
-		return contracts.ParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
+		if err != nil { // TODO: better way for this?
+			return contracts.ParseInstructionExecute(instruction)
+		}
+
+		return inst, err
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:

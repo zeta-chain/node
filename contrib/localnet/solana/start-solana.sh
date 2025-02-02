@@ -12,7 +12,7 @@ sleep 5
 solana airdrop 1000
 solana airdrop 1000 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
 solana program deploy gateway.so
-
+solana program deploy connected.so
 
 # leave some time for debug if validator exits due to errors
 sleep 1000
