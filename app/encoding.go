@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmenc "github.com/zeta-chain/ethermint/encoding"
@@ -48,6 +49,7 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	fungibletypes.RegisterInterfaces(registry)
 	observertypes.RegisterInterfaces(registry)
 	lightclienttypes.RegisterInterfaces(registry)
+	groupmodule.RegisterInterfaces(registry)
 
 	return encodingConfig
 }
