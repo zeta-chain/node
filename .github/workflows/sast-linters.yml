@@ -19,6 +19,11 @@ jobs:
     env:
       GO111MODULE: on
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.11"
+
       - name: Checkout Source
         uses: actions/checkout@v4
         with:
