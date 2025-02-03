@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
+// startBitcoinTests starts Bitcoin related tests
 func startBitcoinTests(
 	eg *errgroup.Group,
 	conf config.Config,

@@ -4,20 +4,33 @@ package cctx
 type Status int
 
 const (
-	Unknown                     Status = iota
-	PendingInboundConfirmation  Status = 1
-	PendingInboundVoting        Status = 2
-	PendingOutbound             Status = 3
-	OutboundMined               Status = 4
-	PendingRevert               Status = 5
-	Reverted                    Status = 6
-	PendingOutboundConfirmation Status = 7
-	PendingRevertConfirmation   Status = 8
-	PendingRevertVoting         Status = 10
-	Aborted                     Status = 11
-	PendingOutboundSigning      Status = 12
-	PendingRevertSigning        Status = 13
-	PendingOutboundVoting       Status = 14
+	Unknown Status = iota
+	// Zetacore statuses
+	PendingOutbound Status = 1
+	OutboundMined   Status = 2
+	PendingRevert   Status = 3
+	Reverted        Status = 4
+	Aborted         Status = 5
+	// Zetatool only statuses
+	// PendingInboundConfirmation the inbound transaction is pending confirmation on the inbound chain
+	PendingInboundConfirmation Status = 6
+	// PendingInboundVoting the inbound transaction is confirmed on the inbound chain, and we are waiting for observers to vote
+	PendingInboundVoting Status = 7
+	// PendingOutboundSigning the outbound transaction is pending signing by the tss
+	PendingOutboundSigning Status = 8
+	// PendingRevertSigning the revert transaction is pending signing by the tss
+	PendingRevertSigning Status = 9
+	// PendingOutboundConfirmation the outbound transaction
+	// broadcast by the tss is pending confirmation on the outbound chain
+	PendingOutboundConfirmation Status = 10
+	// PendingRevertConfirmation the revert transaction broadcast by the tss is pending confirmation on the outbound chain
+	PendingRevertConfirmation Status = 11
+	// PendingOutboundVoting the outbound transaction is confirmed on the outbound chain,
+	//and we are waiting for observers to vote
+	PendingOutboundVoting Status = 12
+	// PendingRevertVoting the revert transaction is confirmed on the outbound chain,
+	//and we are waiting for observers to vote
+	PendingRevertVoting Status = 13
 )
 
 func (s Status) String() string {
