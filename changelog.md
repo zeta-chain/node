@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v26.0.1
+
+### Fixes
+
+* [3456](https://github.com/zeta-chain/node/pull/3456) - upgrade cometbft
+
+
 ## v26.0.0
 
 ### Features

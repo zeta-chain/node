@@ -303,6 +303,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHWithdrawAndCallRevertWithWithdraw,
+		runner.WithMinimumVersion("v26.0.0"),
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallOutOfGasName,
