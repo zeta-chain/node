@@ -18,7 +18,7 @@ func GetNormalizedVersion() string {
 	if version == "" {
 		version = versionWhenBuiltWithoutMake
 	}
-	return NormalizeVersion(Version)
+	return NormalizeVersion(version)
 }
 
 // NormalizeVersion ensures that the version string starts with a v
