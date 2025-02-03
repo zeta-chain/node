@@ -31,6 +31,9 @@ type OutboundData struct {
 	// feeRate is the fee rate in satoshis/vByte
 	feeRate int64
 
+	// feeRateBumpped is a flag to indicate if the fee rate in CCTX is bumped by zetacore
+	feeRateBumped bool
+
 	// txSize is the average size of a BTC outbound transaction
 	// user is charged (in ZRC20 contract) at a static txSize on each withdrawal
 	txSize int64
@@ -66,6 +69,13 @@ func NewOutboundData(
 	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
 	if err != nil || feeRate <= 0 {
 		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
+	}
+
+	// check if the fee rate is bumped by zetacore
+	// 'GasPriorityFee' is always empty for Bitcoin unless zetacore bumps the fee rate
+	feeRateBumped := params.GasPrice == params.GasPriorityFee
+	if feeRateBumped {
+		logger.Info().Msgf("fee rate is bumped by zetacore: %s", params.GasPriorityFee)
 	}
 
 	// apply outbound fee rate multiplier
@@ -122,10 +132,11 @@ func NewOutboundData(
 	}
 
 	return &OutboundData{
-		to:         to,
-		amount:     amount,
-		amountSats: amountSats,
-		feeRate:    feeRate,
+		to:            to,
+		amount:        amount,
+		amountSats:    amountSats,
+		feeRate:       feeRate,
+		feeRateBumped: feeRateBumped,
 		// #nosec G115 checked in range
 		txSize:   int64(params.CallOptions.GasLimit),
 		nonce:    params.TssNonce,
