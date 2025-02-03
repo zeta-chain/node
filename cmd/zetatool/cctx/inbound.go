@@ -24,6 +24,7 @@ import (
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
+// CheckInbound checks the inbound chain and gets the inbound ballot identifier and updates the TrackingDetails
 func (c *TrackingDetails) CheckInbound(ctx *context.Context) error {
 	var (
 		inboundChain = ctx.GetInboundChain()

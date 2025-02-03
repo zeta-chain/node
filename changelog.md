@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+* [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
+
 ## v27.0.0
 
 ### Breaking Changes

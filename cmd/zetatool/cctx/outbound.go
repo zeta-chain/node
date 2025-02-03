@@ -48,13 +48,13 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
 	if err != nil {
-		return fmt.Errorf("failed to get chain params: %v", err)
+		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 
 	// create evm client for the observation chain
 	evmClient, err := zetatoolchains.GetEvmClient(ctx, outboundChain)
 	if err != nil {
-		return fmt.Errorf("failed to create evm client: %v", err)
+		return fmt.Errorf("failed to create evm client: %w", err)
 	}
 
 	foundConfirmedTx := false
@@ -123,7 +123,7 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 
 	chainParams, err := zetacoreClient.GetChainParamsForChainID(goCtx, outboundChain.ChainId)
 	if err != nil {
-		return fmt.Errorf("failed to get chain params: %v", err)
+		return fmt.Errorf("failed to get chain params: %w", err)
 	}
 	confirmationCount := chainParams.ConfirmationCount
 

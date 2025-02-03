@@ -683,7 +683,7 @@ func TestZetacore_GetOutboundTracker(t *testing.T) {
 	client := setupZetacoreClients(t)
 
 	ctx := context.Background()
-	resp, err := client.GetOutboundTracker(ctx, chain.ChainId, 456)
+	resp, err := client.GetOutboundTracker(ctx, chain, 456)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput.OutboundTracker, *resp)
 }
