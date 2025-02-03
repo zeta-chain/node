@@ -2,6 +2,12 @@
 
 ## v27.0.0
 
+### Breaking Changes
+
+* Universal contract calls from Bitcoin and Solana now follow the Protocol Contract V2 workflow.
+  * For `depositAndCall` and `call` operations, the `onCall` method is invoked on the Universal Contract from the gateway, replacing the previous behavior where `onCrossChainCall` was triggered by the `systemContract`.
+  * The interfaces of both functions remain the same.
+
 ### Features
 
 * [3353](https://github.com/zeta-chain/node/pull/3353) - add liquidity cap parameter to ZRC20 creation
