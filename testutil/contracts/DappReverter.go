@@ -26,12 +26,13 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
 // DappReverterMetaData contains all meta data concerning the DappReverter contract.
 var DappReverterMetaData = &bind.MetaData{
 	ABI: "[{\"inputs\":[],\"name\":\"onZetaMessage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"onZetaRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x6080604052348015600f57600080fd5b50608180601d6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063705847b71460375780639a19074914603f575b600080fd5b603d6047565b005b60456049565b005b565b56fea26469706673582212202ae32d3809d629fd01d309562a51297d761f547f4633bf45c73bf33c9955651164736f6c63430008190033",
+	Bin: "0x6080604052348015600f57600080fd5b50608180601d6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063705847b71460375780639a19074914603f575b600080fd5b603d6047565b005b60456049565b005b565b56fea26469706673582212203f2101e4f3eedc7d132d603655b2788dd769162db0d6c7d36058cb6cb2be4c3964736f6c634300081a0033",
 }
 
 // DappReverterABI is the input ABI used to generate the binding from.
@@ -156,11 +157,11 @@ func NewDappReverterFilterer(address common.Address, filterer bind.ContractFilte
 
 // bindDappReverter binds a generic wrapper to an already deployed contract.
 func bindDappReverter(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(DappReverterABI))
+	parsed, err := DappReverterMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and

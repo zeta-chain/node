@@ -87,7 +87,7 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 
 	// Create a fanout
 	// It allows a "global" chan (i.e. blockChan) to stream to multiple consumers independently.
-	fo := fanout.New[ctypes.EventDataNewBlock](blockChan, fanout.DefaultBuffer)
+	fo := fanout.New(blockChan, fanout.DefaultBuffer)
 	fo.Start()
 
 	c.blocksFanout = fo

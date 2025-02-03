@@ -10,7 +10,7 @@ import (
 // PostGasPrice posts gas price to zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// GAS PRICE
-	gasPrice, err := ob.evmClient.EVMRPCClient.SuggestGasPrice(ctx)
+	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to suggest gas price")
 	}
@@ -91,7 +91,7 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 // getChainBaseFee fetches baseFee from latest block's header.
 func (ob *Observer) getChainBaseFee(ctx context.Context) (*big.Int, error) {
 	// get latest block
-	header, err := ob.evmClient.EVMRPCClient.HeaderByNumber(ctx, nil)
+	header, err := ob.evmClient.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get latest block header")
 	}

@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## Unreleased
+## v27.0.0
+
+### Breaking Changes
+
+* Universal contract calls from Bitcoin and Solana now follow the Protocol Contract V2 workflow.
+  * For `depositAndCall` and `call` operations, the `onCall` method is invoked on the Universal Contract from the gateway, replacing the previous behavior where `onCrossChainCall` was triggered by the `systemContract`.
+  * The interfaces of both functions remain the same.
 
 ### Features
 
@@ -15,15 +21,18 @@
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
-* [3379](https://github.com/zeta-chain/node/pull/3379) - add Avalanche, Arbitrum and World Chain in chain info
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
+* [3426](https://github.com/zeta-chain/node/pull/3426) - use protocol contracts V2 with Bitcoin deposits
 * [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object
 * [3418](https://github.com/zeta-chain/node/pull/3418) - orchestrator V2: TON observer-signer
-
+* [3432](https://github.com/zeta-chain/node/pull/3432) - use protocol contracts V2 with Solana deposits
+* [3438](https://github.com/zeta-chain/node/pull/3438) - orchestrator V2: SOl observer-signer. Drop V1.
+* [3440](https://github.com/zeta-chain/node/pull/3440) - remove unused method `FilterSolanaInboundEvents`
+* [3428](https://github.com/zeta-chain/node/pull/3428) - zetaclient: converge EVM clients.
+* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
 
 ### Fixes
 
-* [3374](https://github.com/zeta-chain/node/pull/3374) - remove minimum rent exempt check for SPL token withdrawals
 * [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
 
 ## v26.0.0
@@ -38,12 +47,6 @@
 * [3348](https://github.com/zeta-chain/node/pull/3348) - add support to perform withdraws in ZetaChain `onRevert` call
 
 ## v25.0.0
-
-## Unreleased
-
-## Refactor
-
-* [2863](https://github.com/zeta-chain/node/pull/2863) - refactor zetacore to delete matured ballots and add a migration script to remove all old ballots.
 
 ### Features
 
