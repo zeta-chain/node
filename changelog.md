@@ -34,6 +34,7 @@
 ### Fixes
 
 * [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
+* [3460](https://github.com/zeta-chain/node/pull/3460) - add group module to the cosmos interface registry
 
 ## v26.0.0
 
