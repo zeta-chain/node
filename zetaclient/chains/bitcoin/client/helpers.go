@@ -119,23 +119,23 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 	}
 }
 
-// GetEstimatedFeeRate gets estimated smart fee rate (BTC/Kb) targeting given block confirmation
-func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error) {
+// GetEstimatedFeeRate gets estimated smart fee rate (sat/vB) targeting given block confirmation
+func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (satsPerByte int64, err error) {
 	// RPC 'EstimateSmartFee' is not available in regnet
-	if regnet {
+	if c.isRegnet {
 		return FeeRateRegnet, nil
 	}
 
 	feeResult, err := c.EstimateSmartFee(ctx, confTarget, &types.EstimateModeEconomical)
-	if err != nil {
+	switch {
+	case err != nil:
 		return 0, errors.Wrap(err, "unable to estimate smart fee")
-	}
-	if feeResult.Errors != nil {
+	case feeResult.Errors != nil:
 		return 0, fmt.Errorf("fee result contains errors: %s", feeResult.Errors)
-	}
-	if feeResult.FeeRate == nil {
+	case feeResult.FeeRate == nil:
 		return 0, errors.New("nil fee rate")
 	}
+
 	feeRate := *feeResult.FeeRate
 	if feeRate <= 0 || feeRate >= maxBTCSupply {
 		return 0, fmt.Errorf("invalid fee rate: %f", feeRate)

@@ -224,9 +224,3 @@ func Test_SignRBFTx(t *testing.T) {
 		})
 	}
 }
-
-func hashFromTXID(t *testing.T, txid string) *chainhash.Hash {
-	h, err := chainhash.NewHashFromStr(txid)
-	require.NoError(t, err)
-	return h
-}

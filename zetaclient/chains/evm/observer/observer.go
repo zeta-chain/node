@@ -254,7 +254,7 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 		}
 		ob.WithLastBlockScanned(blockNumber)
 	}
-	ob.Logger().Chain.Info().Msgf("chain %d starts scanning from block %d", ob.Chain().ChainId, ob.LastBlockScanned())
+	ob.Logger().Chain.Info().Uint64("last_block_scanned", ob.LastBlockScanned()).Msg("LoadLastBlockScanned succeed")
 
 	return nil
 }

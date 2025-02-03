@@ -19,9 +19,6 @@ import (
 
 // OutboundData is a data structure containing necessary data to construct a BTC outbound transaction
 type OutboundData struct {
-	// chainID is the external chain ID
-	chainID int64
-
 	// to is the recipient address
 	to btcutil.Address
 
@@ -51,7 +48,6 @@ type OutboundData struct {
 // NewOutboundData creates OutboundData from the given CCTX.
 func NewOutboundData(
 	cctx *types.CrossChainTx,
-	chainID int64,
 	height uint64,
 	minRelayFee float64,
 	logger, loggerCompliance zerolog.Logger,
@@ -63,20 +59,13 @@ func NewOutboundData(
 
 	// support gas token only for Bitcoin outbound
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
-		return nil, errors.New("can only send gas token to a Bitcoin network")
+		return nil, fmt.Errorf("invalid coin type %s", cctx.InboundParams.CoinType.String())
 	}
 
-	// initial fee rate
+	// parse fee rate
 	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
 	if err != nil || feeRate <= 0 {
 		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
-	}
-
-	// use current gas rate if fed by zetacore
-	newRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-	if err == nil && newRate > 0 && newRate != feeRate {
-		logger.Info().Msgf("use new fee rate %d sat/vB instead of %d sat/vB", newRate, feeRate)
-		feeRate = newRate
 	}
 
 	// apply outbound fee rate multiplier
@@ -96,7 +85,7 @@ func NewOutboundData(
 		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 	if !chains.IsBtcAddressSupported(to) {
-		return nil, fmt.Errorf("unsupported receiver address %s", params.Receiver)
+		return nil, fmt.Errorf("unsupported receiver address %s", to.EncodeAddress())
 	}
 
 	// amount in BTC and satoshis
@@ -104,6 +93,10 @@ func NewOutboundData(
 	amountSats := params.Amount.BigInt().Int64()
 
 	// check gas limit
+	if params.CallOptions == nil {
+		// never happens, 'GetCurrentOutboundParam' will create it
+		return nil, errors.New("call options is nil")
+	}
 	if params.CallOptions.GasLimit > math.MaxInt64 {
 		return nil, fmt.Errorf("invalid gas limit %d", params.CallOptions.GasLimit)
 	}
@@ -112,7 +105,7 @@ func NewOutboundData(
 	restrictedCCTX := compliance.IsCctxRestricted(cctx)
 	if restrictedCCTX {
 		compliance.PrintComplianceLog(logger, loggerCompliance,
-			true, chainID, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
+			true, params.ReceiverChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
 	}
 
 	// check dust amount
@@ -129,7 +122,6 @@ func NewOutboundData(
 	}
 
 	return &OutboundData{
-		chainID:    chainID,
 		to:         to,
 		amount:     amount,
 		amountSats: amountSats,

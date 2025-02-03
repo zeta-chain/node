@@ -32,7 +32,6 @@ func Test_NewOutboundData(t *testing.T) {
 		name         string
 		cctx         *crosschaintypes.CrossChainTx
 		cctxModifier func(cctx *crosschaintypes.CrossChainTx)
-		chainID      int64
 		height       uint64
 		minRelayFee  float64
 		expected     *OutboundData
@@ -50,44 +49,13 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
-			chainID:     chain.ChainId,
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:    chain.ChainId,
 				to:         receiver,
 				amount:     0.1,
 				amountSats: 10000000,
 				feeRate:    8, // Round(7.5)
-				txSize:     254,
-				nonce:      1,
-				height:     101,
-				cancelTx:   false,
-			},
-			errMsg: "",
-		},
-		{
-			name: "create new outbound data using current gas rate instead of old rate",
-			cctx: sample.CrossChainTx(t, "0x123"),
-			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
-				cctx.InboundParams.CoinType = coin.CoinType_Gas
-				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
-				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
-				cctx.GetCurrentOutboundParam().GasPriorityFee = "15"         // 15 sats/vByte
-				cctx.GetCurrentOutboundParam().TssNonce = 1
-			},
-			chainID:     chain.ChainId,
-			height:      101,
-			minRelayFee: 0.00001, // 1000 sat/KB
-			expected: &OutboundData{
-				chainID:    chain.ChainId,
-				to:         receiver,
-				amount:     0.1,
-				amountSats: 10000000,
-				feeRate:    11, // Round(11.25)
 				txSize:     254,
 				nonce:      1,
 				height:     101,
@@ -103,13 +71,13 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:       "cctx is nil",
 		},
 		{
-			name: "coin type is not gas",
+			name: "invalid coin types",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
 				cctx.InboundParams.CoinType = coin.CoinType_ERC20
 			},
 			expected: nil,
-			errMsg:   "can only send gas token to a Bitcoin network",
+			errMsg:   "invalid coin type",
 		},
 		{
 			name: "invalid gas price",
@@ -177,11 +145,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
-			chainID:     chain.ChainId,
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:    chain.ChainId,
 				to:         receiver,
 				amount:     0, // should cancel the tx
 				amountSats: 0,
@@ -204,11 +170,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
-			chainID:     chain.ChainId,
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				chainID:    chain.ChainId,
 				to:         receiver,
 				amount:     0, // should cancel the tx
 				amountSats: 0,
@@ -228,7 +192,7 @@ func Test_NewOutboundData(t *testing.T) {
 				tt.cctxModifier(tt.cctx)
 			}
 
-			outboundData, err := NewOutboundData(tt.cctx, tt.chainID, tt.height, tt.minRelayFee, log.Logger, log.Logger)
+			outboundData, err := NewOutboundData(tt.cctx, tt.height, tt.minRelayFee, log.Logger, log.Logger)
 			if tt.errMsg != "" {
 				require.Nil(t, outboundData)
 				require.ErrorContains(t, err, tt.errMsg)

@@ -11,7 +11,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -26,6 +25,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -169,7 +169,7 @@ func Test_NewObserver(t *testing.T) {
 func Test_BlockCache(t *testing.T) {
 	t.Run("should add and get block from cache", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// feed block hash, header and block to btc client
 		hash := sample.BtcHash()
@@ -193,7 +193,7 @@ func Test_BlockCache(t *testing.T) {
 	})
 	t.Run("should fail if stored type is not BlockNHeader", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// add a string to cache
 		blockNumber := int64(100)
@@ -206,22 +206,9 @@ func Test_BlockCache(t *testing.T) {
 	})
 }
 
-func Test_SetPendingNonce(t *testing.T) {
-	// create observer
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
-
-	// ensure pending nonce is 0
-	require.Zero(t, ob.GetPendingNonce())
-
-	// set and get pending nonce
-	nonce := uint64(100)
-	ob.SetPendingNonce(nonce)
-	require.Equal(t, nonce, ob.GetPendingNonce())
-}
-
 func TestConfirmationThreshold(t *testing.T) {
 	chain := chains.BitcoinMainnet
-	ob := newTestSuite(t, chain, "")
+	ob := newTestSuite(t, chain)
 
 	t.Run("should return confirmations in chain param", func(t *testing.T) {
 		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
@@ -245,7 +232,7 @@ func TestConfirmationThreshold(t *testing.T) {
 
 func Test_SetLastStuckOutbound(t *testing.T) {
 	// create observer and example stuck tx
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
+	ob := newTestSuite(t, chains.BitcoinMainnet)
 	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 
 	// STEP 1
@@ -303,16 +290,28 @@ type testSuite struct {
 	db       *db.DB
 }
 
-func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
-	ctx := context.Background()
+type testSuiteOpts struct {
+	dbPath string
+}
+
+type opt func(t *testSuiteOpts)
+
+// withDatabasePath is an option to set custom db path
+func withDatabasePath(dbPath string) opt {
+	return func(t *testSuiteOpts) { t.dbPath = dbPath }
+}
+
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
+	// create test suite with options
+	var testOpts testSuiteOpts
+	for _, opt := range opts {
+		opt(&testOpts)
+	}
 
 	require.True(t, chain.IsBitcoinChain())
-
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
 	client := mocks.NewBitcoinClient(t)
-	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
-
 	zetacore := mocks.NewZetacoreClient(t)
 
 	var tss interfaces.TSSSigner
@@ -322,20 +321,22 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
 	}
 
-	// create test database
-	var err error
-	var database *db.DB
-	if dbPath == "" {
-		database, err = db.NewFromSqliteInMemory(true)
-	} else {
-		database, err = db.NewFromSqlite(dbPath, "test.db", true)
-		t.Cleanup(func() { os.RemoveAll(dbPath) })
-	}
-	require.NoError(t, err)
-
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
+
+	var database *db.DB
+	var err error
+	if testOpts.dbPath == "" {
+		database, err = db.NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+	} else {
+		database, err = db.NewFromSqlite(testOpts.dbPath, "test.db", true)
+		require.NoError(t, err)
+		t.Cleanup(func() { os.RemoveAll(testOpts.dbPath) })
+	}
+
+	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -345,7 +346,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		100,
 		&metrics.TelemetryServer{},
 		database,
-		logger,
+		baseLogger,
 	)
 	require.NoError(t, err)
 
@@ -353,10 +354,10 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 	require.NoError(t, err)
 
 	return &testSuite{
-		ctx:      ctx,
-		Observer: ob,
+		ctx:      context.Background(),
 		client:   client,
 		zetacore: zetacore,
 		db:       database,
+		Observer: ob,
 	}
 }

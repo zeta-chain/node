@@ -167,8 +167,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
 func (b *CPFPFeeBumper) FetchFeeBumpInfo(logger zerolog.Logger) error {
 	// query live fee rate
-	isRegnet := chains.IsBitcoinRegnet(b.Chain.ChainId)
-	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1, isRegnet)
+	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1)
 	if err != nil {
 		return errors.Wrap(err, "GetEstimatedFeeRate failed")
 	}

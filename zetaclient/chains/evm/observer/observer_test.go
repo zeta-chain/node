@@ -208,6 +208,48 @@ func Test_NewObserver(t *testing.T) {
 	}
 }
 
+func Test_LoadLastBlockScanned(t *testing.T) {
+	ctx := context.Background()
+
+	// create observer using mock evm client
+	ob := newTestSuite(t)
+
+	t.Run("should load last block scanned", func(t *testing.T) {
+		// create db and write 123 as last block scanned
+		ob.WriteLastBlockScannedToDB(123)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned(ctx)
+		require.NoError(t, err)
+		require.EqualValues(t, 123, ob.LastBlockScanned())
+	})
+	t.Run("should fail on invalid env var", func(t *testing.T) {
+		// set invalid environment variable
+		envvar := base.EnvVarLatestBlockByChain(ob.Chain())
+		os.Setenv(envvar, "invalid")
+		defer os.Unsetenv(envvar)
+
+		// load last block scanned
+		err := ob.LoadLastBlockScanned(ctx)
+		require.ErrorContains(t, err, "error LoadLastBlockScanned")
+	})
+	t.Run("should fail on RPC error", func(t *testing.T) {
+		// create observer on separate path, as we need to reset last block scanned
+		obOther := newTestSuite(t)
+
+		// reset last block scanned to 0 so that it will be loaded from RPC
+		obOther.WithLastBlockScanned(0)
+
+		// attach mock evm client to observer
+		obOther.evmMock.On("BlockNumber", mock.Anything).Unset()
+		obOther.evmMock.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
+
+		// load last block scanned
+		err := obOther.LoadLastBlockScanned(ctx)
+		require.ErrorContains(t, err, "error RPC")
+	})
+}
+
 func Test_BlockCache(t *testing.T) {
 	t.Run("should get block from cache", func(t *testing.T) {
 		// create observer

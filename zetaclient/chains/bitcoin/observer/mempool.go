@@ -188,7 +188,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	//  3. zetaclient needs the original tx body of a stuck tx to bump its fee and sign again.
 	lastTx, err := ob.rpc.GetRawTransactionByStr(ctx, lastHash)
 	if err != nil {
-		return nil, 0, errors.Wrapf(err, "GetRawTxByHash failed for last tx %s nonce %d", lastHash, lastNonce)
+		return nil, 0, errors.Wrapf(err, "GetRawTransactionByStr failed for last tx %s nonce %d", lastHash, lastNonce)
 	}
 
 	return lastTx, lastNonce, nil
