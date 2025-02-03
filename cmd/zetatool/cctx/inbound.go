@@ -24,7 +24,7 @@ import (
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
-// CheckInbound checks the inbound chain and gets the inbound ballot identifier and updates the TrackingDetails
+// CheckInbound checks the inbound chain,gets the inbound ballot identifier and updates the TrackingDetails
 func (c *TrackingDetails) CheckInbound(ctx *context.Context) error {
 	var (
 		inboundChain = ctx.GetInboundChain()
@@ -79,11 +79,12 @@ func (c *TrackingDetails) CheckInbound(ctx *context.Context) error {
 		}
 	default:
 		c.Message = "Chain not supported"
+		return nil
 	}
-
 	return nil
 }
 
+// btcInboundBallotIdentifier gets the inbound ballot identifier for the inbound hash from bitcoin chain
 func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
@@ -146,6 +147,7 @@ func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error
 	return nil
 }
 
+// evmInboundBallotIdentifier gets the inbound ballot identifier for the inbound hash from evm chain
 func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
@@ -273,6 +275,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 	return nil
 }
 
+// solanaInboundBallotIdentifier gets the inbound ballot identifier for the inbound hash from solana chain
 func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
@@ -331,6 +334,7 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 	return nil
 }
 
+// zevmInboundBallotIdentifier gets the inbound ballot identifier for the inbound hash from zetachain
 func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()

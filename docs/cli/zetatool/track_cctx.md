@@ -1,6 +1,6 @@
 ## Usage 
 
-### TRack the status of a CCTX
+### Track the status of a CCTX
 
 ### Command
 ```shell

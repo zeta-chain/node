@@ -1,8 +1,6 @@
 package v9
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/observer/types"
@@ -19,7 +17,6 @@ const MaturityBlocks = int64(100)
 // MigrateStore migrates the x/observer module state from the consensus version 8 to version 9.
 // The migration deletes all the ballots and ballot lists that are older than MaturityBlocks.
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
-	fmt.Println("Migrating x/observer store")
 	currentHeight := ctx.BlockHeight()
 	// Maturity blocks is a parameter in the emissions module
 	if currentHeight < MaturityBlocks {

@@ -1,6 +1,6 @@
 ## Usage 
 
-### Fetching the Ballot Identifier
+### Fetching the Inbound Ballot Identifier
 
 ### Command
 ```shell
