@@ -7,6 +7,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+
 	zetatoolchains "github.com/zeta-chain/node/cmd/zetatool/chains"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -18,12 +22,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	zetaclientConfig "github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 )
 
-func (c *CCTXDetails) CheckInbound(ctx *context.Context) error {
+func (c *TrackingDetails) CheckInbound(ctx *context.Context) error {
 	var (
 		inboundChain = ctx.GetInboundChain()
 		err          error
@@ -32,7 +33,7 @@ func (c *CCTXDetails) CheckInbound(ctx *context.Context) error {
 	switch {
 	case inboundChain.IsZetaChain():
 		{
-			err = CheckInBoundTx(ctx, c)
+			err = c.zevmInboundBallotIdentifier(ctx)
 			if err != nil {
 				return fmt.Errorf(
 					"failed to get inbound ballot for zeta chain %d, %w",
@@ -82,7 +83,7 @@ func (c *CCTXDetails) CheckInbound(ctx *context.Context) error {
 	return nil
 }
 
-func (c *CCTXDetails) btcInboundBallotIdentifier(ctx *context.Context) error {
+func (c *TrackingDetails) btcInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		inboundChain   = ctx.GetInboundChain()
@@ -144,10 +145,9 @@ func (c *CCTXDetails) btcInboundBallotIdentifier(ctx *context.Context) error {
 	return nil
 }
 
-func (c *CCTXDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
+func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
-		isConfirmed    = false
 		inboundChain   = ctx.GetInboundChain()
 		zetacoreClient = ctx.GetZetaCoreClient()
 		zetaChainID    = ctx.GetConfig().ZetaChainID
@@ -170,7 +170,7 @@ func (c *CCTXDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 	}
 	// Signer is unused
 	zetaEvmClient := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-	isConfirmed, err = zetaEvmClient.IsTxConfirmed(goCtx, inboundHash, chainParams.ConfirmationCount)
+	isConfirmed, err := zetaEvmClient.IsTxConfirmed(goCtx, inboundHash, chainParams.ConfirmationCount)
 	if err != nil {
 		return fmt.Errorf("unable to confirm tx: %w", err)
 	}
@@ -249,7 +249,11 @@ func (c *CCTXDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 				}
 				eventDepositAndCall, err := gateway.ParseDepositedAndCalled(*log)
 				if err == nil {
-					msg = zetatoolchains.DepositAndCallInboundVoteV2(eventDepositAndCall, inboundChain.ChainId, zetaChainID)
+					msg = zetatoolchains.DepositAndCallInboundVoteV2(
+						eventDepositAndCall,
+						inboundChain.ChainId,
+						zetaChainID,
+					)
 					break
 				}
 				eventCall, err := gateway.ParseCalled(*log)
@@ -268,7 +272,7 @@ func (c *CCTXDetails) evmInboundBallotIdentifier(ctx *context.Context) error {
 	return nil
 }
 
-func (c *CCTXDetails) solanaInboundBallotIdentifier(ctx *context.Context) error {
+func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) error {
 	var (
 		inboundHash    = ctx.GetInboundHash()
 		inboundChain   = ctx.GetInboundChain()
@@ -323,5 +327,32 @@ func (c *CCTXDetails) solanaInboundBallotIdentifier(ctx *context.Context) error 
 	c.CCTXIdentifier = msg.Digest()
 	c.Status = PendingInboundVoting
 
+	return nil
+}
+
+func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) error {
+	var (
+		inboundHash    = ctx.GetInboundHash()
+		zetacoreClient = ctx.GetZetaCoreClient()
+		goCtx          = ctx.GetContext()
+	)
+
+	inboundHashToCCTX, err := zetacoreClient.Crosschain.InboundHashToCctx(
+		goCtx, &crosschaintypes.QueryGetInboundHashToCctxRequest{
+			InboundHash: inboundHash,
+		})
+	if err != nil {
+		return fmt.Errorf("inbound chain is zetachain , cctx should be available in the same block: %w", err)
+	}
+	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) == 0 {
+		return fmt.Errorf("inbound hash does not have any cctx linked %s", inboundHash)
+	}
+
+	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) > 1 {
+		return fmt.Errorf("inbound hash more than one cctx %s", inboundHash)
+	}
+
+	c.CCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]
+	c.Status = PendingOutbound
 	return nil
 }

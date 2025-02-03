@@ -14,7 +14,13 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
-func startBitcoinTests(eg *errgroup.Group, conf config.Config, deployerRunner *runner.E2ERunner, verbose bool, light, skipBitcoinSetup bool) {
+func startBitcoinTests(
+	eg *errgroup.Group,
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	verbose bool,
+	light, skipBitcoinSetup bool,
+) {
 	{
 		// start the bitcoin tests
 		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs

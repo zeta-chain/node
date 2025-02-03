@@ -8,8 +8,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// CCTXDetails represents the status of a CCTX transaction
-type CCTXDetails struct {
+// TrackingDetails represents the status of a CCTX transaction
+type TrackingDetails struct {
 	CCTXIdentifier          string       `json:"cctx_identifier"`
 	Status                  Status       `json:"status"`
 	OutboundChain           chains.Chain `json:"outbound_chain_id"`
@@ -18,14 +18,14 @@ type CCTXDetails struct {
 	Message                 string       `json:"message"`
 }
 
-func NewCCTXDetails() *CCTXDetails {
-	return &CCTXDetails{
+func NewCCTXDetails() *TrackingDetails {
+	return &TrackingDetails{
 		CCTXIdentifier: "",
 		Status:         Unknown,
 	}
 }
 
-func (c *CCTXDetails) UpdateStatusFromZetacoreCCTX(status crosschaintypes.CctxStatus) {
+func (c *TrackingDetails) UpdateStatusFromZetacoreCCTX(status crosschaintypes.CctxStatus) {
 	switch status {
 	case crosschaintypes.CctxStatus_PendingOutbound:
 		c.Status = PendingOutbound
@@ -42,23 +42,24 @@ func (c *CCTXDetails) UpdateStatusFromZetacoreCCTX(status crosschaintypes.CctxSt
 	}
 }
 
-func (c *CCTXDetails) IsPending() bool {
+func (c *TrackingDetails) IsPendingOutbound() bool {
 	return c.Status == PendingOutbound || c.Status == PendingRevert
 }
 
-func (c *CCTXDetails) IsPendingConfirmation() bool {
+func (c *TrackingDetails) IsPendingConfirmation() bool {
 	return c.Status == PendingOutboundConfirmation || c.Status == PendingRevertConfirmation
 }
 
-func (c *CCTXDetails) Print() string {
+func (c *TrackingDetails) Print() string {
 	return fmt.Sprintf("CCTX: %s Status: %s", c.CCTXIdentifier, c.Status.String())
 }
 
-func (c *CCTXDetails) DebugPrint() string {
+func (c *TrackingDetails) DebugPrint() string {
 	return fmt.Sprintf("CCTX: %s Status: %s Message: %s", c.CCTXIdentifier, c.Status.String(), c.Message)
 }
 
-func (c *CCTXDetails) UpdateCCTXStatus(ctx *context.Context) {
+// UpdateCCTXStatus updates the TrackingDetails with status from zetacore
+func (c *TrackingDetails) UpdateCCTXStatus(ctx *context.Context) {
 	var (
 		zetacoreClient = ctx.GetZetaCoreClient()
 		goCtx          = ctx.GetContext()
@@ -75,7 +76,7 @@ func (c *CCTXDetails) UpdateCCTXStatus(ctx *context.Context) {
 	return
 }
 
-func (c *CCTXDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
+func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 	var (
 		zetacoreClient = ctx.GetZetaCoreClient()
 		goCtx          = ctx.GetContext()
@@ -84,19 +85,19 @@ func (c *CCTXDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 	}
-	chainId := CCTX.GetCurrentOutboundParam().ReceiverChainId
+	chainID := CCTX.GetCurrentOutboundParam().ReceiverChainId
 
 	// This is almost impossible to happen as the cctx would not have been created if the chain was not supported
-	chain, found := chains.GetChainFromChainID(chainId, []chains.Chain{})
+	chain, found := chains.GetChainFromChainID(chainID, []chains.Chain{})
 	if !found {
-		c.Message = fmt.Sprintf("receiver chain not supported,chain id: %d", chainId)
+		c.Message = fmt.Sprintf("receiver chain not supported,chain id: %d", chainID)
 	}
 	c.OutboundChain = chain
 	c.OutboundTssNonce = CCTX.GetCurrentOutboundParam().TssNonce
 	return
 }
 
-func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
+func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	var (
 		zetacoreClient = ctx.GetZetaCoreClient()
 		goCtx          = ctx.GetContext()
@@ -104,12 +105,12 @@ func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 		outboundNonce  = c.OutboundTssNonce
 	)
 
-	if !c.IsPending() {
+	if !c.IsPendingOutbound() {
 		return
 	}
 
 	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain, outboundNonce)
-	// tracker is found that means the outbound has broadcasted but we are waiting for confirmations
+	// tracker is found that means the outbound has been broadcast, but we are waiting for confirmations
 	if err == nil && tracker != nil {
 		c.updateOutboundConfirmation()
 		var hashList []string
@@ -124,15 +125,16 @@ func (c *CCTXDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	return
 }
 
-func (c *CCTXDetails) updateInboundConfirmation(isConfirmed bool) {
+// 0 - Inbound Confirmation
+func (c *TrackingDetails) updateInboundConfirmation(isConfirmed bool) {
 	c.Status = PendingInboundConfirmation
 	if isConfirmed {
 		c.Status = PendingInboundVoting
 	}
 }
 
-// 1 - Signing
-func (c *CCTXDetails) updateOutboundSigning() {
+// 1 - Outbound Signing
+func (c *TrackingDetails) updateOutboundSigning() {
 	switch {
 	case c.Status == PendingOutbound:
 		c.Status = PendingOutboundSigning
@@ -141,8 +143,8 @@ func (c *CCTXDetails) updateOutboundSigning() {
 	}
 }
 
-// 2 - Confirmation
-func (c *CCTXDetails) updateOutboundConfirmation() {
+// 2 - Outbound Confirmation
+func (c *TrackingDetails) updateOutboundConfirmation() {
 	switch {
 	case c.Status == PendingOutbound:
 		c.Status = PendingOutboundConfirmation
@@ -151,8 +153,8 @@ func (c *CCTXDetails) updateOutboundConfirmation() {
 	}
 }
 
-// UpdateOutboundVoting 3 - Voting
-func (c *CCTXDetails) UpdateOutboundVoting() {
+// 3 - Outbound Voting
+func (c *TrackingDetails) updateOutboundVoting() {
 	switch {
 	case c.Status == PendingOutboundConfirmation:
 		c.Status = PendingOutboundVoting

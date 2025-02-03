@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/rpc"
 	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 )
 
 type Context struct {
 	ctx            context.Context
 	config         *config.Config
-	zetaCoreClient rpc.Clients
+	zetaCoreClient zetacorerpc.Clients
 	inboundHash    string
 	inboundChain   chains.Chain
 	logger         zerolog.Logger
@@ -58,7 +58,7 @@ func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *Context) GetZetaCoreClient() rpc.Clients {
+func (c *Context) GetZetaCoreClient() zetacorerpc.Clients {
 	return c.zetaCoreClient
 }
 

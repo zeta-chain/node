@@ -11,6 +11,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	"github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -20,9 +24,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 )
 
 func resolveRPC(chain chains.Chain, cfg *config.Config) string {
@@ -35,7 +36,6 @@ func resolveRPC(chain chains.Chain, cfg *config.Config) string {
 }
 
 func GetEvmClient(ctx *context.Context, chain chains.Chain) (*ethclient.Client, error) {
-
 	evmRRC := resolveRPC(chain, ctx.GetConfig())
 	if evmRRC == "" {
 		return nil, fmt.Errorf("rpc not found for chain %d network %s", chain.ChainId, chain.Network)
@@ -53,7 +53,6 @@ func GetEvmTx(
 	inboundHash string,
 	chain chains.Chain,
 ) (*ethtypes.Transaction, *ethtypes.Receipt, error) {
-
 	goCtx := ctx.GetContext()
 	// Fetch transaction from the inbound
 	hash := ethcommon.HexToHash(inboundHash)

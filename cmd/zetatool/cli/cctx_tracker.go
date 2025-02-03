@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/cmd/zetatool/cctx"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
 	zetatoolcontext "github.com/zeta-chain/node/cmd/zetatool/context"
@@ -49,8 +50,7 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.CCTXDetails, error) {
-
+func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.TrackingDetails, error) {
 	var (
 		cctxDetails = cctx.NewCCTXDetails()
 		err         error
@@ -60,36 +60,35 @@ func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.CCTXDetails, error) {
 	if err != nil {
 		return cctxDetails, fmt.Errorf("failed to get ballot identifier: %v", err)
 	}
-	// Reject unknown status , as it is not valid
+	// Reject unknown status, as it is not valid
 	if cctxDetails.Status == cctx.Unknown || cctxDetails.CCTXIdentifier == "" {
 		return cctxDetails, fmt.Errorf("unknown status")
 	}
 
-	// At this point, we have confirmed the inbound hash is valid, and it was sent to valid address.We can show some information to the user.
-	// Add any error messages to the message field of the response instead of throwing an error
-	// Update cctx status from zetacore , if cctx is not found, it will continue to be in the status retuned by CheckInbound function PendingInboundVoting or PendingInboundConfirmation
+	// At this point, we have confirmed the inbound hash is valid, and it was sent to valid address.
+	// Update cctx status from zetacore.This copies the status from zetacore to the cctx details.The cctx status can only be `PendingInboundVoting` or `PendingInboundConfirmation` at this point
 	cctxDetails.UpdateCCTXStatus(ctx)
 
 	// The cctx details now have status from zetacore, we have not tried to a get more granular status from the outbound chain yet.
-	// If it's not pending, we can just return here
-	if !cctxDetails.IsPending() {
+	// If it's not pending, we can just return here.
+	if !cctxDetails.IsPendingOutbound() {
 		return cctxDetails, nil
 	}
 
-	// update outbound details, this does not translation any status, it just updates the details
+	// update outbound details, this does not transition any status.
 	cctxDetails.UpdateCCTXOutboundDetails(ctx)
 
 	// Update tx hash list from outbound tracker
-	// If the tracker is found it means the outbound is broadcasted but we are waiting for the confirmations
-	// If the tracker is not found it means the outbound is not broadcasted yet
+	// If the tracker is found, it means the outbound is broadcast, but we are waiting for the confirmations
+	// If the tracker is not found, it means the outbound is not broadcast yet, we are wwaiting for the tss to sign the outbound
 	cctxDetails.UpdateHashListAndPendingStatus(ctx)
 
-	// If its not pending confirmation we can return here, it means the outbound is not broadcasted yet its pending tss signing
+	// If its not pending confirmation, we can return here, it means the outbound is not broadcast yet its pending tss signing
 	if !cctxDetails.IsPendingConfirmation() {
 		return cctxDetails, nil
 	}
 
-	// Check outbound tx , we are waiting for the outbound tx to be confirmed
+	// Check outbound tx, we are waiting for the outbound tx to be confirmed
 	err = cctxDetails.CheckOutbound(ctx)
 	if err != nil {
 		return cctxDetails, err

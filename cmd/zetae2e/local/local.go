@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
@@ -292,8 +291,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-		log.Info().Msgf("EVM tests started %v %v", light, skipBitcoinSetup)
-		//startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
 	if !skipPrecompiles {
