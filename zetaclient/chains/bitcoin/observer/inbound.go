@@ -111,9 +111,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// ObserveInboundTrackers processes inbound trackers
+// ProcessInboundTrackers processes inbound trackers
 // TODO(revamp): move inbound tracker logic in a specific file
-func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return err

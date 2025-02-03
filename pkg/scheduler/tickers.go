@@ -70,24 +70,12 @@ type blockTicker struct {
 	logger zerolog.Logger
 }
 
-type blockCtxKey struct{}
-
 func newBlockTicker(task Executable, blockChan <-chan cometbft.EventDataNewBlock, logger zerolog.Logger) *blockTicker {
 	return &blockTicker{
 		exec:      task,
 		blockChan: blockChan,
 		logger:    logger,
 	}
-}
-
-func withBlockEvent(ctx context.Context, event cometbft.EventDataNewBlock) context.Context {
-	return context.WithValue(ctx, blockCtxKey{}, event)
-}
-
-// BlockFromContext returns cometbft.EventDataNewBlock from the context or false.
-func BlockFromContext(ctx context.Context) (cometbft.EventDataNewBlock, bool) {
-	blockEvent, ok := ctx.Value(blockCtxKey{}).(cometbft.EventDataNewBlock)
-	return blockEvent, ok
 }
 
 func (t *blockTicker) Start(ctx context.Context) error {

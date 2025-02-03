@@ -38,7 +38,8 @@ func (rk RelayerKey) ResolveAddress(network chains.Network) (string, string, err
 	return network.String(), address, nil
 }
 
-// LoadRelayerKey loads the relayer key for given network and password
+// LoadRelayerKey loads the relayer key for given network and password.
+// Note: returns (nil,nil) if the relayer key is not present.
 func LoadRelayerKey(relayerKeyPath string, network chains.Network, password string) (*RelayerKey, error) {
 	// resolve the relayer key file name
 	fileName, err := ResolveRelayerKeyFile(relayerKeyPath, network)
@@ -46,33 +47,32 @@ func LoadRelayerKey(relayerKeyPath string, network chains.Network, password stri
 		return nil, errors.Wrap(err, "failed to resolve relayer key file name")
 	}
 
-	// load the relayer key if it is present
-	if zetaos.FileExists(fileName) {
-		// read the relayer key file
-		relayerKey, err := ReadRelayerKeyFromFile(fileName)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to read relayer key file: %s", fileName)
-		}
-
-		// password must be set by operator
-		if password == "" {
-			return nil, errors.New("password is required to decrypt the private key")
-		}
-
-		// decrypt the private key
-		privateKey, err := crypto.DecryptAES256GCMBase64(relayerKey.PrivateKey, password)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to decrypt private key")
-		}
-
-		relayerKey.PrivateKey = privateKey
-		return relayerKey, nil
+	// relayer key is optional, so it's okay if the relayer key is not provided
+	if !zetaos.FileExists(fileName) {
+		log.Logger.Warn().Msgf("relayer key file not found: %s", fileName)
+		return nil, nil
 	}
 
-	log.Logger.Warn().Msgf("relayer key file not found: %s", fileName)
+	// read the relayer key file
+	relayerKey, err := ReadRelayerKeyFromFile(fileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read relayer key file: %s", fileName)
+	}
 
-	// relayer key is optional, so it's okay if the relayer key is not provided
-	return nil, nil
+	// password must be set by operator
+	if password == "" {
+		return nil, errors.New("password is required to decrypt the private key")
+	}
+
+	// decrypt the private key
+	privateKey, err := crypto.DecryptAES256GCMBase64(relayerKey.PrivateKey, password)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decrypt private key")
+	}
+
+	relayerKey.PrivateKey = privateKey
+
+	return relayerKey, nil
 }
 
 // ResolveRelayerKeyFile is a helper function to resolve the relayer key file with full path

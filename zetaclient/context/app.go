@@ -26,7 +26,8 @@ type AppContext struct {
 	chainRegistry *ChainRegistry
 
 	// crosschainFlags is the current crosschain flags state
-	crosschainFlags observertypes.CrosschainFlags
+	crosschainFlags  observertypes.CrosschainFlags
+	operationalFlags observertypes.OperationalFlags
 
 	// logger is the logger of the app
 	logger zerolog.Logger
@@ -98,12 +99,21 @@ func (a *AppContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 	return a.crosschainFlags
 }
 
+// GetOperationalFlags returns operational flags
+func (a *AppContext) GetOperationalFlags() observertypes.OperationalFlags {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.operationalFlags
+}
+
 // Update updates AppContext and params for all chains
 // this must be the ONLY function that writes to AppContext
 func (a *AppContext) Update(
 	freshChains, additionalChains []chains.Chain,
 	freshChainParams map[int64]*observertypes.ChainParams,
 	crosschainFlags observertypes.CrosschainFlags,
+	operationalFlags observertypes.OperationalFlags,
 ) error {
 	// some sanity checks
 	switch {
@@ -128,6 +138,7 @@ func (a *AppContext) Update(
 	defer a.mu.Unlock()
 
 	a.crosschainFlags = crosschainFlags
+	a.operationalFlags = operationalFlags
 
 	return nil
 }

@@ -90,11 +90,11 @@ func (t *TON) Start(ctx context.Context) error {
 	}
 
 	register(t.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(t.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(t.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(t.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(t.observer.CheckRPCStatus, "check_rpc_status")
 	register(t.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
-	register(t.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(t.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(t.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
@@ -121,15 +121,16 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	chainID := t.observer.Chain().ChainId
-
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
+	chainID := t.observer.Chain().ChainId
 
 	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
 	if err != nil {

@@ -98,6 +98,13 @@ export declare enum InboundStatus {
    * @generated from enum value: INSUFFICIENT_DEPOSITOR_FEE = 1;
    */
   INSUFFICIENT_DEPOSITOR_FEE = 1,
+
+  /**
+   * the receiver address parsed from the inbound is invalid
+   *
+   * @generated from enum value: INVALID_RECEIVER_ADDRESS = 2;
+   */
+  INVALID_RECEIVER_ADDRESS = 2,
 }
 
 /**
