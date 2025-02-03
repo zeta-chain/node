@@ -259,7 +259,12 @@ func CheckAndUpdateCCTXGasPriceBTC(
 	}
 
 	// set new gas price and last update timestamp
+	//
+	// there is no priority fee for Bitcoin chain, the reason for setting 'GasPriorityFee' is:
+	// zetaclient can't figure out whether the gas price has been updated or not, so setting the
+	// 'GasPriorityFee' is to signal the gas price is updated, and the RBF (replace by fee) is allowed.
 	cctx.GetCurrentOutboundParam().GasPrice = newGasPrice.String()
+	cctx.GetCurrentOutboundParam().GasPriorityFee = newGasPrice.String()
 	k.SetCrossChainTx(ctx, cctx)
 
 	return gasPriceIncrease, additionalFees, nil

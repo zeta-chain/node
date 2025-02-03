@@ -629,6 +629,8 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 				require.True(t, found)
 				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
 				require.NoError(t, err)
+				newPriorityFee, err := cctx.GetCurrentOutboundParam().GetGasPriorityFeeUInt64()
+				require.NoError(t, err)
 				require.EqualValues(
 					t,
 					tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(),
@@ -637,6 +639,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 					tc.expectedGasPriceIncrease.Uint64(),
 					previousGasPrice,
 				)
+				require.EqualValues(t, newGasPrice, newPriorityFee)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
 		})
