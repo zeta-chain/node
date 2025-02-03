@@ -24,7 +24,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-// MakeEncodingConfig creates an EncodingConfig for testing
+// MakeEncodingConfig creates an EncodingConfig
 func MakeEncodingConfig() ethermint.EncodingConfig {
 	encodingConfig := evmenc.MakeConfig()
 	registry := encodingConfig.InterfaceRegistry
