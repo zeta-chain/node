@@ -69,6 +69,12 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
+		Confirmation: types.Confirmation{
+			SafeInboundCount:  2,
+			FastInboundCount:  0, // zero means disabled
+			SafeOutboundCount: 2,
+			FastOutboundCount: 1,
+		},
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
@@ -85,6 +91,12 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: types.Confirmation{
+			SafeInboundCount:  1,
+			FastInboundCount:  0, // zero means disabled
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 
@@ -143,6 +155,24 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	copy := *params
 	copy.ConfirmationCount = 0
 	err := types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+
+	copy = *params
+	copy.Confirmation.SafeInboundCount = 0
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy = *params
+	copy.Confirmation.FastInboundCount = copy.Confirmation.SafeInboundCount + 1
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+
+	copy = *params
+	copy.Confirmation.SafeOutboundCount = 0
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy = *params
+	copy.Confirmation.FastOutboundCount = copy.Confirmation.SafeOutboundCount + 1
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params

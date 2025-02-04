@@ -56,9 +56,30 @@ func ValidateChainParams(params *ChainParams) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
 	}
 
+	// validate confirmation counts
 	if params.ConfirmationCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
 	}
+	if params.Confirmation.SafeInboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeInboundCount must be greater than 0")
+	}
+	if params.Confirmation.FastInboundCount > params.Confirmation.SafeInboundCount {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"FastInboundCount must be less than or equal to SafeInboundCount",
+		)
+	}
+	if params.Confirmation.SafeOutboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeOutboundCount must be greater than 0")
+	}
+	if params.Confirmation.FastOutboundCount > params.Confirmation.SafeOutboundCount {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"FastOutboundCount must be less than or equal to SafeOutboundCount",
+		)
+	}
+
+	// validate tickers and intervals
 	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
 	}
@@ -168,6 +189,12 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
@@ -186,6 +213,12 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
@@ -204,6 +237,12 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
@@ -223,6 +262,12 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
@@ -241,6 +286,12 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
@@ -259,6 +310,12 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  12,
+			FastInboundCount:  12,
+			SafeOutboundCount: 12,
+			FastOutboundCount: 12,
+		},
 	}
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
@@ -277,6 +334,12 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
@@ -295,6 +358,12 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		Confirmation: Confirmation{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -314,6 +383,12 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
+		Confirmation: Confirmation{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
@@ -351,5 +426,6 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
-		params1.GatewayAddress == params2.GatewayAddress
+		params1.GatewayAddress == params2.GatewayAddress &&
+		params1.Confirmation == params2.Confirmation
 }

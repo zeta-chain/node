@@ -59799,6 +59799,8 @@ definitions:
         type: boolean
       gateway_address:
         type: string
+      confirmation:
+        $ref: '#/definitions/observerConfirmation'
   observerChainParamsList:
     type: object
     properties:
@@ -59807,6 +59809,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerChainParams'
+  observerConfirmation:
+    type: object
+    properties:
+      safe_inbound_count:
+        type: string
+        format: uint64
+      fast_inbound_count:
+        type: string
+        format: uint64
+      safe_outbound_count:
+        type: string
+        format: uint64
+      fast_outbound_count:
+        type: string
+        format: uint64
   observerCrosschainFlags:
     type: object
     properties:

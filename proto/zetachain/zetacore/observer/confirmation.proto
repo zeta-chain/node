@@ -1,0 +1,11 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+option go_package = "github.com/zeta-chain/node/x/observer/types";
+
+message Confirmation {
+  uint64 safe_inbound_count = 1;
+  uint64 fast_inbound_count = 2;
+  uint64 safe_outbound_count = 3;
+  uint64 fast_outbound_count = 4;
+}
