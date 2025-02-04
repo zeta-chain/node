@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v27.0.1
+
+### Fixes
+
+* [3460](https://github.com/zeta-chain/node/pull/3460) - add `group`,`gov`,`params`,`consensus`,`feemarket` ,`crisis`,`vesting` modules to the cosmos interface registry to enable parsing of tx results.
+
 ## v27.0.0
 
 ### Breaking Changes
@@ -34,7 +40,6 @@
 ### Fixes
 
 * [3416](https://github.com/zeta-chain/node/pull/3416) - add a check for nil gas price in the CheckTxFee function
-* [3460](https://github.com/zeta-chain/node/pull/3460) - add missing module to the cosmos interface registry
 
 ## v26.0.0
 
