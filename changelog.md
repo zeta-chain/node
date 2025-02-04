@@ -15,6 +15,7 @@
 * [3358](https://github.com/zeta-chain/node/pull/3358) - register aborted CCTX for Bitcoin inbound that carries insufficient depositor fee
 * [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
 * [3425](https://github.com/zeta-chain/node/pull/3425) - enable inscription parsing on Bitcoin mainnet
+* [3461](https://github.com/zeta-chain/node/pull/3461) - enable multiple confirmation count values in chain params
 
 ### Refactor
 
