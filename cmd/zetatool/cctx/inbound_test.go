@@ -52,7 +52,7 @@ func Test_InboundBallotIdentifier(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, err := zetatoolcontext.NewContext(context.Background(), tc.inboundChainID, tc.inboundHash, "")
 			require.NoError(t, err)
-			c := cctx.NewCCTXDetails()
+			c := cctx.NewTrackingDetails()
 			err = c.CheckInbound(ctx)
 			require.NoError(t, err)
 			if !tc.expectError && c.CCTXIdentifier != tc.expectedBallotIdentifier {

@@ -18,7 +18,7 @@ type TrackingDetails struct {
 	Message                 string       `json:"message"`
 }
 
-func NewCCTXDetails() *TrackingDetails {
+func NewTrackingDetails() *TrackingDetails {
 	return &TrackingDetails{
 		CCTXIdentifier: "",
 		Status:         Unknown,

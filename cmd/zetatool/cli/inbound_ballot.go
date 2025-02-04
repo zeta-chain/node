@@ -38,19 +38,19 @@ func GetInboundBallot(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create context: %w", err)
 	}
 
-	cctxDetails := cctx.NewCCTXDetails()
+	cctxTrackingDetails := cctx.NewTrackingDetails()
 
-	err = cctxDetails.CheckInbound(ctx)
+	err = cctxTrackingDetails.CheckInbound(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get ballot identifier: %w", err)
 	}
-	if cctxDetails.Status == cctx.PendingInboundConfirmation {
+	if cctxTrackingDetails.Status == cctx.PendingInboundConfirmation {
 		log.Printf(
 			"Ballot Identifier: %s, warning the inbound hash might not be confirmed yet",
-			cctxDetails.CCTXIdentifier,
+			cctxTrackingDetails.CCTXIdentifier,
 		)
 		return nil
 	}
-	log.Print("Ballot Identifier: ", cctxDetails.CCTXIdentifier)
+	log.Print("Ballot Identifier: ", cctxTrackingDetails.CCTXIdentifier)
 	return nil
 }
