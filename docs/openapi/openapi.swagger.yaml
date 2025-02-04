@@ -59799,8 +59799,9 @@ definitions:
         type: boolean
       gateway_address:
         type: string
-      confirmation:
-        $ref: '#/definitions/observerConfirmation'
+      confirmation_params:
+        $ref: '#/definitions/observerConfirmationParams'
+        title: Advanced confirmation parameters for chain to support fast observation
   observerChainParamsList:
     type: object
     properties:
@@ -59809,7 +59810,7 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerChainParams'
-  observerConfirmation:
+  observerConfirmationParams:
     type: object
     properties:
       safe_inbound_count:

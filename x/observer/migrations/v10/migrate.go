@@ -27,10 +27,10 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	// set new fields to the same value as 'confirmation_count'
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams != nil {
-			chainParams.Confirmation.SafeInboundCount = chainParams.ConfirmationCount
-			chainParams.Confirmation.FastInboundCount = chainParams.ConfirmationCount
-			chainParams.Confirmation.SafeOutboundCount = chainParams.ConfirmationCount
-			chainParams.Confirmation.FastOutboundCount = chainParams.ConfirmationCount
+			chainParams.ConfirmationParams.SafeInboundCount = chainParams.ConfirmationCount
+			chainParams.ConfirmationParams.FastInboundCount = chainParams.ConfirmationCount
+			chainParams.ConfirmationParams.SafeOutboundCount = chainParams.ConfirmationCount
+			chainParams.ConfirmationParams.FastOutboundCount = chainParams.ConfirmationCount
 		}
 	}
 

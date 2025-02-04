@@ -34,13 +34,13 @@ func TestMigrateStore(t *testing.T) {
 		// ensure the chain params are set correctly
 		oldChainParams, found := k.GetChainParamsList(ctx)
 		require.True(t, found)
-		require.EqualValues(t, chainParams, oldChainParams)
+		require.Equal(t, chainParams, oldChainParams)
 
 		// migrate the store
 		err := v10.MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
-		// ensure we still have 7 chain params after migration
+		// ensure we still have same number of chain params after migration
 		newChainParams, found := k.GetChainParamsList(ctx)
 		require.True(t, found)
 		require.Len(t, newChainParams.ChainParams, len(oldChainParams.ChainParams))
@@ -50,16 +50,16 @@ func TestMigrateStore(t *testing.T) {
 			oldParam := oldChainParams.ChainParams[i]
 
 			// ensure the confirmation fields are set correctly
-			require.Equal(t, newParam.Confirmation.SafeInboundCount, oldParam.ConfirmationCount)
-			require.Equal(t, newParam.Confirmation.FastInboundCount, oldParam.ConfirmationCount)
-			require.Equal(t, newParam.Confirmation.SafeOutboundCount, oldParam.ConfirmationCount)
-			require.Equal(t, newParam.Confirmation.FastOutboundCount, oldParam.ConfirmationCount)
+			require.Equal(t, oldParam.ConfirmationCount, newParam.ConfirmationParams.SafeInboundCount)
+			require.Equal(t, oldParam.ConfirmationCount, newParam.ConfirmationParams.FastInboundCount)
+			require.Equal(t, oldParam.ConfirmationCount, newParam.ConfirmationParams.SafeOutboundCount)
+			require.Equal(t, oldParam.ConfirmationCount, newParam.ConfirmationParams.FastOutboundCount)
 
 			// ensure nothing else has changed except the confirmation
-			oldParam.Confirmation.SafeInboundCount = oldParam.ConfirmationCount
-			oldParam.Confirmation.FastInboundCount = oldParam.ConfirmationCount
-			oldParam.Confirmation.SafeOutboundCount = oldParam.ConfirmationCount
-			oldParam.Confirmation.FastOutboundCount = oldParam.ConfirmationCount
+			oldParam.ConfirmationParams.SafeInboundCount = oldParam.ConfirmationCount
+			oldParam.ConfirmationParams.FastInboundCount = oldParam.ConfirmationCount
+			oldParam.ConfirmationParams.SafeOutboundCount = oldParam.ConfirmationCount
+			oldParam.ConfirmationParams.FastOutboundCount = oldParam.ConfirmationCount
 			require.Equal(t, newParam, oldParam)
 		}
 	})
@@ -87,7 +87,7 @@ func TestMigrateStore(t *testing.T) {
 func makeChainParamsEmptyConfirmation(chainID int64, confirmationCount uint64) *types.ChainParams {
 	chainParams := sample.ChainParams(chainID)
 	chainParams.ConfirmationCount = confirmationCount
-	chainParams.Confirmation = types.Confirmation{}
+	chainParams.ConfirmationParams = types.ConfirmationParams{}
 	return chainParams
 }
 

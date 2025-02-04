@@ -2,7 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
-import "zetachain/zetacore/observer/confirmation.proto";
+import "zetachain/zetacore/observer/confirmation_params.proto";
 
 option go_package = "github.com/zeta-chain/node/x/observer/types";
 
@@ -30,7 +30,9 @@ message ChainParams {
   ];
   bool is_supported = 16;
   string gateway_address = 17;
-  Confirmation confirmation = 18 [ (gogoproto.nullable) = false ];
+
+  // Advanced confirmation parameters for chain to support fast observation
+  ConfirmationParams confirmation_params = 18 [ (gogoproto.nullable) = false ];
 }
 
 // Deprecated(v17)

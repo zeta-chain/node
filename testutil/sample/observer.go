@@ -114,7 +114,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 		MinObserverDelegation:       sdkmath.LegacyNewDec(r.Int63()),
 		IsSupported:                 false,
 		GatewayAddress:              EthAddress().String(),
-		Confirmation:                Confirmation(),
+		ConfirmationParams:          ConfirmationParams(),
 	}
 }
 
@@ -340,14 +340,14 @@ func OperationalFlags() types.OperationalFlags {
 	}
 }
 
-func Confirmation() types.Confirmation {
+func ConfirmationParams() types.ConfirmationParams {
 	randInboundCount := Uint64InRange(1, 200)
 	randOutboundCount := Uint64InRange(1, 200)
 
-	return types.Confirmation{
+	return types.ConfirmationParams{
 		SafeInboundCount:  randInboundCount,
-		FastInboundCount:  randInboundCount - 1,
+		FastInboundCount:  Uint64InRange(1, randInboundCount),
 		SafeOutboundCount: randOutboundCount,
-		FastOutboundCount: randOutboundCount - 1,
+		FastOutboundCount: Uint64InRange(1, randOutboundCount),
 	}
 }
