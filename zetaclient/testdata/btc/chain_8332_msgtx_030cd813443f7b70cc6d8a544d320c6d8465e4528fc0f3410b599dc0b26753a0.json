@@ -1,0 +1,95 @@
+{
+  "Version": 1,
+  "TxIn": [
+    {
+      "PreviousOutPoint": {
+        "Hash": "efca302a18bd8cebb3b8afef13e98ecaac47157755a62ab241ef3848140cfe92",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEUCIQD+vXB5QFfmG4PiqsCTAtiZEOO3mgMbCEtPFIxVKaGJxgIgfGCjg07rfdmJwQjHNbwX4NU853oBbowIkNvB5dxXO2wB",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "3dc005eb0c1d393e717070ea84aa13e334a458a4fb7c7f9f98dbf8b231b5ceef",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEUCIQDip9szSAtGI8GRvjSFJfSNLGx/2MepdquH1Vaj2fG/DAIgYMUfOFQvE8MywRSqqiCTcoNDqVUGkw1cgQvd3koxIVMB",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "74c3aca825f3b21b82ee344d939c40d4c1e836a89c18abbd521bfa69f5f6e5d7",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEQCIDzr8YVsCvLFwtjs5DVBjpmecAUH6mR7tc8QmUmzN9VzAiBnU/AbfIG3MQRrGK/3WJ6EcVJK7+Y0mjRocLwJyh3o1wE=",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "87264cef0e581f4aab3c99c53221bec3219686b48088d651a8cf8a98e4c2c5bf",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEQCIFM1gzPXKK/6SpXiP2ZZn2bJQB5PgCu7E/AUrPrighdoAiB5PFg1YmenwAUoiafag9N+sBMGJ3SWs+BE5KW0q9xEYQE=",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "5af24933973df03d96624ae1341d79a860e8dbc2ffc841420aa6710f3abc0074",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEQCICFVKukAkYOXm1NN7bJR1VWqyqaPFAwBbr+x5nh6NcXgAiAwnfdr1RESQ1LDlV+S0NscurZQT+VkmwWFsMdABANXCwE=",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "efca302a18bd8cebb3b8afef13e98ecaac47157755a62ab241ef3848140cfe92",
+        "Index": 2
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEUCIQD6vL28zA0kaK9gdD+oFxWf3Qmj+XGT8Rl4DulatAFMkgIgX3KMst6jqScmUdCcI4ImSbOMFg0MwiJhPLddsbzeXhgB",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": "b85755938ac026b2d13e5fbacf015288f453712b4eb4a02d7e4c98ee76ada530",
+        "Index": 0
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEUCIQCFNdqVZQvNeGSV8/2/GRA/wNZAjQAtYCErth+8e/aJRQIgK6Xl4ymJrD7yk/VWGWwmM+bnN1DjJT7UdONmxWSawd0B",
+        "AvrTNIt8fXPoWnz+U69CtTW3UEGe/FXDbIB/ON0LoG7c"
+      ],
+      "Sequence": 4294967295
+    }
+  ],
+  "TxOut": [
+    { "Value": 2148, "PkScript": "ABTaquDT3p2P3uMWYeYa6oKLWb54ZA==" },
+    { "Value": 12000, "PkScript": "ABQMG/t9ON/wlG/exWJtUa1Y1+m8VA==" },
+    { "Value": 39041489, "PkScript": "ABTaquDT3p2P3uMWYeYa6oKLWb54ZA==" }
+  ],
+  "LockTime": 0
+}
