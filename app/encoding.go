@@ -58,7 +58,6 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	govtypesv1beta1.RegisterInterfaces(registry)
 	govtypesv1.RegisterInterfaces(registry)
 	proposaltypes.RegisterInterfaces(registry)
-	crisistypes.RegisterInterfaces(registry)
 	feemarkettypes.RegisterInterfaces(registry)
 	consensusparamtypes.RegisterInterfaces(registry)
 	vestingtypes.RegisterInterfaces(registry)
