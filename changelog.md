@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v27.0.1
+
+### Fixes
+
+* [3460](https://github.com/zeta-chain/node/pull/3460) - add `group`,`gov`,`params`,`consensus`,`feemarket` ,`crisis`,`vesting` modules to the cosmos interface registry to enable parsing of tx results.
+
 ## v27.0.0
 
 ### Breaking Changes
