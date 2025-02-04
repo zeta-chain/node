@@ -11,9 +11,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -49,13 +49,13 @@ func operationSimulateVoteInbound(
 		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
 		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
 		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
-		return GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, false)
 	}
 }
 
 // SimulateVoteInbound generates a MsgVoteInbound with random values and delivers it. It also schedules future operations for subsequent votes.
 func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
-	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := ObserverVotesSimulationMatrix()
+	observerVotesTransitionMatrix, statePercentageArray, curNumVotesState := zetasimulation.ObserverVotesSimulationMatrix()
 	return func(
 		r *rand.Rand,
 		app *baseapp.BaseApp,
@@ -74,9 +74,9 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		asset, err := GetAsset(ctx, k.GetFungibleKeeper(), from)
+		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), from)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "unable to get asset"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "unable to get asset"), nil, err
 		}
 
 		// Generate a random inbound vote , coin type is randomly selected
@@ -84,21 +84,26 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 		cf, found := k.GetObserverKeeper().GetCrosschainFlags(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "crosschain flags not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "crosschain flags not found"), nil, nil
 		}
 
 		// Return early if inbound is not enabled.
 		if !cf.IsInboundEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound is not enabled"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "inbound is not enabled"), nil, nil
 		}
 
 		// Return early if the inbound has already been finalized.
 		if k.IsFinalizedInbound(ctx, msg.InboundHash, msg.SenderChainId, msg.EventIndex) {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "inbound already finalized"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "inbound already finalized"), nil, nil
 		}
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, firstVoter, err := GetRandomAccountAndObserver(r, ctx, k, accs)
+		simAccount, firstVoter, _, err := zetasimulation.GetRandomAccountAndObserver(
+			r,
+			ctx,
+			k.GetObserverKeeper(),
+			accs,
+		)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -111,12 +116,16 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 		// THe first vote should always create a new ballot
 		_, found = k.GetObserverKeeper().GetBallot(ctx, firstMsg.Digest())
 		if found {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "ballot already exists"), nil, nil
 		}
 
 		err = firstMsg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first inbound vote"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgVoteInbound,
+				"unable to validate first inbound vote",
+			), nil, err
 		}
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
@@ -130,22 +139,21 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "unable to generate mock tx"), nil, err
 		}
 
 		// We can return error here as we  can guarantee that the first vote will be successful.
 		// Since we query the observer set before adding votes
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "unable to deliver tx"), nil, err
 		}
-
-		opMsg := simtypes.NewOperationMsg(&msg, true, "")
+		opMsg := zetasimulation.OperationMessage(&msg)
 
 		// Add subsequent votes
 		observerSet, found := k.GetObserverKeeper().GetObserverSet(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, authz.InboundVoter.String(), "observer set not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "observer set not found"), nil, nil
 		}
 
 		// 1) Schedule operations for votes
@@ -165,7 +173,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 			if observerAddress == firstVoter {
 				continue
 			}
-			observerAccount, err := GetObserverAccount(observerAddress, accs)
+			observerAccount, err := zetasimulation.GetObserverAccount(observerAddress, accs)
 			if err != nil {
 				continue
 			}
@@ -175,7 +183,7 @@ func SimulateVoteInbound(k keeper.Keeper) simtypes.Operation {
 
 			e := votingMsg.ValidateBasic()
 			if e != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, e
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteInbound, "unable to validate voting msg"), nil, e
 			}
 			fops = append(fops, simtypes.FutureOperation{
 				// Submit all subsequent votes in the next block.

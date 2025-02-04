@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Tests
+
+* [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
+
 ## v27.0.0
 
 ### Breaking Changes

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -24,7 +25,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -35,9 +36,9 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 			}
 		}
 
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAbortStuckCCTX, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgAbortStuckCCTX, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -47,7 +48,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no TSS found",
 			), nil, nil
 		}
@@ -56,7 +57,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no pending nonces found",
 			), nil, nil
 		}
@@ -65,7 +66,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if pendingNonces.NonceLow == pendingNonces.NonceHigh {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no pending nonces found",
 			), nil, nil
 		}
@@ -84,7 +85,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no cctx found",
 			), nil, nil
 		}
@@ -93,7 +94,7 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAbortStuckCCTX,
+				TypeMsgAbortStuckCCTX,
 				"no cctx found",
 			), nil, nil
 		}
@@ -105,7 +106,11 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgAbortStuckCCTX msg"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgAbortStuckCCTX,
+				"unable to validate MsgAbortStuckCCTX msg",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -122,6 +127,6 @@ func SimulateMsgAbortStuckCCTX(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

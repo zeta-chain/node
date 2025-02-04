@@ -15,6 +15,26 @@ type EmissionAccountKeeper struct {
 	mock.Mock
 }
 
+// GetAccount provides a mock function with given fields: ctx, addr
+func (_m *EmissionAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+	ret := _m.Called(ctx, addr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAccount")
+	}
+
+	var r0 types.AccountI
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) types.AccountI); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.AccountI)
+		}
+	}
+
+	return r0
+}
+
 // GetModuleAccount provides a mock function with given fields: ctx, moduleName
 func (_m *EmissionAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
 	ret := _m.Called(ctx, moduleName)
