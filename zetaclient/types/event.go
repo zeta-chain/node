@@ -21,8 +21,8 @@ const (
 	// InboundCategoryUnknown represents an unknown inbound
 	InboundCategoryUnknown InboundCategory = iota
 
-	// InboundCategoryGood represents a processable inbound
-	InboundCategoryGood
+	// InboundCategoryProcessable represents a processable inbound
+	InboundCategoryProcessable
 
 	// InboundCategoryDonation represents a donation inbound
 	InboundCategoryDonation
@@ -67,6 +67,9 @@ type InboundEvent struct {
 
 	// Asset is the asset of the inbound
 	Asset string
+
+	// IsCrossChainCall is true if the inbound is a cross-chain call
+	IsCrossChainCall bool
 }
 
 // DecodeMemo decodes the receiver from the memo bytes
@@ -110,5 +113,5 @@ func (event *InboundEvent) Category() InboundCategory {
 		return InboundCategoryDonation
 	}
 
-	return InboundCategoryGood
+	return InboundCategoryProcessable
 }

@@ -120,8 +120,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// ObserveInboundTrackers handles adhoc trackers that were somehow missed by
-func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
+// ProcessInboundTrackers handles adhoc trackers that were somehow missed by
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return errors.Wrap(err, "unable to get inbound trackers")

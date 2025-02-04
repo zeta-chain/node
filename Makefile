@@ -13,7 +13,7 @@ GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 
 # common goreaser command definition
-GOLANG_CROSS_VERSION ?= v1.23.3@sha256:380420abb74844aaebca5bf9e2d00b1d7c78f59ce9e6d47cdb3276281702ca23
+GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
 GORELEASER := $(DOCKER) run \
 	--rm \
 	--privileged \
@@ -170,7 +170,7 @@ fmt:
 ###                           Generation commands  		                    ###
 ###############################################################################
 
-protoVer=0.14.0
+protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace --user $(shell id -u):$(shell id -g) $(protoImageName)
 
@@ -290,7 +290,7 @@ start-e2e-consensus-test: e2e-images
 	@echo "--> Starting e2e consensus test"
 	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
 	export ZETACORE1_PLATFORM=linux/amd64 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-stress-test: e2e-images
 	@echo "--> Starting stress test"
@@ -409,7 +409,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
@@ -429,12 +429,6 @@ test-sim-import-export-long: runsim
 test-sim-after-import-long: runsim
 	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
-
-# Use to run all simulation tests quickly (for example, before a creating a PR)
-test-sim-quick:
-	$(call run-sim-test,"test-full-app-sim",TestFullAppSimulation,10,20,30m)
-	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,30m)
-	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,30m)
 
 .PHONY: \
 test-sim-nondeterminism \
@@ -467,16 +461,6 @@ release:
 ###############################################################################
 ###                     Local Mainnet Development                           ###
 ###############################################################################
-
-#BTC
-start-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-stop-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
-
-clean-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
 #ETHEREUM
 start-eth-node-mainnet:

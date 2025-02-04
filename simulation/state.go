@@ -244,6 +244,8 @@ func extractObserverGenesisState(
 		}
 	}
 
+	keygen := sample.KeygenFromRand(r)
+
 	observerState.Tss = &tss
 	observerState.Observers.ObserverList = observers
 	observerState.NodeAccountList = nodeAccounts
@@ -253,6 +255,7 @@ func extractObserverGenesisState(
 	observerState.PendingNonces = pendingNonces
 	observerState.TssHistory = tssHistory
 	observerState.Ballots = ballots
+	observerState.Keygen = &keygen
 
 	return observerState
 }
