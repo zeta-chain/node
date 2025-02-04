@@ -45,6 +45,10 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		GatewayAddress:              gwAddress,
 		IsSupported:                 true,
+		ConfirmationParams: observertypes.ConfirmationParams{
+			SafeInboundCount:  confirmation,
+			SafeOutboundCount: confirmation,
+		},
 	}
 }
 

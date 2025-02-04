@@ -71,9 +71,9 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
 		ConfirmationParams: types.ConfirmationParams{
 			SafeInboundCount:  2,
-			FastInboundCount:  0, // zero means disabled
+			FastInboundCount:  0, // zero means fast observation is disabled
 			SafeOutboundCount: 2,
-			FastOutboundCount: 1,
+			FastOutboundCount: 0, // zero means fast observation is disabled
 		},
 	}
 	s.btcParams = &types.ChainParams{
@@ -92,9 +92,9 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		ConfirmationParams: types.ConfirmationParams{
-			SafeInboundCount:  0, // zero means fallback to confirmation count
-			FastInboundCount:  0,
-			SafeOutboundCount: 1,
+			SafeInboundCount:  2,
+			FastInboundCount:  1,
+			SafeOutboundCount: 2,
 			FastOutboundCount: 1,
 		},
 	}
@@ -158,10 +158,18 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	require.NotNil(s.T(), err)
 
 	copy = *params
+	copy.ConfirmationParams.SafeInboundCount = 0
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy = *params
 	copy.ConfirmationParams.FastInboundCount = copy.ConfirmationParams.SafeInboundCount + 1
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
+	copy = *params
+	copy.ConfirmationParams.SafeOutboundCount = 0
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
 	copy = *params
 	copy.ConfirmationParams.FastOutboundCount = copy.ConfirmationParams.SafeOutboundCount + 1
 	err = types.ValidateChainParams(&copy)

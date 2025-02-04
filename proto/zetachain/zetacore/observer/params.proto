@@ -10,7 +10,8 @@ message ChainParamsList { repeated ChainParams chain_params = 1; }
 
 message ChainParams {
   int64 chain_id = 11;
-  uint64 confirmation_count = 1;
+  // Deprecated(v28): use confirmation_params instead
+  uint64 confirmation_count = 1 [ deprecated = true ];
   uint64 gas_price_ticker = 2;
   uint64 inbound_ticker = 3;
   uint64 outbound_ticker = 4;

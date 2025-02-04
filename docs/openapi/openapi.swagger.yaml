@@ -59767,6 +59767,7 @@ definitions:
       confirmation_count:
         type: string
         format: uint64
+        title: 'Deprecated(v28): use confirmation_params instead'
       gas_price_ticker:
         type: string
         format: uint64

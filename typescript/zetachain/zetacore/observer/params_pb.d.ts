@@ -41,7 +41,10 @@ export declare class ChainParams extends Message<ChainParams> {
   chainId: bigint;
 
   /**
-   * @generated from field: uint64 confirmation_count = 1;
+   * Deprecated(v28): use confirmation_params instead
+   *
+   * @generated from field: uint64 confirmation_count = 1 [deprecated = true];
+   * @deprecated
    */
   confirmationCount: bigint;
 

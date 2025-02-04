@@ -57,14 +57,23 @@ func ValidateChainParams(params *ChainParams) error {
 	}
 
 	// validate confirmation counts
+	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
+	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
+	// https://github.com/zeta-chain/node/issues/3466
 	if params.ConfirmationCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
+	}
+	if params.ConfirmationParams.SafeInboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeInboundCount must be greater than 0")
 	}
 	if params.ConfirmationParams.FastInboundCount > params.ConfirmationParams.SafeInboundCount {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,
 			"FastInboundCount must be less than or equal to SafeInboundCount",
 		)
+	}
+	if params.ConfirmationParams.SafeOutboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeOutboundCount must be greater than 0")
 	}
 	if params.ConfirmationParams.FastOutboundCount > params.ConfirmationParams.SafeOutboundCount {
 		return errorsmod.Wrapf(
