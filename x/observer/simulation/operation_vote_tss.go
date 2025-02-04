@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -48,7 +49,7 @@ func operationSimulateVoteTss(
 		// The main difference between the two functions is that the one defined by us does not error out if the vote fails.
 		// We need this behaviour as the votes are assigned to future operations, i.e., they are scheduled to be executed in a future block. We do not know at the time of scheduling if the vote will be successful or not.
 		// There might be multiple reasons for a vote to fail , like the observer not being present in the observer set, the observer not being an observer, etc.
-		return GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, false)
 	}
 }
 
@@ -63,7 +64,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		yesVote := chains.ReceiveStatus_success
 		noVote := chains.ReceiveStatus_failed
-		ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := BallotVoteSimulationMatrix()
+		ballotVotesTransitionMatrix, yesVotePercentageArray, ballotVotesState := zetasimulation.TSSVoteSimulationMatrix()
 		nodeAccounts := k.GetAllNodeAccount(ctx)
 		numVotes := len(nodeAccounts)
 		ballotVotesState = ballotVotesTransitionMatrix.NextState(r, ballotVotesState)
@@ -77,12 +78,12 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 
 		newTss, err := sample.TSSFromRand(r)
 		if err != nil {
-			return simtypes.OperationMsg{}, nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to generate tss"), nil, nil
 		}
 
 		keygen, found := k.GetKeygen(ctx)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgVoteTSS, "keygen not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "keygen not found"), nil, nil
 		}
 
 		msg := types.MsgVoteTSS{
@@ -94,7 +95,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 
 		// Pick a random observer to create the ballot
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, firstVoter, err := GetRandomNodeAccount(r, ctx, k, accs)
+		simAccount, firstVoter, err := zetasimulation.GetRandomNodeAccount(r, ctx, k, accs)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -108,12 +109,12 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 		// THe first vote should always create a new ballot
 		_, found = k.GetBallot(ctx, firstMsg.Digest())
 		if found {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ballot already exists"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "ballot already exists"), nil, nil
 		}
 
 		err = firstMsg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate first tss vote"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to validate first tss vote"), nil, err
 		}
 
 		tx, err := simtestutil.GenSignedMockTx(
@@ -128,17 +129,17 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to generate mock tx"), nil, err
 		}
 
 		// We can return error here as we  can guarantee that the first vote will be successful.
 		// Since we query the observer set before adding votes
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(&msg, true, "")
+		opMsg := zetasimulation.OperationMessage(&msg)
 
 		var fops []simtypes.FutureOperation
 
@@ -150,7 +151,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 			if nodeAccount.Operator == firstVoter {
 				continue
 			}
-			observerAccount, err := GetSimAccount(nodeAccount.Operator, accs)
+			observerAccount, err := zetasimulation.GetSimAccount(nodeAccount.Operator, accs)
 			if err != nil {
 				continue
 			}
@@ -161,7 +162,7 @@ func SimulateMsgVoteTSS(k keeper.Keeper) simtypes.Operation {
 
 			e := votingMsg.ValidateBasic()
 			if e != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate voting msg"), nil, e
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteTSS, "unable to validate voting msg"), nil, e
 			}
 
 			fops = append(fops, simtypes.FutureOperation{

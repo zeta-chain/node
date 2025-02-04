@@ -9,6 +9,7 @@ const (
 	FieldChainNetwork = "chain_network"
 	FieldNonce        = "nonce"
 	FieldTx           = "tx"
+	FieldOutboundID   = "outbound_id"
 	FieldCctx         = "cctx"
 	FieldZetaTx       = "zeta_tx"
 	FieldBallot       = "ballot"

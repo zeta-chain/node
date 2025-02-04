@@ -9,6 +9,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -17,9 +18,9 @@ import (
 func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgRemoveOutboundTracker, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRemoveOutboundTracker, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -30,7 +31,7 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if len(trackers) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgRemoveOutboundTracker,
+				TypeMsgRemoveOutboundTracker,
 				"no outbound trackers found",
 			), nil, nil
 		}
@@ -47,7 +48,7 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgRemoveOutboundTracker,
 				"unable to validate MsgRemoveOutboundTracker",
 			), nil, err
 		}
@@ -66,6 +67,6 @@ func SimulateMsgRemoveOutboundTracker(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

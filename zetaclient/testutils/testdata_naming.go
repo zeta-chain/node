@@ -64,6 +64,11 @@ func FileNameBTCMsgTx(chainID int64, txHash string) string {
 	return fmt.Sprintf("chain_%d_msgtx_%s.json", chainID, txHash)
 }
 
+// FileNameBTCTransaction returns unified archive file name for btc transaction
+func FileNameBTCTransaction(chainID int64, txHash string) string {
+	return fmt.Sprintf("chain_%d_tx_%s.json", chainID, txHash)
+}
+
 // FileNameEVMOutbound returns unified archive file name for outbound tx
 func FileNameEVMOutbound(chainID int64, txHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("chain_%d_outbound_%s_%s.json", chainID, coinType, txHash)

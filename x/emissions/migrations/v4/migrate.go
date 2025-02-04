@@ -12,7 +12,7 @@ import (
 
 type EmissionsKeeper interface {
 	SetParams(ctx sdk.Context, params types.Params) error
-	GetCodec() codec.BinaryCodec
+	GetCodec() codec.Codec
 	GetStoreKey() storetypes.StoreKey
 }
 

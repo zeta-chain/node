@@ -9,6 +9,16 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+)
+
+const (
+	// FeeRateRegnet is the hardcoded fee rate for regnet
+	FeeRateRegnet = 1
+
+	// maxBTCSupply is the maximum supply of Bitcoin
+	maxBTCSupply = 21000000.0
 )
 
 // GetBlockVerboseByStr alias for GetBlockVerbose
@@ -102,6 +112,30 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 		// res.Confirmations < 0 (meaning not included)
 		return types.TxRawResult{}, fmt.Errorf("tx %s not included yet", hash)
 	}
+}
+
+// GetEstimatedFeeRate gets estimated smart fee rate (sat/vB) targeting given block confirmation
+func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (satsPerByte int64, err error) {
+	// RPC 'EstimateSmartFee' is not available in regnet
+	if c.isRegnet {
+		return FeeRateRegnet, nil
+	}
+
+	feeResult, err := c.EstimateSmartFee(ctx, confTarget, &types.EstimateModeEconomical)
+	switch {
+	case err != nil:
+		return 0, errors.Wrap(err, "unable to estimate smart fee")
+	case feeResult.Errors != nil:
+		return 0, fmt.Errorf("fee result contains errors: %s", feeResult.Errors)
+	case feeResult.FeeRate == nil:
+		return 0, errors.New("nil fee rate")
+	}
+
+	feeRate := *feeResult.FeeRate
+	if feeRate <= 0 || feeRate >= maxBTCSupply {
+		return 0, fmt.Errorf("invalid fee rate: %f", feeRate)
+	}
+	return common.FeeRateToSatPerByte(feeRate), nil
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result

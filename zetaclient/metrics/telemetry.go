@@ -152,6 +152,13 @@ func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Unlock()
 }
 
+// GetNumberOfUTXOs returns number of UTXOs
+func (t *TelemetryServer) GetNumberOfUTXOs() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.status.BTCNumberOfUTXOs
+}
+
 // AddFeeEntry adds fee entry
 func (t *TelemetryServer) AddFeeEntry(block int64, amount int64) {
 	t.mu.Lock()

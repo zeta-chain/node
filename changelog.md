@@ -6,6 +6,10 @@
 
 * [3461](https://github.com/zeta-chain/node/pull/3461) - enable multiple confirmation count values in chain params
 
+### Tests
+
+* [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
+
 ## v27.0.0
 
 ### Breaking Changes
@@ -27,6 +31,7 @@
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
+* [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 * [3426](https://github.com/zeta-chain/node/pull/3426) - use protocol contracts V2 with Bitcoin deposits
 * [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object

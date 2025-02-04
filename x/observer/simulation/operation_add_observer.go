@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -19,9 +20,9 @@ import (
 func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddObserver, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgAddObserver, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -31,7 +32,7 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddObserver,
+				TypeMsgAddObserver,
 				"no observer set found",
 			), nil, nil
 		}
@@ -46,7 +47,7 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 		// Pick a random observer which part of the node account but not in the observer set
 		// New accounts are added to the node account list via SimulateAddObserverNodeAccount
 		var newObserver string
-		foundNA := RepeatCheck(func() bool {
+		foundNA := zetasimulation.RepeatCheck(func() bool {
 			newObserver = nodeAccounts[r.Intn(len(nodeAccounts))].Operator
 			if _, found := observerMap[newObserver]; !found {
 				return true
@@ -56,13 +57,13 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 		if !foundNA {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddObserver,
+				TypeMsgAddObserver,
 				"no node accounts available which can be added as observer",
 			), nil, nil
 		}
 		pubkey, err := sample.PubkeyStringFromRand(r)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgAddObserver, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgAddObserver, err.Error()), nil, nil
 		}
 		msg := types.MsgAddObserver{
 			Creator:                 policyAccount.Address.String(),
@@ -72,7 +73,7 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 		}
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgAddObserver, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -89,6 +90,6 @@ func SimulateAddObserver(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }
