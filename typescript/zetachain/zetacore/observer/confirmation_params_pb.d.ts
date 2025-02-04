@@ -11,21 +11,33 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  */
 export declare class ConfirmationParams extends Message<ConfirmationParams> {
   /**
+   * This is the safe number of confirmations to wait before an inbound is
+   * considered finalized.
+   *
    * @generated from field: uint64 safe_inbound_count = 1;
    */
   safeInboundCount: bigint;
 
   /**
+   * This is the number of confirmations for fast inbound observation, which is
+   * shorter than safe_inbound_count.
+   *
    * @generated from field: uint64 fast_inbound_count = 2;
    */
   fastInboundCount: bigint;
 
   /**
+   * This is the safe number of confirmations to wait before an outbound is
+   * considered finalized.
+   *
    * @generated from field: uint64 safe_outbound_count = 3;
    */
   safeOutboundCount: bigint;
 
   /**
+   * This is the number of confirmations for fast outbound observation, which is
+   * shorter than safe_outbound_count.
+   *
    * @generated from field: uint64 fast_outbound_count = 4;
    */
   fastOutboundCount: bigint;

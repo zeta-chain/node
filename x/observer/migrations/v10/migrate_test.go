@@ -3,11 +3,9 @@ package v10_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/x/observer/keeper"
 	v10 "github.com/zeta-chain/node/x/observer/migrations/v10"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -29,7 +27,7 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain params
-		setChainParamsList(ctx, *k, chainParams)
+		k.SetChainParamsList(ctx, chainParams)
 
 		// ensure the chain params are set correctly
 		oldChainParams, found := k.GetChainParamsList(ctx)
@@ -89,12 +87,4 @@ func makeChainParamsEmptyConfirmation(chainID int64, confirmationCount uint64) *
 	chainParams.ConfirmationCount = confirmationCount
 	chainParams.ConfirmationParams = types.ConfirmationParams{}
 	return chainParams
-}
-
-// setChainParamsList set chain params list in the store
-func setChainParamsList(ctx sdk.Context, observerKeeper keeper.Keeper, chainParams types.ChainParamsList) {
-	store := ctx.KVStore(observerKeeper.StoreKey())
-	b := observerKeeper.Codec().MustMarshal(&chainParams)
-	key := types.KeyPrefix(types.AllChainParamsKey)
-	store.Set(key, b)
 }

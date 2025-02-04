@@ -23,9 +23,17 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type ConfirmationParams struct {
-	SafeInboundCount  uint64 `protobuf:"varint,1,opt,name=safe_inbound_count,json=safeInboundCount,proto3" json:"safe_inbound_count,omitempty"`
-	FastInboundCount  uint64 `protobuf:"varint,2,opt,name=fast_inbound_count,json=fastInboundCount,proto3" json:"fast_inbound_count,omitempty"`
+	// This is the safe number of confirmations to wait before an inbound is
+	// considered finalized.
+	SafeInboundCount uint64 `protobuf:"varint,1,opt,name=safe_inbound_count,json=safeInboundCount,proto3" json:"safe_inbound_count,omitempty"`
+	// This is the number of confirmations for fast inbound observation, which is
+	// shorter than safe_inbound_count.
+	FastInboundCount uint64 `protobuf:"varint,2,opt,name=fast_inbound_count,json=fastInboundCount,proto3" json:"fast_inbound_count,omitempty"`
+	// This is the safe number of confirmations to wait before an outbound is
+	// considered finalized.
 	SafeOutboundCount uint64 `protobuf:"varint,3,opt,name=safe_outbound_count,json=safeOutboundCount,proto3" json:"safe_outbound_count,omitempty"`
+	// This is the number of confirmations for fast outbound observation, which is
+	// shorter than safe_outbound_count.
 	FastOutboundCount uint64 `protobuf:"varint,4,opt,name=fast_outbound_count,json=fastOutboundCount,proto3" json:"fast_outbound_count,omitempty"`
 }
 

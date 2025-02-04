@@ -59817,15 +59817,27 @@ definitions:
       safe_inbound_count:
         type: string
         format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an inbound is
+          considered finalized.
       fast_inbound_count:
         type: string
         format: uint64
+        description: |-
+          This is the number of confirmations for fast inbound observation, which is
+          shorter than safe_inbound_count.
       safe_outbound_count:
         type: string
         format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an outbound is
+          considered finalized.
       fast_outbound_count:
         type: string
         format: uint64
+        description: |-
+          This is the number of confirmations for fast outbound observation, which is
+          shorter than safe_outbound_count.
   observerCrosschainFlags:
     type: object
     properties:
