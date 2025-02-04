@@ -113,6 +113,10 @@ export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAdd
 }
 
 /**
+ * MsgAddInboundTracker defines a message to add an inbound tracker.
+ * The index used for the saving the tracker to the store is of the format
+ * <chain_id>-<tx_hash>
+ *
  * @generated from message zetachain.zetacore.crosschain.MsgAddInboundTracker
  */
 export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> {
@@ -186,6 +190,63 @@ export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundT
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddInboundTrackerResponse;
 
   static equals(a: MsgAddInboundTrackerResponse | PlainMessage<MsgAddInboundTrackerResponse> | undefined, b: MsgAddInboundTrackerResponse | PlainMessage<MsgAddInboundTrackerResponse> | undefined): boolean;
+}
+
+/**
+ * MsgRemoveInboundTracker defines a message to remove an inbound tracker.
+ * The index used for the fetching the tracker to the store is of the format
+ * <chain_id>-<tx_hash>
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveInboundTracker
+ */
+export declare class MsgRemoveInboundTracker extends Message<MsgRemoveInboundTracker> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string tx_hash = 3;
+   */
+  txHash: string;
+
+  constructor(data?: PartialMessage<MsgRemoveInboundTracker>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveInboundTracker";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveInboundTracker;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveInboundTracker;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveInboundTracker;
+
+  static equals(a: MsgRemoveInboundTracker | PlainMessage<MsgRemoveInboundTracker> | undefined, b: MsgRemoveInboundTracker | PlainMessage<MsgRemoveInboundTracker> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveInboundTrackerResponse
+ */
+export declare class MsgRemoveInboundTrackerResponse extends Message<MsgRemoveInboundTrackerResponse> {
+  constructor(data?: PartialMessage<MsgRemoveInboundTrackerResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveInboundTrackerResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static equals(a: MsgRemoveInboundTrackerResponse | PlainMessage<MsgRemoveInboundTrackerResponse> | undefined, b: MsgRemoveInboundTrackerResponse | PlainMessage<MsgRemoveInboundTrackerResponse> | undefined): boolean;
 }
 
 /**
