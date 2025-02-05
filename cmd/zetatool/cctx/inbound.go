@@ -2,6 +2,7 @@ package cctx
 
 import (
 	"fmt"
+	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -189,8 +190,9 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 
 	msg := &crosschaintypes.MsgVoteInbound{}
 	// Create inbound vote message based on the cointype and protocol version
-	switch tx.To().Hex() {
-	case chainParams.ConnectorContractAddress:
+
+	switch {
+	case compareAddress(tx.To().Hex(), chainParams.ConnectorContractAddress):
 		{
 			// build inbound vote message and post vote
 			addrConnector := ethcommon.HexToAddress(chainParams.ConnectorContractAddress)
@@ -205,7 +207,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 				}
 			}
 		}
-	case chainParams.Erc20CustodyContractAddress:
+	case compareAddress(tx.To().Hex(), chainParams.Erc20CustodyContractAddress):
 		{
 			addrCustody := ethcommon.HexToAddress(chainParams.Erc20CustodyContractAddress)
 			custody, err := erc20custody.NewERC20Custody(addrCustody, evmClient)
@@ -223,7 +225,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 				}
 			}
 		}
-	case tssEthAddress:
+	case compareAddress(tx.To().Hex(), tssEthAddress):
 		{
 			if receipt.Status != ethtypes.ReceiptStatusSuccessful {
 				return fmt.Errorf("tx failed on chain %d", inboundChain.ChainId)
@@ -234,7 +236,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			}
 			msg = zetatoolchains.GasVoteV1(tx, sender, receipt.BlockNumber.Uint64(), inboundChain.ChainId, zetaChainID)
 		}
-	case chainParams.GatewayAddress:
+	case compareAddress(tx.To().Hex(), chainParams.GatewayAddress):
 		{
 			gatewayAddr := ethcommon.HexToAddress(chainParams.GatewayAddress)
 			gateway, err := gatewayevm.NewGatewayEVM(gatewayAddr, evmClient)
@@ -360,4 +362,10 @@ func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) erro
 	c.CCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]
 	c.Status = PendingOutbound
 	return nil
+}
+
+func compareAddress(a string, b string) bool {
+	lowerA := strings.ToLower(a)
+	lowerB := strings.ToLower(b)
+	return strings.EqualFold(lowerA, lowerB)
 }
