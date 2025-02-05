@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { ConfirmationParams } from "./confirmation_params_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.ChainParamsList
@@ -40,7 +41,10 @@ export declare class ChainParams extends Message<ChainParams> {
   chainId: bigint;
 
   /**
-   * @generated from field: uint64 confirmation_count = 1;
+   * Deprecated(v28): use confirmation_params instead
+   *
+   * @generated from field: uint64 confirmation_count = 1 [deprecated = true];
+   * @deprecated
    */
   confirmationCount: bigint;
 
@@ -108,6 +112,13 @@ export declare class ChainParams extends Message<ChainParams> {
    * @generated from field: string gateway_address = 17;
    */
   gatewayAddress: string;
+
+  /**
+   * Advanced confirmation parameters for chain to support fast observation
+   *
+   * @generated from field: zetachain.zetacore.observer.ConfirmationParams confirmation_params = 18;
+   */
+  confirmationParams?: ConfirmationParams;
 
   constructor(data?: PartialMessage<ChainParams>);
 
