@@ -36,6 +36,8 @@ message MsgAddInboundTracker {
 
 ## MsgRemoveInboundTracker
 
+RemoveInboundTracker removes the inbound tracker if it exists.
+
 ```proto
 message MsgRemoveInboundTracker {
 	string creator = 1;

@@ -78,5 +78,4 @@ func CmdRemoveInboundTracker() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-
 }
