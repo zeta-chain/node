@@ -36,6 +36,7 @@ const (
 	flagTestPerformance   = "test-performance"
 	flagTestSolana        = "test-solana"
 	flagTestTON           = "test-ton"
+	flagTestSui           = "test-sui"
 	flagSkipRegular       = "skip-regular"
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
@@ -72,6 +73,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
+	cmd.Flags().Bool(flagTestSui, false, "set to true to run Sui tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -104,6 +106,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
+		testSui           = must(cmd.Flags().GetBool(flagTestSui))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -237,6 +240,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
 			)
+		}
+
+		if testSui {
+			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
 
 		deployerRunner.SetupZEVMProtocolContracts()

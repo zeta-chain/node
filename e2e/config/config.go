@@ -12,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v3"
 )
 
@@ -99,6 +100,8 @@ type RPCs struct {
 	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
 	Solana            string     `yaml:"solana"`
 	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	Sui               string     `yaml:"sui"`
+	SuiFaucet         string     `yaml:"sui_faucet"`
 	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
 	ZetaCoreRPC       string     `yaml:"zetacore_rpc"`
 	ZetaclientMetrics string     `yaml:"zetaclient_metrics"`
@@ -395,6 +398,24 @@ func (a Account) EVMAddress() ethcommon.Address {
 
 func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(a.RawPrivateKey.String())
+}
+
+// SuiAddress derives the blake2b hash from the private key
+//
+// https://docs.sui.io/concepts/cryptography/transaction-auth/keys-addresses#address-format
+func (a Account) SuiAddress() (string, error) {
+	privKey, err := a.PrivateKey()
+	if err != nil {
+		return "", fmt.Errorf("get private key: %w", err)
+	}
+	pubKey := append(privKey.PublicKey.X.Bytes(), privKey.PublicKey.Y.Bytes()...)
+	hasher, err := blake2b.New256(nil)
+	if err != nil {
+		return "", fmt.Errorf("hashing sui pubkey: %w", err)
+	}
+	hasher.Write(pubKey)
+	suiAddress := hasher.Sum(nil)
+	return fmt.Sprintf("0x%x", suiAddress), nil
 }
 
 // Validate that the address and the private key specified in the

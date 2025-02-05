@@ -105,6 +105,8 @@ rpcs:
     params: regnet
   solana: "http://solana:8899"
   ton_sidecar_url: "http://ton:8000"
+  sui: "http://sui:9000"
+  sui_faucet: "http://sui:9123"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
   zetaclient_metrics: "http://zetaclient0:8886"
