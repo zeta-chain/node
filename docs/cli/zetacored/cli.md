@@ -35,6 +35,7 @@ Zetacore Daemon (server)
 * [zetacored rollback](#zetacored-rollback)	 - rollback Cosmos SDK and CometBFT state by one height
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
+* [zetacored status](#zetacored-status)	 - Query remote node for status
 * [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
 * [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
@@ -9015,6 +9016,36 @@ zetacored start [flags]
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
+
+## zetacored status
+
+Query remote node for status
+
+```
+zetacored status [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for status
+  -n, --node string     Node to connect to 
+  -o, --output string   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
