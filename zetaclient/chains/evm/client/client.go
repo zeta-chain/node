@@ -5,14 +5,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -101,15 +99,8 @@ func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 		return time.Time{}, errors.Wrap(err, "unable to get block number")
 	}
 
-	// query latest block header, retry in case there is rpc delay
-	bo := backoff.NewConstantBackOff(time.Second * 1)
-	boWithMaxRetries := backoff.WithMaxRetries(bo, 5)
-
-	var header *ethtypes.Header
-	err = retry.DoWithBackoff(func() error {
-		header, err = c.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
-		return retry.Retry(err)
-	}, boWithMaxRetries)
+	// query latest block header
+	header, err := c.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
 	if err != nil {
 		return time.Time{}, errors.Wrapf(err, "unable to get block header for block %d", bn)
 	}
