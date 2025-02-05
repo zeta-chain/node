@@ -18,7 +18,7 @@ const (
 
 func TestnetConfig() *Config {
 	return &Config{
-		ZetaChainRPC: "https://zetachain-testnet-grpc.itrocket.net:443",
+		ZetaChainRPC: "https://zetachain-testnet-rpc.itrocket.net:443",
 		EthereumRPC:  "https://ethereum-sepolia-rpc.publicnode.com",
 		ZetaChainID:  101,
 		BtcUser:      "",
