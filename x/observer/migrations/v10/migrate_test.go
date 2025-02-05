@@ -10,29 +10,18 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-var chainParams = types.ChainParamsList{
-	ChainParams: []*types.ChainParams{
-		makeChainParamsEmptyConfirmation(1, 14),
-		makeChainParamsEmptyConfirmation(56, 20),
-		makeChainParamsEmptyConfirmation(8332, 3),
-		makeChainParamsEmptyConfirmation(7000, 0),
-		makeChainParamsEmptyConfirmation(137, 200),
-		makeChainParamsEmptyConfirmation(8453, 90),
-		makeChainParamsEmptyConfirmation(900, 32),
-	},
-}
-
 func TestMigrateStore(t *testing.T) {
 	t.Run("can migrate confirmation count", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		// set chain params
-		k.SetChainParamsList(ctx, chainParams)
+		testChainParams := getTestChainParams()
+		k.SetChainParamsList(ctx, testChainParams)
 
 		// ensure the chain params are set correctly
 		oldChainParams, found := k.GetChainParamsList(ctx)
 		require.True(t, found)
-		require.Equal(t, chainParams, oldChainParams)
+		require.Equal(t, testChainParams, oldChainParams)
 
 		// migrate the store
 		err := v10.MigrateStore(ctx, *k)
@@ -79,6 +68,33 @@ func TestMigrateStore(t *testing.T) {
 		require.False(t, found)
 		require.Empty(t, allChainParams.ChainParams)
 	})
+
+	t.Run("migrate nothing if chain params list validation fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// get test chain params
+		testChainParams := getTestChainParams()
+
+		// make the first chain params invalid
+		testChainParams.ChainParams[0].InboundTicker = 0
+
+		// set chain params
+		k.SetChainParamsList(ctx, testChainParams)
+
+		// ensure the chain params are set correctly
+		oldChainParams, found := k.GetChainParamsList(ctx)
+		require.True(t, found)
+		require.Equal(t, testChainParams, oldChainParams)
+
+		// migrate the store
+		err := v10.MigrateStore(ctx, *k)
+		require.ErrorIs(t, err, types.ErrInvalidChainParams)
+
+		// ensure nothing has changed
+		newChainParams, found := k.GetChainParamsList(ctx)
+		require.True(t, found)
+		require.Equal(t, oldChainParams, newChainParams)
+	})
 }
 
 // makeChainParamsEmptyConfirmation creates a sample chain params with empty confirmation
@@ -87,4 +103,19 @@ func makeChainParamsEmptyConfirmation(chainID int64, confirmationCount uint64) *
 	chainParams.ConfirmationCount = confirmationCount
 	chainParams.ConfirmationParams = types.ConfirmationParams{}
 	return chainParams
+}
+
+// getTestChainParams returns a list of chain params for testing
+func getTestChainParams() types.ChainParamsList {
+	return types.ChainParamsList{
+		ChainParams: []*types.ChainParams{
+			makeChainParamsEmptyConfirmation(1, 14),
+			makeChainParamsEmptyConfirmation(56, 20),
+			makeChainParamsEmptyConfirmation(8332, 3),
+			makeChainParamsEmptyConfirmation(7000, 0),
+			makeChainParamsEmptyConfirmation(137, 200),
+			makeChainParamsEmptyConfirmation(8453, 90),
+			makeChainParamsEmptyConfirmation(900, 32),
+		},
+	}
 }

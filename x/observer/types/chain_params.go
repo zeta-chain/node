@@ -52,8 +52,10 @@ func ValidateChainParams(params *ChainParams) error {
 		return fmt.Errorf("chain params cannot be nil")
 	}
 
+	// don't validate ZetaChain params, because the validation will fail on existing params in the store
+	// we might remove the ZetaChain params in the future, this is TBD
 	if chains.IsZetaChain(params.ChainId, nil) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
+		return nil
 	}
 
 	// validate confirmation counts

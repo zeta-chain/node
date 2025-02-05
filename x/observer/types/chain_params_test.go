@@ -36,8 +36,9 @@ func TestChainParamsList_Validate(t *testing.T) {
 
 type UpdateChainParamsSuite struct {
 	suite.Suite
-	evmParams *types.ChainParams
-	btcParams *types.ChainParams
+	zetaParams *types.ChainParams
+	evmParams  *types.ChainParams
+	btcParams  *types.ChainParams
 }
 
 var _ = Suite(&UpdateChainParamsSuite{})
@@ -53,6 +54,23 @@ func TestChainParamsEqual(t *testing.T) {
 }
 
 func (s *UpdateChainParamsSuite) SetupTest() {
+	s.zetaParams = &types.ChainParams{
+		ConfirmationCount:           0,
+		GasPriceTicker:              0,
+		InboundTicker:               0,
+		OutboundTicker:              0,
+		WatchUtxoTicker:             0,
+		ZetaTokenContractAddress:    "0x0000000000000000000000000000000000000000",
+		ConnectorContractAddress:    "0x0000000000000000000000000000000000000000",
+		Erc20CustodyContractAddress: "0x0000000000000000000000000000000000000000",
+		ChainId:                     7000,
+		OutboundScheduleInterval:    0,
+		OutboundScheduleLookahead:   0,
+		BallotThreshold:             types.DefaultBallotThreshold,
+		MinObserverDelegation:       types.DefaultMinObserverDelegation,
+		IsSupported:                 true,
+		GatewayAddress:              "",
+	}
 	s.evmParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
@@ -101,7 +119,9 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 }
 
 func (s *UpdateChainParamsSuite) TestValidParams() {
-	err := types.ValidateChainParams(s.evmParams)
+	err := types.ValidateChainParams(s.zetaParams)
+	require.Nil(s.T(), err)
+	err = types.ValidateChainParams(s.evmParams)
 	require.Nil(s.T(), err)
 	err = types.ValidateChainParams(s.btcParams)
 	require.Nil(s.T(), err)

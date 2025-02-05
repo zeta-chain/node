@@ -36,6 +36,11 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		}
 	}
 
+	// validate the updated chain params list
+	if err := allChainParams.Validate(); err != nil {
+		return errorsmod.Wrap(types.ErrInvalidChainParams, err.Error())
+	}
+
 	// set the updated chain params list
 	observerKeeper.SetChainParamsList(ctx, allChainParams)
 
