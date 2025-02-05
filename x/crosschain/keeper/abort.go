@@ -1,12 +1,15 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -20,20 +23,56 @@ func (k Keeper) ProcessAbort(
 	cctx types.CrossChainTx,
 ) error {
 	abortedAmount := GetAbortedAmount(cctx)
+	abortAddress := ethcommon.HexToAddress(cctx.RevertOptions.AbortAddress)
+
+	// use a temporary context to not commit any state change if processing the abort logs fails
+	// this is to avoid an inconsistent state where onAbort is called by created cctx inside are not processed
+	tmpCtx, commit := ctx.CacheContext()
 
 	// process the abort on the zevm
-	// TODO(IN THIS PR): filter events for new cctxs
-	_, err := k.fungibleKeeper.ProcessAbort(
-		ctx,
+	evmTxResponse, err := k.fungibleKeeper.ProcessAbort(
+		tmpCtx,
 		cctx.InboundParams.Sender,
 		abortedAmount.BigInt(),
 		true,
 		1,
 		cctx.InboundParams.CoinType,
 		"",
-		ethcommon.HexToAddress(cctx.RevertOptions.AbortAddress),
+		abortAddress,
 		cctx.RevertOptions.RevertMessage,
 	)
+
+	if err != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
+		logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
+		if len(logs) > 0 {
+			tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
+			txOrigin := cctx.InboundParams.TxOrigin
+			if txOrigin == "" {
+				txOrigin = cctx.GetInboundParams().Sender
+			}
+
+			// process logs to process cctx events initiated during the contract call
+			err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
+			if err != nil {
+				// this happens if the cctx events are not processed correctly with invalid withdrawals
+				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+				// the contract call is considered as reverted
+				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+			}
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute("action", "ProcessAbort"),
+					sdk.NewAttribute("contract", cctx.RevertOptions.AbortAddress),
+					sdk.NewAttribute("data", ""),
+					sdk.NewAttribute("cctxIndex", cctx.Index),
+				),
+			)
+		}
+	}
+
+	// commit state change from the deposit and eventual cctx events
+	commit()
 
 	return err
 }
