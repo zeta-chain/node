@@ -135,7 +135,8 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 	time.Sleep(delay)
 
 	var (
-		chainID = s.observer.Chain().ChainId
+		chain   = s.observer.Chain()
+		chainID = chain.ChainId
 
 		// #nosec G115 positive
 		zetaHeight = uint64(zetaBlock.Block.Height)
@@ -147,7 +148,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		needsProcessingCtr = 0
 	)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}
