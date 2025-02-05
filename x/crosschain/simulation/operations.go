@@ -165,6 +165,9 @@ func WeightedOperations(
 		},
 	)
 
+	// TODO : Add the new test for MsgRemoveInboundTracker
+	//https: //github.com/zeta-chain/node/issues/3479
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightVoteGasPrice,
