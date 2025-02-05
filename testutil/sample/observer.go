@@ -97,6 +97,8 @@ func ChainParams(chainID int64) *types.ChainParams {
 		return nil
 	}
 
+	confirmationParams := ConfirmationParams(r)
+
 	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
@@ -114,7 +116,7 @@ func ChainParams(chainID int64) *types.ChainParams {
 		MinObserverDelegation:       sdkmath.LegacyNewDec(r.Int63()),
 		IsSupported:                 false,
 		GatewayAddress:              EthAddress().String(),
-		ConfirmationParams:          ConfirmationParams(r),
+		ConfirmationParams:          &confirmationParams,
 	}
 }
 

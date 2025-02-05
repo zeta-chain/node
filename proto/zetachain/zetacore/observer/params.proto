@@ -33,7 +33,7 @@ message ChainParams {
   string gateway_address = 17;
 
   // Advanced confirmation parameters for chain to support fast observation
-  ConfirmationParams confirmation_params = 18 [ (gogoproto.nullable) = false ];
+  ConfirmationParams confirmation_params = 18;
 }
 
 // Deprecated(v17)

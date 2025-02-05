@@ -43,10 +43,12 @@ func TestMigrateStore(t *testing.T) {
 			require.Equal(t, oldParam.ConfirmationCount, newParam.ConfirmationParams.FastOutboundCount)
 
 			// ensure nothing else has changed except the confirmation
-			oldParam.ConfirmationParams.SafeInboundCount = oldParam.ConfirmationCount
-			oldParam.ConfirmationParams.FastInboundCount = oldParam.ConfirmationCount
-			oldParam.ConfirmationParams.SafeOutboundCount = oldParam.ConfirmationCount
-			oldParam.ConfirmationParams.FastOutboundCount = oldParam.ConfirmationCount
+			oldParam.ConfirmationParams = &types.ConfirmationParams{
+				SafeInboundCount:  oldParam.ConfirmationCount,
+				FastInboundCount:  oldParam.ConfirmationCount,
+				SafeOutboundCount: oldParam.ConfirmationCount,
+				FastOutboundCount: oldParam.ConfirmationCount,
+			}
 			require.Equal(t, newParam, oldParam)
 		}
 	})
@@ -101,7 +103,7 @@ func TestMigrateStore(t *testing.T) {
 func makeChainParamsEmptyConfirmation(chainID int64, confirmationCount uint64) *types.ChainParams {
 	chainParams := sample.ChainParams(chainID)
 	chainParams.ConfirmationCount = confirmationCount
-	chainParams.ConfirmationParams = types.ConfirmationParams{}
+	chainParams.ConfirmationParams = nil
 	return chainParams
 }
 

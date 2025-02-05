@@ -65,6 +65,9 @@ func ValidateChainParams(params *ChainParams) error {
 	if params.ConfirmationCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
 	}
+	if params.ConfirmationParams == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "confirmation params cannot be nil")
+	}
 	if params.ConfirmationParams.SafeInboundCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeInboundCount must be greater than 0")
 	}
@@ -194,7 +197,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  14,
 			FastInboundCount:  14,
 			SafeOutboundCount: 14,
@@ -218,7 +221,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  14,
 			FastInboundCount:  14,
 			SafeOutboundCount: 14,
@@ -242,7 +245,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  2,
 			FastInboundCount:  2,
 			SafeOutboundCount: 2,
@@ -267,7 +270,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  6,
 			FastInboundCount:  6,
 			SafeOutboundCount: 6,
@@ -291,7 +294,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  6,
 			FastInboundCount:  6,
 			SafeOutboundCount: 6,
@@ -315,7 +318,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  12,
 			FastInboundCount:  12,
 			SafeOutboundCount: 12,
@@ -339,7 +342,7 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  2,
 			FastInboundCount:  2,
 			SafeOutboundCount: 2,
@@ -363,7 +366,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  1,
 			FastInboundCount:  1,
 			SafeOutboundCount: 1,
@@ -388,7 +391,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
-		ConfirmationParams: ConfirmationParams{
+		ConfirmationParams: &ConfirmationParams{
 			SafeInboundCount:  1,
 			FastInboundCount:  1,
 			SafeOutboundCount: 1,
