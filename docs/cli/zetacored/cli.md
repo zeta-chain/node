@@ -35,6 +35,7 @@ Zetacore Daemon (server)
 * [zetacored rollback](#zetacored-rollback)	 - rollback Cosmos SDK and CometBFT state by one height
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
+* [zetacored status](#zetacored-status)	 - Query remote node for status
 * [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
 * [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
@@ -1671,6 +1672,9 @@ zetacored query [flags]
 * [zetacored query authority](#zetacored-query-authority)	 - Querying commands for the authority module
 * [zetacored query authz](#zetacored-query-authz)	 - Querying commands for the authz module
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+* [zetacored query block](#zetacored-query-block)	 - Query for a committed block by height, hash, or event(s)
+* [zetacored query block-results](#zetacored-query-block-results)	 - Query for a committed block's results by height
+* [zetacored query blocks](#zetacored-query-blocks)	 - Query for paginated blocks that match a set of events
 * [zetacored query comet-validator-set](#zetacored-query-comet-validator-set)	 - Get the full CometBFT validator set at given height
 * [zetacored query consensus](#zetacored-query-consensus)	 - Querying commands for the consensus module
 * [zetacored query crosschain](#zetacored-query-crosschain)	 - Querying commands for the crosschain module
@@ -2980,6 +2984,143 @@ zetacored query bank total-supply-of [denom] [flags]
 ### SEE ALSO
 
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query block
+
+Query for a committed block by height, hash, or event(s)
+
+### Synopsis
+
+Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method
+
+```
+zetacored query block --type=[height|hash] [height|hash] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query block --type=height [height]
+$ zetacored query block --type=hash [hash]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for block
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+      --type string        The type to be used when querying tx, can be one of "height", "hash" 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
+
+## zetacored query block-results
+
+Query for a committed block's results by height
+
+### Synopsis
+
+Query for a specific committed block's results using the CometBFT RPC `block_results` method
+
+```
+zetacored query block-results [height] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for block-results
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
+
+## zetacored query blocks
+
+Query for paginated blocks that match a set of events
+
+### Synopsis
+
+Search for blocks that match the exact given events where results are paginated.
+The events query is directly passed to CometBFT's RPC BlockSearch method and must
+conform to CometBFT's query syntax.
+Please refer to each module's documentation for the full set of events to query
+for. Each module documents its respective events under 'xx_events.md'.
+
+
+```
+zetacored query blocks [flags]
+```
+
+### Examples
+
+```
+$ zetacored query blocks --query "message.sender='cosmos1...' AND block.height > 7" --page 1 --limit 30 --order_by asc
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for blocks
+      --limit int          Query number of transactions results per page returned (default 100)
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+      --order_by string    The ordering semantics (asc|dsc)
+  -o, --output string      Output format (text|json) 
+      --page int           Query a specific page of paginated results (default 1)
+      --query string       The blocks events query per CometBFT's query semantics
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
 
 ## zetacored query comet-validator-set
 
@@ -9015,6 +9156,36 @@ zetacored start [flags]
       --log_format string   The logging format (json|plain) 
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
       --log_no_color        Disable colored logs
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
+
+## zetacored status
+
+Query remote node for status
+
+```
+zetacored status [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for status
+  -n, --node string     Node to connect to 
+  -o, --output string   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
