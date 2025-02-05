@@ -137,7 +137,7 @@ func TestClientLive(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, inbounds, 1)
-		require.Equal(t, inbounds[0].Value, 0.0001)
+		require.Equal(t, inbounds[0].Value+inbounds[0].DepositorFee, 0.0001)
 		require.Equal(t, inbounds[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
 
 		// the text memo is base64 std encoded string:DSRR1RmDCwWmxqY201/TMtsJdmA=
@@ -332,7 +332,7 @@ func TestClientLive(t *testing.T) {
 		require.NoError(t, err)
 
 		// go back whatever blocks as needed
-		endBlock := startBlock - 100
+		endBlock := startBlock - 1
 
 		// loop through mempool.space blocks backwards
 		for bn := startBlock; bn >= endBlock; {

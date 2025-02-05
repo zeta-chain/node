@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
@@ -491,8 +490,8 @@ func (signer *Signer) BroadcastOutbound(
 					outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 			retry, report := zetacore.HandleBroadcastError(
 				err,
-				strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
-				fmt.Sprintf("%d", toChain.ID()),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				toChain.ID(),
 				outboundHash,
 			)
 			if report {

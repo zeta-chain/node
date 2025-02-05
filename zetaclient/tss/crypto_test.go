@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,6 +46,12 @@ func TestPubKey(t *testing.T) {
 		addrEVM := pk.AddressEVM()
 		addrBTC, err := pk.AddressBTC(chains.BitcoinMainnet.ChainId)
 		require.NoError(t, err)
+
+		expectedPkScript, err := txscript.PayToAddrScript(addrBTC)
+		require.NoError(t, err)
+		pkScript, err := pk.BTCPayToAddrScript(chains.BitcoinMainnet.ChainId)
+		require.NoError(t, err)
+		assert.Equal(t, expectedPkScript, pkScript)
 
 		assert.Equal(t, sample, pk.Bech32String())
 		assert.Equal(t, "0x70e967acfcc17c3941e87562161406d41676fd83", strings.ToLower(addrEVM.Hex()))

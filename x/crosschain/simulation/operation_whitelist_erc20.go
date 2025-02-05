@@ -12,6 +12,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -20,9 +21,9 @@ import (
 func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistERC20, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -32,7 +33,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -41,7 +42,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if len(filteredChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"no EVM-compatible chains found",
 			), nil, nil
 		}
@@ -55,14 +56,14 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		case randomChain.IsEVMChain():
 			tokenAddress = sample.EthAddressFromRand(r).String()
 		default:
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgWhitelistERC20, "unsupported chain"), nil, nil
 		}
 
 		_, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"no TSS found",
 			), nil, nil
 		}
@@ -71,7 +72,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"no chain params found",
 			), nil, nil
 		}
@@ -80,7 +81,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if !isFound {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"median gas price not found",
 			), nil, nil
 		}
@@ -91,7 +92,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgWhitelistERC20,
+				TypeMsgWhitelistERC20,
 				"priorityFee is greater than median gasPrice",
 			), nil, nil
 		}
@@ -101,7 +102,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			if fCoin.Asset == tokenAddress && fCoin.ForeignChainId == randomChain.ChainId {
 				return simtypes.NoOpMsg(
 					types.ModuleName,
-					types.TypeMsgWhitelistERC20,
+					TypeMsgWhitelistERC20,
 					"ERC20 already whitelisted",
 				), nil, nil
 			}
@@ -124,7 +125,7 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgWhitelistERC20,
 				"unable to validate MsgWhitelistERC20",
 			), nil, err
 		}
@@ -143,6 +144,6 @@ func SimulateMsgWhitelistERC20(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

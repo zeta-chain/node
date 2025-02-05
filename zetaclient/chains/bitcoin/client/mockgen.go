@@ -45,6 +45,7 @@ type client interface {
 
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,
