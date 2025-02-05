@@ -33,6 +33,8 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 
 		// Act
 		_, err := msgServer.RemoveInboundTracker(ctx, &msg)
+
+		// Assert
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
