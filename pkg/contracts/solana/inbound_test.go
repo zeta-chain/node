@@ -1,7 +1,6 @@
 package solana
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -55,14 +54,15 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// solana e2e user evm account
-	expectedMemo, err := hex.DecodeString("103fd9224f00ce3013e95629e52dfc31d805d68d")
 	require.NoError(t, err)
 	expectedDeposit := &Deposit{
-		Sender: sender,
-		Amount: 12000000,
-		Memo:   expectedMemo,
-		Slot:   txResult.Slot,
-		Asset:  "",
+		Sender:           sender,
+		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+		Amount:           12000000,
+		Memo:             []byte{},
+		Slot:             txResult.Slot,
+		Asset:            "",
+		IsCrossChainCall: false,
 	}
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
@@ -159,36 +159,15 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// expected result
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	// example contract deployed during e2e test, read from tx result
-	expectedReceiver := []byte{
-		117,
-		160,
-		106,
-		140,
-		37,
-		135,
-		57,
-		218,
-		223,
-		226,
-		53,
-		45,
-		87,
-		151,
-		61,
-		239,
-		158,
-		231,
-		162,
-		186,
-	}
 	expectedMsg := []byte("hello lamports")
 	expectedDeposit := &Deposit{
-		Sender: sender,
-		Amount: 1200000,
-		Memo:   append(expectedReceiver, expectedMsg...),
-		Slot:   txResult.Slot,
-		Asset:  "",
+		Sender:           sender,
+		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
+		Amount:           1200000,
+		Memo:             expectedMsg,
+		Slot:             txResult.Slot,
+		Asset:            "",
+		IsCrossChainCall: true,
 	}
 
 	t.Run("should parse inbound event deposit SOL and call", func(t *testing.T) {
@@ -284,15 +263,15 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	// expected result
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	// solana e2e user evm account
-	expectedMemo, err := hex.DecodeString("103fd9224f00ce3013e95629e52dfc31d805d68d")
 	require.NoError(t, err)
 	expectedDeposit := &Deposit{
-		Sender: sender,
-		Amount: 12000000,
-		Memo:   expectedMemo,
-		Slot:   txResult.Slot,
-		Asset:  "BTmtL9Dh2DcwhPntEbjo3rSWpmz1EhXsmohSC7CGSEWw", // SPL address
+		Sender:           sender,
+		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+		Amount:           12000000,
+		Memo:             []byte{},
+		Slot:             txResult.Slot,
+		Asset:            "BTmtL9Dh2DcwhPntEbjo3rSWpmz1EhXsmohSC7CGSEWw", // SPL address
+		IsCrossChainCall: false,
 	}
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
@@ -389,14 +368,15 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// example contract deployed during e2e test, read from tx result
-	expectedReceiver := []byte{213, 254, 240, 66, 1, 154, 250, 238, 39, 131, 9, 45, 5, 2, 190, 192, 20, 31, 103, 209}
 	expectedMsg := []byte("hello spl tokens")
 	expectedDeposit := &Deposit{
-		Sender: sender,
-		Amount: 12000000,
-		Memo:   append(expectedReceiver, expectedMsg...),
-		Slot:   txResult.Slot,
-		Asset:  "7d4ehzE4WNgithQZMyQFDhmHyN6rQNTEC7re1bsRN7TX", // SPL address
+		Sender:           sender,
+		Receiver:         "0xd5Fef042019aFAEe2783092d0502bEc0141f67D1",
+		Amount:           12000000,
+		Memo:             expectedMsg,
+		Slot:             txResult.Slot,
+		Asset:            "7d4ehzE4WNgithQZMyQFDhmHyN6rQNTEC7re1bsRN7TX", // SPL address,
+		IsCrossChainCall: true,
 	}
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {

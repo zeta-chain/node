@@ -11,33 +11,23 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 type Bitcoin struct {
 	scheduler *scheduler.Scheduler
 	observer  *observer.Observer
 	signer    *signer.Signer
-	proc      *outboundprocessor.Processor
 }
 
-func New(
-	scheduler *scheduler.Scheduler,
-	observer *observer.Observer,
-	signer *signer.Signer,
-) *Bitcoin {
-	// TODO move this to base signer
-	// https://github.com/zeta-chain/node/issues/3330
-	proc := outboundprocessor.NewProcessor(observer.Logger().Outbound)
-
+func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *Bitcoin {
 	return &Bitcoin{
 		scheduler: scheduler,
 		observer:  observer,
 		signer:    signer,
-		proc:      proc,
 	}
 }
 
@@ -99,11 +89,11 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(b.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
-	register(b.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(b.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(b.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
@@ -131,18 +121,17 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	var (
-		lookahead = b.observer.ChainParams().OutboundScheduleLookahead
-		chainID   = b.observer.Chain().ChainId
-	)
-
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
+	chainID := b.observer.Chain().ChainId
+	lookahead := b.observer.ChainParams().OutboundScheduleLookahead
 
 	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
 	if err != nil {
@@ -154,7 +143,7 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		var (
 			params     = cctx.GetCurrentOutboundParam()
 			nonce      = params.TssNonce
-			outboundID = outboundprocessor.ToOutboundID(cctx.Index, params.ReceiverChainId, nonce)
+			outboundID = base.OutboundIDFromCCTX(cctx)
 		)
 
 		if params.ReceiverChainId != chainID {
@@ -183,18 +172,14 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 				Uint64("outbound.earliest_pending_nonce", cctxList[0].GetCurrentOutboundParam().TssNonce).
 				Msg("Schedule CCTX: lookahead reached")
 			return nil
-		case b.proc.IsOutboundActive(outboundID):
+		case b.signer.IsOutboundActive(outboundID):
 			// outbound is already being processed
 			continue
 		}
 
-		b.proc.StartTryProcess(outboundID)
-
 		go b.signer.TryProcessOutbound(
 			ctx,
 			cctx,
-			b.proc,
-			outboundID,
 			b.observer,
 			b.observer.ZetacoreClient(),
 			zetaHeight,

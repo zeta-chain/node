@@ -98,6 +98,13 @@ export declare enum InboundStatus {
    * @generated from enum value: INSUFFICIENT_DEPOSITOR_FEE = 1;
    */
   INSUFFICIENT_DEPOSITOR_FEE = 1,
+
+  /**
+   * the receiver address parsed from the inbound is invalid
+   *
+   * @generated from enum value: INVALID_RECEIVER_ADDRESS = 2;
+   */
+  INVALID_RECEIVER_ADDRESS = 2,
 }
 
 /**
@@ -421,6 +428,14 @@ export declare class Status extends Message<Status> {
    * @generated from field: int64 created_timestamp = 5;
    */
   createdTimestamp: bigint;
+
+  /**
+   * error_message_revert carries information about the revert outbound tx ,
+   * which is created if the first outbound tx fails
+   *
+   * @generated from field: string error_message_revert = 7;
+   */
+  errorMessageRevert: string;
 
   constructor(data?: PartialMessage<Status>);
 

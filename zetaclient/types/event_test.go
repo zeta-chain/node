@@ -72,12 +72,12 @@ func Test_Catetory(t *testing.T) {
 		expected types.InboundCategory
 	}{
 		{
-			name: "should return InboundCategoryGood for a processable inbound event",
+			name: "should return InboundCategoryProcessable for a processable inbound event",
 			event: &types.InboundEvent{
 				Sender:   sample.SolanaAddress(t),
 				Receiver: sample.EthAddress().Hex(),
 			},
-			expected: types.InboundCategoryGood,
+			expected: types.InboundCategoryProcessable,
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted sender address",

@@ -1,18 +1,30 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
+)
+
+var (
+	TypeMsgAddOutboundTracker            = sdk.MsgTypeURL(&types.MsgAddOutboundTracker{})
+	TypeMsgAddInboundTracker             = sdk.MsgTypeURL(&types.MsgAddInboundTracker{})
+	TypeMsgRemoveOutboundTracker         = sdk.MsgTypeURL(&types.MsgRemoveOutboundTracker{})
+	TypeMsgVoteGasPrice                  = sdk.MsgTypeURL(&types.MsgVoteGasPrice{})
+	TypeMsgVoteOutbound                  = sdk.MsgTypeURL(&types.MsgVoteOutbound{})
+	TypeMsgVoteInbound                   = sdk.MsgTypeURL(&types.MsgVoteInbound{})
+	TypeMsgWhitelistERC20                = sdk.MsgTypeURL(&types.MsgWhitelistERC20{})
+	TypeMsgMigrateTssFunds               = sdk.MsgTypeURL(&types.MsgMigrateTssFunds{})
+	TypeMsgUpdateTssAddress              = sdk.MsgTypeURL(&types.MsgUpdateTssAddress{})
+	TypeMsgAbortStuckCCTX                = sdk.MsgTypeURL(&types.MsgAbortStuckCCTX{})
+	TypeMsgUpdateRateLimiterFlags        = sdk.MsgTypeURL(&types.MsgUpdateRateLimiterFlags{})
+	TypeMsgRefundAbortedCCTX             = sdk.MsgTypeURL(&types.MsgRefundAbortedCCTX{})
+	TypeMsgUpdateERC20CustodyPauseStatus = sdk.MsgTypeURL(&types.MsgUpdateERC20CustodyPauseStatus{})
 )
 
 // Simulation operation weights constants
@@ -203,199 +215,4 @@ func WeightedOperations(
 			SimulateMsgUpdateTssAddress(k),
 		),
 	}
-}
-
-func GetRandomObserver(r *rand.Rand, observerList []string) string {
-	idx := r.Intn(len(observerList))
-	return observerList[idx]
-}
-
-func GetRandomChainID(r *rand.Rand, chains []chains.Chain) int64 {
-	idx := r.Intn(len(chains))
-	return chains[idx].ChainId
-}
-
-// GetRandomAccountAndObserver returns a random account and the associated observer address
-func GetRandomAccountAndObserver(
-	r *rand.Rand,
-	ctx sdk.Context,
-	k keeper.Keeper,
-	accounts []simtypes.Account,
-) (simtypes.Account, string, error) {
-	observers, found := k.GetObserverKeeper().GetObserverSet(ctx)
-	if !found {
-		return simtypes.Account{}, "", fmt.Errorf("observer set not found")
-	}
-
-	if len(observers.ObserverList) == 0 {
-		return simtypes.Account{}, "", fmt.Errorf("no observers present in observer set found")
-	}
-
-	randomObserver := ""
-	foundObserver := false
-	for i := 0; i < 10; i++ {
-		randomObserver = GetRandomObserver(r, observers.ObserverList)
-		ok := k.GetObserverKeeper().IsNonTombstonedObserver(ctx, randomObserver)
-		if ok {
-			foundObserver = true
-			break
-		}
-	}
-
-	if !foundObserver {
-		return simtypes.Account{}, "", fmt.Errorf("no observer found")
-	}
-
-	simAccount, err := GetObserverAccount(randomObserver, accounts)
-	if err != nil {
-		return simtypes.Account{}, "", err
-	}
-	return simAccount, randomObserver, nil
-}
-
-// GetObserverAccount returns the account associated with the observer address from the list of accounts provided
-// GetObserverAccount can fail if all the observers are removed from the observer set ,this can happen
-//if the other modules create transactions which affect the validator
-//and triggers any of the staking hooks defined in the observer modules
-
-func GetObserverAccount(observerAddress string, accounts []simtypes.Account) (simtypes.Account, error) {
-	operatorAddress, err := observerTypes.GetOperatorAddressFromAccAddress(observerAddress)
-	if err != nil {
-		return simtypes.Account{}, fmt.Errorf("validator not found for observer ")
-	}
-
-	simAccount, found := simtypes.FindAccount(accounts, operatorAddress)
-	if !found {
-		return simtypes.Account{}, fmt.Errorf("operator account not found")
-	}
-	return simAccount, nil
-}
-
-// GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
-func GenAndDeliverTxWithRandFees(
-	txCtx simulation.OperationInput,
-) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
-
-	var fees sdk.Coins
-	var err error
-
-	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
-	if hasNeg {
-		return simtypes.NoOpMsg(
-			txCtx.ModuleName,
-			sdk.MsgTypeURL(txCtx.Msg),
-			"message doesn't leave room for fees",
-		), nil, err
-	}
-
-	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
-	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
-	}
-	return GenAndDeliverTx(txCtx, fees)
-}
-
-// GenAndDeliverTx generates a transactions and delivers it with the provided fees.
-// This function does not return an error if the transaction fails to deliver.
-func GenAndDeliverTx(
-	txCtx simulation.OperationInput,
-	fees sdk.Coins,
-) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	tx, err := simtestutil.GenSignedMockTx(
-		txCtx.R,
-		txCtx.TxGen,
-		[]sdk.Msg{txCtx.Msg},
-		fees,
-		simtestutil.DefaultGenTxGas,
-		txCtx.Context.ChainID(),
-		[]uint64{account.GetAccountNumber()},
-		[]uint64{account.GetSequence()},
-		txCtx.SimAccount.PrivKey,
-	)
-	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate mock tx"), nil, err
-	}
-
-	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
-	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, nil
-	}
-
-	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil, nil
-}
-
-func ObserverVotesSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
-	observerVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
-		{20, 10, 0, 0, 0, 0},
-		{55, 50, 20, 10, 0, 0},
-		{25, 25, 30, 25, 30, 15},
-		{0, 15, 30, 25, 30, 30},
-		{0, 0, 20, 30, 30, 30},
-		{0, 0, 0, 10, 10, 25},
-	})
-	// The states are:
-	// column 1: All observers vote
-	// column 2: 90% vote
-	// column 3: 75% vote
-	// column 4: 40% vote
-	// column 5: 15% vote
-	// column 6: noone votes
-	// All columns sum to 100 for simplicity, but this is arbitrary and can be changed
-	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
-	curNumVotesState := 1
-	return observerVotesTransitionMatrix, statePercentageArray, curNumVotesState
-}
-
-func BallotVoteSimulationMatrix() (simtypes.TransitionMatrix, []float64, int) {
-	ballotTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
-		{70, 10, 20},
-		{20, 30, 30},
-		{10, 60, 50},
-	})
-	// The states are:
-	// column 1: 100% vote yes
-	// column 2: 50% vote yes
-	// column 3: 0% vote yes
-	// For all conditions we assume if the the vote is not a yes.
-	// then it is a no .Not voting condtion is handled by the ObserverVotesSimulationMatrix matrix
-	yesVoteArray := []float64{1, .5, 0}
-	ballotVotesState := 1
-	return ballotTransitionMatrix, yesVoteArray, ballotVotesState
-}
-
-func GetPolicyAccount(ctx sdk.Context, k types.AuthorityKeeper, accounts []simtypes.Account) (simtypes.Account, error) {
-	policies, found := k.GetPolicies(ctx)
-	if !found {
-		return simtypes.Account{}, fmt.Errorf("policies object not found")
-	}
-	if len(policies.Items) == 0 {
-		return simtypes.Account{}, fmt.Errorf("no policies found")
-	}
-
-	admin := policies.Items[0].Address
-	address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)
-	if err != nil {
-		return simtypes.Account{}, err
-	}
-	simAccount, found := simtypes.FindAccount(accounts, address)
-	if !found {
-		return simtypes.Account{}, fmt.Errorf("admin account not found in list of simulation accounts")
-	}
-	return simAccount, nil
-}
-
-func GetAsset(ctx sdk.Context, k types.FungibleKeeper, chainID int64) (string, error) {
-	foreignCoins := k.GetAllForeignCoins(ctx)
-	asset := ""
-
-	for _, coin := range foreignCoins {
-		if coin.ForeignChainId == chainID {
-			return coin.Asset, nil
-		}
-	}
-
-	return asset, fmt.Errorf("asset not found for chain %d", chainID)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -19,9 +20,9 @@ func SimulateMsgUpdateRateLimiterFlags(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Fetch the account from the auth keeper which can then be used to fetch spendable coins}
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateRateLimiterFlags, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateRateLimiterFlags, err.Error()), nil, nil
 		}
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
@@ -35,7 +36,7 @@ func SimulateMsgUpdateRateLimiterFlags(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgUpdateRateLimiterFlags,
 				"unable to validate MsgUpdateRateLimiterFlags msg",
 			), nil, err
 		}
@@ -54,6 +55,6 @@ func SimulateMsgUpdateRateLimiterFlags(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

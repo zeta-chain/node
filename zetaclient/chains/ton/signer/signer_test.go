@@ -21,7 +21,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	"github.com/zeta-chain/node/zetaclient/keys"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -73,7 +72,7 @@ func TestSigner(t *testing.T) {
 	ts.OnGetTransactionsSince(ts.gw.AccountID(), lt, ton.Bits256(hash), []ton.Transaction{withdrawalTX}, nil)
 
 	// ACT
-	signer.TryProcessOutbound(ts.ctx, cctx, ts.proc, outboundID, nil, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx, ts.zetacore, zetaHeight)
 
 	// ASSERT
 	// Make sure signer send the tx the chain AND published the outbound tracker
@@ -124,7 +123,6 @@ type testSuite struct {
 
 	gw         *toncontracts.Gateway
 	baseSigner *base.Signer
-	proc       *outboundprocessor.Processor
 
 	trackerBag []testTracker
 }
@@ -164,7 +162,6 @@ func newTestSuite(t *testing.T) *testSuite {
 		zetacore: zetacore,
 		tss:      tss,
 
-		proc:       outboundprocessor.NewProcessor(logger.Std),
 		gw:         toncontracts.NewGateway(gwAccountID),
 		baseSigner: base.NewSigner(chain, tss, logger),
 	}

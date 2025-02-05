@@ -130,58 +130,24 @@ func Start(_ *cobra.Command, _ []string) error {
 		graceful.ShutdownNow()
 	})
 
-	// CreateSignerMap: This creates a map of all signers for each chain.
-	// Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to create signer map")
-		return err
-	}
-
-	// Creates a map of all chain observers for each chain.
-	// Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbPath, logger, telemetry)
-	if err != nil {
-		return errors.Wrap(err, "unable to create chain observer map")
-	}
-
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
 	// This is the high level object used for CCTX interactions
 	// It also handles background configuration updates from zetacore
-	maestro, err := orchestrator.New(
-		ctx,
-		zetacoreClient,
-		signerMap,
-		observerMap,
-		tss,
-		dbPath,
-		logger,
-		telemetry,
-	)
-	if err != nil {
-		return errors.Wrap(err, "unable to create orchestrator")
-	}
-
 	taskScheduler := scheduler.New(logger.Std)
-	maestroV2Deps := &orchestrator.Dependencies{
+	maestroDeps := &orchestrator.Dependencies{
 		Zetacore:  zetacoreClient,
 		TSS:       tss,
 		DBPath:    dbPath,
 		Telemetry: telemetry,
 	}
 
-	maestroV2, err := orchestrator.NewV2(taskScheduler, maestroV2Deps, logger)
+	maestro, err := orchestrator.NewV2(taskScheduler, maestroDeps, logger)
 	if err != nil {
 		return errors.Wrap(err, "unable to create orchestrator V2")
 	}
 
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, maestro)
-
-	// Start orchestrator V2
-	// V2 will co-exist with V1 until all types of chains will be refactored (BTC, EVM, SOL, TON).
-	// (currently it's only BTC)
-	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()

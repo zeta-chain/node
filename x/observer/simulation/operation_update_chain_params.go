@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -18,23 +19,23 @@ import (
 func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateChainParams, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
 		spendable := k.GetBankKeeper().SpendableCoins(ctx, authAccount.GetAddress())
 
-		randomChain, err := GetExternalChain(ctx, k, r)
+		randomChain, err := zetasimulation.GetExternalChain(ctx, k, r)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateChainParams, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, nil
 		}
 
 		cp := sample.ChainParamsFromRand(r, randomChain.ChainId)
 		err = types.ValidateChainParams(cp)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateChainParams, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, nil
 		}
 
 		msg := types.MsgUpdateChainParams{
@@ -44,7 +45,7 @@ func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -61,6 +62,6 @@ func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

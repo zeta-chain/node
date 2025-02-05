@@ -144,7 +144,7 @@ func DistributeObserverRewards(
 	keeper.EmitObserverEmissions(ctx, finalDistributionList)
 
 	// Processing Step 3: Delete all matured ballots and the ballot list
-	emissionsKeeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, params.BallotMaturityBlocks)
+	emissionsKeeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, maturityBlocks)
 	return nil
 }
 

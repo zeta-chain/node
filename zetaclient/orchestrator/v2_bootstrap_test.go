@@ -69,8 +69,6 @@ func TestBootstrap(t *testing.T) {
 		mockEthCalls(ts, maticServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
-			// disable btc for this test
-			cfg.BTCChainConfigs = nil
 			cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 				Endpoint: ethServer.Endpoint,
 			}
@@ -117,6 +115,82 @@ func TestBootstrap(t *testing.T) {
 
 		tasksMissGroup(t, ts.scheduler.Tasks(), "evm:1")
 		assert.Contains(t, ts.Log.String(), `"chain":1,"message":"Removed observer-signer"`)
+	})
+
+	t.Run("Solana", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		// Given orchestrator
+		ts := newTestSuite(t)
+
+		// Given Solana RPC
+		solServer, solConfig := testrpc.NewSolanaServer(t)
+		mockSolanaCalls(ts, solServer)
+
+		ts.UpdateConfig(func(cfg *config.Config) {
+			cfg.SolanaConfig = solConfig
+
+			// disable other chains
+			cfg.TONConfig.LiteClientConfigURL = ""
+			cfg.EVMChainConfigs = nil
+			cfg.BTCChainConfigs = nil
+		})
+
+		// Mock zetacore calls
+		mockZetacoreCalls(ts)
+
+		// ACT
+		// Start the orchestrator and wait for SOL observerSigner to bootstrap
+		require.NoError(t, ts.Start(ts.ctx))
+
+		// ASSERT
+		// Solana observerSigner is added
+		check := func() bool {
+			return ts.HasObserverSigner(chains.SolanaMainnet.ChainId)
+		}
+
+		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
+
+		tasksHaveGroup(t, ts.scheduler.Tasks(), "sol:900")
+		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"Added observer-signer"`)
+	})
+
+	t.Run("TON", func(t *testing.T) {
+		// TODO: mock TON liteServer with real calls
+		// https://github.com/zeta-chain/node/issues/3419
+
+		t.Skip("Depends on lite-server mocks")
+		// t.Parallel()
+
+		// ARRANGE
+		// Given orchestrator
+		ts := newTestSuite(t)
+
+		// Given TON rpc URL
+		ts.UpdateConfig(func(cfg *config.Config) {
+			// todo
+			cfg.TONConfig = config.TONConfig{
+				LiteClientConfigURL: "localhost",
+			}
+		})
+
+		// Mock zetacore calls
+		mockZetacoreCalls(ts)
+
+		// ACT
+		// Start the orchestrator and wait for TON observerSigner to bootstrap
+		require.NoError(t, ts.Start(ts.ctx))
+
+		// ASSERT
+		check := func() bool {
+			return ts.HasObserverSigner(chains.TONMainnet.ChainId)
+		}
+
+		assert.Eventually(t, check, 3*constant.ZetaBlockTime, 100*time.Millisecond)
+
+		tasksHaveGroup(t, ts.scheduler.Tasks(), "ton:2015140")
+		assert.Contains(t, ts.Log.String(), `"chain":2015140,"chain_network":"ton","message":"Added observer-signer"`)
 	})
 }
 
@@ -190,7 +264,10 @@ func mockBitcoinCalls(_ *testSuite, client *testrpc.BtcServer) {
 func mockEthCalls(_ *testSuite, client *testrpc.EVMServer) {
 	client.SetBlockNumber(100)
 	client.SetChainID(1)
+}
 
+func mockSolanaCalls(_ *testSuite, client *testrpc.SolanaServer) {
+	// todo
 }
 
 func mockZetacoreCalls(ts *testSuite) {

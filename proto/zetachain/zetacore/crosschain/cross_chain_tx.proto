@@ -34,6 +34,8 @@ enum InboundStatus {
   // this field is specifically for Bitcoin when the deposit amount is less than
   // depositor fee
   INSUFFICIENT_DEPOSITOR_FEE = 1;
+  // the receiver address parsed from the inbound is invalid
+  INVALID_RECEIVER_ADDRESS = 2;
 }
 
 message InboundParams {
@@ -121,6 +123,9 @@ message Status {
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.
   int64 created_timestamp = 5;
+  // error_message_revert carries information about the revert outbound tx ,
+  // which is created if the first outbound tx fails
+  string error_message_revert = 7;
 }
 
 // ProtocolContractVersion represents the version of the protocol contract used

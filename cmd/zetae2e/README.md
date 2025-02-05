@@ -55,7 +55,7 @@ contracts:
 ```
 
 ### Bitcoin setup
-Interaction with the Bitcoin node will require setting up a specific node tracking the address. It can be set locally following the guide [Using Bitcoin Docker Image for Local Development](https://www.notion.so/Using-Bitcoin-Docker-Image-for-Local-Development-bf7e84c58f22431fb52f17a471997e1f?pvs=21) 
+Interaction with the Bitcoin node will require setting up a specific node tracking the address.
 
 If an error occurs mention that wallets are not loaded, this command can be run to set it up:
 
