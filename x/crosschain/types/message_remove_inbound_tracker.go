@@ -44,5 +44,8 @@ func (msg *MsgRemoveInboundTracker) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+	if msg.ChainId < 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", msg.ChainId)
+	}
 	return nil
 }

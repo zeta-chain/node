@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestMsgServer_AddInboundTracker(t *testing.T) {
+func TestMsgServer_RemoveInboundTracker(t *testing.T) {
 	t.Run("fail if creator is not admin", func(t *testing.T) {
 		// Arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{

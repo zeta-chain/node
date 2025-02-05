@@ -27,6 +27,15 @@ func TestMsgRemoveInboundTracker_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
+			name: "invalid if chain id is negative",
+			msg: types.NewMsgRemoveInboundTracker(
+				sample.AccAddress(),
+				-1,
+				sample.ZetaIndex(t),
+			),
+			err: sdkerrors.ErrInvalidChainID,
+		},
+		{
 			name: "valid",
 			msg: types.NewMsgRemoveInboundTracker(
 				sample.AccAddress(),
@@ -130,5 +139,10 @@ func TestMsgRemoveInboundTracker_GetSignBytes(t *testing.T) {
 		chains.Goerli.ChainId,
 		sample.ZetaIndex(t),
 	)
-	require.Equal(t, msg.GetSignBytes(), msg.GetSignBytes())
+
+	require.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
+	require.NotEmpty(t, msg.GetSignBytes())
+	require.Equal(t, string(msg.GetSignBytes()), string(msg.GetSignBytes()), "sign bytes should be deterministic")
 }
