@@ -126,6 +126,8 @@ message Status {
   // error_message_revert carries information about the revert outbound tx ,
   // which is created if the first outbound tx fails
   string error_message_revert = 7;
+  // error_message_abort carries information when aborting the CCTX fails
+  string error_message_abort = 8;
 }
 
 // ProtocolContractVersion represents the version of the protocol contract used

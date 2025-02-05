@@ -9,6 +9,7 @@ type StatusMessages struct {
 	StatusMessage        string `json:"status_message"`
 	ErrorMessageOutbound string `json:"error_message_outbound"`
 	ErrorMessageRevert   string `json:"error_message_revert"`
+	ErrorMessageAbort    string `json:"error_message_abort"`
 }
 
 func (m *Status) AbortRefunded() {
