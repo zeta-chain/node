@@ -79,6 +79,11 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 	if err != nil {
 		c.Message = fmt.Sprintf("failed to get cctx: %v", err)
 	}
+	outboundParams := CCTX.GetCurrentOutboundParam()
+	if outboundParams == nil {
+		c.Message = "outbound params not found"
+		return
+	}
 	chainID := CCTX.GetCurrentOutboundParam().ReceiverChainId
 
 	// This is almost impossible to happen as the cctx would not have been created if the chain was not supported
@@ -116,6 +121,11 @@ func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	// the cctx is in pending state, but the outbound signing has not been done
 	c.updateOutboundSigning()
 	return
+}
+
+// IsInboundFinalized checks if the inbound voting has been finalized
+func (c *TrackingDetails) IsInboundFinalized() bool {
+	return !(c.Status == PendingInboundConfirmation || c.Status == PendingInboundVoting)
 }
 
 func (c *TrackingDetails) IsPendingOutbound() bool {

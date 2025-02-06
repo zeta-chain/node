@@ -269,7 +269,7 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			}
 		}
 	default:
-		return fmt.Errorf("irrelevant transaction , not sent to any known address txHash: %s", inboundHash)
+		return fmt.Errorf("irrelevant transaction , not sent to any known address txHash: %s to address %s", inboundHash, tx.To())
 	}
 
 	c.CCTXIdentifier = msg.Digest()
@@ -351,12 +351,8 @@ func (c *TrackingDetails) zevmInboundBallotIdentifier(ctx *context.Context) erro
 	if err != nil {
 		return fmt.Errorf("inbound chain is zetachain , cctx should be available in the same block: %w", err)
 	}
-	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) == 0 {
+	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) < 1 {
 		return fmt.Errorf("inbound hash does not have any cctx linked %s", inboundHash)
-	}
-
-	if len(inboundHashToCCTX.InboundHashToCctx.CctxIndex) > 1 {
-		return fmt.Errorf("inbound hash more than one cctx %s", inboundHash)
 	}
 
 	c.CCTXIdentifier = inboundHashToCCTX.InboundHashToCctx.CctxIndex[0]

@@ -9,6 +9,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/node/pkg/memo"
 
 	"github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -74,9 +75,6 @@ func BitcoinBallotIdentifier(
 	}
 
 	cctxIdentifier, err = identifierFromBtcEvent(event, senderChainID, zetacoreChainID)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -139,9 +137,10 @@ func voteFromLegacyMemo(
 		coin.CoinType_Gas,
 		"",
 		0,
-		crosschaintypes.ProtocolContractVersion_V1,
+		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not relevant for v1
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
 	)
 }
 
@@ -156,9 +155,8 @@ func voteFromStdMemo(
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
 	}
 
-	// make a legacy message so that zetacore can process it as V1
-	msgBytes := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
-	message := hex.EncodeToString(msgBytes)
+	// check if the memo is a cross-chain call, or simple token deposit
+	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
 
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
@@ -168,16 +166,17 @@ func voteFromStdMemo(
 		event.ToAddress,
 		zetacoreChainID,
 		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
+		hex.EncodeToString(event.MemoStd.Payload),
 		event.TxHash,
 		event.BlockNumber,
 		0,
 		coin.CoinType_Gas,
 		"",
 		0,
-		crosschaintypes.ProtocolContractVersion_V1,
+		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not relevant for v1
-		crosschaintypes.InboundStatus_SUCCESS,
+		event.Status,
 		crosschaintypes.WithRevertOptions(revertOptions),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)
 }
