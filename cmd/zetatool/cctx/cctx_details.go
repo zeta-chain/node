@@ -128,10 +128,12 @@ func (c *TrackingDetails) IsInboundFinalized() bool {
 	return !(c.Status == PendingInboundConfirmation || c.Status == PendingInboundVoting)
 }
 
+// IsPendingOutbound checks if the cctx is pending processing the outbound transaction (outbound or revert)
 func (c *TrackingDetails) IsPendingOutbound() bool {
 	return c.Status == PendingOutbound || c.Status == PendingRevert
 }
 
+// IsPendingConfirmation checks if the cctx is pending outbound confirmation (outbound or revert
 func (c *TrackingDetails) IsPendingConfirmation() bool {
 	return c.Status == PendingOutboundConfirmation || c.Status == PendingRevertConfirmation
 }

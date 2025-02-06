@@ -269,7 +269,11 @@ func (c *TrackingDetails) evmInboundBallotIdentifier(ctx *context.Context) error
 			}
 		}
 	default:
-		return fmt.Errorf("irrelevant transaction , not sent to any known address txHash: %s to address %s", inboundHash, tx.To())
+		return fmt.Errorf(
+			"irrelevant transaction , not sent to any known address txHash: %s to address %s",
+			inboundHash,
+			tx.To(),
+		)
 	}
 
 	c.CCTXIdentifier = msg.Digest()
@@ -293,7 +297,10 @@ func (c *TrackingDetails) solanaInboundBallotIdentifier(ctx *context.Context) er
 		return fmt.Errorf("error creating rpc client")
 	}
 
-	signature := solana.MustSignatureFromBase58(inboundHash)
+	signature, err := solana.SignatureFromBase58(inboundHash)
+	if err != nil {
+		return fmt.Errorf("error parsing signature: %w", err)
+	}
 
 	txResult, err := solanarpc.GetTransaction(goCtx, solClient, signature)
 	if err != nil {

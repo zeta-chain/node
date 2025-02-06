@@ -21,12 +21,12 @@ func TestnetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "https://zetachain-athens.g.allthatnode.com/archive/tendermint",
 		EthereumRPC:  "https://ethereum-sepolia-rpc.publicnode.com",
-		ZetaChainID:  7001,
+		ZetaChainID:  chains.ZetaChainTestnet.ChainId,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
 		BtcParams:    "",
-		SolanaRPC:    "",
+		SolanaRPC:    "https://api.testnet.solana.com",
 		BscRPC:       "https://bsc-testnet-rpc.publicnode.com",
 		PolygonRPC:   "https://polygon-amoy.gateway.tenderly.com",
 		BaseRPC:      "https://base-sepolia-rpc.publicnode.com",
@@ -37,7 +37,7 @@ func DevnetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "",
 		EthereumRPC:  "",
-		ZetaChainID:  101,
+		ZetaChainID:  chains.ZetaChainDevnet.ChainId,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
@@ -53,7 +53,7 @@ func MainnetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "https://zetachain-mainnet.g.allthatnode.com:443/archive/tendermint",
 		EthereumRPC:  "https://eth-mainnet.public.blastapi.io",
-		ZetaChainID:  7000,
+		ZetaChainID:  chains.ZetaChainMainnet.ChainId,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
@@ -70,7 +70,7 @@ func PrivateNetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "http://127.0.0.1:26657",
 		EthereumRPC:  "http://127.0.0.1:8545",
-		ZetaChainID:  101,
+		ZetaChainID:  chains.ZetaChainPrivnet.ChainId,
 		BtcUser:      "smoketest",
 		BtcPassword:  "123",
 		BtcHost:      "127.0.0.1:18443",

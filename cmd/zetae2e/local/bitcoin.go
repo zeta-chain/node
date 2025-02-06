@@ -70,7 +70,6 @@ func startBitcoinTests(
 	)
 	eg.Go(bitcoinDepositTestRoutine)
 	eg.Go(bitcoinWithdrawTestRoutine)
-
 }
 
 // bitcoinTestRoutines returns test routines for deposit and withdraw tests

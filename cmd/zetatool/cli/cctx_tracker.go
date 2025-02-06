@@ -69,17 +69,16 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 			// The error can be caused by two reasons
 			// 1. We have reached the end of the cctx error chain, we can return
 			// 2. There was an error in tracking the cctx.
+
 			// If debug flag is set, we log everything
-			if cmd.Flag(config.FlagDebug).Changed {
-				log.Error().Msgf("failed to track cctx: %v", err)
+			// If the length of the tracking details is 0, it means that we have not tracked any cctx yet, we log the error
+			if cmd.Flag(config.FlagDebug).Changed || len(trackingDetailsList) == 0 {
+				log.Error().Msgf("failed to track cctx : %v", err)
 				if cctxTrackingDetails != nil {
 					log.Info().Msg(cctxTrackingDetails.DebugPrint())
 				}
 			}
-			// If the length of the tracking details is 0, it means that we have not tracked any cctx yet, we log the error
-			if len(trackingDetailsList) == 0 {
-				log.Error().Msgf("failed to track cctx: %v", err)
-			}
+
 			return nil
 		}
 
@@ -105,6 +104,7 @@ func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.TrackingDetails, error) {
 	}
 
 	// At this point, we have confirmed the inbound hash is valid, and it was sent to valid address.
+	// After this we attach error messages to the message field as wealready have some details about the cctx which can be printed
 	// Update cctx status from zetacore.This copies the status from zetacore to the cctx details.The cctx status can only be `PendingInboundVoting` or `PendingInboundConfirmation` at this point
 	cctxTrackingDetails.UpdateCCTXStatus(ctx)
 

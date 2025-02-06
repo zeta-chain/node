@@ -2,7 +2,6 @@ package chains
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 
@@ -13,12 +12,6 @@ import (
 // voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
 func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 	zetaChainID int64) (*crosschaintypes.MsgVoteInbound, error) {
-	// decode event memo bytes to get the receiver
-	err := event.DecodeMemo()
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode memo: %w", err)
-	}
-
 	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
 		"",
@@ -35,8 +28,9 @@ func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		event.CoinType,
 		event.Asset,
 		0, // not a smart contract call
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
+		crosschaintypes.ProtocolContractVersion_V2,
+		false,
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
 	), nil
 }
