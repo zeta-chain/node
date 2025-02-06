@@ -35,6 +35,11 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
 	}
 
+	// keep last block up-to-date
+	if err := ob.updateLastBlock(ctx); err != nil {
+		return err
+	}
+
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
 		Str(logs.FieldMethod, "ProcessOutboundTrackers").
@@ -475,16 +480,11 @@ func (ob *Observer) checkConfirmedTx(
 		logger.Error().Msg("receipt is nil")
 		return nil, nil, false
 	}
-	ob.LastBlock()
+
 	// check confirmations
-	lastHeight, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("BlockNumber error")
-		return nil, nil, false
-	}
-	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
+	if !ob.IsBlockConfirmedForOutboundSafe(receipt.BlockNumber.Uint64()) {
 		logger.Debug().
-			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), lastHeight)
+			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), ob.LastBlock())
 		return nil, nil, false
 	}
 

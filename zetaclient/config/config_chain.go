@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	MaxBlocksPerPeriod = 100
+	// BlockLimitPerScan is the maximum number of blocks to scan in one ticker
+	BlockLimitPerScan = 100
 )
 
 // New constructs Config optionally with default values.

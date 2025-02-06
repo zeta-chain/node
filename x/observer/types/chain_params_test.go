@@ -171,6 +171,38 @@ func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 	require.NotNil(s.T(), err)
 }
 
+func (s *UpdateChainParamsSuite) Test_InboundConfirmationFast() {
+	// should return fast confirmation count if enabled
+	copy := copyParams(s.evmParams)
+	copy.ConfirmationParams.SafeInboundCount = 2
+	copy.ConfirmationParams.FastInboundCount = 1
+	confirmation := copy.InboundConfirmationFast()
+	require.Equal(s.T(), uint64(1), confirmation)
+
+	// should fallback to safe confirmation count if fast confirmation is disabled
+	copy = copyParams(s.evmParams)
+	copy.ConfirmationParams.SafeInboundCount = 2
+	copy.ConfirmationParams.FastInboundCount = 0
+	confirmation = copy.InboundConfirmationFast()
+	require.Equal(s.T(), uint64(2), confirmation)
+}
+
+func (s *UpdateChainParamsSuite) Test_OutboundConfirmationFast() {
+	// should return fast confirmation count if enabled
+	copy := copyParams(s.evmParams)
+	copy.ConfirmationParams.SafeOutboundCount = 2
+	copy.ConfirmationParams.FastOutboundCount = 1
+	confirmation := copy.OutboundConfirmationFast()
+	require.Equal(s.T(), uint64(1), confirmation)
+
+	// should fallback to safe confirmation count if fast confirmation is disabled
+	copy = copyParams(s.evmParams)
+	copy.ConfirmationParams.SafeOutboundCount = 2
+	copy.ConfirmationParams.FastOutboundCount = 0
+	confirmation = copy.OutboundConfirmationFast()
+	require.Equal(s.T(), uint64(2), confirmation)
+}
+
 func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	copy := copyParams(params)
 	copy.ConfirmationCount = 0

@@ -31,7 +31,6 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
-		ConfirmationCount:           confirmation,
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    connectorAddr,
 		Erc20CustodyContractAddress: erc20CustodyAddr,

@@ -421,7 +421,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		// create evm observer for testing
 		ob := newTestSuite(t)
 
-		confirmations := ob.chainParams.ConfirmationCount
+		confirmations := ob.chainParams.ConfirmationParams.SafeOutboundCount
 
 		// create mock evm client with preloaded block, tx and receipt
 		ob.evmMock.On("BlockNumber", mock.Anything).Unset()

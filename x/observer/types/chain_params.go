@@ -155,6 +155,24 @@ func ValidateChainParams(params *ChainParams) error {
 	return nil
 }
 
+// InboundConfirmationFast returns the fast number of confirmation for inbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) InboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastInboundCount > 0 {
+		return cp.ConfirmationParams.FastInboundCount
+	}
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// OutboundConfirmationFast returns the fast number of confirmation for outbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) OutboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastOutboundCount > 0 {
+		return cp.ConfirmationParams.FastOutboundCount
+	}
+	return cp.ConfirmationParams.SafeOutboundCount
+}
+
 func validChainContractAddress(address string) bool {
 	if !strings.HasPrefix(address, "0x") {
 		return false
