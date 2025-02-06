@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -12,8 +13,9 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"golang.org/x/crypto/blake2b"
 	"gopkg.in/yaml.v3"
+
+	sui_utils "github.com/zeta-chain/node/e2e/utils/sui"
 )
 
 // DoubleQuotedString forces a string to be double quoted when marshaling to yaml.
@@ -401,21 +403,13 @@ func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 }
 
 // SuiAddress derives the blake2b hash from the private key
-//
-// https://docs.sui.io/concepts/cryptography/transaction-auth/keys-addresses#address-format
-func (a Account) SuiAddress() (string, error) {
-	privKey, err := a.PrivateKey()
+func (a Account) SuiSigner() (*sui_utils.SignerSecp256k1, error) {
+	privateKeyBytes, err := hex.DecodeString(a.RawPrivateKey.String())
 	if err != nil {
-		return "", fmt.Errorf("get private key: %w", err)
+		return nil, fmt.Errorf("decode private key: %w", err)
 	}
-	pubKey := append(privKey.PublicKey.X.Bytes(), privKey.PublicKey.Y.Bytes()...)
-	hasher, err := blake2b.New256(nil)
-	if err != nil {
-		return "", fmt.Errorf("hashing sui pubkey: %w", err)
-	}
-	hasher.Write(pubKey)
-	suiAddress := hasher.Sum(nil)
-	return fmt.Sprintf("0x%x", suiAddress), nil
+	signer := sui_utils.NewSignerSecp256k1FromSecretKey(privateKeyBytes)
+	return signer, nil
 }
 
 // Validate that the address and the private key specified in the

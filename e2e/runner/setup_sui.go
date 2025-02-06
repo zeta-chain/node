@@ -1,17 +1,54 @@
 package runner
 
 import (
+	"fmt"
+
+	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/stretchr/testify/require"
+
+	sui_utils "github.com/zeta-chain/node/e2e/utils/sui"
 )
 
 func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.Logger.Print("⚙️ initializing gateway program on Sui")
 
-	deployerAddr, err := r.Account.SuiAddress()
-	require.NoError(r, err, "get deploy address")
+	deployerSigner, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	deployerAddress := deployerSigner.Address()
 
 	header := map[string]string{}
-	err = sui.RequestSuiFromFaucet(faucetURL, deployerAddr, header)
+	err = sui.RequestSuiFromFaucet(faucetURL, deployerAddress, header)
 	require.NoError(r, err, "sui faucet request to %s", faucetURL)
+
+	client := r.Clients.Sui
+
+	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
+		Sender:          deployerAddress,
+		CompiledModules: []string{sui_utils.GetEncodedGateway()},
+		Dependencies: []string{
+			"0x0000000000000000000000000000000000000000000000000000000000000001",
+			"0x0000000000000000000000000000000000000000000000000000000000000002",
+		},
+		GasBudget: "5000000000",
+	})
+	require.NoError(r, err, "create publish tx")
+
+	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	require.NoError(r, err, "sign transaction")
+
+	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:   publishReq.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:        true,
+			ShowBalanceChanges: true,
+			ShowEvents:         true,
+		},
+		RequestType: "WaitForLocalExecution",
+	})
+	require.NoError(r, err)
+	fmt.Println(resp)
+
+	// TODO: save IDs in config and configure chain
 }
