@@ -122,6 +122,18 @@ var (
 		Name:        "arbitrum_mainnet",
 	}
 
+	// SuiMainnet is the Sui mainnet
+	SuiMainnet = Chain{
+		ChainId:     101,
+		Network:     Network_sui,
+		NetworkType: NetworkType_mainnet,
+		Vm:          Vm_mvm_sui,
+		Consensus:   Consensus_sui_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "sui_mainnet",
+	}
+
 	// WorldMainnet is the World Chain mainnet
 	WorldMainnet = Chain{
 		ChainId:     480,
@@ -316,6 +328,18 @@ var (
 		Name:        "world_testnet",
 	}
 
+	// SuiTestnet is the Sui testnet
+	SuiTestnet = Chain{
+		ChainId:     103,
+		Network:     Network_sui,
+		NetworkType: NetworkType_testnet,
+		Vm:          Vm_mvm_sui,
+		Consensus:   Consensus_sui_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "sui_testnet",
+	}
+
 	// SolanaDevnet is Solana devnet
 	// NOTE: Solana devnet refers to Solana testnet in our terminology
 	// Solana uses devnet denomitation for network for development
@@ -431,6 +455,17 @@ var (
 		Name:        "ton_localnet",
 	}
 
+	SuiLocalnet = Chain{
+		ChainId:     104,
+		Network:     Network_sui,
+		NetworkType: NetworkType_privnet,
+		Vm:          Vm_mvm_sui,
+		Consensus:   Consensus_sui_consensus,
+		IsExternal:  true,
+		CctxGateway: CCTXGateway_observers,
+		Name:        "sui_localnet",
+	}
+
 	/**
 	* Deprecated chains
 	 */
@@ -507,6 +542,9 @@ func DefaultChainsList() []Chain {
 		ArbitrumSepolia,
 		WorldMainnet,
 		WorldTestnet,
+		SuiMainnet,
+		SuiTestnet,
+		SuiLocalnet,
 	}
 }
 
