@@ -4,12 +4,12 @@
 
 ### Features
 
+* [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
 
 ### Tests
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
-
 
 ## v27.0.0
 

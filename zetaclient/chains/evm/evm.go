@@ -131,7 +131,8 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 	time.Sleep(delay)
 
 	var (
-		chainID = e.observer.Chain().ChainId
+		chain   = e.observer.Chain()
+		chainID = chain.ChainId
 
 		// #nosec G115 always in range
 		zetaHeight = uint64(zetaBlock.Block.Height)
@@ -151,7 +152,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
 	)
 
-	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}

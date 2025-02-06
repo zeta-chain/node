@@ -52,13 +52,42 @@ func ValidateChainParams(params *ChainParams) error {
 		return fmt.Errorf("chain params cannot be nil")
 	}
 
+	// don't validate ZetaChain params, because the validation will fail on existing params in the store
+	// we might remove the ZetaChain params in the future, this is TBD
 	if chains.IsZetaChain(params.ChainId, nil) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
+		return nil
 	}
 
+	// validate confirmation counts
+	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
+	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
+	// https://github.com/zeta-chain/node/issues/3466
 	if params.ConfirmationCount == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
 	}
+	if params.ConfirmationParams == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "confirmation params cannot be nil")
+	}
+	if params.ConfirmationParams.SafeInboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeInboundCount must be greater than 0")
+	}
+	if params.ConfirmationParams.FastInboundCount > params.ConfirmationParams.SafeInboundCount {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"FastInboundCount must be less than or equal to SafeInboundCount",
+		)
+	}
+	if params.ConfirmationParams.SafeOutboundCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeOutboundCount must be greater than 0")
+	}
+	if params.ConfirmationParams.FastOutboundCount > params.ConfirmationParams.SafeOutboundCount {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"FastOutboundCount must be less than or equal to SafeOutboundCount",
+		)
+	}
+
+	// validate tickers and intervals
 	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
 	}
@@ -168,6 +197,12 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
@@ -186,6 +221,12 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
@@ -204,6 +245,12 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
@@ -223,6 +270,12 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
@@ -241,6 +294,12 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
@@ -259,6 +318,12 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  12,
+			FastInboundCount:  12,
+			SafeOutboundCount: 12,
+			FastOutboundCount: 12,
+		},
 	}
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
@@ -277,6 +342,12 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
@@ -295,6 +366,12 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -314,6 +391,12 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
@@ -351,5 +434,6 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
-		params1.GatewayAddress == params2.GatewayAddress
+		params1.GatewayAddress == params2.GatewayAddress &&
+		params1.ConfirmationParams == params2.ConfirmationParams
 }
