@@ -334,7 +334,7 @@ func TestZetaChainFromCosmosChainID(t *testing.T) {
 		},
 		{
 			name:     "ZetaChainPrivnet",
-			chainID:  "cosmoshub_101101-1",
+			chainID:  "cosmoshub_101-1",
 			expected: chains.ZetaChainPrivnet,
 			wantErr:  false,
 		},
