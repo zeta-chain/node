@@ -1,6 +1,6 @@
 {
   "zeta_chain_rpc": "https://zetachain-testnet-grpc.itrocket.net:443",
-  "zeta_chain_id": 101,
+  "zeta_chain_id": 101101,
   "ethereum_rpc": "https://ethereum-sepolia-rpc.publicnode.com",
   "btc_user": "",
   "btc_password": "",
