@@ -67,7 +67,7 @@ jobs:
           key: cache-${{ hashFiles('go.sum') }}
 
       - name: Inject go cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@61bd187f75f25d38e056fdd48506fac777c6ebec
         with:
           cache-map: |
             {
