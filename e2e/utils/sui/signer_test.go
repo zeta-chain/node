@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/block-vision/sui-go-sdk/signer"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -57,7 +58,7 @@ func Test2(t *testing.T) {
 
 	// Prepare the input for hashing: flag byte + public key bytes
 	input := make([]byte, len(pkbytes))
-	input[0] = FLAG_SECP256K1
+	input[0] = signer.SigntureFlagSecp256k1
 	fmt.Printf("input[0]=%d\n", input[0])
 	copy(input[1:], pkbytes[1:])
 

@@ -8,20 +8,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/block-vision/sui-go-sdk/signer"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	crypto2 "github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/blake2b"
-)
-
-const (
-	// Flag bytes for different signature schemes
-	FLAG_ED25519   = 0x00
-	FLAG_SECP256K1 = 0x01
-	FLAG_SECP256R1 = 0x02
-	FLAG_MULTISIG  = 0x03
-
-	// Length of Sui address in bytes
-	SUI_ADDRESS_LENGTH = 32
 )
 
 type SignerSecp256k1 struct {
@@ -29,12 +19,20 @@ type SignerSecp256k1 struct {
 }
 
 func NewSignerSecp256k1FromSecretKey(secret []byte) *SignerSecp256k1 {
-	priv := new(ecdsa.PrivateKey)
-	priv.D = new(big.Int).SetBytes(secret)
-	priv.PublicKey.Curve = secp256k1.S256() // Use secp256k1 curve
-	// Calculate public key point
-	priv.PublicKey.X, priv.PublicKey.Y = priv.PublicKey.Curve.ScalarBaseMult(secret)
-	return &SignerSecp256k1{privkey: priv}
+	privKey := secp256k1.PrivKeyFromBytes(secret)
+
+	ecdsaPrivKey := &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: secp256k1.S256(),
+			X:     privKey.PubKey().X(),
+			Y:     privKey.PubKey().Y(),
+		},
+		D: new(big.Int).SetBytes(secret),
+	}
+
+	return &SignerSecp256k1{
+		privkey: ecdsaPrivKey,
+	}
 }
 
 func NewSignerSecp256k1Random() *SignerSecp256k1 {
@@ -86,7 +84,7 @@ func (s *SignerSecp256k1) Address() string {
 
 	// Prepare the input for hashing: flag byte + public key bytes
 	input := make([]byte, len(pubKeyBytes)+1)
-	input[0] = FLAG_SECP256K1
+	input[0] = signer.SigntureFlagSecp256k1
 	copy(input[1:], pubKeyBytes)
 
 	// Create BLAKE2b hash
@@ -113,7 +111,7 @@ func ToSerializedSignature(signature, pubKey []byte) string {
 	signatureLen := len(signature)
 	pubKeyLen := len(pubKey)
 	serializedSignature := make([]byte, 1+signatureLen+pubKeyLen)
-	serializedSignature[0] = byte(FLAG_SECP256K1)
+	serializedSignature[0] = byte(signer.SigntureFlagSecp256k1)
 	copy(serializedSignature[1:], signature)
 	copy(serializedSignature[1+signatureLen:], pubKey)
 	return base64.StdEncoding.EncodeToString(serializedSignature)
