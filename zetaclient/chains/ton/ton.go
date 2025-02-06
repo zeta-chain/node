@@ -130,9 +130,9 @@ func (t *TON) scheduleCCTX(ctx context.Context) error {
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
-	chainID := t.observer.Chain().ChainId
+	chain := t.observer.Chain()
 
-	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := t.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}

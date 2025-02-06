@@ -59767,6 +59767,7 @@ definitions:
       confirmation_count:
         type: string
         format: uint64
+        title: 'Deprecated(v28): use confirmation_params instead'
       gas_price_ticker:
         type: string
         format: uint64
@@ -59799,6 +59800,9 @@ definitions:
         type: boolean
       gateway_address:
         type: string
+      confirmation_params:
+        $ref: '#/definitions/observerConfirmationParams'
+        title: Advanced confirmation parameters for chain to support fast observation
   observerChainParamsList:
     type: object
     properties:
@@ -59807,6 +59811,33 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerChainParams'
+  observerConfirmationParams:
+    type: object
+    properties:
+      safe_inbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an inbound is
+          considered finalized.
+      fast_inbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast inbound observation, which is
+          shorter than safe_inbound_count.
+      safe_outbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an outbound is
+          considered finalized.
+      fast_outbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast outbound observation, which is
+          shorter than safe_outbound_count.
   observerCrosschainFlags:
     type: object
     properties:

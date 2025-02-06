@@ -1,0 +1,22 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+option go_package = "github.com/zeta-chain/node/x/observer/types";
+
+message ConfirmationParams {
+  // This is the safe number of confirmations to wait before an inbound is
+  // considered finalized.
+  uint64 safe_inbound_count = 1;
+
+  // This is the number of confirmations for fast inbound observation, which is
+  // shorter than safe_inbound_count.
+  uint64 fast_inbound_count = 2;
+
+  // This is the safe number of confirmations to wait before an outbound is
+  // considered finalized.
+  uint64 safe_outbound_count = 3;
+
+  // This is the number of confirmations for fast outbound observation, which is
+  // shorter than safe_outbound_count.
+  uint64 fast_outbound_count = 4;
+}

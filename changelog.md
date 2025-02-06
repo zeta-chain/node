@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+
 ### Tests
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission

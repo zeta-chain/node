@@ -36,8 +36,9 @@ func TestChainParamsList_Validate(t *testing.T) {
 
 type UpdateChainParamsSuite struct {
 	suite.Suite
-	evmParams *types.ChainParams
-	btcParams *types.ChainParams
+	zetaParams *types.ChainParams
+	evmParams  *types.ChainParams
+	btcParams  *types.ChainParams
 }
 
 var _ = Suite(&UpdateChainParamsSuite{})
@@ -53,6 +54,23 @@ func TestChainParamsEqual(t *testing.T) {
 }
 
 func (s *UpdateChainParamsSuite) SetupTest() {
+	s.zetaParams = &types.ChainParams{
+		ConfirmationCount:           0,
+		GasPriceTicker:              0,
+		InboundTicker:               0,
+		OutboundTicker:              0,
+		WatchUtxoTicker:             0,
+		ZetaTokenContractAddress:    "0x0000000000000000000000000000000000000000",
+		ConnectorContractAddress:    "0x0000000000000000000000000000000000000000",
+		Erc20CustodyContractAddress: "0x0000000000000000000000000000000000000000",
+		ChainId:                     7000,
+		OutboundScheduleInterval:    0,
+		OutboundScheduleLookahead:   0,
+		BallotThreshold:             types.DefaultBallotThreshold,
+		MinObserverDelegation:       types.DefaultMinObserverDelegation,
+		IsSupported:                 true,
+		GatewayAddress:              "",
+	}
 	s.evmParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
@@ -69,6 +87,12 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
+		ConfirmationParams: &types.ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  0, // zero means fast observation is disabled
+			SafeOutboundCount: 2,
+			FastOutboundCount: 0, // zero means fast observation is disabled
+		},
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
@@ -85,11 +109,19 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &types.ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  1,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 1,
+		},
 	}
 }
 
 func (s *UpdateChainParamsSuite) TestValidParams() {
-	err := types.ValidateChainParams(s.evmParams)
+	err := types.ValidateChainParams(s.zetaParams)
+	require.Nil(s.T(), err)
+	err = types.ValidateChainParams(s.evmParams)
 	require.Nil(s.T(), err)
 	err = types.ValidateChainParams(s.btcParams)
 	require.Nil(s.T(), err)
@@ -140,82 +172,126 @@ func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 }
 
 func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
-	copy := *params
+	copy := copyParams(params)
 	copy.ConfirmationCount = 0
-	err := types.ValidateChainParams(&copy)
+	err := types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
+	copy.ConfirmationParams = nil
+	err = types.ValidateChainParams(copy)
+	require.NotNil(s.T(), err)
+
+	copy = copyParams(params)
+	copy.ConfirmationParams.SafeInboundCount = 0
+	err = types.ValidateChainParams(copy)
+	require.NotNil(s.T(), err)
+	copy = copyParams(params)
+	copy.ConfirmationParams.FastInboundCount = copy.ConfirmationParams.SafeInboundCount + 1
+	err = types.ValidateChainParams(copy)
+	require.NotNil(s.T(), err)
+
+	copy = copyParams(params)
+	copy.ConfirmationParams.SafeOutboundCount = 0
+	err = types.ValidateChainParams(copy)
+	require.NotNil(s.T(), err)
+	copy = copyParams(params)
+	copy.ConfirmationParams.FastOutboundCount = copy.ConfirmationParams.SafeOutboundCount + 1
+	err = types.ValidateChainParams(copy)
+	require.NotNil(s.T(), err)
+
+	copy = copyParams(params)
 	copy.GasPriceTicker = 0
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.GasPriceTicker = 300
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 	copy.GasPriceTicker = 301
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.InboundTicker = 0
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.InboundTicker = 300
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 	copy.InboundTicker = 301
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.OutboundTicker = 0
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.OutboundTicker = 300
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 	copy.OutboundTicker = 301
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.OutboundScheduleInterval = 0
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.OutboundScheduleInterval = 100
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 	copy.OutboundScheduleInterval = 101
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.OutboundScheduleLookahead = 0
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.OutboundScheduleLookahead = 500
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 	copy.OutboundScheduleLookahead = 501
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.BallotThreshold = sdkmath.LegacyDec{}
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("0.9")
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
 
-	copy = *params
+	copy = copyParams(params)
 	copy.MinObserverDelegation = sdkmath.LegacyDec{}
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.NotNil(s.T(), err)
 	copy.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
-	err = types.ValidateChainParams(&copy)
+	err = types.ValidateChainParams(copy)
 	require.Nil(s.T(), err)
+}
+
+// copyParams creates a deep copy of the given ChainParams.
+func copyParams(src *types.ChainParams) *types.ChainParams {
+	if src == nil {
+		return nil
+	}
+
+	copy := *src
+	if src.ConfirmationParams == nil {
+		return &copy
+	}
+
+	copy.ConfirmationParams = &types.ConfirmationParams{
+		SafeInboundCount:  src.ConfirmationParams.SafeInboundCount,
+		FastInboundCount:  src.ConfirmationParams.FastInboundCount,
+		SafeOutboundCount: src.ConfirmationParams.SafeOutboundCount,
+		FastOutboundCount: src.ConfirmationParams.FastOutboundCount,
+	}
+
+	return &copy
 }
