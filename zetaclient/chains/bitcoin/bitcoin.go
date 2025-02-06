@@ -130,10 +130,11 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
-	chainID := b.observer.Chain().ChainId
+	chain := b.observer.Chain()
+	chainID := chain.ChainId
 	lookahead := b.observer.ChainParams().OutboundScheduleLookahead
 
-	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}
