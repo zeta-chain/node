@@ -76,7 +76,7 @@ type ZetacoreClient interface {
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 
-	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
+	ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCCTXWithinRateLimit(
 		ctx context.Context,
 	) (*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse, error)
