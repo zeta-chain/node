@@ -57,7 +57,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationParams.SafeInboundCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationParams.SafeInboundCount - 2)
 
 		_, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
@@ -142,7 +142,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationParams.SafeInboundCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationParams.SafeInboundCount - 2)
 
 		_, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
@@ -220,7 +220,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
-		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
+		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 2
 
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
