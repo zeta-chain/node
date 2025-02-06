@@ -78,6 +78,12 @@ func (s *SignerSecp256k1) GetPublicKey() []byte {
 	return append([]byte{prefix}, paddedX...)
 }
 
+// GetFlaggedPublicKey returns GetPublicKey flagged for use with wallets
+// and command line tools
+func (s *SignerSecp256k1) GetFlaggedPublicKey() []byte {
+	return append([]byte{signer.SigntureFlagSecp256k1}, s.GetPublicKey()...)
+}
+
 func (s *SignerSecp256k1) Address() string {
 	// Get the public key bytes
 	pubKeyBytes := s.GetPublicKey()

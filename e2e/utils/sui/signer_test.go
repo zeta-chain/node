@@ -3,12 +3,11 @@ package sui
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/hex"
-	"fmt"
 	"testing"
 
-	"github.com/block-vision/sui-go-sdk/signer"
-	"golang.org/x/crypto/blake2b"
+	sui_signer "github.com/block-vision/sui-go-sdk/signer"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/stretchr/testify/require"
 )
 
 // test vector:
@@ -24,15 +23,6 @@ var VALID_SECP256K1_PUBLIC_KEY = []byte{
 	41, 91, 141, 134, 245, 114, 45, 63, 82, 19, 251, 210, 57, 79, 54,
 }
 
-// it('create keypair from secret key', () => {
-//    const secret_key = new Uint8Array(VALID_SECP256K1_SECRET_KEY);
-//    const pub_key = new Uint8Array(VALID_SECP256K1_PUBLIC_KEY);
-//    let pub_key_base64 = toB64(pub_key);
-//    const keypair = Secp256k1Keypair.fromSecretKey(secret_key);
-//    expect(keypair.getPublicKey().toBytes()).toEqual(new Uint8Array(pub_key));
-//    expect(keypair.getPublicKey().toBase64()).toEqual(pub_key_base64);
-//  });
-
 func TestSignerSecp256k1FromSecretKey(t *testing.T) {
 	// Create signer from secret key
 	signer := NewSignerSecp256k1FromSecretKey(VALID_SECP256K1_SECRET_KEY)
@@ -46,38 +36,57 @@ func TestSignerSecp256k1FromSecretKey(t *testing.T) {
 	}
 }
 
-func Test2(t *testing.T) {
-	// test case generated with sui keytool command
-	pkbytes, err := base64.StdEncoding.DecodeString("AQLsqLZ8MUNEsBvUXILavCu4dSAtsyg/8Jz0gssssyT63w==")
-	if err != nil {
-		t.Fatal(err)
+// Test keypairs generated and exported with
+//
+// sui client new-address secp256k1
+// sui keytool export
+//
+// See https://github.com/sui-foundation/sips/blob/main/sips/sip-15.md for encoding info
+func TestSuiSecp256k1Keypair(t *testing.T) {
+	tests := []struct {
+		name                 string
+		privKey              string
+		expectedAddress      string
+		expectedPubkeyBase64 string
+	}{
+		{
+			name:                 "example 1",
+			privKey:              "suiprivkey1q8h7ejwfcdn6gc2x9kddtd9vld3kvuvtr9gdtj9qcf7nqnw94tvl79cwfq4",
+			expectedAddress:      "0x68f6d05fd44366bd431405e8ea32e2d2f8e330d98e0089c9447ecfbbdf6e236f",
+			expectedPubkeyBase64: "AQOhmtkY2bTZGXRZmXZLo495i5Dz+FgJvM7bbnUCWlL2hg==",
+		},
+		{
+			name:                 "example 2",
+			privKey:              "suiprivkey1qxghtp2vncr94s8h7ctvgf58gy27l9nch75ka2jh37qr90xuyxhlwk5khxc",
+			expectedAddress:      "0x8ec6f13affbf48c73550567f2a1cb8f05474c0133ebf745f91a2f3b971c1ec9a",
+			expectedPubkeyBase64: "AQIgu/14lUhVMEWjIB0RQ80ARJiH/xQIw4KJTEhDhHcjEQ==",
+		},
+		{
+			name:                 "example 3",
+			privKey:              "suiprivkey1q99wkv3fj352cn97yu5r9jwqhcvyyk6t9scwrftyjgqgflandfgc70r74hg",
+			expectedAddress:      "0xa0f6b839f7945065ebdd030cec8e6e30d01a74c8cb31b1945909fd426c2cef80",
+			expectedPubkeyBase64: "AQIRTpSIUP2GOAWTEHOTYbyUjlfxpHKwPvsgwZw3G6h/RQ==",
+		},
 	}
-	// len(pkbytes) == 34
-	// byte 0: 0x01 (flag byte) byte 1-33: 33 compressed public key bytes
-	expectedAddress := "0xce97523ae06726043aa5783c7b37964fa92c561fc65515a8d9bf13d3f9c9eae8"
 
-	// Prepare the input for hashing: flag byte + public key bytes
-	input := make([]byte, len(pkbytes))
-	input[0] = signer.SigntureFlagSecp256k1
-	fmt.Printf("input[0]=%d\n", input[0])
-	copy(input[1:], pkbytes[1:])
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, data, err := bech32.DecodeAndConvert(tt.privKey)
+			require.NoError(t, err)
 
-	// Create BLAKE2b hash
-	hash, err := blake2b.New256(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+			// assert this is a secp256k1 private key
+			require.Equal(t, byte(sui_signer.SigntureFlagSecp256k1), data[0])
 
-	// Write input to hash
-	hash.Write(pkbytes)
+			flagLessData := data[1:]
 
-	// Get the final hash
-	addressBytes := hash.Sum(nil)
+			signer := NewSignerSecp256k1FromSecretKey(flagLessData)
 
-	// Convert to hex string with 0x prefix
-	addressHex := "0x" + hex.EncodeToString(addressBytes)
+			address := signer.Address()
+			require.Equal(t, tt.expectedAddress, address)
 
-	if addressHex != expectedAddress {
-		t.Errorf("Address mismatch\nexpected: %s\ngot: %s", expectedAddress, addressHex)
+			pubkeyBytes := signer.GetFlaggedPublicKey()
+			pubkeyEncoded := base64.StdEncoding.EncodeToString(pubkeyBytes)
+			require.Equal(t, tt.expectedPubkeyBase64, pubkeyEncoded)
+		})
 	}
 }
