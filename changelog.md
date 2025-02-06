@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v27.0.2
+
+This is a zetaclient only release.
+
+### Fixes
+
+* [3482](https://github.com/zeta-chain/node/pull/3482) - fix evm healthcheck to reduce log spam
+* [3484](https://github.com/zeta-chain/node/pull/3484) - use chain name in metrics
+
+
 ## v27.0.1
 
 ### Fixes
