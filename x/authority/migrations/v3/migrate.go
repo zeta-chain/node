@@ -16,7 +16,6 @@ func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
 ) error {
-
 	//
 	var (
 		authorizationList          = types.DefaultAuthorizationsList()
