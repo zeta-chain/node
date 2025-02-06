@@ -123,8 +123,10 @@ var (
 	}
 
 	// SuiMainnet is the Sui mainnet
+	// TODO: this value should be set to 101 but currently conflicts with ZetaChain localnet
+	// https://github.com/zeta-chain/node/issues/3491
 	SuiMainnet = Chain{
-		ChainId:     101,
+		ChainId:     105,
 		Network:     Network_sui,
 		NetworkType: NetworkType_mainnet,
 		Vm:          Vm_mvm_sui,
