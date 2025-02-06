@@ -18,7 +18,7 @@ zetatool track-cctx 0x61008d7f79b2955a15e3cb95154a80e19c7385993fd0e083ff0cbe0b0f
 - `debug`: [Optional] The debug flag is used to print additional debug information when set to true
 
 The Config contains the rpcs needed for the tool to function,
-if not provided the tool automatically uses the default rpcs.It is able to fetch the rpc needed using the chain ID
+if not provided the tool automatically uses the default rpc .It is able to fetch the rpc needed using the chain ID
 
 The command returns
 - The CCTX identifier

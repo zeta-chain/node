@@ -79,8 +79,7 @@ func (c *TrackingDetails) CheckInbound(ctx *context.Context) error {
 			}
 		}
 	default:
-		c.Message = "Chain not supported"
-		return nil
+		return fmt.Errorf("unsupported chain type %d", inboundChain.ChainId)
 	}
 	return nil
 }

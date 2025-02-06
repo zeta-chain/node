@@ -26,6 +26,7 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 	var (
 		ctx                 = &zetatoolcontext.Context{}
 		trackingDetailsList []cctx.TrackingDetails
+		cctxTrackingDetails *cctx.TrackingDetails
 		err                 error
 		maxCCTXChainLength  = 5 // Maximum number of cctx chains to track
 	)
@@ -64,7 +65,7 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 		}
 
 		// fetch the cctx details and status
-		cctxTrackingDetails, err := trackCCTX(ctx)
+		cctxTrackingDetails, err = trackCCTX(ctx)
 		if err != nil {
 			// The error can be caused by two reasons
 			// 1. We have reached the end of the cctx error chain, we can return
@@ -104,7 +105,7 @@ func trackCCTX(ctx *zetatoolcontext.Context) (*cctx.TrackingDetails, error) {
 	}
 
 	// At this point, we have confirmed the inbound hash is valid, and it was sent to valid address.
-	// After this we attach error messages to the message field as wealready have some details about the cctx which can be printed
+	// After this we attach error messages to the message field as we already have some details about the cctx which can be printed
 	// Update cctx status from zetacore.This copies the status from zetacore to the cctx details.The cctx status can only be `PendingInboundVoting` or `PendingInboundConfirmation` at this point
 	cctxTrackingDetails.UpdateCCTXStatus(ctx)
 
