@@ -1,37 +1,25 @@
 package sui
 
 import (
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
-	"math/big"
 
 	"github.com/block-vision/sui-go-sdk/signer"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
-	crypto2 "github.com/ethereum/go-ethereum/crypto"
+	secp256k1_ecdsa "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"golang.org/x/crypto/blake2b"
 )
 
 type SignerSecp256k1 struct {
-	privkey *ecdsa.PrivateKey
+	privkey *secp256k1.PrivateKey
 }
 
 func NewSignerSecp256k1FromSecretKey(secret []byte) *SignerSecp256k1 {
 	privKey := secp256k1.PrivKeyFromBytes(secret)
 
-	ecdsaPrivKey := &ecdsa.PrivateKey{
-		PublicKey: ecdsa.PublicKey{
-			Curve: secp256k1.S256(),
-			X:     privKey.PubKey().X(),
-			Y:     privKey.PubKey().Y(),
-		},
-		D: new(big.Int).SetBytes(secret),
-	}
-
 	return &SignerSecp256k1{
-		privkey: ecdsaPrivKey,
+		privkey: privKey,
 	}
 }
 
@@ -42,28 +30,18 @@ func NewSignerSecp256k1Random() *SignerSecp256k1 {
 		panic(err) // In practice, you might want to handle this error differently
 	}
 
-	// Convert to ECDSA private key
-	ecdsaPrivKey := &ecdsa.PrivateKey{
-		PublicKey: ecdsa.PublicKey{
-			Curve: secp256k1.S256(),
-			X:     privKey.PubKey().X(),
-			Y:     privKey.PubKey().Y(),
-		},
-		D: privKey.ToECDSA().D,
-	}
-
 	return &SignerSecp256k1{
-		privkey: ecdsaPrivKey,
+		privkey: privKey,
 	}
 }
 
 // GetPublicKey returns the compressed public key bytes
 func (s *SignerSecp256k1) GetPublicKey() []byte {
-	pub := s.privkey.Public().(*ecdsa.PublicKey)
+	pub := s.privkey.PubKey()
 
 	// Create compressed public key format:
 	// 0x02/0x03 | x-coordinate (32 bytes)
-	x := pub.X.Bytes()
+	x := pub.X().Bytes()
 
 	// Ensure x coordinate is 32 bytes with leading zeros if needed
 	paddedX := make([]byte, 32)
@@ -71,7 +49,7 @@ func (s *SignerSecp256k1) GetPublicKey() []byte {
 
 	// Prefix with 0x02 for even Y or 0x03 for odd Y
 	prefix := byte(0x02)
-	if pub.Y.Bit(0) == 1 {
+	if pub.Y().Bit(0) == 1 {
 		prefix = 0x03
 	}
 
@@ -131,11 +109,9 @@ func (s *SignerSecp256k1) SignTransactionBlock(txBytesEncoded string) (string, e
 	// this additional hash is required for secp256k1 but not ed25519
 	digest2 := sha256.Sum256(digest1[:])
 
-	sigBytes, err := crypto2.Sign(digest2[:], s.privkey)
-	if err != nil {
-		return "", fmt.Errorf("sign digest2: %w", err)
-	}
-	sigBytes = sigBytes[:64]
+	sigBytes := secp256k1_ecdsa.SignCompact(s.privkey, digest2[:], false)
+	// Take R and S, skip recovery byte
+	sigBytes = sigBytes[1:]
 
 	signature := ToSerializedSignature(sigBytes, s.GetPublicKey())
 	return signature, nil
