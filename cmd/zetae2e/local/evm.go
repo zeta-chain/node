@@ -18,17 +18,17 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
 		e2etests.TestETHDepositAndCallName,
-		//e2etests.TestETHWithdrawName,
-		//e2etests.TestETHWithdrawAndArbitraryCallName,
-		//e2etests.TestETHWithdrawAndCallName,
-		//e2etests.TestETHWithdrawAndCallThroughContractName,
-		//e2etests.TestZEVMToEVMArbitraryCallName,
-		//e2etests.TestZEVMToEVMCallName,
-		//e2etests.TestZEVMToEVMCallThroughContractName,
-		//e2etests.TestEVMToZEVMCallName,
-		//e2etests.TestETHDepositAndCallNoMessageName,
-		//e2etests.TestETHWithdrawAndCallNoMessageName,
-		//e2etests.TestEtherWithdrawRestrictedName,
+		e2etests.TestETHWithdrawName,
+		e2etests.TestETHWithdrawAndArbitraryCallName,
+		e2etests.TestETHWithdrawAndCallName,
+		e2etests.TestETHWithdrawAndCallThroughContractName,
+		e2etests.TestZEVMToEVMArbitraryCallName,
+		e2etests.TestZEVMToEVMCallName,
+		e2etests.TestZEVMToEVMCallThroughContractName,
+		e2etests.TestEVMToZEVMCallName,
+		e2etests.TestETHDepositAndCallNoMessageName,
+		e2etests.TestETHWithdrawAndCallNoMessageName,
+		e2etests.TestEtherWithdrawRestrictedName,
 	))
 
 	// Test happy paths for erc20 token workflow
@@ -36,13 +36,13 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
 		e2etests.TestERC20DepositAndCallName,
-		//e2etests.TestERC20WithdrawName,
-		//e2etests.TestERC20WithdrawAndArbitraryCallName,
-		//e2etests.TestERC20WithdrawAndCallName,
-		//e2etests.TestERC20DepositAndCallNoMessageName,
-		//e2etests.TestERC20WithdrawAndCallNoMessageName,
+		e2etests.TestERC20WithdrawName,
+		e2etests.TestERC20WithdrawAndArbitraryCallName,
+		e2etests.TestERC20WithdrawAndCallName,
+		e2etests.TestERC20DepositAndCallNoMessageName,
+		e2etests.TestERC20WithdrawAndCallNoMessageName,
 		e2etests.TestDepositAndCallSwapName,
-		//e2etests.TestERC20DepositRestrictedName,
+		e2etests.TestERC20DepositRestrictedName,
 	))
 
 	// Test revert cases for gas token workflow

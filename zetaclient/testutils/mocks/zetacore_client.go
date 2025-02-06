@@ -650,9 +650,9 @@ func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, e
 	return r0, r1
 }
 
-// ListPendingCCTX provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
-	ret := _m.Called(ctx, chainID)
+// ListPendingCCTX provides a mock function with given fields: ctx, chain
+func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*types.CrossChainTx, uint64, error) {
+	ret := _m.Called(ctx, chain)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListPendingCCTX")
@@ -661,25 +661,25 @@ func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chainID int64) ([
 	var r0 []*types.CrossChainTx
 	var r1 uint64
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]*types.CrossChainTx, uint64, error)); ok {
-		return rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) ([]*types.CrossChainTx, uint64, error)); ok {
+		return rf(ctx, chain)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) []*types.CrossChainTx); ok {
-		r0 = rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) []*types.CrossChainTx); ok {
+		r0 = rf(ctx, chain)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*types.CrossChainTx)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64) uint64); ok {
-		r1 = rf(ctx, chainID)
+	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain) uint64); ok {
+		r1 = rf(ctx, chain)
 	} else {
 		r1 = ret.Get(1).(uint64)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, int64) error); ok {
-		r2 = rf(ctx, chainID)
+	if rf, ok := ret.Get(2).(func(context.Context, chains.Chain) error); ok {
+		r2 = rf(ctx, chain)
 	} else {
 		r2 = ret.Error(2)
 	}

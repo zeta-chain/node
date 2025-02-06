@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -93,16 +92,10 @@ func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations
 
 // HealthCheck asserts RPC health. Returns the latest block time in UTC.
 func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
-	// query latest block number
-	bn, err := c.BlockNumber(ctx)
-	if err != nil {
-		return time.Time{}, errors.Wrap(err, "unable to get block number")
-	}
-
 	// query latest block header
-	header, err := c.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
+	header, err := c.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return time.Time{}, errors.Wrapf(err, "unable to get block header for block %d", bn)
+		return time.Time{}, errors.Wrap(err, "unable to get latest block header")
 	}
 
 	// convert block time to UTC
