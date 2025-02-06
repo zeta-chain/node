@@ -95,6 +95,7 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 			lastScanned: 90,
 			blockLimit:  10,
 			confParams: observertypes.ConfirmationParams{
+				SafeInboundCount: 10,
 				FastInboundCount: 10,
 			},
 			expectedBlockRange: [2]uint64{0, 0}, // [0, 0)
@@ -105,7 +106,8 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 			lastScanned: 90,
 			blockLimit:  10,
 			confParams: observertypes.ConfirmationParams{
-				FastInboundCount: 10,
+				SafeInboundCount: 10,
+				FastInboundCount: 0, // should fall back to safe confirmation
 			},
 			expectedBlockRange: [2]uint64{91, 92}, // [91, 92)
 		},
@@ -115,6 +117,7 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 			lastScanned: 90,
 			blockLimit:  10,
 			confParams: observertypes.ConfirmationParams{
+				SafeInboundCount: 10,
 				FastInboundCount: 10,
 			},
 			expectedBlockRange: [2]uint64{91, 101}, // [91, 101)
@@ -129,6 +132,7 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 
 			// set fast inbound confirmation
 			chainParams := ob.ChainParams()
+			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
 			chainParams.ConfirmationParams.FastInboundCount = tt.confParams.FastInboundCount
 			ob.Observer.SetChainParams(chainParams)
 
@@ -200,7 +204,7 @@ func Test_IsBlockConfirmedForInboundFast(t *testing.T) {
 			lastBlock:   101, // got 2 confirmations
 			confParams: observertypes.ConfirmationParams{
 				SafeInboundCount: 2,
-				FastInboundCount: 2,
+				FastInboundCount: 0, // should fall back to safe confirmation
 			},
 			expected: true,
 		},
@@ -223,6 +227,7 @@ func Test_IsBlockConfirmedForInboundFast(t *testing.T) {
 
 			// set fast inbound confirmation
 			chainParams := ob.ChainParams()
+			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
 			chainParams.ConfirmationParams.FastInboundCount = tt.confParams.FastInboundCount
 			ob.Observer.SetChainParams(chainParams)
 
@@ -294,7 +299,7 @@ func Test_IsBlockConfirmedForOutboundFast(t *testing.T) {
 			lastBlock:   101, // got 2 confirmations
 			confParams: observertypes.ConfirmationParams{
 				SafeOutboundCount: 2,
-				FastOutboundCount: 2,
+				FastOutboundCount: 0, // should fall back to safe confirmation
 			},
 			expected: true,
 		},
@@ -317,6 +322,7 @@ func Test_IsBlockConfirmedForOutboundFast(t *testing.T) {
 
 			// set fast outbound confirmation
 			chainParams := ob.ChainParams()
+			chainParams.ConfirmationParams.SafeOutboundCount = tt.confParams.SafeOutboundCount
 			chainParams.ConfirmationParams.FastOutboundCount = tt.confParams.FastOutboundCount
 			ob.Observer.SetChainParams(chainParams)
 
