@@ -1,7 +1,7 @@
 package base
 
 // CalcUnscannedBlockRangeInboundSafe calculates the unscanned block range using inbound safe confirmation count.
-// It returns a range of blocks [from, to (exclusive)] that need to be scanned.
+// It returns a range of blocks [from, end (exclusive)) that need to be scanned.
 func (ob *Observer) CalcUnscannedBlockRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
@@ -11,12 +11,13 @@ func (ob *Observer) CalcUnscannedBlockRangeInboundSafe(blockLimit uint64) (from 
 }
 
 // CalcUnscannedBlockRangeInboundFast calculates the unscanned block range using inbound fast confirmation count.
-func (ob *Observer) CalcUnscannedBlockRangeInboundFast(batchSize uint64) (from uint64, end uint64) {
+// It returns a range of blocks [from, end (exclusive)) that need to be scanned.
+func (ob *Observer) CalcUnscannedBlockRangeInboundFast(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
 	confirmation := ob.ChainParams().ConfirmationParams.FastInboundCount
 
-	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, batchSize)
+	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit)
 }
 
 // IsBlockConfirmedForInboundSafe checks if the block number is confirmed using inbound safe confirmation count.

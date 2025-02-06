@@ -263,8 +263,7 @@ func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	blockTime, err := ob.evmClient.HealthCheck(ctx)
 	if err != nil {
-		ob.Logger().Chain.Error().Err(err).Msg("CheckRPCStatus failed")
-		//return errors.Wrap(err, "unable to check rpc health")
+		return errors.Wrap(err, "unable to check rpc health")
 	}
 
 	ob.ReportBlockLatency(blockTime)

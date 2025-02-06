@@ -718,13 +718,3 @@ func (ob *Observer) ObserveTSSReceiveInBlock(ctx context.Context, blockNumber ui
 	}
 	return nil
 }
-
-// // calcBlockRangeToScan calculates the next range of blocks to scan
-// func (ob *Observer) calcBlockRangeToScan(latestConfirmed, lastScanned, batchSize uint64) (uint64, uint64) {
-// 	startBlock := lastScanned + 1
-// 	toBlock := lastScanned + batchSize
-// 	if toBlock > latestConfirmed {
-// 		toBlock = latestConfirmed
-// 	}
-// 	return startBlock, toBlock
-// }
