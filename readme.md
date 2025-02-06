@@ -33,6 +33,7 @@ In addition to the blockchain codebase, ZetaChain’s architecture includes a se
 * [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts)
 * [Solana connected chains (SVM)](https://github.com/zeta-chain/protocol-contracts-solana)
 * [TON connected chains (TVM)](https://github.com/zeta-chain/protocol-contracts-ton)
+* [SUI connected chains (SUI's MVM)](https://github.com/zeta-chain/protocol-contracts-sui)
 
 These repositories contain the necessary code and tools to deploy, interact with, and extend the functionality of ZetaChain’s cross-chain protocol on each respective blockchain network.
 
