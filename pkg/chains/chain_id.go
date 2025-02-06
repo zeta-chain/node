@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// LocalZetaChainID is the chain ID of the local Zeta chain
+const LocalZetaChainID = 101101
+
 // CosmosToEthChainID converts a Cosmos chain ID to an Ethereum chain ID
 // parse value between _ and -
 // e.g. cosmoshub_400-1 -> 400

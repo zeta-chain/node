@@ -375,7 +375,7 @@ func TestZetaChainFromChainID(t *testing.T) {
 		},
 		{
 			name:     "ZetaChainPrivnet",
-			chainID:  101,
+			chainID:  chains.LocalZetaChainID,
 			expected: chains.ZetaChainPrivnet,
 			wantErr:  false,
 		},

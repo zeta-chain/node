@@ -16,7 +16,7 @@ func TestRead(t *testing.T) {
 
 		require.Equal(t, "https://zetachain-testnet-grpc.itrocket.net:443", c.ZetaChainRPC)
 		require.Equal(t, "https://ethereum-sepolia-rpc.publicnode.com", c.EthereumRPC)
-		require.Equal(t, int64(101), c.ZetaChainID)
+		require.Equal(t, int64(chains.LocalZetaChainID), c.ZetaChainID)
 		require.Equal(t, "", c.BtcUser)
 		require.Equal(t, "", c.BtcPassword)
 		require.Equal(t, "", c.BtcHost)

@@ -126,7 +126,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
 			SenderChainId:      1337, // ETH
 			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
-			ReceiverChain:      101, // zetachain
+			ReceiverChain:      chains.LocalZetaChainID,
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,
@@ -155,7 +155,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			Sender:             "0x954598965C2aCdA2885B037561526260764095B8",
 			SenderChainId:      1337,
 			Receiver:           "0x954598965C2aCdA2885B037561526260764095B8",
-			ReceiverChain:      101,
+			ReceiverChain:      chains.LocalZetaChainID,
 			Amount:             sdkmath.NewUintFromString("10000000"),
 			Message:            "",
 			InboundBlockHeight: 1,

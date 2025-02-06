@@ -20,7 +20,7 @@ func TestnetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "https://zetachain-testnet-rpc.itrocket.net:443",
 		EthereumRPC:  "https://ethereum-sepolia-rpc.publicnode.com",
-		ZetaChainID:  101,
+		ZetaChainID:  chains.LocalZetaChainID,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
@@ -36,7 +36,7 @@ func DevnetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "",
 		EthereumRPC:  "",
-		ZetaChainID:  101,
+		ZetaChainID:  chains.LocalZetaChainID,
 		BtcUser:      "",
 		BtcPassword:  "",
 		BtcHost:      "",
@@ -68,7 +68,7 @@ func PrivateNetConfig() *Config {
 	return &Config{
 		ZetaChainRPC: "http://127.0.0.1:26657",
 		EthereumRPC:  "http://127.0.0.1:8545",
-		ZetaChainID:  101,
+		ZetaChainID:  chains.LocalZetaChainID,
 		BtcUser:      "smoketest",
 		BtcPassword:  "123",
 		BtcHost:      "127.0.0.1:18443",

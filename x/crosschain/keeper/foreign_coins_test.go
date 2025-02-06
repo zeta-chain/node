@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/node/pkg/chains"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 func TestKeeper_GetAllForeignCoins(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	fc := sample.ForeignCoins(t, sample.EthAddress().Hex())
-	fc.ForeignChainId = 101
+	fc.ForeignChainId = chains.LocalZetaChainID
 	k.GetFungibleKeeper().SetForeignCoins(ctx, fc)
 
 	res := k.GetAllForeignCoins(ctx)

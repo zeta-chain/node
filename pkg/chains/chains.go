@@ -369,7 +369,7 @@ var (
 	// ZetaChainPrivnet is the privnet chain for Zeta (localnet)
 	ZetaChainPrivnet = Chain{
 		ChainName:   ChainName_zeta_mainnet,
-		ChainId:     101101,
+		ChainId:     LocalZetaChainID,
 		Network:     Network_zeta,
 		NetworkType: NetworkType_privnet,
 		Vm:          Vm_evm,
