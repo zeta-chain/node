@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHAINID="athens_101-1"
+CHAINID="athens_101101-1"
 UPGRADE_AUTHORITY_ACCOUNT="zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
 
 if [[ -z $ZETACORED_URL ]]; then

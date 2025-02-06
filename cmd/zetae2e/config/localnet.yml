@@ -1,4 +1,4 @@
-zeta_chain_id: "athens_101-1"
+zeta_chain_id: "athens_101101-1"
 default_account:
   bech32_address: "zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd"
   evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"

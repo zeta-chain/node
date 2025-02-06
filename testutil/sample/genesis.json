@@ -1,6 +1,6 @@
 {
   "genesis_time": "2024-04-12T05:07:56.004517Z",
-  "chain_id": "localnet_101-1",
+  "chain_id": "localnet_101101-1",
   "initial_height": "1",
   "consensus": {
     "params": {

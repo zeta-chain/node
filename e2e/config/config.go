@@ -173,7 +173,7 @@ func DefaultConfig() Config {
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
 		},
-		ZetaChainID: "athens_101-1",
+		ZetaChainID: "athens_101101-1",
 		Contracts: Contracts{
 			EVM: EVM{
 				ERC20: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",

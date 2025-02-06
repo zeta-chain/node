@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CHAINID="localnet_101-1"
+CHAINID="localnet_101101-1"
 KEYRING="test"
 export DAEMON_HOME=$HOME/.zetacored
 export DAEMON_NAME=zetacored
@@ -54,7 +54,7 @@ zetacored add-observer 101 "$observer_list"
 
 
 
-zetacored gentx zeta 50000000000000000000000000azeta --chain-id=localnet_101-1 --keyring-backend=test
+zetacored gentx zeta 50000000000000000000000000azeta --chain-id=localnet_101101-1 --keyring-backend=test
 
 contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
 echo "${contents}" > $DAEMON_HOME/config/genesis.json

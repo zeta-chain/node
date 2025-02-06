@@ -117,7 +117,7 @@ add_emissions_withdraw_authorizations() {
 
 
 # create keys
-CHAINID="athens_101-1"
+CHAINID="athens_101101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
