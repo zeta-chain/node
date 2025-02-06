@@ -58823,6 +58823,7 @@ definitions:
       - catchain_consensus
       - snowman
       - arbitrum_nitro
+      - sui_consensus
     default: ethereum
     description: |-
       - catchain_consensus: ton
@@ -58846,6 +58847,7 @@ definitions:
       - avalanche
       - arbitrum
       - worldchain
+      - sui
     default: eth
     title: |-
       Network represents the network of the chain
@@ -58881,6 +58883,7 @@ definitions:
       - evm
       - svm
       - tvm
+      - mvm_sui
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
