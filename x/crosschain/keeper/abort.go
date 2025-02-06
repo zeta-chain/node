@@ -2,27 +2,34 @@ package keeper
 
 import (
 	"fmt"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	"github.com/pkg/errors"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 // ProcessAbort processes the abort of a cctx
 // It refunds the amount to the abort address and try calling onAbort
+// StatusMessages contains current status messages for cctx (outbound and revert)
 func (k Keeper) ProcessAbort(
 	ctx sdk.Context,
-	cctx types.CrossChainTx,
-) error {
-	abortedAmount := GetAbortedAmount(cctx)
+	cctx *types.CrossChainTx,
+	messages types.StatusMessages,
+) {
+	// only support cctx with v2 and with a defined abort address
+	if cctx.ProtocolContractVersion != types.ProtocolContractVersion_V2 || cctx.RevertOptions.AbortAddress == "" {
+		cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+		return
+	}
+
+	abortedAmount := GetAbortedAmount(*cctx)
 	abortAddress := ethcommon.HexToAddress(cctx.RevertOptions.AbortAddress)
 
 	// use a temporary context to not commit any state change if processing the abort logs fails
@@ -57,7 +64,9 @@ func (k Keeper) ProcessAbort(
 				// this happens if the cctx events are not processed correctly with invalid withdrawals
 				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
 				// the contract call is considered as reverted
-				return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
+				cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+				return
 			}
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(sdk.EventTypeMessage,
@@ -70,11 +79,18 @@ func (k Keeper) ProcessAbort(
 			)
 		}
 	}
+	if err != nil {
+		messages.ErrorMessageAbort = "failed to process abort: " + err.Error()
+	}
 
 	// commit state change from the deposit and eventual cctx events
 	commit()
 
-	return err
+	// note: we still set this value to true if onAbort reverted because the funds will still be deposited to the abortAddress
+	cctx.CctxStatus.IsAbortRefunded = true
+	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+
+	return
 }
 
 // LegacyRefundAbortedAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx

@@ -59,12 +59,11 @@ func (k Keeper) ValidateOutboundZEVM(
 			// Error here would mean the outbound tx failed and we also failed to create a revert tx.
 			// This is the only case where we set outbound and revert messages,
 			// as both the outbound and the revert failed in the same block
-			cctx.SetAbort(
-				types.StatusMessages{
-					StatusMessage:        fmt.Sprintf("revert failed to be processed"),
-					ErrorMessageOutbound: ccctxerror.NewCCTXErrorJSONMessage("", depositErr),
-					ErrorMessageRevert:   ccctxerror.NewCCTXErrorJSONMessage("", revertErr),
-				})
+			k.ProcessAbort(ctx, cctx, types.StatusMessages{
+				StatusMessage:        fmt.Sprintf("revert failed to be processed"),
+				ErrorMessageOutbound: ccctxerror.NewCCTXErrorJSONMessage("", depositErr),
+				ErrorMessageRevert:   ccctxerror.NewCCTXErrorJSONMessage("", revertErr),
+			})
 			return types.CctxStatus_Aborted
 		}
 
@@ -233,7 +232,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		})
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-		cctx.SetAbort(types.StatusMessages{
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{
 			StatusMessage:      "revert failed to be processed",
 			ErrorMessageRevert: ccctxerror.NewCCTXErrorJSONMessage("", depositErr),
 		})
@@ -451,7 +450,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	case types.CctxStatus_PendingRevert:
 		cctx.GetCurrentOutboundParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-		cctx.SetAbort(types.StatusMessages{
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{
 			StatusMessage: "revert failed to be processed",
 			ErrorMessageRevert: ccctxerror.NewCCTXErrorJSONMessage(
 				"revert tx failed to be executed on connected chain",

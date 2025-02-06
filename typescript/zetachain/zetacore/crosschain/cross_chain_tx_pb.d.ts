@@ -437,6 +437,13 @@ export declare class Status extends Message<Status> {
    */
   errorMessageRevert: string;
 
+  /**
+   * error_message_abort carries information when aborting the CCTX fails
+   *
+   * @generated from field: string error_message_abort = 8;
+   */
+  errorMessageAbort: string;
+
   constructor(data?: PartialMessage<Status>);
 
   static readonly runtime: typeof proto3;
