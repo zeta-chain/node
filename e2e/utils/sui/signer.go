@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/signer"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -17,18 +18,6 @@ type SignerSecp256k1 struct {
 
 func NewSignerSecp256k1FromSecretKey(secret []byte) *SignerSecp256k1 {
 	privKey := secp256k1.PrivKeyFromBytes(secret)
-
-	return &SignerSecp256k1{
-		privkey: privKey,
-	}
-}
-
-func NewSignerSecp256k1Random() *SignerSecp256k1 {
-	// Generate a new private key
-	privKey, err := secp256k1.GeneratePrivateKey()
-	if err != nil {
-		panic(err) // In practice, you might want to handle this error differently
-	}
 
 	return &SignerSecp256k1{
 		privkey: privKey,
@@ -66,21 +55,15 @@ func (s *SignerSecp256k1) Address() string {
 	// Get the public key bytes
 	pubKeyBytes := s.GetPublicKey()
 
-	// Prepare the input for hashing: flag byte + public key bytes
-	input := make([]byte, len(pubKeyBytes)+1)
-	input[0] = signer.SigntureFlagSecp256k1
-	copy(input[1:], pubKeyBytes)
-
 	// Create BLAKE2b hash
 	hash, err := blake2b.New256(nil)
 	if err != nil {
-		panic(err) // This should never happen with nil key
+		// This will never happen with nil key
+		panic(err)
 	}
 
-	// Write input to hash
-	hash.Write(input)
-
-	// Get the final hash
+	hash.Write([]byte{signer.SigntureFlagSecp256k1})
+	hash.Write(pubKeyBytes)
 	addrBytes := hash.Sum(nil)
 	// convert to 0x hex
 	return "0x" + hex.EncodeToString(addrBytes)
@@ -103,7 +86,10 @@ func ToSerializedSignature(signature, pubKey []byte) string {
 
 // SignTransactionBlock signs an encoded transaction block
 func (s *SignerSecp256k1) SignTransactionBlock(txBytesEncoded string) (string, error) {
-	txBytes, _ := base64.StdEncoding.DecodeString(txBytesEncoded)
+	txBytes, err := base64.StdEncoding.DecodeString(txBytesEncoded)
+	if err != nil {
+		return "", fmt.Errorf("decode tx bytes: %w", err)
+	}
 	message := messageWithIntent(txBytes)
 	digest1 := blake2b.Sum256(message)
 	// this additional hash is required for secp256k1 but not ed25519
