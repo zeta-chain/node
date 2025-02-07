@@ -120,6 +120,10 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
 		GatewayAddress:              r.GatewayProgram.String(),
+		ConfirmationParams: &observertypes.ConfirmationParams{
+			SafeInboundCount:  32,
+			SafeOutboundCount: 32,
+		},
 	}
 
 	updateMsg := observertypes.NewMsgUpdateChainParams(creator, chainParams)
