@@ -71,7 +71,9 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 	emissionsParams, err := r.EmissionsClient.Params(r.Ctx, &emissionstypes.QueryParamsRequest{})
 	require.NoError(r, err)
 	staleBlockStart := currentBlockHeight - emissionsParams.Params.BallotMaturityBlocks
+	if len(ballotsRes.Ballots) == 0 {
+		return
+	}
 	firstBallotCreationHeight := ballotsRes.Ballots[0].BallotCreationHeight
-
 	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
