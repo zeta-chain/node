@@ -24,10 +24,8 @@ func NewTrackCCTXCMD() *cobra.Command {
 
 func TrackCCTX(cmd *cobra.Command, args []string) error {
 	var (
-		ctx                 = &zetatoolcontext.Context{}
 		trackingDetailsList []cctx.TrackingDetails
 		cctxTrackingDetails *cctx.TrackingDetails
-		err                 error
 		maxCCTXChainLength  = 5 // Maximum number of cctx chains to track
 	)
 
@@ -59,7 +57,7 @@ func TrackCCTX(cmd *cobra.Command, args []string) error {
 		}
 
 		// Create a new context based on the chain id and hash
-		ctx, err = zetatoolcontext.NewContext(context.Background(), chainID, chainHash, configFile)
+		ctx, err := zetatoolcontext.NewContext(context.Background(), chainID, chainHash, configFile)
 		if err != nil {
 			return fmt.Errorf("failed to create context: %w", err)
 		}
