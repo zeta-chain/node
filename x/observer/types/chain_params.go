@@ -155,6 +155,11 @@ func ValidateChainParams(params *ChainParams) error {
 	return nil
 }
 
+// InboundConfirmationSafe returns the safe number of confirmation for inbound observation.
+func (cp ChainParams) InboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
 // InboundConfirmationFast returns the fast number of confirmation for inbound observation.
 // It falls back to safe confirmation count if fast mode is disabled.
 func (cp ChainParams) InboundConfirmationFast() uint64 {
@@ -162,6 +167,11 @@ func (cp ChainParams) InboundConfirmationFast() uint64 {
 		return cp.ConfirmationParams.FastInboundCount
 	}
 	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// OutboundConfirmationSafe returns the safe number of confirmation for outbound observation.
+func (cp ChainParams) OutboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeOutboundCount
 }
 
 // OutboundConfirmationFast returns the fast number of confirmation for outbound observation.

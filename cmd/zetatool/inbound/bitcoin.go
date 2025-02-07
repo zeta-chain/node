@@ -71,7 +71,7 @@ func btcInboundBallotIdentifier(
 		inboundHash,
 		inboundChain.ChainId,
 		zetaChainID,
-		chainParams.ConfirmationParams.SafeInboundCount,
+		chainParams.InboundConfirmationSafe(),
 	)
 }
 

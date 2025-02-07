@@ -63,14 +63,9 @@ func Test_CalcUnscannedBlockRangeInboundSafe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
 			ob.Observer.WithLastBlockScanned(tt.lastScanned)
-
-			// set safe inbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			start, end := ob.CalcUnscannedBlockRangeInboundSafe(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
@@ -126,15 +121,9 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
 			ob.Observer.WithLastBlockScanned(tt.lastScanned)
-
-			// set fast inbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
-			chainParams.ConfirmationParams.FastInboundCount = tt.confParams.FastInboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			start, end := ob.CalcUnscannedBlockRangeInboundFast(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
@@ -174,13 +163,8 @@ func Test_IsBlockConfirmedForInboundSafe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			// set safe inbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			isConfirmed := ob.IsBlockConfirmedForInboundSafe(tt.blockNumber)
 			require.Equal(t, tt.expected, isConfirmed)
@@ -222,14 +206,8 @@ func Test_IsBlockConfirmedForInboundFast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			// set fast inbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeInboundCount = tt.confParams.SafeInboundCount
-			chainParams.ConfirmationParams.FastInboundCount = tt.confParams.FastInboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			isConfirmed := ob.IsBlockConfirmedForInboundFast(tt.blockNumber)
 			require.Equal(t, tt.expected, isConfirmed)
@@ -269,13 +247,8 @@ func Test_IsBlockConfirmedForOutboundSafe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			// set safe outbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeOutboundCount = tt.confParams.SafeOutboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			isConfirmed := ob.IsBlockConfirmedForOutboundSafe(tt.blockNumber)
 			require.Equal(t, tt.expected, isConfirmed)
@@ -317,14 +290,8 @@ func Test_IsBlockConfirmedForOutboundFast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			// set fast outbound confirmation
-			chainParams := ob.ChainParams()
-			chainParams.ConfirmationParams.SafeOutboundCount = tt.confParams.SafeOutboundCount
-			chainParams.ConfirmationParams.FastOutboundCount = tt.confParams.FastOutboundCount
-			ob.Observer.SetChainParams(chainParams)
 
 			isConfirmed := ob.IsBlockConfirmedForOutboundFast(tt.blockNumber)
 			require.Equal(t, tt.expected, isConfirmed)

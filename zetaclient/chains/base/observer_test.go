@@ -35,13 +35,35 @@ type testSuite struct {
 	zetacore *mocks.ZetacoreClient
 }
 
+type testSuiteOpts struct {
+	ConfirmationParams *observertypes.ConfirmationParams
+}
+
+type opt func(t *testSuiteOpts)
+
+// withConfirmationParams is an option to set custom confirmation params
+func withConfirmationParams(confParams observertypes.ConfirmationParams) opt {
+	return func(t *testSuiteOpts) {
+		t.ConfirmationParams = &confParams
+	}
+}
+
 // newTestSuite creates a new observer for testing
-func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
+	// create test suite with options
+	var testOpts testSuiteOpts
+	for _, opt := range opts {
+		opt(&testOpts)
+	}
+
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
 		SafeInboundCount:  defaultConfirmationCount,
 		SafeOutboundCount: defaultConfirmationCount,
+	}
+	if testOpts.ConfirmationParams != nil {
+		chainParams.ConfirmationParams = testOpts.ConfirmationParams
 	}
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSS(t)

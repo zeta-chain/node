@@ -5,7 +5,7 @@ package base
 func (ob *Observer) CalcUnscannedBlockRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
 	lastBlock := ob.LastBlock()
 	lastScanned := ob.LastBlockScanned()
-	confirmation := ob.ChainParams().ConfirmationParams.SafeInboundCount
+	confirmation := ob.ChainParams().InboundConfirmationSafe()
 
 	return calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit)
 }
@@ -23,7 +23,7 @@ func (ob *Observer) CalcUnscannedBlockRangeInboundFast(blockLimit uint64) (from 
 // IsBlockConfirmedForInboundSafe checks if the block number is confirmed using inbound safe confirmation count.
 func (ob *Observer) IsBlockConfirmedForInboundSafe(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
-	confirmation := ob.ChainParams().ConfirmationParams.SafeInboundCount
+	confirmation := ob.ChainParams().InboundConfirmationSafe()
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
 }
 
@@ -38,7 +38,7 @@ func (ob *Observer) IsBlockConfirmedForInboundFast(blockNumber uint64) bool {
 // IsBlockConfirmedForOutboundSafe checks if the block number is confirmed using outbound safe confirmation count.
 func (ob *Observer) IsBlockConfirmedForOutboundSafe(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
-	confirmation := ob.ChainParams().ConfirmationParams.SafeOutboundCount
+	confirmation := ob.ChainParams().OutboundConfirmationSafe()
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
 }
 

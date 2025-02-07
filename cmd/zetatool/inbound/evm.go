@@ -79,7 +79,7 @@ func evmInboundBallotIdentifier(ctx context.Context,
 
 	// Signer is unused
 	c := evmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-	confirmed, err := c.IsTxConfirmed(ctx, inboundHash, chainParams.ConfirmationParams.SafeInboundCount)
+	confirmed, err := c.IsTxConfirmed(ctx, inboundHash, chainParams.InboundConfirmationSafe())
 	if err != nil {
 		return "", fmt.Errorf("unable to confirm tx: %w", err)
 	}

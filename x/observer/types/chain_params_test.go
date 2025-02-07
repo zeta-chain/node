@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	. "gopkg.in/check.v1"
 
+	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -171,36 +172,56 @@ func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 	require.NotNil(s.T(), err)
 }
 
-func (s *UpdateChainParamsSuite) Test_InboundConfirmationFast() {
-	// should return fast confirmation count if enabled
-	copy := copyParams(s.evmParams)
-	copy.ConfirmationParams.SafeInboundCount = 2
-	copy.ConfirmationParams.FastInboundCount = 1
-	confirmation := copy.InboundConfirmationFast()
-	require.Equal(s.T(), uint64(1), confirmation)
+func Test_InboundConfirmationSafe(t *testing.T) {
+	cp := sample.ChainParams(1)
 
-	// should fallback to safe confirmation count if fast confirmation is disabled
-	copy = copyParams(s.evmParams)
-	copy.ConfirmationParams.SafeInboundCount = 2
-	copy.ConfirmationParams.FastInboundCount = 0
-	confirmation = copy.InboundConfirmationFast()
-	require.Equal(s.T(), uint64(2), confirmation)
+	// set and check safe inbound count
+	cp.ConfirmationParams.SafeInboundCount = 10
+	require.Equal(t, uint64(10), cp.InboundConfirmationSafe())
 }
 
-func (s *UpdateChainParamsSuite) Test_OutboundConfirmationFast() {
-	// should return fast confirmation count if enabled
-	copy := copyParams(s.evmParams)
-	copy.ConfirmationParams.SafeOutboundCount = 2
-	copy.ConfirmationParams.FastOutboundCount = 1
-	confirmation := copy.OutboundConfirmationFast()
-	require.Equal(s.T(), uint64(1), confirmation)
+func Test_OutboundConfirmationSafe(t *testing.T) {
+	cp := sample.ChainParams(1)
 
-	// should fallback to safe confirmation count if fast confirmation is disabled
-	copy = copyParams(s.evmParams)
-	copy.ConfirmationParams.SafeOutboundCount = 2
-	copy.ConfirmationParams.FastOutboundCount = 0
-	confirmation = copy.OutboundConfirmationFast()
-	require.Equal(s.T(), uint64(2), confirmation)
+	// set and check safe outbound count
+	cp.ConfirmationParams.SafeOutboundCount = 10
+	require.Equal(t, uint64(10), cp.OutboundConfirmationSafe())
+}
+
+func Test_InboundConfirmationFast(t *testing.T) {
+	t.Run("should return fast inbound confirmation count if enabled", func(t *testing.T) {
+		cp := sample.ChainParams(1)
+		cp.ConfirmationParams.SafeInboundCount = 2
+		cp.ConfirmationParams.FastInboundCount = 1
+		confirmation := cp.InboundConfirmationFast()
+		require.Equal(t, uint64(1), confirmation)
+	})
+
+	t.Run("should fallback to safe inbound confirmation count if fast confirmation is disabled", func(t *testing.T) {
+		cp := sample.ChainParams(1)
+		cp.ConfirmationParams.SafeInboundCount = 2
+		cp.ConfirmationParams.FastInboundCount = 0
+		confirmation := cp.InboundConfirmationFast()
+		require.Equal(t, uint64(2), confirmation)
+	})
+}
+
+func Test_OutboundConfirmationFast(t *testing.T) {
+	t.Run("should return fast outbound confirmation count if enabled", func(t *testing.T) {
+		cp := sample.ChainParams(1)
+		cp.ConfirmationParams.SafeOutboundCount = 2
+		cp.ConfirmationParams.FastOutboundCount = 1
+		confirmation := cp.OutboundConfirmationFast()
+		require.Equal(t, uint64(1), confirmation)
+	})
+
+	t.Run("should fallback to safe outbound confirmation count if fast confirmation is disabled", func(t *testing.T) {
+		cp := sample.ChainParams(1)
+		cp.ConfirmationParams.SafeOutboundCount = 2
+		cp.ConfirmationParams.FastOutboundCount = 0
+		confirmation := cp.OutboundConfirmationFast()
+		require.Equal(t, uint64(2), confirmation)
+	})
 }
 
 func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {

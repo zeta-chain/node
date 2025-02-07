@@ -149,10 +149,10 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
 	amountInSat := params.Amount.BigInt()
 	// #nosec G115 always in range
-	if res.Confirmations < int64(ob.ChainParams().ConfirmationParams.SafeOutboundCount) {
+	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
 		ob.logger.Outbound.Debug().
 			Int64("currentConfirmations", res.Confirmations).
-			Uint64("requiredConfirmations", ob.ChainParams().ConfirmationParams.SafeOutboundCount).
+			Uint64("requiredConfirmations", ob.ChainParams().OutboundConfirmationSafe()).
 			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
 
 		return false, nil
