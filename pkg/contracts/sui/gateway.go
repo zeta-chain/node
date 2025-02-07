@@ -70,6 +70,7 @@ func (g Gateway) queryInbounds(ctx context.Context, _, _ uint64, depositAndCall 
 	for _, eventData := range res.Data {
 		// TODO: events that fail to be parsed should still be observed as invalid (if at least the tx hash and event seq are present)
 		// Example: if the receiver is not a valid ETH address, the observation should fail and be reverted to the sender
+		// https://github.com/zeta-chain/node/issues/3502
 		inbound, err := parseInbound(eventData, depositAndCall)
 		if err != nil {
 			return []Inbound{}, err
