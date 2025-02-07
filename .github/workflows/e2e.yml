@@ -67,7 +67,7 @@ jobs:
           key: cache-${{ hashFiles('go.sum') }}
 
       - name: Inject go cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@61bd187f75f25d38e056fdd48506fac777c6ebec
         with:
           cache-map: |
             {
@@ -121,6 +121,7 @@ jobs:
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
+      SUI_TESTS: ${{ steps.matrix-conditionals.outputs.SUI_TESTS }}
       LEGACY_TESTS: ${{ steps.matrix-conditionals.outputs.LEGACY_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
@@ -154,6 +155,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
+              core.setOutput('SUI_TESTS', labels.includes('SUI_TESTS'));
               core.setOutput('LEGACY_TESTS', labels.includes('LEGACY_TESTS'));
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
@@ -185,6 +187,7 @@ jobs:
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
+              core.setOutput('SUI_TESTS', true);
               core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
@@ -198,6 +201,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
+              core.setOutput('SUI_TESTS', true);
               core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               const makeTargets = context.payload.inputs['make-targets'].split(',');
@@ -212,6 +216,7 @@ jobs:
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
+              core.setOutput('SUI_TESTS', makeTargets.includes('sui-test'));
               core.setOutput('LEGACY_TESTS', makeTargets.includes('legacy-test'));
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
@@ -265,6 +270,9 @@ jobs:
           - make-target: "start-ton-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
+          - make-target: "start-sui-test"
+            runs-on: ubuntu-20.04
+            run: ${{ needs.matrix-conditionals.outputs.SUI_TESTS == 'true' }}
           - make-target: "start-legacy-test"
             runs-on: ubuntu-20.04
             run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}

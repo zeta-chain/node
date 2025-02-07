@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -25,6 +26,7 @@ type Clients struct {
 	Evm     *ethclient.Client
 	EvmAuth *bind.TransactOpts
 	TON     *tonrunner.Client
+	Sui     sui.ISuiAPI
 
 	// the RPC clients for ZetaChain
 	Zevm     *ethclient.Client
