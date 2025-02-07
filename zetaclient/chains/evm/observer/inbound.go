@@ -203,9 +203,8 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
-		ob.Logger().Chain.Warn().Err(err).Msgf("ObserveZetaSent: GetConnectorContract error:")
-		// lastScanned
-		return startBlock - 1, err
+		// we have to re-scan from this block next time
+		return startBlock - 1, errors.Wrap(err, "error getting connector contract")
 	}
 	iter, err := connector.FilterZetaSent(&bind.FilterOpts{
 		Start:   startBlock,
@@ -213,10 +212,8 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 		Context: ctx,
 	}, []ethcommon.Address{}, []*big.Int{})
 	if err != nil {
-		ob.Logger().Chain.Warn().Err(err).Msgf(
-			"ObserveZetaSent: FilterZetaSent error from block %d to %d for chain %d", startBlock, toBlock, ob.Chain().ChainId)
-		// lastScanned
-		return startBlock - 1, err
+		// we have to re-scan from this block next time
+		return startBlock - 1, errors.Wrap(err, "error filtering ZetaSent events")
 	}
 
 	// collect and sort events by block number, then tx index, then log index (ascending)
@@ -270,7 +267,7 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 		const gasLimit = zetacore.PostVoteInboundMessagePassingExecutionGasLimit
 		if _, err = ob.PostVoteInbound(ctx, msg, gasLimit); err != nil {
 			// we have to re-scan from this block next time
-			return beingScanned - 1, err
+			return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
 		}
 	}
 
@@ -284,8 +281,8 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msgf("ObserveERC20Deposited: GetERC20CustodyContract error:")
-		return startBlock - 1, err // lastScanned
+		// we have to re-scan from this block next time
+		return startBlock - 1, errors.Wrap(err, "error getting ERC20Custody contract")
 	}
 
 	iter, err := erc20custodyContract.FilterDeposited(&bind.FilterOpts{
@@ -294,9 +291,8 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 		Context: ctx,
 	}, []ethcommon.Address{})
 	if err != nil {
-		ob.Logger().Inbound.Warn().Err(err).Msgf(
-			"ObserveERC20Deposited: FilterDeposited error from block %d to %d for chain %d", startBlock, toBlock, ob.Chain().ChainId)
-		return startBlock - 1, err // lastScanned
+		// we have to re-scan from this block next time
+		return startBlock - 1, errors.Wrap(err, "error filtering ERC20 Deposited events")
 	}
 
 	// collect and sort events by block number, then tx index, then log index (ascending)
@@ -336,9 +332,8 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 		}
 		tx, _, err := ob.TransactionByHash(ctx, event.Raw.TxHash.Hex())
 		if err != nil {
-			ob.Logger().Inbound.Error().Err(err).Msgf(
-				"ObserveERC20Deposited: error getting transaction for inbound %s chain %d", event.Raw.TxHash, ob.Chain().ChainId)
-			return beingScanned - 1, err // we have to re-scan from this block next time
+			// we have to re-scan from this block next time
+			return beingScanned - 1, errors.Wrapf(err, "error getting transaction %s", event.Raw.TxHash.Hex())
 		}
 		sender := ethcommon.HexToAddress(tx.From)
 
@@ -354,7 +349,8 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 		if msg != nil {
 			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 			if err != nil {
-				return beingScanned - 1, err // we have to re-scan from this block next time
+				// we have to re-scan from this block next time
+				return beingScanned - 1, errors.Wrap(err, "error posting inbound vote")
 			}
 		}
 	}
@@ -365,21 +361,13 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 // ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
 func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
-	chainID := ob.Chain().ChainId
-
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// observe TSS received gas token in block 'bn'
 		err := ob.ObserveTSSReceiveInBlock(ctx, bn)
 		if err != nil {
-			ob.Logger().Inbound.Error().
-				Err(err).
-				Int64("tss.chain_id", chainID).
-				Uint64("tss.block_number", bn).
-				Msg("ObserverTSSReceive: unable to ObserveTSSReceiveInBlock")
-
 			// we have to re-scan from this block next time
-			return bn - 1, nil
+			return bn - 1, errors.Wrapf(err, "error observing TSS received gas asset in block %d", bn)
 		}
 	}
 
