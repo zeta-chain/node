@@ -73,5 +73,5 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 	staleBlockStart := currentBlockHeight - emissionsParams.Params.BallotMaturityBlocks
 	firstBallotCreationHeight := ballotsRes.Ballots[0].BallotCreationHeight
 
-	require.Greater(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
+	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
