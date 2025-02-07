@@ -541,6 +541,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// Verify that the balance of restricted address is zero
 	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+	// Verify that there are no stale ballots left over after tests complete
 	deployerRunner.EnsureNoStaleBallots()
 
 	// print and validate report

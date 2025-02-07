@@ -62,6 +62,7 @@ func ensureZRC20ZeroBalance(r *E2ERunner, zrc20 *zrc20.ZRC20, address ethcommon.
 	)
 }
 
+// EnsureNoStaleBallots ensures that there are no stale ballots left on the chain.
 func (r *E2ERunner) EnsureNoStaleBallots() {
 	ballotsRes, err := r.ObserverClient.Ballots(r.Ctx, &types.QueryBallotsRequest{})
 	require.NoError(r, err)
@@ -69,7 +70,8 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 	require.NoError(r, err)
 	emissionsParams, err := r.EmissionsClient.Params(r.Ctx, &emissionstypes.QueryParamsRequest{})
 	require.NoError(r, err)
-
 	staleBlockStart := currentBlockHeight - emissionsParams.Params.BallotMaturityBlocks
-	require.Greater(r, ballotsRes.Ballots[0].BallotCreationHeight, staleBlockStart, "there should be no stale ballots")
+	firstBallotCreationHeight := ballotsRes.Ballots[0].BallotCreationHeight
+
+	require.Greater(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
