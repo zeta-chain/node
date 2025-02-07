@@ -20,7 +20,7 @@ type Gateway struct {
 
 // NewGateway creates a new Sui gateway
 // Note: packageID is the equivalent for gateway address or program ID on Solana
-// It's what will be stared in gateway chain params
+// It's what will be set in gateway chain params
 func NewGateway(client sui.ISuiAPI, packageID string) Gateway {
 	return Gateway{
 		client:    client,
