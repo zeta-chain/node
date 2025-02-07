@@ -1,10 +1,10 @@
 package sui
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"strconv"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 )
 

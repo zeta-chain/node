@@ -1,4 +1,5 @@
-package sui
+// Package bytecode provides the full bytecode for the Sui gateway
+package bytecode
 
 import (
 	_ "embed"
