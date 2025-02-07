@@ -153,7 +153,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 	}
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd, err := ob.ObserverTSSReceive(ctx, startBlock, toBlock)
+	lastScannedTssRecvd, err := ob.ObserveTSSReceive(ctx, startBlock, toBlock)
 	if err != nil {
 		logger.Error().Err(err).Msg("error observing TSS received gas asset")
 	}
@@ -358,9 +358,9 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 	return toBlock, nil
 }
 
-// ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetacore
+// ObserveTSSReceive queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Observer) ObserverTSSReceive(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) ObserveTSSReceive(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
 	// query incoming gas asset
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// observe TSS received gas token in block 'bn'
