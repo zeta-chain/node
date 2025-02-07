@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"fmt"
-
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/stretchr/testify/require"
@@ -11,7 +9,7 @@ import (
 )
 
 func (r *E2ERunner) SetupSui(faucetURL string) {
-	r.Logger.Print("⚙️ initializing gateway program on Sui")
+	r.Logger.Print("⚙️ initializing gateway package on Sui")
 
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
@@ -48,7 +46,14 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
-	fmt.Println(resp)
+
+	var packageID string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "published" {
+			packageID = change.PackageId
+		}
+	}
+	require.NotEmpty(r, packageID)
 
 	// TODO: save IDs in config and configure chain
 }

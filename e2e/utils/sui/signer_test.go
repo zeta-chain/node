@@ -88,7 +88,7 @@ func TestSuiSecp256k1Keypair(t *testing.T) {
 			pubkeyEncoded := base64.StdEncoding.EncodeToString(pubkeyBytes)
 			require.Equal(t, tt.expectedPubkeyBase64, pubkeyEncoded)
 
-			// we don't have a good way outside e2e to verify the signature is correct, but let's excertise it anyway
+			// we don't have a good way outside e2e to verify the signature is correct, but let's exercise it anyway
 			_, err = signer.SignTransactionBlock("ZXhhbXBsZQo=")
 			require.NoError(t, err)
 		})
