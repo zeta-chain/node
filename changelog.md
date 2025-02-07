@@ -4,12 +4,17 @@
 
 ### Features
 
-* [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+* [3461](https://github.com/zeta-chain/node/pull/3461) - add new `ConfirmationParams` field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+* [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
 
 ### Refactor
 
 * [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3496](https://github.com/zeta-chain/node/pull/3496) - zetaclient uses `ConfirmationParams` in stead of old `ConfirmationCount`; use block ranged based observation for btc and evm chain.
+
+### Fixes
+
+* [3501](https://github.com/zeta-chain/node/pull/3501) - fix E2E test failure caused by nil `ConfirmationParams` for Solana and TON
 
 ### Tests
 
