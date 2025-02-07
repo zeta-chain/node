@@ -6,6 +6,7 @@
 
 * [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
 * [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
+* [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
 
 ### Refactor
 

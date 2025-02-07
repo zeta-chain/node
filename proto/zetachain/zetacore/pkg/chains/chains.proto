@@ -67,6 +67,7 @@ enum Network {
   avalanche = 9;
   arbitrum = 10;
   worldchain = 11;
+  sui = 12;
 }
 
 // NetworkType represents the network type of the chain
@@ -87,6 +88,7 @@ enum Vm {
   evm = 1;
   svm = 2;
   tvm = 3;
+  mvm_sui = 4;
 }
 
 // Consensus represents the consensus algorithm used by the chain
@@ -102,6 +104,7 @@ enum Consensus {
   catchain_consensus = 5; // ton
   snowman = 6;            // avalanche
   arbitrum_nitro = 7;
+  sui_consensus = 8;
 }
 
 // CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
