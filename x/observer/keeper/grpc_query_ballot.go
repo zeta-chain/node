@@ -84,7 +84,7 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 		return nil
 	})
 
-	sort.SliceStable(ballots, func(i, j int) bool {
+	sort.Slice(ballots, func(i, j int) bool {
 		return ballots[i].BallotCreationHeight < ballots[j].BallotCreationHeight
 	})
 
