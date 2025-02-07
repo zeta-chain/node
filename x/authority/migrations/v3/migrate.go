@@ -41,6 +41,6 @@ func MigrateStore(
 	}
 
 	// Set the new authorization list
-	keeper.SetAuthorizationList(ctx, types.DefaultAuthorizationsList())
+	keeper.SetAuthorizationList(ctx, authorizationList)
 	return nil
 }
