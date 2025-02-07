@@ -541,6 +541,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// Verify that the balance of restricted address is zero
 	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+	deployerRunner.EnsureNoStaleBallots()
 
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
