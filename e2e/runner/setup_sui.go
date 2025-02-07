@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"fmt"
+
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/stretchr/testify/require"
@@ -42,18 +44,27 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 			ShowEffects:        true,
 			ShowBalanceChanges: true,
 			ShowEvents:         true,
+			ShowObjectChanges:  true,
 		},
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
 
-	var packageID string
+	var packageID, objectID string
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "published" {
 			packageID = change.PackageId
 		}
 	}
-	require.NotEmpty(r, packageID)
+	require.NotEmpty(r, packageID, "find packageID")
+
+	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "created" && change.ObjectType == gatewayType {
+			objectID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, objectID, "find objectID")
 
 	// TODO: save IDs in config and configure chain
 }
