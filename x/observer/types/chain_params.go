@@ -448,6 +448,17 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 
 // ChainParamsEqual returns true if two chain params are equal
 func ChainParamsEqual(params1, params2 ChainParams) bool {
+	equalConfirmParams := func(confmParam1, confmParam2 *ConfirmationParams) bool {
+		if confmParam1 == confmParam2 {
+			return true
+		}
+		if (confmParam1 == nil) || (confmParam2 == nil) {
+			return false
+		}
+
+		return *confmParam1 == *confmParam2
+	}
+
 	return params1.ChainId == params2.ChainId &&
 		params1.ConfirmationCount == params2.ConfirmationCount &&
 		params1.ZetaTokenContractAddress == params2.ZetaTokenContractAddress &&
@@ -463,5 +474,5 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
 		params1.GatewayAddress == params2.GatewayAddress &&
-		params1.ConfirmationParams == params2.ConfirmationParams
+		equalConfirmParams(params1.ConfirmationParams, params2.ConfirmationParams)
 }
