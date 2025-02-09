@@ -201,6 +201,7 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
 	)
 }
@@ -239,6 +240,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithRevertOptions(revertOptions),
 		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)

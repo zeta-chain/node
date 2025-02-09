@@ -111,6 +111,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
 			ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
 			CoinType:                          cctx.InboundParams.CoinType,
+			ObservationMode:                   cctx.GetCurrentOutboundParam().GetObservationMode(),
 		}
 
 		err = k.SetObserverOutboundInfo(ctx, to, &cctx)

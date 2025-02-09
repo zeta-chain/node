@@ -198,6 +198,7 @@ func DepositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 		crosschaintypes.WithCrossChainCall(isCrossChainCall),
 	)
@@ -230,6 +231,7 @@ func DepositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 		crosschaintypes.WithCrossChainCall(true),
 	)
@@ -256,6 +258,7 @@ func CallInboundVoteV2(event *gatewayevm.GatewayEVMCalled,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithEVMRevertOptions(event.RevertOptions),
 	)
 }

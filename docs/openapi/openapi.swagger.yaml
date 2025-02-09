@@ -59039,6 +59039,9 @@ definitions:
         title: |-
           this field describes if a smart contract call should be made for a inbound
           with assets only used for protocol contract version 2
+      observation_mode:
+        $ref: '#/definitions/crosschainObservationMode'
+        title: observation mode used for the inbound
       status:
         $ref: '#/definitions/crosschainInboundStatus'
         title: status of the inbound observation
@@ -59122,6 +59125,15 @@ definitions:
         type: string
       cctx_index:
         type: string
+  crosschainObservationMode:
+    type: string
+    enum:
+      - SAFE
+      - FAST
+    default: SAFE
+    title: |-
+      - SAFE: an inbound/outbound is observed using safe confirmation count
+       - FAST: an inbound/outbound is observed using fast confirmation count
   crosschainOutboundParams:
     type: object
     properties:
@@ -59169,6 +59181,9 @@ definitions:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
       call_options:
         $ref: '#/definitions/crosschainCallOptions'
+      observation_mode:
+        $ref: '#/definitions/crosschainObservationMode'
+        title: observation mode used for the outbound
   crosschainOutboundTracker:
     type: object
     properties:

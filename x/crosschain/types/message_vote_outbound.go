@@ -27,6 +27,7 @@ func NewMsgVoteOutbound(
 	chain int64,
 	nonce uint64,
 	coinType coin.CoinType,
+	observationMode ObservationMode,
 ) *MsgVoteOutbound {
 	return &MsgVoteOutbound{
 		Creator:                           creator,
@@ -41,6 +42,7 @@ func NewMsgVoteOutbound(
 		OutboundChain:                     chain,
 		OutboundTssNonce:                  nonce,
 		CoinType:                          coinType,
+		ObservationMode:                   observationMode,
 	}
 }
 

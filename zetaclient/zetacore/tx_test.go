@@ -329,6 +329,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 		chains.Ethereum.ChainId,
 		10001,
 		coin.CoinType_Gas,
+		crosschaintypes.ObservationMode_SAFE,
 	)
 
 	hash, ballot, err := client.PostVoteOutbound(ctx, 100_000, 200_000, msg)

@@ -307,6 +307,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 			ObservedOutboundGasUsed:           100,
 			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
 			ObservedOutboundEffectiveGasLimit: 20,
+			ObservationMode:                   types.ObservationMode_SAFE,
 		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		require.NoError(t, err)
 		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
@@ -314,6 +315,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
 		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservationMode, types.ObservationMode_SAFE)
 	})
 
 	t.Run("successfully get outbound tx for failed ballot without amount check", func(t *testing.T) {
@@ -327,6 +329,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 			ObservedOutboundGasUsed:           100,
 			ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(100),
 			ObservedOutboundEffectiveGasLimit: 20,
+			ObservationMode:                   types.ObservationMode_SAFE,
 		}, observertypes.BallotStatus_BallotFinalized_FailureObservation)
 		require.NoError(t, err)
 		require.Equal(t, cctx.GetCurrentOutboundParam().Hash, hash)
@@ -334,6 +337,7 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasPrice, sdkmath.NewInt(100))
 		require.Equal(t, cctx.GetCurrentOutboundParam().EffectiveGasLimit, uint64(20))
 		require.Equal(t, cctx.GetCurrentOutboundParam().ObservedExternalHeight, uint64(10))
+		require.Equal(t, cctx.GetCurrentOutboundParam().ObservationMode, types.ObservationMode_SAFE)
 	})
 
 	t.Run("failed to get outbound tx if amount does not match value received", func(t *testing.T) {
@@ -389,6 +393,7 @@ func Test_NewCCTX(t *testing.T) {
 			Asset:                   asset,
 			EventIndex:              eventIndex,
 			ProtocolContractVersion: types.ProtocolContractVersion_V2,
+			ObservationMode:         types.ObservationMode_SAFE,
 			Status:                  types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
@@ -409,6 +414,7 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
 		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
+		require.Equal(t, types.ObservationMode_SAFE, cctx.GetInboundParams().ObservationMode)
 		require.Equal(t, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.GetInboundParams().Status)
 	})
 

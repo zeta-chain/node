@@ -31,6 +31,7 @@ func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		crosschaintypes.ProtocolContractVersion_V2,
 		false,
 		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ObservationMode_SAFE,
 		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
 	), nil
 }

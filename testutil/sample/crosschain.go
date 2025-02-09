@@ -407,6 +407,20 @@ func MemoFromRand(r *rand.Rand) (common.Address, []byte, string) {
 	return common.HexToAddress(randomMemo), randomData, memoHex
 }
 
+func ObservationModeFromRand(r *rand.Rand) types.ObservationMode {
+	types := []types.ObservationMode{types.ObservationMode_SAFE, types.ObservationMode_FAST}
+	return types[r.Intn(len(types))]
+}
+
+func InboundStatusFromRand(r *rand.Rand) types.InboundStatus {
+	statuses := []types.InboundStatus{
+		types.InboundStatus_SUCCESS,
+		types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+		types.InboundStatus_INVALID_RECEIVER_ADDRESS,
+	}
+	return statuses[r.Intn(len(statuses))]
+}
+
 func CCTXfromRand(r *rand.Rand,
 	creator string,
 	index string,
@@ -429,6 +443,8 @@ func CCTXfromRand(r *rand.Rand,
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
+		ObservationMode:        ObservationModeFromRand(r),
+		Status:                 InboundStatusFromRand(r),
 	}
 
 	outbound := &types.OutboundParams{
@@ -448,6 +464,7 @@ func CCTXfromRand(r *rand.Rand,
 		GasUsed:                100,
 		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
 		EffectiveGasLimit:      100,
+		ObservationMode:        ObservationModeFromRand(r),
 	}
 
 	cctx := types.CrossChainTx{
@@ -481,6 +498,7 @@ func OutboundVoteSim(r *rand.Rand,
 		ObservedOutboundEffectiveGasPrice: cctx.GetCurrentOutboundParam().EffectiveGasPrice,
 		ObservedOutboundGasUsed:           cctx.GetCurrentOutboundParam().GasUsed,
 		CoinType:                          cctx.InboundParams.CoinType,
+		ObservationMode:                   cctx.GetCurrentOutboundParam().GetObservationMode(),
 	}
 
 	return cctx, msg

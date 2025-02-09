@@ -163,6 +163,7 @@ func TestKeeper_VoteOutbound(t *testing.T) {
 			ObservedOutboundEffectiveGasPrice: math.NewInt(21),
 			ObservedOutboundGasUsed:           21,
 			CoinType:                          cctx.InboundParams.CoinType,
+			ObservationMode:                   cctx.GetCurrentOutboundParam().ObservationMode,
 		}
 		_, err := msgServer.VoteOutbound(ctx, &msg)
 		require.NoError(t, err)

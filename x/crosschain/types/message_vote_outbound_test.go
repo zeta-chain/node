@@ -37,6 +37,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				42,
 				42,
 				coin.CoinType_Zeta,
+				types.ObservationMode_SAFE,
 			),
 		},
 		{
@@ -54,6 +55,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				42,
 				42,
 				coin.CoinType_Zeta,
+				types.ObservationMode_SAFE,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -72,6 +74,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				-1,
 				42,
 				coin.CoinType_Zeta,
+				types.ObservationMode_SAFE,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -104,6 +107,7 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 		OutboundChain:                     42,
 		OutboundTssNonce:                  42,
 		CoinType:                          coin.CoinType_Zeta,
+		ObservationMode:                   types.ObservationMode_SAFE,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -179,6 +183,12 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 	msgNew.CoinType = coin.CoinType_ERC20
 	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
+
+	// observation mode used
+	msgNew = msg
+	msgNew.ObservationMode = types.ObservationMode_FAST
+	hash2 = msgNew.Digest()
+	require.NotEqual(t, hash, hash2, "observation mode should change hash")
 }
 
 func TestMsgVoteOutbound_GetSigners(t *testing.T) {

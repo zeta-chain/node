@@ -18,7 +18,7 @@ import (
 
 func CmdVoteOutbound() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType]",
+		Use:   "vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [observationMode]",
 		Short: "Broadcast message to vote an outbound",
 		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -68,6 +68,12 @@ func CmdVoteOutbound() *cobra.Command {
 			}
 			argsCoinType := coin.CoinType(coinType)
 
+			observationMode, ok := types.ObservationMode_value[args[11]]
+			if !ok {
+				return fmt.Errorf("wrong observation mode %s", args[11])
+			}
+			argsObservationMode := types.ObservationMode(observationMode)
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -86,6 +92,7 @@ func CmdVoteOutbound() *cobra.Command {
 				chain,
 				outTxNonce,
 				argsCoinType,
+				argsObservationMode,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

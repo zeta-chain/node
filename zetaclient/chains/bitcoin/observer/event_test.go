@@ -38,6 +38,7 @@ func createTestBtcEvent(
 		MemoStd:     memoStd,
 		TxHash:      sample.Hash().Hex(),
 		BlockNumber: 123456,
+		Status:      crosschaintypes.InboundStatus_SUCCESS,
 	}
 }
 
@@ -384,6 +385,8 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V2,
 			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // always empty with legacy memo
 			IsCrossChainCall:        true,
+			Status:                  crosschaintypes.InboundStatus_SUCCESS,
+			ObservationMode:         crosschaintypes.ObservationMode_SAFE,
 		}
 
 		// create new inbound vote V1
@@ -439,6 +442,8 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			RevertOptions: crosschaintypes.RevertOptions{
 				RevertAddress: revertOptions.RevertAddress, // should be overridden by revert address
 			},
+			Status:          crosschaintypes.InboundStatus_SUCCESS,
+			ObservationMode: crosschaintypes.ObservationMode_SAFE,
 		}
 
 		// create new inbound vote V2 with standard memo

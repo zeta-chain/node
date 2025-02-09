@@ -198,6 +198,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ObservationMode_SAFE,
 	)
 }
 

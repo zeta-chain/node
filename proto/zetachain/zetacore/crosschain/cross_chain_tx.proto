@@ -27,6 +27,12 @@ enum TxFinalizationStatus {
   Executed = 2;     // the corresponding tx is executed
 }
 
+enum ObservationMode {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SAFE = 0; // an inbound/outbound is observed using safe confirmation count
+  FAST = 1; // an inbound/outbound is observed using fast confirmation count
+}
+
 // InboundStatus represents the status of an observed inbound
 enum InboundStatus {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -59,6 +65,9 @@ message InboundParams {
   // this field describes if a smart contract call should be made for a inbound
   // with assets only used for protocol contract version 2
   bool is_cross_chain_call = 12;
+
+  // observation mode used for the inbound
+  ObservationMode observation_mode = 13;
 
   // status of the inbound observation
   InboundStatus status = 20;
@@ -106,6 +115,9 @@ message OutboundParams {
   TxFinalizationStatus tx_finalization_status = 12;
 
   CallOptions call_options = 24;
+
+  // observation mode used for the outbound
+  ObservationMode observation_mode = 25;
 
   // not used. do not edit.
   reserved 13 to 19;

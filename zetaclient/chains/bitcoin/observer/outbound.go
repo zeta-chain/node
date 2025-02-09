@@ -191,6 +191,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		ob.Chain().ChainId,
 		nonce,
 		coin.CoinType_Gas,
+		crosschaintypes.ObservationMode_SAFE,
 	)
 
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
