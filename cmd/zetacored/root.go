@@ -208,6 +208,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
@@ -238,6 +239,9 @@ func queryCommand() *cobra.Command {
 		rpc.ValidatorCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		server.QueryBlockCmd(),
+		server.QueryBlocksCmd(),
+		server.QueryBlockResultsCmd(),
 	)
 
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")

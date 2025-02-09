@@ -135,18 +135,20 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 	time.Sleep(delay)
 
 	var (
-		chainID = s.observer.Chain().ChainId
+		chain   = s.observer.Chain()
+		chainID = chain.ChainId
 
 		// #nosec G115 positive
 		zetaHeight = uint64(zetaBlock.Block.Height)
 
 		// #nosec G115 positive
-		interval          = uint64(s.observer.ChainParams().OutboundScheduleInterval)
-		scheduleLookahead = s.observer.ChainParams().OutboundScheduleLookahead
-		scheduleLookback  = uint64(float64(scheduleLookahead) * outboundLookbackFactor)
+		interval           = uint64(s.observer.ChainParams().OutboundScheduleInterval)
+		scheduleLookahead  = s.observer.ChainParams().OutboundScheduleLookahead
+		scheduleLookback   = uint64(float64(scheduleLookahead) * outboundLookbackFactor)
+		needsProcessingCtr = 0
 	)
 
-	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}
@@ -154,17 +156,15 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 	// schedule keysign for each pending cctx
 	for _, cctx := range cctxList {
 		var (
-			params     = cctx.GetCurrentOutboundParam()
-			nonce      = params.TssNonce
-			outboundID = base.OutboundIDFromCCTX(cctx)
+			params        = cctx.GetCurrentOutboundParam()
+			inboundParams = cctx.GetInboundParams()
+			nonce         = params.TssNonce
+			outboundID    = base.OutboundIDFromCCTX(cctx)
 		)
 
 		switch {
 		case params.ReceiverChainId != chainID:
 			s.outboundLogger(outboundID).Error().Msg("chain id mismatch")
-			continue
-		case s.signer.IsOutboundActive(outboundID):
-			// noop
 			continue
 		case params.TssNonce > cctxList[0].GetCurrentOutboundParam().TssNonce+scheduleLookback:
 			return fmt.Errorf(
@@ -173,6 +173,20 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 				outboundID,
 				cctxList[0].GetCurrentOutboundParam().TssNonce,
 			)
+		}
+
+		// schedule newly created cctx right away, no need to wait for next interval
+		// 1. schedule the very first cctx (there can be multiple) created in the last Zeta block.
+		// 2. schedule new cctx only when there is no other older cctx to process
+		isCCTXNewlyCreated := inboundParams.ObservedExternalHeight == zetaHeight
+		shouldProcessCCTXImmedately := isCCTXNewlyCreated && needsProcessingCtr == 0
+
+		// even if the outbound is currently active, we should increment this counter
+		// to avoid immediate processing logic
+		needsProcessingCtr++
+
+		if s.signer.IsOutboundActive(outboundID) {
+			continue
 		}
 
 		// vote outbound if it's already confirmed
@@ -186,8 +200,10 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 			continue
 		}
 
+		shouldScheduleProcess := nonce%interval == zetaHeight%interval
+
 		// schedule a TSS keysign
-		if nonce%interval == zetaHeight%interval {
+		if shouldProcessCCTXImmedately || shouldScheduleProcess {
 			go s.signer.TryProcessOutbound(
 				ctx,
 				cctx,

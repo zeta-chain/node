@@ -18,12 +18,14 @@ import (
 	"github.com/stretchr/testify/require"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -32,6 +34,13 @@ import (
 const (
 	StakePerAccount           = "stake_per_account"
 	InitiallyBondedValidators = "initially_bonded_validators"
+	// blocksForEmissions supplies the number of blocks to be used for testing emissions.
+	//It is used to calculate the total amount of tokens to fund the emission pool with
+	// and also to create sample ballots
+	// which would then be used to distribute those emissions per block
+	blocksForEmissions = 100
+	// ballotPerBlock supplies the number of ballots to be created per block
+	ballotPerBlock = 100
 )
 
 // extractBankGenesisState extracts and updates the bank genesis state.
@@ -64,6 +73,15 @@ func extractBankGenesisState(
 			Coins:   sdk.NewCoins(notBondedCoins),
 		})
 	}
+
+	// Fund the emission pool to start the distribution process
+	emissionsAmount := emissionstypes.BlockReward.Mul(sdkmath.LegacyNewDec(blocksForEmissions)).RoundInt()
+	bankState.Balances = append(bankState.Balances, banktypes.Balance{
+		Address: emissionstypes.EmissionsModuleAddress.String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionsAmount)),
+	})
+
+	bankState.Supply = bankState.Supply.Add(sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionsAmount))...)
 
 	return bankState
 }
@@ -199,6 +217,35 @@ func extractObserverGenesisState(
 		pendingNonces = append(pendingNonces, pendingNonce)
 	}
 
+	var (
+		totalBlocks     = blocksForEmissions
+		ballotsPerBlock = ballotPerBlock
+	)
+
+	// create test ballots for reward distribution
+	ballots := make([]*observertypes.Ballot, ballotsPerBlock*totalBlocks)
+	votes := make([]observertypes.VoteType, len(observers))
+	for i := 0; i < len(votes); i++ {
+		votes[i] = observertypes.VoteType_SuccessObservation
+	}
+
+	for i := 0; i < totalBlocks; i++ {
+		for j := 0; j < ballotsPerBlock; j++ {
+			identifier := fmt.Sprintf("ballot-%d-%d", i, j)
+			ballots[i+j] = &observertypes.Ballot{
+				BallotIdentifier:     identifier,
+				Index:                identifier,
+				VoterList:            observers,
+				Votes:                votes,
+				ObservationType:      observertypes.ObservationType_InboundTx,
+				BallotStatus:         observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+				BallotCreationHeight: int64(i),
+			}
+		}
+	}
+
+	keygen := sample.KeygenFromRand(r)
+
 	observerState.Tss = &tss
 	observerState.Observers.ObserverList = observers
 	observerState.NodeAccountList = nodeAccounts
@@ -207,6 +254,8 @@ func extractObserverGenesisState(
 	observerState.ChainNonces = chainsNonces
 	observerState.PendingNonces = pendingNonces
 	observerState.TssHistory = tssHistory
+	observerState.Ballots = ballots
+	observerState.Keygen = &keygen
 
 	return observerState
 }
@@ -320,6 +369,21 @@ func extractFungibleGenesisState(
 	return fungibleState
 }
 
+// extractEmmisionsGenesisState extracts and updates the emissions genesis state.
+// 1 is set as the ballot maturity blocks.This is done to start the distribution process from height 2
+func extractEmissionsGenesisState(t *testing.T,
+	rawState map[string]json.RawMessage,
+	cdc codec.Codec) *emissionstypes.GenesisState {
+	emissionsStateBz, ok := rawState[emissionstypes.ModuleName]
+	require.True(t, ok, "emissions genesis state is missing")
+
+	emissionsState := new(emissionstypes.GenesisState)
+	cdc.MustUnmarshalJSON(emissionsStateBz, emissionsState)
+	emissionsState.Params.BallotMaturityBlocks = 1
+
+	return emissionsState
+}
+
 // updateRawState updates the raw genesis state for the application.
 // This is used to inject values needed to run the simulation tests.
 func updateRawState(
@@ -342,6 +406,7 @@ func updateRawState(
 	rawState[observertypes.ModuleName] = cdc.MustMarshalJSON(observerState)
 	rawState[authoritytypes.ModuleName] = cdc.MustMarshalJSON(authorityState)
 	rawState[fungibletypes.ModuleName] = cdc.MustMarshalJSON(fungibleState)
+	rawState[emissionstypes.ModuleName] = cdc.MustMarshalJSON(extractEmissionsGenesisState(t, rawState, cdc))
 	rawState[crosschaintypes.ModuleName] = cdc.MustMarshalJSON(extractCrosschainGenesisState(t, rawState, cdc, r))
 }
 

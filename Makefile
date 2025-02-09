@@ -312,6 +312,11 @@ start-ton-test: e2e-images
 	export E2E_ARGS="--skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
 
+start-sui-test: e2e-images
+	@echo "--> Starting sui test"
+	export E2E_ARGS="--skip-regular --test-sui" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
+
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
 	export E2E_ARGS="--skip-regular --test-legacy" && \
@@ -327,7 +332,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v25' \
+		--build-arg OLD_VERSION='release/v26' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,7 +341,7 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v25.0.0' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v26.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
