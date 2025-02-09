@@ -144,7 +144,7 @@ func (signer *Signer) TryProcessOutbound(
 		tx = whitelistTx
 
 	case coin.CoinType_Gas:
-		if cctx.InboundParams.IsCrossChainCall {
+		if cctx.InboundParams.IsCrossChainCall && !cctx.IsCurrentOutboundRevert() { // TODO: is this ok condition?
 			executeTx, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
