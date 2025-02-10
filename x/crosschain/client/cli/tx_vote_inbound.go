@@ -19,7 +19,7 @@ func CmdVoteInbound() *cobra.Command {
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
 			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [observationMode] [inboundStatus]",
 		Short: "Broadcast message to vote an inbound",
-		Args:  cobra.ExactArgs(13),
+		Args:  cobra.ExactArgs(16),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := args[0]
 			argsSenderChain, err := strconv.ParseInt(args[1], 10, 64)
