@@ -237,7 +237,10 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	if additional != nil {
 		from = common.HexToAddress(ethMsg.From)
 	} else if ethMsg.Data != nil {
-		from = ethMsg.GetSender()
+		from, err = ethMsg.GetSender(b.chainID)
+		if err != nil {
+			b.logger.Debug("failed to parse from field", "hash", hexTx, "error", err.Error())
+		}
 	} else {
 		return nil, errors.New("failed to parse receipt")
 	}
