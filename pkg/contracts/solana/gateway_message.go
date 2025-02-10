@@ -197,7 +197,7 @@ func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
 }
 
-// Hash packs the withdraw message and computes the hash
+// Hash packs the execute message and computes the hash
 func (msg *MsgExecute) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)

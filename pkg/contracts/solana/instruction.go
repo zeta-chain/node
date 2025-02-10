@@ -349,13 +349,14 @@ type AccountMeta struct {
 	IsWritable bool
 }
 
-// Msg struct with string public key and byte array data
-type Msg struct {
+// ExecuteMsg describes data and accounts passed to connected programs
+type ExecuteMsg struct {
 	Accounts []AccountMeta
 	Data     []byte
 }
 
-func GetMsgAbi() (abi.Arguments, error) {
+// GetExecuteMsgAbi used for abi encoding/decoding execute msg
+func GetExecuteMsgAbi() (abi.Arguments, error) {
 	MsgAbiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
 		{
 			Name: "accounts",
@@ -379,26 +380,27 @@ func GetMsgAbi() (abi.Arguments, error) {
 	return MsgAbiArgs, nil
 }
 
-func DecodeMsg(msgbz []byte) (Msg, error) {
-	args, err := GetMsgAbi()
+// DecodeExecuteMsg decodes execute msg using abi decoding
+func DecodeExecuteMsg(msgbz []byte) (ExecuteMsg, error) {
+	args, err := GetExecuteMsgAbi()
 	if err != nil {
-		return Msg{}, err
+		return ExecuteMsg{}, err
 	}
 
 	unpacked, err := args.Unpack(msgbz)
 	if err != nil {
-		return Msg{}, err
+		return ExecuteMsg{}, err
 	}
 
 	jsonMsg, err := json.Marshal(unpacked[0])
 	if err != nil {
-		return Msg{}, err
+		return ExecuteMsg{}, err
 	}
 
-	var msg Msg
+	var msg ExecuteMsg
 	err = json.Unmarshal(jsonMsg, &msg)
 	if err != nil {
-		return Msg{}, err
+		return ExecuteMsg{}, err
 	}
 
 	return msg, nil

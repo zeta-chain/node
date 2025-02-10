@@ -44,14 +44,14 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// load deployer private key
 	privkey := r.GetSolanaPrivKey()
 
-	abiArgs, err := solanacontract.GetMsgAbi()
+	abiArgs, err := solanacontract.GetExecuteMsgAbi()
 	require.NoError(r, err)
 
 	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
 	connectedPda := r.ComputeConnectedPdaAddress(connected)
 	gatewayPda := r.ComputePdaAddress()
 
-	msg := solanacontract.Msg{
+	msg := solanacontract.ExecuteMsg{
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(gatewayPda.Bytes()), IsWritable: false},

@@ -40,17 +40,7 @@ var (
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
 	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
-	// TODO: merge current IDL generation PR and update this
-	DiscriminatorExecute = [8]byte{
-		130,
-		221,
-		242,
-		154,
-		13,
-		193,
-		189,
-		29,
-	}
+	DiscriminatorExecute = idlgateway.IDLGateway.GetDiscriminator("execute")
 
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")

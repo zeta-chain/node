@@ -312,7 +312,7 @@ func (signer *Signer) prepareExecuteTx(
 	if err != nil {
 		return nil, err
 	}
-	msg, err := contracts.DecodeMsg(message)
+	msg, err := contracts.DecodeExecuteMsg(message)
 	if err != nil {
 		return nil, err
 	}
