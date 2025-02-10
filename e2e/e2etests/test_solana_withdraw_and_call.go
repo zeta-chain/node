@@ -48,7 +48,8 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
-	connectedPda := r.ComputeConnectedPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
+	require.NoError(r, err)
 	gatewayPda := r.ComputePdaAddress()
 
 	msg := solanacontract.ExecuteMsg{

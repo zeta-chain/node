@@ -34,17 +34,6 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	return pdaComputed
 }
 
-// ComputeConnectedPdaAddress computes the PDA address for the custom program PDA with seed "connected"
-func (r *E2ERunner) ComputeConnectedPdaAddress(connected solana.PublicKey) solana.PublicKey {
-	seed := []byte("connected")
-	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, connected)
-	require.NoError(r, err)
-
-	r.Logger.Info("computed pda for connected program: %s, bump %d\n", pdaComputed, bump)
-
-	return pdaComputed
-}
-
 // CreateDepositInstruction creates a 'deposit' instruction
 func (r *E2ERunner) CreateDepositInstruction(
 	signer solana.PublicKey,

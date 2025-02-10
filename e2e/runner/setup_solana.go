@@ -68,7 +68,8 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Info("initialize gateway logs: %v", out.Meta.LogMessages)
 
 	// initialize connected program
-	connectedPda := r.ComputeConnectedPdaAddress(ConnectedProgramID)
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedProgramID)
+	require.NoError(r, err)
 
 	var instConnected solana.GenericInstruction
 	accountSliceConnected := []*solana.AccountMeta{}

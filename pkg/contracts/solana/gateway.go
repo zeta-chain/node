@@ -66,6 +66,7 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	return gatewayID, pda, err
 }
 
+// ComputeConnectedPdaAddress computes the PDA address for the custom program PDA with seed "connected"
 func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
 	seed := []byte("connected")
 	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, connected)
