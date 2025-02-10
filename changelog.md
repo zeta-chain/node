@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v27.0.4
+
+### Fixes
+* [3508](https://github.com/zeta-chain/node/pull/3508) - fix empty from field in eth receipt rpc method
+
 ## v27.0.2
 
 This is a zetaclient only release.
