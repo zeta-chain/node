@@ -79,7 +79,7 @@ func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit ui
 // isBlockConfirmed checks if the block number is confirmed.
 //
 // Note: block 100 is confirmed if the last block is 100 and confirmation count is 1.
-func isBlockConfirmed(blockNumber uint64, confirmation uint64, lastBlock uint64) bool {
+func isBlockConfirmed(blockNumber, confirmation, lastBlock uint64) bool {
 	confHeight := blockNumber + confirmation - 1
 	return lastBlock >= confHeight
 }
