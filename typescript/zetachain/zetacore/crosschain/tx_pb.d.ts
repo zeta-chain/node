@@ -548,7 +548,7 @@ export declare class MsgVoteOutbound extends Message<MsgVoteOutbound> {
   coinType: CoinType;
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 21;
+   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 13;
    */
   observationMode: ObservationMode;
 
