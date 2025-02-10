@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/yaml.v3"
+
+	sui_utils "github.com/zeta-chain/node/e2e/utils/sui"
 )
 
 // DoubleQuotedString forces a string to be double quoted when marshaling to yaml.
@@ -99,6 +102,8 @@ type RPCs struct {
 	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
 	Solana            string     `yaml:"solana"`
 	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	Sui               string     `yaml:"sui"`
+	SuiFaucet         string     `yaml:"sui_faucet"`
 	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
 	ZetaCoreRPC       string     `yaml:"zetacore_rpc"`
 	ZetaclientMetrics string     `yaml:"zetaclient_metrics"`
@@ -395,6 +400,16 @@ func (a Account) EVMAddress() ethcommon.Address {
 
 func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(a.RawPrivateKey.String())
+}
+
+// SuiAddress derives the blake2b hash from the private key
+func (a Account) SuiSigner() (*sui_utils.SignerSecp256k1, error) {
+	privateKeyBytes, err := hex.DecodeString(a.RawPrivateKey.String())
+	if err != nil {
+		return nil, fmt.Errorf("decode private key: %w", err)
+	}
+	signer := sui_utils.NewSignerSecp256k1FromSecretKey(privateKeyBytes)
+	return signer, nil
 }
 
 // Validate that the address and the private key specified in the

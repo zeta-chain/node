@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -51,6 +52,11 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 		tonClient = c
 	}
 
+	var suiClient sui.ISuiAPI
+	if conf.RPCs.Sui != "" {
+		suiClient = sui.NewSuiClient(conf.RPCs.Sui)
+	}
+
 	zetaCoreClients, err := GetZetacoreClient(conf)
 	if err != nil {
 		return runner.Clients{}, fmt.Errorf("failed to get zetacore client: %w", err)
@@ -66,6 +72,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 		BtcRPC:            btcRPCClient,
 		Solana:            solanaClient,
 		TON:               tonClient,
+		Sui:               suiClient,
 		Evm:               evmClient,
 		EvmAuth:           evmAuth,
 		Zevm:              zevmClient,
