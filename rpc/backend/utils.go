@@ -107,7 +107,11 @@ func (b *Backend) getAccountNonce(
 				break
 			}
 
-			sender := ethMsg.GetSender()
+			sender, err := ethMsg.GetSender(b.chainID)
+			if err != nil {
+				b.logger.Debug("failed to parse from field", "hash", ethMsg.Hash, "error", err.Error())
+				continue
+			}
 			if sender == accAddr {
 				nonce++
 			}
