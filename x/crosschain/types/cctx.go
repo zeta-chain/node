@@ -194,7 +194,7 @@ func (m *CrossChainTx) AddOutbound(
 	m.GetCurrentOutboundParam().EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
 	m.GetCurrentOutboundParam().EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
 	m.GetCurrentOutboundParam().ObservedExternalHeight = msg.ObservedOutboundBlockHeight
-	m.GetCurrentOutboundParam().ObservationMode = msg.ObservationMode
+	m.GetCurrentOutboundParam().ConfirmationMode = msg.ConfirmationMode
 	return nil
 }
 
@@ -266,7 +266,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
 		IsCrossChainCall:       msg.IsCrossChainCall,
-		ObservationMode:        msg.ObservationMode,
+		ConfirmationMode:       msg.ConfirmationMode,
 		Status:                 msg.Status,
 	}
 

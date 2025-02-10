@@ -208,7 +208,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 		types.InboundStatus_SUCCESS,
-		types.ObservationMode_SAFE,
+		types.ConfirmationMode_SAFE,
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, false)
@@ -291,7 +291,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 		types.InboundStatus_SUCCESS,
-		types.ObservationMode_SAFE,
+		types.ConfirmationMode_SAFE,
 	)
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)

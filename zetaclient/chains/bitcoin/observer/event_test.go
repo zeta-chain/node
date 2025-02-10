@@ -386,7 +386,7 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // always empty with legacy memo
 			IsCrossChainCall:        true,
 			Status:                  crosschaintypes.InboundStatus_SUCCESS,
-			ObservationMode:         crosschaintypes.ObservationMode_SAFE,
+			ConfirmationMode:        crosschaintypes.ConfirmationMode_SAFE,
 		}
 
 		// create new inbound vote V1
@@ -442,8 +442,8 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 			RevertOptions: crosschaintypes.RevertOptions{
 				RevertAddress: revertOptions.RevertAddress, // should be overridden by revert address
 			},
-			Status:          crosschaintypes.InboundStatus_SUCCESS,
-			ObservationMode: crosschaintypes.ObservationMode_SAFE,
+			Status:           crosschaintypes.InboundStatus_SUCCESS,
+			ConfirmationMode: crosschaintypes.ConfirmationMode_SAFE,
 		}
 
 		// create new inbound vote V2 with standard memo

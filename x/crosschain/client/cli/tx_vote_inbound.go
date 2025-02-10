@@ -17,7 +17,7 @@ import (
 func CmdVoteInbound() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
-			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [observationMode] [inboundStatus]",
+			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus]",
 		Short: "Broadcast message to vote an inbound",
 		Args:  cobra.ExactArgs(16),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,11 +72,11 @@ func CmdVoteInbound() *cobra.Command {
 				return err
 			}
 
-			observationMode, ok := types.ObservationMode_value[args[14]]
+			confirmationMode, ok := types.ConfirmationMode_value[args[14]]
 			if !ok {
-				return fmt.Errorf("wrong observation mode %s", args[14])
+				return fmt.Errorf("wrong confirmation mode %s", args[14])
 			}
-			argsObservationMode := types.ObservationMode(observationMode)
+			argsConfirmationMode := types.ConfirmationMode(confirmationMode)
 
 			inboundStatus, ok := types.InboundStatus_value[args[15]]
 			if !ok {
@@ -102,7 +102,7 @@ func CmdVoteInbound() *cobra.Command {
 				protocolContractVersion,
 				isArbitraryCall,
 				argsInboundStatus,
-				argsObservationMode,
+				argsConfirmationMode,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

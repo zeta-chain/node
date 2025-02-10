@@ -140,7 +140,7 @@ func voteFromLegacyMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not relevant for v1
 		crosschaintypes.InboundStatus_SUCCESS,
-		crosschaintypes.ObservationMode_SAFE,
+		crosschaintypes.ConfirmationMode_SAFE,
 		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
 	)
 }
@@ -177,7 +177,7 @@ func voteFromStdMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not relevant for v1
 		event.Status,
-		crosschaintypes.ObservationMode_SAFE,
+		crosschaintypes.ConfirmationMode_SAFE,
 		crosschaintypes.WithRevertOptions(revertOptions),
 		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)

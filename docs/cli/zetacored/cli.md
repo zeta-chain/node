@@ -10938,7 +10938,7 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [observationMode] [inboundStatus] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus] [flags]
 ```
 
 ### Options
@@ -10991,7 +10991,7 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
 Broadcast message to vote an outbound
 
 ```
-zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [observationMode] [flags]
+zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [confirmationMode] [flags]
 ```
 
 ### Options

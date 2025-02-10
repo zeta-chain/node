@@ -376,7 +376,7 @@ func Test_VoteOutboundBallot(t *testing.T) {
 			chainID,
 			tx.Nonce(),
 			coinType,
-			crosschaintypes.ObservationMode_SAFE,
+			crosschaintypes.ConfirmationMode_SAFE,
 		)
 		ballotExpected := cctx.GetCurrentOutboundParam().BallotIndex
 		require.Equal(t, ballotExpected, msg.Digest())

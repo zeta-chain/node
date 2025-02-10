@@ -111,7 +111,7 @@ func (ob *Observer) PostVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
-		crosschaintypes.ObservationMode_SAFE,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit

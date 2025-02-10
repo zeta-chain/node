@@ -53,7 +53,7 @@ func GetInboundVoteMessage(
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 		status,
-		types.ObservationMode_SAFE,
+		types.ConfirmationMode_SAFE,
 	)
 	return msg
 }

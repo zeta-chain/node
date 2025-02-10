@@ -261,7 +261,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not used
 		crosschaintypes.InboundStatus_SUCCESS,
-		crosschaintypes.ObservationMode_SAFE,
+		crosschaintypes.ConfirmationMode_SAFE,
 		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
 	)
 }

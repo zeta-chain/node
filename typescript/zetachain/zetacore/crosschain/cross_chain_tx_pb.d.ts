@@ -81,18 +81,18 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
- * @generated from enum zetachain.zetacore.crosschain.ObservationMode
+ * @generated from enum zetachain.zetacore.crosschain.ConfirmationMode
  */
-export declare enum ObservationMode {
+export declare enum ConfirmationMode {
   /**
-   * an inbound/outbound is observed using safe confirmation count
+   * an inbound/outbound is confirmed using safe confirmation count
    *
    * @generated from enum value: SAFE = 0;
    */
   SAFE = 0,
 
   /**
-   * an inbound/outbound is observed using fast confirmation count
+   * an inbound/outbound is confirmed using fast confirmation count
    *
    * @generated from enum value: FAST = 1;
    */
@@ -220,11 +220,11 @@ export declare class InboundParams extends Message<InboundParams> {
   isCrossChainCall: boolean;
 
   /**
-   * observation mode used for the inbound
+   * confirmation mode used for the inbound
    *
-   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 13;
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 13;
    */
-  observationMode: ObservationMode;
+  confirmationMode: ConfirmationMode;
 
   /**
    * status of the inbound observation
@@ -399,11 +399,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
   callOptions?: CallOptions;
 
   /**
-   * observation mode used for the outbound
+   * confirmation mode used for the outbound
    *
-   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 25;
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 25;
    */
-  observationMode: ObservationMode;
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<OutboundParams>);
 

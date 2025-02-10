@@ -37,7 +37,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				42,
 				42,
 				coin.CoinType_Zeta,
-				types.ObservationMode_SAFE,
+				types.ConfirmationMode_SAFE,
 			),
 		},
 		{
@@ -55,7 +55,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				42,
 				42,
 				coin.CoinType_Zeta,
-				types.ObservationMode_SAFE,
+				types.ConfirmationMode_SAFE,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -74,7 +74,7 @@ func TestMsgVoteOutbound_ValidateBasic(t *testing.T) {
 				-1,
 				42,
 				coin.CoinType_Zeta,
-				types.ObservationMode_SAFE,
+				types.ConfirmationMode_SAFE,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -107,7 +107,7 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 		OutboundChain:                     42,
 		OutboundTssNonce:                  42,
 		CoinType:                          coin.CoinType_Zeta,
-		ObservationMode:                   types.ObservationMode_SAFE,
+		ConfirmationMode:                  types.ConfirmationMode_SAFE,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -186,7 +186,7 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 
 	// observation mode used
 	msgNew = msg
-	msgNew.ObservationMode = types.ObservationMode_FAST
+	msgNew.ConfirmationMode = types.ConfirmationMode_FAST
 	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "observation mode should change hash")
 }

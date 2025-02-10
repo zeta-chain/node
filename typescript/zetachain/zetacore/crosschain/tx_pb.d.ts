@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { CallOptions, InboundStatus, ObservationMode, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, ConfirmationMode, InboundStatus, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -548,9 +548,9 @@ export declare class MsgVoteOutbound extends Message<MsgVoteOutbound> {
   coinType: CoinType;
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 13;
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 13;
    */
-  observationMode: ObservationMode;
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<MsgVoteOutbound>);
 
@@ -702,11 +702,11 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
   status: InboundStatus;
 
   /**
-   * observation mode used for the inbound
+   * confirmation mode used for the inbound
    *
-   * @generated from field: zetachain.zetacore.crosschain.ObservationMode observation_mode = 21;
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 21;
    */
-  observationMode: ObservationMode;
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 
