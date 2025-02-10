@@ -72,17 +72,17 @@ func CmdVoteInbound() *cobra.Command {
 				return err
 			}
 
-			inboundStatus, ok := types.InboundStatus_value[args[14]]
+			observationMode, ok := types.ObservationMode_value[args[14]]
 			if !ok {
-				return fmt.Errorf("wrong inbound status %s", args[14])
-			}
-			argsInboundStatus := types.InboundStatus(inboundStatus)
-
-			observationMode, ok := types.ObservationMode_value[args[15]]
-			if !ok {
-				return fmt.Errorf("wrong observation mode %s", args[15])
+				return fmt.Errorf("wrong observation mode %s", args[14])
 			}
 			argsObservationMode := types.ObservationMode(observationMode)
+
+			inboundStatus, ok := types.InboundStatus_value[args[15]]
+			if !ok {
+				return fmt.Errorf("wrong inbound status %s", args[15])
+			}
+			argsInboundStatus := types.InboundStatus(inboundStatus)
 
 			msg := types.NewMsgVoteInbound(
 				clientCtx.GetFromAddress().String(),
