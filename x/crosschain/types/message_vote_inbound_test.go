@@ -307,7 +307,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 		require.False(t, msg.IsCrossChainCall)
 	})
 
-	t.Run("can set inbound status and observation mode", func(t *testing.T) {
+	t.Run("can set inbound status and confirmation mode", func(t *testing.T) {
 		expectedInboundStatus := types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 		expectedConfirmationMode := types.ConfirmationMode_FAST
 

@@ -70,7 +70,7 @@ func CmdVoteOutbound() *cobra.Command {
 
 			confirmationMode, ok := types.ConfirmationMode_value[args[11]]
 			if !ok {
-				return fmt.Errorf("wrong observation mode %s", args[11])
+				return fmt.Errorf("wrong confirmation mode %s", args[11])
 			}
 			argsConfirmationMode := types.ConfirmationMode(confirmationMode)
 
