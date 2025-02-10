@@ -325,7 +325,7 @@ func (signer *Signer) prepareExecuteTx(
 		})
 	}
 
-	// sign gateway withdraw message by TSS
+	// sign gateway execute message by TSS
 	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	msgExecute, err := signer.createAndSignMsgExecute(
 		ctx,
@@ -340,7 +340,7 @@ func (signer *Signer) prepareExecuteTx(
 		return nil, err
 	}
 
-	// sign the withdraw transaction by relayer key
+	// sign the execute transaction by relayer key
 	tx, err := signer.signExecuteTx(ctx, *msgExecute)
 	if err != nil {
 		return nil, err

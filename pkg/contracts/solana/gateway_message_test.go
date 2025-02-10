@@ -1,8 +1,6 @@
 package solana_test
 
 import (
-	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -30,7 +28,6 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		hash := contracts.NewMsgWithdraw(chainID, nonce, amount, to).Hash()
 
 		// ASSERT
-		fmt.Println(hex.EncodeToString(hash[:]))
 		require.EqualValues(t, hash[:], wantHashBytes)
 	})
 }
@@ -76,7 +73,6 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		hash := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, 8, mintAccount, to, toAta).Hash()
 
 		// ASSERT
-		fmt.Println(hex.EncodeToString(hash[:]))
 		require.EqualValues(t, hash[:], wantHashBytes)
 	})
 }
