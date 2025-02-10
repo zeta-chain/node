@@ -99,7 +99,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // ObserveInbound observes the evm chain for inbounds and posts votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "ObserveInbound").Logger()
+	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
@@ -112,9 +112,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// https://github.com/zeta-chain/node/issues/3186
 	//return nil
 
-	// calculate the unscanned block range
+	// get the block range to scan
 	// Note: using separate scan range for each event incur more complexity (metrics, db, etc) and not worth it
-	startBlock, endBlock := ob.CalcUnscannedBlockRangeInboundSafe(config.BlockLimitPerScan)
+	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
 	if startBlock >= endBlock {
 		return nil
 	}

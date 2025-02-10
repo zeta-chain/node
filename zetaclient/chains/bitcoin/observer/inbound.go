@@ -21,15 +21,15 @@ import (
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "ObserveInbound").Logger()
+	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
 
 	// keep last block up-to-date
 	if err := ob.updateLastBlock(ctx); err != nil {
 		return err
 	}
 
-	// calculate the unscanned block range
-	startBlock, endBlock := ob.CalcUnscannedBlockRangeInboundSafe(config.BlockLimitPerScan)
+	// get the block range to scan
+	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
 	if startBlock >= endBlock {
 		return nil
 	}
@@ -37,7 +37,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// observe inbounds for the block range [startBlock, endBlock-1]
 	lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlock, endBlock-1)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error observing inbounds for block range [%d, %d]", startBlock, endBlock-1)
+		logger.Error().
+			Err(err).
+			Uint64("from", startBlock).
+			Uint64("to", endBlock-1).
+			Msg("error observing inbounds in block range")
 	}
 
 	// save last scanned block to both memory and db
@@ -62,7 +66,6 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 			// we have to re-scan this block next time
 			return blockNumber - 1, errors.Wrapf(err, "error getting bitcoin block %d", blockNumber)
 		}
-		ob.Logger().Inbound.Info().Msgf("block %d contains %d txs", blockNumber, len(res.Block.Tx))
 
 		if len(res.Block.Tx) <= 1 {
 			continue

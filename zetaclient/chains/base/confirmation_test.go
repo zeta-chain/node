@@ -8,7 +8,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-func Test_CalcUnscannedBlockRangeInboundSafe(t *testing.T) {
+func Test_GetScanRangeInboundSafe(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	tests := []struct {
@@ -67,13 +67,13 @@ func Test_CalcUnscannedBlockRangeInboundSafe(t *testing.T) {
 			ob.Observer.WithLastBlock(tt.lastBlock)
 			ob.Observer.WithLastBlockScanned(tt.lastScanned)
 
-			start, end := ob.CalcUnscannedBlockRangeInboundSafe(tt.blockLimit)
+			start, end := ob.GetScanRangeInboundSafe(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
 		})
 	}
 }
 
-func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
+func Test_GetScanRangeInboundFast(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	tests := []struct {
@@ -125,7 +125,7 @@ func Test_CalcUnscannedBlockRangeInboundFast(t *testing.T) {
 			ob.Observer.WithLastBlock(tt.lastBlock)
 			ob.Observer.WithLastBlockScanned(tt.lastScanned)
 
-			start, end := ob.CalcUnscannedBlockRangeInboundFast(tt.blockLimit)
+			start, end := ob.GetScanRangeInboundFast(tt.blockLimit)
 			require.Equal(t, tt.expectedBlockRange, [2]uint64{start, end})
 		})
 	}

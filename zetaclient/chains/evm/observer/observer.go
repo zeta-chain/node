@@ -286,7 +286,7 @@ func (ob *Observer) updateLastBlock(ctx context.Context) error {
 	}
 
 	// increment prom counter
-	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
+	metrics.GetBlockNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	return nil
 }

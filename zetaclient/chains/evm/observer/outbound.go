@@ -482,9 +482,9 @@ func (ob *Observer) checkConfirmedTx(
 	}
 
 	// check confirmations
-	if !ob.IsBlockConfirmedForOutboundSafe(receipt.BlockNumber.Uint64()) {
-		logger.Debug().
-			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), ob.LastBlock())
+	txBlock := receipt.BlockNumber.Uint64()
+	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
 		return nil, nil, false
 	}
 

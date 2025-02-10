@@ -7,7 +7,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -22,17 +21,11 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		ob.logger.Inbound.Info().
 			Str("tracker.hash", tracker.TxHash).
-			Str("tracker.coin-type", tracker.CoinType.String()).
-			Msgf("checking tracker")
-		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true)
-		if err != nil {
+			Str("tracker.coin_type", tracker.CoinType.String()).
+			Msg("Processing inbound tracker")
+		if _, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true); err != nil {
 			return err
 		}
-		ob.logger.Inbound.Info().
-			Str("inbound.chain", ob.Chain().Name).
-			Str("inbound.ballot", ballotIdentifier).
-			Str("inbound.coin-type", coin.CoinType_Gas.String()).
-			Msgf("Vote submitted for inbound Tracker")
 	}
 
 	return nil
@@ -42,22 +35,22 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error parsing btc tx hash")
 	}
 
 	tx, err := ob.rpc.GetRawTransactionVerbose(ctx, hash)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error getting btc raw tx verbose")
 	}
 
 	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error parsing btc block hash")
 	}
 
 	blockVb, err := ob.rpc.GetBlockVerbose(ctx, blockHash)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error getting btc block verbose")
 	}
 
 	if len(blockVb.Tx) <= 1 {
@@ -66,7 +59,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 
 	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "error getting btc tss address for chain %d", ob.Chain().ChainId)
 	}
 
 	// check confirmation
@@ -87,7 +80,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 		common.CalcDepositorFee,
 	)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error getting btc event")
 	}
 
 	if event == nil {
