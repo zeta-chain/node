@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,8 +28,7 @@ func NewBalancesCmd() *cobra.Command {
 		false,
 		"skip the BTC network",
 	)
-	cmd.Flags().String(flagERC20Network, "", "network from /zeta-chain/observer/supportedChains")
-	cmd.Flags().String(flagERC20Symbol, "", "symbol from /zeta-chain/fungible/foreign_coins")
+	registerERC20Flags(cmd)
 	return cmd
 }
 
@@ -51,27 +51,9 @@ func runBalances(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancelCause(context.Background())
 	defer cancel(nil)
 
-	// update config with dynamic ERC20
-	erc20ChainName, err := cmd.Flags().GetString(flagERC20Network)
+	err = processZRC20Flags(cmd, &conf)
 	if err != nil {
-		return err
-	}
-	erc20Symbol, err := cmd.Flags().GetString(flagERC20Symbol)
-	if err != nil {
-		return err
-	}
-	if erc20ChainName != "" && erc20Symbol != "" {
-		erc20Asset, zrc20ContractAddress, err := findERC20(
-			cmd.Context(),
-			conf,
-			erc20ChainName,
-			erc20Symbol,
-		)
-		if err != nil {
-			return err
-		}
-		conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(erc20Asset)
-		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
+		return fmt.Errorf("process ZRC20 flags: %w", err)
 	}
 
 	// initialize deployer runner with config

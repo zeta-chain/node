@@ -17,14 +17,10 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
-const flagERC20Network = "erc20-network"
-const flagERC20Symbol = "erc20-symbol"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -46,8 +42,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 		os.Exit(1)
 	}
 
-	cmd.Flags().String(flagERC20Network, "", "network from /zeta-chain/observer/supportedChains")
-	cmd.Flags().String(flagERC20Symbol, "", "symbol from /zeta-chain/fungible/foreign_coins")
+	registerERC20Flags(cmd)
 
 	// Retain the verbose flag
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
@@ -75,27 +70,9 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	// initialize logger
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
-	// update config with dynamic ERC20
-	erc20ChainName, err := cmd.Flags().GetString(flagERC20Network)
+	err = processZRC20Flags(cmd, &conf)
 	if err != nil {
-		return err
-	}
-	erc20Symbol, err := cmd.Flags().GetString(flagERC20Symbol)
-	if err != nil {
-		return err
-	}
-	if erc20ChainName != "" && erc20Symbol != "" {
-		erc20Asset, zrc20ContractAddress, err := findERC20(
-			cmd.Context(),
-			conf,
-			erc20ChainName,
-			erc20Symbol,
-		)
-		if err != nil {
-			return err
-		}
-		conf.Contracts.EVM.ERC20 = config.DoubleQuotedString(erc20Asset)
-		conf.Contracts.ZEVM.ERC20ZRC20Addr = config.DoubleQuotedString(zrc20ContractAddress)
+		return fmt.Errorf("process ZRC20 flags: %w", err)
 	}
 
 	// initialize context
@@ -199,44 +176,4 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 		})
 	}
 	return tests, nil
-}
-
-// findERC20 loads ERC20 addresses via gRPC given CLI flags
-func findERC20(ctx context.Context, conf config.Config, networkName, erc20Symbol string) (string, string, error) {
-	clients, err := zetae2econfig.GetZetacoreClient(conf)
-	if err != nil {
-		return "", "", fmt.Errorf("get zeta clients: %w", err)
-	}
-
-	supportedChainsRes, err := clients.Observer.SupportedChains(ctx, &observertypes.QuerySupportedChains{})
-	if err != nil {
-		return "", "", fmt.Errorf("get chain params: %w", err)
-	}
-
-	chainID := int64(0)
-	for _, chain := range supportedChainsRes.Chains {
-		if strings.EqualFold(chain.Network.String(), networkName) {
-			chainID = chain.ChainId
-			break
-		}
-	}
-	if chainID == 0 {
-		return "", "", fmt.Errorf("chain %s not found", networkName)
-	}
-
-	foreignCoinsRes, err := clients.Fungible.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
-	if err != nil {
-		return "", "", fmt.Errorf("get foreign coins: %w", err)
-	}
-
-	for _, coin := range foreignCoinsRes.ForeignCoins {
-		if coin.ForeignChainId != chainID {
-			continue
-		}
-		// sometimes symbol is USDT, sometimes it's like USDT.SEPOLIA
-		if strings.HasPrefix(coin.Symbol, erc20Symbol) || strings.HasSuffix(coin.Symbol, erc20Symbol) {
-			return coin.Asset, coin.Zrc20ContractAddress, nil
-		}
-	}
-	return "", "", fmt.Errorf("erc20 %s not found on %s", erc20Symbol, networkName)
 }
