@@ -220,18 +220,18 @@ export declare class InboundParams extends Message<InboundParams> {
   isCrossChainCall: boolean;
 
   /**
-   * confirmation mode used for the inbound
-   *
-   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 13;
-   */
-  confirmationMode: ConfirmationMode;
-
-  /**
    * status of the inbound observation
    *
    * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
    */
   status: InboundStatus;
+
+  /**
+   * confirmation mode used for the inbound
+   *
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 21;
+   */
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<InboundParams>);
 

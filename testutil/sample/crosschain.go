@@ -179,8 +179,8 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
-		ConfirmationMode:       ConfirmationModeFromRand(r),
 		Status:                 InboundStatusFromRand(r),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 }
 
@@ -195,8 +195,8 @@ func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
-		ConfirmationMode:       ConfirmationModeFromRand(r),
 		Status:                 InboundStatusFromRand(r),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 }
 
@@ -449,8 +449,8 @@ func CCTXfromRand(r *rand.Rand,
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
-		ConfirmationMode:       ConfirmationModeFromRand(r),
 		Status:                 InboundStatusFromRand(r),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 
 	outbound := &types.OutboundParams{

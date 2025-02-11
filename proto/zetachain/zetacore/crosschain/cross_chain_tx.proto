@@ -66,11 +66,14 @@ message InboundParams {
   // with assets only used for protocol contract version 2
   bool is_cross_chain_call = 12;
 
-  // confirmation mode used for the inbound
-  ConfirmationMode confirmation_mode = 13;
-
   // status of the inbound observation
   InboundStatus status = 20;
+
+  // confirmation mode used for the inbound
+  ConfirmationMode confirmation_mode = 21;
+
+  // not used. do not edit.
+  reserved 13 to 19;
 }
 
 message ZetaAccounting {

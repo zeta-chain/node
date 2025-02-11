@@ -59048,12 +59048,12 @@ definitions:
         title: |-
           this field describes if a smart contract call should be made for a inbound
           with assets only used for protocol contract version 2
-      confirmation_mode:
-        $ref: '#/definitions/crosschainConfirmationMode'
-        title: confirmation mode used for the inbound
       status:
         $ref: '#/definitions/crosschainInboundStatus'
         title: status of the inbound observation
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the inbound
   crosschainInboundStatus:
     type: string
     enum:

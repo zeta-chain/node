@@ -269,8 +269,8 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		BallotIndex:            index,
 		CoinType:               msg.CoinType,
 		IsCrossChainCall:       msg.IsCrossChainCall,
-		ConfirmationMode:       msg.ConfirmationMode,
 		Status:                 msg.Status,
+		ConfirmationMode:       msg.ConfirmationMode,
 	}
 
 	outboundParams := &OutboundParams{
@@ -289,9 +289,9 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
-		// Use same confirmation mode from vote message as placeholder.
-		// It will be overwritten by actual confirmation mode in the outbound vote message
-		ConfirmationMode: msg.ConfirmationMode,
+		// use SAFE confirmation mode as default value.
+		// it will be overwritten by actual confirmation mode in the outbound vote message.
+		ConfirmationMode: ConfirmationMode_SAFE,
 	}
 
 	status := &Status{
