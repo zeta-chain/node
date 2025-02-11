@@ -26,6 +26,7 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -45,6 +46,15 @@ func chainParamsByChainID(chainParams []*types.ChainParams, id int64) *types.Cha
 	for _, chainParam := range chainParams {
 		if chainParam.ChainId == id {
 			return chainParam
+		}
+	}
+	return nil
+}
+
+func foreignCoinByChainID(foreignCoins []fungibletypes.ForeignCoins, id int64) *fungibletypes.ForeignCoins {
+	for _, coin := range foreignCoins {
+		if coin.ForeignChainId == id {
+			return &coin
 		}
 	}
 	return nil
@@ -140,23 +150,25 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	// set ZEVM contracts
+	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(r.Ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
+	if err != nil {
+		return err
+	}
+
+	ethForeignCoin := foreignCoinByChainID(foreignCoins.ForeignCoins, evmChainID.Int64())
+	if ethForeignCoin != nil {
+		r.ETHZRC20Addr = common.HexToAddress(ethForeignCoin.Zrc20ContractAddress)
+		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
 	if c := conf.Contracts.ZEVM.SystemContractAddr; c != "" {
 		r.SystemContractAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid SystemContractAddr: %w", err)
 		}
 		r.SystemContract, err = systemcontract.NewSystemContract(r.SystemContractAddr, r.ZEVMClient)
-		if err != nil {
-			return err
-		}
-	}
-
-	if c := conf.Contracts.ZEVM.ETHZRC20Addr; c != "" {
-		r.ETHZRC20Addr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ETHZRC20Addr: %w", err)
-		}
-		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
