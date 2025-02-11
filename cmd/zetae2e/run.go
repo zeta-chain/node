@@ -23,7 +23,7 @@ import (
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
-const flagERC20ChainName = "erc20-chain-name"
+const flagERC20NetworkName = "erc20-network-name"
 const flagERC20Symbol = "erc20-symbol"
 
 // NewRunCmd returns the run command
@@ -46,7 +46,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 		os.Exit(1)
 	}
 
-	cmd.Flags().String(flagERC20ChainName, "", "chain_name from /zeta-chain/observer/supportedChains")
+	cmd.Flags().String(flagERC20NetworkName, "", "chain_name from /zeta-chain/observer/supportedChains")
 	cmd.Flags().String(flagERC20Symbol, "", "symbol from /zeta-chain/fungible/foreign_coins")
 
 	// Retain the verbose flag
@@ -76,7 +76,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
 	// update config with dynamic ERC20
-	erc20ChainName, err := cmd.Flags().GetString(flagERC20ChainName)
+	erc20ChainName, err := cmd.Flags().GetString(flagERC20NetworkName)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, e
 }
 
 // findERC20 loads ERC20 addresses via gRPC given CLI flags
-func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Symbol string) (string, string, error) {
+func findERC20(ctx context.Context, conf config.Config, networkName, erc20Symbol string) (string, string, error) {
 	clients, err := zetae2econfig.GetZetacoreClient(conf)
 	if err != nil {
 		return "", "", fmt.Errorf("get zeta clients: %w", err)
@@ -215,13 +215,13 @@ func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Sym
 
 	chainID := int64(0)
 	for _, chain := range supportedChainsRes.Chains {
-		if chain.Name == erc20ChainName {
+		if strings.EqualFold(chain.Network.String(), networkName) {
 			chainID = chain.ChainId
 			break
 		}
 	}
 	if chainID == 0 {
-		return "", "", fmt.Errorf("chain %s not found", erc20ChainName)
+		return "", "", fmt.Errorf("chain %s not found", networkName)
 	}
 
 	foreignCoinsRes, err := clients.Fungible.ForeignCoinsAll(ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
@@ -238,5 +238,5 @@ func findERC20(ctx context.Context, conf config.Config, erc20ChainName, erc20Sym
 			return coin.Asset, coin.Zrc20ContractAddress, nil
 		}
 	}
-	return "", "", fmt.Errorf("erc20 %s not found on %s", erc20Symbol, erc20ChainName)
+	return "", "", fmt.Errorf("erc20 %s not found on %s", erc20Symbol, networkName)
 }
