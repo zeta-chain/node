@@ -206,7 +206,7 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 		ReceiverChainId: r.Int63(),
 		CoinType:        coin.CoinType(r.Intn(100)),
 		Amount:          sdkmath.NewUint(uint64(r.Int63())),
-		TssNonce:        r.Uint64(),
+		TssNonce:        uint64(r.Uint32()), // using r.Uint32() can avoid overflow when dealing with `PendingNonces`
 		CallOptions: &types.CallOptions{
 			GasLimit: r.Uint64(),
 		},

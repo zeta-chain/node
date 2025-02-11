@@ -779,17 +779,21 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 				outboundParams.TssNonce,
 			)
 			require.False(t, found)
-			pn, found := zk.ObserverKeeper.GetPendingNonces(
-				ctx,
-				outboundParams.TssPubkey,
-				outboundParams.ReceiverChainId,
-			)
-			require.True(t, found)
-			require.GreaterOrEqual(t, pn.NonceLow, int64(outboundParams.TssNonce)+1)
-			require.GreaterOrEqual(t, pn.NonceHigh, int64(outboundParams.TssNonce)+1)
 			_, found = k.GetInboundHashToCctx(ctx, cctx.InboundParams.ObservedHash)
 			require.True(t, found)
 		}
+
+		// assert pending nonces
+		pn, found := zk.ObserverKeeper.GetPendingNonces(
+			ctx,
+			cctx.GetCurrentOutboundParam().TssPubkey,
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+		)
+		require.True(t, found)
+		require.GreaterOrEqual(t, pn.NonceLow, int64(cctx.GetCurrentOutboundParam().TssNonce)+1)
+		require.GreaterOrEqual(t, pn.NonceHigh, int64(cctx.GetCurrentOutboundParam().TssNonce)+1)
+
+		// assert nonce to cctx mapping
 		ncctx, found := zk.ObserverKeeper.GetNonceToCctx(ctx,
 			tssPubkey,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,

@@ -415,7 +415,7 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
 		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
 		require.Equal(t, types.ConfirmationMode_FAST, cctx.GetInboundParams().ConfirmationMode)
-		require.Equal(t, types.ConfirmationMode_FAST, cctx.GetCurrentOutboundParam().ConfirmationMode)
+		require.Equal(t, types.ConfirmationMode_SAFE, cctx.GetCurrentOutboundParam().ConfirmationMode)
 		require.Equal(t, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.GetInboundParams().Status)
 	})
 
