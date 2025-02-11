@@ -3,7 +3,7 @@ package observer
 
 import (
 	"context"
-	"math/big"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -169,19 +169,6 @@ func (ob *Observer) setPendingNonce(nonce uint64) {
 	ob.pendingNonce = nonce
 }
 
-// ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
-func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
-	if amount.Cmp(big.NewInt(BigValueSats)) >= 0 {
-		return BigValueConfirmationCount
-	}
-	if BigValueConfirmationCount < ob.ChainParams().ConfirmationCount {
-		return BigValueConfirmationCount
-	}
-
-	// #nosec G115 always in range
-	return int64(ob.ChainParams().ConfirmationCount)
-}
-
 // GetBlockByNumberCached gets cached block (and header) by block number
 func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int64) (*BTCBlockNHeader, error) {
 	if result, ok := ob.BlockCache().Get(blockNumber); ok {
@@ -234,4 +221,32 @@ func (ob *Observer) GetBroadcastedTx(nonce uint64) (string, bool) {
 
 func (ob *Observer) isNodeEnabled() bool {
 	return ob.nodeEnabled.Load()
+}
+
+// updateLastBlock is a helper function to update the last block number.
+// Note: keep last block up-to-date helps to avoid inaccurate confirmation.
+func (ob *Observer) updateLastBlock(ctx context.Context) error {
+	blockNumber, err := ob.rpc.GetBlockCount(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "error getting block number")
+	}
+	if blockNumber < 0 {
+		return fmt.Errorf("block number is negative: %d", blockNumber)
+	}
+
+	// 0 will be returned if the node is not synced
+	if blockNumber == 0 {
+		ob.nodeEnabled.Store(false)
+		ob.Logger().Chain.Debug().Err(err).Msg("Bitcoin node is not enabled")
+		return nil
+	}
+	ob.nodeEnabled.Store(true)
+
+	// #nosec G115 checked positive
+	if uint64(blockNumber) < ob.LastBlock() {
+		return fmt.Errorf("block number should not decrease: current %d last %d", blockNumber, ob.LastBlock())
+	}
+	ob.WithLastBlock(uint64(blockNumber))
+
+	return nil
 }
