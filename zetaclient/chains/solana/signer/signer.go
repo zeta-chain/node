@@ -17,7 +17,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -499,9 +498,9 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 // IsSenderZetaChain checks if the sender chain is ZetaChain
 // TODO(revamp): move to another package more general for cctx functions
 func IsSenderZetaChain(
-	cctx *crosschaintypes.CrossChainTx,
+	cctx *types.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
-		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound
+		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound
 }
