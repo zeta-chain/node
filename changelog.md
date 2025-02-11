@@ -8,6 +8,7 @@
 * [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
 * [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
 * [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
+* [3520] (https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 
 ### Refactor
 
