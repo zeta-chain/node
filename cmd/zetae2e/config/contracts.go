@@ -150,7 +150,10 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	// set ZEVM contracts
-	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(r.Ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
+	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(
+		r.Ctx,
+		&fungibletypes.QueryAllForeignCoinsRequest{},
+	)
 	if err != nil {
 		return err
 	}

@@ -3,17 +3,16 @@ package runner
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
-
-var errNilZRC20 = errors.New("zrc20 contract is nil")
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
 type AccountBalances struct {
@@ -39,11 +38,21 @@ type AccountBalancesDiff struct {
 	ERC20 *big.Int
 }
 
-func (r *E2ERunner) getZRC20BalanceSafe(z *zrc20.ZRC20) (*big.Int, error) {
-	if z == nil {
-		return new(big.Int), errNilZRC20
+type ERC20BalanceOf interface {
+	BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error)
+}
+
+func (r *E2ERunner) getERC20BalanceSafe(z ERC20BalanceOf, name string) *big.Int {
+	// have to use reflect to check nil interface because go'ism
+	if z == nil || reflect.ValueOf(z).IsNil() {
+		r.Logger.Print("❓ balance of %s: nil", name)
+		return new(big.Int)
 	}
-	return z.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	res, err := z.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	if err != nil {
+		r.Logger.Print("❓ balance of %s: %v", name, err)
+	}
+	return res
 }
 
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
@@ -57,40 +66,19 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	if err != nil {
 		return AccountBalances{}, fmt.Errorf("get wzeta balance: %w", err)
 	}
-	zetaEth, err := r.getZRC20BalanceSafe(r.ETHZRC20)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get eth zrc20 balance: %w", err)
-	}
-	zetaErc20, err := r.getZRC20BalanceSafe(r.ERC20ZRC20)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get erc20 zrc20 balance: %w", err)
-	}
-	zetaBtc, err := r.getZRC20BalanceSafe(r.BTCZRC20)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get btc zrc20 balance: %w", err)
-	}
-	zetaSol, err := r.getZRC20BalanceSafe(r.SOLZRC20)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get sol zrc20 balance: %w", err)
-	}
-	zetaSPL, err := r.getZRC20BalanceSafe(r.SPLZRC20)
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get spl zrc20 balance: %w", err)
-	}
+	zetaEth := r.getERC20BalanceSafe(r.ETHZRC20, "eth zrc20")
+	zetaErc20 := r.getERC20BalanceSafe(r.ERC20ZRC20, "erc20 zrc20")
+	zetaBtc := r.getERC20BalanceSafe(r.BTCZRC20, "btc zrc20")
+	zetaSol := r.getERC20BalanceSafe(r.SOLZRC20, "sol zrc20")
+	zetaSPL := r.getERC20BalanceSafe(r.SPLZRC20, "spl zrc20")
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
 	if err != nil {
 		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
 	}
-	evmZeta, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get eth zeta balance: %w", err)
-	}
-	evmErc20, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	if err != nil {
-		return AccountBalances{}, fmt.Errorf("get eth erc20 balance: %w", err)
-	}
+	evmZeta := r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
+	evmErc20 := r.getERC20BalanceSafe(r.ZetaEth, "eth erc20")
 
 	// bitcoin
 	var BtcBTC string
