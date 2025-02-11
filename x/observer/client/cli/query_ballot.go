@@ -72,5 +72,6 @@ func CmdAllBallots() *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
 	return cmd
 }

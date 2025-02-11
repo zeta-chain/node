@@ -37,11 +37,11 @@ var (
 		Help:      "Count of getLogs per chain",
 	}, []string{"chain"})
 
-	// GetBlockByNumberPerChain is a counter that contains the number of getBlockByNumber per chain
-	GetBlockByNumberPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
+	// GetBlockNumberPerChain is a counter that contains the number of getBlockNumber per chain
+	GetBlockNumberPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
-		Name:      "rpc_getBlockByNumber_count",
-		Help:      "Count of getLogs per chain",
+		Name:      "rpc_getBlockNumber_count",
+		Help:      "Count of blockNumber per chain",
 	}, []string{"chain"})
 
 	// TSSNodeBlamePerPubKey is a counter that contains the number of tss node blame per pubkey
