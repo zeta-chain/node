@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -50,16 +51,16 @@ func chainParamsByChainID(chainParams []*types.ChainParams, id int64) *types.Cha
 	return nil
 }
 
-func foreignCoinByChainID(foreignCoins []fungibletypes.ForeignCoins, id int64) *fungibletypes.ForeignCoins {
-	for _, coin := range foreignCoins {
-		if coin.ForeignChainId == id {
-			return &coin
+func foreignCoinByChainID(foreignCoins []fungibletypes.ForeignCoins, id int64, coinType coin.CoinType) *fungibletypes.ForeignCoins {
+	for _, fCoin := range foreignCoins {
+		if fCoin.ForeignChainId == id && fCoin.CoinType == coinType {
+			return &fCoin
 		}
 	}
 	return nil
 }
 
-func setContractsEVM(r *runner.E2ERunner, params *types.ChainParams) error {
+func setContractsGatewayEVM(r *runner.E2ERunner, params *types.ChainParams) error {
 	r.GatewayEVMAddr = common.HexToAddress(params.GatewayAddress)
 	if r.GatewayEVMAddr == (common.Address{}) {
 		return nil
@@ -116,7 +117,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
 
-	err = setContractsEVM(r, evmChainParams)
+	err = setContractsGatewayEVM(r, evmChainParams)
 	if err != nil {
 		return fmt.Errorf("setContractsGatewayEVM: %w", err)
 	}
@@ -141,7 +142,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		return err
 	}
 
-	ethForeignCoin := foreignCoinByChainID(foreignCoins.ForeignCoins, evmChainID.Int64())
+	ethForeignCoin := foreignCoinByChainID(foreignCoins.ForeignCoins, evmChainID.Int64(), coin.CoinType_Gas)
 	if ethForeignCoin != nil {
 		r.ETHZRC20Addr = common.HexToAddress(ethForeignCoin.Zrc20ContractAddress)
 		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
