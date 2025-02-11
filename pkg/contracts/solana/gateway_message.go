@@ -13,6 +13,7 @@ const (
 	InstructionWithdrawSplToken  byte = 2
 	InstructionWhitelistSplToken byte = 3
 	InstructionExecute           byte = 5
+	InstructionExecuteSPL        byte = 6
 )
 
 var InstructionIdentifier = []byte("ZETACHAIN")
@@ -377,6 +378,167 @@ func (msg *MsgWithdrawSPL) SigV() uint8 {
 
 // Signer returns the signer of the message
 func (msg *MsgWithdrawSPL) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgExecuteSPL is the message for the Solana gateway execute_spl_token instruction
+type MsgExecuteSPL struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the execute_spl_token
+	nonce uint64
+
+	// amount is the lamports amount for the execute_spl_token
+	amount uint64
+
+	// mintAccount is the address for the spl token
+	mintAccount solana.PublicKey
+
+	// decimals of spl token
+	decimals uint8
+
+	// to is the recipient address for the execute_spl_token
+	to solana.PublicKey
+
+	// recipientAta is the recipient associated token account for the execute_spl_token
+	recipientAta solana.PublicKey
+
+	// signature is the signature of the message
+	signature [65]byte
+
+	// Sender is the sender address for the execute spl
+	sender [20]byte
+
+	// Data for execute
+	data []byte
+
+	// Remaining accounts for arbirtrary program
+	remainingAccounts []*solana.AccountMeta
+}
+
+// NewMsgExecuteSPL returns a new execute spl message
+func NewMsgExecuteSPL(
+	chainID, nonce, amount uint64,
+	decimals uint8,
+	mintAccount, to, toAta solana.PublicKey,
+	sender [20]byte,
+	data []byte,
+	remainingAccounts []*solana.AccountMeta,
+) *MsgExecuteSPL {
+	return &MsgExecuteSPL{
+		chainID:           chainID,
+		nonce:             nonce,
+		amount:            amount,
+		to:                to,
+		recipientAta:      toAta,
+		mintAccount:       mintAccount,
+		decimals:          decimals,
+		sender:            sender,
+		data:              data,
+		remainingAccounts: remainingAccounts,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgExecuteSPL) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgExecuteSPL) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgExecuteSPL) Amount() uint64 {
+	return msg.amount
+}
+
+// To returns the recipient address of the message
+func (msg *MsgExecuteSPL) To() solana.PublicKey {
+	return msg.to
+}
+
+func (msg *MsgExecuteSPL) RecipientAta() solana.PublicKey {
+	return msg.recipientAta
+}
+
+func (msg *MsgExecuteSPL) MintAccount() solana.PublicKey {
+	return msg.mintAccount
+}
+
+func (msg *MsgExecuteSPL) Decimals() uint8 {
+	return msg.decimals
+}
+
+// Sender returns the sender address of the message
+func (msg *MsgExecuteSPL) Sender() [20]byte {
+	return msg.sender
+}
+
+// Data returns the data of the message
+func (msg *MsgExecuteSPL) Data() []byte {
+	return msg.data
+}
+
+// RemainingAccounts returns the remaining accounts of the message
+func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
+	return msg.remainingAccounts
+}
+
+// Hash packs the execute spl message and computes the hash
+func (msg *MsgExecuteSPL) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionExecuteSPL)
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	message = append(message, msg.mintAccount.Bytes()...)
+
+	message = append(message, msg.recipientAta.Bytes()...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgExecuteSPL) SetSignature(signature [65]byte) *MsgExecuteSPL {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgExecuteSPL) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgExecuteSPL) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgExecuteSPL) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgExecuteSPL) Signer() (common.Address, error) {
 	msgHash := msg.Hash()
 	msgSig := msg.SigRSV()
 

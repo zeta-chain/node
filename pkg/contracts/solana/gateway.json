@@ -530,6 +530,162 @@
       ]
     },
     {
+      "name": "execute_spl_token",
+      "docs": [
+        "Execute with SPL tokens. Caller is TSS.",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `decimals` - Token decimals for precision.",
+        "* `amount` - The amount of tokens to withdraw.",
+        "* `sender` - Sender from ZEVM.",
+        "* `data` - Data to pass to destination program.",
+        "* `signature` - The TSS signature.",
+        "* `recovery_id` - The recovery ID for signature verification.",
+        "* `message_hash` - Message hash for signature verification.",
+        "* `nonce` - The current nonce value."
+      ],
+      "discriminator": [
+        121,
+        99,
+        79,
+        69,
+        77,
+        243,
+        46,
+        199
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the withdrawal."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pda_ata",
+          "docs": [
+            "The associated token account for the Gateway PDA."
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint_account",
+          "docs": [
+            "The mint account of the SPL token being withdrawn."
+          ]
+        },
+        {
+          "name": "destination_program",
+          "docs": [
+            "The destination program."
+          ]
+        },
+        {
+          "name": "destination_program_pda"
+        },
+        {
+          "name": "destination_program_pda_ata",
+          "docs": [
+            "The destination program associated token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The token program."
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The associated token program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program."
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "decimals",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "sender",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initialize",
       "docs": [
         "Initializes the gateway PDA.",
