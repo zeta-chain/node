@@ -51,7 +51,11 @@ func chainParamsByChainID(chainParams []*types.ChainParams, id int64) *types.Cha
 	return nil
 }
 
-func foreignCoinByChainID(foreignCoins []fungibletypes.ForeignCoins, id int64, coinType coin.CoinType) *fungibletypes.ForeignCoins {
+func foreignCoinByChainID(
+	foreignCoins []fungibletypes.ForeignCoins,
+	id int64,
+	coinType coin.CoinType,
+) *fungibletypes.ForeignCoins {
 	for _, fCoin := range foreignCoins {
 		if fCoin.ForeignChainId == id && fCoin.CoinType == coinType {
 			return &fCoin
