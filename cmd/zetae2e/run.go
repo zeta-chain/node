@@ -23,7 +23,7 @@ import (
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
-const flagERC20NetworkName = "erc20-network-name"
+const flagERC20Network = "erc20-network"
 const flagERC20Symbol = "erc20-symbol"
 
 // NewRunCmd returns the run command
@@ -46,7 +46,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 		os.Exit(1)
 	}
 
-	cmd.Flags().String(flagERC20NetworkName, "", "chain_name from /zeta-chain/observer/supportedChains")
+	cmd.Flags().String(flagERC20Network, "", "network from /zeta-chain/observer/supportedChains")
 	cmd.Flags().String(flagERC20Symbol, "", "symbol from /zeta-chain/fungible/foreign_coins")
 
 	// Retain the verbose flag
@@ -76,7 +76,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
 	// update config with dynamic ERC20
-	erc20ChainName, err := cmd.Flags().GetString(flagERC20NetworkName)
+	erc20ChainName, err := cmd.Flags().GetString(flagERC20Network)
 	if err != nil {
 		return err
 	}

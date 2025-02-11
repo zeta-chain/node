@@ -51,6 +51,7 @@ func (r *E2ERunner) getERC20BalanceSafe(z ERC20BalanceOf, name string) *big.Int 
 	res, err := z.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	if err != nil {
 		r.Logger.Print("❓ balance of %s: %v", name, err)
+		return new(big.Int)
 	}
 	return res
 }
@@ -78,7 +79,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		return AccountBalances{}, fmt.Errorf("get eth balance: %w", err)
 	}
 	evmZeta := r.getERC20BalanceSafe(r.ZetaEth, "zeta eth")
-	evmErc20 := r.getERC20BalanceSafe(r.ZetaEth, "eth erc20")
+	evmErc20 := r.getERC20BalanceSafe(r.ERC20, "eth erc20")
 
 	// bitcoin
 	var BtcBTC string

@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
@@ -60,7 +59,8 @@ func foreignCoinByChainID(foreignCoins []fungibletypes.ForeignCoins, id int64) *
 	return nil
 }
 
-func setContractsGatewayEVM(r *runner.E2ERunner) error {
+func setContractsEVM(r *runner.E2ERunner, params *types.ChainParams) error {
+	r.GatewayEVMAddr = common.HexToAddress(params.GatewayAddress)
 	if r.GatewayEVMAddr == (common.Address{}) {
 		return nil
 	}
@@ -73,27 +73,18 @@ func setContractsGatewayEVM(r *runner.E2ERunner) error {
 	if err != nil {
 		return err
 	}
-	r.ZetaEthAddr, err = r.GatewayEVM.ZetaToken(&bind.CallOpts{})
-	if err != nil {
-		return fmt.Errorf("get ZetaEthAddr: %w", err)
-	}
+	r.ZetaEthAddr = common.HexToAddress(params.ZetaTokenContractAddress)
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
 
-	r.ConnectorEthAddr, err = r.GatewayEVM.ZetaConnector(&bind.CallOpts{})
-	if err != nil {
-		return fmt.Errorf("get ConnectorEthAddr: %w", err)
-	}
+	r.ConnectorEthAddr = common.HexToAddress(params.ConnectorContractAddress)
 	r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
 	if err != nil {
 		return err
 	}
-	r.ERC20CustodyAddr, err = r.GatewayEVM.Custody(&bind.CallOpts{})
-	if err != nil {
-		return fmt.Errorf("get ERC20CustodyAddr: %w", err)
-	}
+	r.ERC20CustodyAddr = common.HexToAddress(params.Erc20CustodyContractAddress)
 	r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 	if err != nil {
 		return err
@@ -125,15 +116,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
 
-	if c := conf.Contracts.EVM.Gateway; c != "" {
-		r.GatewayEVMAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid GatewayAddr: %w", err)
-		}
-	} else {
-		r.GatewayEVMAddr = common.HexToAddress(evmChainParams.GatewayAddress)
-	}
-	err = setContractsGatewayEVM(r)
+	err = setContractsEVM(r, evmChainParams)
 	if err != nil {
 		return fmt.Errorf("setContractsGatewayEVM: %w", err)
 	}
