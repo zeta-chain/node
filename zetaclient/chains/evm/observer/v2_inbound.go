@@ -141,6 +141,9 @@ func (ob *Observer) parseAndValidateDepositEvents(
 			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
 			Msg("invalid Deposited event")
 	}
+
+	// order events by height, tx index and event index (ascending)
+	// this ensures the first event is observed if there are multiple in the same tx
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
 			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
@@ -292,6 +295,9 @@ func (ob *Observer) parseAndValidateCallEvents(
 			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
 			Msg("invalid Called event")
 	}
+
+	// order events by height, tx index and event index (ascending)
+	// this ensures the first event is observed if there are multiple in the same tx
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
 			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
@@ -423,6 +429,9 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
 			Msg("invalid DepositedAndCalled event")
 	}
+
+	// order events by height, tx index and event index (ascending)
+	// this ensures the first event is observed if there are multiple in the same tx
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
 			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
