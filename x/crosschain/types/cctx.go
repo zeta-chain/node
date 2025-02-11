@@ -155,6 +155,9 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 			GasLimit: gasLimit,
 		},
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
+		// Inherit same confirmation mode from original outbound as placeholder.
+		// It will be overwritten by actual confirmation mode in the outbound vote message
+		ConfirmationMode: m.GetCurrentOutboundParam().ConfirmationMode,
 	}
 
 	// TODO : Refactor to move CoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
@@ -286,6 +289,9 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
+		// Use same confirmation mode from vote message as placeholder.
+		// It will be overwritten by actual confirmation mode in the outbound vote message
+		ConfirmationMode: msg.ConfirmationMode,
 	}
 
 	status := &Status{

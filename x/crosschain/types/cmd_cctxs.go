@@ -291,6 +291,10 @@ func newCmdCCTX(
 			Sender:       sender,
 			CoinType:     coin.CoinType_Cmd,
 			ObservedHash: inboundHash,
+			// inbound in Cmd CCTX initiated from ZetaChain is deemed safely confirmed
+			ConfirmationMode: ConfirmationMode_SAFE,
+			// irrelevant to observer voting, set it to success by default
+			Status: InboundStatus_SUCCESS,
 		},
 		OutboundParams: []*OutboundParams{
 			{
@@ -304,6 +308,8 @@ func newCmdCCTX(
 				GasPrice:       medianGasPrice,
 				GasPriorityFee: priorityFee,
 				TssPubkey:      tssPubKey,
+				// use same confirmation mode as inbound, will be overwritten by actual confirmation mode
+				ConfirmationMode: ConfirmationMode_SAFE,
 			},
 		},
 	}

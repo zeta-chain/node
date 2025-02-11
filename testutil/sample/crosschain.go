@@ -179,6 +179,8 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
+		Status:                 InboundStatusFromRand(r),
 	}
 }
 
@@ -193,6 +195,8 @@ func InboundParamsValidChainID(r *rand.Rand) *types.InboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
+		Status:                 InboundStatusFromRand(r),
 	}
 }
 
@@ -212,6 +216,7 @@ func OutboundParams(r *rand.Rand) *types.OutboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		GasUsed:                r.Uint64(),
 		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 }
 
@@ -230,6 +235,7 @@ func OutboundParamsValidChainID(r *rand.Rand) *types.OutboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		GasUsed:                r.Uint64(),
 		EffectiveGasPrice:      sdkmath.NewInt(r.Int63()),
+		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 }
 

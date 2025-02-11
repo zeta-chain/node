@@ -393,7 +393,7 @@ func Test_NewCCTX(t *testing.T) {
 			Asset:                   asset,
 			EventIndex:              eventIndex,
 			ProtocolContractVersion: types.ProtocolContractVersion_V2,
-			ConfirmationMode:        types.ConfirmationMode_SAFE,
+			ConfirmationMode:        types.ConfirmationMode_FAST,
 			Status:                  types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
 		}
 		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
@@ -414,7 +414,8 @@ func Test_NewCCTX(t *testing.T) {
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
 		require.Equal(t, types.ProtocolContractVersion_V2, cctx.ProtocolContractVersion)
-		require.Equal(t, types.ConfirmationMode_SAFE, cctx.GetInboundParams().ConfirmationMode)
+		require.Equal(t, types.ConfirmationMode_FAST, cctx.GetInboundParams().ConfirmationMode)
+		require.Equal(t, types.ConfirmationMode_FAST, cctx.GetCurrentOutboundParam().ConfirmationMode)
 		require.Equal(t, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.GetInboundParams().Status)
 	})
 
