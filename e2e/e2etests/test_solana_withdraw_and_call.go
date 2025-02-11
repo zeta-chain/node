@@ -44,36 +44,19 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// load deployer private key
 	privkey := r.GetSolanaPrivKey()
 
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
-
+	// check balances before withdraw
 	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
-	gatewayPda := r.ComputePdaAddress()
 
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(gatewayPda.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(privkey.PublicKey().Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: []byte("hello"),
-	}
-
-	msgEncoded, err := abiArgs.Pack(msg)
-	require.NoError(r, err)
-
-	// check balances before withdraw
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
 
 	senderBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, privkey.PublicKey())
 	require.NoError(r, err)
 
-	// withdraw
-	tx := r.WithdrawAndCallSOLZRC20(connected, withdrawAmount, approvedAmount, msgEncoded)
+	// withdraw and call
+	tx := r.WithdrawAndCallSOLZRC20(connected, withdrawAmount, approvedAmount, []byte("hello"))
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

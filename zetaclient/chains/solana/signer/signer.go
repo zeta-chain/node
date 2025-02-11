@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -144,7 +145,7 @@ func (signer *Signer) TryProcessOutbound(
 		tx = whitelistTx
 
 	case coin.CoinType_Gas:
-		if cctx.InboundParams.IsCrossChainCall && !cctx.IsCurrentOutboundRevert() { // TODO: is this ok condition?
+		if cctx.InboundParams.IsCrossChainCall && IsSenderZetaChain(cctx, zetacoreClient) {
 			executeTx, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
@@ -493,4 +494,14 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 	}
 	solBalance := float64(result.Value) / float64(solana.LAMPORTS_PER_SOL)
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
+}
+
+// IsSenderZetaChain checks if the sender chain is ZetaChain
+// TODO(revamp): move to another package more general for cctx functions
+func IsSenderZetaChain(
+	cctx *crosschaintypes.CrossChainTx,
+	zetacoreClient interfaces.ZetacoreClient,
+) bool {
+	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
+		cctx.CctxStatus.Status == crosschaintypes.CctxStatus_PendingOutbound
 }

@@ -15,6 +15,8 @@ const (
 	InstructionExecute           byte = 5
 )
 
+var InstructionIdentifier []byte = []byte("ZETACHAIN")
+
 // MsgWithdraw is the message for the Solana gateway withdraw instruction
 type MsgWithdraw struct {
 	// chainID is the chain ID of Solana chain
@@ -68,7 +70,7 @@ func (msg *MsgWithdraw) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("ZETACHAIN")...)
+	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWithdraw)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
@@ -202,7 +204,7 @@ func (msg *MsgExecute) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("ZETACHAIN")...)
+	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionExecute)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
@@ -331,7 +333,7 @@ func (msg *MsgWithdrawSPL) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("ZETACHAIN")...)
+	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWithdrawSplToken)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
@@ -437,7 +439,7 @@ func (msg *MsgWhitelist) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("ZETACHAIN")...)
+	message = append(message, InstructionIdentifier...)
 	message = append(message, InstructionWhitelistSplToken)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)

@@ -53,7 +53,7 @@ func (r *E2ERunner) VerifySolanaWithdrawalAmountFromCCTX(cctx *crosschaintypes.C
 
 	// 1st instruction is the withdraw
 	instruction := tx.Message.Instructions[0]
-	instWithdrae, err := solanacontracts.ParseInstructionWithdraw(instruction)
+	instWithdrae, err := solanacontracts.TryParseInstructionWithdraw(instruction)
 	require.NoError(r, err)
 
 	// verify the amount
