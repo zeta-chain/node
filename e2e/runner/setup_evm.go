@@ -109,6 +109,11 @@ func (r *E2ERunner) SetupEVM() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
+	// set the connector contract address in gateway
+	// this is deployed on the legacy side
+	txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, r.ConnectorEthAddr)
+	require.NoError(r, err)
+
 	// deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
 	require.NoError(r, err)
@@ -123,6 +128,7 @@ func (r *E2ERunner) SetupEVM() {
 	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
+	ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 
 	// check isZetaChain is false

@@ -3,7 +3,10 @@ package config
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -19,56 +22,110 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/node/x/observer/types"
 )
+
+func chainParamsBySelector(
+	chainParams []*types.ChainParams,
+	selector func(chainID int64, additionalChains []chains.Chain) bool,
+) *types.ChainParams {
+	for _, chainParam := range chainParams {
+		if selector(chainParam.ChainId, nil) {
+			return chainParam
+		}
+	}
+	return nil
+}
+
+func chainParamsByChainId(chainParams []*types.ChainParams, id int64) *types.ChainParams {
+	for _, chainParam := range chainParams {
+		if chainParam.ChainId == id {
+			return chainParam
+		}
+	}
+	return nil
+}
+
+func setContractsGatewayEVM(r *runner.E2ERunner) error {
+	if r.GatewayEVMAddr == (common.Address{}) {
+		return nil
+	}
+	gatewayCode, err := r.EVMClient.CodeAt(r.Ctx, r.GatewayEVMAddr, nil)
+	if err != nil || len(gatewayCode) == 0 {
+		r.Logger.Print("❓ no code at EVM gateway address (%s)", r.GatewayEVMAddr)
+		return nil
+	}
+	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(r.GatewayEVMAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	r.ZetaEthAddr, err = r.GatewayEVM.ZetaToken(&bind.CallOpts{})
+	if err != nil {
+		return fmt.Errorf("get ZetaEthAddr: %w", err)
+	}
+	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+
+	r.ConnectorEthAddr, err = r.GatewayEVM.ZetaConnector(&bind.CallOpts{})
+	if err != nil {
+		return fmt.Errorf("get ConnectorEthAddr: %w", err)
+	}
+	r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	r.ERC20CustodyAddr, err = r.GatewayEVM.Custody(&bind.CallOpts{})
+	if err != nil {
+		return fmt.Errorf("get ERC20CustodyAddr: %w", err)
+	}
+	r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // setContractsFromConfig get EVM contracts from config
 func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	var err error
 
+	chainParams, err := r.Clients.Zetacore.GetChainParams(r.Ctx)
+	require.NoError(r, err, "get chain params")
+
+	solChainParams := chainParamsBySelector(chainParams, chains.IsSolanaChain)
+
 	// set Solana contracts
 	if c := conf.Contracts.Solana.GatewayProgramID; c != "" {
 		r.GatewayProgram = solana.MustPublicKeyFromBase58(c.String())
+	} else if solChainParams != nil && solChainParams.GatewayAddress != "" {
+		r.GatewayProgram = solana.MustPublicKeyFromBase58(solChainParams.GatewayAddress)
 	}
 
 	if c := conf.Contracts.Solana.SPLAddr; c != "" {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}
 
-	// set EVM contracts
-	if c := conf.Contracts.EVM.ZetaEthAddr; c != "" {
-		r.ZetaEthAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid ZetaEthAddr: %w", err)
-		}
-		r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
-		if err != nil {
-			return err
-		}
-	}
+	evmChainId, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err, "get evm chain ID")
+	evmChainParams := chainParamsByChainId(chainParams, evmChainId.Int64())
 
-	if c := conf.Contracts.EVM.ConnectorEthAddr; c != "" {
-		r.ConnectorEthAddr, err = c.AsEVMAddress()
+	if c := conf.Contracts.EVM.Gateway; c != "" {
+		r.GatewayEVMAddr, err = c.AsEVMAddress()
 		if err != nil {
-			return fmt.Errorf("invalid ConnectorEthAddr: %w", err)
+			return fmt.Errorf("invalid GatewayAddr: %w", err)
 		}
-		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
-		if err != nil {
-			return err
-		}
+	} else {
+		r.GatewayEVMAddr = common.HexToAddress(evmChainParams.GatewayAddress)
 	}
-
-	if c := conf.Contracts.EVM.CustodyAddr; c != "" {
-		r.ERC20CustodyAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid CustodyAddr: %w", err)
-		}
-		r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
-		if err != nil {
-			return err
-		}
+	err = setContractsGatewayEVM(r)
+	if err != nil {
+		return fmt.Errorf("setContractsGatewayEVM: %w", err)
 	}
 
 	if c := conf.Contracts.EVM.ERC20; c != "" {
@@ -237,18 +294,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.EvmTestDAppAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid EvmTestDappAddr: %w", err)
-		}
-	}
-
-	// v2 contracts
-	if c := conf.Contracts.EVM.Gateway; c != "" {
-		r.GatewayEVMAddr, err = c.AsEVMAddress()
-		if err != nil {
-			return fmt.Errorf("invalid GatewayAddr: %w", err)
-		}
-		r.GatewayEVM, err = gatewayevm.NewGatewayEVM(r.GatewayEVMAddr, r.EVMClient)
-		if err != nil {
-			return err
 		}
 	}
 
