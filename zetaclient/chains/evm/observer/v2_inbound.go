@@ -205,6 +205,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(isCrossChainCall),
 	)
@@ -344,6 +345,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
 		types.WithEVMRevertOptions(event.RevertOptions),
 	)
 }
@@ -487,6 +489,7 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
 	)

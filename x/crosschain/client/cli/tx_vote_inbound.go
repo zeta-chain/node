@@ -17,9 +17,12 @@ import (
 func CmdVoteInbound() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
-			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall]",
+			"] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus]",
 		Short: "Broadcast message to vote an inbound",
-		Args:  cobra.ExactArgs(13),
+		Example: `zetacored tx crosschain vote-inbound 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 8453 "" 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 7000 1000000 "" ` +
+			`0x66b59ad844404e91faa9587a3061e2f7af36f7a7a1a0afaca3a2efd811bc9463 26170791 Gas 0x0000000000000000000000000000000000000000 587 V2 FALSE SAFE SUCCESS`,
+
+		Args: cobra.ExactArgs(16),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := args[0]
 			argsSenderChain, err := strconv.ParseInt(args[1], 10, 64)
@@ -72,6 +75,18 @@ func CmdVoteInbound() *cobra.Command {
 				return err
 			}
 
+			confirmationMode, ok := types.ConfirmationMode_value[args[14]]
+			if !ok {
+				return fmt.Errorf("wrong confirmation mode %s", args[14])
+			}
+			argsConfirmationMode := types.ConfirmationMode(confirmationMode)
+
+			inboundStatus, ok := types.InboundStatus_value[args[15]]
+			if !ok {
+				return fmt.Errorf("wrong inbound status %s", args[15])
+			}
+			argsInboundStatus := types.InboundStatus(inboundStatus)
+
 			msg := types.NewMsgVoteInbound(
 				clientCtx.GetFromAddress().String(),
 				argsSender,
@@ -89,7 +104,8 @@ func CmdVoteInbound() *cobra.Command {
 				uint(argsEventIndex),
 				protocolContractVersion,
 				isArbitraryCall,
-				types.InboundStatus_SUCCESS,
+				argsInboundStatus,
+				argsConfirmationMode,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
