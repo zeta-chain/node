@@ -18,7 +18,7 @@ import (
 // migrations needto be run in different environment
 func GetDefaultUpgradeHandlerVersion() string {
 	// semver must have v prefix, but we store without prefix
-	vVersion := "v" + constant.Version
+	vVersion := constant.GetNormalizedVersion()
 
 	// development builds always use the full version in the release handlers
 	if semver.Build(vVersion) != "" || semver.Prerelease(vVersion) != "" {

@@ -107,7 +107,7 @@ func TestShutdownListener(t *testing.T) {
 
 		listener := NewShutdownListener(client, logger)
 		listener.getVersion = func() string {
-			return "1.1.2"
+			return "v1.1.2"
 		}
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
@@ -135,7 +135,7 @@ func TestShutdownListener(t *testing.T) {
 
 		listener := NewShutdownListener(client, logger)
 		listener.getVersion = func() string {
-			return "1.1.1"
+			return "v1.1.1"
 		}
 
 		client.Mock.On("GetOperationalFlags", ctx).Return(observertypes.OperationalFlags{
