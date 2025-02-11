@@ -15,7 +15,7 @@ const (
 	InstructionExecute           byte = 5
 )
 
-var InstructionIdentifier []byte = []byte("ZETACHAIN")
+var InstructionIdentifier = []byte("ZETACHAIN")
 
 // MsgWithdraw is the message for the Solana gateway withdraw instruction
 type MsgWithdraw struct {

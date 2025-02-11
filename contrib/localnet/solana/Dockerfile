@@ -7,6 +7,7 @@ COPY ./gateway.so .
 COPY ./gateway-keypair.json .
 COPY ./connected.so .
 COPY ./connected-keypair.json .
+COPY ./gateway-upgrade.so .
 
 
 ENTRYPOINT [ "bash" ]

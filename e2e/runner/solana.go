@@ -1,7 +1,9 @@
 package runner
 
 import (
+	"fmt"
 	"math/big"
+	"os"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -178,6 +180,31 @@ func (r *E2ERunner) CreateSignedTransaction(
 	return tx
 }
 
+func (r *E2ERunner) SignTransaction(
+	tx *solana.Transaction,
+	privateKey *solana.PrivateKey,
+	additionalPrivateKeys []solana.PrivateKey,
+) *solana.Transaction {
+
+	// sign the initialize transaction
+	_, err := tx.Sign(
+		func(key solana.PublicKey) *solana.PrivateKey {
+			if privateKey.PublicKey().Equals(key) {
+				return privateKey
+			}
+			for _, apk := range additionalPrivateKeys {
+				if apk.PublicKey().Equals(key) {
+					return &apk
+				}
+			}
+			return nil
+		},
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
 // ResolveSolanaATA finds or creates SOL associated token account
 func (r *E2ERunner) ResolveSolanaATA(
 	payer solana.PrivateKey,
@@ -332,6 +359,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		_, out := r.BroadcastTxSync(signedTx)
 		r.Logger.Info("whitelist spl mint logs: %v", out.Meta.LogMessages)
 
+		r.Logger.Print("WhitelistPDA %s", whitelistEntryPDA)
 		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfoWithOpts(
 			r.Ctx,
 			whitelistEntryPDA,
@@ -344,6 +372,98 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	}
 
 	return mintAccount
+}
+
+func (r *E2ERunner) DeployGateway(privateKey *solana.PrivateKey) {
+
+	programID := r.GatewayProgram
+	rpcClient := r.SolanaClient
+
+	programDataPaths := "/root/gateway-upgrade.so"
+	programData, err := os.ReadFile(programDataPaths)
+	require.NoError(r, err)
+
+	programLen := uint64(len(programData))
+	programCost, err := r.SolanaClient.GetMinimumBalanceForRentExemption(
+		r.Ctx,
+		programLen,
+		rpc.CommitmentFinalized,
+	)
+	require.NoError(r, err)
+
+	r.Logger.Print("Program cost %d", programCost)
+
+	programInfo, err := rpcClient.GetAccountInfo(r.Ctx, programID)
+	require.NoError(r, err)
+
+	if programInfo == nil || programInfo.Value == nil {
+		panic("Program account not found")
+	}
+
+	bufferAccount := solana.NewWallet().PrivateKey
+	fmt.Println("Creating buffer account...")
+
+	createBufferIx := system.NewCreateAccountInstruction(
+		programCost,
+		programLen,
+		solana.BPFLoaderDeprecatedProgramID,
+		privateKey.PublicKey(),
+		bufferAccount.PublicKey(),
+	).Build()
+
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{createBufferIx},
+		*privateKey,
+		[]solana.PrivateKey{bufferAccount},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Print("create buffer logs: %v", out.Meta.LogMessages)
+
+	// Write program data in chunks
+	fmt.Println("Writing program data to buffer...")
+	const (
+		WRITE_CHUNK_SIZE = 900 // Maximum chunk size for write operations
+		MAX_RETRIES      = 3   // Maximum number of retries for failed transactions
+		DATA_OFFSET      = 0   // Initial data offset
+	)
+	totalChunks := (len(programData) + WRITE_CHUNK_SIZE - 1) / WRITE_CHUNK_SIZE
+	instructions := []solana.Instruction{}
+	for i := 0; i < totalChunks; i++ {
+		start := i * WRITE_CHUNK_SIZE
+		end := (i + 1) * WRITE_CHUNK_SIZE
+		if end > len(programData) {
+			end = len(programData)
+		}
+
+		chunk := programData[start:end]
+
+		instruction := solana.NewInstruction(
+			programID,
+			solana.AccountMetaSlice{
+				solana.NewAccountMeta(bufferAccount.PublicKey(), true, true),
+			},
+			chunk,
+		)
+		instructions = append(instructions, instruction)
+
+	}
+
+	r.Logger.Print("Number of chunks %d", len(instructions))
+
+	for _, instruction := range instructions {
+		writeTx := r.CreateSignedTransaction(
+			[]solana.Instruction{instruction},
+			*privateKey,
+			[]solana.PrivateKey{},
+		)
+
+		// broadcast the transaction and wait for finalization
+		_, out := r.BroadcastTxSync(writeTx)
+		r.Logger.Print("write tx logs: %v", out.Meta.LogMessages)
+	}
+
 }
 
 // BroadcastTxSync broadcasts a transaction once and checks if it's confirmed

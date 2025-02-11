@@ -117,9 +117,33 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	err = r.ensureSolanaChainParams()
 	require.NoError(r, err)
 
+	r.Logger.Print("PDA %s", pdaComputed)
+
+	r.DeployGateway(&privkey)
+
 	// deploy test spl
 	mintAccount := r.DeploySPL(&privkey, true)
 	r.SPLAddr = mintAccount.PublicKey()
+}
+
+func (r *E2ERunner) VerifyUpgrade() bool {
+
+	seed := []byte(solanacontracts.PDASeed)
+	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
+	require.NoError(r, err)
+
+	pdaUpgraded := solanacontracts.PdaInfoUpgraded{}
+
+	// retrieve the PDA account info
+	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
+	require.NoError(r, err)
+
+	err = borsh.Deserialize(&pdaUpgraded, pdaInfo.Bytes())
+	require.NoError(r, err)
+
+	return pdaUpgraded.Upgraded
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
