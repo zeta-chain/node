@@ -14,7 +14,7 @@ func CmdLastZetaHeight() *cobra.Command {
 		Short: "Query last Zeta Height",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

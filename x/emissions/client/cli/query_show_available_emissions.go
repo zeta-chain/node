@@ -16,7 +16,7 @@ func CmdShowAvailableEmissions() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqAddress := args[0]
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
