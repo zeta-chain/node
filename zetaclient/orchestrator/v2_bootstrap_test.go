@@ -156,6 +156,42 @@ func TestBootstrap(t *testing.T) {
 		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"Added observer-signer"`)
 	})
 
+	t.Run("SUI", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		// Given orchestrator
+		ts := newTestSuite(t)
+
+		// todo client and stuff
+		// todo config
+
+		// Disable other chains
+		ts.UpdateConfig(func(cfg *config.Config) {
+			cfg.BTCChainConfigs = nil
+			cfg.EVMChainConfigs = nil
+			cfg.SolanaConfig.Endpoint = ""
+		})
+
+		// Mock zetacore calls
+		mockZetacoreCalls(ts)
+
+		// ACT
+		// Start the orchestrator and wait for SUI observerSigner to bootstrap
+		require.NoError(t, ts.Start(ts.ctx))
+
+		// ASSERT
+		// Solana observerSigner is added
+		check := func() bool {
+			return ts.HasObserverSigner(chains.SuiMainnet.ChainId)
+		}
+
+		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
+
+		tasksHaveGroup(t, ts.scheduler.Tasks(), "sui:105")
+		assert.Contains(t, ts.Log.String(), `"chain":105,"chain_network":"sui","message":"Added observer-signer"`)
+	})
+
 	t.Run("TON", func(t *testing.T) {
 		// TODO: mock TON liteServer with real calls
 		// https://github.com/zeta-chain/node/issues/3419

@@ -169,6 +169,8 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 			observerSigner, err = oc.bootstrapEVM(ctx, chain)
 		case chain.IsSolana():
 			observerSigner, err = oc.bootstrapSolana(ctx, chain)
+		case chain.IsSUI():
+			observerSigner, err = oc.bootstrapSUI(ctx, chain)
 		case chain.IsTON():
 			observerSigner, err = oc.bootstrapTON(ctx, chain)
 		}

@@ -23,6 +23,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/sui"
+	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
+	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
@@ -177,6 +180,33 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 	}
 
 	return solana.New(oc.scheduler, observer, signer), nil
+}
+
+func (oc *V2) bootstrapSUI(ctx context.Context, chain zctx.Chain) (*sui.SUI, error) {
+	// should not happen
+	if !chain.IsSUI() {
+		return nil, errors.New("chain is not SUI")
+	}
+
+	_, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// todo if app.Config().GetSUIConfig() is not found, return errSkipChain
+
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	// todo client
+
+	observer := suiobserver.New(baseObserver)
+
+	signer := suisigner.New(oc.newBaseSigner(chain))
+
+	return sui.New(oc.scheduler, observer, signer), nil
 }
 
 func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
