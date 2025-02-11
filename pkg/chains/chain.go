@@ -164,6 +164,11 @@ func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
 }
 
+// IsSUIChain returns true if the chain is SUI chain.
+func IsSUIChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_sui, additionalChains))
+}
+
 // IsTONChain returns true is the chain is TON chain
 func IsTONChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_ton, additionalChains))

@@ -174,6 +174,10 @@ func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
 }
 
+func (c Chain) IsSUI() bool {
+	return chains.IsSUIChain(c.ID(), c.registry.additionalChains)
+}
+
 func (c Chain) IsTON() bool {
 	return chains.IsTONChain(c.ID(), c.registry.additionalChains)
 }
