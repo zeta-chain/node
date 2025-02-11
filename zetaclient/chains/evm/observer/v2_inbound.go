@@ -19,6 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -129,16 +130,16 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	for iterator.Next() {
-		events = append(events, iterator.Event)
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDeposit)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
 		}
-		ob.Logger().Inbound.Warn().
-			Err(err).
-			Msgf("ObserveGateway: invalid Deposited event in tx %s on chain %d at height %d",
-				iterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iterator.Event.Raw.BlockNumber)
+		ob.Logger().
+			Inbound.Warn().
+			Stringer(logs.FieldTx, iterator.Event.Raw.TxHash).
+			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
+			Msg("invalid Deposited event")
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -156,8 +157,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	for _, event := range events {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+			ob.Logger().
+				Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple Deposited events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -278,16 +281,16 @@ func (ob *Observer) parseAndValidateCallEvents(
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*gatewayevm.GatewayEVMCalled, 0)
 	for iterator.Next() {
-		events = append(events, iterator.Event)
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
 		}
-		ob.Logger().Inbound.Warn().
-			Err(err).
-			Msgf("ObserveGateway: invalid Call event in tx %s on chain %d at height %d",
-				iterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iterator.Event.Raw.BlockNumber)
+		ob.Logger().
+			Inbound.Warn().
+			Stringer(logs.FieldTx, iterator.Event.Raw.TxHash).
+			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
+			Msg("invalid Called event")
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -305,8 +308,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 	for _, event := range events {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+			ob.Logger().Inbound.Warn().Stringer(logs.FieldTx, event.Raw.TxHash).Msg("multiple Called events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -410,16 +412,16 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	for iterator.Next() {
-		events = append(events, iterator.Event)
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
 		if err == nil {
 			events = append(events, iterator.Event)
 			continue
 		}
-		ob.Logger().Inbound.Warn().
-			Err(err).
-			Msgf("ObserveGateway: invalid DepositedAndCalled event in tx %s on chain %d at height %d",
-				iterator.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iterator.Event.Raw.BlockNumber)
+		ob.Logger().
+			Inbound.Warn().
+			Stringer(logs.FieldTx, iterator.Event.Raw.TxHash).
+			Uint64(logs.FieldBlock, iterator.Event.Raw.BlockNumber).
+			Msg("invalid DepositedAndCalled event")
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -437,8 +439,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	for _, event := range events {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().
-				Msgf("ObserveGateway: multiple remote call events detected in same tx %s", event.Raw.TxHash)
+			ob.Logger().
+				Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("multiple DepositedAndCalled events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
