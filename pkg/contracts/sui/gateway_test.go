@@ -13,9 +13,9 @@ import (
 // https://github.com/zeta-chain/protocol-contracts-sui?tab=readme-ov-file#integration-test
 // packageID needs to be set to the value logged as moduleId when running `go run main.go`
 func TestLiveGateway_ReadInbounds(t *testing.T) {
-	t.Skip("skipping live test")
+	//t.Skip("skipping live test")
 
-	client := sui.NewSuiClient("http://localhost:9000")
+	client := sui.NewSuiClient("https://sui-testnet-endpoint.blockvision.org")
 	ctx := context.Background()
 	now := time.Now()
 
@@ -24,7 +24,7 @@ func TestLiveGateway_ReadInbounds(t *testing.T) {
 
 	gateway := NewGateway(
 		client,
-		"0xde4e867fd128c42c3dd7b8f79a1e294573e25a976fb4d9697d9fa934f39de0bc",
+		"0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db",
 	)
 	inbounds, err := gateway.QueryDepositInbounds(ctx, from, uint64(now.UnixMilli()))
 	require.NoError(t, err)
