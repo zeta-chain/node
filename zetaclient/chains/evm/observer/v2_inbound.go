@@ -127,12 +127,12 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	iterator *gatewayevm.GatewayEVMDepositedIterator,
 	gatewayAddr ethcommon.Address,
 ) []*gatewayevm.GatewayEVMDeposited {
-	// collect and sort events by block number, then tx index, then log index (ascending)
-	events := make([]*gatewayevm.GatewayEVMDeposited, 0)
+	// collect and sort validEvents by block number, then tx index, then log index (ascending)
+	validEvents := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	for iterator.Next() {
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDeposit)
 		if err == nil {
-			events = append(events, iterator.Event)
+			validEvents = append(validEvents, iterator.Event)
 			continue
 		}
 		ob.Logger().
@@ -144,20 +144,20 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 	// order events by height, tx index and event index (ascending)
 	// this ensures the first event is observed if there are multiple in the same tx
-	sort.SliceStable(events, func(i, j int) bool {
-		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
-			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
-				return events[i].Raw.Index < events[j].Raw.Index
+	sort.SliceStable(validEvents, func(i, j int) bool {
+		if validEvents[i].Raw.BlockNumber == validEvents[j].Raw.BlockNumber {
+			if validEvents[i].Raw.TxIndex == validEvents[j].Raw.TxIndex {
+				return validEvents[i].Raw.Index < validEvents[j].Raw.Index
 			}
-			return events[i].Raw.TxIndex < events[j].Raw.TxIndex
+			return validEvents[i].Raw.TxIndex < validEvents[j].Raw.TxIndex
 		}
-		return events[i].Raw.BlockNumber < events[j].Raw.BlockNumber
+		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
 	// filter events from same tx
 	filtered := make([]*gatewayevm.GatewayEVMDeposited, 0)
 	guard := make(map[string]bool)
-	for _, event := range events {
+	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().
@@ -281,12 +281,12 @@ func (ob *Observer) parseAndValidateCallEvents(
 	iterator *gatewayevm.GatewayEVMCalledIterator,
 	gatewayAddr ethcommon.Address,
 ) []*gatewayevm.GatewayEVMCalled {
-	// collect and sort events by block number, then tx index, then log index (ascending)
-	events := make([]*gatewayevm.GatewayEVMCalled, 0)
+	// collect and sort validEvents by block number, then tx index, then log index (ascending)
+	validEvents := make([]*gatewayevm.GatewayEVMCalled, 0)
 	for iterator.Next() {
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayCall)
 		if err == nil {
-			events = append(events, iterator.Event)
+			validEvents = append(validEvents, iterator.Event)
 			continue
 		}
 		ob.Logger().
@@ -298,20 +298,20 @@ func (ob *Observer) parseAndValidateCallEvents(
 
 	// order events by height, tx index and event index (ascending)
 	// this ensures the first event is observed if there are multiple in the same tx
-	sort.SliceStable(events, func(i, j int) bool {
-		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
-			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
-				return events[i].Raw.Index < events[j].Raw.Index
+	sort.SliceStable(validEvents, func(i, j int) bool {
+		if validEvents[i].Raw.BlockNumber == validEvents[j].Raw.BlockNumber {
+			if validEvents[i].Raw.TxIndex == validEvents[j].Raw.TxIndex {
+				return validEvents[i].Raw.Index < validEvents[j].Raw.Index
 			}
-			return events[i].Raw.TxIndex < events[j].Raw.TxIndex
+			return validEvents[i].Raw.TxIndex < validEvents[j].Raw.TxIndex
 		}
-		return events[i].Raw.BlockNumber < events[j].Raw.BlockNumber
+		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
 	// filter events from same tx
 	filtered := make([]*gatewayevm.GatewayEVMCalled, 0)
 	guard := make(map[string]bool)
-	for _, event := range events {
+	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().Inbound.Warn().Stringer(logs.FieldTx, event.Raw.TxHash).Msg("multiple Called events in same tx")
@@ -415,12 +415,12 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	iterator *gatewayevm.GatewayEVMDepositedAndCalledIterator,
 	gatewayAddr ethcommon.Address,
 ) []*gatewayevm.GatewayEVMDepositedAndCalled {
-	// collect and sort events by block number, then tx index, then log index (ascending)
-	events := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
+	// collect and sort validEvents by block number, then tx index, then log index (ascending)
+	validEvents := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	for iterator.Next() {
 		err := common.ValidateEvmTxLog(&iterator.Event.Raw, gatewayAddr, "", common.TopicsGatewayDepositAndCall)
 		if err == nil {
-			events = append(events, iterator.Event)
+			validEvents = append(validEvents, iterator.Event)
 			continue
 		}
 		ob.Logger().
@@ -432,20 +432,20 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 
 	// order events by height, tx index and event index (ascending)
 	// this ensures the first event is observed if there are multiple in the same tx
-	sort.SliceStable(events, func(i, j int) bool {
-		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
-			if events[i].Raw.TxIndex == events[j].Raw.TxIndex {
-				return events[i].Raw.Index < events[j].Raw.Index
+	sort.SliceStable(validEvents, func(i, j int) bool {
+		if validEvents[i].Raw.BlockNumber == validEvents[j].Raw.BlockNumber {
+			if validEvents[i].Raw.TxIndex == validEvents[j].Raw.TxIndex {
+				return validEvents[i].Raw.Index < validEvents[j].Raw.Index
 			}
-			return events[i].Raw.TxIndex < events[j].Raw.TxIndex
+			return validEvents[i].Raw.TxIndex < validEvents[j].Raw.TxIndex
 		}
-		return events[i].Raw.BlockNumber < events[j].Raw.BlockNumber
+		return validEvents[i].Raw.BlockNumber < validEvents[j].Raw.BlockNumber
 	})
 
 	// filter events from same tx
 	filtered := make([]*gatewayevm.GatewayEVMDepositedAndCalled, 0)
 	guard := make(map[string]bool)
-	for _, event := range events {
+	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
 			ob.Logger().
