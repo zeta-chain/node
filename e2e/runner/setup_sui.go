@@ -7,7 +7,7 @@ import (
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/stretchr/testify/require"
 
-	sui_bytecode "github.com/zeta-chain/node/pkg/contracts/sui/bytecode"
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 func (r *E2ERunner) SetupSui(faucetURL string) {
@@ -25,7 +25,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
-		CompiledModules: []string{sui_bytecode.GetEncodedGateway()},
+		CompiledModules: []string{zetasui.GatewayBytecodeBase64()},
 		Dependencies: []string{
 			"0x0000000000000000000000000000000000000000000000000000000000000001",
 			"0x0000000000000000000000000000000000000000000000000000000000000002",
