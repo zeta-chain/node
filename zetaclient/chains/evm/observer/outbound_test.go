@@ -421,15 +421,14 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		// create evm observer for testing
 		ob := newTestSuite(t)
 
-		confirmations := ob.chainParams.ConfirmationCount
+		confirmations := ob.chainParams.OutboundConfirmationSafe()
 
 		// create mock evm client with preloaded block, tx and receipt
-		ob.evmMock.On("BlockNumber", mock.Anything).Unset()
-		ob.evmMock.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
 		ob.evmMock.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
 		ob.evmMock.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
 
 		ob.BlockCache().Add(blockNumber, block)
+		ob.WithLastBlock(blockNumber + confirmations - 1)
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
