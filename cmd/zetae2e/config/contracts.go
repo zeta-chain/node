@@ -41,7 +41,7 @@ func chainParamsBySelector(
 	return nil
 }
 
-func chainParamsByChainId(chainParams []*types.ChainParams, id int64) *types.ChainParams {
+func chainParamsByChainID(chainParams []*types.ChainParams, id int64) *types.ChainParams {
 	for _, chainParam := range chainParams {
 		if chainParam.ChainId == id {
 			return chainParam
@@ -111,9 +111,9 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}
 
-	evmChainId, err := r.EVMClient.ChainID(r.Ctx)
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")
-	evmChainParams := chainParamsByChainId(chainParams, evmChainId.Int64())
+	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
 
 	if c := conf.Contracts.EVM.Gateway; c != "" {
 		r.GatewayEVMAddr, err = c.AsEVMAddress()
