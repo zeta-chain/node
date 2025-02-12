@@ -1,6 +1,7 @@
 package sui
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -69,14 +70,16 @@ func parseInbound(event models.SuiEventResponse, eventType string) (Inbound, err
 		return Inbound{}, errors.New("invalid receiver address")
 	}
 
-	payload := []byte{}
+	var payload []byte
 	if eventType == eventDepositAndCall {
-		parsedPayload, ok := parsedJSON["payload"].(string)
+		parsedPayload, ok := parsedJSON["payload"].([]interface{})
 		if !ok {
 			return Inbound{}, errors.New("invalid payload")
 		}
-
-		payload = []byte(parsedPayload)
+		payload, err = convertPayload(parsedPayload)
+		if err != nil {
+			return Inbound{}, errors.Wrap(err, "failed to convert payload")
+		}
 	}
 
 	return Inbound{
@@ -88,4 +91,21 @@ func parseInbound(event models.SuiEventResponse, eventType string) (Inbound, err
 		Receiver:   receiver,
 		Payload:    payload,
 	}, nil
+}
+
+// convertPayload
+func convertPayload(data []interface{}) ([]byte, error) {
+	payload := make([]byte, 0, len(data))
+	for i, d := range data {
+		// parsed bytes are represented as float64
+		if b, ok := d.(float64); ok {
+			if b < 0 || b > 255 {
+				return nil, fmt.Errorf("invalid payload data at index %d, not a byte (%f)", i, b)
+			}
+			payload = append(payload, byte(b))
+		} else {
+			return nil, fmt.Errorf("invalid payload data at index %d", i)
+		}
+	}
+	return payload, nil
 }

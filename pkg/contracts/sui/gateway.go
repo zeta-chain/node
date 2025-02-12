@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/pkg/errors"
