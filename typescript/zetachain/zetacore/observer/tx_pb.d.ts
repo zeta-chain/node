@@ -733,8 +733,8 @@ export declare class MsgUpdateOperationalFlagsResponse extends Message<MsgUpdate
 }
 
 /**
- * MsgDisableFastConfirmation is used to disable fast confirmation for a list of
- * chains.
+ * MsgDisableFastConfirmation is used to disable fast confirmation for given
+ * chain ID.
  *
  * @generated from message zetachain.zetacore.observer.MsgDisableFastConfirmation
  */
@@ -745,9 +745,9 @@ export declare class MsgDisableFastConfirmation extends Message<MsgDisableFastCo
   creator: string;
 
   /**
-   * @generated from field: repeated int64 chain_id_list = 2;
+   * @generated from field: int64 chain_id = 2;
    */
-  chainIdList: bigint[];
+  chainId: bigint;
 
   constructor(data?: PartialMessage<MsgDisableFastConfirmation>);
 

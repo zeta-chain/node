@@ -165,11 +165,11 @@ message MsgUpdateOperationalFlags {
 
 message MsgUpdateOperationalFlagsResponse {}
 
-// MsgDisableFastConfirmation is used to disable fast confirmation for a list of
-// chains.
+// MsgDisableFastConfirmation is used to disable fast confirmation for given
+// chain ID.
 message MsgDisableFastConfirmation {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  repeated int64 chain_id_list = 2;
+  int64 chain_id = 2;
 }
 message MsgDisableFastConfirmationResponse {}

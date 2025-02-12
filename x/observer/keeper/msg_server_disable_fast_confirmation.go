@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-// DisableFastConfirmation disables fast confirmation for the given chain IDs
+// DisableFastConfirmation disables fast confirmation for the given chain ID
 // Inbound and outbound will be only confirmed using SAFE confirmation count on disabled chains
 func (k msgServer) DisableFastConfirmation(
 	goCtx context.Context,
@@ -30,22 +30,17 @@ func (k msgServer) DisableFastConfirmation(
 		return &types.MsgDisableFastConfirmationResponse{}, types.ErrChainParamsNotFound
 	}
 
-	// create a lookup map for the chain IDs
-	disableAll := len(msg.ChainIdList) == 0
-	chainIDMap := make(map[int64]bool)
-	for _, chainID := range msg.ChainIdList {
-		chainIDMap[chainID] = true
-	}
-
 	// disable fast confirmation by setting fast confirmation count to zero
 	for _, cp := range chainParamsList.ChainParams {
 		if cp.ConfirmationParams == nil {
 			continue // should never happen
 		}
 
-		if disableAll || chainIDMap[cp.ChainId] {
-			cp.ConfirmationParams.FastInboundCount = 0
-			cp.ConfirmationParams.FastOutboundCount = 0
+		// setting fast confirmation count to same value as safe confirmation count
+		// will effectively disable fast confirmation
+		if cp.ChainId == msg.ChainId {
+			cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount
+			cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount
 		}
 	}
 

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,9 +13,9 @@ import (
 
 func CmdDisableFastConfirmation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "disable-fast-confirmation [list of chain-id]",
-		Short:   "Disable fast confirmation for the list of chains separated by comma; empty list will disable all chains",
-		Example: `zetacored tx observer disable-fast-confirmation "1,56"`,
+		Use:     "disable-fast-confirmation [chain-id]",
+		Short:   "Disable fast confirmation for the given chain ID",
+		Example: `zetacored tx observer disable-fast-confirmation 1`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -24,17 +23,13 @@ func CmdDisableFastConfirmation() *cobra.Command {
 				return err
 			}
 
-			chainIDs := strings.Split(strings.TrimSpace(args[0]), ",")
-			var chainIDList []int64
-			for _, chainID := range chainIDs {
-				chainIDInt, err := strconv.ParseInt(chainID, 10, 64)
-				if err != nil {
-					return err
-				}
-				chainIDList = append(chainIDList, chainIDInt)
+			// get chainID as int64
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
 			}
 
-			msg := types.NewMsgDisableFastConfirmation(clientCtx.GetFromAddress().String(), chainIDList)
+			msg := types.NewMsgDisableFastConfirmation(clientCtx.GetFromAddress().String(), chainID)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err

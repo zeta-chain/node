@@ -154,13 +154,13 @@ message MsgDisableCCTX {
 
 ## MsgDisableFastConfirmation
 
-DisableFastConfirmation disables fast confirmation for the given chain IDs
+DisableFastConfirmation disables fast confirmation for the given chain ID
 Inbound and outbound will be only confirmed using SAFE confirmation count on disabled chains
 
 ```proto
 message MsgDisableFastConfirmation {
 	string creator = 1;
-	int64 chain_id_list = 2;
+	int64 chain_id = 2;
 }
 ```
 

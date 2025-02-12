@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -20,37 +19,15 @@ func TestMsgDisableFastConfirmation_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "invalid address",
-			msg:  types.NewMsgDisableFastConfirmation("invalid", []int64{}),
+			msg:  types.NewMsgDisableFastConfirmation("invalid", 1),
 			err: func(t require.TestingT, err error, i ...interface{}) {
 				require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 			},
 		},
 		{
-			name: "chain id list is too long",
-			msg: types.NewMsgDisableFastConfirmation(
-				sample.AccAddress(),
-				make([]int64, types.MaxChainIDListLength+1), // 201 is the max length
-			),
-			err: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-				require.ErrorContains(t, err, "chain id list too long")
-			},
-		},
-		{
 			name: "valid",
-			msg: types.NewMsgDisableFastConfirmation(
-				sample.AccAddress(),
-				[]int64{chains.Ethereum.ChainId},
-			),
-			err: require.NoError,
-		},
-		{
-			name: "valid with empty chain id list",
-			msg: types.NewMsgDisableFastConfirmation(
-				sample.AccAddress(),
-				nil,
-			),
-			err: require.NoError,
+			msg:  types.NewMsgDisableFastConfirmation(sample.AccAddress(), 1),
+			err:  require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -70,12 +47,12 @@ func TestMsgDisableFastConfirmation_GetSigners(t *testing.T) {
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgDisableFastConfirmation(signer, []int64{}),
+			msg:    types.NewMsgDisableFastConfirmation(signer, 1),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgDisableFastConfirmation("invalid", []int64{}),
+			msg:    types.NewMsgDisableFastConfirmation("invalid", 1),
 			panics: true,
 		},
 	}
@@ -105,7 +82,7 @@ func TestMsgDisableFastConfirmation_Route(t *testing.T) {
 }
 
 func TestMsgDisableFastConfirmation_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgDisableFastConfirmation(sample.AccAddress(), []int64{chains.Ethereum.ChainId})
+	msg := types.NewMsgDisableFastConfirmation(sample.AccAddress(), 1)
 	require.NotPanics(t, func() {
 		bytes := msg.GetSignBytes()
 		require.NotEmpty(t, bytes)

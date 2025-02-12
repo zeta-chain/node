@@ -54,8 +54,8 @@ func SimulateDisableFastConfirmation(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := types.MsgDisableFastConfirmation{
-			Creator:     policyAccount.Address.String(),
-			ChainIdList: []int64{randomExternalChain},
+			Creator: policyAccount.Address.String(),
+			ChainId: randomExternalChain,
 		}
 
 		err = msg.ValidateBasic()
