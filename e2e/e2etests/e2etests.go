@@ -16,6 +16,7 @@ const (
 	TestETHDepositAndCallNoMessageName           = "eth_deposit_and_call_no_message"
 	TestETHDepositAndCallRevertName              = "eth_deposit_and_call_revert"
 	TestETHDepositAndCallRevertWithCallName      = "eth_deposit_and_call_revert_with_call"
+	TestETHDepositRevertAndAbortName             = "eth_deposit_revert_and_abort"
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
@@ -241,6 +242,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestETHDepositRevertAndAbortName,
+		"deposit Ether into ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHDepositRevertAndAbort,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawName,
