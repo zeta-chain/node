@@ -2,8 +2,6 @@ package sui
 
 import (
 	"context"
-	_ "embed"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -32,9 +30,6 @@ type RPC interface {
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
 }
 
-//go:embed bin/gateway.mv
-var gatewayBinary []byte
-
 // ErrParseEvent event parse error
 var ErrParseEvent = errors.New("event parse error")
 
@@ -43,11 +38,6 @@ var ErrParseEvent = errors.New("event parse error")
 // It's what will be set in gateway chain params
 func NewGateway(client RPC, packageID string) *Gateway {
 	return &Gateway{client, packageID}
-}
-
-// GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
-func GatewayBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(gatewayBinary)
 }
 
 // QueryDepositInbounds queries the inbounds from deposit events from the Sui gateway
