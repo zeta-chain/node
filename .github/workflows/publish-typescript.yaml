@@ -23,13 +23,12 @@ jobs:
 
       - name: Generate
         run: |
-          make typescript 
+          make typescript
 
       - name: Set Version
         working-directory: typescript
         run: |
-          version=$(cat ../app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-          npm version ${version}
+          npm version from-git
 
       - name: Publish package on NPM 📦
         run: npm publish
