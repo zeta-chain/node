@@ -31,7 +31,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	}
 
 	// check confirmations
-	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
+	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
 		return fmt.Errorf(
 			"inbound %s has not been confirmed yet: receipt block %d",
 			tx.Hash,

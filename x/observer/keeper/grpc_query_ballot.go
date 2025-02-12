@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"sort"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,6 +82,10 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 		}
 		ballots = append(ballots, ballot)
 		return nil
+	})
+
+	sort.Slice(ballots, func(i, j int) bool {
+		return ballots[i].BallotCreationHeight < ballots[j].BallotCreationHeight
 	})
 
 	if err != nil {

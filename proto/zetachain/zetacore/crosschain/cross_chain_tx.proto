@@ -27,6 +27,12 @@ enum TxFinalizationStatus {
   Executed = 2;     // the corresponding tx is executed
 }
 
+enum ConfirmationMode {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SAFE = 0; // an inbound/outbound is confirmed using safe confirmation count
+  FAST = 1; // an inbound/outbound is confirmed using fast confirmation count
+}
+
 // InboundStatus represents the status of an observed inbound
 enum InboundStatus {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -62,6 +68,12 @@ message InboundParams {
 
   // status of the inbound observation
   InboundStatus status = 20;
+
+  // confirmation mode used for the inbound
+  ConfirmationMode confirmation_mode = 21;
+
+  // not used. do not edit.
+  reserved 13 to 19;
 }
 
 message ZetaAccounting {
@@ -106,6 +118,9 @@ message OutboundParams {
   TxFinalizationStatus tx_finalization_status = 12;
 
   CallOptions call_options = 24;
+
+  // confirmation mode used for the outbound
+  ConfirmationMode confirmation_mode = 25;
 
   // not used. do not edit.
   reserved 13 to 19;

@@ -36,7 +36,7 @@ func TestGetConfig(t *testing.T) {
 
 		cfg, err = config.GetConfig(chains.Sepolia, "")
 		require.NoError(t, err)
-		require.Equal(t, "https://zetachain-testnet-rpc.itrocket.net:443", cfg.ZetaChainRPC)
+		require.Equal(t, "https://zetachain-athens.g.allthatnode.com/archive/tendermint", cfg.ZetaChainRPC)
 
 		cfg, err = config.GetConfig(chains.GoerliLocalnet, "")
 		require.NoError(t, err)

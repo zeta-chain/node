@@ -58823,6 +58823,7 @@ definitions:
       - catchain_consensus
       - snowman
       - arbitrum_nitro
+      - sui_consensus
     default: ethereum
     description: |-
       - catchain_consensus: ton
@@ -58846,6 +58847,7 @@ definitions:
       - avalanche
       - arbitrum
       - worldchain
+      - sui
     default: eth
     title: |-
       Network represents the network of the chain
@@ -58881,6 +58883,7 @@ definitions:
       - evm
       - svm
       - tvm
+      - mvm_sui
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
@@ -58924,6 +58927,15 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
+  crosschainConfirmationMode:
+    type: string
+    enum:
+      - SAFE
+      - FAST
+    default: SAFE
+    title: |-
+      - SAFE: an inbound/outbound is confirmed using safe confirmation count
+       - FAST: an inbound/outbound is confirmed using fast confirmation count
   crosschainConversion:
     type: object
     properties:
@@ -59039,6 +59051,9 @@ definitions:
       status:
         $ref: '#/definitions/crosschainInboundStatus'
         title: status of the inbound observation
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the inbound
   crosschainInboundStatus:
     type: string
     enum:
@@ -59166,6 +59181,9 @@ definitions:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
       call_options:
         $ref: '#/definitions/crosschainCallOptions'
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the outbound
   crosschainOutboundTracker:
     type: object
     properties:
