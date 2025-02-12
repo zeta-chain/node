@@ -72,7 +72,7 @@ func (k msgServer) RefundAbortedCCTX(
 	commit()
 
 	// set the cctx as refunded
-	cctx.CctxStatus.AbortRefunded()
+	cctx.CctxStatus.SetAbortRefunded()
 
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgRefundAbortedCCTXResponse{}, nil

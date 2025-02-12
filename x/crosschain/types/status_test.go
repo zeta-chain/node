@@ -17,7 +17,7 @@ func TestStatus_AbortRefunded(t *testing.T) {
 			LastUpdateTimestamp: 0,
 			IsAbortRefunded:     false,
 		}
-		status.AbortRefunded()
+		status.SetAbortRefunded()
 		require.Equal(t, status.IsAbortRefunded, true)
 		require.Equal(t, status.StatusMessage, "CCTX aborted and Refunded")
 	})

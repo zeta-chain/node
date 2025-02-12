@@ -12,7 +12,7 @@ type StatusMessages struct {
 	ErrorMessageAbort    string `json:"error_message_abort"`
 }
 
-func (m *Status) AbortRefunded() {
+func (m *Status) SetAbortRefunded() {
 	m.IsAbortRefunded = true
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
