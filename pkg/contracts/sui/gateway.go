@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CoinTypeSUI is the coin type for SUI, native gas token
+// SUI is the coin type for SUI, native gas token
 const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
 
 const (
@@ -32,7 +32,7 @@ type Gateway struct {
 //go:embed bin/gateway.mv
 var gatewayBinary []byte
 
-// ErrParse event parse error
+// ErrParseEvent event parse error
 var ErrParseEvent = errors.New("event parse error")
 
 // NewGateway creates a new SUI gateway
@@ -48,11 +48,13 @@ func GatewayBytecodeBase64() string {
 }
 
 // QueryDepositInbounds queries the inbounds from deposit events from the Sui gateway
+// from and to represents time range in Unix time in milliseconds
 func (g *Gateway) QueryDepositInbounds(ctx context.Context, from, to uint64) ([]Inbound, error) {
 	return g.queryInbounds(ctx, from, to, eventDeposit)
 }
 
 // QueryDepositAndCallInbounds queries the inbounds from depositAndCall events from the Sui gateway
+// from and to represents time range in Unix time in milliseconds
 func (g *Gateway) QueryDepositAndCallInbounds(ctx context.Context, from, to uint64) ([]Inbound, error) {
 	return g.queryInbounds(ctx, from, to, eventDepositAndCall)
 }
@@ -62,7 +64,8 @@ func (g *Gateway) queryInbounds(ctx context.Context, _, _ uint64, event string) 
 	// TODO: Support pagination
 	res, err := g.client.SuiXQueryEvents(ctx, models.SuiXQueryEventsRequest{
 		SuiEventFilter: map[string]any{
-			// TODO: Fix the error
+			// TODO: Fix the error, or add another solution to query events by time range
+			// https://github.com/zeta-chain/node/issues/3523
 			// using TimeRange causes the following error when sending the query:
 			// {"code":-32602,"message":"Invalid params","data":"expected value at line 1 column 108"}
 			// commenting out for new and querying all events
@@ -70,9 +73,12 @@ func (g *Gateway) queryInbounds(ctx context.Context, _, _ uint64, event string) 
 			//	StartTime: from,
 			//	EndTime:   to,
 			//},
+			//"TimeRange": map[string]interface{}{
+			//	"startTime": from,
+			//	"endTime":   to,
+			//},
 			"MoveEventType": eventType(g.packageID, moduleName, event),
 		},
-		Limit: 5,
 	})
 	if err != nil {
 		return []Inbound{}, err

@@ -1,6 +1,7 @@
 package sui
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -13,19 +14,16 @@ type Inbound struct {
 	TxHash     string
 	EventIndex uint64
 	// Note: CoinType is what is used as Asset field in the ForeignCoin object
-	CoinType CoinType
-	Amount   uint64
-	Sender   string
-	Receiver ethcommon.Address
-	Payload  []byte
+	CoinType         CoinType
+	Amount           uint64
+	Sender           string
+	Receiver         ethcommon.Address
+	Payload          []byte
+	IsCrossChainCall bool
 }
 
 func (d *Inbound) IsGasDeposit() bool {
 	return d.CoinType == SUI
-}
-
-func (d *Inbound) IsCrossChainCall() bool {
-	return len(d.Payload) > 0
 }
 
 // parseInbound parses an inbound from a JSON read in the SUI event
@@ -66,26 +64,50 @@ func parseInbound(event models.SuiEventResponse, eventType string) (Inbound, err
 
 	receiver := ethcommon.HexToAddress(parsedReceiver)
 	if receiver == (ethcommon.Address{}) {
-		return Inbound{}, errors.New("invalid receiver address")
+		return Inbound{}, errors.New("can't parse receiver address")
 	}
 
-	payload := []byte{}
+	isCrosschainCall := false
+
+	var payload []byte
 	if eventType == eventDepositAndCall {
-		parsedPayload, ok := parsedJSON["payload"].(string)
+		isCrosschainCall = true
+
+		parsedPayload, ok := parsedJSON["payload"].([]interface{})
 		if !ok {
 			return Inbound{}, errors.New("invalid payload")
 		}
-
-		payload = []byte(parsedPayload)
+		payload, err = convertPayload(parsedPayload)
+		if err != nil {
+			return Inbound{}, errors.Wrap(err, "failed to convert payload")
+		}
 	}
 
 	return Inbound{
-		TxHash:     event.Id.TxDigest,
-		EventIndex: eventIndex,
-		CoinType:   CoinType(coinType),
-		Amount:     amount,
-		Sender:     sender,
-		Receiver:   receiver,
-		Payload:    payload,
+		TxHash:           event.Id.TxDigest,
+		EventIndex:       eventIndex,
+		CoinType:         CoinType(coinType),
+		Amount:           amount,
+		Sender:           sender,
+		Receiver:         receiver,
+		Payload:          payload,
+		IsCrossChainCall: isCrosschainCall,
 	}, nil
+}
+
+// convertPayload
+func convertPayload(data []interface{}) ([]byte, error) {
+	payload := make([]byte, 0, len(data))
+	for i, d := range data {
+		// parsed bytes are represented as float64
+		if b, ok := d.(float64); ok {
+			if b < 0 || b > 255 {
+				return nil, fmt.Errorf("invalid payload data at index %d, not a byte (%f)", i, b)
+			}
+			payload = append(payload, byte(b))
+		} else {
+			return nil, fmt.Errorf("invalid payload data at index %d, not a float64", i)
+		}
+	}
+	return payload, nil
 }
