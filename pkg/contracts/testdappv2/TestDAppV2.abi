@@ -36,50 +36,6 @@
         "type": "bytes32"
       }
     ],
-    "name": "abortedWithMessage",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "sender",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "asset",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "outgoing",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainID",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "revertMessage",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
     "name": "amountWithMessage",
     "outputs": [
       {
@@ -216,57 +172,6 @@
         "type": "string"
       }
     ],
-    "name": "getAbortedWithMessage",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "sender",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "asset",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "outgoing",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "chainID",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "revertMessage",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct TestDAppV2.AbortContext",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "message",
-        "type": "string"
-      }
-    ],
     "name": "getAmountWithMessage",
     "outputs": [
       {
@@ -327,51 +232,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "bytes",
-            "name": "sender",
-            "type": "bytes"
-          },
-          {
-            "internalType": "address",
-            "name": "asset",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "outgoing",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "chainID",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes",
-            "name": "revertMessage",
-            "type": "bytes"
-          }
-        ],
-        "internalType": "struct TestDAppV2.AbortContext",
-        "name": "abortContext",
-        "type": "tuple"
-      }
-    ],
-    "name": "onAbort",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
