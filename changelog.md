@@ -8,6 +8,7 @@
 * [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
 * [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
 * [3506](https://github.com/zeta-chain/node/pull/3506) - define `ConfirmationMode` enum and add it to `InboundParams`, `OutboundParams`, `MsgVoteInbound` and `MsgVoteOutbound`
+* [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 
 ### Refactor
 
