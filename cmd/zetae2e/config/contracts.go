@@ -121,6 +121,10 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
 
+	if evmChainParams == nil {
+		return fmt.Errorf("no EVM chain params found for chain ID %d", evmChainID.Int64())
+	}
+
 	err = setContractsGatewayEVM(r, evmChainParams)
 	if err != nil {
 		return fmt.Errorf("setContractsGatewayEVM: %w", err)
