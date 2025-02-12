@@ -32,6 +32,8 @@ service Msg {
   rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
   rpc EnableCCTX(MsgEnableCCTX) returns (MsgEnableCCTXResponse);
   rpc DisableCCTX(MsgDisableCCTX) returns (MsgDisableCCTXResponse);
+  rpc DisableFastConfirmation(MsgDisableFastConfirmation)
+      returns (MsgDisableFastConfirmationResponse);
   rpc UpdateGasPriceIncreaseFlags(MsgUpdateGasPriceIncreaseFlags)
       returns (MsgUpdateGasPriceIncreaseFlagsResponse);
   rpc UpdateOperationalFlags(MsgUpdateOperationalFlags)
@@ -162,3 +164,12 @@ message MsgUpdateOperationalFlags {
 }
 
 message MsgUpdateOperationalFlagsResponse {}
+
+// MsgDisableFastConfirmation is used to disable fast confirmation for a list of
+// chains.
+message MsgDisableFastConfirmation {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  repeated int64 chain_id_list = 2;
+}
+message MsgDisableFastConfirmationResponse {}
