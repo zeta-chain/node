@@ -280,8 +280,8 @@ func newAppContext(
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
 		case chains.IsTONChain(c.ChainId, nil):
 			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
-		case chains.IsSUIChain(c.ChainId, nil):
-			// todo config
+		case chains.IsSuiChain(c.ChainId, nil):
+			cfg.SuiConfig = config.SuiConfig{Endpoint: "localhost"}
 		default:
 			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}

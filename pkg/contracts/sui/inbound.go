@@ -26,7 +26,7 @@ func (d *Inbound) IsGasDeposit() bool {
 	return d.CoinType == SUI
 }
 
-// parseInbound parses an inbound from a JSON read in the SUI event
+// parseInbound parses an inbound from a JSON read in the Sui event
 // depositAndCall is a flag to indicate if the event is a depositAndCall event otherwise deposit event
 // TODO: add specific error that can be handled when the event data is invalid
 // https://github.com/zeta-chain/node/issues/3502

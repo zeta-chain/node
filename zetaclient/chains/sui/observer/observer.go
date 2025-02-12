@@ -11,13 +11,13 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 )
 
-// Observer SUI observer
+// Observer Sui observer
 type Observer struct {
 	*base.Observer
 	client RPC
 }
 
-// RPC represents subset of SUI RPC methods.
+// RPC represents subset of Sui RPC methods.
 type RPC interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
@@ -40,14 +40,14 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 		return errors.Wrap(err, "unable to check rpc health")
 	}
 
-	// It's not a "real" block latency as SUI uses concept of "checkpoints"
+	// It's not a "real" block latency as Sui uses concept of "checkpoints"
 	ob.ReportBlockLatency(blockTime)
 
 	return nil
 }
 
-// PostGasPrice posts SUI gas price to zetacore.
-// Note (1) that SUI changes gas per EPOCH (not block)
+// PostGasPrice posts Sui gas price to zetacore.
+// Note (1) that Sui changes gas per EPOCH (not block)
 // Note (2) that SuiXGetCurrentEpoch() is deprecated.
 //
 // See https://docs.sui.io/concepts/tokenomics/gas-pricing
@@ -76,7 +76,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to get ref gas price")
 	}
 
-	// no priority fee for SUI
+	// no priority fee for Sui
 	const priorityFee = 0
 
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)

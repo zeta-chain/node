@@ -53,7 +53,7 @@ func TestLiveGateway_ReadInbounds(t *testing.T) {
 }
 
 func TestGateway_QueryDepositInbounds(t *testing.T) {
-	clientMock := mocks.NewSUIClient(t)
+	clientMock := mocks.NewSuiClient(t)
 	gateway := NewGateway(clientMock, "packageID")
 	ctx := context.Background()
 
@@ -266,7 +266,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 }
 
 func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
-	clientMock := mocks.NewSUIClient(t)
+	clientMock := mocks.NewSuiClient(t)
 	gateway := NewGateway(clientMock, "packageID")
 	ctx := context.Background()
 
@@ -416,6 +416,6 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 	}
 }
 
-func onQueryEvent(m *mocks.SUIClient, res models.PaginatedEventsResponse, err error) {
+func onQueryEvent(m *mocks.SuiClient, res models.PaginatedEventsResponse, err error) {
 	m.On("SuiXQueryEvents", mock.Anything, mock.Anything).Return(res, err).Once()
 }

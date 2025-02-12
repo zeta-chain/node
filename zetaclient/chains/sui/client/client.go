@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client SUI client.
+// Client Sui client.
 type Client struct {
 	sui.ISuiAPI
 }

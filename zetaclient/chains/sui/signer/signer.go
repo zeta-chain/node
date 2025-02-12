@@ -2,7 +2,7 @@ package signer
 
 import "github.com/zeta-chain/node/zetaclient/chains/base"
 
-// Signer SUI outbound transaction signer.
+// Signer Sui outbound transaction signer.
 type Signer struct {
 	*base.Signer
 }

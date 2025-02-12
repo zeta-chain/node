@@ -38,7 +38,7 @@ var gatewayBinary []byte
 // ErrParseEvent event parse error
 var ErrParseEvent = errors.New("event parse error")
 
-// NewGateway creates a new SUI gateway
+// NewGateway creates a new Sui gateway
 // Note: packageID is the equivalent for gateway address or program ID on Solana
 // It's what will be set in gateway chain params
 func NewGateway(client RPC, packageID string) *Gateway {

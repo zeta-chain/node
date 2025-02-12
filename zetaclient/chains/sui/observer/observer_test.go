@@ -51,7 +51,7 @@ type testSuite struct {
 	t        *testing.T
 	ctx      context.Context
 	zetaMock *mocks.ZetacoreClient
-	suiMock  *mocks.SUIClient
+	suiMock  *mocks.SuiClient
 	*Observer
 }
 
@@ -83,7 +83,7 @@ func newTestSuite(t *testing.T) *testSuite {
 	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
 	require.NoError(t, err)
 
-	suiMock := mocks.NewSUIClient(t)
+	suiMock := mocks.NewSuiClient(t)
 
 	observer := New(baseObserver, suiMock)
 

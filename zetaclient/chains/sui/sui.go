@@ -15,25 +15,25 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 )
 
-// SUI observer-signer.
-type SUI struct {
+// Sui observer-signer.
+type Sui struct {
 	scheduler *scheduler.Scheduler
 	observer  *observer.Observer
 	signer    *signer.Signer
 }
 
-// New SUI observer-signer constructor.
-func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *SUI {
-	return &SUI{scheduler, observer, signer}
+// New Sui observer-signer constructor.
+func New(scheduler *scheduler.Scheduler, observer *observer.Observer, signer *signer.Signer) *Sui {
+	return &Sui{scheduler, observer, signer}
 }
 
 // Chain returns chain
-func (s *SUI) Chain() chains.Chain {
+func (s *Sui) Chain() chains.Chain {
 	return s.observer.Chain()
 }
 
 // Start starts observer-signer for processing inbound & outbound cross-chain transactions.
-func (s *SUI) Start(ctx context.Context) error {
+func (s *Sui) Start(ctx context.Context) error {
 	if ok := s.observer.Observer.Start(); !ok {
 		return errors.New("observer is already started")
 	}
@@ -85,17 +85,17 @@ func (s *SUI) Start(ctx context.Context) error {
 }
 
 // Stop stops all relevant tasks.
-func (s *SUI) Stop() {
+func (s *Sui) Stop() {
 	s.observer.Logger().Chain.Info().Msg("stopping observer-signer")
 	s.scheduler.StopGroup(s.group())
 }
 
-func (s *SUI) group() scheduler.Group {
+func (s *Sui) group() scheduler.Group {
 	return scheduler.Group(fmt.Sprintf("sui:%d", s.Chain().ChainId))
 }
 
 // scheduleCCTX schedules outbound cross-chain transactions.
-func (s *SUI) scheduleCCTX(_ context.Context) error {
+func (s *Sui) scheduleCCTX(_ context.Context) error {
 	// todo
 	return nil
 }

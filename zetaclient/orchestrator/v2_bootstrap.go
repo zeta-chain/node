@@ -183,10 +183,10 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 	return solana.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapSUI(ctx context.Context, chain zctx.Chain) (*sui.SUI, error) {
+func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, error) {
 	// should not happen
-	if !chain.IsSUI() {
-		return nil, errors.New("chain is not SUI")
+	if !chain.IsSui() {
+		return nil, errors.New("chain is not sui")
 	}
 
 	app, err := zctx.FromContext(ctx)
@@ -194,7 +194,7 @@ func (oc *V2) bootstrapSUI(ctx context.Context, chain zctx.Chain) (*sui.SUI, err
 		return nil, err
 	}
 
-	cfg, found := app.Config().GetSUIConfig()
+	cfg, found := app.Config().GetSuiConfig()
 	if !found {
 		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
 	}

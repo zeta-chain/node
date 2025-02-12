@@ -156,19 +156,19 @@ func TestBootstrap(t *testing.T) {
 		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"Added observer-signer"`)
 	})
 
-	t.Run("SUI", func(t *testing.T) {
+	t.Run("Sui", func(t *testing.T) {
 		t.Parallel()
 
 		// ARRANGE
 		// Given orchestrator
 		ts := newTestSuite(t)
 
-		suiServer, suiConfig := testrpc.NewSUIServer(t)
+		suiServer, suiConfig := testrpc.NewSuiServer(t)
 		mockSuiCalls(ts, suiServer)
 
 		// Disable other chains
 		ts.UpdateConfig(func(cfg *config.Config) {
-			cfg.SUIConfig = suiConfig
+			cfg.SuiConfig = suiConfig
 			cfg.BTCChainConfigs = nil
 			cfg.EVMChainConfigs = nil
 			cfg.SolanaConfig.Endpoint = ""
@@ -179,7 +179,7 @@ func TestBootstrap(t *testing.T) {
 		mockZetacoreCalls(ts)
 
 		// ACT
-		// Start the orchestrator and wait for SUI observerSigner to bootstrap
+		// Start the orchestrator and wait for Sui observerSigner to bootstrap
 		require.NoError(t, ts.Start(ts.ctx))
 
 		// ASSERT
@@ -308,7 +308,7 @@ func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {
 	// todo
 }
 
-func mockSuiCalls(_ *testSuite, _ *testrpc.SUIServer) {
+func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer) {
 	// todo
 }
 

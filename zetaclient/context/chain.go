@@ -174,8 +174,8 @@ func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
 }
 
-func (c Chain) IsSUI() bool {
-	return chains.IsSUIChain(c.ID(), c.registry.additionalChains)
+func (c Chain) IsSui() bool {
+	return chains.IsSuiChain(c.ID(), c.registry.additionalChains)
 }
 
 func (c Chain) IsTON() bool {
