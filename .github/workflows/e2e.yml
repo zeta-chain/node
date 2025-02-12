@@ -231,26 +231,26 @@ jobs:
       matrix:
         include:
           - make-target: "start-e2e-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.DEFAULT_TESTS == 'true' }}
           - make-target: "start-e2e-consensus-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.CONSENSUS_TESTS == 'true' }}
           - make-target: "start-upgrade-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
           - make-target: "start-upgrade-test-light"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS == 'true' }}
           - make-target: "start-upgrade-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-admin-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
           - make-target: "start-upgrade-test-admin"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-performance-test"
@@ -261,20 +261,20 @@ jobs:
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-tss-migration-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-solana-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
           - make-target: "start-ton-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
           - make-target: "start-sui-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SUI_TESTS == 'true' }}
           - make-target: "start-legacy-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
