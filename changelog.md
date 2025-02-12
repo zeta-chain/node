@@ -5,6 +5,7 @@
 ### Features
 
 * [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+* [3414](https://github.com/zeta-chain/node/pull/3414) - support advanced abort workflow (onAbort)
 
 ### Tests
 
