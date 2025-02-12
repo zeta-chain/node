@@ -24,6 +24,7 @@ func New(setDefaults bool) Config {
 		cfg.EVMChainConfigs = evmChainsConfigs()
 		cfg.BTCChainConfigs = btcChainsConfigs()
 		cfg.SolanaConfig = solanaConfigLocalnet()
+		cfg.SuiConfig = suiConfigLocalnet()
 		cfg.TONConfig = tonConfigLocalnet()
 	}
 
@@ -46,6 +47,12 @@ func bitcoinConfigRegnet() BTCConfig {
 func solanaConfigLocalnet() SolanaConfig {
 	return SolanaConfig{
 		Endpoint: "http://solana:8899",
+	}
+}
+
+func suiConfigLocalnet() SuiConfig {
+	return SuiConfig{
+		Endpoint: "http://sui:9000",
 	}
 }
 
