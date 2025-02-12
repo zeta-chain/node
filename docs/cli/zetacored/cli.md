@@ -14308,7 +14308,7 @@ zetacored tx observer [flags]
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx observer add-observer](#zetacored-tx-observer-add-observer)	 - Broadcast message add-observer
 * [zetacored tx observer disable-cctx](#zetacored-tx-observer-disable-cctx)	 - Disable inbound and outbound for CCTX
-* [zetacored tx observer disable-fast-confirmation](#zetacored-tx-observer-disable-fast-confirmation)	 - Disable fast confirmation for the given chain id
+* [zetacored tx observer disable-fast-confirmation](#zetacored-tx-observer-disable-fast-confirmation)	 - Disable fast confirmation for the given chain ID
 * [zetacored tx observer enable-cctx](#zetacored-tx-observer-enable-cctx)	 - Enable inbound and outbound for CCTX
 * [zetacored tx observer encode](#zetacored-tx-observer-encode)	 - Encode a json string into hex
 * [zetacored tx observer remove-chain-params](#zetacored-tx-observer-remove-chain-params)	 - Broadcast message to remove chain params
@@ -14429,7 +14429,7 @@ zetacored tx observer disable-cctx [disable-inbound] [disable-outbound] [flags]
 
 ## zetacored tx observer disable-fast-confirmation
 
-Disable fast confirmation for the given chain id
+Disable fast confirmation for the given chain ID
 
 ```
 zetacored tx observer disable-fast-confirmation [chain-id] [flags]
