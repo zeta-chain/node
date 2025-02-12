@@ -51,7 +51,7 @@ func (k Keeper) ProcessAbort(
 		cctx.RevertOptions.RevertMessage,
 	)
 
-	if err != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
+	if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
 		logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 		if len(logs) > 0 {
 			tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
