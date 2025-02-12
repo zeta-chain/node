@@ -14,19 +14,16 @@ type Inbound struct {
 	TxHash     string
 	EventIndex uint64
 	// Note: CoinType is what is used as Asset field in the ForeignCoin object
-	CoinType CoinType
-	Amount   uint64
-	Sender   string
-	Receiver ethcommon.Address
-	Payload  []byte
+	CoinType         CoinType
+	Amount           uint64
+	Sender           string
+	Receiver         ethcommon.Address
+	Payload          []byte
+	IsCrossChainCall bool
 }
 
 func (d *Inbound) IsGasDeposit() bool {
 	return d.CoinType == SUI
-}
-
-func (d *Inbound) IsCrossChainCall() bool {
-	return len(d.Payload) > 0
 }
 
 // parseInbound parses an inbound from a JSON read in the SUI event
@@ -67,11 +64,15 @@ func parseInbound(event models.SuiEventResponse, eventType string) (Inbound, err
 
 	receiver := ethcommon.HexToAddress(parsedReceiver)
 	if receiver == (ethcommon.Address{}) {
-		return Inbound{}, errors.New("invalid receiver address")
+		return Inbound{}, errors.New("can't parse receiver address")
 	}
+
+	isCrosschainCall := false
 
 	var payload []byte
 	if eventType == eventDepositAndCall {
+		isCrosschainCall = true
+
 		parsedPayload, ok := parsedJSON["payload"].([]interface{})
 		if !ok {
 			return Inbound{}, errors.New("invalid payload")
@@ -83,13 +84,14 @@ func parseInbound(event models.SuiEventResponse, eventType string) (Inbound, err
 	}
 
 	return Inbound{
-		TxHash:     event.Id.TxDigest,
-		EventIndex: eventIndex,
-		CoinType:   CoinType(coinType),
-		Amount:     amount,
-		Sender:     sender,
-		Receiver:   receiver,
-		Payload:    payload,
+		TxHash:           event.Id.TxDigest,
+		EventIndex:       eventIndex,
+		CoinType:         CoinType(coinType),
+		Amount:           amount,
+		Sender:           sender,
+		Receiver:         receiver,
+		Payload:          payload,
+		IsCrossChainCall: isCrosschainCall,
 	}, nil
 }
 
@@ -104,7 +106,7 @@ func convertPayload(data []interface{}) ([]byte, error) {
 			}
 			payload = append(payload, byte(b))
 		} else {
-			return nil, fmt.Errorf("invalid payload data at index %d", i)
+			return nil, fmt.Errorf("invalid payload data at index %d, not a float64", i)
 		}
 	}
 	return payload, nil

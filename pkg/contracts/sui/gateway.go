@@ -64,7 +64,8 @@ func (g *Gateway) queryInbounds(ctx context.Context, _, _ uint64, event string) 
 	// TODO: Support pagination
 	res, err := g.client.SuiXQueryEvents(ctx, models.SuiXQueryEventsRequest{
 		SuiEventFilter: map[string]any{
-			// TODO: Fix the error
+			// TODO: Fix the error, or add another solution to query events by time range
+			// https://github.com/zeta-chain/node/issues/3523
 			// using TimeRange causes the following error when sending the query:
 			// {"code":-32602,"message":"Invalid params","data":"expected value at line 1 column 108"}
 			// commenting out for new and querying all events
@@ -73,12 +74,11 @@ func (g *Gateway) queryInbounds(ctx context.Context, _, _ uint64, event string) 
 			//	EndTime:   to,
 			//},
 			//"TimeRange": map[string]interface{}{
-			//"startTime": from,
-			//"endTime":   to,
+			//	"startTime": from,
+			//	"endTime":   to,
 			//},
 			"MoveEventType": eventType(g.packageID, moduleName, event),
 		},
-		Limit: 5,
 	})
 	if err != nil {
 		return []Inbound{}, err
