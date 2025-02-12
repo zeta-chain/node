@@ -16,8 +16,6 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-var _ client = (*Client)(nil)
-
 // NewFromEndpoint Client constructor based on endpoint string.
 func NewFromEndpoint(endpoint string) *Client {
 	return New(sui.NewSuiClient(endpoint))

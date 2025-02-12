@@ -1,35 +1,38 @@
-package sui_test
+package sui
 
 import (
 	"context"
 	"errors"
-	"github.com/block-vision/sui-go-sdk/models"
-	"github.com/block-vision/sui-go-sdk/sui"
-	"github.com/stretchr/testify/require"
-	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
-	"github.com/zeta-chain/node/pkg/contracts/sui/mocks"
-	"github.com/zeta-chain/node/testutil/sample"
 	"testing"
 	"time"
+
+	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/block-vision/sui-go-sdk/sui"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// This is a manual live test, uncomment the t.Skip to run it
+const rpcTestnet = "https://sui-testnet-endpoint.blockvision.org"
+
 // The test used the gateway deployed on Sui testnet at
 // https://suiscan.xyz/testnet/object/0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db/tx-blocks
 func TestLiveGateway_ReadInbounds(t *testing.T) {
-	t.Skip("skipping live test")
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping live test")
+		return
+	}
 
-	client := sui.NewSuiClient("https://sui-testnet-endpoint.blockvision.org")
+	client := sui.NewSuiClient(rpcTestnet)
 	ctx := context.Background()
 	now := time.Now()
 
 	// query event from last 2 hours
 	from := uint64(now.Add(-2 * time.Hour).UnixMilli())
 
-	gateway := zetasui.NewGateway(
-		client,
-		"0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db",
-	)
+	gateway := NewGateway(client, "0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db")
 	inbounds, err := gateway.QueryDepositInbounds(ctx, from, uint64(now.UnixMilli()))
 	require.NoError(t, err)
 	t.Logf("deposit:")
@@ -50,8 +53,8 @@ func TestLiveGateway_ReadInbounds(t *testing.T) {
 }
 
 func TestGateway_QueryDepositInbounds(t *testing.T) {
-	clientMock := mocks.NewSuiClient(t)
-	gateway := zetasui.NewGateway(clientMock, "packageID")
+	clientMock := mocks.NewSUIClient(t)
+	gateway := NewGateway(clientMock, "packageID")
 	ctx := context.Background()
 
 	ethAddr1 := sample.EthAddress()
@@ -61,7 +64,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 		name             string
 		suiQueryRes      models.PaginatedEventsResponse
 		suiQueryErr      error
-		expectedInbounds []zetasui.Inbound
+		expectedInbounds []Inbound
 		errContains      string
 	}{
 		{
@@ -69,7 +72,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 			suiQueryRes: models.PaginatedEventsResponse{
 				Data: []models.SuiEventResponse{},
 			},
-			expectedInbounds: []zetasui.Inbound{},
+			expectedInbounds: []Inbound{},
 		},
 		{
 			name:        "query error",
@@ -86,7 +89,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -98,7 +101,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "2",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "200",
 							"sender":    "0x456",
 							"receiver":  ethAddr2.Hex(),
@@ -106,11 +109,11 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 					},
 				},
 			},
-			expectedInbounds: []zetasui.Inbound{
+			expectedInbounds: []Inbound{
 				{
 					TxHash:           "0xabc",
 					EventIndex:       1,
-					CoinType:         zetasui.SUI,
+					CoinType:         SUI,
 					Amount:           100,
 					Sender:           "0x123",
 					Receiver:         ethAddr1,
@@ -119,7 +122,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 				{
 					TxHash:           "0xefg",
 					EventIndex:       2,
-					CoinType:         zetasui.SUI,
+					CoinType:         SUI,
 					Amount:           200,
 					Sender:           "0x456",
 					Receiver:         ethAddr2,
@@ -137,7 +140,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "invalid",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -177,7 +180,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    100,
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -197,7 +200,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    123,
 							"receiver":  ethAddr1.Hex(),
@@ -217,7 +220,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  123,
@@ -237,7 +240,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  "invalid",
@@ -250,7 +253,7 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			clientMock.MockSuiXQueryEvents(tc.suiQueryRes, tc.suiQueryErr)
+			onQueryEvent(clientMock, tc.suiQueryRes, tc.suiQueryErr)
 			inbounds, err := gateway.QueryDepositInbounds(ctx, 0, 0)
 			if tc.errContains != "" {
 				require.ErrorContains(t, err, tc.errContains)
@@ -263,8 +266,8 @@ func TestGateway_QueryDepositInbounds(t *testing.T) {
 }
 
 func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
-	clientMock := mocks.NewSuiClient(t)
-	gateway := zetasui.NewGateway(clientMock, "packageID")
+	clientMock := mocks.NewSUIClient(t)
+	gateway := NewGateway(clientMock, "packageID")
 	ctx := context.Background()
 
 	ethAddr1 := sample.EthAddress()
@@ -274,7 +277,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 		name             string
 		suiQueryRes      models.PaginatedEventsResponse
 		suiQueryErr      error
-		expectedInbounds []zetasui.Inbound
+		expectedInbounds []Inbound
 		errContains      string
 	}{
 		{
@@ -282,7 +285,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 			suiQueryRes: models.PaginatedEventsResponse{
 				Data: []models.SuiEventResponse{},
 			},
-			expectedInbounds: []zetasui.Inbound{},
+			expectedInbounds: []Inbound{},
 		},
 		{
 			name:        "query error",
@@ -299,7 +302,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 							EventSeq: "1",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -316,7 +319,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 							EventSeq: "2",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "200",
 							"sender":    "0x456",
 							"receiver":  ethAddr2.Hex(),
@@ -325,11 +328,11 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 					},
 				},
 			},
-			expectedInbounds: []zetasui.Inbound{
+			expectedInbounds: []Inbound{
 				{
 					TxHash:           "0xabc",
 					EventIndex:       1,
-					CoinType:         zetasui.SUI,
+					CoinType:         SUI,
 					Amount:           100,
 					Sender:           "0x123",
 					Receiver:         ethAddr1,
@@ -339,7 +342,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 				{
 					TxHash:           "0xefg",
 					EventIndex:       2,
-					CoinType:         zetasui.SUI,
+					CoinType:         SUI,
 					Amount:           200,
 					Sender:           "0x456",
 					Receiver:         ethAddr2,
@@ -358,7 +361,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 							EventSeq: "2",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -383,7 +386,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 							EventSeq: "2",
 						},
 						ParsedJson: map[string]interface{}{
-							"coin_type": string(zetasui.SUI),
+							"coin_type": string(SUI),
 							"amount":    "100",
 							"sender":    "0x123",
 							"receiver":  ethAddr1.Hex(),
@@ -401,7 +404,7 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			clientMock.MockSuiXQueryEvents(tc.suiQueryRes, tc.suiQueryErr)
+			onQueryEvent(clientMock, tc.suiQueryRes, tc.suiQueryErr)
 			inbounds, err := gateway.QueryDepositAndCallInbounds(ctx, 0, 0)
 			if tc.errContains != "" {
 				require.ErrorContains(t, err, tc.errContains)
@@ -411,4 +414,8 @@ func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
 			require.ElementsMatch(t, tc.expectedInbounds, inbounds)
 		})
 	}
+}
+
+func onQueryEvent(m *mocks.SUIClient, res models.PaginatedEventsResponse, err error) {
+	m.On("SuiXQueryEvents", mock.Anything, mock.Anything).Return(res, err).Once()
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
-	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/pkg/errors"
 )
 
@@ -25,8 +24,12 @@ type CoinType string
 
 // Gateway contains the API to read inbounds and sign outbounds to the Sui gateway
 type Gateway struct {
-	client    sui.ISuiAPI
+	client    RPC
 	packageID string
+}
+
+type RPC interface {
+	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
 }
 
 //go:embed bin/gateway.mv
@@ -38,7 +41,7 @@ var ErrParseEvent = errors.New("event parse error")
 // NewGateway creates a new SUI gateway
 // Note: packageID is the equivalent for gateway address or program ID on Solana
 // It's what will be set in gateway chain params
-func NewGateway(client sui.ISuiAPI, packageID string) *Gateway {
+func NewGateway(client RPC, packageID string) *Gateway {
 	return &Gateway{client, packageID}
 }
 
