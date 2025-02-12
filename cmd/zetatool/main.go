@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/node/cmd/zetatool/cli"
 	"github.com/zeta-chain/node/cmd/zetatool/config"
-	"github.com/zeta-chain/node/cmd/zetatool/inbound"
 )
 
 var rootCmd = &cobra.Command{
@@ -16,8 +16,11 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(inbound.NewGetInboundBallotCMD())
+	rootCmd.AddCommand(cli.NewGetInboundBallotCMD())
+	rootCmd.AddCommand(cli.NewTrackCCTXCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
+	rootCmd.PersistentFlags().
+		Bool(config.FlagDebug, false, "enable debug mode, to show more details on why the command might be failing")
 }
 
 func main() {

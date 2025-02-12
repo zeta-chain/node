@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer is the observer for evm chains
@@ -266,6 +267,26 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	}
 
 	ob.ReportBlockLatency(blockTime)
+	ob.Logger().Chain.Info().Msg("CheckRPCStatus succeed")
+
+	return nil
+}
+
+// updateLastBlock is a helper function to update the last block number.
+// Note: keep last block up-to-date helps to avoid inaccurate confirmation.
+func (ob *Observer) updateLastBlock(ctx context.Context) error {
+	blockNumber, err := ob.evmClient.BlockNumber(ctx)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "error getting block number")
+	case blockNumber < ob.LastBlock():
+		return fmt.Errorf("block number should not decrease: current %d last %d", blockNumber, ob.LastBlock())
+	default:
+		ob.WithLastBlock(blockNumber)
+	}
+
+	// increment prom counter
+	metrics.GetBlockNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	return nil
 }

@@ -4,12 +4,33 @@
 
 ### Features
 
-* [3461](https://github.com/zeta-chain/node/pull/3461) - add new 'ConfirmationParams' field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+* [3461](https://github.com/zeta-chain/node/pull/3461) - add new `ConfirmationParams` field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
+* [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
+* [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
+* [3506](https://github.com/zeta-chain/node/pull/3506) - define `ConfirmationMode` enum and add it to `InboundParams`, `OutboundParams`, `MsgVoteInbound` and `MsgVoteOutbound`
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
+
+### Refactor
+
+* [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
+* [3496](https://github.com/zeta-chain/node/pull/3496) - zetaclient uses `ConfirmationParams` instead of old `ConfirmationCount`; use block ranged based observation for btc and evm chain.
+
+### Fixes
+
+* [3501](https://github.com/zeta-chain/node/pull/3501) - fix E2E test failure caused by nil `ConfirmationParams` for Solana and TON
+* [3509](https://github.com/zeta-chain/node/pull/3509) - schedule Bitcoin TSS keysign on interval to avoid TSS keysign spam
+* [3517](https://github.com/zeta-chain/node/pull/3517) - remove duplicate gateway event appending to fix false positive on multiple events in same tx
 
 ### Tests
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
+* [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
+
+## v27.0.1
+
+### Fixes
+
+* [3460](https://github.com/zeta-chain/node/pull/3460) - add `group`,`gov`,`params`,`consensus`,`feemarket` ,`crisis`,`vesting` modules to the cosmos interface registry to enable parsing of tx results.
 
 ## v27.0.0
 
@@ -26,13 +47,9 @@
 * [3358](https://github.com/zeta-chain/node/pull/3358) - register aborted CCTX for Bitcoin inbound that carries insufficient depositor fee
 * [3368](https://github.com/zeta-chain/node/pull/3368) - cli command to fetch inbound ballot from inbound hash added to zetatools.
 * [3425](https://github.com/zeta-chain/node/pull/3425) - enable inscription parsing on Bitcoin mainnet
-
-### Refactor
-
 * [3332](https://github.com/zeta-chain/node/pull/3332) - implement orchestrator V2. Move BTC observer-signer to V2
 * [3360](https://github.com/zeta-chain/node/pull/3360) - update protocol contract imports using consolidated path
 * [3349](https://github.com/zeta-chain/node/pull/3349) - implement new bitcoin rpc in zetaclient with improved performance and observability
-* [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3390](https://github.com/zeta-chain/node/pull/3390) - orchestrator V2: EVM observer-signer
 * [3426](https://github.com/zeta-chain/node/pull/3426) - use protocol contracts V2 with Bitcoin deposits
 * [3326](https://github.com/zeta-chain/node/pull/3326) - improve error messages for cctx status object

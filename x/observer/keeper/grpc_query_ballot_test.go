@@ -224,7 +224,7 @@ func TestKeeper_Ballots(t *testing.T) {
 				VoterList:            []string{sample.AccAddress()},
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
-				BallotCreationHeight: 1,
+				BallotCreationHeight: 1 + int64(i),
 				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
@@ -234,5 +234,10 @@ func TestKeeper_Ballots(t *testing.T) {
 		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
 		require.NoError(t, err)
 		require.ElementsMatch(t, ballots, res.Ballots)
+
+		firstBallotCreationHeight := res.Ballots[0].BallotCreationHeight
+		for _, ballot := range res.Ballots {
+			require.GreaterOrEqual(t, ballot.BallotCreationHeight, firstBallotCreationHeight)
+		}
 	})
 }

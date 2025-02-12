@@ -35,6 +35,11 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
 	}
 
+	// keep last block up-to-date
+	if err := ob.updateLastBlock(ctx); err != nil {
+		return err
+	}
+
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
 		Str(logs.FieldMethod, "ProcessOutboundTrackers").
@@ -111,6 +116,7 @@ func (ob *Observer) PostVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
@@ -475,16 +481,11 @@ func (ob *Observer) checkConfirmedTx(
 		logger.Error().Msg("receipt is nil")
 		return nil, nil, false
 	}
-	ob.LastBlock()
+
 	// check confirmations
-	lastHeight, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("BlockNumber error")
-		return nil, nil, false
-	}
-	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
-		logger.Debug().
-			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), lastHeight)
+	txBlock := receipt.BlockNumber.Uint64()
+	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
 		return nil, nil, false
 	}
 

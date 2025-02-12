@@ -110,6 +110,10 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
 		GatewayAddress:              gw.ID.ToRaw(),
+		ConfirmationParams: &observertypes.ConfirmationParams{
+			SafeInboundCount:  1,
+			SafeOutboundCount: 1,
+		},
 	}
 
 	msg := observertypes.NewMsgUpdateChainParams(creator, chainParams)

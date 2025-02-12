@@ -26,7 +26,8 @@ func TestMigrateStore(t *testing.T) {
 		require.NoError(t, err)
 		list, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)
-		require.Equal(t, types.DefaultAuthorizationsList(), list)
+
+		require.ElementsMatch(t, types.DefaultAuthorizationsList().Authorizations, list.Authorizations)
 	})
 
 	t.Run("set default authorization list if list is not found", func(t *testing.T) {

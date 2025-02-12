@@ -137,6 +137,7 @@ message MsgVoteOutbound {
 	int64 outbound_chain = 7;
 	uint64 outbound_tss_nonce = 8;
 	pkg.coin.CoinType coin_type = 9;
+	ConfirmationMode confirmation_mode = 13;
 }
 ```
 
@@ -205,6 +206,7 @@ message MsgVoteInbound {
 	CallOptions call_options = 18;
 	bool is_cross_chain_call = 19;
 	InboundStatus status = 20;
+	ConfirmationMode confirmation_mode = 21;
 }
 ```
 

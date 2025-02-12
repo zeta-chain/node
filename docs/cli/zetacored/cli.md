@@ -6826,12 +6826,18 @@ zetacored query observer list-ballots [flags]
 ### Options
 
 ```
+      --count-total        count total number of records in list-ballots to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-ballots
+      --limit uint         pagination limit of list-ballots to query for (default 100)
       --node string        [host]:[port] to CometBFT RPC interface for this chain 
+      --offset uint        pagination offset of list-ballots to query for
   -o, --output string      Output format (text|json) 
+      --page uint          pagination page of list-ballots to query for. This sets offset to a multiple of limit (default 1)
+      --page-key string    pagination page-key of list-ballots to query for
+      --reverse            results are sorted in descending order
 ```
 
 ### Options inherited from parent commands
@@ -10992,7 +10998,13 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-inbound 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 8453 "" 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 7000 1000000 "" 0x66b59ad844404e91faa9587a3061e2f7af36f7a7a1a0afaca3a2efd811bc9463 26170791 Gas 0x0000000000000000000000000000000000000000 587 V2 FALSE SAFE SUCCESS
 ```
 
 ### Options
@@ -11045,7 +11057,13 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
 Broadcast message to vote an outbound
 
 ```
-zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [flags]
+zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [confirmationMode] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-outbound 0x12044bec3b050fb28996630e9f2e9cc8d6cf9ef0e911e73348ade46c7ba3417a 0x4f29f9199b10189c8d02b83568aba4cb23984f11adf23e7e5d2eb037ca309497 67773716 65646 30011221226 100000 297254 0 137 13812 ERC20 SAFE
 ```
 
 ### Options

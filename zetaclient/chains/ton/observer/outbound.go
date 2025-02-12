@@ -249,6 +249,7 @@ func (ob *Observer) postVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
+		cc.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = gasconst.PostVoteOutboundGasLimit

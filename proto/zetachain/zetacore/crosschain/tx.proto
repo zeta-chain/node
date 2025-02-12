@@ -178,6 +178,7 @@ message MsgVoteOutbound {
   int64 outbound_chain = 7;
   uint64 outbound_tss_nonce = 8;
   pkg.coin.CoinType coin_type = 9;
+  ConfirmationMode confirmation_mode = 13;
 }
 
 message MsgVoteOutboundResponse {}
@@ -219,6 +220,9 @@ message MsgVoteInbound {
 
   // status of the inbound observation
   InboundStatus status = 20;
+
+  // confirmation mode used for the inbound
+  ConfirmationMode confirmation_mode = 21;
 }
 
 message MsgVoteInboundResponse {}
