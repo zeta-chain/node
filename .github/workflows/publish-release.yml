@@ -75,21 +75,21 @@ jobs:
 
       - name: Set Version
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ inputs.version }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_VERSION=${{ inputs.version }}" >> ${GITHUB_ENV}
 
       - name: Create Release Tag
         shell: bash
         run: |
-          git tag ${GITHUB_TAG_MAJOR_VERSION}
+          git tag ${GITHUB_TAG_VERSION}
           create_tag=$(git push --tags || echo "tag exists")
           if [[ $create_tag == "tag exists" ]]; then
             echo "Delete existing tag to re-create"
-            git tag -d ${GITHUB_TAG_MAJOR_VERSION}
-            git push --delete origin ${GITHUB_TAG_MAJOR_VERSION}
+            git tag -d ${GITHUB_TAG_VERSION}
+            git push --delete origin ${GITHUB_TAG_VERSION}
             echo "sleep for 5 seconds to let github catch up."
             sleep 5
             echo "Re-Create Tag."
-            git tag ${GITHUB_TAG_MAJOR_VERSION}
+            git tag ${GITHUB_TAG_VERSION}
             git push --tags      
           fi
 
@@ -99,12 +99,12 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: changelog-current.md
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          tag_name: ${{ env.GITHUB_TAG_VERSION }}
 
       - name: Publish Release Files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_VERSION }}
         run: |
           touch .release-env
           make release
@@ -119,13 +119,18 @@ jobs:
             dist/checksums.txt
 
       - name: Upload Attestation Bundle
-        env: 
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash 
-        run: | 
-          gh release upload ${{ env.GITHUB_TAG_MAJOR_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
+        shell: bash
+        run: |
+          gh release upload ${{ env.GITHUB_TAG_VERSION }} ${{ steps.attestation.outputs.bundle-path }}
 
       - name: Clean Up Workspace
         if: always()
         shell: bash
         run: sudo rm -rf * || echo "failed to cleanup workspace please investigate"
+
+  publish-typescript:
+    needs: publish-release
+    uses: ./.github/workflows/publish-typescript.yml
+    secrets: inherit

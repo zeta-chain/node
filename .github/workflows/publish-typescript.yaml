@@ -1,8 +1,7 @@
 name: Publish Typescript to NPM
 on:
   workflow_dispatch:
-  release:
-    types: [created]
+  workflow_call:
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -18,7 +17,7 @@ jobs:
 
       - name: Install buf
         run: |
-          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-Linux-x86_64 -o /usr/local/bin/buf
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.47.2/buf-Linux-x86_64 -o /usr/local/bin/buf
           chmod +x /usr/local/bin/buf
 
       - name: Generate
@@ -28,7 +27,7 @@ jobs:
       - name: Set Version
         working-directory: typescript
         run: |
-          npm version from-git
+          npm version from-git --no-git-tag-version
 
       - name: Publish package on NPM 📦
         run: npm publish
