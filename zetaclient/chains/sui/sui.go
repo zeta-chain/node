@@ -3,11 +3,13 @@ package sui
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/scheduler"
+	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -53,7 +55,6 @@ func (s *SUI) Start(ctx context.Context) error {
 	// todo
 	//   - [ ] ObserveInbound
 	//   - [ ] ProcessInboundTrackers
-	//   - [ ] PostGasPrice
 	//   - [ ] ProcessOutboundTrackers
 	//   - [ ] ScheduleCCTX
 
@@ -66,7 +67,16 @@ func (s *SUI) Start(ctx context.Context) error {
 		s.scheduler.Register(ctx, exec, opts...)
 	}
 
+	optGasInterval := scheduler.IntervalUpdater(func() time.Duration {
+		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().GasPriceTicker)
+	})
+
+	optGenericSkipper := scheduler.Skipper(func() bool {
+		return !s.observer.ChainParams().IsSupported
+	})
+
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
+	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 
 	// CCTX scheduler (every zetachain block)
 	register(s.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
