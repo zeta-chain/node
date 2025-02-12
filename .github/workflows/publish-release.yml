@@ -100,6 +100,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: changelog-current.md
           tag_name: ${{ env.GITHUB_TAG_VERSION }}
+          generate_release_notes: false
 
       - name: Publish Release Files
         env:
