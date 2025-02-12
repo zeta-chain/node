@@ -3,7 +3,6 @@ package observer_test
 import (
 	"context"
 	"errors"
-	"math/big"
 	"os"
 	"strconv"
 	"testing"
@@ -203,30 +202,6 @@ func Test_BlockCache(t *testing.T) {
 		result, err := ob.GetBlockByNumberCached(ob.ctx, blockNumber)
 		require.ErrorContains(t, err, "cached value is not of type *BTCBlockNHeader")
 		require.Nil(t, result)
-	})
-}
-
-func TestConfirmationThreshold(t *testing.T) {
-	chain := chains.BitcoinMainnet
-	ob := newTestSuite(t, chain)
-
-	t.Run("should return confirmations in chain param", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(t, int64(3), ob.ConfirmationsThreshold(big.NewInt(1000)))
-	})
-
-	t.Run("should return big value confirmations", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(
-			t,
-			int64(observer.BigValueConfirmationCount),
-			ob.ConfirmationsThreshold(big.NewInt(observer.BigValueSats)),
-		)
-	})
-
-	t.Run("big value confirmations is the upper cap", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: observer.BigValueConfirmationCount + 1})
-		require.Equal(t, int64(observer.BigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(1000)))
 	})
 }
 

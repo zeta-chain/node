@@ -69,7 +69,7 @@ func (c *TrackingDetails) checkEvmOutboundTx(ctx *context.Context) error {
 		}
 		// Signer is unused
 		c := zetaevmclient.New(evmClient, ethtypes.NewLondonSigner(tx.ChainId()))
-		confirmed, err := c.IsTxConfirmed(goCtx, hash, chainParams.ConfirmationCount)
+		confirmed, err := c.IsTxConfirmed(goCtx, hash, chainParams.OutboundConfirmationSafe())
 		if err != nil {
 			continue
 		}
@@ -125,7 +125,7 @@ func (c *TrackingDetails) checkBitcoinOutboundTx(ctx *context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get chain params: %w", err)
 	}
-	confirmationCount := chainParams.ConfirmationCount
+	confirmationCount := chainParams.OutboundConfirmationSafe()
 
 	params, err := chains.BitcoinNetParamsFromChainID(outboundChain.ChainId)
 	if err != nil {

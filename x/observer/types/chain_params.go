@@ -155,6 +155,34 @@ func ValidateChainParams(params *ChainParams) error {
 	return nil
 }
 
+// InboundConfirmationSafe returns the safe number of confirmation for inbound observation.
+func (cp ChainParams) InboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// InboundConfirmationFast returns the fast number of confirmation for inbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) InboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastInboundCount > 0 {
+		return cp.ConfirmationParams.FastInboundCount
+	}
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// OutboundConfirmationSafe returns the safe number of confirmation for outbound observation.
+func (cp ChainParams) OutboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeOutboundCount
+}
+
+// OutboundConfirmationFast returns the fast number of confirmation for outbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) OutboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastOutboundCount > 0 {
+		return cp.ConfirmationParams.FastOutboundCount
+	}
+	return cp.ConfirmationParams.SafeOutboundCount
+}
+
 func validChainContractAddress(address string) bool {
 	if !strings.HasPrefix(address, "0x") {
 		return false
@@ -435,5 +463,17 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
 		params1.GatewayAddress == params2.GatewayAddress &&
-		params1.ConfirmationParams == params2.ConfirmationParams
+		confirmationParamsEqual(params1.ConfirmationParams, params2.ConfirmationParams)
+}
+
+// confirmationParamsEqual returns true if two confirmation params are equal
+func confirmationParamsEqual(a, b *ConfirmationParams) bool {
+	if a == b {
+		return true
+	}
+	if (a == nil) || (b == nil) {
+		return false
+	}
+
+	return *a == *b
 }
