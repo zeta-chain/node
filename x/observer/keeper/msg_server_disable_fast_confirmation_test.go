@@ -39,7 +39,7 @@ func setupChainParamsList(
 		require.NoError(t, err)
 	}
 
-	// check list has two chain params with FAST confirmation enabled
+	// chain params should have FAST confirmation enabled
 	allChainParams, found := k.GetChainParamsList(ctx)
 	require.True(t, found)
 	require.Len(t, allChainParams.ChainParams, len(chainParamsList))
