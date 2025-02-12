@@ -54,7 +54,6 @@ func (s *SUI) Start(ctx context.Context) error {
 	//   - [ ] ObserveInbound
 	//   - [ ] ProcessInboundTrackers
 	//   - [ ] PostGasPrice
-	//   - [ ] CheckRPCStatus
 	//   - [ ] ProcessOutboundTrackers
 	//   - [ ] ScheduleCCTX
 
@@ -66,6 +65,8 @@ func (s *SUI) Start(ctx context.Context) error {
 
 		s.scheduler.Register(ctx, exec, opts...)
 	}
+
+	register(s.observer.CheckRPCStatus, "check_rpc_status")
 
 	// CCTX scheduler (every zetachain block)
 	register(s.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)

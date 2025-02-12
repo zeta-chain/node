@@ -24,6 +24,7 @@ import (
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui"
+	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
@@ -188,21 +189,24 @@ func (oc *V2) bootstrapSUI(ctx context.Context, chain zctx.Chain) (*sui.SUI, err
 		return nil, errors.New("chain is not SUI")
 	}
 
-	_, err := zctx.FromContext(ctx)
+	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// todo if app.Config().GetSUIConfig() is not found, return errSkipChain
+	cfg, found := app.Config().GetSUIConfig()
+	if !found {
+		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
+	}
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	// todo client
+	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
 
-	observer := suiobserver.New(baseObserver)
+	observer := suiobserver.New(baseObserver, suiClient)
 
 	signer := suisigner.New(oc.newBaseSigner(chain))
 

@@ -55,6 +55,11 @@ type SolanaConfig struct {
 	Endpoint string `mask:"filled"`
 }
 
+// SUIConfig is the config for SUI chain
+type SUIConfig struct {
+	Endpoint string `mask:"filled"`
+}
+
 // TONConfig is the config for TON chain
 type TONConfig struct {
 	// Can be either URL of local file path
@@ -96,6 +101,7 @@ type Config struct {
 	// Deprecated: the 'BitcoinConfig' will be removed once the 'BTCChainConfigs' is fully adopted
 	BitcoinConfig BTCConfig    `json:"BitcoinConfig"`
 	SolanaConfig  SolanaConfig `json:"SolanaConfig"`
+	SUIConfig     SUIConfig    `json:"SUIConfig"`
 	TONConfig     TONConfig    `json:"TONConfig"`
 
 	// compliance config
@@ -147,6 +153,14 @@ func (c Config) GetSolanaConfig() (SolanaConfig, bool) {
 	defer c.mu.RUnlock()
 
 	return c.SolanaConfig, c.SolanaConfig != (SolanaConfig{})
+}
+
+// GetSUIConfig returns the SUI config
+func (c Config) GetSUIConfig() (SUIConfig, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.SUIConfig, c.SUIConfig != (SUIConfig{})
 }
 
 // GetTONConfig returns the TONConfig and a bool indicating if it's present.

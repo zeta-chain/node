@@ -163,14 +163,16 @@ func TestBootstrap(t *testing.T) {
 		// Given orchestrator
 		ts := newTestSuite(t)
 
-		// todo client and stuff
-		// todo config
+		suiServer, suiConfig := testrpc.NewSUIServer(t)
+		mockSuiCalls(ts, suiServer)
 
 		// Disable other chains
 		ts.UpdateConfig(func(cfg *config.Config) {
+			cfg.SUIConfig = suiConfig
 			cfg.BTCChainConfigs = nil
 			cfg.EVMChainConfigs = nil
 			cfg.SolanaConfig.Endpoint = ""
+			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -302,7 +304,11 @@ func mockEthCalls(_ *testSuite, client *testrpc.EVMServer) {
 	client.SetChainID(1)
 }
 
-func mockSolanaCalls(_ *testSuite, client *testrpc.SolanaServer) {
+func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {
+	// todo
+}
+
+func mockSuiCalls(_ *testSuite, _ *testrpc.SUIServer) {
 	// todo
 }
 
