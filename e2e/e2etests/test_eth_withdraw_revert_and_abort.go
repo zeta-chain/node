@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/zeta-chain/node/testutil/sample"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -26,11 +27,11 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// perform the withdraw
 	tx := r.ETHWithdrawAndCall(
-		r.TestDAppV2EVMAddr,
+		sample.EthAddress(), // non-existing address
 		amount,
 		[]byte("revert"),
 		gatewayzevm.RevertOptions{
-			RevertAddress:    r.TestDAppV2ZEVMAddr,
+			RevertAddress:    sample.EthAddress(), // non-existing address
 			CallOnRevert:     true,
 			RevertMessage:    []byte("revert"),
 			OnRevertGasLimit: big.NewInt(200000),

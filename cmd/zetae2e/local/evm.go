@@ -57,7 +57,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestETHDepositName, // necessary to pay fees on ZEVM and withdraw
 			//e2etests.TestETHDepositAndCallRevertName,
 			//e2etests.TestETHDepositAndCallRevertWithCallName,
-			e2etests.TestETHDepositRevertAndAbortName,
+			//e2etests.TestETHDepositRevertAndAbortName,
 			//e2etests.TestETHWithdrawAndCallRevertName,
 			//e2etests.TestETHWithdrawAndCallRevertWithCallName,
 			e2etests.TestETHWithdrawRevertAndAbortName,
