@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// CmdAddInboundTracker returns the command to add an inbound tracker
 func CmdAddInboundTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "add-inbound-tracker [chain-id] [tx-hash] [coin-type]",
@@ -36,6 +37,37 @@ func CmdAddInboundTracker() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argChain,
 				argsCoinType,
+				argTxHash,
+			)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// CmdRemoveInboundTracker returns the command to remove an inbound tracker
+func CmdRemoveInboundTracker() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-inbound-tracker [chain-id] [tx-hash]",
+		Short: `Remove an inbound tracker`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			argTxHash := args[1]
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgRemoveInboundTracker(
+				clientCtx.GetFromAddress().String(),
+				argChain,
 				argTxHash,
 			)
 

@@ -198,6 +198,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 }
 
@@ -303,9 +304,9 @@ func ParseGatewayInstruction(
 	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		if err != nil {
-			return contracts.TryParseInstructionExecute(instruction)
+			return contracts.ParseInstructionExecute(instruction)
 		}
 
 		return inst, err

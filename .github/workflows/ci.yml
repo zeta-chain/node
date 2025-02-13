@@ -20,7 +20,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: rm -rf *
   rpcimportable:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     # do not run this on forks as they are not installable
     # it will still be check in the merge queue in this case

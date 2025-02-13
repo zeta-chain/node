@@ -58927,6 +58927,15 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
+  crosschainConfirmationMode:
+    type: string
+    enum:
+      - SAFE
+      - FAST
+    default: SAFE
+    title: |-
+      - SAFE: an inbound/outbound is confirmed using safe confirmation count
+       - FAST: an inbound/outbound is confirmed using fast confirmation count
   crosschainConversion:
     type: object
     properties:
@@ -59042,6 +59051,9 @@ definitions:
       status:
         $ref: '#/definitions/crosschainInboundStatus'
         title: status of the inbound observation
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the inbound
   crosschainInboundStatus:
     type: string
     enum:
@@ -59097,6 +59109,8 @@ definitions:
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
+    type: object
+  crosschainMsgRemoveInboundTrackerResponse:
     type: object
   crosschainMsgRemoveOutboundTrackerResponse:
     type: object
@@ -59169,6 +59183,9 @@ definitions:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
       call_options:
         $ref: '#/definitions/crosschainCallOptions'
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the outbound
   crosschainOutboundTracker:
     type: object
     properties:

@@ -14,7 +14,7 @@ func CmdListBlockHeader() *cobra.Command {
 		Short: "List all the block headers",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func CmdShowBlockHeader() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			blockHash := args[0]
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

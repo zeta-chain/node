@@ -144,7 +144,7 @@ func (signer *Signer) TryProcessOutbound(
 		tx = whitelistTx
 
 	case coin.CoinType_Gas:
-		if cctx.InboundParams.IsCrossChainCall && IsSenderZetaChain(cctx, zetacoreClient) {
+		if cctx.InboundParams.IsCrossChainCall && IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
 			executeTx, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
@@ -284,13 +284,76 @@ func (signer *Signer) prepareWithdrawTx(
 	// sign gateway withdraw message by TSS
 	msg, err := signer.createAndSignMsgWithdraw(ctx, params, height, cancelTx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createAndSignMsgWithdraw error")
 	}
 
 	// sign the withdraw transaction by relayer key
 	tx, err := signer.signWithdrawTx(ctx, *msg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "signWithdrawTx error")
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) prepareExecuteTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	message, err := hex.DecodeString(cctx.RelayedMessage)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+	}
+	msg, err := contracts.DecodeExecuteMsg(message)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decodeExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
+	}
+
+	// sign gateway execute message by TSS
+	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
+	msgExecute, err := signer.createAndSignMsgExecute(
+		ctx,
+		params,
+		height,
+		sender,
+		msg.Data,
+		remainingAccounts,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "createAndSignMsgExecute error")
+	}
+
+	// sign the execute transaction by relayer key
+	tx, err := signer.signExecuteTx(ctx, *msgExecute)
+	if err != nil {
+		return nil, errors.Wrap(err, "signExecuteTx error")
 	}
 
 	return tx, nil
@@ -384,7 +447,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	// get mint details to get decimals
 	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "decodeMintAccountDetails error")
 	}
 
 	// sign gateway withdraw spl message by TSS
@@ -397,13 +460,13 @@ func (signer *Signer) prepareWithdrawSPLTx(
 		cancelTx,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createAndSignMsgWithdrawSPL error")
 	}
 
 	// sign the withdraw transaction by relayer key
 	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "signWithdrawSPLTx error")
 	}
 
 	return tx, nil
@@ -494,25 +557,25 @@ func (signer *Signer) prepareWhitelistTx(
 
 	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "publicKeyFromBase58 %s error", relayedMsg[1])
 	}
 
 	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "findProgramAddress error for seed %s", seed)
 	}
 
 	// sign gateway whitelist message by TSS
 	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
 	}
 
 	// sign the whitelist transaction by relayer key
 	tx, err := signer.signWhitelistTx(ctx, msg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "signWhitelistTx error")
 	}
 
 	return tx, nil
@@ -577,9 +640,9 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
-// IsSenderZetaChain checks if the sender chain is ZetaChain
+// IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
 // TODO(revamp): move to another package more general for cctx functions
-func IsSenderZetaChain(
+func IsPendingOutboundFromZetaChain(
 	cctx *types.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
