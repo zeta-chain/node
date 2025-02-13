@@ -34,7 +34,7 @@ const (
 	PostBlameDataGasLimit = 200_000
 
 	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx (for zetachain itself)
-	PostVoteOutboundGasLimit = 1_000_000
+	PostVoteOutboundGasLimit = 500_000
 
 	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)
 	// The value is set to 7M because in case of onRevert call, it might consume lot of gas

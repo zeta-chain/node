@@ -258,9 +258,7 @@ func (k Keeper) DepositZRC20(
 		types.ModuleAddressEVM,
 		contract,
 		BigIntZero,
-		big.NewInt(
-			200_000,
-		), // TODO: why is this needed just for solana? estimate gas takes long, same as we had with gateway gas limit
+		nil,
 		true,
 		false,
 		"deposit",

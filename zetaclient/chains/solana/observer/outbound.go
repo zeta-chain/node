@@ -148,9 +148,13 @@ func (ob *Observer) PostVoteOutbound(
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
 	// and the vote msg won't trigger ZEVM interaction
 	const (
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		retryGasLimit = 0
+		gasLimit = zetacore.PostVoteOutboundGasLimit
 	)
+
+	var retryGasLimit uint64
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
 
 	// post vote to zetacore
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
