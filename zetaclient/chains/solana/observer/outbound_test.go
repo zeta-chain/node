@@ -316,7 +316,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -340,7 +340,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		instruction.Data = []byte("invalid instruction data")
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "error deserializing instruction")
@@ -362,7 +362,7 @@ func Test_ParseInstructionWithdraw(t *testing.T) {
 		copy(instruction.Data, fakeDiscriminatorBytes)
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "not a withdraw instruction")
@@ -388,7 +388,7 @@ func Test_ParseInstructionWhitelist(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWhitelist(instruction)
+		inst, err := contracts.ParseInstructionWhitelist(instruction)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -412,7 +412,7 @@ func Test_ParseInstructionWhitelist(t *testing.T) {
 		instruction.Data = []byte("invalid instruction data")
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWhitelist(instruction)
+		inst, err := contracts.ParseInstructionWhitelist(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "error deserializing instruction")
@@ -434,7 +434,7 @@ func Test_ParseInstructionWhitelist(t *testing.T) {
 		copy(instruction.Data, fakeDiscriminatorBytes)
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWhitelist(instruction)
+		inst, err := contracts.ParseInstructionWhitelist(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "not a whitelist_spl_mint instruction")
@@ -460,7 +460,7 @@ func Test_ParseInstructionWithdrawSPL(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -486,7 +486,7 @@ func Test_ParseInstructionWithdrawSPL(t *testing.T) {
 		instruction.Data = []byte("invalid instruction data")
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "error deserializing instruction")
@@ -508,7 +508,7 @@ func Test_ParseInstructionWithdrawSPL(t *testing.T) {
 		copy(instruction.Data, fakeDiscriminatorBytes)
 
 		// ACT
-		inst, err := contracts.TryParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 
 		// ASSERT
 		require.ErrorContains(t, err, "not a withdraw instruction")

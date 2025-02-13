@@ -163,7 +163,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 	case coin.CoinType_ERC20:
-		if cctx.InboundParams.IsCrossChainCall && IsSenderZetaChain(cctx, zetacoreClient) {
+		if cctx.InboundParams.IsCrossChainCall && IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
 			executeSPLTx, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
@@ -354,69 +354,6 @@ func (signer *Signer) prepareExecuteTx(
 	tx, err := signer.signExecuteTx(ctx, *msgExecute)
 	if err != nil {
 		return nil, errors.Wrap(err, "signExecuteTx error")
-	}
-
-	return tx, nil
-}
-
-func (signer *Signer) prepareExecuteTx(
-	ctx context.Context,
-	cctx *types.CrossChainTx,
-	height uint64,
-	logger zerolog.Logger,
-) (*solana.Transaction, error) {
-	params := cctx.GetCurrentOutboundParam()
-	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SOL",
-		)
-	}
-
-	message, err := hex.DecodeString(cctx.RelayedMessage)
-	if err != nil {
-		return nil, err
-	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, err
-	}
-
-	remainingAccounts := []*solana.AccountMeta{}
-	for _, a := range msg.Accounts {
-		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
-			PublicKey:  solana.PublicKey(a.PublicKey),
-			IsWritable: a.IsWritable,
-		})
-	}
-
-	// sign gateway execute message by TSS
-	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
-	msgExecute, err := signer.createAndSignMsgExecute(
-		ctx,
-		params,
-		height,
-		sender,
-		msg.Data,
-		remainingAccounts,
-		cancelTx,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// sign the execute transaction by relayer key
-	tx, err := signer.signExecuteTx(ctx, *msgExecute)
-	if err != nil {
-		return nil, err
 	}
 
 	return tx, nil

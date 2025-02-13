@@ -311,11 +311,11 @@ func ParseGatewayInstruction(
 
 		return inst, err
 	case coin.CoinType_Cmd:
-		return contracts.TryParseInstructionWhitelist(instruction)
+		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		inst, err := contracts.TryParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 		if err != nil {
-			return contracts.TryParseInstructionExecuteSPL(instruction)
+			return contracts.ParseInstructionExecuteSPL(instruction)
 		}
 
 		return inst, err
