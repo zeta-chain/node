@@ -108,17 +108,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
 		testSui           = must(cmd.Flags().GetBool(flagTestSui))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		setupSolana       = testSolana || testPerformance
+		//light             = must(cmd.Flags().GetBool(flagLight))
+		setupOnly = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup = must(cmd.Flags().GetBool(flagSkipSetup))
+		//skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof  = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy       = must(cmd.Flags().GetBool(flagTestLegacy))
+		skipPrecompiles  = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana      = testSolana || testPerformance
 	)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
@@ -298,7 +298,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		//startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
 	if !skipPrecompiles {

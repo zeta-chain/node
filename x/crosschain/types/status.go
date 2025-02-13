@@ -47,8 +47,9 @@ func (m *Status) UpdateErrorMessages(messages StatusMessages) {
 	if messages.ErrorMessageRevert != "" {
 		m.ErrorMessageRevert = messages.ErrorMessageRevert
 	}
-
-	// TODO(IN THIS PR): Add error message for abort
+	if messages.ErrorMessageAbort != "" {
+		m.ErrorMessageAbort = messages.ErrorMessageAbort
+	}
 }
 
 func (m *Status) ValidateTransition(newStatus CctxStatus) bool {

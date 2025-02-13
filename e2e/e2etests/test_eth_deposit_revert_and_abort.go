@@ -47,7 +47,12 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
-	// check onabort was called
+	// check onAbort was called
+	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.True(r, aborted)
+
+	// check abort context was passed
 	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
 	require.NoError(r, err)
 	require.EqualValues(r, r.ETHZRC20Addr.Hex(), abortContext.Asset.Hex())

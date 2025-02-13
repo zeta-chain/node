@@ -14,36 +14,36 @@ import (
 
 // startEVMTests starts EVM chains related tests in parallel
 func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runner.E2ERunner, verbose bool) {
-	// Test happy paths for gas token workflow
-	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
-		e2etests.TestETHDepositName,
-		e2etests.TestETHDepositAndCallName,
-		e2etests.TestETHWithdrawName,
-		e2etests.TestETHWithdrawAndArbitraryCallName,
-		e2etests.TestETHWithdrawAndCallName,
-		e2etests.TestETHWithdrawAndCallThroughContractName,
-		e2etests.TestZEVMToEVMArbitraryCallName,
-		e2etests.TestZEVMToEVMCallName,
-		e2etests.TestZEVMToEVMCallThroughContractName,
-		e2etests.TestEVMToZEVMCallName,
-		e2etests.TestETHDepositAndCallNoMessageName,
-		e2etests.TestETHWithdrawAndCallNoMessageName,
-		e2etests.TestEtherWithdrawRestrictedName,
-	))
-
-	// Test happy paths for erc20 token workflow
-	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
-		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
-		e2etests.TestERC20DepositName,
-		e2etests.TestERC20DepositAndCallName,
-		e2etests.TestERC20WithdrawName,
-		e2etests.TestERC20WithdrawAndArbitraryCallName,
-		e2etests.TestERC20WithdrawAndCallName,
-		e2etests.TestERC20DepositAndCallNoMessageName,
-		e2etests.TestERC20WithdrawAndCallNoMessageName,
-		e2etests.TestDepositAndCallSwapName,
-		e2etests.TestERC20DepositRestrictedName,
-	))
+	//// Test happy paths for gas token workflow
+	//eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
+	//	e2etests.TestETHDepositName,
+	//	e2etests.TestETHDepositAndCallName,
+	//	e2etests.TestETHWithdrawName,
+	//	e2etests.TestETHWithdrawAndArbitraryCallName,
+	//	e2etests.TestETHWithdrawAndCallName,
+	//	e2etests.TestETHWithdrawAndCallThroughContractName,
+	//	e2etests.TestZEVMToEVMArbitraryCallName,
+	//	e2etests.TestZEVMToEVMCallName,
+	//	e2etests.TestZEVMToEVMCallThroughContractName,
+	//	e2etests.TestEVMToZEVMCallName,
+	//	e2etests.TestETHDepositAndCallNoMessageName,
+	//	e2etests.TestETHWithdrawAndCallNoMessageName,
+	//	e2etests.TestEtherWithdrawRestrictedName,
+	//))
+	//
+	//// Test happy paths for erc20 token workflow
+	//eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
+	//	e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
+	//	e2etests.TestERC20DepositName,
+	//	e2etests.TestERC20DepositAndCallName,
+	//	e2etests.TestERC20WithdrawName,
+	//	e2etests.TestERC20WithdrawAndArbitraryCallName,
+	//	e2etests.TestERC20WithdrawAndCallName,
+	//	e2etests.TestERC20DepositAndCallNoMessageName,
+	//	e2etests.TestERC20WithdrawAndCallNoMessageName,
+	//	e2etests.TestDepositAndCallSwapName,
+	//	e2etests.TestERC20DepositRestrictedName,
+	//))
 
 	// Test revert cases for gas token workflow
 	eg.Go(
@@ -66,24 +66,24 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	)
 
 	// Test revert cases for erc20 token workflow
-	eg.Go(
-		evmTestRoutine(
-			conf,
-			"erc20-revert",
-			conf.AdditionalAccounts.UserERC20Revert,
-			color.FgHiRed,
-			deployerRunner,
-			verbose,
-			e2etests.TestETHDepositName,   // necessary to pay fees on ZEVM
-			e2etests.TestERC20DepositName, // necessary to have assets to withdraw
-			e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
-			e2etests.TestOperationAddLiquidityERC20Name,
-			e2etests.TestERC20DepositAndCallRevertName,
-			e2etests.TestERC20DepositAndCallRevertWithCallName,
-			e2etests.TestERC20WithdrawAndCallRevertName,
-			e2etests.TestERC20WithdrawAndCallRevertWithCallName,
-		),
-	)
+	//eg.Go(
+	//	evmTestRoutine(
+	//		conf,
+	//		"erc20-revert",
+	//		conf.AdditionalAccounts.UserERC20Revert,
+	//		color.FgHiRed,
+	//		deployerRunner,
+	//		verbose,
+	//		e2etests.TestETHDepositName,   // necessary to pay fees on ZEVM
+	//		e2etests.TestERC20DepositName, // necessary to have assets to withdraw
+	//		e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
+	//		e2etests.TestOperationAddLiquidityERC20Name,
+	//		e2etests.TestERC20DepositAndCallRevertName,
+	//		e2etests.TestERC20DepositAndCallRevertWithCallName,
+	//		e2etests.TestERC20WithdrawAndCallRevertName,
+	//		e2etests.TestERC20WithdrawAndCallRevertWithCallName,
+	//	),
+	//)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests

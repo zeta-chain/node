@@ -1,14 +1,11 @@
 package keeper
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -34,52 +31,70 @@ func (k Keeper) ProcessAbort(
 	abortedAmount := GetAbortedAmount(*cctx)
 	abortAddress := ethcommon.HexToAddress(cctx.RevertOptions.AbortAddress)
 
+	connectedChainID, outgoing, err := cctx.GetConnectedChainID()
+	if err != nil {
+		messages.ErrorMessageAbort = "failed to get connected chain ID: " + err.Error()
+		cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+		return
+	}
+
 	// use a temporary context to not commit any state change if processing the abort logs fails
 	// this is to avoid an inconsistent state where onAbort is called by created cctx inside are not processed
 	tmpCtx, commit := ctx.CacheContext()
 
 	// process the abort on the zevm
+	// TODO in this PR: set the asset
 	evmTxResponse, err := k.fungibleKeeper.ProcessAbort(
 		tmpCtx,
 		cctx.InboundParams.Sender,
 		abortedAmount.BigInt(),
-		true,
-		1,
+		outgoing,
+		connectedChainID,
 		cctx.InboundParams.CoinType,
 		"",
 		abortAddress,
 		cctx.RevertOptions.RevertMessage,
 	)
 
+	// TODO in this PR: fix this
+	//if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
+	//	logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
+	//	if len(logs) > 0 {
+	//		tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
+	//		txOrigin := cctx.InboundParams.TxOrigin
+	//		if txOrigin == "" {
+	//			txOrigin = cctx.GetInboundParams().Sender
+	//		}
+	//
+	//		// process logs to process cctx events initiated during the contract call
+	//		err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
+	//		if err != nil {
+	//			// this happens if the cctx events are not processed correctly with invalid withdrawals
+	//			// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+	//			// the contract call is considered as reverted
+	//			messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
+	//			cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+	//			return
+	//		}
+	//		ctx.EventManager().EmitEvent(
+	//			sdk.NewEvent(sdk.EventTypeMessage,
+	//				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+	//				sdk.NewAttribute("action", "ProcessAbort"),
+	//				sdk.NewAttribute("contract", cctx.RevertOptions.AbortAddress),
+	//				sdk.NewAttribute("data", ""),
+	//				sdk.NewAttribute("cctxIndex", cctx.Index),
+	//			),
+	//		)
+	//	}
+	//}
+	if evmTxResponse == nil {
+		messages.ErrorMessageAbort = "failed to process abort: evmTxResponse is nil"
+	}
+	if evmTxResponse != nil && fungibletypes.IsContractReverted(evmTxResponse, err) {
+		messages.ErrorMessageAbort = "failed to process abort: contract reverted"
+	}
 	if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
-		logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
-		if len(logs) > 0 {
-			tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
-			txOrigin := cctx.InboundParams.TxOrigin
-			if txOrigin == "" {
-				txOrigin = cctx.GetInboundParams().Sender
-			}
-
-			// process logs to process cctx events initiated during the contract call
-			err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
-			if err != nil {
-				// this happens if the cctx events are not processed correctly with invalid withdrawals
-				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
-				// the contract call is considered as reverted
-				messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
-				cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
-				return
-			}
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(sdk.EventTypeMessage,
-					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-					sdk.NewAttribute("action", "ProcessAbort"),
-					sdk.NewAttribute("contract", cctx.RevertOptions.AbortAddress),
-					sdk.NewAttribute("data", ""),
-					sdk.NewAttribute("cctxIndex", cctx.Index),
-				),
-			)
-		}
+		messages.ErrorMessageAbort = "failed to process abort: contract not reverted"
 	}
 	if err != nil {
 		messages.ErrorMessageAbort = "failed to process abort: " + err.Error()
