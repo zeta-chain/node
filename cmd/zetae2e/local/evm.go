@@ -60,30 +60,31 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestETHDepositRevertAndAbortName,
 			//e2etests.TestETHWithdrawAndCallRevertName,
 			//e2etests.TestETHWithdrawAndCallRevertWithCallName,
+			e2etests.TestETHWithdrawRevertAndAbortName,
 			//e2etests.TestETHWithdrawAndCallRevertWithWithdrawName,
 			//e2etests.TestDepositAndCallOutOfGasName,
 		),
 	)
 
 	// Test revert cases for erc20 token workflow
-	//eg.Go(
-	//	evmTestRoutine(
-	//		conf,
-	//		"erc20-revert",
-	//		conf.AdditionalAccounts.UserERC20Revert,
-	//		color.FgHiRed,
-	//		deployerRunner,
-	//		verbose,
-	//		e2etests.TestETHDepositName,   // necessary to pay fees on ZEVM
-	//		e2etests.TestERC20DepositName, // necessary to have assets to withdraw
-	//		e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
-	//		e2etests.TestOperationAddLiquidityERC20Name,
-	//		e2etests.TestERC20DepositAndCallRevertName,
-	//		e2etests.TestERC20DepositAndCallRevertWithCallName,
-	//		e2etests.TestERC20WithdrawAndCallRevertName,
-	//		e2etests.TestERC20WithdrawAndCallRevertWithCallName,
-	//	),
-	//)
+	eg.Go(
+		evmTestRoutine(
+			conf,
+			"erc20-revert",
+			conf.AdditionalAccounts.UserERC20Revert,
+			color.FgHiRed,
+			deployerRunner,
+			verbose,
+			e2etests.TestETHDepositName,   // necessary to pay fees on ZEVM
+			e2etests.TestERC20DepositName, // necessary to have assets to withdraw
+			e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
+			//e2etests.TestOperationAddLiquidityERC20Name,
+			//e2etests.TestERC20DepositAndCallRevertName,
+			//e2etests.TestERC20DepositAndCallRevertWithCallName,
+			//e2etests.TestERC20WithdrawAndCallRevertName,
+			//e2etests.TestERC20WithdrawAndCallRevertWithCallName,
+		),
+	)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests
