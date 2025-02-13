@@ -36,10 +36,10 @@ func TestScheduler(t *testing.T) {
 		ts.scheduler.Stop()
 
 		// ASSERT
-		// Counter should be 2 because we invoke a task once on a start,
-		// once after 1 second (default interval),
+		// Counter should be 1 because we invoke a task once on a start,
+		// once after 10 second (default interval),
 		// and then at T=1.5s we stop the scheduler.
-		assert.Equal(t, int32(2), counter)
+		assert.Equal(t, int32(1), counter)
 
 		// Check logs
 		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
