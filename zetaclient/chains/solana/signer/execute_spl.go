@@ -78,7 +78,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	// the produced signature is in the [R || S || V] format where V is 0 or 1.
 	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
 	if err != nil {
-		return nil, errors.Wrap(err, "Key-sign failed")
+		return nil, errors.Wrap(err, "key-sign failed")
 	}
 
 	// attach the signature and return
@@ -153,7 +153,7 @@ func (signer *Signer) signExecuteSPLTx(
 		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "NewTransaction error")
+		return nil, errors.Wrap(err, "unable to create new tx")
 	}
 
 	// relayer signs the transaction
