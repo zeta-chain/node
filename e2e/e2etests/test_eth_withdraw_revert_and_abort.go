@@ -28,7 +28,7 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	tx := r.ETHWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeGasCall("revert"),
+		[]byte("revert"),
 		gatewayzevm.RevertOptions{
 			RevertAddress:    r.TestDAppV2ZEVMAddr,
 			CallOnRevert:     true,
