@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ func NewBalancesCmd() *cobra.Command {
 		false,
 		"skip the BTC network",
 	)
+	registerERC20Flags(cmd)
 	return cmd
 }
 
@@ -47,6 +49,12 @@ func runBalances(cmd *cobra.Command, args []string) error {
 
 	// initialize context
 	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
+
+	err = processZRC20Flags(cmd, &conf)
+	if err != nil {
+		return fmt.Errorf("process ZRC20 flags: %w", err)
+	}
 
 	// initialize deployer runner with config
 	r, err := zetae2econfig.RunnerFromConfig(
