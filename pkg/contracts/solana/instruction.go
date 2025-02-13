@@ -132,9 +132,9 @@ func (inst *WithdrawInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
 // It returns nil if the instruction can't be parsed as a 'withdraw'.
-func TryParseInstructionWithdraw(instruction solana.CompiledInstruction) (*WithdrawInstructionParams, error) {
+func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*WithdrawInstructionParams, error) {
 	// try deserializing instruction as a 'withdraw'
 	inst := &WithdrawInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -198,9 +198,9 @@ func (inst *ExecuteInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionExecute tries to parse the instruction as a 'execute'.
+// ParseInstructionExecute tries to parse the instruction as a 'execute'.
 // It returns nil if the instruction can't be parsed as a 'execute'.
-func TryParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteInstructionParams, error) {
+func ParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteInstructionParams, error) {
 	// try deserializing instruction as a 'execute'
 	inst := &ExecuteInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -258,9 +258,9 @@ func (inst *WithdrawSPLInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
 // It returns nil if the instruction can't be parsed as a 'withdraw'.
-func TryParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
+func ParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
 	// try deserializing instruction as a 'withdraw'
 	inst := &WithdrawSPLInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -326,9 +326,9 @@ func (inst *WhitelistInstructionParams) TokenAmount() uint64 {
 	return 0
 }
 
-// TryParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
+// ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
 // It returns nil if the instruction can't be parsed as a 'whitelist_spl_mint'.
-func TryParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
+func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
 	// try deserializing instruction as a 'whitelist_spl_mint'
 	inst := &WhitelistInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)

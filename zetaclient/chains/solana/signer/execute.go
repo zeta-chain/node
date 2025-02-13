@@ -48,7 +48,7 @@ func (signer *Signer) createAndSignMsgExecute(
 	// the produced signature is in the [R || S || V] format where V is 0 or 1.
 	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
 	if err != nil {
-		return nil, errors.Wrap(err, "Key-sign failed")
+		return nil, errors.Wrap(err, "key-sign failed")
 	}
 
 	// attach the signature and return
@@ -94,7 +94,7 @@ func (signer *Signer) signExecuteTx(ctx context.Context, msg contracts.MsgExecut
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return nil, errors.Wrap(err, "GetLatestBlockhash error")
+		return nil, errors.Wrap(err, "getLatestBlockhash error")
 	}
 
 	// create a transaction that wraps the instruction
@@ -109,7 +109,7 @@ func (signer *Signer) signExecuteTx(ctx context.Context, msg contracts.MsgExecut
 		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "NewTransaction error")
+		return nil, errors.Wrap(err, "newTransaction error")
 	}
 
 	// relayer signs the transaction

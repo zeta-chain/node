@@ -304,16 +304,16 @@ func ParseGatewayInstruction(
 	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		if err != nil {
-			return contracts.TryParseInstructionExecute(instruction)
+			return contracts.ParseInstructionExecute(instruction)
 		}
 
 		return inst, err
 	case coin.CoinType_Cmd:
-		return contracts.TryParseInstructionWhitelist(instruction)
+		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		return contracts.TryParseInstructionWithdrawSPL(instruction)
+		return contracts.ParseInstructionWithdrawSPL(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}
