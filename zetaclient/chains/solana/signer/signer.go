@@ -177,7 +177,14 @@ func (signer *Signer) TryProcessOutbound(
 				return
 			}
 
+			incrementNonceTx, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
+				return
+			}
+
 			tx = executeSPLTx
+			fallbackTx = incrementNonceTx
 		} else {
 			withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
 			if err != nil {

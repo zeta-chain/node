@@ -21,7 +21,7 @@ func TestSolanaWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
 
-	// get ERC20 SOL balance before withdraw
+	// get ZRC20 SOL balance before withdraw
 	balanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("runner balance of SOL before withdraw: %d", balanceBefore)
@@ -54,14 +54,14 @@ func TestSolanaWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
-	// get ERC20 SOL balance after withdraw
+	// get ZRC20 SOL balance after withdraw
 	balanceAfter, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("runner balance of SOL after withdraw: %d", balanceAfter)
 
-	// check the balance is more than 0
+	// check the balance of revert address is equal to withdraw amount
 	balance, err = r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
-	require.True(r, balance.Cmp(big.NewInt(0)) > 0)
+	require.True(r, balance.Cmp(withdrawAmount) == 0)
 }
