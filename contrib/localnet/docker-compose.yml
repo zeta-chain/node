@@ -256,6 +256,8 @@ services:
     profiles:
       - sui
       - all
+    ports:
+      - "9000:9000" # RPC
     environment:
       DOCKER_IP: 172.20.0.105
     networks:

@@ -135,6 +135,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
 		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ConfirmationMode, cctx.InboundParams.ConfirmationMode)
 	})
 
 	t.Run("successfully set BTC revert address V1", func(t *testing.T) {
