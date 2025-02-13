@@ -109,6 +109,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
+	if inst.Failed() {
+		outboundStatus = chains.ReceiveStatus_failed
+	}
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
@@ -298,6 +301,12 @@ func ParseGatewayInstruction(
 	// the instruction should be an invocation of the gateway program
 	if !programID.Equals(gatewayID) {
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
+	}
+
+	// first check if it was simple nonce increment instruction, which indicates that outbound failed
+	inst, err := contracts.TryParseInstructionIncrementNonce(instruction)
+	if err == nil {
+		return inst, nil
 	}
 
 	// parse the outbound instruction

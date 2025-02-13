@@ -132,6 +132,7 @@ func (signer *Signer) TryProcessOutbound(
 	coinType := cctx.InboundParams.CoinType
 
 	var tx *solana.Transaction
+	var fallbackTx *solana.Transaction
 
 	switch coinType {
 	case coin.CoinType_Cmd:
@@ -150,8 +151,14 @@ func (signer *Signer) TryProcessOutbound(
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
 				return
 			}
+			incrementNonceTx, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
+				return
+			}
 
 			tx = executeTx
+			fallbackTx = incrementNonceTx
 		} else {
 			withdrawTx, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
 			if err != nil {
@@ -196,13 +203,14 @@ func (signer *Signer) TryProcessOutbound(
 	signer.SetRelayerBalanceMetrics(ctx)
 
 	// broadcast the signed tx to the Solana network
-	signer.broadcastOutbound(ctx, tx, chainID, nonce, logger, zetacoreClient)
+	signer.broadcastOutbound(ctx, tx, fallbackTx, chainID, nonce, logger, zetacoreClient)
 }
 
 // broadcastOutbound sends the signed transaction to the Solana network
 func (signer *Signer) broadcastOutbound(
 	ctx context.Context,
 	tx *solana.Transaction,
+	fallbackTx *solana.Transaction,
 	chainID int64,
 	nonce uint64,
 	logger zerolog.Logger,
@@ -247,6 +255,11 @@ func (signer *Signer) broadcastOutbound(
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 		)
 		if err != nil {
+			// in case it is not failure due to nonce mismatch, replace tx with fallback tx
+			// probably need a better way to do this, but currently this is the only error to tolerate like this
+			if !strings.Contains(err.Error(), "NonceMismatch") {
+				tx = fallbackTx
+			}
 			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
 			backOff *= 2
 			continue
@@ -257,6 +270,43 @@ func (signer *Signer) broadcastOutbound(
 		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
 		break
 	}
+}
+
+func (signer *Signer) prepareIncrementNonceTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	// sign gateway increment_nonce message by TSS
+	msg, err := signer.createAndSignMsgIncrementNonce(ctx, params, height, cancelTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the increment_nonce transaction by relayer key
+	tx, err := signer.signIncrementNonceTx(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 func (signer *Signer) prepareWithdrawTx(

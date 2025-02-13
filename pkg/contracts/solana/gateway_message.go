@@ -14,6 +14,7 @@ const (
 	InstructionWhitelistSplToken byte = 3
 	InstructionExecute           byte = 5
 	InstructionExecuteSPL        byte = 6
+	InstructionIncrementNonce    byte = 7
 )
 
 var InstructionIdentifier = []byte("ZETACHAIN")
@@ -113,6 +114,96 @@ func (msg *MsgWithdraw) SigV() uint8 {
 
 // Signer returns the signer of the message
 func (msg *MsgWithdraw) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgIncrementNonce is the message for the Solana gateway increment_nonce instruction
+type MsgIncrementNonce struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the increment_nonce
+	nonce uint64
+
+	// amount is the lamports amount for the increment_nonce
+	amount uint64
+
+	// signature is the signature of the message
+	signature [65]byte
+}
+
+// NewMsgIncrementNonce returns a new increment_nonce message
+func NewMsgIncrementNonce(chainID, nonce, amount uint64) *MsgIncrementNonce {
+	return &MsgIncrementNonce{
+		chainID: chainID,
+		nonce:   nonce,
+		amount:  amount,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgIncrementNonce) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgIncrementNonce) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgIncrementNonce) Amount() uint64 {
+	return msg.amount
+}
+
+// Hash packs the increment_nonce message and computes the hash
+func (msg *MsgIncrementNonce) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionIncrementNonce)
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgIncrementNonce) SetSignature(signature [65]byte) *MsgIncrementNonce {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgIncrementNonce) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgIncrementNonce) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgIncrementNonce) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgIncrementNonce) Signer() (common.Address, error) {
 	msgHash := msg.Hash()
 	msgSig := msg.SigRSV()
 

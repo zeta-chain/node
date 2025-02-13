@@ -686,6 +686,81 @@
       ]
     },
     {
+      "name": "increment_nonce",
+      "discriminator": [
+        84,
+        149,
+        209,
+        233,
+        228,
+        66,
+        195,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer incrementing nonce."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initialize",
       "docs": [
         "Initializes the gateway PDA.",

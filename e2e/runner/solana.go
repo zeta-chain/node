@@ -481,6 +481,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	amount *big.Int,
 	approveAmount *big.Int,
 	data []byte,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
@@ -516,7 +517,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 		r.SOLZRC20Addr,
 		msgEncoded,
 		gatewayzevm.CallOptions{GasLimit: big.NewInt(250000)},
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
 	)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")

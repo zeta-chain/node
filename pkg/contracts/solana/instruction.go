@@ -88,6 +88,72 @@ type OutboundInstruction interface {
 
 	// TokenAmount returns the amount of the instruction
 	TokenAmount() uint64
+
+	Failed() bool
+}
+
+var _ OutboundInstruction = (*IncrementNonceInstructionParams)(nil)
+
+// IncrementNonceInstructionParams contains the parameters for a gateway increment_nonce instruction
+type IncrementNonceInstructionParams struct {
+	// Discriminator is the unique identifier for the increment_nonce instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the increment_nonce
+	Amount uint64
+
+	// Signature is the ECDSA signature (by TSS) for the increment_nonce
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the increment_nonce
+	Nonce uint64
+}
+
+func (inst *IncrementNonceInstructionParams) Failed() bool {
+	return true
+}
+
+// Signer returns the signer of the signature contained
+func (inst *IncrementNonceInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *IncrementNonceInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *IncrementNonceInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// TryParseInstructionIncrementNonce tries to parse the instruction as a 'increment_nonce'.
+// It returns nil if the instruction can't be parsed as a 'increment_nonce'.
+func TryParseInstructionIncrementNonce(instruction solana.CompiledInstruction) (*IncrementNonceInstructionParams, error) {
+	// try deserializing instruction as a 'increment_nonce'
+	inst := &IncrementNonceInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'increment_nonce' instruction
+	if inst.Discriminator != DiscriminatorIncrementNonce {
+		return nil, fmt.Errorf("not an increment_nonce instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
 }
 
 var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
@@ -111,6 +177,10 @@ type WithdrawInstructionParams struct {
 
 	// Nonce is the nonce for the withdraw
 	Nonce uint64
+}
+
+func (inst *WithdrawInstructionParams) Failed() bool {
+	return false
 }
 
 // Signer returns the signer of the signature contained
@@ -179,6 +249,10 @@ type ExecuteInstructionParams struct {
 	Nonce uint64
 }
 
+func (inst *ExecuteInstructionParams) Failed() bool {
+	return false
+}
+
 // Signer returns the signer of the signature contained
 func (inst *ExecuteInstructionParams) Signer() (signer common.Address, err error) {
 	var signature [65]byte
@@ -239,6 +313,10 @@ type WithdrawSPLInstructionParams struct {
 
 	// Nonce is the nonce for the withdraw
 	Nonce uint64
+}
+
+func (inst *WithdrawSPLInstructionParams) Failed() bool {
+	return false
 }
 
 // Signer returns the signer of the signature contained
@@ -309,6 +387,10 @@ type ExecuteSPLInstructionParams struct {
 	Nonce uint64
 }
 
+func (inst *ExecuteSPLInstructionParams) Failed() bool {
+	return false
+}
+
 // Signer returns the signer of the signature contained
 func (inst *ExecuteSPLInstructionParams) Signer() (signer common.Address, err error) {
 	var signature [65]byte
@@ -375,6 +457,10 @@ type WhitelistInstructionParams struct {
 
 	// Nonce is the nonce for the whitelist
 	Nonce uint64
+}
+
+func (inst *WhitelistInstructionParams) Failed() bool {
+	return false
 }
 
 // Signer returns the signer of the signature contained
