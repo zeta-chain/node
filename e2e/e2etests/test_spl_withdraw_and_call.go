@@ -9,12 +9,12 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 )
 
 // TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls connected program on solana
@@ -66,9 +66,15 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("connected pda balance of SPL before withdraw: %s", connectedPdaBalanceBefore.Value.Amount)
 
 	// withdraw
-	tx := r.WithdrawAndCallSPLZRC20(runner.ConnectedSPLProgramID, withdrawAmount, approvedAmount, []byte("hello"), gatewayzevm.RevertOptions{
-		OnRevertGasLimit: big.NewInt(0),
-	})
+	tx := r.WithdrawAndCallSPLZRC20(
+		runner.ConnectedSPLProgramID,
+		withdrawAmount,
+		approvedAmount,
+		[]byte("hello"),
+		gatewayzevm.RevertOptions{
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

@@ -140,7 +140,9 @@ func (inst *IncrementNonceInstructionParams) TokenAmount() uint64 {
 
 // TryParseInstructionIncrementNonce tries to parse the instruction as a 'increment_nonce'.
 // It returns nil if the instruction can't be parsed as a 'increment_nonce'.
-func TryParseInstructionIncrementNonce(instruction solana.CompiledInstruction) (*IncrementNonceInstructionParams, error) {
+func TryParseInstructionIncrementNonce(
+	instruction solana.CompiledInstruction,
+) (*IncrementNonceInstructionParams, error) {
 	// try deserializing instruction as a 'increment_nonce'
 	inst := &IncrementNonceInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)

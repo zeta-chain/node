@@ -46,7 +46,10 @@ func (signer *Signer) createAndSignMsgIncrementNonce(
 }
 
 // signIncrementNonceTx wraps the increment_nonce 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signIncrementNonceTx(ctx context.Context, msg contracts.MsgIncrementNonce) (*solana.Transaction, error) {
+func (signer *Signer) signIncrementNonceTx(
+	ctx context.Context,
+	msg contracts.MsgIncrementNonce,
+) (*solana.Transaction, error) {
 	// create increment_nonce instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.IncrementNonceInstructionParams{
 		Discriminator: contracts.DiscriminatorIncrementNonce,
