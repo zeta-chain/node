@@ -109,7 +109,7 @@ func (signer *Signer) signExecuteTx(ctx context.Context, msg contracts.MsgExecut
 		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "newTransaction error")
+		return nil, errors.Wrap(err, "unable to create new tx")
 	}
 
 	// relayer signs the transaction
