@@ -11,6 +11,8 @@ sleep 5
 # airdrop to e2e sol account
 solana airdrop 1000
 solana airdrop 1000 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
+
+# Deploy initial programs
 solana program deploy gateway.so
 solana program deploy connected.so
 solana program deploy connected_spl.so

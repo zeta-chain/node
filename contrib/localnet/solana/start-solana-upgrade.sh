@@ -11,11 +11,17 @@ sleep 5
 # airdrop to e2e sol account
 solana airdrop 1000
 solana airdrop 1000 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
+
+# Deploy initial programs
 solana program deploy gateway.so
 solana program deploy connected.so
-# upgrade to the new program, gateway-upgrade.so . The new program is identical to the old program, but has an extra field
-solana program deploy gateway-upgrade.so --program-id 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d
+solana program deploy connected_spl.so
+
+# Get program ID from gateway keypair
+GATEWAY_PROGRAM_ID=$(solana-keygen pubkey gateway-keypair.json)
+
+# upgrade to the gateway-upgrade program using the program ID from keypair
+solana program deploy gateway-upgrade.so --program-id "$GATEWAY_PROGRAM_ID"
 
 # leave some time for debug if validator exits due to errors
 sleep 1000
-
