@@ -175,7 +175,7 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainZeta(
 	}
 	// deposit the amount to refund address
 	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, refundAmount.BigInt()); err != nil {
-		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
+		return fmt.Errorf("failed to refund zeta on ZetaChain: %w", err)
 	}
 	return nil
 }
