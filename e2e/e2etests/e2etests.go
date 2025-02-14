@@ -260,6 +260,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawName,
@@ -324,6 +325,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestETHWithdrawRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertWithWithdrawName,
@@ -389,6 +391,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestERC20DepositRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawName,
@@ -445,6 +448,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestERC20WithdrawRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMArbitraryCallName,
