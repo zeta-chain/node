@@ -48,6 +48,7 @@ var (
 		"/zetachain.zetacore.crosschain.MsgAddInboundTracker",
 		"/zetachain.zetacore.crosschain.MsgAddOutboundTracker",
 		"/zetachain.zetacore.crosschain.MsgRemoveOutboundTracker",
+		"/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
 		"/zetachain.zetacore.fungible.MsgPauseZRC20",
 		"/zetachain.zetacore.observer.MsgUpdateKeygen",
 		"/zetachain.zetacore.observer.MsgDisableCCTX",

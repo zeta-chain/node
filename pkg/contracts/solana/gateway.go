@@ -39,6 +39,9 @@ var (
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
+	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
+	DiscriminatorExecute = idlgateway.IDLGateway.GetDiscriminator("execute")
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
 
@@ -61,4 +64,15 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	pda, _, err = solana.FindProgramAddress([][]byte{seed}, gatewayID)
 
 	return gatewayID, pda, err
+}
+
+// ComputeConnectedPdaAddress computes the PDA address for the custom program PDA with seed "connected"
+func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
+	seed := []byte("connected")
+	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, connected)
+	if err != nil {
+		return solana.PublicKey{}, err
+	}
+
+	return pdaComputed, nil
 }

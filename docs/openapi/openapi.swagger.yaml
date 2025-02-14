@@ -59110,6 +59110,8 @@ definitions:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
     type: object
+  crosschainMsgRemoveInboundTrackerResponse:
+    type: object
   crosschainMsgRemoveOutboundTrackerResponse:
     type: object
   crosschainMsgUpdateERC20CustodyPauseStatusResponse:
