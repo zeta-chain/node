@@ -14,11 +14,12 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
+func TestERC20WithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 
+	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// deploy testabort contract
@@ -26,7 +27,7 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the withdraw
-	tx := r.ETHWithdrawAndCall(
+	tx := r.ERC20WithdrawAndCall(
 		sample.EthAddress(), // non-existing address
 		amount,
 		[]byte("revert"),
