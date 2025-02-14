@@ -59,7 +59,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.True(r, balance.Uint64() > 0)
 
-	// Test 2: no contract ofr abort
+	// Test 2: no contract for abort
 
 	// check that funds are still received if onAbort is not called or fails
 	abortAddressNoContract := sample.EthAddress()
