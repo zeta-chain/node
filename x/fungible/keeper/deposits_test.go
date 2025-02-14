@@ -117,7 +117,7 @@ func assertTestDAppV2MessageAndAmount(
 	require.Equal(t, expectedAmount, amount.Int64())
 }
 
-func TestKeeper_ProcessV2Deposit(t *testing.T) {
+func TestKeeper_ProcessDeposit(t *testing.T) {
 	t.Run("should process no-call deposit", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)

@@ -280,6 +280,8 @@ func (k Keeper) CallExecuteAbort(
 		return nil, types.ErrGatewayContractNotSet
 	}
 
+	// TODO: set correct sender for non EVM chains
+	// https://github.com/zeta-chain/node/issues/3532
 	return k.CallEVM(
 		ctx,
 		*gatewayABI,
@@ -292,7 +294,7 @@ func (k Keeper) CallExecuteAbort(
 		"executeAbort",
 		target,
 		revert.AbortContext{
-			Sender:        common.HexToAddress(inboundSender).Bytes(), // TODO(IN THIS PR): check for Bitcoin
+			Sender:        common.HexToAddress(inboundSender).Bytes(),
 			Asset:         zrc20,
 			Amount:        amount,
 			Outgoing:      outgoing,
