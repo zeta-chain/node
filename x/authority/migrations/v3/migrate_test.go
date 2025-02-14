@@ -11,6 +11,10 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
+	removeInboundAuthorization := types.Authorization{
+		MsgUrl:           v3.MsgURLRemoveInboundTracker,
+		AuthorizedPolicy: types.PolicyType_groupEmergency,
+	}
 	disableFastConfirmationAuthorization := types.Authorization{
 		MsgUrl:           v3.MsgURLDisableFastConfirmation,
 		AuthorizedPolicy: types.PolicyType_groupEmergency,
@@ -21,6 +25,7 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		oldList := types.DefaultAuthorizationsList()
+		oldList.RemoveAuthorization(v3.MsgURLRemoveInboundTracker)
 		oldList.RemoveAuthorization(v3.MsgURLDisableFastConfirmation)
 		k.SetAuthorizationList(ctx, oldList)
 
@@ -32,7 +37,8 @@ func TestMigrateStore(t *testing.T) {
 		newList, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)
 
-		// two lists should be equal if adds the removed authorization back
+		// two lists should be equal if adds the removed authorizations back
+		oldList.SetAuthorization(removeInboundAuthorization)
 		oldList.SetAuthorization(disableFastConfirmationAuthorization)
 		require.Equal(t, oldList, newList)
 	})

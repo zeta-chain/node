@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 		CmdWhitelistERC20(),
 		CmdAbortStuckCCTX(),
 		CmdRefundAborted(),
+		CmdRemoveInboundTracker(),
 	)
 
 	return cmd

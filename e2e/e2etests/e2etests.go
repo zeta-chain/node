@@ -49,6 +49,7 @@ const (
 	 */
 	TestSolanaDepositName                      = "solana_deposit"
 	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaWithdrawAndCallName              = "solana_withdraw_and_call"
 	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
 	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
@@ -441,7 +442,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "12000000"},
+			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -452,6 +453,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallName,
+		"withdraw SOL from ZEVM and call solana program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,

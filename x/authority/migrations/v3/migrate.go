@@ -6,7 +6,10 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-const MsgURLDisableFastConfirmation = "/zetachain.zetacore.observer.MsgDisableFastConfirmation"
+const (
+	MsgURLRemoveInboundTracker    = "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker"
+	MsgURLDisableFastConfirmation = "/zetachain.zetacore.observer.MsgDisableFastConfirmation"
+)
 
 type authorityKeeper interface {
 	SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList)
@@ -19,7 +22,11 @@ func MigrateStore(
 	keeper authorityKeeper,
 ) error {
 	var (
-		authorizationList                    = types.DefaultAuthorizationsList()
+		authorizationList          = types.DefaultAuthorizationsList()
+		removeInboundAuthorization = types.Authorization{
+			MsgUrl:           MsgURLRemoveInboundTracker,
+			AuthorizedPolicy: types.PolicyType_groupEmergency,
+		}
 		disableFastConfirmationAuthorization = types.Authorization{
 			MsgUrl:           MsgURLDisableFastConfirmation,
 			AuthorizedPolicy: types.PolicyType_groupEmergency,
@@ -33,6 +40,7 @@ func MigrateStore(
 	}
 
 	// Add the new authorization
+	authorizationList.SetAuthorization(removeInboundAuthorization)
 	authorizationList.SetAuthorization(disableFastConfirmationAuthorization)
 
 	// Validate the authorization list

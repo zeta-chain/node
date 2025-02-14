@@ -8,7 +8,7 @@ import (
 //go:embed gateway.mv
 var gatewayBinary []byte
 
-// GetEncodedGateway gets the gateway binary encoded as base64 for deployement
-func GetEncodedGateway() string {
+// GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
+func GatewayBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(gatewayBinary)
 }

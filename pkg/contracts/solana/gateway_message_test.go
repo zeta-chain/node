@@ -20,7 +20,7 @@ func Test_MsgWithdrawHash(t *testing.T) {
 		amount := uint64(1336000)
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 
-		wantHash := "aa609ef9480303e8d743f6e36fe1bea0cc56b8d27dcbd8220846125c1181b681"
+		wantHash := "ab576990e7a36adcaeed559d434680308e18cadc60e9c6a50d2891282274dbb0"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -41,7 +41,7 @@ func Test_MsgWhitelistHash(t *testing.T) {
 		whitelistCandidate := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		whitelistEntry := solana.MustPublicKeyFromBase58("2kJndCL9NBR36ySiQ4bmArs4YgWQu67LmCDfLzk5Gb7s")
 
-		wantHash := "cde8fa3ab24b50320db1c47f30492e789177d28e76208176f0a52b8ed54ce2dd"
+		wantHash := "04de341bab0307cdcf9f3ff23c38461e17c33f98338163eeb7a5f50e6b12d052"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -65,7 +65,7 @@ func Test_MsgWithdrawSPLHash(t *testing.T) {
 		toAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
 		require.NoError(t, err)
 
-		wantHash := "87fa5c0ed757c6e1ea9d8976537eaf7868bc1f1bbf55ab198a01645d664fe0ae"
+		wantHash := "628d9011b2784ed2376fcc1ba57e49c0e9dfc860d10d379c8d228c8972c9cd65"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
