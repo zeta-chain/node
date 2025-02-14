@@ -26,6 +26,12 @@ func NoError(err error) {
 	}
 }
 
+func True(b bool) {
+	if !b {
+		exit(fmt.Errorf("expected true, got false"))
+	}
+}
+
 func exit(err error) {
 	fmt.Printf("Unable to continue execution: %s.\nStacktrace:\n", err)
 

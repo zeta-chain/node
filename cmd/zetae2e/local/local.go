@@ -55,7 +55,10 @@ var (
 	ErrTopLevelTimeout = errors.New("top level test timeout")
 )
 
-var noError = testutil.NoError
+var (
+	noError     = testutil.NoError
+	requireTrue = testutil.True
+)
 
 // NewLocalCmd returns the local command
 // which runs the E2E tests locally on the machine with localnet for each blockchain
@@ -244,8 +247,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
 			)
-
-			deployerRunner.Logger.Print("upgraded gateway program : %v", deployerRunner.VerifyUpgrade())
 		}
 
 		deployerRunner.SetupZEVMProtocolContracts()
@@ -289,6 +290,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
+		requireTrue(deployerRunner.VerifySolanaContractsUpgrade())
+
 	}
 
 	// always mint ERC20 before every test execution

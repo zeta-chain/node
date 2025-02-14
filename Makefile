@@ -270,6 +270,11 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-e2e-test-upgrade-contracts: e2e-images
+	@echo "--> Starting e2e test"
+	export E2E_ARGS="--upgrade-contracts --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana -f docker-compose-upgrade-contracts.yml up -d
+
 start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="--skip-regular --test-admin" && \

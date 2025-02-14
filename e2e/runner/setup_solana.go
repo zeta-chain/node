@@ -117,16 +117,12 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	err = r.ensureSolanaChainParams()
 	require.NoError(r, err)
 
-	r.Logger.Print("PDA %s", pdaComputed)
-
-	r.DeployGateway(&privkey)
-
 	// deploy test spl
 	mintAccount := r.DeploySPL(&privkey, true)
 	r.SPLAddr = mintAccount.PublicKey()
 }
 
-func (r *E2ERunner) VerifyUpgrade() bool {
+func (r *E2ERunner) VerifySolanaContractsUpgrade() bool {
 
 	seed := []byte(solanacontracts.PDASeed)
 	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
