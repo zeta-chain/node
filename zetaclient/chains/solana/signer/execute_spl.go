@@ -13,15 +13,18 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWithdrawSPL creates and signs a withdraw spl message for gateway withdraw_spl instruction with TSS.
-func (signer *Signer) createAndSignMsgWithdrawSPL(
+// createAndSignMsgExecuteSPL creates and signs a execute spl message for gateway execute_spl_token instruction with TSS.
+func (signer *Signer) createAndSignMsgExecuteSPL(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
 	asset string,
 	decimals uint8,
+	sender [20]byte,
+	data []byte,
+	remainingAccounts []*solana.AccountMeta,
 	cancelTx bool,
-) (*contracts.MsgWithdrawSPL, error) {
+) (*contracts.MsgExecuteSPL, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
@@ -46,13 +49,29 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 	}
 
 	// get recipient ata
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
+	destinationProgramPda, err := contracts.ComputeConnectedSPLPdaAddress(to)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", to, mintAccount)
+		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
 
-	// prepare withdraw spl msg and compute hash
-	msg := contracts.NewMsgWithdrawSPL(chainID, nonce, amount, decimals, mintAccount, to, recipientAta)
+	destinationProgramPdaAta, _, err := solana.FindAssociatedTokenAddress(destinationProgramPda, mintAccount)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", destinationProgramPda, mintAccount)
+	}
+
+	// prepare execute spl msg and compute hash
+	msg := contracts.NewMsgExecuteSPL(
+		chainID,
+		nonce,
+		amount,
+		decimals,
+		mintAccount,
+		to,
+		destinationProgramPdaAta,
+		sender,
+		data,
+		remainingAccounts,
+	)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -66,23 +85,25 @@ func (signer *Signer) createAndSignMsgWithdrawSPL(
 	return msg.SetSignature(signature), nil
 }
 
-// signWithdrawSPLTx wraps the withdraw spl 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signWithdrawSPLTx(
+// signExecuteSPLTx wraps the execute spl 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signExecuteSPLTx(
 	ctx context.Context,
-	msg contracts.MsgWithdrawSPL,
+	msg contracts.MsgExecuteSPL,
 ) (*solana.Transaction, error) {
-	// create withdraw spl instruction with program call data
-	dataBytes, err := borsh.Serialize(contracts.WithdrawSPLInstructionParams{
-		Discriminator: contracts.DiscriminatorWithdrawSPL,
+	// create execute spl instruction with program call data
+	dataBytes, err := borsh.Serialize(contracts.ExecuteSPLInstructionParams{
+		Discriminator: contracts.DiscriminatorExecuteSPL,
 		Decimals:      msg.Decimals(),
 		Amount:        msg.Amount(),
+		Sender:        msg.Sender(),
+		Data:          msg.Data(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
+		return nil, errors.Wrap(err, "cannot serialize execute spl instruction")
 	}
 
 	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
@@ -90,30 +111,34 @@ func (signer *Signer) signWithdrawSPLTx(
 		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", signer.pda, msg.MintAccount())
 	}
 
-	recipientAta, _, err := solana.FindAssociatedTokenAddress(msg.To(), msg.MintAccount())
+	destinationProgramPda, err := contracts.ComputeConnectedSPLPdaAddress(msg.To())
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", msg.To(), msg.MintAccount())
+		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
 
+	predefinedAccounts := []*solana.AccountMeta{
+		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+		solana.Meta(signer.pda).WRITE(),
+		solana.Meta(pdaAta).WRITE(),
+		solana.Meta(msg.MintAccount()),
+		solana.Meta(msg.To()),
+		solana.Meta(destinationProgramPda),
+		solana.Meta(msg.RecipientAta()).WRITE(),
+		solana.Meta(solana.TokenProgramID),
+		solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
+		solana.Meta(solana.SystemProgramID),
+	}
+	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
+
 	inst := solana.GenericInstruction{
-		ProgID:    signer.gatewayID,
-		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(pdaAta).WRITE(),
-			solana.Meta(msg.MintAccount()),
-			solana.Meta(msg.To()),
-			solana.Meta(recipientAta).WRITE(),
-			solana.Meta(solana.TokenProgramID),
-			solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
-			solana.Meta(solana.SystemProgramID),
-		},
+		ProgID:        signer.gatewayID,
+		DataBytes:     dataBytes,
+		AccountValues: allAccounts,
 	}
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return nil, errors.Wrap(err, "getLatestBlockhash error")
+		return nil, errors.Wrap(err, "GetLatestBlockhash error")
 	}
 
 	// create a transaction that wraps the instruction

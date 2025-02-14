@@ -58,6 +58,7 @@ const (
 	TestSPLDepositName                         = "spl_deposit"
 	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
 	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCallName                 = "spl_withdraw_and_call"
 	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
@@ -463,6 +464,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaWithdrawAndCall,
 	),
 	runner.NewE2ETest(
+		TestSPLWithdrawAndCallName,
+		"withdraw SPL from ZEVM and call solana program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCall,
+	),
+	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
 		"deposit SOL into ZEVM and call a contract",
 		[]runner.ArgDefinition{
@@ -528,7 +537,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositName,
 		"deposit SPL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+			{Description: "amount of spl tokens", DefaultValue: "24000000"},
 		},
 		TestSPLDeposit,
 	),

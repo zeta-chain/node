@@ -95,7 +95,7 @@ func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithd
 		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "newTransaction error")
+		return nil, errors.Wrap(err, "unable to create new tx")
 	}
 
 	// relayer signs the transaction

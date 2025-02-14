@@ -45,8 +45,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	privkey := r.GetSolanaPrivKey()
 
 	// check balances before withdraw
-	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
 	require.NoError(r, err)
 
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
@@ -56,7 +55,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// withdraw and call
-	tx := r.WithdrawAndCallSOLZRC20(connected, withdrawAmount, approvedAmount, []byte("hello"))
+	tx := r.WithdrawAndCallSOLZRC20(runner.ConnectedProgramID, withdrawAmount, approvedAmount, []byte("hello"))
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
