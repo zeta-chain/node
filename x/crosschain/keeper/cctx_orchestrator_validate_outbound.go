@@ -67,32 +67,6 @@ func (k Keeper) ValidateOutboundZEVM(
 	return types.CctxStatus_OutboundMined
 }
 
-// ValidateOutboundObservers processes the finalization of an outbound transaction based on the ballot status.
-// The state is committed only if the individual steps are successful.
-func (k Keeper) ValidateOutboundObservers(
-	ctx sdk.Context,
-	cctx *types.CrossChainTx,
-	ballotStatus observertypes.BallotStatus,
-	valueReceived string,
-) error {
-	// temporary context ensure we don't end up with inconsistent state
-	tmpCtx, commit := ctx.CacheContext()
-
-	switch ballotStatus {
-	case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
-		k.processSuccessfulOutbound(tmpCtx, cctx, valueReceived, true)
-	case observertypes.BallotStatus_BallotFinalized_FailureObservation:
-		k.processFailedOutboundObservers(tmpCtx, cctx, valueReceived)
-	}
-
-	err := cctx.Validate()
-	if err != nil {
-		return err
-	}
-	commit()
-	return nil
-}
-
 // processSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
 //
 //  1. Change the status of the CCTX from
@@ -194,6 +168,32 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 	default:
 		return fmt.Errorf("unexpected cctx status %s", cctx.CctxStatus.Status)
 	}
+	return nil
+}
+
+// ValidateOutboundObservers processes the finalization of an outbound transaction based on the ballot status.
+// The state is committed only if the individual steps are successful.
+func (k Keeper) ValidateOutboundObservers(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	ballotStatus observertypes.BallotStatus,
+	valueReceived string,
+) error {
+	// temporary context ensure we don't end up with inconsistent state
+	tmpCtx, commit := ctx.CacheContext()
+
+	switch ballotStatus {
+	case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
+		k.processSuccessfulOutbound(tmpCtx, cctx, valueReceived, true)
+	case observertypes.BallotStatus_BallotFinalized_FailureObservation:
+		k.processFailedOutboundObservers(tmpCtx, cctx, valueReceived)
+	}
+
+	err := cctx.Validate()
+	if err != nil {
+		return err
+	}
+	commit()
 	return nil
 }
 
