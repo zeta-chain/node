@@ -45,7 +45,6 @@ func (k Keeper) ProcessAbort(
 	tmpCtx, commit := ctx.CacheContext()
 
 	// process the abort on the zevm
-	// TODO in this PR: set the asset
 	evmTxResponse, err := k.fungibleKeeper.ProcessAbort(
 		tmpCtx,
 		cctx.InboundParams.Sender,
@@ -53,7 +52,7 @@ func (k Keeper) ProcessAbort(
 		outgoing,
 		connectedChainID,
 		cctx.InboundParams.CoinType,
-		"",
+		cctx.InboundParams.Asset,
 		abortAddress,
 		cctx.RevertOptions.RevertMessage,
 	)
