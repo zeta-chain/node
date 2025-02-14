@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/node/testutil/sample"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/testabort"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -38,6 +38,8 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 			AbortAddress:     testAbortAddr,
 		},
 	)
+
+	r.Logger.Print("tx hash: %s", tx.Hash().Hex())
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
