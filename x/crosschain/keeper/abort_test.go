@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -18,6 +19,134 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
+
+func TestKeeper_ProcessAbort(t *testing.T) {
+	t.Run("set abort status without processing abort if not v2", func(t *testing.T) {
+		// arrange
+		// define fungible mock to assess processAbort is not called
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		cctx := sample.CrossChainTx(t, "index")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V1
+
+		// act
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+		// assert
+		require.EqualValues(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.False(t, cctx.CctxStatus.IsAbortRefunded)
+	})
+
+	t.Run("set abort status without processing abort if no abort address", func(t *testing.T) {
+		// arrange
+		// define fungible mock to assess processAbort is not called
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		cctx := sample.CrossChainTx(t, "index")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.RevertOptions.AbortAddress = ""
+
+		// act
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+		// assert
+		require.EqualValues(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.False(t, cctx.CctxStatus.IsAbortRefunded)
+	})
+
+	t.Run("fail abort with abort error message if connected chain ID can't be retrieved", func(t *testing.T) {
+		// arrange
+		// define fungible mock to assess processAbort is not called
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		cctx := sample.CrossChainTx(t, "index")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
+
+		// set inbound to nil to make GetConnectedChainID fail
+		cctx.InboundParams = nil
+
+		// act
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+		// assert
+		require.EqualValues(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.False(t, cctx.CctxStatus.IsAbortRefunded)
+		require.Contains(t, cctx.CctxStatus.ErrorMessageAbort, "failed to get connected chain ID")
+	})
+
+	t.Run("process abort by calling process abort of fungible", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		fungibleMock.On(
+			"ProcessAbort",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, nil)
+
+		cctx := sample.CrossChainTx(t, "index")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
+
+		// act
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+		// assert
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Empty(t, cctx.CctxStatus.ErrorMessageAbort)
+		require.True(t, cctx.CctxStatus.IsAbortRefunded)
+	})
+
+	t.Run("fail abort with abort error message if process abort fails", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		fungibleMock.On(
+			"ProcessAbort",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("process abort failed"))
+
+		cctx := sample.CrossChainTx(t, "index")
+		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+		cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
+
+		// act
+		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+		// assert
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Contains(t, cctx.CctxStatus.ErrorMessageAbort, "process abort failed")
+		require.True(t, cctx.CctxStatus.IsAbortRefunded)
+	})
+}
 
 func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 	t.Run("should refund amount zrc20 gas on zeta chain", func(t *testing.T) {

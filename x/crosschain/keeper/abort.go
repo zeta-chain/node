@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"fmt"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -68,8 +68,8 @@ func (k Keeper) ProcessAbort(
 			}
 
 			// process logs to process cctx events initiated during the contract call
-			err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
-			if err != nil {
+			processLogsErr := k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
+			if processLogsErr != nil {
 				// this happens if the cctx events are not processed correctly with invalid withdrawals
 				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
 				// the contract call is considered as reverted
@@ -87,15 +87,6 @@ func (k Keeper) ProcessAbort(
 				),
 			)
 		}
-	}
-	if evmTxResponse == nil {
-		messages.ErrorMessageAbort = "failed to process abort: evmTxResponse is nil"
-	}
-	if evmTxResponse != nil && fungibletypes.IsContractReverted(evmTxResponse, err) {
-		messages.ErrorMessageAbort = "failed to process abort: contract reverted"
-	}
-	if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
-		messages.ErrorMessageAbort = "failed to process abort: contract not reverted"
 	}
 	if err != nil {
 		messages.ErrorMessageAbort = "failed to process abort: " + err.Error()
