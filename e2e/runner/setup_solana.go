@@ -150,7 +150,6 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 }
 
 func (r *E2ERunner) VerifySolanaContractsUpgrade() bool {
-
 	seed := []byte(solanacontracts.PDASeed)
 	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
