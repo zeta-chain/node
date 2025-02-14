@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -39,6 +38,7 @@ import (
 	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
@@ -437,13 +437,6 @@ func (r *E2ERunner) GetZetacoredVersion() string {
 	}
 	nodeInfo, err := r.Clients.Zetacore.GetNodeInfo(r.Ctx)
 	require.NoError(r, err, "get node info")
-	r.zetacoredVersion = ensurePrefix(nodeInfo.ApplicationVersion.Version, "v")
+	r.zetacoredVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
 	return r.zetacoredVersion
-}
-
-func ensurePrefix(s, prefix string) string {
-	if !strings.HasPrefix(s, prefix) {
-		return prefix + s
-	}
-	return s
 }

@@ -205,6 +205,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 }
 
@@ -308,7 +309,7 @@ func ParseGatewayInstruction(
 	}
 
 	// first check if it was simple nonce increment instruction, which indicates that outbound failed
-	inst, err := contracts.TryParseInstructionIncrementNonce(instruction)
+	inst, err := contracts.ParseInstructionIncrementNonce(instruction)
 	if err == nil {
 		return inst, nil
 	}
@@ -316,18 +317,18 @@ func ParseGatewayInstruction(
 	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		inst, err := contracts.TryParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
 		if err != nil {
-			return contracts.TryParseInstructionExecute(instruction)
+			return contracts.ParseInstructionExecute(instruction)
 		}
 
 		return inst, err
 	case coin.CoinType_Cmd:
-		return contracts.TryParseInstructionWhitelist(instruction)
+		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		inst, err := contracts.TryParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
 		if err != nil {
-			return contracts.TryParseInstructionExecuteSPL(instruction)
+			return contracts.ParseInstructionExecuteSPL(instruction)
 		}
 
 		return inst, err

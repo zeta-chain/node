@@ -18,7 +18,7 @@ on:
         description: 'The runner to use for the job'
         required: true
         type: string
-        default: 'ubuntu-20.04'
+        default: 'ubuntu-22.04'
       zetanode-image:
         description: 'docker image to use for zetanode'
         required: true

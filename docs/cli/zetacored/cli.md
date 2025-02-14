@@ -10507,6 +10507,7 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain add-outbound-tracker](#zetacored-tx-crosschain-add-outbound-tracker)	 - Add an outbound tracker
 * [zetacored tx crosschain migrate-tss-funds](#zetacored-tx-crosschain-migrate-tss-funds)	 - Migrate TSS funds to the latest TSS address
 * [zetacored tx crosschain refund-aborted](#zetacored-tx-crosschain-refund-aborted)	 - Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
+* [zetacored tx crosschain remove-inbound-tracker](#zetacored-tx-crosschain-remove-inbound-tracker)	 - Remove an inbound tracker
 * [zetacored tx crosschain remove-outbound-tracker](#zetacored-tx-crosschain-remove-outbound-tracker)	 - Remove an outbound tracker
 * [zetacored tx crosschain update-tss-address](#zetacored-tx-crosschain-update-tss-address)	 - Create a new TSSVoter
 * [zetacored tx crosschain vote-gas-price](#zetacored-tx-crosschain-vote-gas-price)	 - Broadcast message to vote gas price
@@ -10780,6 +10781,59 @@ zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]
 
 * [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
 
+## zetacored tx crosschain remove-inbound-tracker
+
+Remove an inbound tracker
+
+```
+zetacored tx crosschain remove-inbound-tracker [chain-id] [tx-hash] [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for remove-inbound-tracker
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
+
 ## zetacored tx crosschain remove-outbound-tracker
 
 Remove an outbound tracker
@@ -10944,7 +10998,13 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-inbound 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 8453 "" 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 7000 1000000 "" 0x66b59ad844404e91faa9587a3061e2f7af36f7a7a1a0afaca3a2efd811bc9463 26170791 Gas 0x0000000000000000000000000000000000000000 587 V2 FALSE SAFE SUCCESS
 ```
 
 ### Options
@@ -10997,7 +11057,13 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
 Broadcast message to vote an outbound
 
 ```
-zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [flags]
+zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [confirmationMode] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-outbound 0x12044bec3b050fb28996630e9f2e9cc8d6cf9ef0e911e73348ade46c7ba3417a 0x4f29f9199b10189c8d02b83568aba4cb23984f11adf23e7e5d2eb037ca309497 67773716 65646 30011221226 100000 297254 0 137 13812 ERC20 SAFE
 ```
 
 ### Options
