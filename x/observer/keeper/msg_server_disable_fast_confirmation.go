@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
+	cosmoserror "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -21,32 +21,32 @@ func (k msgServer) DisableFastConfirmation(
 	// check permission
 	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	if err != nil {
-		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
+		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
 	// find current chain params list
 	chainParamsList, found := k.GetChainParamsList(ctx)
 	if !found {
-		return &types.MsgDisableFastConfirmationResponse{}, types.ErrChainParamsNotFound
+		return nil, types.ErrChainParamsNotFound
 	}
 
-	// disable fast confirmation by setting fast confirmation count to zero
+	// disable fast confirmation
+	foundChain := false
 	for _, cp := range chainParamsList.ChainParams {
 		if cp.ConfirmationParams == nil {
-			continue // should never happen
+			return nil, types.ErrInvalidChainParams
 		}
 
 		// setting fast confirmation count to same value as safe confirmation count
 		// will effectively disable fast confirmation
 		if cp.ChainId == msg.ChainId {
+			foundChain = true
 			cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount
 			cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount
 		}
 	}
-
-	// validate the updated chain params list
-	if err := chainParamsList.Validate(); err != nil {
-		return &types.MsgDisableFastConfirmationResponse{}, errorsmod.Wrap(types.ErrInvalidChainParams, err.Error())
+	if !foundChain {
+		return nil, cosmoserror.Wrap(types.ErrChainParamsNotFound, "no matching chain ID found")
 	}
 
 	// set the updated chain params list

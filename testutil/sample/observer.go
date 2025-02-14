@@ -343,13 +343,15 @@ func OperationalFlags() types.OperationalFlags {
 }
 
 func ConfirmationParams(r *rand.Rand) types.ConfirmationParams {
-	randInboundCount := Uint64InRangeFromRand(r, 1, 200)
-	randOutboundCount := Uint64InRangeFromRand(r, 1, 200)
+	randInboundCount := Uint64InRangeFromRand(r, 2, 200)
+	randOutboundCount := Uint64InRangeFromRand(r, 2, 200)
 
 	return types.ConfirmationParams{
-		SafeInboundCount:  randInboundCount,
-		FastInboundCount:  Uint64InRange(1, randInboundCount),
+		SafeInboundCount: randInboundCount,
+		// enabled fast inbound confirmation count should be less than safe count
+		FastInboundCount:  Uint64InRange(1, randInboundCount-1),
 		SafeOutboundCount: randOutboundCount,
-		FastOutboundCount: Uint64InRange(1, randOutboundCount),
+		// enabled fast outbound confirmation count should be less than safe count
+		FastOutboundCount: Uint64InRange(1, randOutboundCount-1),
 	}
 }

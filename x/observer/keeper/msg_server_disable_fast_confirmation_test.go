@@ -19,25 +19,15 @@ func setupChainParamsList(
 	t *testing.T,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	admin string,
 	chainParamsList []*types.ChainParams,
+	ensureFastConfirmation bool,
 ) {
-	srv := keeper.NewMsgServerImpl(*k)
-
 	// initial chain params list should be empty
 	_, found := k.GetChainParamsList(ctx)
 	require.False(t, found)
 
-	for _, cp := range chainParamsList {
-		// mock the authority keeper for authorization
-		msg := types.MsgUpdateChainParams{Creator: admin, ChainParams: cp}
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-
-		// add chain params to state
-		_, err := srv.UpdateChainParams(ctx, &msg)
-		require.NoError(t, err)
-	}
+	// set the chain params list in the keeper
+	k.SetChainParamsList(ctx, types.ChainParamsList{ChainParams: chainParamsList})
 
 	// chain params should have FAST confirmation enabled
 	allChainParams, found := k.GetChainParamsList(ctx)
@@ -46,7 +36,9 @@ func setupChainParamsList(
 
 	for i, cp := range allChainParams.ChainParams {
 		require.Equal(t, chainParamsList[i], cp)
-		ensureFastConfirmationEnabled(t, cp)
+		if ensureFastConfirmation {
+			ensureFastConfirmationEnabled(t, cp)
+		}
 	}
 }
 
@@ -68,16 +60,18 @@ func TestMsgServer_DisableFastConfirmation(t *testing.T) {
 		chainParams1 := sample.ChainParams(chainList[1].ChainId)
 
 		// setup chain params list
-		setupChainParamsList(t, k, ctx, admin, []*types.ChainParams{chainParams0, chainParams1})
+		setupChainParamsList(t, k, ctx, []*types.ChainParams{chainParams0, chainParams1}, true)
 
 		// ACT
 		// FAST confirmation can be disabled for the second chain
 		msg := types.MsgDisableFastConfirmation{Creator: admin, ChainId: chainParams1.ChainId}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		_, err := srv.DisableFastConfirmation(ctx, &msg)
-		require.NoError(t, err)
+		response, err := srv.DisableFastConfirmation(ctx, &msg)
 
 		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, types.MsgDisableFastConfirmationResponse{}, *response)
+
 		// check list has two chain params
 		chainParamsList, found := k.GetChainParamsList(ctx)
 		require.True(t, found)
@@ -110,15 +104,16 @@ func TestMsgServer_DisableFastConfirmation(t *testing.T) {
 		chainParams := sample.ChainParams(chainList[0].ChainId)
 
 		// setup chain params list
-		setupChainParamsList(t, k, ctx, admin, []*types.ChainParams{chainParams})
+		setupChainParamsList(t, k, ctx, []*types.ChainParams{chainParams}, true)
 
 		// ACT
 		// try to disable FAST confirmation for the chain
 		msg := types.MsgDisableFastConfirmation{Creator: admin, ChainId: chainParams.ChainId}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, authoritytypes.ErrUnauthorized)
-		_, err := srv.DisableFastConfirmation(ctx, &msg)
+		response, err := srv.DisableFastConfirmation(ctx, &msg)
 
 		// ASSERT
+		require.Nil(t, response)
 		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 
 		// chain params list should be unchanged
@@ -142,13 +137,14 @@ func TestMsgServer_DisableFastConfirmation(t *testing.T) {
 		// ACT
 		msg := types.MsgDisableFastConfirmation{Creator: admin, ChainId: 1}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		_, err := srv.DisableFastConfirmation(ctx, &msg)
+		response, err := srv.DisableFastConfirmation(ctx, &msg)
 
 		// ASSERT
+		require.Nil(t, response)
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})
 
-	t.Run("cannot disable fast confirmation if validation fails", func(t *testing.T) {
+	t.Run("cannot disable fast confirmation if confirmation params is nil", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
@@ -159,22 +155,55 @@ func TestMsgServer_DisableFastConfirmation(t *testing.T) {
 		srv := keeper.NewMsgServerImpl(*k)
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
-		// create invalid chain params
+		// create chain params
 		chainList := chains.ExternalChainList([]chains.Chain{})
 		chainParams := sample.ChainParams(chainList[0].ChainId)
-		chainParams.ConfirmationParams.SafeInboundCount = 0 // <- invalid count
+		chainParams.ConfirmationParams = nil // set nil confirmation params to trigger error
 
-		// setup chain params list
-		setupChainParamsList(t, k, ctx, admin, []*types.ChainParams{chainParams})
+		// setup chain params list, skip checking because confirmation params is nil
+		setupChainParamsList(t, k, ctx, []*types.ChainParams{chainParams}, false)
 
 		// ACT
 		// try to disable FAST confirmation for the chain
 		msg := types.MsgDisableFastConfirmation{Creator: admin, ChainId: chainParams.ChainId}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
-		_, err := srv.DisableFastConfirmation(ctx, &msg)
+		response, err := srv.DisableFastConfirmation(ctx, &msg)
 
 		// ASSERT
+		require.Nil(t, response)
 		require.ErrorIs(t, err, types.ErrInvalidChainParams)
+	})
+
+	t.Run("cannot disable fast confirmation if no matching chain ID found", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		// create mock admin, msg server and authority keeper
+		admin := sample.AccAddress()
+		srv := keeper.NewMsgServerImpl(*k)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+
+		// create chain params
+		chainList := chains.ExternalChainList([]chains.Chain{})
+		chainParams := sample.ChainParams(chainList[0].ChainId)
+
+		// setup chain params list
+		setupChainParamsList(t, k, ctx, []*types.ChainParams{chainParams}, true)
+
+		// ACT
+		msg := types.MsgDisableFastConfirmation{
+			Creator: admin,
+			ChainId: chainList[0].ChainId + 1,
+		} // mismatched chain ID
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
+		response, err := srv.DisableFastConfirmation(ctx, &msg)
+
+		// ASSERT
+		require.Nil(t, response)
+		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
+		require.ErrorContains(t, err, "no matching chain ID found")
 
 		// chain params list should be unchanged
 		chainParamsList, found := k.GetChainParamsList(ctx)
@@ -189,6 +218,8 @@ func ensureFastConfirmationEnabled(t *testing.T, chainParams *types.ChainParams)
 	require.NotNil(t, chainParams.ConfirmationParams)
 	require.Positive(t, chainParams.ConfirmationParams.FastInboundCount)
 	require.Positive(t, chainParams.ConfirmationParams.FastOutboundCount)
+	require.Less(t, chainParams.ConfirmationParams.FastInboundCount, chainParams.ConfirmationParams.SafeInboundCount)
+	require.Less(t, chainParams.ConfirmationParams.FastOutboundCount, chainParams.ConfirmationParams.SafeOutboundCount)
 }
 
 // ensureFastConfirmationDisabled checks that the fast confirmation is disabled
