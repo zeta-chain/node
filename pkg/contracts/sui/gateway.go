@@ -77,13 +77,6 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 			event.PackageId,
 			gw.packageID,
 		)
-	case event.TransactionModule != moduleName:
-		return Event{}, errors.Wrapf(
-			ErrParseEvent,
-			"module mismatch (got %s, want %s)",
-			event.TransactionModule,
-			moduleName,
-		)
 	}
 
 	// Extract common fields
@@ -93,18 +86,25 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		return Event{}, errors.Wrapf(ErrParseEvent, "failed to parse event id %q", event.Id.EventSeq)
 	}
 
-	eventType, err := extractEventType(event.Type)
+	descriptor, err := parseEventDescriptor(event.Type)
 	if err != nil {
 		return Event{}, errors.Wrap(ErrParseEvent, err.Error())
 	}
 
+	// Note that event.TransactionModule can be different because it represents
+	// the module BY WHICH the gateway was called.
+	if descriptor.module != moduleName {
+		return Event{}, errors.Wrapf(ErrParseEvent, "module mismatch %q", descriptor.module)
+	}
+
 	var (
-		inbound bool
-		content any
+		eventType = descriptor.eventType
+		inbound   bool
+		content   any
 	)
 
 	// Parse specific events
-	switch eventType {
+	switch descriptor.eventType {
 	case Deposit, DepositAndCall:
 		inbound = true
 		content, err = parseInbound(event, eventType)
@@ -126,14 +126,23 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 	}, nil
 }
 
-func extractEventType(typeString string) (EventType, error) {
-	// e.g. 0x3e9fb7c....d6cc443cf::gateway::DepositEvent
+type eventDescriptor struct {
+	packageID string
+	module    string
+	eventType EventType
+}
+
+func parseEventDescriptor(typeString string) (eventDescriptor, error) {
 	parts := strings.Split(typeString, "::")
 	if len(parts) != 3 {
-		return "", errors.Errorf("invalid event type %s", typeString)
+		return eventDescriptor{}, errors.Errorf("invalid event type %q", typeString)
 	}
 
-	return EventType(parts[2]), nil
+	return eventDescriptor{
+		packageID: parts[0],
+		module:    parts[1],
+		eventType: EventType(parts[2]),
+	}, nil
 }
 
 func extractStr(kv map[string]any, key string) (string, error) {

@@ -37,11 +37,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "deposit",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "100",
@@ -69,11 +68,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "depositAndCall",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositAndCallEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "200",
@@ -103,11 +101,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "depositAndCall_empty_payload",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositAndCallEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "200",
@@ -154,9 +151,8 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid event id",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "hey"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "hey"},
+				PackageId: packageID,
 			},
 			errContains: `failed to parse event id "hey"`,
 		},
@@ -173,6 +169,7 @@ func TestParseEvent(t *testing.T) {
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId:         packageID,
+				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", Deposit),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",
@@ -180,21 +177,19 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid event type",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Type:              eventType("bar"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Type:      eventType("bar"),
 			},
 			errContains: `unknown event "bar"`,
 		},
 		{
 			name: "invalid coin type",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": 123,
 				},
@@ -204,11 +199,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid amount",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "-1",
@@ -219,11 +213,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid sender",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "300",
@@ -235,11 +228,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid receiver",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "300",
@@ -252,11 +244,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid payload",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositAndCallEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "200",
@@ -270,11 +261,10 @@ func TestParseEvent(t *testing.T) {
 		{
 			name: "invalid payload float64",
 			event: models.SuiEventResponse{
-				Id:                models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId:         packageID,
-				TransactionModule: moduleName,
-				Sender:            sender,
-				Type:              eventType("DepositAndCallEvent"),
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(SUI),
 					"amount":    "200",
