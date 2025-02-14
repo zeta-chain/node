@@ -42,6 +42,9 @@ var (
 	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
 	DiscriminatorExecute = idlgateway.IDLGateway.GetDiscriminator("execute")
 
+	// DiscriminatorExecuteSPL returns the discriminator for Solana gateway 'execute_spl_token' instruction
+	DiscriminatorExecuteSPL = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token")
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
 
@@ -66,13 +69,22 @@ func ParseGatewayWithPDA(gatewayAddress string) (solana.PublicKey, solana.Public
 	return gatewayID, pda, err
 }
 
-// ComputeConnectedPdaAddress computes the PDA address for the custom program PDA with seed "connected"
-func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
-	seed := []byte("connected")
+// ComputePdaAddress computes the PDA address for the custom program PDA with provided seed
+func ComputePdaAddress(connected solana.PublicKey, seed []byte) (solana.PublicKey, error) {
 	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, connected)
 	if err != nil {
 		return solana.PublicKey{}, err
 	}
 
 	return pdaComputed, nil
+}
+
+// ComputeConnectedPdaAddress computes the PDA address for the custom program PDA with seed "connected"
+func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
+	return ComputePdaAddress(connected, []byte("connected"))
+}
+
+// ComputeConnectedSPLPdaAddress computes the PDA address for the custom program PDA with seed "connectedSPL"
+func ComputeConnectedSPLPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
+	return ComputePdaAddress(connected, []byte("connectedSPL"))
 }

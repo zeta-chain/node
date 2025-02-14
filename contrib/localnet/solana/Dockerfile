@@ -9,6 +9,8 @@ COPY ./gateway.so .
 COPY ./gateway-keypair.json .
 COPY ./connected.so .
 COPY ./connected-keypair.json .
+COPY ./connected_spl.so .
+COPY ./connected_spl-keypair.json .
 COPY ./gateway-upgrade.so .
 
 

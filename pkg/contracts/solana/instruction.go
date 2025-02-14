@@ -132,9 +132,9 @@ func (inst *WithdrawInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
 // It returns nil if the instruction can't be parsed as a 'withdraw'.
-func TryParseInstructionWithdraw(instruction solana.CompiledInstruction) (*WithdrawInstructionParams, error) {
+func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*WithdrawInstructionParams, error) {
 	// try deserializing instruction as a 'withdraw'
 	inst := &WithdrawInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -198,9 +198,9 @@ func (inst *ExecuteInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionExecute tries to parse the instruction as a 'execute'.
+// ParseInstructionExecute tries to parse the instruction as a 'execute'.
 // It returns nil if the instruction can't be parsed as a 'execute'.
-func TryParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteInstructionParams, error) {
+func ParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteInstructionParams, error) {
 	// try deserializing instruction as a 'execute'
 	inst := &ExecuteInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -215,6 +215,8 @@ func TryParseInstructionExecute(instruction solana.CompiledInstruction) (*Execut
 
 	return inst, nil
 }
+
+var _ OutboundInstruction = (*WithdrawSPLInstructionParams)(nil)
 
 type WithdrawSPLInstructionParams struct {
 	// Discriminator is the unique identifier for the withdraw instruction
@@ -258,9 +260,9 @@ func (inst *WithdrawSPLInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// TryParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
+// ParseInstructionWithdraw tries to parse the instruction as a 'withdraw'.
 // It returns nil if the instruction can't be parsed as a 'withdraw'.
-func TryParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
+func ParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*WithdrawSPLInstructionParams, error) {
 	// try deserializing instruction as a 'withdraw'
 	inst := &WithdrawSPLInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)
@@ -271,6 +273,74 @@ func TryParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*Wi
 	// check the discriminator to ensure it's a 'withdraw' instruction
 	if inst.Discriminator != DiscriminatorWithdrawSPL {
 		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
+var _ OutboundInstruction = (*ExecuteSPLInstructionParams)(nil)
+
+type ExecuteSPLInstructionParams struct {
+	// Discriminator is the unique identifier for the execute spl instruction
+	Discriminator [8]byte
+
+	// Decimals is decimals for spl token
+	Decimals uint8
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Sender from zetachain
+	Sender [20]byte
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteSPLInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteSPLInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteSPLInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecuteSPL tries to parse the instruction as a 'execute_spl_token'.
+// It returns nil if the instruction can't be parsed as a 'execute_spl_token'.
+func ParseInstructionExecuteSPL(instruction solana.CompiledInstruction) (*ExecuteSPLInstructionParams, error) {
+	// try deserializing instruction as a 'execute_spl_token'
+	inst := &ExecuteSPLInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_spl_token' instruction
+	if inst.Discriminator != DiscriminatorExecuteSPL {
+		return nil, fmt.Errorf("not an execute_spl_token instruction: %v", inst.Discriminator)
 	}
 
 	return inst, nil
@@ -326,9 +396,9 @@ func (inst *WhitelistInstructionParams) TokenAmount() uint64 {
 	return 0
 }
 
-// TryParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
+// ParseInstructionWhitelist tries to parse the instruction as a 'whitelist_spl_mint'.
 // It returns nil if the instruction can't be parsed as a 'whitelist_spl_mint'.
-func TryParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
+func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*WhitelistInstructionParams, error) {
 	// try deserializing instruction as a 'whitelist_spl_mint'
 	inst := &WhitelistInstructionParams{}
 	err := borsh.Deserialize(inst, instruction.Data)

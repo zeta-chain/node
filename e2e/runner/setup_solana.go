@@ -94,6 +94,33 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	_, out = r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize connected logs: %v", out.Meta.LogMessages)
 
+	// initialize connected_spl program
+	connectedSPLPda, err := solanacontracts.ComputeConnectedSPLPdaAddress(ConnectedSPLProgramID)
+	require.NoError(r, err)
+
+	var instConnectedSPL solana.GenericInstruction
+	accountSliceConnectedSPL := []*solana.AccountMeta{}
+	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(connectedSPLPda).WRITE())
+	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(solana.SystemProgramID))
+	instConnectedSPL.ProgID = ConnectedSPLProgramID
+	instConnectedSPL.AccountValues = accountSliceConnectedSPL
+
+	type InitializeConnectedSPL struct {
+		Discriminator [8]byte
+	}
+	instConnectedSPL.DataBytes, err = borsh.Serialize(InitializeConnectedSPL{
+		Discriminator: solanacontracts.DiscriminatorInitialize,
+	})
+	require.NoError(r, err)
+
+	// create and sign the transaction
+	signedTx = r.CreateSignedTransaction([]solana.Instruction{&instConnectedSPL}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("initialize connected SPL logs: %v", out.Meta.LogMessages)
+
 	// retrieve the PDA account info
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,

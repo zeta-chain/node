@@ -18,7 +18,7 @@ func CmdBlameByIdentifier() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			Identifier := args[0]
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -49,7 +49,7 @@ func CmdGetAllBlameRecords() *cobra.Command {
 		Short: "Query AllBlameRecords",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -81,7 +81,7 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 			chainID := args[0]
 			nonce := args[1]
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

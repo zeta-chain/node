@@ -20,8 +20,9 @@ import (
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
-// Connected program used to test sol withdraw and call
+// Connected programs used to test sol and spl withdraw and call
 var ConnectedProgramID = solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
+var ConnectedSPLProgramID = solana.MustPublicKeyFromBase58("8iUjRRhUCn8BjrvsWPfj8mguTe9L81ES4oAUApiF8JFC")
 
 // ComputePdaAddress computes the PDA address for the gateway program
 func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
@@ -164,31 +165,6 @@ func (r *E2ERunner) CreateSignedTransaction(
 		func(key solana.PublicKey) *solana.PrivateKey {
 			if privateKey.PublicKey().Equals(key) {
 				return &privateKey
-			}
-			for _, apk := range additionalPrivateKeys {
-				if apk.PublicKey().Equals(key) {
-					return &apk
-				}
-			}
-			return nil
-		},
-	)
-	require.NoError(r, err)
-
-	return tx
-}
-
-func (r *E2ERunner) SignTransaction(
-	tx *solana.Transaction,
-	privateKey *solana.PrivateKey,
-	additionalPrivateKeys []solana.PrivateKey,
-) *solana.Transaction {
-
-	// sign the initialize transaction
-	_, err := tx.Sign(
-		func(key solana.PublicKey) *solana.PrivateKey {
-			if privateKey.PublicKey().Equals(key) {
-				return privateKey
 			}
 			for _, apk := range additionalPrivateKeys {
 				if apk.PublicKey().Equals(key) {
@@ -357,7 +333,6 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 		_, out := r.BroadcastTxSync(signedTx)
 		r.Logger.Info("whitelist spl mint logs: %v", out.Meta.LogMessages)
 
-		r.Logger.Print("WhitelistPDA %s", whitelistEntryPDA)
 		whitelistEntryInfo, err = r.SolanaClient.GetAccountInfoWithOpts(
 			r.Ctx,
 			whitelistEntryPDA,
@@ -574,6 +549,72 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// WithdrawAndCallSPLZRC20 withdraws an amount of ZRC20 SPL tokens and calls program on solana
+func (r *E2ERunner) WithdrawAndCallSPLZRC20(
+	to solana.PublicKey,
+	amount *big.Int,
+	approveAmount *big.Int,
+	data []byte,
+) *ethtypes.Transaction {
+	// approve
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+	tx, err = r.SPLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+
+	// create encoded msg
+	connected := solana.MustPublicKeyFromBase58(ConnectedSPLProgramID.String())
+	connectedPda, err := solanacontract.ComputeConnectedSPLPdaAddress(connected)
+	require.NoError(r, err)
+
+	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
+	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
+
+	abiArgs, err := solanacontract.GetExecuteMsgAbi()
+	require.NoError(r, err)
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
+	}
+
+	msgEncoded, err := abiArgs.Pack(msg)
+	require.NoError(r, err)
+
+	// withdraw
+	// TODO: gas limit?
+	tx, err = r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		[]byte(to.String()),
+		amount,
+		r.SPLZRC20Addr,
+		msgEncoded,
+		gatewayzevm.CallOptions{GasLimit: big.NewInt(250000)},
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+
+	// wait for tx receipt
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw_and_call")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	return tx

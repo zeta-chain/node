@@ -418,6 +418,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositName,
 			e2etests.TestSPLDepositAndCallName,
 			e2etests.TestSPLWithdrawName,
+			e2etests.TestSPLWithdrawAndCallName,
 			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 			e2etests.TestSolanaWhitelistSPLName,
 		}

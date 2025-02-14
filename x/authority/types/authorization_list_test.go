@@ -405,6 +405,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy
 		var EmergencyPolicyMessageList = []string{
 			sdk.MsgTypeURL(&crosschaintypes.MsgAddInboundTracker{}),
+			sdk.MsgTypeURL(&crosschaintypes.MsgRemoveInboundTracker{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgAddOutboundTracker{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgRemoveOutboundTracker{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
