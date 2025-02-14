@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,37 +58,36 @@ func (k Keeper) ProcessAbort(
 		cctx.RevertOptions.RevertMessage,
 	)
 
-	// TODO in this PR: fix this
-	//if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
-	//	logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
-	//	if len(logs) > 0 {
-	//		tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
-	//		txOrigin := cctx.InboundParams.TxOrigin
-	//		if txOrigin == "" {
-	//			txOrigin = cctx.GetInboundParams().Sender
-	//		}
-	//
-	//		// process logs to process cctx events initiated during the contract call
-	//		err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
-	//		if err != nil {
-	//			// this happens if the cctx events are not processed correctly with invalid withdrawals
-	//			// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
-	//			// the contract call is considered as reverted
-	//			messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
-	//			cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
-	//			return
-	//		}
-	//		ctx.EventManager().EmitEvent(
-	//			sdk.NewEvent(sdk.EventTypeMessage,
-	//				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-	//				sdk.NewAttribute("action", "ProcessAbort"),
-	//				sdk.NewAttribute("contract", cctx.RevertOptions.AbortAddress),
-	//				sdk.NewAttribute("data", ""),
-	//				sdk.NewAttribute("cctxIndex", cctx.Index),
-	//			),
-	//		)
-	//	}
-	//}
+	if evmTxResponse != nil && !fungibletypes.IsContractReverted(evmTxResponse, err) {
+		logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
+		if len(logs) > 0 {
+			tmpCtx = tmpCtx.WithValue(InCCTXIndexKey, cctx.Index)
+			txOrigin := cctx.InboundParams.TxOrigin
+			if txOrigin == "" {
+				txOrigin = cctx.GetInboundParams().Sender
+			}
+
+			// process logs to process cctx events initiated during the contract call
+			err = k.ProcessLogs(tmpCtx, logs, abortAddress, txOrigin)
+			if err != nil {
+				// this happens if the cctx events are not processed correctly with invalid withdrawals
+				// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+				// the contract call is considered as reverted
+				messages.ErrorMessageAbort = "failed to process logs for abort: " + err.Error()
+				cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
+				return
+			}
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute("action", "ProcessAbort"),
+					sdk.NewAttribute("contract", cctx.RevertOptions.AbortAddress),
+					sdk.NewAttribute("data", ""),
+					sdk.NewAttribute("cctxIndex", cctx.Index),
+				),
+			)
+		}
+	}
 	if evmTxResponse == nil {
 		messages.ErrorMessageAbort = "failed to process abort: evmTxResponse is nil"
 	}
