@@ -80,7 +80,7 @@ message MsgUpdateOperationalChainParams {
   uint64 watch_utxo_ticker = 6;
   int64 outbound_schedule_interval = 7;
   int64 outbound_schedule_lookahead = 8;
-  ConfirmationParams confirmation_params = 9;
+  ConfirmationParams confirmation_params = 9 [ (gogoproto.nullable) = false ];
 }
 
 message MsgUpdateOperationalChainParamsResponse {}
