@@ -10,7 +10,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -40,7 +39,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, event)
+		err := ob.processInboundEvent(ctx, event, nil)
 
 		switch {
 		case errors.Is(err, errTxNotFound):
@@ -65,10 +64,36 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
+// ProcessInboundTrackers processes trackers for inbound transactions.
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
+	chainID := ob.Chain().ChainId
+
+	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, chainID)
+	if err != nil {
+		return errors.Wrap(err, "unable to get inbound trackers")
+	}
+
+	for _, tracker := range trackers {
+		if err := ob.processInboundTracker(ctx, tracker); err != nil {
+			ob.Logger().Inbound.Err(err).
+				Str(logs.FieldTx, tracker.TxHash).
+				Msg("Unable to process inbound tracker")
+		}
+	}
+
+	return nil
+}
+
 // processInboundEvent parses raw event into Inbound,
 // augment it with origin tx and vote on the inbound.
-// Invalid/Non-inbound txs are skipped. Unconfirmed txs pause the whole tail sequence.
-func (ob *Observer) processInboundEvent(ctx context.Context, raw models.SuiEventResponse) error {
+// Invalid/Non-inbound txs are skipped.
+// Unconfirmed txs pause the whole tail sequence.
+// If tx is empty, it fetches the tx from the RPC.
+func (ob *Observer) processInboundEvent(
+	ctx context.Context,
+	raw models.SuiEventResponse,
+	tx *models.SuiTransactionBlockResponse,
+) error {
 	event, err := ob.gateway.ParseEvent(raw)
 	switch {
 	case errors.Is(err, sui.ErrParseEvent):
@@ -85,14 +110,17 @@ func (ob *Observer) processInboundEvent(ctx context.Context, raw models.SuiEvent
 		return errors.Errorf("unexpected event index %d for tx %s", event.EventIndex, event.TxHash)
 	}
 
-	txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+	if tx == nil {
+		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
+		if err != nil {
+			return errors.Wrap(errTxNotFound, err.Error())
+		}
 
-	tx, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
-	if err != nil {
-		return errors.Wrap(errTxNotFound, err.Error())
+		tx = &txFresh
 	}
 
-	msg, err := ob.constructInboundVote(event, tx)
+	msg, err := ob.constructInboundVote(event, *tx)
 	if err != nil {
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
@@ -100,6 +128,27 @@ func (ob *Observer) processInboundEvent(ctx context.Context, raw models.SuiEvent
 	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote inbound")
+	}
+
+	return nil
+}
+
+// processInboundTracker queries tx with its events by tracker and then votes.
+func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
+	req := models.SuiGetTransactionBlockRequest{
+		Digest:  tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+	}
+
+	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
+	if err != nil {
+		return errors.Wrapf(err, "unable to get transaction block")
+	}
+
+	for _, event := range tx.Events {
+		if err := ob.processInboundEvent(ctx, event, &tx); err != nil {
+			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
+		}
 	}
 
 	return nil
@@ -147,58 +196,4 @@ func (ob *Observer) constructInboundVote(
 		cctypes.ConfirmationMode_SAFE,
 		cctypes.WithCrossChainCall(inbound.IsCrossChainCall),
 	), nil
-}
-
-// ensureCursor ensures tx scroll cursor for inbound observations
-func (ob *Observer) ensureCursor(ctx context.Context) error {
-	if ob.LastTxScanned() == "" {
-		return nil
-	}
-
-	// Note that this would only work for the empty chain database
-	envValue := base.EnvVarLatestTxByChain(ob.Chain())
-	if envValue != "" {
-		ob.WithLastTxScanned(envValue)
-		return nil
-	}
-
-	// let's take the first tx that was ever registered for the Gateway (deployment tx)
-	// Note that this might have for a non-archival node
-	req := models.SuiGetObjectRequest{
-		ObjectId: ob.gateway.PackageID(),
-		Options: models.SuiObjectDataOptions{
-			ShowPreviousTransaction: true,
-		},
-	}
-
-	res, err := ob.client.SuiGetObject(ctx, req)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "unable to get object")
-	case res.Error != nil:
-		return errors.Errorf("get object error: %s (code %s)", res.Error.Error, res.Error.Code)
-	case res.Data == nil:
-		return errors.New("object data is empty")
-	case res.Data.PreviousTransaction == "":
-		return errors.New("previous transaction is empty")
-	}
-
-	cursor := client.EncodeCursor(models.EventId{
-		TxDigest: res.Data.PreviousTransaction,
-		EventSeq: "0",
-	})
-
-	return ob.setCursor(cursor)
-}
-
-func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
-
-func (ob *Observer) setCursor(cursor string) error {
-	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
-		return errors.Wrap(err, "unable to write last tx scanned to db")
-	}
-
-	ob.WithLastTxScanned(cursor)
-
-	return nil
 }

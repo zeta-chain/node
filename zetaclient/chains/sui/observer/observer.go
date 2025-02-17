@@ -97,6 +97,60 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
+// ensureCursor ensures tx scroll cursor for inbound observations
+func (ob *Observer) ensureCursor(ctx context.Context) error {
+	if ob.LastTxScanned() == "" {
+		return nil
+	}
+
+	// Note that this would only work for the empty chain database
+	envValue := base.EnvVarLatestTxByChain(ob.Chain())
+	if envValue != "" {
+		ob.WithLastTxScanned(envValue)
+		return nil
+	}
+
+	// let's take the first tx that was ever registered for the Gateway (deployment tx)
+	// Note that this might have for a non-archival node
+	req := models.SuiGetObjectRequest{
+		ObjectId: ob.gateway.PackageID(),
+		Options: models.SuiObjectDataOptions{
+			ShowPreviousTransaction: true,
+		},
+	}
+
+	res, err := ob.client.SuiGetObject(ctx, req)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to get object")
+	case res.Error != nil:
+		return errors.Errorf("get object error: %s (code %s)", res.Error.Error, res.Error.Code)
+	case res.Data == nil:
+		return errors.New("object data is empty")
+	case res.Data.PreviousTransaction == "":
+		return errors.New("previous transaction is empty")
+	}
+
+	cursor := client.EncodeCursor(models.EventId{
+		TxDigest: res.Data.PreviousTransaction,
+		EventSeq: "0",
+	})
+
+	return ob.setCursor(cursor)
+}
+
+func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
+
+func (ob *Observer) setCursor(cursor string) error {
+	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
+		return errors.Wrap(err, "unable to write last tx scanned to db")
+	}
+
+	ob.WithLastTxScanned(cursor)
+
+	return nil
+}
+
 func uint64FromStr(raw string) (uint64, error) {
 	v, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil {
