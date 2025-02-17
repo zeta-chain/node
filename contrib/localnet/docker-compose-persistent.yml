@@ -46,26 +46,72 @@ services:
     volumes:
       - eth-data-persist:/root/data
 
+  solana:
+    volumes:
+      - solana-ledger-persist:/data/test-ledger
+    profiles:
+      - solana
+      - all
+
   orchestrator:
     volumes:
       - orchestrator-state-persist:/root/state
 
 volumes:
   zetacore0-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetacore1-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetacore2-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetacore3-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetaclient0-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetaclient0-tss-persist:
+    labels:
+      - "localnet=true"
   zetaclient0-zetaclient-persist:
+    labels:
+      - "localnet=true"
   zetaclient1-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetaclient1-tss-persist:
+    labels:
+      - "localnet=true"
   zetaclient1-zetaclient-persist:
+    labels:
+      - "localnet=true"
   zetaclient2-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetaclient2-tss-persist:
+    labels:
+      - "localnet=true"
   zetaclient2-zetaclient-persist:
+    labels:
+      - "localnet=true"
   zetaclient3-zetacored-persist:
+    labels:
+      - "localnet=true"
   zetaclient3-tss-persist:
+    labels:
+      - "localnet=true"
   zetaclient3-zetaclient-persist:
+    labels:
+      - "localnet=true"
   eth-data-persist:
+    labels:
+      - "localnet=true"
   orchestrator-state-persist:
+    labels:
+      - "localnet=true"
+  solana-ledger-persist:
+    labels:
+      - "localnet=true"
