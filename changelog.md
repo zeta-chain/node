@@ -11,6 +11,7 @@
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
 * [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
 * [3520] (https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
+* [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
 
 ### Refactor
 
