@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethchains "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -31,7 +30,7 @@ func (cpl ChainParamsList) Validate() error {
 
 	// validate the chain params and check for duplicates
 	for _, chainParam := range cpl.ChainParams {
-		if err := ValidateChainParams(chainParam); err != nil {
+		if err := chainParam.Validate(); err != nil {
 			return err
 		}
 
@@ -46,15 +45,11 @@ func (cpl ChainParamsList) Validate() error {
 	return nil
 }
 
-// ValidateChainParams performs some basic checks on chain params
-func ValidateChainParams(params *ChainParams) error {
-	if params == nil {
-		return fmt.Errorf("chain params cannot be nil")
-	}
-
+// Validate performs basic checks on chain params
+func (cp ChainParams) Validate() error {
 	// don't validate ZetaChain params, because the validation will fail on existing params in the store
 	// we might remove the ZetaChain params in the future, this is TBD
-	if chains.IsZetaChain(params.ChainId, nil) {
+	if chains.IsZetaChain(cp.ChainId, nil) {
 		return nil
 	}
 
@@ -62,93 +57,78 @@ func ValidateChainParams(params *ChainParams) error {
 	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
 	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
 	// https://github.com/zeta-chain/node/issues/3466
-	if params.ConfirmationCount == 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
+	if cp.ConfirmationCount == 0 {
+		return errors.New("ConfirmationCount must be greater than 0")
 	}
-	if params.ConfirmationParams == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "confirmation params cannot be nil")
+	if cp.ConfirmationParams == nil {
+		return errors.New("confirmation params cannot be nil")
 	}
-	if params.ConfirmationParams.SafeInboundCount == 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeInboundCount must be greater than 0")
-	}
-	if params.ConfirmationParams.FastInboundCount > params.ConfirmationParams.SafeInboundCount {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"FastInboundCount must be less than or equal to SafeInboundCount",
-		)
-	}
-	if params.ConfirmationParams.SafeOutboundCount == 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "SafeOutboundCount must be greater than 0")
-	}
-	if params.ConfirmationParams.FastOutboundCount > params.ConfirmationParams.SafeOutboundCount {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"FastOutboundCount must be less than or equal to SafeOutboundCount",
-		)
+	if err := cp.ConfirmationParams.Validate(); err != nil {
+		return errors.Wrap(err, "invalid confirmation params")
 	}
 
 	// validate tickers and intervals
-	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
+	if cp.GasPriceTicker <= 0 || cp.GasPriceTicker > 300 {
+		return fmt.Errorf("GasPriceTicker %d out of range", cp.GasPriceTicker)
 	}
-	if params.InboundTicker <= 0 || params.InboundTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InboundTicker %d out of range", params.InboundTicker)
+	if cp.InboundTicker <= 0 || cp.InboundTicker > 300 {
+		return fmt.Errorf("InboundTicker %d out of range", cp.InboundTicker)
 	}
-	if params.OutboundTicker <= 0 || params.OutboundTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTicker %d out of range", params.OutboundTicker)
+	if cp.OutboundTicker <= 0 || cp.OutboundTicker > 300 {
+		return fmt.Errorf("OutboundTicker %d out of range", cp.OutboundTicker)
 	}
-	if params.OutboundScheduleInterval == 0 || params.OutboundScheduleInterval > 100 { // 600 secs
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.OutboundScheduleInterval == 0 || cp.OutboundScheduleInterval > 100 { // 600 secs
+		return fmt.Errorf(
+
 			"OutboundScheduleInterval %d out of range",
-			params.OutboundScheduleInterval,
+			cp.OutboundScheduleInterval,
 		)
 	}
-	if params.OutboundScheduleLookahead == 0 || params.OutboundScheduleLookahead > 500 { // 500 cctxs
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.OutboundScheduleLookahead == 0 || cp.OutboundScheduleLookahead > 500 { // 500 cctxs
+		return fmt.Errorf(
+
 			"OutboundScheduleLookahead %d out of range",
-			params.OutboundScheduleLookahead,
+			cp.OutboundScheduleLookahead,
 		)
 	}
 
 	// if WatchUtxoTicker defined, check validity
-	if params.WatchUtxoTicker > 300 {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.WatchUtxoTicker > 300 {
+		return fmt.Errorf(
+
 			"WatchUtxoTicker %d out of range",
-			params.WatchUtxoTicker,
+			cp.WatchUtxoTicker,
 		)
 	}
 
 	// if contract addresses are defined, check validity
-	if params.ZetaTokenContractAddress != "" && !validChainContractAddress(params.ZetaTokenContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.ZetaTokenContractAddress != "" && !validChainContractAddress(cp.ZetaTokenContractAddress) {
+		return fmt.Errorf(
+
 			"invalid ZetaTokenContractAddress %s",
-			params.ZetaTokenContractAddress,
+			cp.ZetaTokenContractAddress,
 		)
 	}
-	if params.ConnectorContractAddress != "" && !validChainContractAddress(params.ConnectorContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.ConnectorContractAddress != "" && !validChainContractAddress(cp.ConnectorContractAddress) {
+		return fmt.Errorf(
+
 			"invalid ConnectorContractAddress %s",
-			params.ConnectorContractAddress,
+			cp.ConnectorContractAddress,
 		)
 	}
-	if params.Erc20CustodyContractAddress != "" && !validChainContractAddress(params.Erc20CustodyContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.Erc20CustodyContractAddress != "" && !validChainContractAddress(cp.Erc20CustodyContractAddress) {
+		return fmt.Errorf(
+
 			"invalid Erc20CustodyContractAddress %s",
-			params.Erc20CustodyContractAddress,
+			cp.Erc20CustodyContractAddress,
 		)
 	}
 
-	if params.BallotThreshold.IsNil() || params.BallotThreshold.GT(sdkmath.LegacyOneDec()) {
+	if cp.BallotThreshold.IsNil() || cp.BallotThreshold.GT(sdkmath.LegacyOneDec()) {
 		return ErrParamsThreshold
 	}
 
-	if params.MinObserverDelegation.IsNil() {
+	if cp.MinObserverDelegation.IsNil() {
 		return ErrParamsMinObserverDelegation
 	}
 
