@@ -34,6 +34,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateGatewayContract",
 		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
 		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
+		"/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
 		"/zetachain.zetacore.observer.MsgAddObserver",
 		"/zetachain.zetacore.observer.MsgRemoveChainParams",
