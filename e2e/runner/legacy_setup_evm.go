@@ -138,8 +138,8 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool) {
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
 
-	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainParams,
 	))
 

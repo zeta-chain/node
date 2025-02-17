@@ -27,6 +27,10 @@ func MigrateStore(
 			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
 			AuthorizedPolicy: types.PolicyType_groupOperational,
 		}
+		updateChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
 	)
 
 	// Fetch the current authorization list, if found use that instead of default list
@@ -38,6 +42,7 @@ func MigrateStore(
 	// Add the new authorization
 	authorizationList.SetAuthorization(removeInboundAuthorization)
 	authorizationList.SetAuthorization(updateOperationalChainParamsAuthorization)
+	authorizationList.SetAuthorization(updateChainParamsAuthorization)
 
 	// Validate the authorization list
 	err := authorizationList.Validate()

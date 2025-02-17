@@ -61,8 +61,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
 
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainParams,
 	))
 	require.NoError(r, err)
@@ -110,8 +110,8 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
 	chainParams.IsSupported = false
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainParams,
 	))
 	require.NoError(r, err)

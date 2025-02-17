@@ -182,7 +182,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 
 	updateMsg := observertypes.NewMsgUpdateChainParams(creator, chainParams)
 
-	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, updateMsg); err != nil {
+	if _, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, updateMsg); err != nil {
 		return errors.Wrap(err, "unable to broadcast solana chain params tx")
 	}
 
