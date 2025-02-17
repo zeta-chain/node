@@ -44,6 +44,10 @@ func (msg *MsgUpdateChainParams) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
+	if msg.ChainParams == nil {
+		return cosmoserrors.Wrap(ErrInvalidChainParams, "chain params cannot be nil")
+	}
+
 	if err := msg.ChainParams.Validate(); err != nil {
 		return cosmoserrors.Wrap(ErrInvalidChainParams, err.Error())
 	}

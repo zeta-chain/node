@@ -12,6 +12,74 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+func TestConfirmationParams_Validate(t *testing.T) {
+	tests := []struct {
+		name  string
+		cp    types.ConfirmationParams
+		isErr bool
+	}{
+		{
+			name: "valid confirmation params",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+		},
+		{
+			name: "invalid SafeInboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  0,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid FastInboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  2,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid SafeOutboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 0,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid FastOutboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 2,
+			},
+			isErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.cp.Validate()
+			if tt.isErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestChainParamsList_Validate(t *testing.T) {
 	t.Run("should return no error for default list", func(t *testing.T) {
 		list := types.GetDefaultChainParams()
@@ -216,9 +284,9 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 }
 
 func (s *UpdateChainParamsSuite) TestValidParams() {
-	require.Error(s.T(), s.zetaParams.Validate())
-	require.Error(s.T(), s.evmParams.Validate())
-	require.Error(s.T(), s.btcParams.Validate())
+	require.NoError(s.T(), s.zetaParams.Validate())
+	require.NoError(s.T(), s.evmParams.Validate())
+	require.NoError(s.T(), s.btcParams.Validate())
 }
 
 func (s *UpdateChainParamsSuite) TestCommonParams() {
@@ -337,7 +405,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.GasPriceTicker = 0
 	require.Error(s.T(), cp.Validate())
 	cp.GasPriceTicker = 300
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 	cp.GasPriceTicker = 301
 	require.Error(s.T(), cp.Validate())
 
@@ -345,7 +413,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.InboundTicker = 0
 	require.Error(s.T(), cp.Validate())
 	cp.InboundTicker = 300
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 	cp.InboundTicker = 301
 	require.Error(s.T(), cp.Validate())
 
@@ -353,7 +421,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.OutboundTicker = 0
 	require.Error(s.T(), cp.Validate())
 	cp.OutboundTicker = 300
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 	cp.OutboundTicker = 301
 	require.Error(s.T(), cp.Validate())
 
@@ -361,7 +429,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.OutboundScheduleInterval = 0
 	require.Error(s.T(), cp.Validate())
 	cp.OutboundScheduleInterval = 100
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 	cp.OutboundScheduleInterval = 101
 	require.Error(s.T(), cp.Validate())
 
@@ -369,7 +437,7 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.OutboundScheduleLookahead = 0
 	require.Error(s.T(), cp.Validate())
 	cp.OutboundScheduleLookahead = 500
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 	cp.OutboundScheduleLookahead = 501
 	require.Error(s.T(), cp.Validate())
 
@@ -379,13 +447,13 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	cp.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
 	require.Error(s.T(), cp.Validate())
 	cp.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("0.9")
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 
 	cp = copyParams(params)
 	cp.MinObserverDelegation = sdkmath.LegacyDec{}
 	require.Error(s.T(), cp.Validate())
 	cp.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
-	require.Error(s.T(), cp.Validate())
+	require.NoError(s.T(), cp.Validate())
 }
 
 // copyParams creates a deep copy of the given ChainParams.

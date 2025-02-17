@@ -62,7 +62,7 @@ func (msg *MsgUpdateOperationalChainParams) ValidateBasic() error {
 	}
 
 	if msg.ChainId < 0 {
-		return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, "chain id cannot be negative")
+		return cosmoserrors.Wrap(sdkerrors.ErrInvalidChainID, "chain id cannot be negative")
 	}
 
 	if msg.OutboundScheduleInterval < 0 {
