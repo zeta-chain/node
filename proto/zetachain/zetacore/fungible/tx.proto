@@ -28,6 +28,7 @@ service Msg {
   rpc UnpauseZRC20(MsgUnpauseZRC20) returns (MsgUnpauseZRC20Response);
   rpc UpdateGatewayContract(MsgUpdateGatewayContract)
       returns (MsgUpdateGatewayContractResponse);
+  rpc UpdateZRC20Name(MsgUpdateZRC20Name) returns (MsgUpdateZRC20NameResponse);
 }
 
 message MsgDeploySystemContracts {
@@ -137,3 +138,13 @@ message MsgUpdateGatewayContract {
 }
 
 message MsgUpdateGatewayContractResponse {}
+
+message MsgUpdateZRC20Name {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string zrc20_address = 2;
+  string name = 3;
+  string symbol = 4;
+}
+
+message MsgUpdateZRC20NameResponse {}

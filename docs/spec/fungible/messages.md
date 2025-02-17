@@ -152,3 +152,14 @@ message MsgUpdateGatewayContract {
 }
 ```
 
+## MsgUpdateZRC20Name
+
+```proto
+message MsgUpdateZRC20Name {
+	string creator = 1;
+	string zrc20_address = 2;
+	string name = 3;
+	string symbol = 4;
+}
+```
+
