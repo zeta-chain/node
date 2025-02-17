@@ -84,11 +84,13 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	return nil
 }
 
-// processInboundEvent parses raw event into Inbound,
-// augment it with origin tx and vote on the inbound.
-// Invalid/Non-inbound txs are skipped.
-// Unconfirmed txs pause the whole tail sequence.
-// If tx is empty, it fetches the tx from the RPC.
+// processInboundEvent parses raw event into Inbound, augments it with origin tx and votes on the inbound.
+// - Invalid/Non-inbound txs are skipped.
+// - Unconfirmed txs pause the whole tail sequence.
+// - If tx is empty, it fetches the tx from RPC.
+// - Sui tx is finalized if it's returned from RPC
+//
+// See https://docs.sui.io/concepts/sui-architecture/transaction-lifecycle#verifying-finality
 func (ob *Observer) processInboundEvent(
 	ctx context.Context,
 	raw models.SuiEventResponse,

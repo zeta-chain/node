@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"time"
 
@@ -99,12 +100,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 // ensureCursor ensures tx scroll cursor for inbound observations
 func (ob *Observer) ensureCursor(ctx context.Context) error {
-	if ob.LastTxScanned() == "" {
+	if ob.LastTxScanned() != "" {
 		return nil
 	}
 
 	// Note that this would only work for the empty chain database
-	envValue := base.EnvVarLatestTxByChain(ob.Chain())
+	envValue := os.Getenv(base.EnvVarLatestTxByChain(ob.Chain()))
 	if envValue != "" {
 		ob.WithLastTxScanned(envValue)
 		return nil

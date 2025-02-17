@@ -2,13 +2,21 @@ package observer
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/testutil/sample"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -45,6 +53,119 @@ func TestObserver(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 	})
+
+	t.Run("ObserveInbound", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		evmBob := sample.EthAddress()
+		evmAlice := sample.EthAddress()
+
+		const usdc = "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
+
+		// Given gateway object from RPC (for "ensuring" the initial scroll cursor)
+		gatewayRequest := models.SuiGetObjectRequest{
+			ObjectId: ts.gateway.PackageID(),
+			Options: models.SuiObjectDataOptions{
+				ShowPreviousTransaction: true,
+			},
+		}
+
+		gatewayObject := models.SuiObjectResponse{
+			Data: &models.SuiObjectData{
+				ObjectId:            ts.gateway.PackageID(),
+				PreviousTransaction: "ABC123_first_tx",
+			},
+		}
+
+		ts.suiMock.
+			On("SuiGetObject", mock.Anything, gatewayRequest).
+			Return(gatewayObject, nil)
+
+		// Given list of gateway events...
+		expectedQuery := client.EventQuery{
+			PackageID: ts.gateway.PackageID(),
+			Module:    ts.gateway.Module(),
+			Cursor:    "ABC123_first_tx#0",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		// ...two of which are valid (1 & 3)
+		events := []models.SuiEventResponse{
+			ts.SampleEvent("TX_1_ok", string(sui.Deposit), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+			ts.SampleEvent("TX_2_unrelated_event", "something", map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+			ts.SampleEvent("TX_3_ok", string(sui.DepositAndCall), map[string]any{
+				// USDC
+				"coin_type": usdc,
+				"amount":    "300",
+				"sender":    "SUI_ALICE",
+				"receiver":  evmAlice.String(),
+				"payload":   []any{float64(1), float64(2), float64(3)},
+			}),
+			ts.SampleEvent("TX_4_invalid_data", string(sui.Deposit), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "hello",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+
+		// Given 2 transaction blocks
+		ts.OnGetTx("TX_1_ok", "10000", false, nil)
+		ts.OnGetTx("TX_3_ok", "20000", false, nil)
+
+		// Given inbound votes catches so we can assert them later
+		ts.CatchInboundVotes()
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check that final cursor is on INVALID event, that's expected
+		assert.Equal(t, "TX_4_invalid_data#0", ts.LastTxScanned())
+
+		// Check for transactions
+		assert.Equal(t, 2, len(ts.inboundVotes))
+
+		vote1 := ts.inboundVotes[0]
+		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
+		assert.Equal(t, false, vote1.IsCrossChainCall)
+		assert.Equal(t, math.NewUint(200), vote1.Amount)
+		assert.Equal(t, evmBob.String(), vote1.Receiver)
+
+		vote3 := ts.inboundVotes[1]
+		assert.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
+		assert.Equal(t, true, vote3.IsCrossChainCall)
+		assert.Equal(t, usdc, vote3.Asset)
+		assert.Equal(t, math.NewUint(300), vote3.Amount)
+		assert.Equal(t, evmAlice.String(), vote3.Receiver)
+
+		// Check that other 2 txs are skipped
+		assert.Contains(
+			t,
+			ts.log.String(),
+			`unable to parse amount: cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+		)
+		assert.Contains(
+			t,
+			ts.log.String(),
+			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
+		)
+	})
 }
 
 type testSuite struct {
@@ -52,6 +173,12 @@ type testSuite struct {
 	ctx      context.Context
 	zetaMock *mocks.ZetacoreClient
 	suiMock  *mocks.SuiClient
+	db       *db.DB
+	log      *testlog.Log
+	gateway  *sui.Gateway
+
+	inboundVotes []*cctypes.MsgVoteInbound
+
 	*Observer
 }
 
@@ -60,14 +187,15 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	chain := chains.SuiMainnet
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
+	require.NotEmpty(t, chainParams.GatewayAddress)
 
 	// todo zctx with chain & params (in future PRs)
 
 	zetacore := mocks.NewZetacoreClient(t).
-		WithKeys(&keys.Keys{}).
 		WithZetaChain().
-		WithPostVoteInbound("", "").
-		WithPostVoteOutbound("", "")
+		WithKeys(&keys.Keys{
+			OperatorAddress: sample.Bech32AccAddress(),
+		})
 
 	tss := mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet)
 
@@ -85,13 +213,61 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	suiMock := mocks.NewSuiClient(t)
 
-	observer := New(baseObserver, suiMock)
+	gw := sui.NewGateway(chainParams.GatewayAddress)
+
+	observer := New(baseObserver, suiMock, gw)
 
 	return &testSuite{
 		t:        t,
 		ctx:      ctx,
 		zetaMock: zetacore,
 		suiMock:  suiMock,
+		db:       database,
+		log:      log,
+		gateway:  gw,
 		Observer: observer,
 	}
+}
+
+func (ts *testSuite) SampleEvent(txHash, event string, kv map[string]any) models.SuiEventResponse {
+	eventType := fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), ts.gateway.Module(), event)
+
+	return models.SuiEventResponse{
+		Id: models.EventId{
+			TxDigest: txHash,
+			EventSeq: "0",
+		},
+		PackageId:         ts.gateway.PackageID(),
+		TransactionModule: "gateway",
+		Sender:            "SENDER_ABC",
+		Type:              eventType,
+		ParsedJson:        kv,
+	}
+}
+
+func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events []models.SuiEventResponse) {
+	req := models.SuiGetTransactionBlockRequest{
+		Digest:  digest,
+		Options: models.SuiTransactionBlockOptions{ShowEvents: showEvents},
+	}
+
+	res := models.SuiTransactionBlockResponse{
+		Digest:     digest,
+		Events:     events,
+		Checkpoint: checkpoint,
+	}
+
+	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(res, nil).Once()
+}
+
+func (ts *testSuite) CatchInboundVotes() {
+	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
+		ts.inboundVotes = append(ts.inboundVotes, msg)
+		return "", "", nil
+	}
+
+	ts.zetaMock.
+		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(callback).
+		Maybe()
 }
