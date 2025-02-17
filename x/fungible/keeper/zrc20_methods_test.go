@@ -12,7 +12,35 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
-func Test_ZRC20Allowance(t *testing.T) {
+func TestKeeper_ZRC20SetName(t *testing.T) {
+	ts := setupChain(t)
+
+	t.Run("should update name", func(t *testing.T) {
+		err := ts.fungibleKeeper.ZRC20SetName(ts.ctx, ts.zrc20Address, "NewName")
+		require.NoError(t, err)
+
+		name, err := ts.fungibleKeeper.ZRC20Name(ts.ctx, ts.zrc20Address)
+		require.NoError(t, err)
+
+		require.Equal(t, "NewName", name)
+	})
+}
+
+func TestKeeper_ZRC20SetSymbol(t *testing.T) {
+	ts := setupChain(t)
+
+	t.Run("should update symbol", func(t *testing.T) {
+		err := ts.fungibleKeeper.ZRC20SetSymbol(ts.ctx, ts.zrc20Address, "SYM")
+		require.NoError(t, err)
+
+		symbol, err := ts.fungibleKeeper.ZRC20Symbol(ts.ctx, ts.zrc20Address)
+		require.NoError(t, err)
+
+		require.Equal(t, "SYM", symbol)
+	})
+}
+
+func TestKeeper_ZRC20Allowance(t *testing.T) {
 	ts := setupChain(t)
 
 	t.Run("should fail when owner is zero address", func(t *testing.T) {
@@ -60,7 +88,7 @@ func Test_ZRC20Allowance(t *testing.T) {
 	})
 }
 
-func Test_ZRC20BalanceOf(t *testing.T) {
+func TestKeeper_ZRC20BalanceOf(t *testing.T) {
 	ts := setupChain(t)
 
 	t.Run("should fail when owner is zero address", func(t *testing.T) {
@@ -86,7 +114,7 @@ func Test_ZRC20BalanceOf(t *testing.T) {
 	})
 }
 
-func Test_ZRC20TotalSupply(t *testing.T) {
+func TestKeeper_ZRC20TotalSupply(t *testing.T) {
 	ts := setupChain(t)
 
 	t.Run("should fail when zrc20 address is zero address", func(t *testing.T) {
@@ -102,7 +130,7 @@ func Test_ZRC20TotalSupply(t *testing.T) {
 	})
 }
 
-func Test_ZRC20Transfer(t *testing.T) {
+func TestKeeper_ZRC20Transfer(t *testing.T) {
 	ts := setupChain(t)
 
 	// Make sure sample.EthAddress() exists as an ethermint account in state.
@@ -160,7 +188,7 @@ func Test_ZRC20Transfer(t *testing.T) {
 	})
 }
 
-func Test_ZRC20TransferFrom(t *testing.T) {
+func TestKeeper_ZRC20TransferFrom(t *testing.T) {
 	// Instantiate the ZRC20 ABI only one time.
 	// This avoids instantiating it every time deposit or withdraw are called.
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()

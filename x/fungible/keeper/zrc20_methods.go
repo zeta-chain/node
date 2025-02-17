@@ -14,12 +14,178 @@ import (
 )
 
 const (
+	setName      = "setName"
+	setSymbol    = "setSymbol"
+	name         = "name"
+	symbol       = "symbol"
 	allowance    = "allowance"
 	balanceOf    = "balanceOf"
 	totalSupply  = "totalSupply"
 	transfer     = "transfer"
 	transferFrom = "transferFrom"
 )
+
+// ZRC20SetName updates the name of a ZRC20 token
+func (k Keeper) ZRC20SetName(
+	ctx sdk.Context,
+	zrc20Address common.Address,
+	name string,
+) error {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return err
+	}
+
+	// function setName(string memory name)
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		fungibletypes.ModuleAddressEVM,
+		zrc20Address,
+		big.NewInt(0),
+		nil,
+		true,
+		true,
+		setName,
+		name,
+	)
+	if err != nil {
+		return errors.Wrap(err, "EVM error calling ZRC20 setName function")
+	}
+	if res.VmError != "" {
+		return fmt.Errorf("EVM execution error calling allowance: %s", res.VmError)
+	}
+
+	return nil
+}
+
+// ZRC20SetSymbol updates the symbol of a ZRC20 token
+func (k Keeper) ZRC20SetSymbol(
+	ctx sdk.Context,
+	zrc20Address common.Address,
+	symbol string,
+) error {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return err
+	}
+
+	// function setSymbol(string memory symbol)
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		fungibletypes.ModuleAddressEVM,
+		zrc20Address,
+		big.NewInt(0),
+		nil,
+		true,
+		true,
+		setSymbol,
+		symbol,
+	)
+	if err != nil {
+		return errors.Wrap(err, "EVM error calling ZRC20 setSymbol function")
+	}
+	if res.VmError != "" {
+		return fmt.Errorf("EVM execution error calling allowance: %s", res.VmError)
+	}
+
+	return nil
+}
+
+// ZRC20Name returns the name of a ZRC20 token
+func (k Keeper) ZRC20Name(
+	ctx sdk.Context,
+	zrc20Address common.Address,
+) (string, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return "", err
+	}
+
+	// function name() public view virtual override returns (string memory)
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		fungibletypes.ModuleAddressEVM,
+		zrc20Address,
+		big.NewInt(0),
+		nil,
+		false,
+		true,
+		name,
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "EVM error calling ZRC20 name function")
+	}
+
+	if res.VmError != "" {
+		return "", fmt.Errorf("EVM execution error calling name: %s", res.VmError)
+	}
+
+	ret, err := zrc20ABI.Methods[name].Outputs.Unpack(res.Ret)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to unpack ZRC20 name return value")
+	}
+
+	if len(ret) == 0 {
+		return "", fmt.Errorf("no data returned from 'name' method")
+	}
+
+	name, ok := ret[0].(string)
+	if !ok {
+		return "", fmt.Errorf("ZRC20 name returned an unexpected type")
+	}
+
+	return name, nil
+}
+
+// ZRC20Symbol returns the symbol of a ZRC20 token
+func (k Keeper) ZRC20Symbol(
+	ctx sdk.Context,
+	zrc20Address common.Address,
+) (string, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return "", err
+	}
+
+	// function symbol() public view virtual override returns (string memory)
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		fungibletypes.ModuleAddressEVM,
+		zrc20Address,
+		big.NewInt(0),
+		nil,
+		false,
+		true,
+		symbol,
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "EVM error calling ZRC20 symbol function")
+	}
+
+	if res.VmError != "" {
+		return "", fmt.Errorf("EVM execution error calling symbol: %s", res.VmError)
+	}
+
+	ret, err := zrc20ABI.Methods[symbol].Outputs.Unpack(res.Ret)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to unpack ZRC20 symbol return value")
+	}
+
+	if len(ret) == 0 {
+		return "", fmt.Errorf("no data returned from 'symbol' method")
+	}
+
+	symbol, ok := ret[0].(string)
+	if !ok {
+		return "", fmt.Errorf("ZRC20 symbol returned an unexpected type")
+	}
+
+	return symbol, nil
+}
 
 // ZRC20Allowance returns the ZRC20 allowance for a given spender.
 // The allowance has to be previously approved by the ZRC20 tokens owner.
