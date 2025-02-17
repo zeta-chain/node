@@ -340,6 +340,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCriticalAdminTransactionsName,
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
+			e2etests.TestUpdateZRC20NameName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
