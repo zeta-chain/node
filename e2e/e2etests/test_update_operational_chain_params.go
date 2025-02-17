@@ -29,7 +29,7 @@ func TestUpdateOperationalChainParams(r *runner.E2ERunner, _ []string) {
 	}
 	require.True(r, found, "chain params not found")
 
-	r.Logger.Info("Updating the bytecode of the ZRC20")
+	r.Logger.Info("Updating operational chain parameters")
 	msg := observertypes.NewMsgUpdateOperationalChainParams(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		chainID,

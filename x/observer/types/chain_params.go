@@ -19,19 +19,18 @@ var (
 
 // Validate checks that the ConfirmationParams is valid
 func (cp ConfirmationParams) Validate() error {
-	if cp.SafeInboundCount == 0 {
+	switch {
+	case cp.SafeInboundCount == 0:
 		return errors.New("SafeInboundCount must be greater than 0")
-	}
-	if cp.FastInboundCount > cp.SafeInboundCount {
+	case cp.FastInboundCount > cp.SafeInboundCount:
 		return errors.New("FastInboundCount must be less than or equal to SafeInboundCount")
-	}
-	if cp.SafeOutboundCount == 0 {
+	case cp.SafeOutboundCount == 0:
 		return errors.New("SafeOutboundCount must be greater than 0")
-	}
-	if cp.FastOutboundCount > cp.SafeOutboundCount {
+	case cp.FastOutboundCount > cp.SafeOutboundCount:
 		return errors.New("FastOutboundCount must be less than or equal to SafeOutboundCount")
+	default:
+		return nil
 	}
-	return nil
 }
 
 // Validate checks all chain params correspond to a chain and there is no duplicate chain id

@@ -8,7 +8,7 @@ import (
 
 const TypeMsgUpdateOperationalChainParams = "update_operational_chain_params"
 
-var _ sdk.Msg = &MsgUpdateChainParams{}
+var _ sdk.Msg = &MsgUpdateOperationalChainParams{}
 
 func NewMsgUpdateOperationalChainParams(
 	creator string,
