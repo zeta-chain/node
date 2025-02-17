@@ -173,3 +173,19 @@ message MsgUpdateOperationalFlags {
 }
 ```
 
+## MsgUpdateOperationalChainParams
+
+```proto
+message MsgUpdateOperationalChainParams {
+	string creator = 1;
+	int64 chain_id = 2;
+	uint64 gas_price_ticker = 3;
+	uint64 inbound_ticker = 4;
+	uint64 outbound_ticker = 5;
+	uint64 watch_utxo_ticker = 6;
+	int64 outbound_schedule_interval = 7;
+	int64 outbound_schedule_lookahead = 8;
+	ConfirmationParams confirmation_params = 9;
+}
+```
+

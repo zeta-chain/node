@@ -37,6 +37,8 @@ service Msg {
       returns (MsgUpdateGasPriceIncreaseFlagsResponse);
   rpc UpdateOperationalFlags(MsgUpdateOperationalFlags)
       returns (MsgUpdateOperationalFlagsResponse);
+  rpc UpdateOperationalChainParams(MsgUpdateOperationalChainParams)
+      returns (MsgUpdateOperationalChainParamsResponse);
 }
 
 message MsgUpdateObserver {

@@ -59938,6 +59938,8 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgUpdateOperationalChainParamsResponse:
+    type: object
   observerMsgUpdateOperationalFlagsResponse:
     type: object
   observerMsgVoteBlameResponse:
