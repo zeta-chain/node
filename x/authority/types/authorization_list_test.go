@@ -400,6 +400,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateOperationalFlags{}),
+			sdk.MsgTypeURL(&observertypes.MsgUpdateOperationalChainParams{}),
 		}
 
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy

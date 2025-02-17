@@ -182,7 +182,6 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 		chainParamsList, found := k.GetChainParamsList(ctx)
 		require.True(t, found)
 
-		// contains previous chain params
 		require.Len(t, chainParamsList.ChainParams, 5)
 		require.Contains(t, chainParamsList.ChainParams, otherChainParams1)
 		require.Contains(t, chainParamsList.ChainParams, otherChainParams2)
