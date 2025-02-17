@@ -44,7 +44,7 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		// use ctx as tmpCtx is dismissed
+		// use ctx as tmpCtx is dismissed to not save any side effects performed during the evm deposit
 		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
 			StatusMessage:        "outbound failed but the universal contract did not revert",
 			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("failed to deposit tokens in ZEVM", err),

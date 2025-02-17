@@ -25,8 +25,11 @@ func (k Keeper) ProcessAbort(
 ) {
 	// only support cctx with v2 and with a defined abort address
 	// also abort can't be processed if the abort amount is already refunded
-	if cctx.ProtocolContractVersion != types.ProtocolContractVersion_V2 || cctx.RevertOptions.AbortAddress == "" ||
+	if cctx.ProtocolContractVersion != types.ProtocolContractVersion_V2 ||
+		cctx.RevertOptions.AbortAddress == "" ||
 		cctx.CctxStatus.IsAbortRefunded {
+		messages.ErrorMessageAbort = "abort processing not supported for this cctx"
+
 		cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
 		return
 	}

@@ -62,7 +62,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// Test 2: no contract for abort
 
 	// check that funds are still received if onAbort is not called or fails
-	abortAddressNoContract := sample.EthAddress()
+	eoaAddress := sample.EthAddress()
 
 	tx = r.ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
@@ -73,7 +73,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 			CallOnRevert:     true,
 			RevertMessage:    []byte("revert"),
 			OnRevertGasLimit: big.NewInt(200000),
-			AbortAddress:     abortAddressNoContract,
+			AbortAddress:     eoaAddress,
 		},
 	)
 
@@ -83,7 +83,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
 	// check abort contract received the tokens
-	balance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, abortAddressNoContract)
+	balance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, eoaAddress)
 	require.NoError(r, err)
 	require.True(r, balance.Uint64() > 0)
 }
