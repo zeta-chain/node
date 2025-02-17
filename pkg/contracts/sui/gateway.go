@@ -37,7 +37,7 @@ var ErrParseEvent = errors.New("event parse error")
 // Note: packageID is the equivalent for gateway address or program ID on Solana
 // It's what will be set in gateway chain params
 func NewGateway(packageID string) *Gateway {
-	return &Gateway{packageID}
+	return &Gateway{packageID: packageID}
 }
 
 // Event represents generic event wrapper
@@ -60,6 +60,14 @@ func (e *Event) Inbound() (Inbound, error) {
 	}
 
 	return e.content.(Inbound), nil
+}
+
+func (gw *Gateway) PackageID() string {
+	return gw.packageID
+}
+
+func (gw *Gateway) Module() string {
+	return moduleName
 }
 
 // ParseEvent parses Event.

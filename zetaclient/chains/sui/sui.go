@@ -67,14 +67,23 @@ func (s *Sui) Start(ctx context.Context) error {
 		s.scheduler.Register(ctx, exec, opts...)
 	}
 
+	optInboundInterval := scheduler.IntervalUpdater(func() time.Duration {
+		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().InboundTicker)
+	})
+
 	optGasInterval := scheduler.IntervalUpdater(func() time.Duration {
 		return ticker.DurationFromUint64Seconds(s.observer.ChainParams().GasPriceTicker)
+	})
+
+	optInboundSkipper := scheduler.Skipper(func() bool {
+		return !app.IsInboundObservationEnabled()
 	})
 
 	optGenericSkipper := scheduler.Skipper(func() bool {
 		return !s.observer.ChainParams().IsSupported
 	})
 
+	register(s.observer.ObserveInbound, "observer_inbound", optInboundInterval, optInboundSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
 	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 

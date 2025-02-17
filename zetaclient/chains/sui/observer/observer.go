@@ -8,28 +8,38 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
-	client RPC
+	client  RPC
+	gateway *sui.Gateway
 }
 
 // RPC represents subset of Sui RPC methods.
 type RPC interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
+	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
+	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
+	SuiGetTransactionBlock(
+		ctx context.Context,
+		req models.SuiGetTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
 }
 
 // New Observer constructor.
-func New(baseObserver *base.Observer, client RPC) *Observer {
+func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observer {
 	return &Observer{
 		Observer: baseObserver,
 		client:   client,
+		gateway:  gateway,
 	}
 }
 

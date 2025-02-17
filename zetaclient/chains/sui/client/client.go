@@ -17,7 +17,7 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const defaultEventsLimit = 100
+const DefaultEventsLimit = 100
 
 const filterMoveEventModule = "MoveEventModule"
 
@@ -71,7 +71,7 @@ type EventQuery struct {
 // If cursor is empty, then the end of scroll reached.
 func (c *Client) QueryModuleEvents(ctx context.Context, q EventQuery) ([]models.SuiEventResponse, string, error) {
 	if q.Limit == 0 {
-		q.Limit = defaultEventsLimit
+		q.Limit = DefaultEventsLimit
 	}
 
 	if err := q.validate(); err != nil {
@@ -90,7 +90,7 @@ func (c *Client) QueryModuleEvents(ctx context.Context, q EventQuery) ([]models.
 	case !res.HasNextPage:
 		return res.Data, "", nil
 	default:
-		return res.Data, encodeCursor(res.NextCursor), nil
+		return res.Data, EncodeCursor(res.NextCursor), nil
 	}
 }
 
@@ -117,7 +117,7 @@ func (p *EventQuery) asRequest() (models.SuiXQueryEventsRequest, error) {
 		},
 	}
 
-	cursor, err := decodeCursor(p.Cursor)
+	cursor, err := DecodeCursor(p.Cursor)
 	if err != nil {
 		return models.SuiXQueryEventsRequest{}, err
 	}
@@ -130,11 +130,13 @@ func (p *EventQuery) asRequest() (models.SuiXQueryEventsRequest, error) {
 	}, nil
 }
 
-func encodeCursor(id models.EventId) string {
+// EncodeCursor encodes event ID into cursor.
+func EncodeCursor(id models.EventId) string {
 	return fmt.Sprintf("%s#%s", id.TxDigest, id.EventSeq)
 }
 
-func decodeCursor(cursor string) (*models.EventId, error) {
+// DecodeCursor decodes cursor into event ID.
+func DecodeCursor(cursor string) (*models.EventId, error) {
 	if cursor == "" {
 		return nil, nil
 	}
