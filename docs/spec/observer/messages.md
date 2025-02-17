@@ -175,6 +175,9 @@ message MsgUpdateOperationalFlags {
 
 ## MsgUpdateOperationalChainParams
 
+UpdateOperationalChainParams updates the operational-related chain params
+Unlike MsgUpdateChainParams, this message doesn't allow updated sensitive values such as the gateway contract to listen to on connected chains
+
 ```proto
 message MsgUpdateOperationalChainParams {
 	string creator = 1;

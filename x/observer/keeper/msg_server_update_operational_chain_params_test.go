@@ -207,7 +207,11 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 				require.EqualValues(t, originalChainParams.ConnectorContractAddress, cp.ConnectorContractAddress)
 				require.EqualValues(t, originalChainParams.Erc20CustodyContractAddress, cp.Erc20CustodyContractAddress)
 				require.EqualValues(t, originalChainParams.BallotThreshold.String(), cp.BallotThreshold.String())
-				require.EqualValues(t, originalChainParams.MinObserverDelegation.String(), cp.MinObserverDelegation.String())
+				require.EqualValues(
+					t,
+					originalChainParams.MinObserverDelegation.String(),
+					cp.MinObserverDelegation.String(),
+				)
 				require.EqualValues(t, originalChainParams.IsSupported, cp.IsSupported)
 				require.EqualValues(t, originalChainParams.GatewayAddress, cp.GatewayAddress)
 
