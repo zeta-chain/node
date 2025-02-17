@@ -18,6 +18,8 @@ service Msg {
       returns (MsgAddOutboundTrackerResponse);
   rpc AddInboundTracker(MsgAddInboundTracker)
       returns (MsgAddInboundTrackerResponse);
+  rpc RemoveInboundTracker(MsgRemoveInboundTracker)
+      returns (MsgRemoveInboundTrackerResponse);
   rpc RemoveOutboundTracker(MsgRemoveOutboundTracker)
       returns (MsgRemoveOutboundTrackerResponse);
 
@@ -64,6 +66,9 @@ message MsgUpdateTssAddress {
 
 message MsgUpdateTssAddressResponse {}
 
+// MsgAddInboundTracker defines a message to add an inbound tracker.
+// The index used for the saving the tracker to the store is of the format
+// <chain_id>-<tx_hash>
 message MsgAddInboundTracker {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
@@ -76,6 +81,18 @@ message MsgAddInboundTracker {
   int64 tx_index = 7 [ deprecated = true ];
 }
 message MsgAddInboundTrackerResponse {}
+
+// MsgRemoveInboundTracker defines a message to remove an inbound tracker.
+// The index used for the fetching the tracker to the store is of the format
+// <chain_id>-<tx_hash>
+message MsgRemoveInboundTracker {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  int64 chain_id = 2;
+  string tx_hash = 3;
+}
+
+message MsgRemoveInboundTrackerResponse {}
 
 // TODO: https://github.com/zeta-chain/node/issues/3083
 message MsgWhitelistERC20 {

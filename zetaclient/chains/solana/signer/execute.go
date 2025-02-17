@@ -13,13 +13,16 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWithdraw creates and signs a withdraw message for gateway withdraw instruction with TSS.
-func (signer *Signer) createAndSignMsgWithdraw(
+// createAndSignMsgExecute creates and signs a execute message for gateway execute instruction with TSS.
+func (signer *Signer) createAndSignMsgExecute(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
+	sender [20]byte,
+	data []byte,
+	remainingAccounts []*solana.AccountMeta,
 	cancelTx bool,
-) (*contracts.MsgWithdraw, error) {
+) (*contracts.MsgExecute, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
@@ -37,8 +40,8 @@ func (signer *Signer) createAndSignMsgWithdraw(
 		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
-	// prepare withdraw msg and compute hash
-	msg := contracts.NewMsgWithdraw(chainID, nonce, amount, to)
+	// prepare execute msg and compute hash
+	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, remainingAccounts)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -52,29 +55,40 @@ func (signer *Signer) createAndSignMsgWithdraw(
 	return msg.SetSignature(signature), nil
 }
 
-// signWithdrawTx wraps the withdraw 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signWithdrawTx(ctx context.Context, msg contracts.MsgWithdraw) (*solana.Transaction, error) {
-	// create withdraw instruction with program call data
-	dataBytes, err := borsh.Serialize(contracts.WithdrawInstructionParams{
-		Discriminator: contracts.DiscriminatorWithdraw,
+// signExecuteTx wraps the execute 'msg' into a Solana transaction and signs it with the relayer key.
+func (signer *Signer) signExecuteTx(ctx context.Context, msg contracts.MsgExecute) (*solana.Transaction, error) {
+	// create execute instruction with program call data
+	dataBytes, err := borsh.Serialize(contracts.ExecuteInstructionParams{
+		Discriminator: contracts.DiscriminatorExecute,
 		Amount:        msg.Amount(),
+		Sender:        msg.Sender(),
+		Data:          msg.Data(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize withdraw instruction")
+		return nil, errors.Wrap(err, "cannot serialize execute instruction")
 	}
 
+	destinationProgramPda, err := contracts.ComputeConnectedPdaAddress(msg.To())
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot decode connected pda address")
+	}
+
+	predefinedAccounts := []*solana.AccountMeta{
+		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
+		solana.Meta(signer.pda).WRITE(),
+		solana.Meta(msg.To()).WRITE(),
+		solana.Meta(destinationProgramPda),
+	}
+	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
+
 	inst := solana.GenericInstruction{
-		ProgID:    signer.gatewayID,
-		DataBytes: dataBytes,
-		AccountValues: []*solana.AccountMeta{
-			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
-			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(msg.To()).WRITE(),
-		},
+		ProgID:        signer.gatewayID,
+		DataBytes:     dataBytes,
+		AccountValues: allAccounts,
 	}
 
 	// get a recent blockhash

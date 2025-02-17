@@ -301,14 +301,24 @@ func ParseGatewayInstruction(
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
-	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		return contracts.ParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecute(instruction)
+		}
+
+		return inst, err
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		return contracts.ParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecuteSPL(instruction)
+		}
+
+		return inst, err
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

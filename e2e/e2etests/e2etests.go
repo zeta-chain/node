@@ -49,6 +49,7 @@ const (
 	 */
 	TestSolanaDepositName                      = "solana_deposit"
 	TestSolanaWithdrawName                     = "solana_withdraw"
+	TestSolanaWithdrawAndCallName              = "solana_withdraw_and_call"
 	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
 	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
@@ -57,6 +58,7 @@ const (
 	TestSPLDepositName                         = "spl_deposit"
 	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
 	TestSPLWithdrawName                        = "spl_withdraw"
+	TestSPLWithdrawAndCallName                 = "spl_withdraw_and_call"
 	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
 
 	/**
@@ -441,7 +443,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaDepositName,
 		"deposit SOL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in lamport", DefaultValue: "12000000"},
+			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},
 		TestSolanaDeposit,
 	),
@@ -452,6 +454,22 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallName,
+		"withdraw SOL from ZEVM and call solana program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCallName,
+		"withdraw SPL from ZEVM and call solana program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCall,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
@@ -519,7 +537,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSPLDepositName,
 		"deposit SPL into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+			{Description: "amount of spl tokens", DefaultValue: "24000000"},
 		},
 		TestSPLDeposit,
 	),
