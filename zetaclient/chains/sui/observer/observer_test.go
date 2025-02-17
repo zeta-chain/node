@@ -139,15 +139,19 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, "TX_4_invalid_data#0", ts.LastTxScanned())
 
 		// Check for transactions
-		assert.Equal(t, 2, len(ts.inboundVotes))
+		assert.Equal(t, 2, len(ts.inboundVotesBag))
 
-		vote1 := ts.inboundVotes[0]
+		vote1 := ts.inboundVotesBag[0]
+		assert.Equal(t, "TX_1_ok", vote1.InboundHash)
+		assert.Equal(t, uint64(10_000), vote1.InboundBlockHeight)
 		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
 		assert.Equal(t, false, vote1.IsCrossChainCall)
 		assert.Equal(t, math.NewUint(200), vote1.Amount)
 		assert.Equal(t, evmBob.String(), vote1.Receiver)
 
-		vote3 := ts.inboundVotes[1]
+		vote3 := ts.inboundVotesBag[1]
+		assert.Equal(t, "TX_3_ok", vote3.InboundHash)
+		assert.Equal(t, uint64(20_000), vote3.InboundBlockHeight)
 		assert.Equal(t, coin.CoinType_ERC20, vote3.CoinType)
 		assert.Equal(t, true, vote3.IsCrossChainCall)
 		assert.Equal(t, usdc, vote3.Asset)
@@ -166,6 +170,55 @@ func TestObserver(t *testing.T) {
 			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
 		)
 	})
+
+	t.Run("ProcessInboundTrackers", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given inbound tracker
+		chainID := ts.Chain().ChainId
+		ts.zetaMock.
+			On("GetInboundTrackersForChain", mock.Anything, chainID).
+			Return([]cctypes.InboundTracker{
+				{
+					ChainId:  chainID,
+					TxHash:   "TX_TRACKER_1",
+					CoinType: coin.CoinType_Gas,
+				},
+			}, nil)
+
+		// Given underlying tx with event
+		evmAlice := sample.EthAddress()
+
+		ts.OnGetTx("TX_TRACKER_1", "15000", true, []models.SuiEventResponse{
+			ts.SampleEvent("TX_TRACKER_1", string(sui.Deposit), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "1000",
+				"sender":    "SUI_ALICE",
+				"receiver":  evmAlice.String(),
+			}),
+		})
+
+		// Given votes catcher
+		ts.CatchInboundVotes()
+
+		// ACT
+		err := ts.ProcessInboundTrackers(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		require.Equal(t, 1, len(ts.inboundVotesBag))
+
+		vote := ts.inboundVotesBag[0]
+
+		assert.Equal(t, "TX_TRACKER_1", vote.InboundHash)
+		assert.Equal(t, uint64(15_000), vote.InboundBlockHeight)
+		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		assert.Equal(t, false, vote.IsCrossChainCall)
+		assert.Equal(t, math.NewUint(1000), vote.Amount)
+		assert.Equal(t, evmAlice.String(), vote.Receiver)
+	})
 }
 
 type testSuite struct {
@@ -177,7 +230,7 @@ type testSuite struct {
 	log      *testlog.Log
 	gateway  *sui.Gateway
 
-	inboundVotes []*cctypes.MsgVoteInbound
+	inboundVotesBag []*cctypes.MsgVoteInbound
 
 	*Observer
 }
@@ -262,7 +315,7 @@ func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events 
 
 func (ts *testSuite) CatchInboundVotes() {
 	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
-		ts.inboundVotes = append(ts.inboundVotes, msg)
+		ts.inboundVotesBag = append(ts.inboundVotesBag, msg)
 		return "", "", nil
 	}
 
