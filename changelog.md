@@ -4,12 +4,14 @@
 
 ### Features
 
+* [3414](https://github.com/zeta-chain/node/pull/3414) - support advanced abort workflow (onAbort)
 * [3461](https://github.com/zeta-chain/node/pull/3461) - add new `ConfirmationParams` field to chain params to enable multiple confirmation count values, deprecating `confirmation_count`
 * [3489](https://github.com/zeta-chain/node/pull/3489) - add Sui chain info
 * [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
 * [3506](https://github.com/zeta-chain/node/pull/3506) - define `ConfirmationMode` enum and add it to `InboundParams`, `OutboundParams`, `MsgVoteInbound` and `MsgVoteOutbound`
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
 * [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
+* [3520] (https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 
 ### Refactor

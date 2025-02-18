@@ -163,13 +163,23 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 	case coin.CoinType_ERC20:
-		withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
-		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
-			return
-		}
+		if cctx.InboundParams.IsCrossChainCall && IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
+			executeSPLTx, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
+				return
+			}
 
-		tx = withdrawSPLTx
+			tx = executeSPLTx
+		} else {
+			withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+				return
+			}
+
+			tx = withdrawSPLTx
+		}
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
@@ -394,6 +404,78 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
 	if err != nil {
 		return nil, errors.Wrap(err, "signWithdrawSPLTx error")
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) prepareExecuteSPLTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (*solana.Transaction, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCctxRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, err
+	}
+
+	message, err := hex.DecodeString(cctx.RelayedMessage)
+	if err != nil {
+		return nil, err
+	}
+	msg, err := contracts.DecodeExecuteMsg(message)
+	if err != nil {
+		return nil, err
+	}
+
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
+	}
+
+	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
+
+	// sign gateway withdraw spl message by TSS
+	msgExecuteSpl, err := signer.createAndSignMsgExecuteSPL(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Asset,
+		mint.Decimals,
+		sender,
+		msg.Data,
+		remainingAccounts,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// sign the execute spl transaction by relayer key
+	tx, err := signer.signExecuteSPLTx(ctx, *msgExecuteSpl)
+	if err != nil {
+		return nil, err
 	}
 
 	return tx, nil

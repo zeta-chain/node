@@ -41,8 +41,7 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	// update the status
-
-	cctx.SetAbort(types.StatusMessages{
+	k.ProcessAbort(ctx, &cctx, types.StatusMessages{
 		StatusMessage: AbortMessage,
 	})
 

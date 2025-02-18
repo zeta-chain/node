@@ -12,6 +12,70 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+func TestCrossChainTx_GetConnectedChainID(t *testing.T) {
+	t.Run("no inbound params", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = nil
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "inbound params cannot be nil")
+	})
+
+	t.Run("no outbound params", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{}
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "outbound params cannot be nil")
+	})
+
+	t.Run("no outbound params with nil", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{nil}
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "outbound params cannot be nil")
+	})
+
+	t.Run("outgoing cctx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{
+			{
+				ReceiverChainId: chains.BitcoinTestnet.GetChainId(),
+			},
+		}
+		chainID, outgoing, err := cctx.GetConnectedChainID()
+		require.NoError(t, err)
+		require.True(t, outgoing)
+		require.EqualValues(t, chains.BitcoinTestnet.GetChainId(), chainID)
+	})
+
+	t.Run("incoming cctx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.BitcoinTestnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{
+			{
+				ReceiverChainId: chains.ZetaChainPrivnet.GetChainId(),
+			},
+		}
+		chainID, outgoing, err := cctx.GetConnectedChainID()
+		require.NoError(t, err)
+		require.False(t, outgoing)
+		require.EqualValues(t, chains.BitcoinTestnet.GetChainId(), chainID)
+	})
+}
+
 func TestCrossChainTx_GetEVMRevertAddress(t *testing.T) {
 	t.Run("use revert address if revert options", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample")

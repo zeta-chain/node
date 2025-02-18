@@ -50,7 +50,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/zeta-chain/ethermint v0.0.0-20250210141109-c8cb0fa0d95d
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250115133723-7232d7838789
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250124151021-87b63e845f1c
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
@@ -311,7 +311,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.9.3
-	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250210125843-0384ef07ec07
+	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250211174435-9680e27af84a
 )
 
 require (
