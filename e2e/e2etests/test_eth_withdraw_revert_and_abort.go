@@ -46,6 +46,9 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
+	r.Logger.Print("CCTX")
+	r.Logger.Print(cctx.String())
+
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
