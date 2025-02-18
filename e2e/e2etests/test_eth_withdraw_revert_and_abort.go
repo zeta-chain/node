@@ -55,7 +55,7 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.True(r, aborted)
 
 	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
+	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "withdraw")
 	require.NoError(r, err)
 	require.EqualValues(r, r.ETHZRC20Addr.Hex(), abortContext.Asset.Hex())
 
