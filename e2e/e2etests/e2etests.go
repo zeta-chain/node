@@ -386,10 +386,8 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestERC20DepositRevertAndAbortName,
-		"deposit ERC20 into ZEVM, revert, then abort with onAbort",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "10000000000000000000"},
-		},
+		"deposit ERC20 into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
+		[]runner.ArgDefinition{},
 		TestERC20DepositRevertAndAbort,
 		runner.WithMinimumVersion("v28.0.0"),
 	),

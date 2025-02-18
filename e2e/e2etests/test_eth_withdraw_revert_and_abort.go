@@ -31,9 +31,11 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 		amount,
 		[]byte("revert"),
 		gatewayzevm.RevertOptions{
-			RevertAddress:    sample.EthAddress(), // non-existing address
-			CallOnRevert:     true,
-			RevertMessage:    []byte("withdraw"), // withdraw is passed as message to create a withdraw in onAbort and test cctx can be created
+			RevertAddress: sample.EthAddress(), // non-existing address
+			CallOnRevert:  true,
+			RevertMessage: []byte(
+				"withdraw",
+			), // withdraw is passed as message to create a withdraw in onAbort and test cctx can be created
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
