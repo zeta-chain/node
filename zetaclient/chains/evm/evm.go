@@ -95,10 +95,10 @@ func (e *EVM) Start(ctx context.Context) error {
 
 	// Observers
 	register(e.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(e.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(e.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(e.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(e.observer.CheckRPCStatus, "check_rpc_status")
-	register(e.observer.ObserverOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(e.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(e.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
@@ -123,13 +123,16 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
 
+	time.Sleep(delay)
+
 	var (
-		chainID = e.observer.Chain().ChainId
+		chain   = e.observer.Chain()
+		chainID = chain.ChainId
 
 		// #nosec G115 always in range
 		zetaHeight = uint64(zetaBlock.Block.Height)
@@ -149,7 +152,7 @@ func (e *EVM) scheduleCCTX(ctx context.Context) error {
 		outboundScheduleLookBack = uint64(float64(lookahead) * outboundLookBackFactor)
 	)
 
-	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := e.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}

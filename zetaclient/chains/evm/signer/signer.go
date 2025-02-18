@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
@@ -180,7 +179,7 @@ func (signer *Signer) Sign(
 
 	addr := crypto.PubkeyToAddress(*pubk)
 	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.client, sig[:])
+	signedTX, err := tx.WithSignature(signer.client.Signer, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -228,7 +227,7 @@ func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) e
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	return signer.client.EVMRPCClient.SendTransaction(ctx, tx)
+	return signer.client.SendTransaction(ctx, tx)
 }
 
 // TryProcessOutbound - signer interface implementation
@@ -361,7 +360,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
-	} else if IsSenderZetaChain(cctx, zetacoreClient) {
+	} else if IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
@@ -491,8 +490,8 @@ func (signer *Signer) BroadcastOutbound(
 					outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, i, myID)
 			retry, report := zetacore.HandleBroadcastError(
 				err,
-				strconv.FormatUint(cctx.GetCurrentOutboundParam().TssNonce, 10),
-				fmt.Sprintf("%d", toChain.ID()),
+				cctx.GetCurrentOutboundParam().TssNonce,
+				toChain.ID(),
 				outboundHash,
 			)
 			if report {
@@ -511,9 +510,9 @@ func (signer *Signer) BroadcastOutbound(
 	}
 }
 
-// IsSenderZetaChain checks if the sender chain is ZetaChain
+// IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
 // TODO(revamp): move to another package more general for cctx functions
-func IsSenderZetaChain(
+func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {

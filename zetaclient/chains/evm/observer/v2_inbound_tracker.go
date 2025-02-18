@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -21,7 +21,7 @@ var (
 // https://github.com/zeta-chain/node/issues/2669
 func (ob *Observer) ProcessInboundTrackerV2(
 	ctx context.Context,
-	tx *ethrpc.Transaction,
+	tx *client.Transaction,
 	receipt *ethtypes.Receipt,
 ) error {
 	gatewayAddr, gateway, err := ob.GetGatewayContract()
@@ -31,7 +31,7 @@ func (ob *Observer) ProcessInboundTrackerV2(
 	}
 
 	// check confirmations
-	if confirmed := ob.HasEnoughConfirmations(receipt, ob.LastBlock()); !confirmed {
+	if !ob.IsBlockConfirmedForInboundSafe(receipt.BlockNumber.Uint64()) {
 		return fmt.Errorf(
 			"inbound %s has not been confirmed yet: receipt block %d",
 			tx.Hash,

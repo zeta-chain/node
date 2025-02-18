@@ -29,14 +29,12 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 	// abort if CCTX inbound observation status indicates failure
 	// this is specifically for Bitcoin inbound error 'INSUFFICIENT_DEPOSITOR_FEE'
 	if config.CCTX.InboundParams.Status == types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE {
-		config.CCTX.SetAbort(
-			types.StatusMessages{
-				StatusMessage: fmt.Sprintf(
-					"observation failed, reason %s",
-					types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String(),
-				),
-			},
-		)
+		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
+			StatusMessage: fmt.Sprintf(
+				"observation failed, reason %s",
+				types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String(),
+			),
+		})
 		return types.CctxStatus_Aborted, nil
 	}
 
@@ -46,7 +44,8 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 
 	if err != nil && !isContractReverted {
 		// exceptional case; internal error; should abort CCTX
-		config.CCTX.SetAbort(types.StatusMessages{
+		// use ctx as tmpCtx is dismissed to not save any side effects performed during the evm deposit
+		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
 			StatusMessage:        "outbound failed but the universal contract did not revert",
 			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("failed to deposit tokens in ZEVM", err),
 		})

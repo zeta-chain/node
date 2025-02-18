@@ -89,11 +89,11 @@ func (b *Bitcoin) Start(ctx context.Context) error {
 
 	// Observers
 	register(b.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
-	register(b.observer.ObserveInboundTrackers, "observe_inbound_trackers", optInboundInterval, optInboundSkipper)
+	register(b.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(b.observer.FetchUTXOs, "fetch_utxos", optUTXOInterval, optGenericSkipper)
 	register(b.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)
 	register(b.observer.CheckRPCStatus, "check_rpc_status")
-	register(b.observer.ObserveOutbound, "observe_outbound", optOutboundInterval, optOutboundSkipper)
+	register(b.observer.ProcessOutboundTrackers, "process_outbound_trackers", optOutboundInterval, optOutboundSkipper)
 
 	// CCTX Scheduler
 	register(b.scheduleCCTX, "schedule_cctx", scheduler.BlockTicker(newBlockChan), optOutboundSkipper)
@@ -121,20 +121,22 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 		return errors.Wrap(err, "unable to update chain params")
 	}
 
-	var (
-		lookahead = b.observer.ChainParams().OutboundScheduleLookahead
-		chainID   = b.observer.Chain().ChainId
-	)
-
-	zetaBlock, ok := scheduler.BlockFromContext(ctx)
-	if !ok {
-		return errors.New("unable to get zeta block from context")
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
 	}
+
+	time.Sleep(delay)
 
 	// #nosec G115 always in range
 	zetaHeight := uint64(zetaBlock.Block.Height)
+	chain := b.observer.Chain()
+	chainID := chain.ChainId
+	lookahead := b.observer.ChainParams().OutboundScheduleLookahead
+	// #nosec G115 positive
+	scheduleInterval := uint64(b.observer.ChainParams().OutboundScheduleInterval)
 
-	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chainID)
+	cctxList, _, err := b.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
 	if err != nil {
 		return errors.Wrap(err, "unable to list pending cctx")
 	}
@@ -178,13 +180,16 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 			continue
 		}
 
-		go b.signer.TryProcessOutbound(
-			ctx,
-			cctx,
-			b.observer,
-			b.observer.ZetacoreClient(),
-			zetaHeight,
-		)
+		// schedule TSS keysign if retry interval has arrived
+		if nonce%scheduleInterval == zetaHeight%scheduleInterval {
+			go b.signer.TryProcessOutbound(
+				ctx,
+				cctx,
+				b.observer,
+				b.observer.ZetacoreClient(),
+				zetaHeight,
+			)
+		}
 	}
 
 	return nil

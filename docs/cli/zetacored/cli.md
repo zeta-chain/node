@@ -35,6 +35,7 @@ Zetacore Daemon (server)
 * [zetacored rollback](#zetacored-rollback)	 - rollback Cosmos SDK and CometBFT state by one height
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
+* [zetacored status](#zetacored-status)	 - Query remote node for status
 * [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
 * [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
@@ -1671,6 +1672,9 @@ zetacored query [flags]
 * [zetacored query authority](#zetacored-query-authority)	 - Querying commands for the authority module
 * [zetacored query authz](#zetacored-query-authz)	 - Querying commands for the authz module
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+* [zetacored query block](#zetacored-query-block)	 - Query for a committed block by height, hash, or event(s)
+* [zetacored query block-results](#zetacored-query-block-results)	 - Query for a committed block's results by height
+* [zetacored query blocks](#zetacored-query-blocks)	 - Query for paginated blocks that match a set of events
 * [zetacored query comet-validator-set](#zetacored-query-comet-validator-set)	 - Get the full CometBFT validator set at given height
 * [zetacored query consensus](#zetacored-query-consensus)	 - Querying commands for the consensus module
 * [zetacored query crosschain](#zetacored-query-crosschain)	 - Querying commands for the crosschain module
@@ -2980,6 +2984,143 @@ zetacored query bank total-supply-of [denom] [flags]
 ### SEE ALSO
 
 * [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query block
+
+Query for a committed block by height, hash, or event(s)
+
+### Synopsis
+
+Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method
+
+```
+zetacored query block --type=[height|hash] [height|hash] [flags]
+```
+
+### Examples
+
+```
+$ zetacored query block --type=height [height]
+$ zetacored query block --type=hash [hash]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for block
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+      --type string        The type to be used when querying tx, can be one of "height", "hash" 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
+
+## zetacored query block-results
+
+Query for a committed block's results by height
+
+### Synopsis
+
+Query for a specific committed block's results using the CometBFT RPC `block_results` method
+
+```
+zetacored query block-results [height] [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for block-results
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
+
+## zetacored query blocks
+
+Query for paginated blocks that match a set of events
+
+### Synopsis
+
+Search for blocks that match the exact given events where results are paginated.
+The events query is directly passed to CometBFT's RPC BlockSearch method and must
+conform to CometBFT's query syntax.
+Please refer to each module's documentation for the full set of events to query
+for. Each module documents its respective events under 'xx_events.md'.
+
+
+```
+zetacored query blocks [flags]
+```
+
+### Examples
+
+```
+$ zetacored query blocks --query "message.sender='cosmos1...' AND block.height > 7" --page 1 --limit 30 --order_by asc
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for blocks
+      --limit int          Query number of transactions results per page returned (default 100)
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+      --order_by string    The ordering semantics (asc|dsc)
+  -o, --output string      Output format (text|json) 
+      --page int           Query a specific page of paginated results (default 1)
+      --query string       The blocks events query per CometBFT's query semantics
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](#zetacored-query)	 - Querying subcommands
 
 ## zetacored query comet-validator-set
 
@@ -6685,12 +6826,18 @@ zetacored query observer list-ballots [flags]
 ### Options
 
 ```
+      --count-total        count total number of records in list-ballots to query for
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for list-ballots
+      --limit uint         pagination limit of list-ballots to query for (default 100)
       --node string        [host]:[port] to CometBFT RPC interface for this chain 
+      --offset uint        pagination offset of list-ballots to query for
   -o, --output string      Output format (text|json) 
+      --page uint          pagination page of list-ballots to query for. This sets offset to a multiple of limit (default 1)
+      --page-key string    pagination page-key of list-ballots to query for
+      --reverse            results are sorted in descending order
 ```
 
 ### Options inherited from parent commands
@@ -9021,6 +9168,36 @@ zetacored start [flags]
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
 
+## zetacored status
+
+Query remote node for status
+
+```
+zetacored status [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for status
+  -n, --node string     Node to connect to 
+  -o, --output string   Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
+
 ## zetacored tendermint
 
 Tendermint subcommands
@@ -10330,6 +10507,7 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain add-outbound-tracker](#zetacored-tx-crosschain-add-outbound-tracker)	 - Add an outbound tracker
 * [zetacored tx crosschain migrate-tss-funds](#zetacored-tx-crosschain-migrate-tss-funds)	 - Migrate TSS funds to the latest TSS address
 * [zetacored tx crosschain refund-aborted](#zetacored-tx-crosschain-refund-aborted)	 - Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
+* [zetacored tx crosschain remove-inbound-tracker](#zetacored-tx-crosschain-remove-inbound-tracker)	 - Remove an inbound tracker
 * [zetacored tx crosschain remove-outbound-tracker](#zetacored-tx-crosschain-remove-outbound-tracker)	 - Remove an outbound tracker
 * [zetacored tx crosschain update-tss-address](#zetacored-tx-crosschain-update-tss-address)	 - Create a new TSSVoter
 * [zetacored tx crosschain vote-gas-price](#zetacored-tx-crosschain-vote-gas-price)	 - Broadcast message to vote gas price
@@ -10603,6 +10781,59 @@ zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]
 
 * [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
 
+## zetacored tx crosschain remove-inbound-tracker
+
+Remove an inbound tracker
+
+```
+zetacored tx crosschain remove-inbound-tracker [chain-id] [tx-hash] [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint      The account number of the signing account (offline mode only)
+      --aux                      Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
+      --chain-id string          The network chain ID
+      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string       Fee granter grants fees for the transaction
+      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string              Fees to pay along with transaction; eg: 10uatom
+      --from string              Name or address of private key with which to sign
+      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                     help for remove-inbound-tracker
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                   Use a connected Ledger device
+      --node string              [host]:[port] to CometBFT rpc interface for this chain 
+      --note string              Note to add a description to the transaction (previously --memo)
+      --offline                  Offline mode (does not allow any online functionality)
+  -o, --output string            Output format (text|json) 
+  -s, --sequence uint            The sequence number of the signing account (offline mode only)
+      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+  -y, --yes                      Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx crosschain](#zetacored-tx-crosschain)	 - crosschain transactions subcommands
+
 ## zetacored tx crosschain remove-outbound-tracker
 
 Remove an outbound tracker
@@ -10767,7 +10998,13 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 Broadcast message to vote an inbound
 
 ```
-zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [flags]
+zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inboundHash] [inBlockHeight] [coinType] [asset] [eventIndex] [protocolContractVersion] [isArbitraryCall] [confirmationMode] [inboundStatus] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-inbound 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 8453 "" 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 7000 1000000 "" 0x66b59ad844404e91faa9587a3061e2f7af36f7a7a1a0afaca3a2efd811bc9463 26170791 Gas 0x0000000000000000000000000000000000000000 587 V2 FALSE SAFE SUCCESS
 ```
 
 ### Options
@@ -10820,7 +11057,13 @@ zetacored tx crosschain vote-inbound [sender] [senderChainID] [txOrigin] [receiv
 Broadcast message to vote an outbound
 
 ```
-zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [flags]
+zetacored tx crosschain vote-outbound [sendHash] [outboundHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType] [confirmationMode] [flags]
+```
+
+### Examples
+
+```
+zetacored tx crosschain vote-outbound 0x12044bec3b050fb28996630e9f2e9cc8d6cf9ef0e911e73348ade46c7ba3417a 0x4f29f9199b10189c8d02b83568aba4cb23984f11adf23e7e5d2eb037ca309497 67773716 65646 30011221226 100000 297254 0 137 13812 ERC20 SAFE
 ```
 
 ### Options

@@ -249,6 +249,22 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.104
 
+  sui:
+    image: ghcr.io/zeta-chain/sui-docker:mainnet-v1.41.1
+    container_name: sui
+    hostname: sui
+    profiles:
+      - sui
+      - all
+    ports:
+      - "9000:9000" # RPC
+    environment:
+      DOCKER_IP: 172.20.0.105
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.105
+    entrypoint: ["sui", "start", "--with-faucet"]
+
   orchestrator:
     image: orchestrator:latest
     tty: true

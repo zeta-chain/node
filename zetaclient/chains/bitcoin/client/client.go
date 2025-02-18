@@ -38,6 +38,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/tendermint/btcd/chaincfg"
 
+	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -48,6 +49,7 @@ type Client struct {
 	hostURL    string
 	client     *http.Client
 	clientName string
+	isRegnet   bool
 	config     config.BTCConfig
 	params     chains.Params
 	logger     zerolog.Logger
@@ -81,7 +83,10 @@ func New(cfg config.BTCConfig, chainID int64, logger zerolog.Logger, opts ...Opt
 		return nil, errors.Wrap(err, "unable to resolve chain params")
 	}
 
-	clientName := fmt.Sprintf("btc:%d", chainID)
+	var (
+		clientName = fmt.Sprintf("btc:%d", chainID)
+		isRegnet   = pkgchains.IsBitcoinRegnet(chainID)
+	)
 
 	c := &Client{
 		hostURL:    normalizeHostURL(cfg.RPCHost, true),
@@ -89,6 +94,7 @@ func New(cfg config.BTCConfig, chainID int64, logger zerolog.Logger, opts ...Opt
 		config:     cfg,
 		params:     params,
 		clientName: clientName,
+		isRegnet:   isRegnet,
 		logger: logger.With().
 			Str(logs.FieldModule, "btc_client").
 			Int64(logs.FieldChain, chainID).
@@ -149,7 +155,8 @@ func (c *Client) sendRequest(req *http.Request, method string) (out rawResponse,
 	defer func() {
 		c.recordMetrics(method, start, out, err)
 		c.logger.Debug().Err(err).
-			Str("rpc.method", method).Dur("rpc.duration", time.Since(start)).
+			Str("rpc.method", method).
+			Float64("rpc.duration", time.Since(start).Seconds()).
 			Msg("Sent request")
 	}()
 

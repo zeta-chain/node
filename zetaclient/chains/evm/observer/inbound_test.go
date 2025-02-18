@@ -7,12 +7,12 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -39,7 +39,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
@@ -57,7 +57,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
 		_, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
@@ -75,7 +75,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		receipt.Logs = receipt.Logs[:2] // remove ZetaSent event
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
 		require.NoError(t, err)
@@ -95,7 +95,7 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
 		_, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
@@ -124,7 +124,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
@@ -142,7 +142,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
 		_, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
@@ -160,7 +160,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		receipt.Logs = receipt.Logs[:1] // remove Deposit event
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
 		require.NoError(t, err)
@@ -181,7 +181,7 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
 		_, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
@@ -220,7 +220,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
-		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
+		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 2
 
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
@@ -409,7 +409,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
-		txCopy := &ethrpc.Transaction{}
+		txCopy := &client.Transaction{}
 		*txCopy = *tx
 		message := hex.EncodeToString(ethcommon.HexToAddress(testutils.OtherAddress1).Bytes())
 		txCopy.Input = message // use other address as receiver
@@ -446,10 +446,9 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name           string
-		mockEVMClient  func(m *mocks.EVMRPCClient)
-		mockJSONClient func(m *mocks.MockJSONRPCClient)
-		errMsg         string
+		name          string
+		mockEVMClient func(m *mocks.EVMRPCClient)
+		errMsg        string
 	}{
 		{
 			name: "should observe TSS receive in block",
@@ -457,9 +456,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				// feed block number and receipt to mock client
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
-			},
-			mockJSONClient: func(m *mocks.MockJSONRPCClient) {
-				m.WithBlock(block)
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			errMsg: "",
 		},
@@ -467,10 +464,12 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 			name: "should not observe on error getting block",
 			mockEVMClient: func(m *mocks.EVMRPCClient) {
 				// feed block number to allow construction of observer
-				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
+				m.On("BlockNumber", mock.Anything).Unset()
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Unset()
+				m.On("BlockNumber", mock.Anything).Return(uint64(0), errors.New("RPC error"))
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
 			},
-			mockJSONClient: nil, // no block
-			errMsg:         "error getting block",
+			errMsg: "error getting block",
 		},
 		{
 			name: "should not observe on error getting receipt",
@@ -478,9 +477,7 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				// feed block number but RPC error on getting receipt
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
-			},
-			mockJSONClient: func(m *mocks.MockJSONRPCClient) {
-				m.WithBlock(block)
+				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
 			errMsg: "error getting receipt",
 		},
@@ -489,14 +486,10 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t)
-			ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+			ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 			if tt.mockEVMClient != nil {
 				tt.mockEVMClient(ob.evmMock)
-			}
-
-			if tt.mockJSONClient != nil {
-				tt.mockJSONClient(ob.rpcClient)
 			}
 
 			err := ob.ObserveTSSReceiveInBlock(ob.ctx, blockNumber)

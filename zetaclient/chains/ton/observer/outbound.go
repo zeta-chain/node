@@ -47,9 +47,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cc.CrossC
 	return false, nil
 }
 
-// ObserveOutbound pulls outbounds trackers from zetacore,
+// ProcessOutboundTrackers pulls outbounds trackers from zetacore,
 // fetches txs from TON and stores them in memory for further use.
-func (ob *Observer) ObserveOutbound(ctx context.Context) error {
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	var (
 		chainID  = ob.Chain().ChainId
 		zetacore = ob.ZetacoreClient()
@@ -249,6 +249,7 @@ func (ob *Observer) postVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
+		cc.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = gasconst.PostVoteOutboundGasLimit

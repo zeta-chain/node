@@ -14,7 +14,7 @@ func CmdShowHeaderHeaderSupportedChains() *cobra.Command {
 		Short: "Show the verification flags",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

@@ -4,10 +4,13 @@ import (
 	"context"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 	"unsafe"
 
+	"cosmossdk.io/math"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -94,11 +97,13 @@ var defaultChainsWithParams = []any{
 	chains.Ethereum,
 	chains.BitcoinMainnet,
 	chains.SolanaMainnet,
+	chains.SuiMainnet,
 	chains.TONMainnet,
 
 	mocks.MockChainParams(chains.Ethereum.ChainId, 100),
 	mocks.MockChainParams(chains.BitcoinMainnet.ChainId, 3),
 	mocks.MockChainParams(chains.SolanaMainnet.ChainId, 10),
+	mocks.MockChainParams(chains.SuiMainnet.ChainId, 1),
 	mocks.MockChainParams(chains.TONMainnet.ChainId, 1),
 }
 
@@ -155,10 +160,20 @@ func newTestSuite(t *testing.T) *testSuite {
 	zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil).Maybe()
 	zetacore.On("GetCrosschainFlags", mock.Anything).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
+	zetacore.On("GetOperationalFlags", mock.Anything).Return(appCtx.GetOperationalFlags(), nil).Maybe()
+	zetacore.On("GetZetaHotKeyBalance", mock.Anything).Return(math.NewInt(123), nil).Maybe()
 
 	// Mock chain-related methods as dynamic getters
 	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains).Maybe()
 	zetacore.On("GetChainParams", mock.Anything).Return(ts.getChainParams).Maybe()
+
+	// Mock zetacore blocks
+	zetacore.On("NewBlockSubscriber", mock.Anything).Return(ts.blockProducer).Maybe()
+
+	// Mock CCTX-related calls (stubs for now)
+	zetacore.On("ListPendingCCTX", mock.Anything, mock.Anything).Return(nil, uint64(0), nil).Maybe()
+	zetacore.On("GetInboundTrackersForChain", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	zetacore.On("GetAllOutboundTrackerByChain", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 
@@ -183,18 +198,6 @@ func (ts *testSuite) MockChainParams(newValues ...any) {
 	ts.chainParams = chainParams
 }
 
-func (ts *testSuite) getSupportedChains(_ context.Context) ([]chains.Chain, error) {
-	ts.mu.Lock()
-	defer ts.mu.Unlock()
-	return ts.chains, nil
-}
-
-func (ts *testSuite) getChainParams(_ context.Context) ([]*observertypes.ChainParams, error) {
-	ts.mu.Lock()
-	defer ts.mu.Unlock()
-	return ts.chainParams, nil
-}
-
 // UpdateConfig updates "global" config.Config for test suite.
 func (ts *testSuite) UpdateConfig(fn func(cfg *config.Config)) {
 	ts.mu.Lock()
@@ -211,6 +214,49 @@ func (ts *testSuite) UpdateConfig(fn func(cfg *config.Config)) {
 	configPtr := (*config.Config)(ptr)
 
 	*configPtr = cfg
+}
+
+func (ts *testSuite) getSupportedChains(_ context.Context) ([]chains.Chain, error) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.chains, nil
+}
+
+func (ts *testSuite) getChainParams(_ context.Context) ([]*observertypes.ChainParams, error) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	return ts.chainParams, nil
+}
+
+func (ts *testSuite) blockProducer(_ context.Context) (chan cometbfttypes.EventDataNewBlock, error) {
+	closeCh := make(chan struct{})
+	ts.t.Cleanup(func() { close(closeCh) })
+
+	blocksChan := make(chan cometbfttypes.EventDataNewBlock)
+	blockNumber := int64(100)
+
+	go func() {
+		for {
+			block := cometbfttypes.EventDataNewBlock{
+				Block: &cometbfttypes.Block{
+					Header: cometbfttypes.Header{
+						Height: atomic.AddInt64(&blockNumber, 1),
+						Time:   time.Now().UTC(),
+					},
+				},
+			}
+
+			select {
+			case blocksChan <- block:
+				time.Sleep(200 * time.Millisecond)
+			case <-closeCh:
+				close(blocksChan)
+				return
+			}
+		}
+	}()
+
+	return blocksChan, nil
 }
 
 func newAppContext(
@@ -234,6 +280,8 @@ func newAppContext(
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
 		case chains.IsTONChain(c.ChainId, nil):
 			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
+		case chains.IsSuiChain(c.ChainId, nil):
+			cfg.SuiConfig = config.SuiConfig{Endpoint: "localhost"}
 		default:
 			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}
@@ -250,13 +298,38 @@ func newAppContext(
 	appContext := zctx.New(cfg, nil, logger)
 
 	ccFlags := sample.CrosschainFlags()
+	opFlags := sample.OperationalFlags()
 
-	err := appContext.Update(chainList, nil, params, *ccFlags)
+	err := appContext.Update(chainList, nil, params, *ccFlags, opFlags)
 	require.NoError(t, err, "failed to update app context")
 
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
 	return ctx, appContext
+}
+
+func parseChainsWithParams(t *testing.T, chainsOrParams ...any) ([]chains.Chain, []*observertypes.ChainParams) {
+	var (
+		supportedChains = make([]chains.Chain, 0, len(chainsOrParams))
+		obsParams       = make([]*observertypes.ChainParams, 0, len(chainsOrParams))
+	)
+
+	for _, something := range chainsOrParams {
+		switch tt := something.(type) {
+		case *chains.Chain:
+			supportedChains = append(supportedChains, *tt)
+		case chains.Chain:
+			supportedChains = append(supportedChains, tt)
+		case *observertypes.ChainParams:
+			obsParams = append(obsParams, tt)
+		case observertypes.ChainParams:
+			obsParams = append(obsParams, &tt)
+		default:
+			t.Fatalf("parse chains and params: unsupported type %T (%+v)", tt, tt)
+		}
+	}
+
+	return supportedChains, obsParams
 }
 
 func chainsContain(list []zctx.Chain, ids ...int64) bool {

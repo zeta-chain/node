@@ -11,6 +11,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -111,9 +112,18 @@ func (k PubKey) Bech32String() string {
 	return v
 }
 
-// AddressBTC returns the bitcoin address of the public key.
+// AddressBTC returns the Bitcoin address of the public key.
 func (k PubKey) AddressBTC(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
 	return bitcoinP2WPKH(k.Bytes(true), chainID)
+}
+
+// BTCPayToAddrScript returns the script for the Bitcoin TSS address.
+func (k PubKey) BTCPayToAddrScript(chainID int64) ([]byte, error) {
+	tssAddrP2WPKH, err := k.AddressBTC(chainID)
+	if err != nil {
+		return nil, err
+	}
+	return txscript.PayToAddrScript(tssAddrP2WPKH)
 }
 
 // AddressEVM returns the ethereum address of the public key.

@@ -405,6 +405,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy
 		var EmergencyPolicyMessageList = []string{
 			sdk.MsgTypeURL(&crosschaintypes.MsgAddInboundTracker{}),
+			sdk.MsgTypeURL(&crosschaintypes.MsgRemoveInboundTracker{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgAddOutboundTracker{}),
 			sdk.MsgTypeURL(&crosschaintypes.MsgRemoveOutboundTracker{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
@@ -425,6 +426,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateSystemContract{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateGatewayContract{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgRemoveForeignCoin{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20Name{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{}),
 			sdk.MsgTypeURL(&observertypes.MsgAddObserver{}),
 			sdk.MsgTypeURL(&observertypes.MsgRemoveChainParams{}),

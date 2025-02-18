@@ -567,7 +567,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -595,7 +595,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -649,7 +649,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -675,7 +675,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),

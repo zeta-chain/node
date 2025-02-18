@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -420,15 +421,14 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		// create evm observer for testing
 		ob := newTestSuite(t)
 
-		confirmations := ob.chainParams.ConfirmationCount
+		confirmations := ob.chainParams.OutboundConfirmationSafe()
 
 		// create mock evm client with preloaded block, tx and receipt
-		ob.evmMock.On("BlockNumber", mock.Anything).Unset()
-		ob.evmMock.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
 		ob.evmMock.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
 		ob.evmMock.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
 
 		ob.BlockCache().Add(blockNumber, block)
+		ob.WithLastBlock(blockNumber + confirmations - 1)
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
@@ -447,6 +447,8 @@ func Test_FilterTSSOutbound(t *testing.T) {
 
 	t.Run("should filter nothing on RPC error", func(t *testing.T) {
 		ob := newTestSuite(t)
+
+		ob.evmMock.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// filter TSS outbound
 		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)

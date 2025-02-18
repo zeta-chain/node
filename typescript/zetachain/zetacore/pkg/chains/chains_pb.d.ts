@@ -217,6 +217,11 @@ export declare enum Network {
    * @generated from enum value: worldchain = 11;
    */
   worldchain = 11,
+
+  /**
+   * @generated from enum value: sui = 12;
+   */
+  sui = 12,
 }
 
 /**
@@ -273,6 +278,11 @@ export declare enum Vm {
    * @generated from enum value: tvm = 3;
    */
   tvm = 3,
+
+  /**
+   * @generated from enum value: mvm_sui = 4;
+   */
+  mvm_sui = 4,
 }
 
 /**
@@ -326,6 +336,11 @@ export declare enum Consensus {
    * @generated from enum value: arbitrum_nitro = 7;
    */
   arbitrum_nitro = 7,
+
+  /**
+   * @generated from enum value: sui_consensus = 8;
+   */
+  sui_consensus = 8,
 }
 
 /**

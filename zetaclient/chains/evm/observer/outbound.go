@@ -27,12 +27,17 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// ObserverOutbound processes outbound trackers
-func (ob *Observer) ObserverOutbound(ctx context.Context) error {
+// ProcessOutboundTrackers processes outbound trackers
+func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
 	if err != nil {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
+	}
+
+	// keep last block up-to-date
+	if err := ob.updateLastBlock(ctx); err != nil {
+		return err
 	}
 
 	// prepare logger fields
@@ -111,6 +116,7 @@ func (ob *Observer) PostVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
@@ -157,7 +163,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 
-	// get connector and erce20Custody contracts
+	// get connector and erc20Custody contracts
 	connectorAddr, connector, err := ob.GetConnectorContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
@@ -219,7 +225,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 }
 
 // parseOutboundReceivedValue parses the received value and status from the outbound receipt
-// The receivd value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
+// The received value is the amount of Zeta/ERC20/Gas token (released from connector/custody/TSS) sent to the receiver
 // TODO: simplify this function and reduce the number of argument
 // https://github.com/zeta-chain/node/issues/2627
 // https://github.com/zeta-chain/node/pull/2666#discussion_r1718379784
@@ -385,7 +391,7 @@ func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock u
 // FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
 func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
 	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
-	block, err := ob.GetBlockByNumberCached(blockNumber)
+	block, err := ob.GetBlockByNumberCached(ctx, blockNumber)
 	if err != nil {
 		ob.Logger().
 			Outbound.Error().
@@ -475,22 +481,17 @@ func (ob *Observer) checkConfirmedTx(
 		logger.Error().Msg("receipt is nil")
 		return nil, nil, false
 	}
-	ob.LastBlock()
+
 	// check confirmations
-	lastHeight, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("BlockNumber error")
-		return nil, nil, false
-	}
-	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
-		logger.Debug().
-			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), lastHeight)
+	txBlock := receipt.BlockNumber.Uint64()
+	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
 		return nil, nil, false
 	}
 
 	// cross-check tx inclusion against the block
 	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
-	err = ob.CheckTxInclusion(transaction, receipt)
+	err = ob.CheckTxInclusion(ctx, transaction, receipt)
 	if err != nil {
 		logger.Error().Err(err).Msg("CheckTxInclusion error")
 		return nil, nil, false

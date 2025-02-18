@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,28 +10,16 @@ import (
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 type Client struct {
-	interfaces.EVMRPCClient
+	*ethclient.Client
 	ethtypes.Signer
 }
 
 // NewFromEndpoint new Client constructor based on endpoint URL.
 func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
-	if endpoint == testutils.MockEVMRPCEndpoint {
-		chainID := big.NewInt(chains.Ethereum.ChainId)
-		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.EVMRPCClient{}
-
-		return New(client, ethSigner), nil
-	}
-
 	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get instrumented HTTP client")
@@ -56,7 +43,7 @@ func NewFromEndpoint(ctx context.Context, endpoint string) (*Client, error) {
 }
 
 // New Client constructor.
-func New(client interfaces.EVMRPCClient, signer ethtypes.Signer) *Client {
+func New(client *ethclient.Client, signer ethtypes.Signer) *Client {
 	return &Client{client, signer}
 }
 
@@ -105,16 +92,10 @@ func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations
 
 // HealthCheck asserts RPC health. Returns the latest block time in UTC.
 func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
-	// query latest block number
-	bn, err := c.BlockNumber(ctx)
-	if err != nil {
-		return time.Time{}, errors.Wrap(err, "unable to get block number")
-	}
-
 	// query latest block header
-	header, err := c.EVMRPCClient.HeaderByNumber(ctx, new(big.Int).SetUint64(bn))
+	header, err := c.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return time.Time{}, errors.Wrapf(err, "unable to get block header for block %d", bn)
+		return time.Time{}, errors.Wrap(err, "unable to get latest block header")
 	}
 
 	// convert block time to UTC

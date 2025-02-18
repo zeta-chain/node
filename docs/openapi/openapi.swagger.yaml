@@ -58823,6 +58823,7 @@ definitions:
       - catchain_consensus
       - snowman
       - arbitrum_nitro
+      - sui_consensus
     default: ethereum
     description: |-
       - catchain_consensus: ton
@@ -58846,6 +58847,7 @@ definitions:
       - avalanche
       - arbitrum
       - worldchain
+      - sui
     default: eth
     title: |-
       Network represents the network of the chain
@@ -58881,6 +58883,7 @@ definitions:
       - evm
       - svm
       - tvm
+      - mvm_sui
     default: no_vm
     title: |-
       Vm represents the virtual machine type of the chain to support smart
@@ -58924,6 +58927,15 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
+  crosschainConfirmationMode:
+    type: string
+    enum:
+      - SAFE
+      - FAST
+    default: SAFE
+    title: |-
+      - SAFE: an inbound/outbound is confirmed using safe confirmation count
+       - FAST: an inbound/outbound is confirmed using fast confirmation count
   crosschainConversion:
     type: object
     properties:
@@ -59039,15 +59051,20 @@ definitions:
       status:
         $ref: '#/definitions/crosschainInboundStatus'
         title: status of the inbound observation
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the inbound
   crosschainInboundStatus:
     type: string
     enum:
       - SUCCESS
       - INSUFFICIENT_DEPOSITOR_FEE
+      - INVALID_RECEIVER_ADDRESS
     default: SUCCESS
     description: |-
       - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
       depositor fee
+       - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
     title: InboundStatus represents the status of an observed inbound
   crosschainInboundTracker:
     type: object
@@ -59092,6 +59109,8 @@ definitions:
   crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgRefundAbortedCCTXResponse:
+    type: object
+  crosschainMsgRemoveInboundTrackerResponse:
     type: object
   crosschainMsgRemoveOutboundTrackerResponse:
     type: object
@@ -59164,6 +59183,9 @@ definitions:
         $ref: '#/definitions/crosschainTxFinalizationStatus'
       call_options:
         $ref: '#/definitions/crosschainCallOptions'
+      confirmation_mode:
+        $ref: '#/definitions/crosschainConfirmationMode'
+        title: confirmation mode used for the outbound
   crosschainOutboundTracker:
     type: object
     properties:
@@ -59540,6 +59562,8 @@ definitions:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
     type: object
+  fungibleMsgUpdateZRC20NameResponse:
+    type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
   fungibleQueryAllForeignCoinsResponse:
@@ -59765,6 +59789,7 @@ definitions:
       confirmation_count:
         type: string
         format: uint64
+        title: 'Deprecated(v28): use confirmation_params instead'
       gas_price_ticker:
         type: string
         format: uint64
@@ -59797,6 +59822,9 @@ definitions:
         type: boolean
       gateway_address:
         type: string
+      confirmation_params:
+        $ref: '#/definitions/observerConfirmationParams'
+        title: Advanced confirmation parameters for chain to support fast observation
   observerChainParamsList:
     type: object
     properties:
@@ -59805,6 +59833,33 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerChainParams'
+  observerConfirmationParams:
+    type: object
+    properties:
+      safe_inbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an inbound is
+          considered finalized.
+      fast_inbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast inbound observation, which is
+          shorter than safe_inbound_count.
+      safe_outbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an outbound is
+          considered finalized.
+      fast_outbound_count:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast outbound observation, which is
+          shorter than safe_outbound_count.
   observerCrosschainFlags:
     type: object
     properties:
@@ -60382,6 +60437,9 @@ definitions:
         title: |-
           error_message_revert carries information about the revert outbound tx ,
           which is created if the first outbound tx fails
+      error_message_abort:
+        type: string
+        title: error_message_abort carries information when aborting the CCTX fails
   zetacoreemissionsParams:
     type: object
     properties:

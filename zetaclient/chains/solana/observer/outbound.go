@@ -9,7 +9,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -17,59 +16,9 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
-
-// WatchOutbound watches solana chain for outgoing txs status
-// TODO(revamp): move ticker function to ticker file
-func (ob *Observer) WatchOutbound(ctx context.Context) error {
-	// get app context
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	// create outbound ticker based on chain params
-	chainID := ob.Chain().ChainId
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("Solana_WatchOutbound_%d", chainID),
-		ob.ChainParams().OutboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-
-	ob.Logger().Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
-	sampledLogger := ob.Logger().Outbound.Sample(&zerolog.BasicSampler{N: 10})
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
-				continue
-			}
-
-			// process outbound trackers
-			err := ob.ProcessOutboundTrackers(ctx)
-			if err != nil {
-				ob.Logger().
-					Outbound.Error().
-					Err(err).
-					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
-			}
-
-			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.Logger().Outbound)
-		case <-ob.StopChannel():
-			ob.Logger().Outbound.Info().Msgf("WatchOutbound: watcher stopped for chain %d", chainID)
-			return nil
-		}
-	}
-}
 
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
@@ -249,6 +198,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 }
 
@@ -351,14 +301,24 @@ func ParseGatewayInstruction(
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
-	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		return contracts.ParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecute(instruction)
+		}
+
+		return inst, err
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		return contracts.ParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecuteSPL(instruction)
+		}
+
+		return inst, err
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}
