@@ -11,29 +11,6 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	var (
-		updateZRC20NameAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
-			AuthorizedPolicy: types.PolicyType_groupAdmin,
-		}
-		removeInboundAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
-			AuthorizedPolicy: types.PolicyType_groupEmergency,
-		}
-		updateOperationalChainParamsAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
-			AuthorizedPolicy: types.PolicyType_groupOperational,
-		}
-		updateChainParamsAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
-			AuthorizedPolicy: types.PolicyType_groupAdmin,
-		}
-		disableFastConfirmationAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableFastConfirmation",
-			AuthorizedPolicy: types.PolicyType_groupEmergency,
-		}
-	)
-
 	t.Run("update authorization list", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
@@ -51,16 +28,10 @@ func TestMigrateStore(t *testing.T) {
 
 		// Assert
 		require.NoError(t, err)
-		newList, found := k.GetAuthorizationList(ctx)
+		list, found := k.GetAuthorizationList(ctx)
 		require.True(t, found)
 
-		// two lists should be equal if adds the removed authorizations back
-		list.SetAuthorization(updateZRC20NameAuthorization)
-		list.SetAuthorization(removeInboundAuthorization)
-		list.SetAuthorization(updateOperationalChainParamsAuthorization)
-		list.SetAuthorization(updateChainParamsAuthorization)
-		list.SetAuthorization(disableFastConfirmationAuthorization)
-		require.Equal(t, list, newList)
+		require.ElementsMatch(t, types.DefaultAuthorizationsList().Authorizations, list.Authorizations)
 	})
 
 	t.Run("set default authorization list if list is not found", func(t *testing.T) {
@@ -77,7 +48,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, types.DefaultAuthorizationsList(), list)
 	})
 
-	t.Run("return error if authorization list is invalid", func(t *testing.T) {
+	t.Run("return error list is invalid", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
 
