@@ -307,6 +307,8 @@ type intoAny interface {
 
 // UpdateChainParams updates the chain params for the given chain ID
 // It takes into account that the required policy get updated in v28 operational -> admin
+// TODO: remove retry after v28 upgrade
+// https://github.com/zeta-chain/node/issues/3545
 func (zts ZetaTxServer) UpdateChainParams(chainParams *observertypes.ChainParams) error {
 	if _, err := zts.BroadcastTx(utils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
 		zts.MustGetAccountAddressFromName(utils.AdminPolicyName),
