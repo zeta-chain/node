@@ -23,17 +23,6 @@ func (d *Inbound) IsGasDeposit() bool {
 	return d.CoinType == SUI
 }
 
-// Memo returns memo in format []byte{evm-address-20bytes, payload...}
-func (d *Inbound) Memo() []byte {
-	receiver := d.Receiver.Bytes()
-	out := make([]byte, 0, len(receiver)+len(d.Payload))
-
-	out = append(out, receiver...)
-	out = append(out, d.Payload...)
-
-	return out
-}
-
 func parseInbound(event models.SuiEventResponse, eventType EventType) (Inbound, error) {
 	parsedJSON := event.ParsedJson
 

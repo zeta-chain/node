@@ -177,6 +177,12 @@ func (ob *Observer) constructInboundVote(
 		return nil, errors.Wrap(err, "unable to parse checkpoint")
 	}
 
+	// Empty or full SUI coin name
+	var asset string
+	if !inbound.IsGasDeposit() {
+		asset = string(inbound.CoinType)
+	}
+
 	return cctypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		inbound.Sender,
@@ -185,12 +191,12 @@ func (ob *Observer) constructInboundVote(
 		inbound.Receiver.String(),
 		ob.ZetacoreClient().Chain().ChainId,
 		inbound.Amount,
-		hex.EncodeToString(inbound.Memo()),
+		hex.EncodeToString(inbound.Payload),
 		event.TxHash,
 		checkpointSeqNum,
-		0,
+		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coinType,
-		string(inbound.CoinType),
+		asset,
 		event.EventIndex,
 		cctypes.ProtocolContractVersion_V2,
 		false,

@@ -147,6 +147,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
 		assert.Equal(t, false, vote1.IsCrossChainCall)
 		assert.Equal(t, math.NewUint(200), vote1.Amount)
+		assert.Equal(t, "", vote1.Asset)
 		assert.Equal(t, evmBob.String(), vote1.Receiver)
 
 		vote3 := ts.inboundVotesBag[1]
@@ -157,6 +158,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, usdc, vote3.Asset)
 		assert.Equal(t, math.NewUint(300), vote3.Amount)
 		assert.Equal(t, evmAlice.String(), vote3.Receiver)
+		assert.Equal(t, "010203", vote3.Message)
 
 		// Check that other 2 txs are skipped
 		assert.Contains(
