@@ -33,20 +33,24 @@ func (k msgServer) DisableFastConfirmation(
 
 	// disable fast confirmation
 	foundChain := false
-	for _, cp := range chainParamsList.ChainParams {
-		if cp.ChainId != msg.ChainId {
-			continue
-		}
+	for i := range chainParamsList.ChainParams {
+		if chainParamsList.ChainParams[i].ChainId == msg.ChainId {
+			if chainParamsList.ChainParams[i].ConfirmationParams == nil {
+				return nil, types.ErrInvalidChainParams
+			}
 
-		if cp.ConfirmationParams == nil {
-			return nil, types.ErrInvalidChainParams
-		}
+			// setting fast confirmation count to same value as safe confirmation count
+			// will effectively disable fast confirmation
+			foundChain = true
+			chainParamsList.ChainParams[i].ConfirmationParams.FastInboundCount = chainParamsList.ChainParams[i].ConfirmationParams.SafeInboundCount
+			chainParamsList.ChainParams[i].ConfirmationParams.FastOutboundCount = chainParamsList.ChainParams[i].ConfirmationParams.SafeOutboundCount
 
-		// setting fast confirmation count to same value as safe confirmation count
-		// will effectively disable fast confirmation
-		foundChain = true
-		cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount
-		cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount
+			// set the updated chain params list
+			k.SetChainParamsList(ctx, chainParamsList)
+
+			// there should be only one chain with the same chain ID
+			break
+		}
 	}
 	if !foundChain {
 		return nil, cosmoserror.Wrap(
@@ -54,9 +58,6 @@ func (k msgServer) DisableFastConfirmation(
 			fmt.Sprintf("no matching chain ID found (%d)", msg.ChainId),
 		)
 	}
-
-	// set the updated chain params list
-	k.SetChainParamsList(ctx, chainParamsList)
 
 	return &types.MsgDisableFastConfirmationResponse{}, nil
 }
