@@ -324,9 +324,6 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
 
 	// update the chain params
-	_, err = r.ZetaTxServer.BroadcastTx(e2eutils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(e2eutils.AdminPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 }
