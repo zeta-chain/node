@@ -65,14 +65,14 @@ func (k msgServer) RefundAbortedCCTX(
 	// refund the amount
 	// use temporary context to avoid gas refunding issues and side effects
 	tmpCtx, commit := ctx.CacheContext()
-	err = k.RefundAbortedAmountOnZetaChain(tmpCtx, cctx, refundAddress)
+	err = k.LegacyRefundAbortedAmountOnZetaChain(tmpCtx, cctx, refundAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
 	}
 	commit()
 
 	// set the cctx as refunded
-	cctx.CctxStatus.AbortRefunded()
+	cctx.CctxStatus.SetAbortRefunded()
 
 	k.SetCrossChainTx(ctx, cctx)
 	return &types.MsgRefundAbortedCCTXResponse{}, nil

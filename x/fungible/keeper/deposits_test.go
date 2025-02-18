@@ -1,25 +1,127 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/mock"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/testutil/contracts"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"math/big"
 	"testing"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/mock"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
-	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/testutil/contracts"
+	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
+
+// getTestDAppNoMessageIndex queries the no message index of the test dapp v2 contract
+func getTestDAppNoMessageIndex(
+	t *testing.T,
+	ctx sdk.Context,
+	k fungiblekeeper.Keeper,
+	contract,
+	account common.Address,
+) string {
+	testDAppABI, err := testdappv2.TestDAppV2MetaData.GetAbi()
+	require.NoError(t, err)
+	res, err := k.CallEVM(
+		ctx,
+		*testDAppABI,
+		types.ModuleAddressEVM,
+		contract,
+		fungiblekeeper.BigIntZero,
+		nil,
+		false,
+		false,
+		"getNoMessageIndex",
+		account,
+	)
+	require.NoError(t, err)
+
+	unpacked, err := testDAppABI.Unpack("getNoMessageIndex", res.Ret)
+	require.NoError(t, err)
+	require.Len(t, unpacked, 1)
+
+	index, ok := unpacked[0].(string)
+	require.True(t, ok)
+
+	return index
+}
+
+// deployTestDAppV2 deploys the test dapp v2 contract and returns its address
+func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
+	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress())
+	require.NoError(t, err)
+	require.NotEmpty(t, testDAppV2)
+	assertContractDeployment(t, evmk, ctx, testDAppV2)
+
+	return testDAppV2
+}
+
+// assertTestDAppV2MessageAndAmount asserts the message and amount of the test dapp v2 contract
+func assertTestDAppV2MessageAndAmount(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	contract common.Address,
+	expectedMessage string,
+	expectedAmount int64,
+) {
+	testDAppABI, err := testdappv2.TestDAppV2MetaData.GetAbi()
+	require.NoError(t, err)
+
+	// message
+	res, err := k.CallEVM(
+		ctx,
+		*testDAppABI,
+		types.ModuleAddressEVM,
+		contract,
+		fungiblekeeper.BigIntZero,
+		nil,
+		false,
+		false,
+		"getCalledWithMessage",
+		expectedMessage,
+	)
+	require.NoError(t, err)
+
+	unpacked, err := testDAppABI.Unpack("getCalledWithMessage", res.Ret)
+	require.NoError(t, err)
+	require.Len(t, unpacked, 1)
+	found, ok := unpacked[0].(bool)
+	require.True(t, ok)
+	require.True(t, found)
+
+	// amount
+	res, err = k.CallEVM(
+		ctx,
+		*testDAppABI,
+		types.ModuleAddressEVM,
+		contract,
+		fungiblekeeper.BigIntZero,
+		nil,
+		false,
+		false,
+		"getAmountWithMessage",
+		expectedMessage,
+	)
+	require.NoError(t, err)
+
+	unpacked, err = testDAppABI.Unpack("getAmountWithMessage", res.Ret)
+	require.NoError(t, err)
+	require.Len(t, unpacked, 1)
+	amount, ok := unpacked[0].(*big.Int)
+	require.True(t, ok)
+	require.Equal(t, expectedAmount, amount.Int64())
+}
 
 func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 	t.Run("can deposit gas coin for transfers", func(t *testing.T) {
@@ -437,14 +539,168 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 
 		b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
 		require.Equal(t, int64(0), b.Amount.Int64())
-		errorMint := errors.New("", 1, "error minting coins")
+		errorMint := errors.New("error minting coins")
 
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, math.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 		err := k.DepositCoinZeta(ctx, to, amount)
 		require.ErrorIs(t, err, errorMint)
 
+	})
+}
+
+func TestKeeper_ProcessDeposit(t *testing.T) {
+	t.Run("should process no-call deposit", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+		receiver := sample.EthAddress()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			receiver,
+			big.NewInt(42),
+			[]byte{},
+			coin.CoinType_Gas,
+			false,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.False(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, receiver)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(42), balance)
+	})
+
+	t.Run("should process no-call deposit, message should be ignored", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+		receiver := sample.EthAddress()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			receiver,
+			big.NewInt(42),
+			[]byte("foo"),
+			coin.CoinType_Gas,
+			false,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.False(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, receiver)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(42), balance)
+	})
+
+	t.Run("should process deposit and call", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testDapp := deployTestDAppV2(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			testDapp,
+			big.NewInt(82),
+			[]byte("foo"),
+			coin.CoinType_Gas,
+			true,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.True(t, contractCall)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(82), balance)
+		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
+	})
+
+	t.Run("should process deposit and call with no message", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testDapp := deployTestDAppV2(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		sender := sample.EthAddress()
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sender.Bytes(),
+			chainID,
+			zrc20,
+			testDapp,
+			big.NewInt(82),
+			[]byte{},
+			coin.CoinType_Gas,
+			true,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.True(t, contractCall)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(82), balance)
+
+		messageIndex := getTestDAppNoMessageIndex(t, ctx, *k, testDapp, sender)
+
+		assertTestDAppV2MessageAndAmount(
+			t,
+			ctx,
+			k,
+			testDapp,
+			messageIndex,
+			82,
+		)
 	})
 }

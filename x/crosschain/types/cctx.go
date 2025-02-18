@@ -14,6 +14,26 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// GetConnectedChainID returns the connected chain ID for the CCTX.
+// If the CCTX is outgoing, this is the receiver chain ID.
+// If the CCTX is incoming, this is the sender chain ID.
+// Second argument is boolean, true if the CCTX is outgoing, false if incoming.
+func (m CrossChainTx) GetConnectedChainID() (int64, bool, error) {
+	if m.InboundParams == nil {
+		return 0, false, fmt.Errorf("inbound params cannot be nil")
+	}
+
+	// If the sender chain ID is ZetaChain, this is an outgoing CCTX.
+	// Note: additional chains argument is empty, all ZetaChain IDs are hardcoded in the codebase.
+	if chains.IsZetaChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		if len(m.OutboundParams) < 1 || m.OutboundParams[0] == nil {
+			return 0, false, fmt.Errorf("outbound params cannot be nil")
+		}
+		return m.OutboundParams[0].ReceiverChainId, true, nil
+	}
+	return m.InboundParams.SenderChainId, false, nil
+}
+
 // GetEVMRevertAddress returns the EVM revert address
 // If a revert address is specified in the revert options, it returns the address
 // Otherwise returns sender address

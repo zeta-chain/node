@@ -315,10 +315,9 @@ func (k Keeper) UpdateZRC20GasLimit(
 	)
 }
 
-// DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
-// callable from fungible module
+// CallDepositAndCall calls the depositAndCall function of the system contract
 // Returns directly results from CallEVM
-func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
+func (k Keeper) CallDepositAndCall(ctx sdk.Context,
 	context systemcontract.ZContext,
 	zrc20Addr common.Address,
 	targetContract common.Address,

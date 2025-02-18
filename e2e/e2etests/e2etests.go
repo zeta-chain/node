@@ -11,11 +11,13 @@ const (
 	/*
 	  EVM chain tests
 	*/
-	TestETHDepositName                           = "eth_deposit"
-	TestETHDepositAndCallName                    = "eth_deposit_and_call"
-	TestETHDepositAndCallNoMessageName           = "eth_deposit_and_call_no_message"
-	TestETHDepositAndCallRevertName              = "eth_deposit_and_call_revert"
-	TestETHDepositAndCallRevertWithCallName      = "eth_deposit_and_call_revert_with_call"
+	TestETHDepositName                      = "eth_deposit"
+	TestETHDepositAndCallName               = "eth_deposit_and_call"
+	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
+	TestETHDepositAndCallRevertName         = "eth_deposit_and_call_revert"
+	TestETHDepositAndCallRevertWithCallName = "eth_deposit_and_call_revert_with_call"
+	TestETHDepositRevertAndAbortName        = "eth_deposit_revert_and_abort"
+
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
@@ -23,26 +25,33 @@ const (
 	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
 	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
 	TestETHWithdrawAndCallRevertWithCallName     = "eth_withdraw_and_call_revert_with_call"
+	TestETHWithdrawRevertAndAbortName            = "eth_withdraw_revert_and_abort"
 	TestETHWithdrawAndCallRevertWithWithdrawName = "eth_withdraw_and_call_revert_with_withdraw"
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
-	TestERC20DepositName                         = "erc20_deposit"
-	TestERC20DepositAndCallName                  = "erc20_deposit_and_call"
-	TestERC20DepositAndCallNoMessageName         = "erc20_deposit_and_call_no_message"
-	TestERC20DepositAndCallRevertName            = "erc20_deposit_and_call_revert"
-	TestERC20DepositAndCallRevertWithCallName    = "erc20_deposit_and_call_revert_with_call"
-	TestERC20WithdrawName                        = "erc20_withdraw"
-	TestERC20WithdrawAndArbitraryCallName        = "erc20_withdraw_and_arbitrary_call"
-	TestERC20WithdrawAndCallName                 = "erc20_withdraw_and_call"
-	TestERC20WithdrawAndCallNoMessageName        = "erc20_withdraw_and_call_no_message"
-	TestERC20WithdrawAndCallRevertName           = "erc20_withdraw_and_call_revert"
-	TestERC20WithdrawAndCallRevertWithCallName   = "erc20_withdraw_and_call_revert_with_call"
-	TestZEVMToEVMArbitraryCallName               = "zevm_to_evm_arbitrary_call"
-	TestZEVMToEVMCallName                        = "zevm_to_evm_call"
-	TestZEVMToEVMCallThroughContractName         = "zevm_to_evm_call_through_contract"
-	TestEVMToZEVMCallName                        = "evm_to_zevm_call"
-	TestDepositAndCallSwapName                   = "deposit_and_call_swap"
-	TestEtherWithdrawRestrictedName              = "eth_withdraw_restricted"
-	TestERC20DepositRestrictedName               = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+
+	TestERC20DepositName                      = "erc20_deposit"
+	TestERC20DepositAndCallName               = "erc20_deposit_and_call"
+	TestERC20DepositAndCallNoMessageName      = "erc20_deposit_and_call_no_message"
+	TestERC20DepositAndCallRevertName         = "erc20_deposit_and_call_revert"
+	TestERC20DepositAndCallRevertWithCallName = "erc20_deposit_and_call_revert_with_call"
+	TestERC20DepositRevertAndAbortName        = "erc20_deposit_revert_and_abort"
+
+	TestERC20WithdrawName                      = "erc20_withdraw"
+	TestERC20WithdrawAndArbitraryCallName      = "erc20_withdraw_and_arbitrary_call"
+	TestERC20WithdrawAndCallName               = "erc20_withdraw_and_call"
+	TestERC20WithdrawAndCallNoMessageName      = "erc20_withdraw_and_call_no_message"
+	TestERC20WithdrawAndCallRevertName         = "erc20_withdraw_and_call_revert"
+	TestERC20WithdrawAndCallRevertWithCallName = "erc20_withdraw_and_call_revert_with_call"
+	TestERC20WithdrawRevertAndAbortName        = "erc20_withdraw_revert_and_abort"
+
+	TestZEVMToEVMArbitraryCallName       = "zevm_to_evm_arbitrary_call"
+	TestZEVMToEVMCallName                = "zevm_to_evm_call"
+	TestZEVMToEVMCallThroughContractName = "zevm_to_evm_call_through_contract"
+	TestEVMToZEVMCallName                = "evm_to_zevm_call"
+
+	TestDepositAndCallSwapName      = "deposit_and_call_swap"
+	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
+	TestERC20DepositRestrictedName  = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 * Solana tests
@@ -137,6 +146,7 @@ const (
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
+	TestUpdateZRC20NameName           = "update_zrc20_name"
 	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
 
@@ -245,6 +255,15 @@ var AllE2ETests = []runner.E2ETest{
 		TestETHDepositAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
+		TestETHDepositRevertAndAbortName,
+		"deposit Ether into ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "10000000000000000"},
+		},
+		TestETHDepositRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
+	),
+	runner.NewE2ETest(
 		TestETHWithdrawName,
 		"withdraw Ether from ZEVM",
 		[]runner.ArgDefinition{
@@ -299,6 +318,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestETHWithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawRevertAndAbortName,
+		"withdraw Ether from ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestETHWithdrawRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertWithWithdrawName,
@@ -358,6 +386,15 @@ var AllE2ETests = []runner.E2ETest{
 		TestERC20DepositAndCallRevertWithCall,
 	),
 	runner.NewE2ETest(
+		TestERC20DepositRevertAndAbortName,
+		"deposit ERC20 into ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestERC20DepositRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
+	),
+	runner.NewE2ETest(
 		TestERC20WithdrawName,
 		"withdraw ERC20 from ZEVM",
 		[]runner.ArgDefinition{
@@ -404,6 +441,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestERC20WithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
+		TestERC20WithdrawRevertAndAbortName,
+		"withdraw ERC20 from ZEVM, revert, then abort with onAbort",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "1000"},
+		},
+		TestERC20WithdrawRevertAndAbort,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMArbitraryCallName,
@@ -925,6 +971,13 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate ERC20 custody funds",
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
+	),
+	runner.NewE2ETest(
+		TestUpdateZRC20NameName,
+		"update ZRC20 name and symbol",
+		[]runner.ArgDefinition{},
+		TestUpdateZRC20Name,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaclientRestartHeightName,
