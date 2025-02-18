@@ -204,7 +204,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(
 		gasLimit.Uint64(),
 		foreignCoin.CoinType,
 		foreignCoin.Asset,
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 		types.InboundStatus_SUCCESS,
@@ -287,7 +287,7 @@ func (k Keeper) ProcessZetaSentEvent(
 		90000,
 		coin.CoinType_Zeta,
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
 		types.InboundStatus_SUCCESS,

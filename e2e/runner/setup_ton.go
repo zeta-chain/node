@@ -116,9 +116,7 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 		},
 	}
 
-	msg := observertypes.NewMsgUpdateChainParams(creator, chainParams)
-
-	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msg); err != nil {
+	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
 	}
 

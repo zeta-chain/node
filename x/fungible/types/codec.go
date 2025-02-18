@@ -18,6 +18,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgPauseZRC20{}, "fungible/PauseZRC20", nil)
 	cdc.RegisterConcrete(&MsgUnpauseZRC20{}, "fungible/UnpauseZRC20", nil)
 	cdc.RegisterConcrete(&MsgUpdateGatewayContract{}, "fungible/UpdateGatewayContract", nil)
+	cdc.RegisterConcrete(&MsgUpdateZRC20Name{}, "fungible/UpdateZRC20Name", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -32,6 +33,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgPauseZRC20{},
 		&MsgUnpauseZRC20{},
 		&MsgUpdateGatewayContract{},
+		&MsgUpdateZRC20Name{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

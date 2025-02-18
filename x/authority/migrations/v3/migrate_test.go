@@ -16,7 +16,10 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		list := types.DefaultAuthorizationsList()
+		list.RemoveAuthorization("/zetachain.zetacore.fungible.MsgUpdateZRC20Name")
 		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgRemoveInboundTracker")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateOperationalChainParams")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateChainParams")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act

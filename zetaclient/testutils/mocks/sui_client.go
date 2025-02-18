@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	client "github.com/zeta-chain/node/zetaclient/chains/sui/client"
+
 	mock "github.com/stretchr/testify/mock"
 
 	models "github.com/block-vision/sui-go-sdk/models"
@@ -66,6 +68,99 @@ func (_m *SuiClient) HealthCheck(ctx context.Context) (time.Time, error) {
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// QueryModuleEvents provides a mock function with given fields: ctx, q
+func (_m *SuiClient) QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error) {
+	ret := _m.Called(ctx, q)
+
+	if len(ret) == 0 {
+		panic("no return value specified for QueryModuleEvents")
+	}
+
+	var r0 []models.SuiEventResponse
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, client.EventQuery) ([]models.SuiEventResponse, string, error)); ok {
+		return rf(ctx, q)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, client.EventQuery) []models.SuiEventResponse); ok {
+		r0 = rf(ctx, q)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.SuiEventResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, client.EventQuery) string); ok {
+		r1 = rf(ctx, q)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, client.EventQuery) error); ok {
+		r2 = rf(ctx, q)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// SuiGetObject provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiGetObject")
+	}
+
+	var r0 models.SuiObjectResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetObjectRequest) (models.SuiObjectResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetObjectRequest) models.SuiObjectResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(models.SuiObjectResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiGetObjectRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SuiGetTransactionBlock provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiGetTransactionBlock(ctx context.Context, req models.SuiGetTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiGetTransactionBlock")
+	}
+
+	var r0 models.SuiTransactionBlockResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetTransactionBlockRequest) (models.SuiTransactionBlockResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetTransactionBlockRequest) models.SuiTransactionBlockResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(models.SuiTransactionBlockResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiGetTransactionBlockRequest) error); ok {
+		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -8,6 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { ObserverUpdateReason } from "./observer_pb.js";
 import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams } from "./params_pb.js";
+import type { ConfirmationParams } from "./confirmation_params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 import type { GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
@@ -190,6 +191,89 @@ export declare class MsgUpdateChainParamsResponse extends Message<MsgUpdateChain
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateChainParamsResponse;
 
   static equals(a: MsgUpdateChainParamsResponse | PlainMessage<MsgUpdateChainParamsResponse> | undefined, b: MsgUpdateChainParamsResponse | PlainMessage<MsgUpdateChainParamsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalChainParams
+ */
+export declare class MsgUpdateOperationalChainParams extends Message<MsgUpdateOperationalChainParams> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: uint64 gas_price_ticker = 3;
+   */
+  gasPriceTicker: bigint;
+
+  /**
+   * @generated from field: uint64 inbound_ticker = 4;
+   */
+  inboundTicker: bigint;
+
+  /**
+   * @generated from field: uint64 outbound_ticker = 5;
+   */
+  outboundTicker: bigint;
+
+  /**
+   * @generated from field: uint64 watch_utxo_ticker = 6;
+   */
+  watchUtxoTicker: bigint;
+
+  /**
+   * @generated from field: int64 outbound_schedule_interval = 7;
+   */
+  outboundScheduleInterval: bigint;
+
+  /**
+   * @generated from field: int64 outbound_schedule_lookahead = 8;
+   */
+  outboundScheduleLookahead: bigint;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.ConfirmationParams confirmation_params = 9;
+   */
+  confirmationParams?: ConfirmationParams;
+
+  constructor(data?: PartialMessage<MsgUpdateOperationalChainParams>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateOperationalChainParams";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateOperationalChainParams;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateOperationalChainParams;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateOperationalChainParams;
+
+  static equals(a: MsgUpdateOperationalChainParams | PlainMessage<MsgUpdateOperationalChainParams> | undefined, b: MsgUpdateOperationalChainParams | PlainMessage<MsgUpdateOperationalChainParams> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgUpdateOperationalChainParamsResponse
+ */
+export declare class MsgUpdateOperationalChainParamsResponse extends Message<MsgUpdateOperationalChainParamsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateOperationalChainParamsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateOperationalChainParamsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateOperationalChainParamsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateOperationalChainParamsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateOperationalChainParamsResponse;
+
+  static equals(a: MsgUpdateOperationalChainParamsResponse | PlainMessage<MsgUpdateOperationalChainParamsResponse> | undefined, b: MsgUpdateOperationalChainParamsResponse | PlainMessage<MsgUpdateOperationalChainParamsResponse> | undefined): boolean;
 }
 
 /**
