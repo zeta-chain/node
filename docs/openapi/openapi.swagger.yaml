@@ -60435,6 +60435,9 @@ definitions:
         title: |-
           error_message_revert carries information about the revert outbound tx ,
           which is created if the first outbound tx fails
+      error_message_abort:
+        type: string
+        title: error_message_abort carries information when aborting the CCTX fails
   zetacoreemissionsParams:
     type: object
     properties:

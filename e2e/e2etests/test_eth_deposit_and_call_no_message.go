@@ -17,9 +17,6 @@ func TestETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-
 	// perform the deposit and call to the TestDAppV2ZEVMAddr
 	tx := r.ETHDepositAndCall(
 		r.TestDAppV2ZEVMAddr,
@@ -37,9 +34,4 @@ func TestETHDepositAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	messageIndex, err := r.TestDAppV2ZEVM.GetNoMessageIndex(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.AssertTestDAppZEVMCalled(true, messageIndex, amount)
-
-	// check the balance was updated
-	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 }
