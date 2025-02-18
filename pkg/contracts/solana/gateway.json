@@ -687,6 +687,17 @@
     },
     {
       "name": "increment_nonce",
+      "docs": [
+        "Increments nonce, used by TSS in case outbound fails.",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `amount` - The amount in original outbound.",
+        "* `signature` - The TSS signature.",
+        "* `recovery_id` - The recovery ID for signature verification.",
+        "* `message_hash` - Message hash for signature verification.",
+        "* `nonce` - The current nonce value."
+      ],
       "discriminator": [
         84,
         149,

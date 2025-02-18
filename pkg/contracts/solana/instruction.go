@@ -89,6 +89,7 @@ type OutboundInstruction interface {
 	// TokenAmount returns the amount of the instruction
 	TokenAmount() uint64
 
+	// Failed returns true if outbound failed
 	Failed() bool
 }
 
@@ -115,6 +116,7 @@ type IncrementNonceInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *IncrementNonceInstructionParams) Failed() bool {
 	return true
 }
@@ -181,6 +183,7 @@ type WithdrawInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *WithdrawInstructionParams) Failed() bool {
 	return false
 }
@@ -251,6 +254,7 @@ type ExecuteInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *ExecuteInstructionParams) Failed() bool {
 	return false
 }
@@ -317,6 +321,7 @@ type WithdrawSPLInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *WithdrawSPLInstructionParams) Failed() bool {
 	return false
 }
@@ -389,6 +394,7 @@ type ExecuteSPLInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *ExecuteSPLInstructionParams) Failed() bool {
 	return false
 }
@@ -461,6 +467,7 @@ type WhitelistInstructionParams struct {
 	Nonce uint64
 }
 
+// Failed returns true if outbound failed
 func (inst *WhitelistInstructionParams) Failed() bool {
 	return false
 }
