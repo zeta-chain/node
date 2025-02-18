@@ -101,7 +101,7 @@ func CmdVoteInbound() *cobra.Command {
 				250_000,
 				argsCoinType,
 				argsAsset,
-				uint(argsEventIndex),
+				argsEventIndex,
 				protocolContractVersion,
 				isArbitraryCall,
 				argsInboundStatus,

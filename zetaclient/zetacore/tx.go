@@ -32,7 +32,7 @@ func GetInboundVoteMessage(
 	coinType coin.CoinType,
 	asset string,
 	signerAddress string,
-	eventIndex uint,
+	eventIndex uint64,
 	status types.InboundStatus,
 ) *types.MsgVoteInbound {
 	msg := types.NewMsgVoteInbound(

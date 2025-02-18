@@ -191,7 +191,7 @@ func (ob *Observer) constructInboundVote(
 		0,
 		coinType,
 		string(inbound.CoinType),
-		uint(event.EventIndex),
+		event.EventIndex,
 		cctypes.ProtocolContractVersion_V2,
 		false,
 		cctypes.InboundStatus_SUCCESS,
