@@ -320,7 +320,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawRevertAndAbortName,
-		"withdraw Ether from ZEVM, revert, then abort with onAbort",
+		"withdraw Ether from ZEVM, revert, then abort with onAbort, check onAbort can created cctx",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
