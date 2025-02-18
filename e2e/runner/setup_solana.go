@@ -149,10 +149,14 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.SPLAddr = mintAccount.PublicKey()
 }
 
+// VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
 func (r *E2ERunner) VerifySolanaContractsUpgrade() bool {
 	seed := []byte(solanacontracts.PDASeed)
 	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
-	require.NoError(r, err)
+	if err != nil {
+		r.Logger.Error("failed to compute PDA address: %v", err)
+		return false
+	}
 
 	pdaUpgraded := solanacontracts.PdaInfoUpgraded{}
 
@@ -160,10 +164,16 @@ func (r *E2ERunner) VerifySolanaContractsUpgrade() bool {
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,
 	})
-	require.NoError(r, err)
+	if err != nil {
+		r.Logger.Error("failed to get PDA account info: %v", err)
+		return false
+	}
 
 	err = borsh.Deserialize(&pdaUpgraded, pdaInfo.Bytes())
-	require.NoError(r, err)
+	if err != nil {
+		r.Logger.Error("failed to deserialize PDA info: %v", err)
+		return false
+	}
 
 	return pdaUpgraded.Upgraded
 }
