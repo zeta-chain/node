@@ -93,6 +93,10 @@ func (k Keeper) setNonceToCCTX(
 	}
 }
 
+const (
+	TSIndexKey = "cctx-ts-"
+)
+
 // SetCrossChainTx set a specific cctx in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	// only set the updated timestamp if the block height is >0 to allow
@@ -103,7 +107,20 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&cctx)
-	store.Set(types.KeyPrefix(cctx.Index), b)
+	cctxIndexPrefix := types.KeyPrefix(cctx.Index)
+	store.Set(cctxIndexPrefix, b)
+
+	tsIndexPrefix := types.KeyPrefix(TSIndexKey)
+	tsIndexStore := prefix.NewStore(ctx.KVStore(k.storeKey), tsIndexPrefix)
+	cctxIndex, err := cctx.GetCCTXIndexBytes()
+	if err != nil {
+		k.Logger(ctx).Error("unable to GetCCTXIndexBytes", "err", err)
+		return
+	}
+	// must use big endian so most significant bytes are first for sortability
+	createdAtBytes := sdk.Uint64ToBigEndian(uint64(cctx.CctxStatus.CreatedTimestamp))
+	indexKey := append(createdAtBytes, cctxIndex[:]...)
+	tsIndexStore.Set(indexKey, cctxIndexPrefix)
 }
 
 // GetCrossChainTx returns a cctx from its index

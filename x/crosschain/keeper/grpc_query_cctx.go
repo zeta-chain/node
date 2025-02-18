@@ -42,11 +42,11 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
+	cctxStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
+	tsStore := prefix.NewStore(store, types.KeyPrefix(TSIndexKey))
 
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
@@ -55,12 +55,14 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 		req.Pagination.Limit = DefaultPageSize
 	}
 
-	pageRes, err := query.Paginate(sendStore, req.Pagination, func(_ []byte, value []byte) error {
-		var send types.CrossChainTx
-		if err := k.cdc.Unmarshal(value, &send); err != nil {
+	var sends []*types.CrossChainTx
+	pageRes, err := query.Paginate(tsStore, req.Pagination, func(_ []byte, value []byte) error {
+		var cctx types.CrossChainTx
+		cctxBytes := cctxStore.Get(value)
+		if err := k.cdc.Unmarshal(cctxBytes, &cctx); err != nil {
 			return err
 		}
-		sends = append(sends, &send)
+		sends = append(sends, &cctx)
 		return nil
 	})
 
