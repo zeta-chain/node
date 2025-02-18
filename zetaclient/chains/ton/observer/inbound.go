@@ -282,6 +282,7 @@ func (ob *Observer) voteDeposit(
 		types.ProtocolContractVersion_V2,
 		false, // not used
 		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
 		types.WithCrossChainCall(inboundData.isContractCall),
 	)
 
