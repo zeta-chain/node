@@ -56,7 +56,7 @@ func (e *Event) IsInbound() bool { return e.inbound }
 // Inbound extract Inbound.
 func (e *Event) Inbound() (Inbound, error) {
 	if !e.inbound {
-		return Inbound{}, errors.New("not an inbound")
+		return Inbound{}, errors.Errorf("not an inbound (%+v)", e.content)
 	}
 
 	return e.content.(Inbound), nil
@@ -112,7 +112,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 	)
 
 	// Parse specific events
-	switch descriptor.eventType {
+	switch eventType {
 	case Deposit, DepositAndCall:
 		inbound = true
 		content, err = parseInbound(event, eventType)
