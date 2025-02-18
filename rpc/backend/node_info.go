@@ -260,7 +260,7 @@ func (b *Backend) NewMnemonic(uid string,
 	if err != nil {
 		return nil, err
 	}
-	return info, err
+	return info, nil
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
