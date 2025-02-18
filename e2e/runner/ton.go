@@ -113,12 +113,9 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		memo := zevmRecipient.Bytes()
-		memo = append(memo, callData...)
-
 		return cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
-			cctx.RelayedMessage == hex.EncodeToString(memo)
+			cctx.RelayedMessage == hex.EncodeToString(callData)
 	}
 
 	// Wait for cctx

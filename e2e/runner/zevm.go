@@ -364,10 +364,6 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 
 		for i := range res.CrossChainTx {
 			tx := res.CrossChainTx[i]
-
-			r.Logger.Print("CCTX")
-			r.Logger.Print(tx.String())
-
 			if filter(tx) {
 				return r.waitForMinedCCTXFromIndex(tx.Index, status)
 			}
