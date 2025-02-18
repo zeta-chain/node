@@ -18,7 +18,11 @@ func MigrateStore(
 ) error {
 	//
 	var (
-		authorizationList          = types.DefaultAuthorizationsList()
+		authorizationList            = types.DefaultAuthorizationsList()
+		updateZRC20NameAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
 		removeInboundAuthorization = types.Authorization{
 			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
 			AuthorizedPolicy: types.PolicyType_groupEmergency,
@@ -40,6 +44,7 @@ func MigrateStore(
 	}
 
 	// Add the new authorization
+	authorizationList.SetAuthorization(updateZRC20NameAuthorization)
 	authorizationList.SetAuthorization(removeInboundAuthorization)
 	authorizationList.SetAuthorization(updateOperationalChainParamsAuthorization)
 	authorizationList.SetAuthorization(updateChainParamsAuthorization)

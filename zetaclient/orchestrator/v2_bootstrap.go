@@ -10,6 +10,7 @@ import (
 	tontools "github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	suigateway "github.com/zeta-chain/node/pkg/contracts/sui"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
@@ -206,7 +207,9 @@ func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, err
 
 	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
 
-	observer := suiobserver.New(baseObserver, suiClient)
+	gateway := suigateway.NewGateway(chain.Params().GatewayAddress)
+
+	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
 	signer := suisigner.New(oc.newBaseSigner(chain))
 

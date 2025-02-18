@@ -98,7 +98,7 @@ func ZetaTokenVoteV1(
 		coin.CoinType_Zeta,
 		"",
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
@@ -128,7 +128,7 @@ func Erc20VoteV1(
 		coin.CoinType_ERC20,
 		event.Asset.String(),
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		crosschaintypes.InboundStatus_SUCCESS,
 	)
 }
@@ -194,7 +194,7 @@ func DepositInboundVoteV2(event *gatewayevm.GatewayEVMDeposited,
 		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coinType,
 		event.Asset.Hex(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,
@@ -227,7 +227,7 @@ func DepositAndCallInboundVoteV2(event *gatewayevm.GatewayEVMDepositedAndCalled,
 		1_500_000,
 		coinType,
 		event.Asset.Hex(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,
@@ -254,7 +254,7 @@ func CallInboundVoteV2(event *gatewayevm.GatewayEVMCalled,
 		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coin.CoinType_NoAssetCall,
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		crosschaintypes.InboundStatus_SUCCESS,

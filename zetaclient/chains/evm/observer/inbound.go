@@ -571,7 +571,7 @@ func (ob *Observer) BuildInboundVoteMsgForDepositedEvent(
 		coin.CoinType_ERC20,
 		event.Asset.String(),
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
 }
@@ -624,7 +624,7 @@ func (ob *Observer) BuildInboundVoteMsgForZetaSentEvent(
 		coin.CoinType_Zeta,
 		"",
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.InboundStatus_SUCCESS,
 	)
 }

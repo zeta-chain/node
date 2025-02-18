@@ -232,6 +232,9 @@ func (ob *Observer) LastTxScanned() string {
 
 // WithLastTxScanned set last transaction scanned.
 func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	ob.lastTxScanned = txHash
 	return ob
 }

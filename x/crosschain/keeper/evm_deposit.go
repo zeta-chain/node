@@ -148,7 +148,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 				tmpCtx.EventManager().EmitEvent(
 					sdk.NewEvent(sdk.EventTypeMessage,
 						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-						sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
+						sdk.NewAttribute("action", "CallDepositAndCall"),
 						sdk.NewAttribute("contract", to.String()),
 						sdk.NewAttribute("data", hex.EncodeToString(message)),
 						sdk.NewAttribute("cctxIndex", cctx.Index),
