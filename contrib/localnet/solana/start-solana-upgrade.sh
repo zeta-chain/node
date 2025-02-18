@@ -21,7 +21,7 @@ solana program deploy connected_spl.so
 GATEWAY_PROGRAM_ID=$(solana-keygen pubkey gateway-keypair.json)
 
 # upgrade to the gateway-upgrade program using the program ID from keypair
-solana program deploy gateway-upgrade.so --program-id "$GATEWAY_PROGRAM_ID"
+solana program deploy gateway_upgrade.so --program-id "$GATEWAY_PROGRAM_ID"
 
 # leave some time for debug if validator exits due to errors
 sleep 1000
