@@ -25,11 +25,11 @@ func TestUpdateZRC20Name(r *runner.E2ERunner, _ []string) {
 	// Get new info of the ZRC20
 	newName, err := r.ETHZRC20.Name(&bind.CallOpts{})
 	require.NoError(r, err)
-	require.Equal(r, "New USDT", newName)
+	require.Equal(r, "New ETH", newName)
 
 	newSymbol, err := r.ETHZRC20.Symbol(&bind.CallOpts{})
 	require.NoError(r, err)
-	require.Equal(r, "USDT.NEW", newSymbol)
+	require.Equal(r, "ETH.NEW", newSymbol)
 
 	// try another zrc20
 	msg = fungibletypes.NewMsgUpdateZRC20Name(
