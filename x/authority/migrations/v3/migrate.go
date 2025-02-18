@@ -6,11 +6,6 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-const (
-	MsgURLRemoveInboundTracker    = "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker"
-	MsgURLDisableFastConfirmation = "/zetachain.zetacore.observer.MsgDisableFastConfirmation"
-)
-
 type authorityKeeper interface {
 	SetAuthorizationList(ctx sdk.Context, list types.AuthorizationList)
 	GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationList, found bool)
@@ -22,13 +17,25 @@ func MigrateStore(
 	keeper authorityKeeper,
 ) error {
 	var (
-		authorizationList          = types.DefaultAuthorizationsList()
+		authorizationList            = types.DefaultAuthorizationsList()
+		updateZRC20NameAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
 		removeInboundAuthorization = types.Authorization{
-			MsgUrl:           MsgURLRemoveInboundTracker,
+			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
 			AuthorizedPolicy: types.PolicyType_groupEmergency,
 		}
+		updateOperationalChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
+		}
+		updateChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
 		disableFastConfirmationAuthorization = types.Authorization{
-			MsgUrl:           MsgURLDisableFastConfirmation,
+			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableFastConfirmation",
 			AuthorizedPolicy: types.PolicyType_groupEmergency,
 		}
 	)
@@ -40,7 +47,10 @@ func MigrateStore(
 	}
 
 	// Add the new authorization
+	authorizationList.SetAuthorization(updateZRC20NameAuthorization)
 	authorizationList.SetAuthorization(removeInboundAuthorization)
+	authorizationList.SetAuthorization(updateOperationalChainParamsAuthorization)
+	authorizationList.SetAuthorization(updateChainParamsAuthorization)
 	authorizationList.SetAuthorization(disableFastConfirmationAuthorization)
 
 	// Validate the authorization list

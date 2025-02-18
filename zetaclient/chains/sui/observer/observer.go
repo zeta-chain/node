@@ -2,34 +2,45 @@ package observer
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
-	client RPC
+	client  RPC
+	gateway *sui.Gateway
 }
 
 // RPC represents subset of Sui RPC methods.
 type RPC interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
+	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
+	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
+	SuiGetTransactionBlock(
+		ctx context.Context,
+		req models.SuiGetTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
 }
 
 // New Observer constructor.
-func New(baseObserver *base.Observer, client RPC) *Observer {
+func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observer {
 	return &Observer{
 		Observer: baseObserver,
 		client:   client,
+		gateway:  gateway,
 	}
 }
 
@@ -83,6 +94,60 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
 	}
+
+	return nil
+}
+
+// ensureCursor ensures tx scroll cursor for inbound observations
+func (ob *Observer) ensureCursor(ctx context.Context) error {
+	if ob.LastTxScanned() != "" {
+		return nil
+	}
+
+	// Note that this would only work for the empty chain database
+	envValue := os.Getenv(base.EnvVarLatestTxByChain(ob.Chain()))
+	if envValue != "" {
+		ob.WithLastTxScanned(envValue)
+		return nil
+	}
+
+	// let's take the first tx that was ever registered for the Gateway (deployment tx)
+	// Note that this might have for a non-archival node
+	req := models.SuiGetObjectRequest{
+		ObjectId: ob.gateway.PackageID(),
+		Options: models.SuiObjectDataOptions{
+			ShowPreviousTransaction: true,
+		},
+	}
+
+	res, err := ob.client.SuiGetObject(ctx, req)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to get object")
+	case res.Error != nil:
+		return errors.Errorf("get object error: %s (code %s)", res.Error.Error, res.Error.Code)
+	case res.Data == nil:
+		return errors.New("object data is empty")
+	case res.Data.PreviousTransaction == "":
+		return errors.New("previous transaction is empty")
+	}
+
+	cursor := client.EncodeCursor(models.EventId{
+		TxDigest: res.Data.PreviousTransaction,
+		EventSeq: "0",
+	})
+
+	return ob.setCursor(cursor)
+}
+
+func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
+
+func (ob *Observer) setCursor(cursor string) error {
+	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
+		return errors.Wrap(err, "unable to write last tx scanned to db")
+	}
+
+	ob.WithLastTxScanned(cursor)
 
 	return nil
 }

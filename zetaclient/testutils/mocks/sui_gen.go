@@ -5,6 +5,8 @@ import (
 	time "time"
 
 	models "github.com/block-vision/sui-go-sdk/models"
+
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
 // client represents interface version of Client.
@@ -15,7 +17,13 @@ import (
 type suiClient interface {
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
+	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
+	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
+	SuiGetTransactionBlock(
+		ctx context.Context,
+		req models.SuiGetTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
 }

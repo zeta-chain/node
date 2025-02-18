@@ -134,20 +134,22 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestWhitelistERC20Name            = "whitelist_erc20"
-	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName       = "migrate_chain_support"
-	TestPauseZRC20Name                = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name       = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
-	TestRateLimiterName               = "rate_limiter"
-	TestCriticalAdminTransactionsName = "critical_admin_transactions"
-	TestPauseERC20CustodyName         = "pause_erc20_custody"
-	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
-	TestMigrateTSSName                = "migrate_tss"
-	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
-	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
-	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
+	TestWhitelistERC20Name               = "whitelist_erc20"
+	TestDepositEtherLiquidityCapName     = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName          = "migrate_chain_support"
+	TestPauseZRC20Name                   = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name          = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName      = "update_bytecode_connector"
+	TestRateLimiterName                  = "rate_limiter"
+	TestCriticalAdminTransactionsName    = "critical_admin_transactions"
+	TestPauseERC20CustodyName            = "pause_erc20_custody"
+	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
+	TestMigrateTSSName                   = "migrate_tss"
+	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
+	TestUpdateZRC20NameName              = "update_zrc20_name"
+	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
+	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 
 	/*
 	 Operational tests
@@ -972,6 +974,13 @@ var AllE2ETests = []runner.E2ETest{
 		TestMigrateERC20CustodyFunds,
 	),
 	runner.NewE2ETest(
+		TestUpdateZRC20NameName,
+		"update ZRC20 name and symbol",
+		[]runner.ArgDefinition{},
+		TestUpdateZRC20Name,
+		runner.WithMinimumVersion("v28.0.0"),
+	),
+	runner.NewE2ETest(
 		TestZetaclientRestartHeightName,
 		"zetaclient scheduled restart height",
 		[]runner.ArgDefinition{},
@@ -982,6 +991,13 @@ var AllE2ETests = []runner.E2ETest{
 		"zetaclient signer offset",
 		[]runner.ArgDefinition{},
 		TestZetaclientSignerOffset,
+	),
+	runner.NewE2ETest(
+		TestUpdateOperationalChainParamsName,
+		"update operational chain params",
+		[]runner.ArgDefinition{},
+		TestUpdateOperationalChainParams,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	/*
 	 Special tests

@@ -79,7 +79,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 			continue
 		}
 
-		if err = observertypes.ValidateChainParams(cp); err != nil {
+		if err := cp.Validate(); err != nil {
 			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
 			continue
 		}

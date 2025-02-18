@@ -87,7 +87,7 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	}
 
 	config := &taskOpts{
-		interval: time.Second,
+		interval: time.Second * 10,
 	}
 
 	for _, opt := range opts {

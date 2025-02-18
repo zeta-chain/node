@@ -22,6 +22,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDisableFastConfirmation{}, "observer/DisableFastConfirmation", nil)
 	cdc.RegisterConcrete(&MsgUpdateGasPriceIncreaseFlags{}, "observer/UpdateGasPriceIncreaseFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateOperationalFlags{}, "observer/UpdateOperationalFlags", nil)
+	cdc.RegisterConcrete(&MsgUpdateOperationalChainParams{}, "observer/UpdateOperationalChainParams", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -40,6 +41,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgDisableFastConfirmation{},
 		&MsgUpdateGasPriceIncreaseFlags{},
 		&MsgUpdateOperationalFlags{},
+		&MsgUpdateOperationalChainParams{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

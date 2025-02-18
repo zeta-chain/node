@@ -11,23 +11,40 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	removeInboundAuthorization := types.Authorization{
-		MsgUrl:           v3.MsgURLRemoveInboundTracker,
-		AuthorizedPolicy: types.PolicyType_groupEmergency,
-	}
-	disableFastConfirmationAuthorization := types.Authorization{
-		MsgUrl:           v3.MsgURLDisableFastConfirmation,
-		AuthorizedPolicy: types.PolicyType_groupEmergency,
-	}
+	var (
+		updateZRC20NameAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
+		removeInboundAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
+			AuthorizedPolicy: types.PolicyType_groupEmergency,
+		}
+		updateOperationalChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
+		}
+		updateChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
+		disableFastConfirmationAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableFastConfirmation",
+			AuthorizedPolicy: types.PolicyType_groupEmergency,
+		}
+	)
 
 	t.Run("update authorization list", func(t *testing.T) {
 		// Arrange
 		k, ctx := keepertest.AuthorityKeeper(t)
 
-		oldList := types.DefaultAuthorizationsList()
-		oldList.RemoveAuthorization(v3.MsgURLRemoveInboundTracker)
-		oldList.RemoveAuthorization(v3.MsgURLDisableFastConfirmation)
-		k.SetAuthorizationList(ctx, oldList)
+		list := types.DefaultAuthorizationsList()
+		list.RemoveAuthorization("/zetachain.zetacore.fungible.MsgUpdateZRC20Name")
+		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgRemoveInboundTracker")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateOperationalChainParams")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateChainParams")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgDisableFastConfirmation")
+		k.SetAuthorizationList(ctx, list)
 
 		// Act
 		err := v3.MigrateStore(ctx, *k)
@@ -38,9 +55,12 @@ func TestMigrateStore(t *testing.T) {
 		require.True(t, found)
 
 		// two lists should be equal if adds the removed authorizations back
-		oldList.SetAuthorization(removeInboundAuthorization)
-		oldList.SetAuthorization(disableFastConfirmationAuthorization)
-		require.Equal(t, oldList, newList)
+		list.SetAuthorization(updateZRC20NameAuthorization)
+		list.SetAuthorization(removeInboundAuthorization)
+		list.SetAuthorization(updateOperationalChainParamsAuthorization)
+		list.SetAuthorization(updateChainParamsAuthorization)
+		list.SetAuthorization(disableFastConfirmationAuthorization)
+		require.Equal(t, list, newList)
 	})
 
 	t.Run("set default authorization list if list is not found", func(t *testing.T) {

@@ -212,7 +212,7 @@ func (a *AppContext) updateChainRegistry(
 		}
 
 		if !isZeta(chainID) {
-			if err := observertypes.ValidateChainParams(params); err != nil {
+			if err := params.Validate(); err != nil {
 				return errors.Wrapf(err, "invalid chain params for chain %d", chainID)
 			}
 		}
