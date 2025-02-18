@@ -29,7 +29,7 @@ const (
 func (k Keeper) ZRC20SetName(
 	ctx sdk.Context,
 	zrc20Address common.Address,
-	name string,
+	newName string,
 ) error {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
@@ -43,11 +43,11 @@ func (k Keeper) ZRC20SetName(
 		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
-		nil,
+		big.NewInt(1_000_000),
 		true,
 		true,
 		setName,
-		name,
+		newName,
 	)
 	if err != nil {
 		return errors.Wrap(err, "EVM error calling ZRC20 setName function")
@@ -63,7 +63,7 @@ func (k Keeper) ZRC20SetName(
 func (k Keeper) ZRC20SetSymbol(
 	ctx sdk.Context,
 	zrc20Address common.Address,
-	symbol string,
+	newSymbol string,
 ) error {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
@@ -77,11 +77,11 @@ func (k Keeper) ZRC20SetSymbol(
 		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
-		nil,
+		big.NewInt(1_000_000),
 		true,
 		true,
 		setSymbol,
-		symbol,
+		newSymbol,
 	)
 	if err != nil {
 		return errors.Wrap(err, "EVM error calling ZRC20 setSymbol function")
@@ -110,7 +110,7 @@ func (k Keeper) ZRC20Name(
 		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
-		nil,
+		big.NewInt(1_000_000),
 		false,
 		true,
 		name,
@@ -157,7 +157,7 @@ func (k Keeper) ZRC20Symbol(
 		fungibletypes.ModuleAddressEVM,
 		zrc20Address,
 		big.NewInt(0),
-		nil,
+		big.NewInt(1_000_000),
 		false,
 		true,
 		symbol,
