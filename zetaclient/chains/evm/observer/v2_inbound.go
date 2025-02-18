@@ -201,7 +201,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coinType,
 		event.Asset.Hex(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
@@ -341,7 +341,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 		zetacore.PostVoteInboundCallOptionsGasLimit,
 		coin.CoinType_NoAssetCall,
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
@@ -485,7 +485,7 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		1_500_000,
 		coinType,
 		event.Asset.Hex(),
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,

@@ -1,421 +1,292 @@
 package sui
 
 import (
-	"context"
-	"errors"
+	"fmt"
 	"testing"
-	"time"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
-	"github.com/block-vision/sui-go-sdk/sui"
-	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/common"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-const rpcTestnet = "https://sui-testnet-endpoint.blockvision.org"
+func TestParseEvent(t *testing.T) {
+	// stubs
+	const (
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		sender    = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
+		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
+	)
 
-// The test used the gateway deployed on Sui testnet at
-// https://suiscan.xyz/testnet/object/0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db/tx-blocks
-func TestLiveGateway_ReadInbounds(t *testing.T) {
-	if !common.LiveTestEnabled() {
-		t.Skip("skipping live test")
-		return
+	eventType := func(t string) string {
+		return fmt.Sprintf("%s::%s::%s", packageID, moduleName, t)
 	}
 
-	client := sui.NewSuiClient(rpcTestnet)
-	ctx := context.Background()
-	now := time.Now()
+	gw := NewGateway(packageID)
 
-	// query event from last 2 hours
-	from := uint64(now.Add(-2 * time.Hour).UnixMilli())
+	receiverAlice := sample.EthAddress()
+	receiverBob := sample.EthAddress()
 
-	gateway := NewGateway(client, "0xe88db37ef3dd9f8b334e3839fa277a8d0e37c329b74a965c2c8e802a737885db")
-	inbounds, err := gateway.QueryDepositInbounds(ctx, from, uint64(now.UnixMilli()))
-	require.NoError(t, err)
-	t.Logf("deposit:")
-	for _, inbound := range inbounds {
-		t.Logf("amount: %d, receiver: %s", inbound.Amount, inbound.Receiver.Hex())
-		require.True(t, inbound.IsGasDeposit())
-		require.False(t, inbound.IsCrossChainCall)
-	}
-
-	inbounds, err = gateway.QueryDepositAndCallInbounds(ctx, from, uint64(now.UnixMilli()))
-	require.NoError(t, err)
-	t.Logf("depositAndCall:")
-	for _, inbound := range inbounds {
-		t.Logf("amount: %d, receiver: %s, payload: %v", inbound.Amount, inbound.Receiver.Hex(), inbound.Payload)
-		require.True(t, inbound.IsGasDeposit())
-		require.True(t, inbound.IsCrossChainCall)
-	}
-}
-
-func TestGateway_QueryDepositInbounds(t *testing.T) {
-	clientMock := mocks.NewSuiClient(t)
-	gateway := NewGateway(clientMock, "packageID")
-	ctx := context.Background()
-
-	ethAddr1 := sample.EthAddress()
-	ethAddr2 := sample.EthAddress()
-
-	tt := []struct {
-		name             string
-		suiQueryRes      models.PaginatedEventsResponse
-		suiQueryErr      error
-		expectedInbounds []Inbound
-		errContains      string
+	for _, tt := range []struct {
+		name        string
+		event       models.SuiEventResponse
+		errContains string
+		assert      func(t *testing.T, raw models.SuiEventResponse, out Event)
 	}{
 		{
-			name: "no events",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{},
-			},
-			expectedInbounds: []Inbound{},
-		},
-		{
-			name:        "query error",
-			suiQueryErr: errors.New("query error"),
-			errContains: "query error",
-		},
-		{
-			name: "valid events",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-						},
-					},
-					{
-						Id: models.EventId{
-							TxDigest: "0xefg",
-							EventSeq: "2",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "200",
-							"sender":    "0x456",
-							"receiver":  ethAddr2.Hex(),
-						},
-					},
+			name: "deposit",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "100",
+					"sender":    sender,
+					"receiver":  receiverAlice.String(),
 				},
 			},
-			expectedInbounds: []Inbound{
-				{
-					TxHash:           "0xabc",
-					EventIndex:       1,
-					CoinType:         SUI,
-					Amount:           100,
-					Sender:           "0x123",
-					Receiver:         ethAddr1,
-					IsCrossChainCall: false,
-				},
-				{
-					TxHash:           "0xefg",
-					EventIndex:       2,
-					CoinType:         SUI,
-					Amount:           200,
-					Sender:           "0x456",
-					Receiver:         ethAddr2,
-					IsCrossChainCall: false,
-				},
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, Deposit, out.EventType)
+				assert.Equal(t, uint64(0), out.EventIndex)
+
+				assert.True(t, out.IsInbound())
+
+				inbound, err := out.Inbound()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, inbound.CoinType)
+				assert.True(t, math.NewUint(100).Equal(inbound.Amount))
+				assert.Equal(t, sender, inbound.Sender)
+				assert.Equal(t, receiverAlice, inbound.Receiver)
+				assert.False(t, inbound.IsCrossChainCall)
 			},
 		},
 		{
-			name: "invalid event index",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "invalid",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-						},
-					},
+			name: "depositAndCall",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"payload":   []any{float64(0), float64(1), float64(2)},
 				},
 			},
-			errContains: "failed to parse event index",
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, uint64(1), out.EventIndex)
+
+				assert.True(t, out.IsInbound())
+
+				inbound, err := out.Inbound()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, inbound.CoinType)
+				assert.True(t, math.NewUint(200).Equal(inbound.Amount))
+				assert.Equal(t, sender, inbound.Sender)
+				assert.Equal(t, receiverBob, inbound.Receiver)
+				assert.True(t, inbound.IsCrossChainCall)
+				assert.Equal(t, []byte{0, 1, 2}, inbound.Payload)
+			},
+		},
+		{
+			name: "depositAndCall_empty_payload",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"payload":   []any{},
+				},
+			},
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, uint64(1), out.EventIndex)
+
+				assert.True(t, out.IsInbound())
+
+				inbound, err := out.Inbound()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, inbound.CoinType)
+				assert.True(t, math.NewUint(200).Equal(inbound.Amount))
+				assert.Equal(t, sender, inbound.Sender)
+				assert.Equal(t, receiverBob, inbound.Receiver)
+				assert.True(t, inbound.IsCrossChainCall)
+				assert.Equal(t, []byte{}, inbound.Payload)
+			},
+		},
+		// ERRORS
+		{
+			name: "empty tx hash",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: "", EventSeq: "0"},
+				PackageId: "0x123",
+			},
+			errContains: "empty tx hash",
+		},
+		{
+			name: "empty event id",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: ""},
+				PackageId: "0x123",
+			},
+			errContains: "empty event id",
+		},
+		{
+			name: "invalid event id",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "hey"},
+				PackageId: packageID,
+			},
+			errContains: `failed to parse event id "hey"`,
+		},
+		{
+			name: "invalid package",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: "0x123",
+			},
+			errContains: "package id mismatch",
+		},
+		{
+			name: "invalid module",
+			event: models.SuiEventResponse{
+				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId:         packageID,
+				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", Deposit),
+				TransactionModule: "foo",
+			},
+			errContains: "module mismatch",
+		},
+		{
+			name: "invalid event type",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Type:      eventType("bar"),
+			},
+			errContains: `unknown event "bar"`,
 		},
 		{
 			name: "invalid coin type",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": 1,
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-						},
-					},
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": 123,
 				},
 			},
-			errContains: "invalid coin type",
+			errContains: "invalid coin_type",
 		},
 		{
 			name: "invalid amount",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    100,
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-						},
-					},
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "-1",
 				},
 			},
-			errContains: "invalid amount",
+			errContains: "unable to parse amount",
 		},
 		{
 			name: "invalid sender",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    123,
-							"receiver":  ethAddr1.Hex(),
-						},
-					},
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "300",
+					"sender":    0,
 				},
 			},
 			errContains: "invalid sender",
 		},
 		{
 			name: "invalid receiver",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  123,
-						},
-					},
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "300",
+					"sender":    sender,
+					"receiver":  "hello",
 				},
 			},
-			errContains: "invalid receiver",
-		},
-		{
-			name: "can't parse receiver as evm address",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  "invalid",
-						},
-					},
-				},
-			},
-			errContains: "can't parse receiver address",
-		},
-	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			onQueryEvent(clientMock, tc.suiQueryRes, tc.suiQueryErr)
-			inbounds, err := gateway.QueryDepositInbounds(ctx, 0, 0)
-			if tc.errContains != "" {
-				require.ErrorContains(t, err, tc.errContains)
-				return
-			}
-			require.NoError(t, err)
-			require.ElementsMatch(t, tc.expectedInbounds, inbounds)
-		})
-	}
-}
-
-func TestGateway_QueryDepositAndCallInbounds(t *testing.T) {
-	clientMock := mocks.NewSuiClient(t)
-	gateway := NewGateway(clientMock, "packageID")
-	ctx := context.Background()
-
-	ethAddr1 := sample.EthAddress()
-	ethAddr2 := sample.EthAddress()
-
-	tt := []struct {
-		name             string
-		suiQueryRes      models.PaginatedEventsResponse
-		suiQueryErr      error
-		expectedInbounds []Inbound
-		errContains      string
-	}{
-		{
-			name: "no events",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{},
-			},
-			expectedInbounds: []Inbound{},
-		},
-		{
-			name:        "query error",
-			suiQueryErr: errors.New("query error"),
-			errContains: "query error",
-		},
-		{
-			name: "valid events",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "1",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-							"payload": []interface{}{
-								float64(1),
-								float64(2),
-								float64(3),
-							},
-						},
-					},
-					{
-						Id: models.EventId{
-							TxDigest: "0xefg",
-							EventSeq: "2",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "200",
-							"sender":    "0x456",
-							"receiver":  ethAddr2.Hex(),
-							"payload":   []interface{}{},
-						},
-					},
-				},
-			},
-			expectedInbounds: []Inbound{
-				{
-					TxHash:           "0xabc",
-					EventIndex:       1,
-					CoinType:         SUI,
-					Amount:           100,
-					Sender:           "0x123",
-					Receiver:         ethAddr1,
-					Payload:          []byte{1, 2, 3},
-					IsCrossChainCall: true,
-				},
-				{
-					TxHash:           "0xefg",
-					EventIndex:       2,
-					CoinType:         SUI,
-					Amount:           200,
-					Sender:           "0x456",
-					Receiver:         ethAddr2,
-					Payload:          []byte{},
-					IsCrossChainCall: true,
-				},
-			},
+			errContains: `invalid receiver address "hello"`,
 		},
 		{
 			name: "invalid payload",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "2",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-							"payload": []interface{}{
-								float64(1),
-								uint64(2),
-								float64(3),
-							},
-						},
-					},
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"payload":   []any{"boom"},
 				},
 			},
-			errContains: "failed to convert payload",
+			errContains: "unable to convert payload: not a float64",
 		},
 		{
-			name: "invalid payload, not a byte",
-			suiQueryRes: models.PaginatedEventsResponse{
-				Data: []models.SuiEventResponse{
-					{
-						Id: models.EventId{
-							TxDigest: "0xabc",
-							EventSeq: "2",
-						},
-						ParsedJson: map[string]interface{}{
-							"coin_type": string(SUI),
-							"amount":    "100",
-							"sender":    "0x123",
-							"receiver":  ethAddr1.Hex(),
-							"payload": []interface{}{
-								float64(1),
-								float64(256),
-								float64(3),
-							},
-						},
-					},
+			name: "invalid payload float64",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"payload":   []any{float64(1000)},
 				},
 			},
-			errContains: "failed to convert payload",
+			errContains: "unable to convert payload: not a byte",
 		},
-	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			onQueryEvent(clientMock, tc.suiQueryRes, tc.suiQueryErr)
-			inbounds, err := gateway.QueryDepositAndCallInbounds(ctx, 0, 0)
-			if tc.errContains != "" {
-				require.ErrorContains(t, err, tc.errContains)
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := gw.ParseEvent(tt.event)
+
+			if tt.errContains != "" {
+				require.ErrorIs(t, err, ErrParseEvent)
+				require.ErrorContains(t, err, tt.errContains)
 				return
 			}
+
 			require.NoError(t, err)
-			require.ElementsMatch(t, tc.expectedInbounds, inbounds)
+			tt.assert(t, tt.event, out)
 		})
 	}
-}
-
-func onQueryEvent(m *mocks.SuiClient, res models.PaginatedEventsResponse, err error) {
-	m.On("SuiXQueryEvents", mock.Anything, mock.Anything).Return(res, err).Once()
 }
