@@ -24,7 +24,7 @@ func (k msgServer) UpdateOperationalChainParams(
 		return nil, errors.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	// can't only update existing params, not create the object
+	// can only update existing params, not create the object
 	chainParamsList, found := k.GetChainParamsList(ctx)
 	if !found {
 		return nil, errors.Wrap(types.ErrChainParamsNotFound, "chain params list not found")
