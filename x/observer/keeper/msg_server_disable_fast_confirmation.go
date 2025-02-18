@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	cosmoserror "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,20 +34,25 @@ func (k msgServer) DisableFastConfirmation(
 	// disable fast confirmation
 	foundChain := false
 	for _, cp := range chainParamsList.ChainParams {
+		if cp.ChainId != msg.ChainId {
+			continue
+		}
+
 		if cp.ConfirmationParams == nil {
 			return nil, types.ErrInvalidChainParams
 		}
 
 		// setting fast confirmation count to same value as safe confirmation count
 		// will effectively disable fast confirmation
-		if cp.ChainId == msg.ChainId {
-			foundChain = true
-			cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount
-			cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount
-		}
+		foundChain = true
+		cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount
+		cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount
 	}
 	if !foundChain {
-		return nil, cosmoserror.Wrap(types.ErrChainParamsNotFound, "no matching chain ID found")
+		return nil, cosmoserror.Wrap(
+			types.ErrChainParamsNotFound,
+			fmt.Sprintf("no matching chain ID found (%d)", msg.ChainId),
+		)
 	}
 
 	// set the updated chain params list

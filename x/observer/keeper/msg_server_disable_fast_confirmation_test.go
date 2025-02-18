@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -203,7 +204,7 @@ func TestMsgServer_DisableFastConfirmation(t *testing.T) {
 		// ASSERT
 		require.Nil(t, response)
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
-		require.ErrorContains(t, err, "no matching chain ID found")
+		require.ErrorContains(t, err, fmt.Sprintf("no matching chain ID found (%d)", msg.ChainId))
 
 		// chain params list should be unchanged
 		chainParamsList, found := k.GetChainParamsList(ctx)
