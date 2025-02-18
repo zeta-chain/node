@@ -33,8 +33,7 @@ func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 		}
 
 		cp := sample.ChainParamsFromRand(r, randomChain.ChainId)
-		err = types.ValidateChainParams(cp)
-		if err != nil {
+		if err := cp.Validate(); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, nil
 		}
 
@@ -43,8 +42,7 @@ func SimulateUpdateChainParams(k keeper.Keeper) simtypes.Operation {
 			ChainParams: cp,
 		}
 
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateChainParams, err.Error()), nil, err
 		}
 

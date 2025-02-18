@@ -12,6 +12,74 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+func TestConfirmationParams_Validate(t *testing.T) {
+	tests := []struct {
+		name  string
+		cp    types.ConfirmationParams
+		isErr bool
+	}{
+		{
+			name: "valid confirmation params",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+		},
+		{
+			name: "invalid SafeInboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  0,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid FastInboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  2,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid SafeOutboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 0,
+				FastOutboundCount: 1,
+			},
+			isErr: true,
+		},
+		{
+			name: "invalid FastOutboundCount",
+			cp: types.ConfirmationParams{
+				SafeInboundCount:  1,
+				FastInboundCount:  1,
+				SafeOutboundCount: 1,
+				FastOutboundCount: 2,
+			},
+			isErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.cp.Validate()
+			if tt.isErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestChainParamsList_Validate(t *testing.T) {
 	t.Run("should return no error for default list", func(t *testing.T) {
 		list := types.GetDefaultChainParams()
@@ -54,100 +122,100 @@ func TestChainParamsEqual(t *testing.T) {
 	require.True(t, types.ChainParamsEqual(*params, *params))
 
 	// ChainId matters
-	copy := copyParams(params)
-	copy.ChainId = 2
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp := copyParams(params)
+	cp.ChainId = 2
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// ConfirmationCount matters
-	copy = copyParams(params)
-	copy.ConfirmationCount = params.ConfirmationCount + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationCount = params.ConfirmationCount + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// GasPriceTicker matters
-	copy = copyParams(params)
-	copy.GasPriceTicker = params.GasPriceTicker + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.GasPriceTicker = params.GasPriceTicker + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// InboundTicker matters
-	copy = copyParams(params)
-	copy.InboundTicker = params.InboundTicker + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.InboundTicker = params.InboundTicker + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// OutboundTicker matters
-	copy = copyParams(params)
-	copy.OutboundTicker = params.OutboundTicker + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.OutboundTicker = params.OutboundTicker + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// WatchUtxoTicker matters
-	copy = copyParams(params)
-	copy.WatchUtxoTicker = params.WatchUtxoTicker + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.WatchUtxoTicker = params.WatchUtxoTicker + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// ZetaTokenContractAddress matters
-	copy = copyParams(params)
-	copy.ZetaTokenContractAddress = "0x_something_else"
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ZetaTokenContractAddress = "0x_something_else"
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// ConnectorContractAddress matters
-	copy = copyParams(params)
-	copy.ConnectorContractAddress = "0x_something_else"
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConnectorContractAddress = "0x_something_else"
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// Erc20CustodyContractAddress matters
-	copy = copyParams(params)
-	copy.Erc20CustodyContractAddress = "0x_something_else"
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.Erc20CustodyContractAddress = "0x_something_else"
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// OutboundScheduleInterval matters
-	copy = copyParams(params)
-	copy.OutboundScheduleInterval = params.OutboundScheduleInterval + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.OutboundScheduleInterval = params.OutboundScheduleInterval + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// OutboundScheduleLookahead matters
-	copy = copyParams(params)
-	copy.OutboundScheduleLookahead = params.OutboundScheduleLookahead + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.OutboundScheduleLookahead = params.OutboundScheduleLookahead + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// BallotThreshold matters
-	copy = copyParams(params)
-	copy.BallotThreshold = params.BallotThreshold.Add(sdkmath.LegacySmallestDec())
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.BallotThreshold = params.BallotThreshold.Add(sdkmath.LegacySmallestDec())
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// MinObserverDelegation matters
-	copy = copyParams(params)
-	copy.MinObserverDelegation = params.MinObserverDelegation.Add(sdkmath.LegacySmallestDec())
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.MinObserverDelegation = params.MinObserverDelegation.Add(sdkmath.LegacySmallestDec())
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// IsSupported matters
-	copy = copyParams(params)
-	copy.IsSupported = !params.IsSupported
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.IsSupported = !params.IsSupported
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// GatewayAddress matters
-	copy = copyParams(params)
-	copy.GatewayAddress = "0x_something_else"
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.GatewayAddress = "0x_something_else"
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
 	// ConfirmationParams matters
-	copy = copyParams(params)
-	copy.ConfirmationParams = nil
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationParams = nil
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.SafeInboundCount = params.ConfirmationParams.SafeInboundCount + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationParams.SafeInboundCount = params.ConfirmationParams.SafeInboundCount + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.FastInboundCount = params.ConfirmationParams.FastInboundCount + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationParams.FastInboundCount = params.ConfirmationParams.FastInboundCount + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.SafeOutboundCount = params.ConfirmationParams.SafeOutboundCount + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationParams.SafeOutboundCount = params.ConfirmationParams.SafeOutboundCount + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.FastOutboundCount = params.ConfirmationParams.FastOutboundCount + 1
-	require.False(t, types.ChainParamsEqual(*params, *copy))
+	cp = copyParams(params)
+	cp.ConfirmationParams.FastOutboundCount = params.ConfirmationParams.FastOutboundCount + 1
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 }
 
 func (s *UpdateChainParamsSuite) SetupTest() {
@@ -216,12 +284,9 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 }
 
 func (s *UpdateChainParamsSuite) TestValidParams() {
-	err := types.ValidateChainParams(s.zetaParams)
-	require.Nil(s.T(), err)
-	err = types.ValidateChainParams(s.evmParams)
-	require.Nil(s.T(), err)
-	err = types.ValidateChainParams(s.btcParams)
-	require.Nil(s.T(), err)
+	require.NoError(s.T(), s.zetaParams.Validate())
+	require.NoError(s.T(), s.evmParams.Validate())
+	require.NoError(s.T(), s.btcParams.Validate())
 }
 
 func (s *UpdateChainParamsSuite) TestCommonParams() {
@@ -230,42 +295,35 @@ func (s *UpdateChainParamsSuite) TestCommonParams() {
 }
 
 func (s *UpdateChainParamsSuite) TestBTCParamsInvalid() {
-	copy := *s.btcParams
-	copy.WatchUtxoTicker = 301
-	err := types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp := *s.btcParams
+	cp.WatchUtxoTicker = 301
+	require.Error(s.T(), cp.Validate())
 }
 
 func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
-	copy := *s.evmParams
-	copy.ZetaTokenContractAddress = "0x123"
-	err := types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp := *s.evmParams
+	cp.ZetaTokenContractAddress = "0x123"
+	require.Error(s.T(), cp.Validate())
 
-	copy = *s.evmParams
-	copy.ZetaTokenContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp = *s.evmParams
+	cp.ZetaTokenContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	require.Error(s.T(), cp.Validate())
 
-	copy = *s.evmParams
-	copy.ConnectorContractAddress = "0x123"
-	err = types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp = *s.evmParams
+	cp.ConnectorContractAddress = "0x123"
+	require.Error(s.T(), cp.Validate())
 
-	copy = *s.evmParams
-	copy.ConnectorContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp = *s.evmParams
+	cp.ConnectorContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	require.Error(s.T(), cp.Validate())
 
-	copy = *s.evmParams
-	copy.Erc20CustodyContractAddress = "0x123"
-	err = types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp = *s.evmParams
+	cp.Erc20CustodyContractAddress = "0x123"
+	require.Error(s.T(), cp.Validate())
 
-	copy = *s.evmParams
-	copy.Erc20CustodyContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateChainParams(&copy)
-	require.NotNil(s.T(), err)
+	cp = *s.evmParams
+	cp.Erc20CustodyContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	require.Error(s.T(), cp.Validate())
 }
 
 func Test_InboundConfirmationSafe(t *testing.T) {
@@ -321,107 +379,81 @@ func Test_OutboundConfirmationFast(t *testing.T) {
 }
 
 func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
-	copy := copyParams(params)
-	copy.ConfirmationCount = 0
-	err := types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp := copyParams(params)
+	cp.ConfirmationCount = 0
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.ConfirmationParams = nil
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.ConfirmationParams = nil
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.SafeInboundCount = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy = copyParams(params)
-	copy.ConfirmationParams.FastInboundCount = copy.ConfirmationParams.SafeInboundCount + 1
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.ConfirmationParams.SafeInboundCount = 0
+	require.Error(s.T(), cp.Validate())
+	cp = copyParams(params)
+	cp.ConfirmationParams.FastInboundCount = cp.ConfirmationParams.SafeInboundCount + 1
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.ConfirmationParams.SafeOutboundCount = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy = copyParams(params)
-	copy.ConfirmationParams.FastOutboundCount = copy.ConfirmationParams.SafeOutboundCount + 1
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.ConfirmationParams.SafeOutboundCount = 0
+	require.Error(s.T(), cp.Validate())
+	cp = copyParams(params)
+	cp.ConfirmationParams.FastOutboundCount = cp.ConfirmationParams.SafeOutboundCount + 1
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.GasPriceTicker = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.GasPriceTicker = 300
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
-	copy.GasPriceTicker = 301
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.GasPriceTicker = 0
+	require.Error(s.T(), cp.Validate())
+	cp.GasPriceTicker = 300
+	require.NoError(s.T(), cp.Validate())
+	cp.GasPriceTicker = 301
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.InboundTicker = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.InboundTicker = 300
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
-	copy.InboundTicker = 301
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.InboundTicker = 0
+	require.Error(s.T(), cp.Validate())
+	cp.InboundTicker = 300
+	require.NoError(s.T(), cp.Validate())
+	cp.InboundTicker = 301
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.OutboundTicker = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.OutboundTicker = 300
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
-	copy.OutboundTicker = 301
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.OutboundTicker = 0
+	require.Error(s.T(), cp.Validate())
+	cp.OutboundTicker = 300
+	require.NoError(s.T(), cp.Validate())
+	cp.OutboundTicker = 301
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.OutboundScheduleInterval = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.OutboundScheduleInterval = 100
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
-	copy.OutboundScheduleInterval = 101
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.OutboundScheduleInterval = 0
+	require.Error(s.T(), cp.Validate())
+	cp.OutboundScheduleInterval = 100
+	require.NoError(s.T(), cp.Validate())
+	cp.OutboundScheduleInterval = 101
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.OutboundScheduleLookahead = 0
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.OutboundScheduleLookahead = 500
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
-	copy.OutboundScheduleLookahead = 501
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
+	cp = copyParams(params)
+	cp.OutboundScheduleLookahead = 0
+	require.Error(s.T(), cp.Validate())
+	cp.OutboundScheduleLookahead = 500
+	require.NoError(s.T(), cp.Validate())
+	cp.OutboundScheduleLookahead = 501
+	require.Error(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.BallotThreshold = sdkmath.LegacyDec{}
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("0.9")
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
+	cp = copyParams(params)
+	cp.BallotThreshold = sdkmath.LegacyDec{}
+	require.Error(s.T(), cp.Validate())
+	cp.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("1.2")
+	require.Error(s.T(), cp.Validate())
+	cp.BallotThreshold = sdkmath.LegacyMustNewDecFromStr("0.9")
+	require.NoError(s.T(), cp.Validate())
 
-	copy = copyParams(params)
-	copy.MinObserverDelegation = sdkmath.LegacyDec{}
-	err = types.ValidateChainParams(copy)
-	require.NotNil(s.T(), err)
-	copy.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
-	err = types.ValidateChainParams(copy)
-	require.Nil(s.T(), err)
+	cp = copyParams(params)
+	cp.MinObserverDelegation = sdkmath.LegacyDec{}
+	require.Error(s.T(), cp.Validate())
+	cp.MinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("0.9")
+	require.NoError(s.T(), cp.Validate())
 }
 
 // copyParams creates a deep copy of the given ChainParams.
@@ -430,17 +462,17 @@ func copyParams(src *types.ChainParams) *types.ChainParams {
 		return nil
 	}
 
-	copy := *src
+	cp := *src
 	if src.ConfirmationParams == nil {
-		return &copy
+		return &cp
 	}
 
-	copy.ConfirmationParams = &types.ConfirmationParams{
+	cp.ConfirmationParams = &types.ConfirmationParams{
 		SafeInboundCount:  src.ConfirmationParams.SafeInboundCount,
 		FastInboundCount:  src.ConfirmationParams.FastInboundCount,
 		SafeOutboundCount: src.ConfirmationParams.SafeOutboundCount,
 		FastOutboundCount: src.ConfirmationParams.FastOutboundCount,
 	}
 
-	return &copy
+	return &cp
 }
