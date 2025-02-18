@@ -13,6 +13,8 @@
 * [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
 * [3520] (https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 * [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
+* [3541](https://github.com/zeta-chain/node/pull/3541) - implement `MsgUpdateZRC20Name` to update the name or symbol of a ZRC20 token
+* [3520](https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 
 ### Refactor
 

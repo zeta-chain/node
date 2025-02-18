@@ -59562,6 +59562,8 @@ definitions:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
     type: object
+  fungibleMsgUpdateZRC20NameResponse:
+    type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
   fungibleQueryAllForeignCoinsResponse:

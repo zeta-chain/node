@@ -330,6 +330,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestUpdateZRC20NameName,
 			e2etests.TestZetaclientSignerOffsetName,
 			e2etests.TestZetaclientRestartHeightName,
 			e2etests.TestWhitelistERC20Name,

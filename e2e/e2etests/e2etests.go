@@ -146,6 +146,7 @@ const (
 	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
 	TestMigrateTSSName                = "migrate_tss"
 	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
+	TestUpdateZRC20NameName           = "update_zrc20_name"
 	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
 
@@ -970,6 +971,13 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate ERC20 custody funds",
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
+	),
+	runner.NewE2ETest(
+		TestUpdateZRC20NameName,
+		"update ZRC20 name and symbol",
+		[]runner.ArgDefinition{},
+		TestUpdateZRC20Name,
+		runner.WithMinimumVersion("v28.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaclientRestartHeightName,
