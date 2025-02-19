@@ -35,8 +35,7 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 			Receiver: sample.EthAddress(), // non-existing contract
 			Payload:  []byte("a payload"),
 			RevertOptions: types.RevertOptions{
-				RevertMessage: []byte("revert"),
-				AbortAddress:  testAbortAddr.Hex(),
+				AbortAddress: testAbortAddr.Hex(),
 			},
 		},
 	}
