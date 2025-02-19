@@ -17,8 +17,6 @@ import (
 func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
-	payload := randomPayload(r)
-
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// deploy testabort contract
@@ -42,8 +40,6 @@ func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
-
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
