@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -24,9 +26,8 @@ func TestEVMToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 		sample.EthAddress(), // non-existing address
 		[]byte("revert"),
 		gatewayevm.RevertOptions{
-			CallOnRevert:  false, // revert not supported
-			RevertMessage: []byte("revert"),
-			AbortAddress:  testAbortAddr,
+			OnRevertGasLimit: big.NewInt(0),
+			AbortAddress:     testAbortAddr,
 		},
 	)
 
@@ -35,9 +36,8 @@ func TestEVMToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
-	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
+	// check onAbort was called
+	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
-	require.EqualValues(r, r.ERC20ZRC20Addr.Hex(), abortContext.Asset.Hex())
-	require.EqualValues(r, int64(0), abortContext.Amount.Int64())
+	require.True(r, aborted)
 }
