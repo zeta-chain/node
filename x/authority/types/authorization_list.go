@@ -54,6 +54,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgPauseZRC20",
 		"/zetachain.zetacore.observer.MsgUpdateKeygen",
 		"/zetachain.zetacore.observer.MsgDisableCCTX",
+		"/zetachain.zetacore.observer.MsgDisableFastConfirmation",
 		"/zetachain.zetacore.lightclient.MsgDisableHeaderVerification",
 	}
 )
