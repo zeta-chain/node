@@ -149,7 +149,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	
 	// Initialize lastScannedTssRecvd to a known "unset" value
 	var lastScannedTssRecvd uint64 = 0 // Assuming 0 is an appropriate "unset" value
-	if chainID == 1 || chainID == 11155111 || chainID == 1337 {
+	chainID := ob.Chain().ChainId
+	if chainID == 1 || chainID == 11155111 || chainID == 1337 || chainID == 137 || chainID == 80002 {
 		lastScannedTssRecvd, err := ob.ObserveTSSReceive(ctx, startBlock, toBlock)
 		if err != nil {
 			logger.Error().Err(err).Msg("error observing TSS received gas asset")
