@@ -155,8 +155,8 @@ func DistributeObserverRewards(
 
 	// Processing Step 3b: Delete all ballots at the buffered maturity height.
 	// This step deletes all remaining ballots and the `BallotListForHeight`.
-	maturityHeightIncludingBuffer := maturityBlocks + pendingBallotsBufferBlocks
-	emissionsKeeper.GetObserverKeeper().ClearAllMaturedBallotsAndBallotList(ctx, maturityHeightIncludingBuffer)
+	bufferedMaturityBlocks := maturityBlocks + pendingBallotsBufferBlocks
+	emissionsKeeper.GetObserverKeeper().ClearAllMaturedBallotsAndBallotList(ctx, bufferedMaturityBlocks)
 	return nil
 }
 
