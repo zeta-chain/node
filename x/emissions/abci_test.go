@@ -368,6 +368,29 @@ func TestDistributeObserverRewards(t *testing.T) {
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
+			name: "no rewards if ballot is not finalized,irrespective of votes",
+			votes: [][]observertypes.VoteType{
+				{
+					observertypes.VoteType_NotYetVoted,
+					observertypes.VoteType_NotYetVoted,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_FailureObservation,
+				},
+			},
+			observerStartingEmissions: sdkmath.NewInt(100),
+			// total reward units would be 4 as all votes match the ballot status
+			totalRewardsForBlock: sdkmath.NewInt(0),
+			expectedRewards: map[string]int64{
+				observerSet.ObserverList[0]: 100,
+				observerSet.ObserverList[1]: 100,
+				observerSet.ObserverList[2]: 100,
+				observerSet.ObserverList[3]: 100,
+			},
+			ballotStatus:    observertypes.BallotStatus_BallotInProgress,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
+		},
+		{
 			name: "one observer slashed",
 			votes: [][]observertypes.VoteType{
 				{
@@ -599,6 +622,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 					i,
 				)
 			}
+			if tc.ballotStatus != observertypes.BallotStatus_BallotInProgress {
+				require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), 0)
+				_, found := zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
+				require.False(t, found)
+			}
+
 		})
 	}
 }

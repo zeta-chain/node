@@ -111,7 +111,8 @@ func DistributeObserverRewards(
 	// https://github.com/zeta-chain/node/issues/3550
 	var (
 		slashAmount = params.ObserverSlashAmount
-		// Maturity blocks is used for distribution and deletion of finalized ballots
+		// Maturity blocks is used for distribution of rewards and deletion of finalized ballots
+		// and pending ballots at the maturity height, are simply ignored
 		maturityBlocks = params.BallotMaturityBlocks
 		// The pendingBallotsBufferBlocks is a buffer number of blocks which is provided for pending ballots to allow them to be finalized
 		pendingBallotsBufferBlocks = params.PendingBallotsBufferBlocks

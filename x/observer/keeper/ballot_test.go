@@ -328,7 +328,6 @@ func TestKeeper_ClearAllMaturedBallotsAndBallotList(t *testing.T) {
 	})
 
 	t.Run("do nothing if ballot list for height is not found", func(t *testing.T) {
-		// Note this condition should never happen in production as the ballot list for height should always be set when saving a ballot to state
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10
@@ -439,7 +438,6 @@ func TestKeeper_ClearFinalizedMaturedBallots(t *testing.T) {
 	})
 
 	t.Run("do nothing if ballot list for height is not found", func(t *testing.T) {
-		// Note this condition should never happen in production as the ballot list for height should always be set when saving a ballot to state
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10

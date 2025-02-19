@@ -114,6 +114,7 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 	// Observer gets 1 unit for a correct vote and -1 unit for an incorrect vote
 	// totalRewardUnits is the sum of all the rewards units.It is used
 	// to calculate the reward per unit based on AmountOfRewards/totalRewardUnits
+
 	for _, address := range m.VoterList {
 		vote := m.Votes[m.GetVoterIndex(address)]
 		if vote == majorityVote {

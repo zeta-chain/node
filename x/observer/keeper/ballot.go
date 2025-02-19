@@ -85,8 +85,8 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 // ClearFinalizedMaturedBallots deletes all matured and finalized ballots for a given height.
 // It emits an event for each ballot deleted.
 // If all ballots are finalized and deleted then the ballot list is also deleted.
-func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocksParam int64) {
-	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
+func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocks int64) {
+	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocks)
 	maturedBallots, found := k.GetBallotListForHeight(ctx, maturedBallotsHeight)
 	if !found {
 		return
@@ -117,17 +117,14 @@ func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocksPara
 // ClearAllMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
 // It emits an event for each ballot deleted.
 // If found the ballot list for height is always deleted
-func (k Keeper) ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocksParam int64) {
-	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
-
-	// Fetch all the matured ballots, return if no matured ballots are found
-	// For the current implementation, this should never happen as ClearAllMaturedBallotsAndBallotList is only called after the Distribution of the rewards,
-	//	which means that there are matured ballots to be deleted
+func (k Keeper) ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, bufferedMaturityBlocks int64) {
+	maturedBallotsHeight := getMaturedBallotHeight(ctx, bufferedMaturityBlocks)
+	// Get the list of matured ballots
 	maturedBallots, found := k.GetBallotListForHeight(ctx, maturedBallotsHeight)
 	if !found {
 		return
 	}
-	// Delete all the matured ballots and emit an event for each ballot deleted
+	// Delete all ballots and emit an event for each ballot deleted
 	for _, ballotIndex := range maturedBallots.BallotsIndexList {
 		ballot, foundBallot := k.GetBallot(ctx, ballotIndex)
 		if !foundBallot {
@@ -136,7 +133,7 @@ func (k Keeper) ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlo
 		k.DeleteBallot(ctx, ballotIndex)
 		logBallotDeletion(ctx, ballot)
 	}
-	// Delete the list of matured ballots
+	// Delete the list of ballots for the height
 	k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
 	return
 }

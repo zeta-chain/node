@@ -15,6 +15,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  *    ObserverSlashAmount:         100000000000000000,
  *    BallotMaturityBlocks:        100,
  *    BlockRewardAmount:           9620949074074074074.074070733466756687,
+ *    PendingBallotsBufferBlocks: 144000
  *
  * @generated from message zetachain.zetacore.emissions.Params
  */

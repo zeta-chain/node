@@ -33,6 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //	ObserverSlashAmount:         100000000000000000,
 //	BallotMaturityBlocks:        100,
 //	BlockRewardAmount:           9620949074074074074.074070733466756687,
+//	PendingBallotsBufferBlocks: 144000
 type Params struct {
 	ValidatorEmissionPercentage string                      `protobuf:"bytes,5,opt,name=validator_emission_percentage,json=validatorEmissionPercentage,proto3" json:"validator_emission_percentage,omitempty"`
 	ObserverEmissionPercentage  string                      `protobuf:"bytes,6,opt,name=observer_emission_percentage,json=observerEmissionPercentage,proto3" json:"observer_emission_percentage,omitempty"`
