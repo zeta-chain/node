@@ -14,6 +14,7 @@
 * [3538](https://github.com/zeta-chain/node/pull/3538) - implement `MsgUpdateOperationalChainParams` for updating operational-related chain params with operational policy
 * [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
 * [3541](https://github.com/zeta-chain/node/pull/3541) - implement `MsgUpdateZRC20Name` to update the name or symbol of a ZRC20 token
+* [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
 * [3520](https://github.com/zeta-chain/node/pull/3520) - integrate SPL withdraw and call
 * [3527](https://github.com/zeta-chain/node/pull/3527) - integrate SOL/SPL withdraw and call revert
 
