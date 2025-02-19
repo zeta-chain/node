@@ -200,14 +200,18 @@ func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, err
 		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
 	}
 
-	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	// note that gw address should be in format of `$packageID,$gatewayObjectID`
+	gateway, err := suigateway.NewGatewayFromPairID(chain.Params().GatewayAddress)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create base observer")
+		return nil, errors.Wrap(err, "unable to create gateway")
 	}
 
 	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
 
-	gateway := suigateway.NewGateway(chain.Params().GatewayAddress)
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 

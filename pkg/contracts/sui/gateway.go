@@ -16,7 +16,11 @@ type EventType string
 
 // Gateway contains the API to read inbounds and sign outbounds to the Sui gateway
 type Gateway struct {
+	// packageID is the package ID of the gateway
 	packageID string
+
+	// gatewayObjectID is the object ID of the gateway struct
+	objectID string
 }
 
 // SUI is the coin type for SUI, native gas token
@@ -33,11 +37,20 @@ const moduleName = "gateway"
 // ErrParseEvent event parse error
 var ErrParseEvent = errors.New("event parse error")
 
-// NewGateway creates a new Sui gateway
-// Note: packageID is the equivalent for gateway address or program ID on Solana
-// It's what will be set in gateway chain params
-func NewGateway(packageID string) *Gateway {
-	return &Gateway{packageID: packageID}
+// NewGatewayFromPairID creates a new Sui Gateway
+// from pair of `$packageID,$gatewayObjectID`
+func NewGatewayFromPairID(pair string) (*Gateway, error) {
+	parts := strings.Split(pair, ",")
+	if len(parts) != 2 {
+		return nil, errors.Errorf("invalid pair %q", pair)
+	}
+
+	return NewGateway(parts[0], parts[1]), nil
+}
+
+// NewGateway creates a new Sui Gateway.
+func NewGateway(packageID string, gatewayObjectID string) *Gateway {
+	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
 // Event represents generic event wrapper
@@ -59,10 +72,17 @@ func (e *Event) Inbound() (Inbound, error) {
 	return v, nil
 }
 
+// PackageID returns object id of Gateway code
 func (gw *Gateway) PackageID() string {
 	return gw.packageID
 }
 
+// ObjectID returns Gateway's struct object id
+func (gw *Gateway) ObjectID() string {
+	return gw.objectID
+}
+
+// Module returns Gateway's module name
 func (gw *Gateway) Module() string {
 	return moduleName
 }
