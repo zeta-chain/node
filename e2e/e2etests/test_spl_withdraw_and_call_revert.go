@@ -97,5 +97,5 @@ func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	balance, err = r.SPLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
-	require.True(r, balance.Cmp(withdrawAmount) == 0)
+	require.Equal(r, withdrawAmount.Int64(), balance.Int64())
 }
