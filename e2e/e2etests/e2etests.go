@@ -46,6 +46,8 @@ const (
 
 	TestZEVMToEVMArbitraryCallName       = "zevm_to_evm_arbitrary_call"
 	TestZEVMToEVMCallName                = "zevm_to_evm_call"
+	TestZEVMToEVMCallRevertName          = "zevm_to_evm_call_revert"
+	TestZEVMToEVMCallRevertAndAbortName  = "zevm_to_evm_call_revert_and_abort"
 	TestZEVMToEVMCallThroughContractName = "zevm_to_evm_call_through_contract"
 	TestEVMToZEVMCallName                = "evm_to_zevm_call"
 	TestEVMToZEVMCallAbortName           = "evm_to_zevm_abort_call"
@@ -464,6 +466,18 @@ var AllE2ETests = []runner.E2ETest{
 		"zevm -> evm call",
 		[]runner.ArgDefinition{},
 		TestZEVMToEVMCall,
+	),
+	runner.NewE2ETest(
+		TestZEVMToEVMCallRevertName,
+		"zevm -> evm call that reverts and call onRevert",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCallRevert,
+	),
+	runner.NewE2ETest(
+		TestZEVMToEVMCallRevertAndAbortName,
+		"zevm -> evm call that reverts and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCallRevertAndAbort,
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallThroughContractName,
