@@ -265,38 +265,41 @@ func TestKeeper_ClearAllMaturedBallotsAndBallotList(t *testing.T) {
 		require.False(t, found)
 	})
 
-	t.Run("clear all matured ballots successfully and skip over ballots that are in the ballot list but not found", func(t *testing.T) {
-		//Arrange
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		numberOfBallots := 10
-		ballots := make([]types.Ballot, numberOfBallots)
-		for i := 0; i < numberOfBallots; i++ {
-			b := types.Ballot{
-				BallotIdentifier:     sample.ZetaIndex(t),
-				BallotCreationHeight: 1,
-				BallotStatus:         types.BallotStatus_BallotInProgress,
+	t.Run(
+		"clear all matured ballots successfully and skip over ballots that are in the ballot list but not found",
+		func(t *testing.T) {
+			//Arrange
+			k, ctx, _, _ := keepertest.ObserverKeeper(t)
+			numberOfBallots := 10
+			ballots := make([]types.Ballot, numberOfBallots)
+			for i := 0; i < numberOfBallots; i++ {
+				b := types.Ballot{
+					BallotIdentifier:     sample.ZetaIndex(t),
+					BallotCreationHeight: 1,
+					BallotStatus:         types.BallotStatus_BallotInProgress,
+				}
+				k.AddBallotToList(ctx, b)
+				if i%2 == 0 {
+					k.SetBallot(ctx, &b)
+				}
+				ballots[i] = b
 			}
-			k.AddBallotToList(ctx, b)
-			if i%2 == 0 {
-				k.SetBallot(ctx, &b)
+			_, found := k.GetBallotListForHeight(ctx, 1)
+			require.True(t, found)
+			require.Equal(t, numberOfBallots/2, len(k.GetAllBallots(ctx)))
+
+			//Act
+			k.ClearAllMaturedBallotsAndBallotList(ctx, 0)
+
+			//Assert
+			for _, b := range ballots {
+				_, found = k.GetBallot(ctx, b.BallotIdentifier)
+				require.False(t, found)
 			}
-			ballots[i] = b
-		}
-		_, found := k.GetBallotListForHeight(ctx, 1)
-		require.True(t, found)
-		require.Equal(t, numberOfBallots/2, len(k.GetAllBallots(ctx)))
-
-		//Act
-		k.ClearAllMaturedBallotsAndBallotList(ctx, 0)
-
-		//Assert
-		for _, b := range ballots {
-			_, found = k.GetBallot(ctx, b.BallotIdentifier)
+			_, found = k.GetBallotListForHeight(ctx, 1)
 			require.False(t, found)
-		}
-		_, found = k.GetBallotListForHeight(ctx, 1)
-		require.False(t, found)
-	})
+		},
+	)
 
 	t.Run("clear only ballotList if no ballots are found", func(t *testing.T) {
 		//Arrange

@@ -14,13 +14,13 @@ import (
 )
 
 type LegacyParams struct {
-	ValidatorEmissionPercentage string                      `protobuf:"bytes,5,opt,name=validator_emission_percentage,json=validatorEmissionPercentage,proto3" json:"validator_emission_percentage,omitempty"`
-	ObserverEmissionPercentage  string                      `protobuf:"bytes,6,opt,name=observer_emission_percentage,json=observerEmissionPercentage,proto3" json:"observer_emission_percentage,omitempty"`
-	TssSignerEmissionPercentage string                      `protobuf:"bytes,7,opt,name=tss_signer_emission_percentage,json=tssSignerEmissionPercentage,proto3" json:"tss_signer_emission_percentage,omitempty"`
-	ObserverSlashAmount         cosmossdk_io_math.Int       `protobuf:"bytes,9,opt,name=observer_slash_amount,json=observerSlashAmount,proto3,customtype=cosmossdk.io/math.Int" json:"observer_slash_amount"`
-	BallotMaturityBlocks        int64                       `protobuf:"varint,10,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3" json:"ballot_maturity_blocks,omitempty"`
+	ValidatorEmissionPercentage string                      `protobuf:"bytes,5,opt,name=validator_emission_percentage,json=validatorEmissionPercentage,proto3"                     json:"validator_emission_percentage,omitempty"`
+	ObserverEmissionPercentage  string                      `protobuf:"bytes,6,opt,name=observer_emission_percentage,json=observerEmissionPercentage,proto3"                       json:"observer_emission_percentage,omitempty"`
+	TssSignerEmissionPercentage string                      `protobuf:"bytes,7,opt,name=tss_signer_emission_percentage,json=tssSignerEmissionPercentage,proto3"                    json:"tss_signer_emission_percentage,omitempty"`
+	ObserverSlashAmount         cosmossdk_io_math.Int       `protobuf:"bytes,9,opt,name=observer_slash_amount,json=observerSlashAmount,proto3,customtype=cosmossdk.io/math.Int"    json:"observer_slash_amount"`
+	BallotMaturityBlocks        int64                       `protobuf:"varint,10,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3"                                 json:"ballot_maturity_blocks,omitempty"`
 	BlockRewardAmount           cosmossdk_io_math.LegacyDec `protobuf:"bytes,11,opt,name=block_reward_amount,json=blockRewardAmount,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"block_reward_amount"`
-	PendingBallotsBufferBlocks  int64                       `protobuf:"varint,12,opt,name=pending_ballots_buffer_blocks,json=pendingBallotsBufferBlocks,proto3" json:"pending_ballots_buffer_blocks,omitempty"`
+	PendingBallotsBufferBlocks  int64                       `protobuf:"varint,12,opt,name=pending_ballots_buffer_blocks,json=pendingBallotsBufferBlocks,proto3"                    json:"pending_ballots_buffer_blocks,omitempty"`
 }
 
 func (l *LegacyParams) Reset() {
@@ -53,7 +53,9 @@ func TestMigrateStore(t *testing.T) {
 			TssSignerEmissionPercentage: "0.125",
 			ObserverSlashAmount:         cosmossdk_io_math.NewInt(100000000000000000),
 			BallotMaturityBlocks:        100,
-			BlockRewardAmount:           cosmossdk_io_math.LegacyMustNewDecFromStr("9620949074074074074.074070733466756687"),
+			BlockRewardAmount: cosmossdk_io_math.LegacyMustNewDecFromStr(
+				"9620949074074074074.074070733466756687",
+			),
 		}
 		SetLegacyParams(t, k, ctx, mainnetParams)
 

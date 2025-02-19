@@ -61,6 +61,8 @@ func TestMigrate(t *testing.T) {
 		legacyParams = types.DefaultParams()
 		legacyParams.ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 		legacyParams.BallotMaturityBlocks = 100
+		// v3 migration uses older params; therefore, it does not set PendingBallotsBufferBlocks
+		legacyParams.PendingBallotsBufferBlocks = 0
 		require.Equal(t, legacyParams, params)
 	})
 

@@ -16,7 +16,7 @@ func NewParams() Params {
 		ObserverSlashAmount:         ObserverSlashAmount,
 		BallotMaturityBlocks:        int64(BallotMaturityBlocks),
 		BlockRewardAmount:           BlockReward,
-		PendingBallotsBufferBlocks:  int64(PendingBallotsBufferBlocks),
+		PendingBallotsBufferBlocks:  PendingBallotsBufferBlocks,
 	}
 }
 

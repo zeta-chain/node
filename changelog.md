@@ -20,6 +20,7 @@
 
 * [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3496](https://github.com/zeta-chain/node/pull/3496) - zetaclient uses `ConfirmationParams` instead of old `ConfirmationCount`; use block ranged based observation for btc and evm chain.
+* [3553](https://github.com/zeta-chain/node/pull/3553) — add a new buffer blocks param to delay deletion of pending ballots
 
 ### Fixes
 

@@ -49,6 +49,11 @@ export declare class Params extends Message<Params> {
    */
   blockRewardAmount: string;
 
+  /**
+   * @generated from field: int64 pending_ballots_buffer_blocks = 12;
+   */
+  pendingBallotsBufferBlocks: bigint;
+
   constructor(data?: PartialMessage<Params>);
 
   static readonly runtime: typeof proto3;
