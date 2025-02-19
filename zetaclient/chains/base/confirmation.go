@@ -1,5 +1,15 @@
 package base
 
+import (
+	"context"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/pkg/constant"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+)
+
 // GetScanRangeInboundSafe calculates the block range to scan using inbound safe confirmation count.
 // It returns a range of blocks [from, end (exclusive)) that need to be scanned.
 func (ob *Observer) GetScanRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
@@ -35,6 +45,16 @@ func (ob *Observer) IsBlockConfirmedForInboundFast(blockNumber uint64) bool {
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
 }
 
+// GetInboundConfirmationMode returns the confirmation mode for given inbound block number.
+//   - It assumes the given block is at least FAST confirmed.
+//   - It returns SAFE mode if the given block reaches SAFE confirmation count.
+func (ob *Observer) GetInboundConfirmationMode(scannedBlock uint64) crosschaintypes.ConfirmationMode {
+	if ob.IsBlockConfirmedForInboundSafe(scannedBlock) {
+		return crosschaintypes.ConfirmationMode_SAFE
+	}
+	return crosschaintypes.ConfirmationMode_FAST
+}
+
 // IsBlockConfirmedForOutboundSafe checks if the block number is confirmed using outbound safe confirmation count.
 func (ob *Observer) IsBlockConfirmedForOutboundSafe(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
@@ -48,6 +68,43 @@ func (ob *Observer) IsBlockConfirmedForOutboundFast(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
 	confirmation := ob.ChainParams().OutboundConfirmationFast()
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
+}
+
+// IsInboundEligibleForFastConfirmation determines if given inbound vote message is eligible for fast confirmation.
+func (ob *Observer) IsInboundEligibleForFastConfirmation(
+	ctx context.Context,
+	msg *crosschaintypes.MsgVoteInbound,
+) (bool, error) {
+	// fast confirmation applies to chains that use confirmation count (e.g. EVM chains and Bitcoin)
+	// these chains should have their liquidity cap multiplier set explicitly
+	multiplier, found := constant.InboundFastConfirmationLiquidityMultiplierMap[msg.SenderChainId]
+	if !found {
+		return false, nil
+	}
+
+	// fast inbound confirmation is only allowed for simple deposit using V2 workflow
+	if !msg.EligibleForFastConfirmation() {
+		return false, nil
+	}
+
+	// query liquidity cap for asset
+	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, msg.SenderChainId, msg.Asset)
+	if err != nil {
+		return false, errors.Wrapf(
+			err,
+			"unable to get foreign coins for asset %s on chain %d",
+			msg.Asset,
+			msg.SenderChainId,
+		)
+	}
+
+	// ensure the deposit amount does not exceed amount cap
+	fastConfirmationAmountCap := sdkmath.LegacyNewDecFromBigInt(fCoins.LiquidityCap.BigInt()).Mul(multiplier)
+	if sdkmath.LegacyNewDecFromBigInt(msg.Amount.BigInt()).GT(fastConfirmationAmountCap) {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // calcUnscannedBlockRange calculates the unscanned block range [from, end (exclusive)) within given block limit.

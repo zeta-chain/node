@@ -183,6 +183,9 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
+	// determine confirmation mode
+	confirmationMode := ob.GetInboundConfirmationMode(event.BlockNumber)
+
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.FromAddress,
@@ -201,14 +204,12 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
-		crosschaintypes.ConfirmationMode_SAFE,
+		confirmationMode,
 		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
 	)
 }
 
 // NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
-// TODO: upgrade to ProtocolContractVersion_V2 and enable more options
-// https://github.com/zeta-chain/node/issues/2711
 func (ob *Observer) NewInboundVoteFromStdMemo(
 	event *BTCInboundEvent,
 	amountSats *big.Int,
@@ -221,6 +222,9 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 
 	// check if the memo is a cross-chain call, or simple token deposit
 	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
+
+	// determine confirmation mode
+	confirmationMode := ob.GetInboundConfirmationMode(event.BlockNumber)
 
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -240,7 +244,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // no arbitrary call for deposit to ZetaChain
 		event.Status,
-		crosschaintypes.ConfirmationMode_SAFE,
+		confirmationMode,
 		crosschaintypes.WithRevertOptions(revertOptions),
 		crosschaintypes.WithCrossChainCall(isCrosschainCall),
 	)

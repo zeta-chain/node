@@ -29450,6 +29450,31 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/fungible/foreign_coins/{chain_id}/{asset}:
+    get:
+      summary: Queries a ForeignCoins by chain_id and asset.
+      operationId: Query_ForeignCoinsFromAsset
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/fungibleQueryGetForeignCoinsFromAssetResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: asset
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/fungible/foreign_coins/{index}:
     get:
       summary: Queries a ForeignCoins by index.
@@ -59589,6 +59614,11 @@ definitions:
     properties:
       code_hash:
         type: string
+  fungibleQueryGetForeignCoinsFromAssetResponse:
+    type: object
+    properties:
+      foreignCoins:
+        $ref: '#/definitions/fungibleForeignCoins'
   fungibleQueryGetForeignCoinsResponse:
     type: object
     properties:

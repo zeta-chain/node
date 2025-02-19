@@ -406,6 +406,17 @@ func (ob *Observer) PostVoteInbound(
 		return "", nil
 	}
 
+	// skip early observed inbounds that are not eligible for fast confirmation
+	if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
+		eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, msg)
+		if err != nil {
+			return "", errors.Wrap(err, "unable to determine inbound fast confirmation eligibility")
+		}
+		if !eligible {
+			return "", nil
+		}
+	}
+
 	// post vote to zetacore
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteInbound(ctx, gasLimit, retryGasLimit, msg)
 	lf[logs.FieldZetaTx] = zetaHash

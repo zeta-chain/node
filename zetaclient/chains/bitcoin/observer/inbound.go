@@ -29,7 +29,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// get the block range to scan
-	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	startBlock, endBlock := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
 	if startBlock >= endBlock {
 		return nil
 	}

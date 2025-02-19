@@ -187,6 +187,9 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		isCrossChainCall = true
 	}
 
+	// determine confirmation mode
+	confirmationMode := ob.GetInboundConfirmationMode(event.Raw.BlockNumber)
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -205,7 +208,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
-		types.ConfirmationMode_SAFE,
+		confirmationMode,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(isCrossChainCall),
 	)
@@ -327,6 +330,9 @@ func (ob *Observer) parseAndValidateCallEvents(
 
 // newCallInboundVote creates a MsgVoteInbound message for a Call event
 func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types.MsgVoteInbound {
+	// determine confirmation mode
+	confirmationMode := ob.GetInboundConfirmationMode(event.Raw.BlockNumber)
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -345,7 +351,7 @@ func (ob *Observer) newCallInboundVote(event *gatewayevm.GatewayEVMCalled) types
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
-		types.ConfirmationMode_SAFE,
+		confirmationMode,
 		types.WithEVMRevertOptions(event.RevertOptions),
 	)
 }
@@ -471,6 +477,9 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		coinType = coin.CoinType_Gas
 	}
 
+	// determine confirmation mode
+	confirmationMode := ob.GetInboundConfirmationMode(event.Raw.BlockNumber)
+
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		event.Sender.Hex(),
@@ -489,7 +498,7 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		types.ProtocolContractVersion_V2,
 		false, // currently not relevant since calls are not arbitrary
 		types.InboundStatus_SUCCESS,
-		types.ConfirmationMode_SAFE,
+		confirmationMode,
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
 	)

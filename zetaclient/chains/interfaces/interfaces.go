@@ -18,6 +18,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	ethclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -63,6 +64,7 @@ type ZetacoreClient interface {
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
 	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
 	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
+	GetForeignCoinsFromAsset(ctx context.Context, chainID int64, asset string) (fungibletypes.ForeignCoins, error)
 
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)

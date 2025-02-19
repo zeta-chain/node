@@ -10,6 +10,8 @@ import (
 
 	context "context"
 
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
+
 	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
 
 	keysinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -245,6 +247,34 @@ func (_m *ZetacoreClient) GetCrosschainFlags(ctx context.Context) (observertypes
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetForeignCoinsFromAsset provides a mock function with given fields: ctx, chainID, asset
+func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID int64, asset string) (fungibletypes.ForeignCoins, error) {
+	ret := _m.Called(ctx, chainID, asset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetForeignCoinsFromAsset")
+	}
+
+	var r0 fungibletypes.ForeignCoins
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string) (fungibletypes.ForeignCoins, error)); ok {
+		return rf(ctx, chainID, asset)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string) fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx, chainID, asset)
+	} else {
+		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
+		r1 = rf(ctx, chainID, asset)
 	} else {
 		r1 = ret.Error(1)
 	}

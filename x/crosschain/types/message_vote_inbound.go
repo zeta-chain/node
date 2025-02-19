@@ -156,3 +156,21 @@ func (msg *MsgVoteInbound) Digest() string {
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }
+
+// EligibleForFastConfirmation determines if the inbound msg is eligible for fast confirmation
+func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
+	switch msg.ProtocolContractVersion {
+	case ProtocolContractVersion_V1:
+		// msg using protocol contract version V1 is not eligible for fast confirmation because:
+		// 1. whether the receiver address is a contract or not is unknown
+		// 2. it can be a depositAndCall (Gas or ZRC20) with empty payload
+		// 3. it can be a message passing (CoinType_Zeta) calls 'onReceive'
+		return false
+	case ProtocolContractVersion_V2:
+		// in protocol contract version V2, simple deposit is distinguished from depositAndCall/NoAssetCall
+		// see the method `ProcessV2Deposit` in `x/fungible/keeper/v2_deposits.go`
+		return !msg.IsCrossChainCall && msg.CoinType != coin.CoinType_NoAssetCall
+	default:
+		return false
+	}
+}

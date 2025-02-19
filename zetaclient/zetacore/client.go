@@ -58,8 +58,8 @@ type Client struct {
 var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
 
 type constructOpts struct {
-	customTendermint bool
-	tendermintClient cometbftrpc.Client
+	customCometBFT bool
+	cometBFTClient cometbftrpc.Client
 
 	customAccountRetriever bool
 	accountRetriever       cosmosclient.AccountRetriever
@@ -67,15 +67,15 @@ type constructOpts struct {
 
 type Opt func(cfg *constructOpts)
 
-// WithTendermintClient sets custom tendermint client
-func WithTendermintClient(client cometbftrpc.Client) Opt {
+// WithCometBFTClient sets custom CometBFT client
+func WithCometBFTClient(client cometbftrpc.Client) Opt {
 	return func(c *constructOpts) {
-		c.customTendermint = true
-		c.tendermintClient = client
+		c.customCometBFT = true
+		c.cometBFTClient = client
 	}
 }
 
-// WithCustomAccountRetriever sets custom tendermint client
+// WithCustomAccountRetriever sets custom CometBFT client
 func WithCustomAccountRetriever(ac cosmosclient.AccountRetriever) Opt {
 	return func(c *constructOpts) {
 		c.customAccountRetriever = true
@@ -108,7 +108,7 @@ func NewClient(
 		ChainHost:    cosmosREST(chainIP),
 		SignerName:   signerName,
 		SignerPasswd: "password",
-		ChainRPC:     tendermintRPC(chainIP),
+		ChainRPC:     CometBFTRPC(chainIP),
 	}
 
 	encodingCfg := app.MakeEncodingConfig()
@@ -130,11 +130,11 @@ func NewClient(
 		return nil, errors.Wrap(err, "unable to build cosmos client context")
 	}
 
-	cometBFTClientIface := constructOptions.tendermintClient
+	cometBFTClientIface := constructOptions.cometBFTClient
 
 	// create a cometbft client if one was not provided in the constructOptions
-	if !constructOptions.customTendermint {
-		cometBFTURL := "http://" + tendermintRPC(chainIP)
+	if !constructOptions.customCometBFT {
+		cometBFTURL := "http://" + CometBFTRPC(chainIP)
 		cometBFTClient, err := cometbfthttp.New(cometBFTURL, "/websocket")
 		if err != nil {
 			return nil, errors.Wrapf(err, "new cometbft client (%s)", cometBFTURL)
@@ -196,8 +196,8 @@ func buildCosmosClientContext(
 
 	// note that in rare cases, this might give FALSE positive
 	// (google "golang nil interface comparison")
-	client = opts.tendermintClient
-	if !opts.customTendermint {
+	client = opts.cometBFTClient
+	if !opts.customCometBFT {
 		remote := config.ChainRPC
 		if !strings.HasPrefix(config.ChainHost, "http") {
 			remote = fmt.Sprintf("tcp://%s", remote)
@@ -299,6 +299,6 @@ func cosmosGRPC(host string) string {
 	return fmt.Sprintf("%s:9090", host)
 }
 
-func tendermintRPC(host string) string {
+func CometBFTRPC(host string) string {
 	return fmt.Sprintf("%s:26657", host)
 }
