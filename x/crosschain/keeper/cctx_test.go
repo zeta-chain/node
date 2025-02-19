@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 	"math/rand"
+	"slices"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -85,7 +87,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int, tssPubkey string
 		items[i].InboundParams.Amount = math.OneUint()
 
 		items[i].ZetaFees = math.OneUint()
-		items[i].Index = fmt.Sprintf("%d", i)
+		items[i].Index = sample.GetCctxIndexFromString(fmt.Sprintf("%d", i))
 		items[i].RevertOptions = types.NewEmptyRevertOptions()
 
 		keeper.SaveCCTXUpdate(ctx, items[i], tssPubkey)
@@ -174,17 +176,21 @@ func TestCCTXs(t *testing.T) {
 	}
 }
 
+func compareCctx(l types.CrossChainTx, r types.CrossChainTx) int {
+	return strings.Compare(l.Index, r.Index)
+}
+
 func TestCCTXGetAll(t *testing.T) {
 	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
 	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, tss)
 	items := createNCctx(keeper, ctx, 10, tss.TssPubkey)
 	cctx := keeper.GetAllCrossChainTx(ctx)
-	c := make([]types.CrossChainTx, len(cctx))
-	for i, val := range cctx {
-		c[i] = val
-	}
-	require.Equal(t, items, c)
+
+	slices.SortFunc(items, compareCctx)
+	slices.SortFunc(cctx, compareCctx)
+
+	require.Equal(t, items, cctx)
 }
 
 // Querier Tests
