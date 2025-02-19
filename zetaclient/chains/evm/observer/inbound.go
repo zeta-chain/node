@@ -152,7 +152,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	chainID := ob.Chain().ChainId
         if chainID != 421614 && chainID != 42161 && chainID != 43113 && chainID != 43114 {
                 var err error
-		lastScannedTssRecvd, err = ob.ObserveTSSReceive(ctx, startBlock, toBlock)
+		lastScannedTssRecvd, err = ob.ObserverTSSReceive(ctx, startBlock, toBlock)
 		if err != nil {
 			return errors.Wrap(err, "unable to observe TSSReceive")
 		}
