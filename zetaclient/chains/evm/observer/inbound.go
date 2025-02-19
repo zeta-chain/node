@@ -155,7 +155,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			logger.Error().Err(err).Msg("error observing TSS received gas asset")
 		}
 	}
-	
+
 	// task 4: filter the outbounds from TSS address to supplement outbound trackers
 	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
 	//
