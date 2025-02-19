@@ -157,7 +157,7 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 
 // EncodeCursor encodes event ID into cursor.
 func EncodeCursor(id models.EventId) string {
-	return fmt.Sprintf("%s#%s", id.TxDigest, id.EventSeq)
+	return fmt.Sprintf("%s,%s", id.TxDigest, id.EventSeq)
 }
 
 // DecodeCursor decodes cursor into event ID.
@@ -166,7 +166,7 @@ func DecodeCursor(cursor string) (*models.EventId, error) {
 		return nil, nil
 	}
 
-	parts := strings.Split(cursor, "#")
+	parts := strings.Split(cursor, ",")
 	if len(parts) != 2 {
 		return nil, errors.New("invalid cursor format")
 	}

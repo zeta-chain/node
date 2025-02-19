@@ -86,7 +86,7 @@ func TestObserver(t *testing.T) {
 		expectedQuery := client.EventQuery{
 			PackageID: ts.gateway.PackageID(),
 			Module:    ts.gateway.Module(),
-			Cursor:    "ABC123_first_tx#0",
+			Cursor:    "ABC123_first_tx,0",
 			Limit:     client.DefaultEventsLimit,
 		}
 
@@ -136,7 +136,7 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check that final cursor is on INVALID event, that's expected
-		assert.Equal(t, "TX_4_invalid_data#0", ts.LastTxScanned())
+		assert.Equal(t, "TX_4_invalid_data,0", ts.LastTxScanned())
 
 		// Check for transactions
 		assert.Equal(t, 2, len(ts.inboundVotesBag))
@@ -268,7 +268,8 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	suiMock := mocks.NewSuiClient(t)
 
-	gw := sui.NewGateway(chainParams.GatewayAddress)
+	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
+	require.NoError(t, err)
 
 	observer := New(baseObserver, suiMock, gw)
 
