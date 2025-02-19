@@ -154,7 +154,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
                 var err error
 		lastScannedTssRecvd, err = ob.ObserveTSSReceive(ctx, startBlock, toBlock)
 		if err != nil {
-			logger.Error().Err(err).Msg("error observing TSS received gas asset")
+			return errors.Wrap(err, "unable to observe TSSReceive")
 		}
 	}
 
