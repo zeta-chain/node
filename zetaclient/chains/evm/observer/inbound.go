@@ -148,7 +148,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// only do this for ARB, AVAX, and their testnets
 	//
 	// initialize lastScannedTssRecvd to a known "unset" value
-	var lastScannedTssRecvd uint64 = 0 // Assuming 0 is an appropriate "unset" value
+	var lastScannedTssRecvd uint64
 	chainID := ob.Chain().ChainId
 	if chainID != 421614 && chainID != 42161 && chainID != 43113 && chainID != 43114 {
 		var err error
@@ -194,7 +194,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		lastScannedGatewayCall,
 		lastScannedGatewayDepositAndCall,
 	}
-	// only include lastScannedTssRecvd if it was set (non-zero)
+	// only include lastScannedTssRecvd if it was set
 	if lastScannedTssRecvd != 0 {
 		scannedBlocks = append(scannedBlocks, lastScannedTssRecvd)
 	}
