@@ -59,7 +59,6 @@ func TestTONSamples(t *testing.T) {
 		require.Equal(t, int(d.Amount.Uint64()), int(d2.Amount.Uint64()))
 		require.Equal(t, d.Sender.ToRaw(), d2.Sender.ToRaw())
 		require.Equal(t, d.Recipient.Hex(), d2.Recipient.Hex())
-		require.Equal(t, d.Memo(), d2.Memo())
 	})
 
 	t.Run("Deposit and call", func(t *testing.T) {
@@ -88,7 +87,6 @@ func TestTONSamples(t *testing.T) {
 		require.Equal(t, d.Sender.ToRaw(), d2.Sender.ToRaw())
 		require.Equal(t, d.Recipient.Hex(), d2.Recipient.Hex())
 		require.Equal(t, d.CallData, d2.CallData)
-		require.Equal(t, d.Memo(), d2.Memo())
 	})
 
 }

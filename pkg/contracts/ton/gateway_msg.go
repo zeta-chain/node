@@ -57,11 +57,6 @@ type Deposit struct {
 	Recipient eth.Address
 }
 
-// Memo casts deposit to memo bytes
-func (d Deposit) Memo() []byte {
-	return d.Recipient.Bytes()
-}
-
 // AsBody casts struct as internal message body.
 func (d Deposit) AsBody() (*boc.Cell, error) {
 	b := boc.NewCell()
@@ -73,17 +68,6 @@ func (d Deposit) AsBody() (*boc.Cell, error) {
 type DepositAndCall struct {
 	Deposit
 	CallData []byte
-}
-
-// Memo casts deposit to call to memo bytes
-func (d DepositAndCall) Memo() []byte {
-	recipient := d.Recipient.Bytes()
-	out := make([]byte, 0, len(recipient)+len(d.CallData))
-
-	out = append(out, recipient...)
-	out = append(out, d.CallData...)
-
-	return out
 }
 
 // AsBody casts struct to internal message body.
