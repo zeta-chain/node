@@ -43,6 +43,12 @@ const (
 	// NOTE: Send is the previous name of CCTX and is kept for backward compatibility
 	CCTXKey = "Send-value-"
 
+	// CounterValueKey is a static key for storing the cctx counter key for ordering
+	CounterValueKey = "ctr-value"
+
+	// CounterIndexKey is is the prefix to use for the counter index
+	CounterIndexKey = "ctr-idx-"
+
 	LastBlockHeightKey   = "LastBlockHeight-value-"
 	FinalizedInboundsKey = "FinalizedInbounds-value-"
 

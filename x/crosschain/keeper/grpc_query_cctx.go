@@ -46,7 +46,7 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 
 	store := ctx.KVStore(k.storeKey)
 	cctxStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
-	tsStore := prefix.NewStore(store, types.KeyPrefix(TSIndexKey))
+	counterStore := prefix.NewStore(store, types.KeyPrefix(types.CounterIndexKey))
 
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
@@ -56,9 +56,12 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	}
 
 	var sends []*types.CrossChainTx
-	pageRes, err := query.Paginate(tsStore, req.Pagination, func(_ []byte, value []byte) error {
+	pageRes, err := query.Paginate(counterStore, req.Pagination, func(_ []byte, value []byte) error {
+		var indexBytes [32]byte
+		copy(indexBytes[:], value[:32])
+		cctxIndex := types.GetCctxIndexFromBytes(indexBytes)
 		var cctx types.CrossChainTx
-		cctxBytes := cctxStore.Get(value)
+		cctxBytes := cctxStore.Get(types.KeyPrefix(cctxIndex))
 		if err := k.cdc.Unmarshal(cctxBytes, &cctx); err != nil {
 			return err
 		}

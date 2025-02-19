@@ -93,9 +93,43 @@ func (k Keeper) setNonceToCCTX(
 	}
 }
 
-const (
-	TSIndexKey = "cctx-ts-"
-)
+// GetCctxCounter retrieves the current counter value
+func (k Keeper) GetCctxCounter(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CounterValueKey))
+	storedCounter := store.Get([]byte(types.CounterValueKey))
+
+	return sdk.BigEndianToUint64(storedCounter)
+}
+
+// getNextCctxCounter retrieves and increments the counter for ordering
+func (k Keeper) getNextCctxCounter(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CounterValueKey))
+	storedCounter := k.GetCctxCounter(ctx)
+
+	nextCounter := storedCounter + 1
+
+	store.Set([]byte(types.CounterValueKey), sdk.Uint64ToBigEndian(nextCounter))
+	return nextCounter
+}
+
+// setCctxCounterIndex sets the CCTX in the counter index
+//
+// note that we use the raw bytes in the index rather than the hex encoded bytes
+// like in the main store
+func (k Keeper) setCctxCounterIndex(ctx sdk.Context, cctx types.CrossChainTx) {
+	counterIndexStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CounterIndexKey))
+	nextCounter := k.getNextCctxCounter(ctx)
+
+	cctxIndex, err := cctx.GetCCTXIndexBytes()
+	if err != nil {
+		k.Logger(ctx).Error("get cctx index bytes", "err", err)
+		return
+	}
+
+	// must use big endian so most significant bytes are first for sortability
+	nextCounterBytes := sdk.Uint64ToBigEndian(nextCounter)
+	counterIndexStore.Set(nextCounterBytes, cctxIndex[:])
+}
 
 // SetCrossChainTx set a specific cctx in the store from its index
 func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
@@ -107,20 +141,14 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&cctx)
-	cctxIndexPrefix := types.KeyPrefix(cctx.Index)
-	store.Set(cctxIndexPrefix, b)
+	cctxIndex := types.KeyPrefix(cctx.Index)
 
-	tsIndexPrefix := types.KeyPrefix(TSIndexKey)
-	tsIndexStore := prefix.NewStore(ctx.KVStore(k.storeKey), tsIndexPrefix)
-	cctxIndex, err := cctx.GetCCTXIndexBytes()
-	if err != nil {
-		k.Logger(ctx).Error("unable to GetCCTXIndexBytes", "err", err)
-		return
+	isUpdate := store.Has(cctxIndex)
+	store.Set(cctxIndex, b)
+
+	if !isUpdate {
+		k.setCctxCounterIndex(ctx, cctx)
 	}
-	// must use big endian so most significant bytes are first for sortability
-	createdAtBytes := sdk.Uint64ToBigEndian(uint64(cctx.CctxStatus.CreatedTimestamp))
-	indexKey := append(createdAtBytes, cctxIndex[:]...)
-	tsIndexStore.Set(indexKey, cctxIndexPrefix)
 }
 
 // GetCrossChainTx returns a cctx from its index
