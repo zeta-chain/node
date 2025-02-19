@@ -27,7 +27,7 @@ func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// perform the withdraw
 	tx := r.ZEVMToEMVCall(
-		r.TestDAppV2EVMAddr,
+		sample.EthAddress(), // non-existing address
 		[]byte("revert"),
 		gatewayzevm.RevertOptions{
 			RevertAddress:    sample.EthAddress(), // non-existing address
