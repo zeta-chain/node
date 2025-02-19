@@ -145,11 +145,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	lastScannedDeposited := ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd, err := ob.ObserverTSSReceive(ctx, startBlock, toBlock)
-	if err != nil {
-		return errors.Wrap(err, "unable to observe TSSReceive")
+	// Only do this for ARB, AVAX, and their testnets
+	
+	// Initialize lastScannedTssRecvd to a known "unset" value
+	var lastScannedTssRecvd uint64 = 0 // Assuming 0 is an appropriate "unset" value
+	if ob.Chain().ChainId != 421614 && ob.Chain().ChainId != 42161 && ob.Chain().ChainId != 43113 && ob.Chain().ChainId != 43114  {
+		lastScannedTssRecvd, err := ob.ObserveTSSReceive(ctx, startBlock, toBlock)
+		if err != nil {
+			logger.Error().Err(err).Msg("error observing TSS received gas asset")
+		}
 	}
-
+	
 	// task 4: filter the outbounds from TSS address to supplement outbound trackers
 	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
 	//
@@ -179,15 +185,20 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// note: using the lowest height for all events is not perfect,
 	// but it's simple and good enough
-	lowestLastScannedBlock := slices.Min([]uint64{
+	scannedBlocks := []uint64{
 		lastScannedZetaSent,
 		lastScannedDeposited,
-		lastScannedTssRecvd,
 		lastScannedGatewayDeposit,
 		lastScannedGatewayCall,
 		lastScannedGatewayDepositAndCall,
-	})
-
+	}
+	// Only include lastScannedTssRecvd if it was set (non-zero)
+	if lastScannedTssRecvd != 0 {
+		scannedBlocks = append(scannedBlocks, lastScannedTssRecvd)
+	}
+	// Calculate the lowest last scanned block
+	lowestLastScannedBlock := slices.Min(scannedBlocks)
+	
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lowestLastScannedBlock > lastScanned {
 		if err = ob.SaveLastBlockScanned(lowestLastScannedBlock); err != nil {
