@@ -224,7 +224,7 @@ func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
 			sender:         d.Sender.ToRaw(),
 			amount:         d.Amount,
 			receiver:       d.Recipient.Hex(),
-			message:        d.Memo(),
+			message:        []byte{},
 			isContractCall: false,
 		}, nil
 	case toncontracts.OpDepositAndCall:
@@ -236,7 +236,7 @@ func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
 			sender:         d.Sender.ToRaw(),
 			amount:         d.Amount,
 			receiver:       d.Recipient.Hex(),
-			message:        d.Memo(),
+			message:        d.CallData,
 			isContractCall: true,
 		}, nil
 	default:
