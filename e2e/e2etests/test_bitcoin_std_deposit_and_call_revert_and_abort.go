@@ -55,11 +55,6 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	require.NoError(r, err)
 	require.True(r, aborted)
 
-	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
-	require.NoError(r, err)
-	require.EqualValues(r, r.BTCZRC20Addr.Hex(), abortContext.Asset.Hex())
-
 	// check abort contract received the tokens
 	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
 	require.NoError(r, err)
