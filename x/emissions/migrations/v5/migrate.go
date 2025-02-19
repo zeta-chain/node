@@ -17,10 +17,15 @@ func MigrateStore(
 	ctx sdk.Context,
 	emissionsKeeper EmissionsKeeper,
 ) error {
-	defaultParams := types.DefaultParams()
+	updatedParams := types.DefaultParams()
 	params, found := emissionsKeeper.GetParams(ctx)
 	if found {
-		params.PendingBallotsBufferBlocks = defaultParams.PendingBallotsBufferBlocks
+		updatedParams.BlockRewardAmount = params.BlockRewardAmount
+		updatedParams.ValidatorEmissionPercentage = params.ValidatorEmissionPercentage
+		updatedParams.ObserverEmissionPercentage = params.ObserverEmissionPercentage
+		updatedParams.TssSignerEmissionPercentage = params.TssSignerEmissionPercentage
+		updatedParams.ObserverSlashAmount = params.ObserverSlashAmount
+		updatedParams.BallotMaturityBlocks = params.BallotMaturityBlocks
 	}
-	return emissionsKeeper.SetParams(ctx, params)
+	return emissionsKeeper.SetParams(ctx, updatedParams)
 }
