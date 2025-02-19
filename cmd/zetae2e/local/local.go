@@ -12,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -53,11 +54,7 @@ const (
 var (
 	TestTimeout        = 20 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
-)
-
-var (
-	noError     = testutil.NoError
-	requireTrue = testutil.True
+	noError            = testutil.NoError
 )
 
 // NewLocalCmd returns the local command
@@ -290,7 +287,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
-		requireTrue(deployerRunner.VerifySolanaContractsUpgrade())
+		require.True(deployerRunner, deployerRunner.VerifySolanaContractsUpgrade())
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
