@@ -26,6 +26,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestZEVMToEVMCallName,
 		e2etests.TestZEVMToEVMCallThroughContractName,
 		e2etests.TestEVMToZEVMCallName,
+		e2etests.TestEVMToZEVMCallAbortName,
 		e2etests.TestETHDepositAndCallNoMessageName,
 		e2etests.TestETHWithdrawAndCallNoMessageName,
 		e2etests.TestEtherWithdrawRestrictedName,

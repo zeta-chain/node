@@ -48,6 +48,7 @@ const (
 	TestZEVMToEVMCallName                = "zevm_to_evm_call"
 	TestZEVMToEVMCallThroughContractName = "zevm_to_evm_call_through_contract"
 	TestEVMToZEVMCallName                = "evm_to_zevm_call"
+	TestEVMToZEVMCallAbortName           = "evm_to_zevm_abort_call"
 
 	TestDepositAndCallSwapName      = "deposit_and_call_swap"
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
@@ -475,6 +476,12 @@ var AllE2ETests = []runner.E2ETest{
 		"evm -> zevm call",
 		[]runner.ArgDefinition{},
 		TestEVMToZEVMCall,
+	),
+	runner.NewE2ETest(
+		TestEVMToZEVMCallAbortName,
+		"evm -> zevm call fails and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestEVMToZEVMCallAbort,
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallSwapName,
