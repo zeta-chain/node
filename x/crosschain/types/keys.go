@@ -46,7 +46,7 @@ const (
 	// CounterValueKey is a static key for storing the cctx counter key for ordering
 	CounterValueKey = "ctr-value"
 
-	// CounterIndexKey is is the prefix to use for the counter index
+	// CounterIndexKey is the prefix to use for the counter index
 	CounterIndexKey = "ctr-idx-"
 
 	LastBlockHeightKey   = "LastBlockHeight-value-"
