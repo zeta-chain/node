@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## v27.0.5
+* [3554](https://github.com/zeta-chain/node/pull/3554) - disable observation of direct to TSS Address deposits on Arbitrum and Avalanch networks
+
 ## v27.0.4
 
 ### Fixes
