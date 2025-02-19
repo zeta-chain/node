@@ -137,7 +137,7 @@ func validatePendingBallotsBufferBlocks(i interface{}) error {
 
 	// pending ballots buffer blocks can be 0 to delete pending ballots immediately
 	if v < 0 {
-		return fmt.Errorf("ballot maturity types must not be negative")
+		return fmt.Errorf("pending ballots buffer blocks must not be negative")
 	}
 	return nil
 }

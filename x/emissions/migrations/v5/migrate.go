@@ -1,6 +1,7 @@
 package v5
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/emissions/types"
@@ -18,14 +19,32 @@ func MigrateStore(
 	emissionsKeeper EmissionsKeeper,
 ) error {
 	updatedParams := types.DefaultParams()
+	// If params are found, update all fields except the new one `PendingBallotsBufferBlocks`
 	params, found := emissionsKeeper.GetParams(ctx)
 	if found {
-		updatedParams.BlockRewardAmount = params.BlockRewardAmount
-		updatedParams.ValidatorEmissionPercentage = params.ValidatorEmissionPercentage
-		updatedParams.ObserverEmissionPercentage = params.ObserverEmissionPercentage
-		updatedParams.TssSignerEmissionPercentage = params.TssSignerEmissionPercentage
-		updatedParams.ObserverSlashAmount = params.ObserverSlashAmount
-		updatedParams.BallotMaturityBlocks = params.BallotMaturityBlocks
+		if params.ValidatorEmissionPercentage != "" {
+			updatedParams.ValidatorEmissionPercentage = params.ValidatorEmissionPercentage
+		}
+
+		if params.ObserverEmissionPercentage != "" {
+			updatedParams.ObserverEmissionPercentage = params.ObserverEmissionPercentage
+		}
+
+		if params.TssSignerEmissionPercentage != "" {
+			updatedParams.TssSignerEmissionPercentage = params.TssSignerEmissionPercentage
+		}
+
+		if params.BlockRewardAmount.GT(sdkmath.LegacyZeroDec()) {
+			updatedParams.BlockRewardAmount = params.BlockRewardAmount
+		}
+
+		if params.ObserverSlashAmount.GTE(sdkmath.ZeroInt()) {
+			updatedParams.ObserverSlashAmount = params.ObserverSlashAmount
+		}
+		if params.BallotMaturityBlocks > 0 {
+			updatedParams.BallotMaturityBlocks = params.BallotMaturityBlocks
+		}
 	}
+
 	return emissionsKeeper.SetParams(ctx, updatedParams)
 }

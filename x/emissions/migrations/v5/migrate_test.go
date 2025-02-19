@@ -44,7 +44,7 @@ func SetLegacyParams(t *testing.T, k *keeper.Keeper, ctx sdk.Context, params Leg
 }
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("successfull migrate store", func(t *testing.T) {
+	t.Run("successfully migrate store", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
 		mainnetParams := LegacyParams{
@@ -71,6 +71,62 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
 		require.Equal(t, mainnetParams.BlockRewardAmount, updatedParams.BlockRewardAmount)
+		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
+	})
+
+	t.Run("successfully migrate store even if tssSignerEmissionPercentage is missing", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+
+		mainnetParams := LegacyParams{
+			ValidatorEmissionPercentage: "0.75",
+			ObserverEmissionPercentage:  "0.125",
+			ObserverSlashAmount:         cosmossdk_io_math.NewInt(100000000000000000),
+			BallotMaturityBlocks:        100,
+			BlockRewardAmount: cosmossdk_io_math.LegacyMustNewDecFromStr(
+				"9620949074074074074.074070733466756687",
+			),
+		}
+		SetLegacyParams(t, k, ctx, mainnetParams)
+
+		err := v5.MigrateStore(ctx, k)
+
+		// Assert
+		require.NoError(t, err)
+		updatedParams, found := k.GetParams(ctx)
+		require.True(t, found)
+		require.Equal(t, mainnetParams.ValidatorEmissionPercentage, updatedParams.ValidatorEmissionPercentage)
+		require.Equal(t, mainnetParams.ObserverEmissionPercentage, updatedParams.ObserverEmissionPercentage)
+		require.Equal(t, types.DefaultParams().TssSignerEmissionPercentage, updatedParams.TssSignerEmissionPercentage)
+		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
+		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
+		require.Equal(t, mainnetParams.BlockRewardAmount, updatedParams.BlockRewardAmount)
+		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
+	})
+
+	t.Run("successfully migrate store even if block reward is missing", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+
+		mainnetParams := LegacyParams{
+			ValidatorEmissionPercentage: "0.75",
+			ObserverEmissionPercentage:  "0.125",
+			TssSignerEmissionPercentage: "0.125",
+			ObserverSlashAmount:         cosmossdk_io_math.NewInt(100000000000000000),
+			BallotMaturityBlocks:        100,
+		}
+		SetLegacyParams(t, k, ctx, mainnetParams)
+
+		err := v5.MigrateStore(ctx, k)
+
+		// Assert
+		require.NoError(t, err)
+		updatedParams, found := k.GetParams(ctx)
+		require.True(t, found)
+		require.Equal(t, mainnetParams.ValidatorEmissionPercentage, updatedParams.ValidatorEmissionPercentage)
+		require.Equal(t, mainnetParams.ObserverEmissionPercentage, updatedParams.ObserverEmissionPercentage)
+		require.Equal(t, mainnetParams.TssSignerEmissionPercentage, updatedParams.TssSignerEmissionPercentage)
+		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
+		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
+		require.Equal(t, types.DefaultParams().BlockRewardAmount, updatedParams.BlockRewardAmount)
 		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
 	})
 
