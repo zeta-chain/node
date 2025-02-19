@@ -10,6 +10,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -19,6 +20,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -131,59 +133,108 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return nil
 	}
 
-	// get last scanned block height (we simply use same height for all 3 events ZetaSent, Deposited, TssRecvd)
+	var (
+		lastScannedZetaSent              uint64
+		lastScannedDeposited             uint64
+		lastScannedGatewayDeposit        uint64
+		lastScannedGatewayCall           uint64
+		lastScannedGatewayDepositAndCall uint64
+		lastScannedTssRecvd              uint64
+	)
 	// Note: using different heights for each event incurs more complexity (metrics, db, etc) and not worth it
 	startBlock, toBlock := ob.calcBlockRangeToScan(confirmedBlockNum, lastScanned, config.MaxBlocksPerPeriod)
 
+	wg := sync.WaitGroup{}
+
 	// task 1:  query evm chain for zeta sent logs (read at most 100 blocks in one go)
-	lastScannedZetaSent, err := ob.ObserveZetaSent(ctx, startBlock, toBlock)
-	if err != nil {
-		return errors.Wrap(err, "unable to observe ZetaSent")
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		lastScannedZetaSent, err = ob.ObserveZetaSent(ctx, startBlock, toBlock)
+		if err != nil {
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msgf("ObserveInbound: error observing zeta sent")
+		}
+	}()
 
 	// task 2: query evm chain for deposited logs (read at most 100 blocks in one go)
-	lastScannedDeposited := ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		lastScannedDeposited = ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
+	}()
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
 	// only do this for ARB, AVAX, and their testnets
 	//
 	// initialize lastScannedTssRecvd to a known "unset" value
-	var lastScannedTssRecvd uint64
 	chainID := ob.Chain().ChainId
-	if chainID != 421614 && chainID != 42161 && chainID != 43113 && chainID != 43114 {
-		var err error
-		lastScannedTssRecvd, err = ob.ObserverTSSReceive(ctx, startBlock, toBlock)
-		if err != nil {
-			return errors.Wrap(err, "unable to observe TSSReceive")
+	shouldScanTSSRecieve := chainID != chains.ArbitrumMainnet.ChainId &&
+		chainID != chains.ArbitrumSepolia.ChainId &&
+		chainID != chains.AvalancheMainnet.ChainId &&
+		chainID != chains.AvalancheTestnet.ChainId
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if shouldScanTSSRecieve {
+			var err error
+			lastScannedTssRecvd, err = ob.ObserverTSSReceive(ctx, startBlock, toBlock)
+			if err != nil {
+				ob.Logger().Inbound.Error().
+					Err(err).
+					Msgf("ObserveInbound: error observe TSSReceive")
+			}
 		}
-	}
+	}()
 
 	// task 4: filter the outbounds from TSS address to supplement outbound trackers
 	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
-	//
-	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ob.FilterTSSOutbound(ctx, startBlock, toBlock)
+	}()
 
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
 	// https://github.com/zeta-chain/node/issues/2493
-	lastScannedGatewayDeposit, err := ob.ObserveGatewayDeposit(ctx, startBlock, toBlock)
-	if err != nil {
-		ob.Logger().Inbound.Error().
-			Err(err).
-			Msgf("ObserveInbound: error observing deposit events from Gateway contract")
-	}
-	lastScannedGatewayCall, err := ob.ObserveGatewayCall(ctx, startBlock, toBlock)
-	if err != nil {
-		ob.Logger().Inbound.Error().
-			Err(err).
-			Msgf("ObserveInbound: error observing call events from Gateway contract")
-	}
-	lastScannedGatewayDepositAndCall, err := ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
-	if err != nil {
-		ob.Logger().Inbound.Error().
-			Err(err).
-			Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		lastScannedGatewayDeposit, err = ob.ObserveGatewayDeposit(ctx, startBlock, toBlock)
+		if err != nil {
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msgf("ObserveInbound: error observing deposit events from Gateway contract")
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		lastScannedGatewayCall, err = ob.ObserveGatewayCall(ctx, startBlock, toBlock)
+		if err != nil {
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msgf("ObserveInbound: error observing call events from Gateway contract")
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		lastScannedGatewayDepositAndCall, err = ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
+		if err != nil {
+			ob.Logger().Inbound.Error().
+				Err(err).
+				Msgf("ObserveInbound: error observing depositAndCall events from Gateway contract")
+		}
+	}()
+	wg.Wait()
 
 	// note: using the lowest height for all events is not perfect,
 	// but it's simple and good enough
@@ -195,11 +246,19 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		lastScannedGatewayDepositAndCall,
 	}
 	// only include lastScannedTssRecvd if it was set
-	if lastScannedTssRecvd != 0 {
+	if shouldScanTSSRecieve {
 		scannedBlocks = append(scannedBlocks, lastScannedTssRecvd)
 	}
 	// calculate the lowest last scanned block
 	lowestLastScannedBlock := slices.Min(scannedBlocks)
+
+	highestLastScannedBlock := slices.Max(scannedBlocks)
+	if highestLastScannedBlock-lowestLastScannedBlock > 10 {
+		ob.Logger().Inbound.Warn().
+			Uint64("observer.last_scanned_lowest", lowestLastScannedBlock).
+			Uint64("observer.highest_scanned_lowest", highestLastScannedBlock).
+			Msg("ObserveInbound: high scanned block delta")
+	}
 
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lowestLastScannedBlock > lastScanned {
