@@ -47,19 +47,16 @@ type Event struct {
 	EventType  EventType
 
 	content any
-	inbound bool
 }
-
-// IsInbound checks whether event is Inbound.
-func (e *Event) IsInbound() bool { return e.inbound }
 
 // Inbound extract Inbound.
 func (e *Event) Inbound() (Inbound, error) {
-	if !e.inbound {
-		return Inbound{}, errors.Errorf("not an inbound (%+v)", e.content)
+	v, ok := e.content.(Inbound)
+	if !ok {
+		return Inbound{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
-	return e.content.(Inbound), nil
+	return v, nil
 }
 
 func (gw *Gateway) PackageID() string {
@@ -107,14 +104,12 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 
 	var (
 		eventType = descriptor.eventType
-		inbound   bool
 		content   any
 	)
 
 	// Parse specific events
 	switch eventType {
 	case Deposit, DepositAndCall:
-		inbound = true
 		content, err = parseInbound(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
@@ -128,9 +123,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		TxHash:     txHash,
 		EventIndex: eventID,
 		EventType:  eventType,
-
-		content: content,
-		inbound: inbound,
+		content:    content,
 	}, nil
 }
 

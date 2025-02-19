@@ -103,8 +103,6 @@ func (ob *Observer) processInboundEvent(
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
-	case !event.IsInbound():
-		ob.Logger().Inbound.Info().Msg("Not an inbound event. Skipping")
 	case event.EventIndex != 0:
 		// Is it possible to have multiple events per tx?
 		// e.g. contract "A" calls Gateway multiple times in a single tx (deposit to multiple accounts)

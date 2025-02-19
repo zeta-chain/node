@@ -53,8 +53,6 @@ func TestParseEvent(t *testing.T) {
 				assert.Equal(t, Deposit, out.EventType)
 				assert.Equal(t, uint64(0), out.EventIndex)
 
-				assert.True(t, out.IsInbound())
-
 				inbound, err := out.Inbound()
 				require.NoError(t, err)
 
@@ -84,8 +82,6 @@ func TestParseEvent(t *testing.T) {
 				assert.Equal(t, txHash, out.TxHash)
 				assert.Equal(t, DepositAndCall, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
-
-				assert.True(t, out.IsInbound())
 
 				inbound, err := out.Inbound()
 				require.NoError(t, err)
@@ -117,8 +113,6 @@ func TestParseEvent(t *testing.T) {
 				assert.Equal(t, txHash, out.TxHash)
 				assert.Equal(t, DepositAndCall, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
-
-				assert.True(t, out.IsInbound())
 
 				inbound, err := out.Inbound()
 				require.NoError(t, err)
