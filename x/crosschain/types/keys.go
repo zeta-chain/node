@@ -15,9 +15,6 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	// StoreKey defines the primary module store key
-	StoreKeyCreatedAtIndex = ModuleName + "-createdat"
-
 	// RouterKey is the message route for slashing
 	RouterKey = ModuleName
 
