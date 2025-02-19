@@ -96,6 +96,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinStdMemoDepositAndCallRevertAndAbortName     = "bitcoin_std_memo_deposit_and_call_revert_and_abort"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
@@ -735,6 +736,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; revert and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestBitcoinStdMemoDepositAndCallRevertAndAbort,
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoInscribedDepositAndCallName,
