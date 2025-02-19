@@ -8,7 +8,7 @@ import (
 
 var (
 	// DefaultInboundFastConfirmationLiquidityMultiplier is the default ZRC20 liquidity cap multiplier for inbound fast confirmation
-	DefaultInboundFastConfirmationLiquidityMultiplier = sdkmath.LegacyMustNewDecFromStr("0.0001")
+	DefaultInboundFastConfirmationLiquidityMultiplier = sdkmath.LegacyMustNewDecFromStr("0.00025")
 
 	// InboundFastConfirmationLiquidityMultiplierMap maps chainID to ZRC20 liquidity cap multiplier for inbound fast confirmation.
 	// Fast inbound confirmation is enabled only for chains explicitly listed in this map.
