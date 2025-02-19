@@ -166,19 +166,19 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		lastScannedDeposited = ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
 	}()
 
-	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	// only do this for ARB, AVAX, and their testnets
+	// skip slow block scanning actions for ARB, AVAX, and their testnets
 	chainID := ob.Chain().ChainId
-	shouldScanTSSRecieve := chainID != chains.ArbitrumMainnet.ChainId &&
+	shouldBlockScan := chainID != chains.ArbitrumMainnet.ChainId &&
 		chainID != chains.ArbitrumSepolia.ChainId &&
 		chainID != chains.AvalancheMainnet.ChainId &&
 		chainID != chains.AvalancheTestnet.ChainId
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if shouldScanTSSRecieve {
+	if shouldBlockScan {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 			var err error
+			// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
 			lastScannedTssRecvd, err = ob.ObserverTSSReceive(ctx, startBlock, toBlock)
 			if err != nil {
 				ob.Logger().Inbound.Error().
@@ -186,12 +186,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 					Msgf("ObserveInbound: error observe TSSReceive")
 			}
 			// task 4: filter the outbounds from TSS address to supplement outbound trackers
+			// task 3 and task 4 both use the block cache so there little speedup running in parallel
 			// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
-			//
-			// this is a slow task and should be skipped for ARB, AVAX, and their testnets
 			ob.FilterTSSOutbound(ctx, startBlock, toBlock)
-		}
-	}()
+		}()
+	}
 
 	// query the gateway logs
 	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
@@ -241,7 +240,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		lastScannedGatewayDepositAndCall,
 	}
 	// only include lastScannedTssRecvd if it was set
-	if shouldScanTSSRecieve {
+	if shouldBlockScan {
 		scannedBlocks = append(scannedBlocks, lastScannedTssRecvd)
 	}
 	// calculate the lowest last scanned block
