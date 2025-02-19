@@ -537,6 +537,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
 			// Keeper initialization
 			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
 			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
@@ -581,10 +582,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 			})
 			ctx = ctx.WithBlockHeight(100)
 
+			// Act
 			// Distribute the rewards and check if the rewards are distributed correctly
 			err = emissions.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
-			require.NoError(t, err)
 
+			// Assert
+			require.NoError(t, err)
 			for i, observer := range observerSet.ObserverList {
 				observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
 				require.True(t, found, "withdrawable emission not found for observer %d", i)

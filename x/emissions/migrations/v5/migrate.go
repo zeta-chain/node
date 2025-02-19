@@ -11,10 +11,8 @@ type EmissionsKeeper interface {
 	GetParams(ctx sdk.Context) (types.Params, bool)
 }
 
-// MigrateStore migrates the store from v3 to v4
-// The v3 params are copied to the v4 params, and the v4 params are set in the store
-// v4 params removes unused parameters from v3; these values are discarded.
-// v4 introduces a new parameter, BlockRewardAmount, which is set to the default value
+// MigrateStore migrates the store from v4 to v5
+// The v5 params include a new parameter, PendingBallotsBufferBlocks, which is set to the default value
 func MigrateStore(
 	ctx sdk.Context,
 	emissionsKeeper EmissionsKeeper,

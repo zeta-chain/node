@@ -110,8 +110,10 @@ func DistributeObserverRewards(
 	// TODO : move the params BallotMaturityBlocks and BufferBlocksUnfinalizedBallots to the observer module
 	// https://github.com/zeta-chain/node/issues/3550
 	var (
-		slashAmount                = params.ObserverSlashAmount
-		maturityBlocks             = params.BallotMaturityBlocks
+		slashAmount = params.ObserverSlashAmount
+		// Maturity blocks is used for distribution and deletion of finalized ballots
+		maturityBlocks = params.BallotMaturityBlocks
+		// The pendingBallotsBufferBlocks is a buffer number of blocks which is provided for pending ballots to allow them to be finalized
 		pendingBallotsBufferBlocks = params.PendingBallotsBufferBlocks
 		maturedBallots             []string
 	)
@@ -147,9 +149,11 @@ func DistributeObserverRewards(
 	keeper.EmitObserverEmissions(ctx, finalDistributionList)
 
 	// Processing Step 3a: Delete all finalized ballots at `maturityBlocksForFinalizedBallots` height
+	// This step optionally deletes the `BallotListForHeight` if all ballots are finalized and deleted
 	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, maturityBlocks)
 
-	// Processing Step 3b: Delete all ballots and the BallotList at `heightmaturityHeightIncludingBuffer` height
+	// Processing Step 3b: Delete all ballots at the buffered maturity height.
+	// This step deletes all remaining ballots and the `BallotListForHeight`.
 	maturityHeightIncludingBuffer := maturityBlocks + pendingBallotsBufferBlocks
 	emissionsKeeper.GetObserverKeeper().ClearAllMaturedBallotsAndBallotList(ctx, maturityHeightIncludingBuffer)
 	return nil

@@ -117,6 +117,12 @@ func TestValidate(t *testing.T) {
 		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("-1.30")
 		require.ErrorContains(t, params.Validate(), "block reward amount must not be negative")
 	})
+
+	t.Run("should error if pending ballots buffer blocks is negative", func(t *testing.T) {
+		params := NewParams()
+		params.PendingBallotsBufferBlocks = -100
+		require.Error(t, params.Validate())
+	})
 }
 func TestParamsString(t *testing.T) {
 	params := DefaultParams()

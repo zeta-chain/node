@@ -94,8 +94,8 @@ func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocksPara
 
 	ballotsDeleted := 0
 	for _, ballotIndex := range maturedBallots.BallotsIndexList {
-		ballot, found := k.GetBallot(ctx, ballotIndex)
-		if !found {
+		ballot, foundBallot := k.GetBallot(ctx, ballotIndex)
+		if !foundBallot {
 			continue
 		}
 		if !ballot.IsFinalized() {
@@ -106,8 +106,9 @@ func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocksPara
 		ballotsDeleted++
 	}
 
-	// If all ballots are finazed and deleted then delete the list of ballots.
+	// If all ballots are finalized and deleted, then delete the list of ballots.
 	// This would avoid a second iteration at the buffered maturity height
+	// If there are a few ballots remaining we would delete the list at the buffered maturity height
 	if ballotsDeleted == len(maturedBallots.BallotsIndexList) {
 		k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
 	}
@@ -128,8 +129,8 @@ func (k Keeper) ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlo
 	}
 	// Delete all the matured ballots and emit an event for each ballot deleted
 	for _, ballotIndex := range maturedBallots.BallotsIndexList {
-		ballot, found := k.GetBallot(ctx, ballotIndex)
-		if !found {
+		ballot, foundBallot := k.GetBallot(ctx, ballotIndex)
+		if !foundBallot {
 			continue
 		}
 		k.DeleteBallot(ctx, ballotIndex)

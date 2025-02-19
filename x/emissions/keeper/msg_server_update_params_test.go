@@ -40,11 +40,24 @@ func TestMsgServer_UpdateParams(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("fail for invalid params", func(t *testing.T) {
+	t.Run("fail for invalid params ,validatorEmissionPercentage is invalid", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		params := types.DefaultParams()
 		params.ValidatorEmissionPercentage = "-1.5"
+		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
+			Authority: k.GetAuthority(),
+			Params:    params,
+		})
+
+		require.ErrorIs(t, err, types.ErrUnableToSetParams)
+	})
+
+	t.Run("fail for invalid params ,pending buffer blocks is invalid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		params := types.DefaultParams()
+		params.PendingBallotsBufferBlocks = -1
 		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 			Authority: k.GetAuthority(),
 			Params:    params,
