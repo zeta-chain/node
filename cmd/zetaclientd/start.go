@@ -133,7 +133,7 @@ func Start(_ *cobra.Command, _ []string) error {
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
 	// This is the high level object used for CCTX interactions
 	// It also handles background configuration updates from zetacore
-	taskScheduler := scheduler.New(logger.Std)
+	taskScheduler := scheduler.New(logger.Std, 0)
 	maestroDeps := &orchestrator.Dependencies{
 		Zetacore:  zetacoreClient,
 		TSS:       tss,

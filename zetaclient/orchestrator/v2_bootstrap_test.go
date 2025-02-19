@@ -75,6 +75,12 @@ func TestBootstrap(t *testing.T) {
 			cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 				Endpoint: maticServer.Endpoint,
 			}
+
+			// disable other chains
+			cfg.BTCChainConfigs = nil
+			cfg.SolanaConfig.Endpoint = ""
+			cfg.SuiConfig.Endpoint = ""
+			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
