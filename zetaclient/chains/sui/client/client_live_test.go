@@ -16,8 +16,8 @@ const (
 
 func TestClientLive(t *testing.T) {
 	if !common.LiveTestEnabled() {
-		t.Skip("skipping live test")
-		return
+		// t.Skip("skipping live test")
+		// return
 	}
 
 	t.Run("HealthCheck", func(t *testing.T) {
@@ -92,6 +92,29 @@ func TestClientLive(t *testing.T) {
 		for i, a := range res0 {
 			eventsEqual(t, a, resCombined[i])
 		}
+	})
+
+	t.Run("GetOwnedObjectID", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RpcMainnet)
+
+		// Given admin wallet us Cetus DEX team
+		// (yeah, it took some time to find it)
+		const ownerAddress = "0xdbfd0b17fa804c98f51d552b050fb7f850b85db96fa2a0d79e50119525814a47"
+
+		// Given AdminCap struct type of Cetus DEX
+		// (they use it for upgrades and stuff)
+		const structType = "0x1eabed72c53feb3805120a081dc15963c204dc8d091542592abaf7a35689b2fb::config::AdminCap"
+
+		// ACT
+		// Get owned object id as we would fetch Gateway's WithdrawCap
+		// that should belong to TSS
+		objectID, err := ts.GetOwnedObjectID(ts.ctx, ownerAddress, structType)
+
+		// ASSERT
+		// https://suiscan.xyz/mainnet/object/0x89c1a321291d15ddae5a086c9abc533dff697fde3d89e0ca836c41af73e36a75
+		require.NoError(t, err)
+		require.Equal(t, "0x89c1a321291d15ddae5a086c9abc533dff697fde3d89e0ca836c41af73e36a75", objectID)
 	})
 }
 
