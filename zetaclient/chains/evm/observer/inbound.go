@@ -146,7 +146,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
 	// only do this for ARB, AVAX, and their testnets
-        //
+	//
 	// initialize lastScannedTssRecvd to a known "unset" value
 	var lastScannedTssRecvd uint64 = 0 // Assuming 0 is an appropriate "unset" value
 	chainID := ob.Chain().ChainId
