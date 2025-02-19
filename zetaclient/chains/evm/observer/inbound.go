@@ -145,13 +145,13 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	lastScannedDeposited := ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	// Only do this for ARB, AVAX, and their testnets
-	
-	// Initialize lastScannedTssRecvd to a known "unset" value
+	// only do this for ARB, AVAX, and their testnets
+        //
+	// initialize lastScannedTssRecvd to a known "unset" value
 	var lastScannedTssRecvd uint64 = 0 // Assuming 0 is an appropriate "unset" value
 	chainID := ob.Chain().ChainId
-        if chainID != 421614 && chainID != 42161 && chainID != 43113 && chainID != 43114 {
-                var err error
+	if chainID != 421614 && chainID != 42161 && chainID != 43113 && chainID != 43114 {
+		var err error
 		lastScannedTssRecvd, err = ob.ObserverTSSReceive(ctx, startBlock, toBlock)
 		if err != nil {
 			return errors.Wrap(err, "unable to observe TSSReceive")
@@ -194,13 +194,13 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		lastScannedGatewayCall,
 		lastScannedGatewayDepositAndCall,
 	}
-	// Only include lastScannedTssRecvd if it was set (non-zero)
+	// only include lastScannedTssRecvd if it was set (non-zero)
 	if lastScannedTssRecvd != 0 {
 		scannedBlocks = append(scannedBlocks, lastScannedTssRecvd)
 	}
-	// Calculate the lowest last scanned block
+	// calculate the lowest last scanned block
 	lowestLastScannedBlock := slices.Min(scannedBlocks)
-	
+
 	// update last scanned block height for all 3 events (ZetaSent, Deposited, TssRecvd), ignore db error
 	if lowestLastScannedBlock > lastScanned {
 		if err = ob.SaveLastBlockScanned(lowestLastScannedBlock); err != nil {
