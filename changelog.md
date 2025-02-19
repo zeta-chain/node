@@ -15,6 +15,7 @@
 * [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
 * [3541](https://github.com/zeta-chain/node/pull/3541) - implement `MsgUpdateZRC20Name` to update the name or symbol of a ZRC20 token
 * [3520](https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
+* [3551](https://github.com/zeta-chain/node/pull/3551) - support for fast inbound confirmation
 
 ### Refactor
 

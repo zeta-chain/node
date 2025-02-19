@@ -114,7 +114,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 	// get the block range to scan
 	// Note: using separate scan range for each event incur more complexity (metrics, db, etc) and not worth it
-	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	startBlock, endBlock := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
 	if startBlock >= endBlock {
 		return nil
 	}
