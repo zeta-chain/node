@@ -188,13 +188,10 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 					Msgf("ObserveInbound: error observe TSSReceive")
 			}
 		}
-	}()
-
-	// task 4: filter the outbounds from TSS address to supplement outbound trackers
-	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		// task 4: filter the outbounds from TSS address to supplement outbound trackers
+		// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
+		//
+		// this is a slow task and should be skipped for ARB, AVAX, and their testnets
 		ob.FilterTSSOutbound(ctx, startBlock, toBlock)
 	}()
 
