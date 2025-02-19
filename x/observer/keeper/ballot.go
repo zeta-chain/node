@@ -82,13 +82,45 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	k.SetBallotList(ctx, &list)
 }
 
-// ClearMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
-// It also emits an event for each ballot deleted.
-func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocksParam int64) {
+// ClearFinalizedMaturedBallots deletes all matured and finalized ballots for a given height.
+// It emits an event for each ballot deleted.
+// If all ballots are finalized and deleted then the ballot list is also deleted.
+func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocksParam int64) {
+	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
+	maturedBallots, found := k.GetBallotListForHeight(ctx, maturedBallotsHeight)
+	if !found {
+		return
+	}
+
+	ballotsDeleted := 0
+	for _, ballotIndex := range maturedBallots.BallotsIndexList {
+		ballot, found := k.GetBallot(ctx, ballotIndex)
+		if !found {
+			continue
+		}
+		if !ballot.IsFinalized() {
+			continue
+		}
+		k.DeleteBallot(ctx, ballotIndex)
+		logBallotDeletion(ctx, ballot)
+		ballotsDeleted++
+	}
+
+	// If all ballots are finazed and deleted then delete the list of ballots.
+	// This would avoid a second iteration at the buffered maturity height
+	if ballotsDeleted == len(maturedBallots.BallotsIndexList) {
+		k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
+	}
+}
+
+// ClearAllMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
+// It emits an event for each ballot deleted.
+// If found the ballot list for height is always deleted
+func (k Keeper) ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocksParam int64) {
 	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
 
 	// Fetch all the matured ballots, return if no matured ballots are found
-	// For the current implementation, this should never happen as ClearMaturedBallotsAndBallotList is only called after the Distribution of the rewards,
+	// For the current implementation, this should never happen as ClearAllMaturedBallotsAndBallotList is only called after the Distribution of the rewards,
 	//	which means that there are matured ballots to be deleted
 	maturedBallots, found := k.GetBallotListForHeight(ctx, maturedBallotsHeight)
 	if !found {

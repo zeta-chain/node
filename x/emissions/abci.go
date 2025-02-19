@@ -107,10 +107,13 @@ func DistributeObserverRewards(
 	emissionsKeeper keeper.Keeper,
 	params types.Params,
 ) error {
+	// TODO : move the params BallotMaturityBlocks and BufferBlocksUnfinalizedBallots to the observer module
+	// https://github.com/zeta-chain/node/issues/3550
 	var (
-		slashAmount    = params.ObserverSlashAmount
-		maturityBlocks = params.BallotMaturityBlocks
-		maturedBallots []string
+		slashAmount                = params.ObserverSlashAmount
+		maturityBlocks             = params.BallotMaturityBlocks
+		pendingBallotsBufferBlocks = params.PendingBallotsBufferBlocks
+		maturedBallots             []string
 	)
 
 	err := emissionsKeeper.GetBankKeeper().
@@ -143,8 +146,12 @@ func DistributeObserverRewards(
 	// Processing Step 2: Emit the observer emissions
 	keeper.EmitObserverEmissions(ctx, finalDistributionList)
 
-	// Processing Step 3: Delete all matured ballots and the ballot list
-	emissionsKeeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, maturityBlocks)
+	// Processing Step 3a: Delete all finalized ballots at `maturityBlocksForFinalizedBallots` height
+	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, maturityBlocks)
+
+	// Processing Step 3b: Delete all ballots and the BallotList at `heightmaturityHeightIncludingBuffer` height
+	maturityHeightIncludingBuffer := maturityBlocks + pendingBallotsBufferBlocks
+	emissionsKeeper.GetObserverKeeper().ClearAllMaturedBallotsAndBallotList(ctx, maturityHeightIncludingBuffer)
 	return nil
 }
 

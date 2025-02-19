@@ -52,4 +52,7 @@ var (
 	// BallotMaturityBlocks is amount of blocks needed for ballot to mature
 	// by default is set to 100
 	BallotMaturityBlocks = 100
+	// PendingBallotsBufferBlocks is a buffer number of blocks(in addition to BallotMaturityBlocks)
+	// that we use only for pending ballots before deleting them
+	PendingBallotsBufferBlocks = 10000
 )

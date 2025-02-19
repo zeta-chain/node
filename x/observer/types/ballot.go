@@ -79,6 +79,10 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 	return m, false
 }
 
+func (m Ballot) IsFinalized() bool {
+	return m.BallotStatus != BallotStatus_BallotInProgress
+}
+
 func CreateVotes(listSize int) []VoteType {
 	voterList := make([]VoteType, listSize)
 	for i := range voterList {
