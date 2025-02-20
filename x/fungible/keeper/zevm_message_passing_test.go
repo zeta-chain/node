@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/node/testutil/contracts/dapp"
-	"github.com/zeta-chain/node/testutil/contracts/dappreverter"
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
 	"math/big"
 	"testing"
 

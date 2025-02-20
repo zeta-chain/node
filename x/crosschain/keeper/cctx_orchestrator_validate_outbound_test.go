@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/zeta-chain/node/testutil/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
 	"math/big"
 	"testing"
 

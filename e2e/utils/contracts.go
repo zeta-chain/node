@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	testcontract "github.com/zeta-chain/node/testutil/contracts/example"
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 )
 
 const (

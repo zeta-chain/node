@@ -3,11 +3,10 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zeta-chain/node/testutil/contracts/dapp"
-	"github.com/zeta-chain/node/testutil/contracts/dappreverter"
-	"github.com/zeta-chain/node/testutil/contracts/example"
-	"github.com/zeta-chain/node/testutil/contracts/reverter"
-
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
+	"github.com/zeta-chain/node/e2e/contracts/example"
+	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"math/big"
 	"testing"
 
