@@ -89,8 +89,8 @@ type OutboundInstruction interface {
 	// TokenAmount returns the amount of the instruction
 	TokenAmount() uint64
 
-	// Failed returns true if outbound failed
-	Failed() bool
+	// InstructionDiscriminator returns the discriminator of the instruction
+	InstructionDiscriminator() [8]byte
 }
 
 var _ OutboundInstruction = (*IncrementNonceInstructionParams)(nil)
@@ -116,9 +116,9 @@ type IncrementNonceInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *IncrementNonceInstructionParams) Failed() bool {
-	return true
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *IncrementNonceInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -183,9 +183,9 @@ type WithdrawInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *WithdrawInstructionParams) Failed() bool {
-	return false
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WithdrawInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -254,9 +254,9 @@ type ExecuteInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *ExecuteInstructionParams) Failed() bool {
-	return false
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -321,9 +321,9 @@ type WithdrawSPLInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *WithdrawSPLInstructionParams) Failed() bool {
-	return false
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WithdrawSPLInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -394,9 +394,9 @@ type ExecuteSPLInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *ExecuteSPLInstructionParams) Failed() bool {
-	return false
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteSPLInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -467,9 +467,9 @@ type WhitelistInstructionParams struct {
 	Nonce uint64
 }
 
-// Failed returns true if outbound failed
-func (inst *WhitelistInstructionParams) Failed() bool {
-	return false
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WhitelistInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained

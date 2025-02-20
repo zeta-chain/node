@@ -109,7 +109,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
-	if inst.Failed() {
+	if inst.InstructionDiscriminator() == contracts.DiscriminatorIncrementNonce {
 		outboundStatus = chains.ReceiveStatus_failed
 	}
 
