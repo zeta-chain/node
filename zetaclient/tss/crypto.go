@@ -20,6 +20,7 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 
@@ -129,6 +130,11 @@ func (k PubKey) BTCPayToAddrScript(chainID int64) ([]byte, error) {
 // AddressEVM returns the ethereum address of the public key.
 func (k PubKey) AddressEVM() eth.Address {
 	return crypto.PubkeyToAddress(*k.ecdsaPubKey)
+}
+
+// AddressSui returns Sui address of the public key.
+func (k PubKey) AddressSui() string {
+	return sui.AddressFromPubKeyECDSA(k.ecdsaPubKey)
 }
 
 // VerifySignature checks that keysign.Signature is valid and origins from expected TSS public key.

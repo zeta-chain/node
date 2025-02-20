@@ -1,8 +1,10 @@
 package sui
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -21,6 +23,8 @@ type Gateway struct {
 
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
+
+	mu sync.RWMutex
 }
 
 // SUI is the coin type for SUI, native gas token
@@ -40,12 +44,12 @@ var ErrParseEvent = errors.New("event parse error")
 // NewGatewayFromPairID creates a new Sui Gateway
 // from pair of `$packageID,$gatewayObjectID`
 func NewGatewayFromPairID(pair string) (*Gateway, error) {
-	parts := strings.Split(pair, ",")
-	if len(parts) != 2 {
-		return nil, errors.Errorf("invalid pair %q", pair)
+	packageID, gatewayObjectID, err := parsePair(pair)
+	if err != nil {
+		return nil, err
 	}
 
-	return NewGateway(parts[0], parts[1]), nil
+	return NewGateway(packageID, gatewayObjectID), nil
 }
 
 // NewGateway creates a new Sui Gateway.
@@ -74,17 +78,42 @@ func (e *Event) Inbound() (Inbound, error) {
 
 // PackageID returns object id of Gateway code
 func (gw *Gateway) PackageID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
 	return gw.packageID
 }
 
 // ObjectID returns Gateway's struct object id
 func (gw *Gateway) ObjectID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
 	return gw.objectID
 }
 
 // Module returns Gateway's module name
 func (gw *Gateway) Module() string {
 	return moduleName
+}
+
+// WithdrawCapType returns struct type of the WithdrawCap
+func (gw *Gateway) WithdrawCapType() string {
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), moduleName)
+}
+
+// UpdateIDs updates packageID and objectID.
+func (gw *Gateway) UpdateIDs(pair string) error {
+	packageID, gatewayObjectID, err := parsePair(pair)
+	if err != nil {
+		return err
+	}
+
+	gw.mu.Lock()
+	defer gw.mu.Unlock()
+
+	gw.packageID = packageID
+	gw.objectID = gatewayObjectID
+
+	return nil
 }
 
 // ParseEvent parses Event.
@@ -196,4 +225,13 @@ func convertPayload(data []any) ([]byte, error) {
 	}
 
 	return payload, nil
+}
+
+func parsePair(pair string) (string, string, error) {
+	parts := strings.Split(pair, ",")
+	if len(parts) != 2 {
+		return "", "", errors.Errorf("invalid pair %q", pair)
+	}
+
+	return parts[0], parts[1], nil
 }
