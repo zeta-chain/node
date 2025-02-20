@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
@@ -19,7 +20,6 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
-	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/chains"

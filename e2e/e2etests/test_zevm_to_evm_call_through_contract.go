@@ -1,12 +1,12 @@
 package e2etests
 
 import (
+	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"

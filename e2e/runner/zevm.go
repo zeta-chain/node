@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"math/big"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
-	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
