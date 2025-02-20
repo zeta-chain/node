@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
+const flagSecp256k1 = 0x01
+
 // Digest calculates tx digest (hash) for further signing by TSS.
 func Digest(tx models.TxnMetaData) ([32]byte, error) {
 	txBytes, err := base64.StdEncoding.DecodeString(tx.TxBytes)
@@ -47,8 +49,6 @@ func messageWithIntentPrefix(message []byte) []byte {
 // https://docs.sui.io/concepts/cryptography/transaction-auth/keys-addresses
 // https://docs.sui.io/concepts/cryptography/transaction-auth/signatures
 func AddressFromPubKeyECDSA(pk *ecdsa.PublicKey) string {
-	const flagSecp256k1 = 0x01
-
 	pubBytes := elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
 
 	raw := make([]byte, 1+len(pubBytes))
@@ -58,4 +58,24 @@ func AddressFromPubKeyECDSA(pk *ecdsa.PublicKey) string {
 	addrBytes := blake2b.Sum256(raw)
 
 	return "0x" + hex.EncodeToString(addrBytes[:])
+}
+
+// SerializeSignatureECDSA serializes secp256k1 sig (R|S|V) and a publicKey into base64 string
+// https://docs.sui.io/concepts/cryptography/transaction-auth/signatures
+func SerializeSignatureECDSA(signature [65]byte, publicKey []byte) (string, error) {
+	// we don't need the last V byte for recovery
+	const sigLen = 64
+
+	// compressed public key
+	const pubKeyLen = 33
+	if len(publicKey) != pubKeyLen {
+		return "", errors.Errorf("invalid publicKey length (got %d, want %d)", len(publicKey), pubKeyLen)
+	}
+
+	serialized := make([]byte, 1+sigLen+pubKeyLen)
+	serialized[0] = flagSecp256k1
+	copy(serialized[1:], signature[:sigLen])
+	copy(serialized[1+sigLen:], publicKey)
+
+	return base64.StdEncoding.EncodeToString(serialized), nil
 }

@@ -76,4 +76,20 @@ func TestCrypto(t *testing.T) {
 			assert.Equal(t, tt.address, addr)
 		}
 	})
+
+	t.Run("SerializeSignatureECDSA", func(t *testing.T) {
+		// ARRANGE
+		signature := [65]byte{0, 1, 3}
+		pubKey := [33]byte{4, 5, 6}
+
+		// ACT
+		res, err := SerializeSignatureECDSA(signature, pubKey[:])
+
+		// ASSERT
+		require.NoError(t, err)
+
+		resBin, err := base64.StdEncoding.DecodeString(res)
+		require.NoError(t, err)
+		require.Equal(t, (1 + 64 + 33), len(resBin))
+	})
 }
