@@ -3,30 +3,27 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zeta-chain/node/e2e/contracts/dapp"
-	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
-	"github.com/zeta-chain/node/e2e/contracts/example"
-	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	"github.com/zeta-chain/protocol-contracts/pkg/erc1967proxy.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
+	"github.com/zeta-chain/node/e2e/contracts/example"
+	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -593,9 +590,9 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
-		example, err := k.DeployContract(ctx, example.ExampleMetaData)
+		exampleContract, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, exampleContract)
 
 		res, err := k.CallDepositAndCall(
 			ctx,
@@ -605,13 +602,13 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 				ChainID: big.NewInt(chainID),
 			},
 			zrc20,
-			example,
+			exampleContract,
 			big.NewInt(42),
 			[]byte(""),
 		)
 		require.NoError(t, err)
 		require.False(t, types.IsContractReverted(res, err))
-		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, exampleContract)
 		require.NoError(t, err)
 		require.Equal(t, int64(42), balance.Int64())
 
@@ -622,7 +619,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 			ctx,
 			*exampleABI,
 			types.ModuleAddressEVM,
-			example,
+			exampleContract,
 			big.NewInt(0),
 			nil,
 			false,
