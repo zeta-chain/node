@@ -215,7 +215,7 @@ func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, err
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
-	signer := suisigner.New(oc.newBaseSigner(chain))
+	signer := suisigner.New(oc.newBaseSigner(chain), suiClient, gateway)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
