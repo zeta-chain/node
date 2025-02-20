@@ -287,7 +287,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
-		require.True(deployerRunner, deployerRunner.VerifySolanaContractsUpgrade())
+		require.True(deployerRunner, deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()))
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)

@@ -1,6 +1,9 @@
 package runner
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -149,33 +152,47 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.SPLAddr = mintAccount.PublicKey()
 }
 
+func getAnchorDiscriminator(methodName string) []byte {
+	// In Anchor, the namespace is "global" + method name
+	namespace := fmt.Sprintf("global:%s", methodName)
+
+	// Calculate SHA256
+	hash := sha256.Sum256([]byte(namespace))
+
+	// Return first 8 bytes
+	return hash[:8]
+}
+
 // VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
-func (r *E2ERunner) VerifySolanaContractsUpgrade() bool {
-	seed := []byte(solanacontracts.PDASeed)
-	pdaComputed, _, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
-	if err != nil {
-		r.Logger.Error("failed to compute PDA address: %v", err)
-		return false
-	}
+func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool {
+	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
+	require.NoError(r, err)
 
-	pdaUpgraded := solanacontracts.PdaInfoUpgraded{}
+	// Calculate the instruction discriminator for "upgraded"
+	// Anchor uses the first 8 bytes of the sha256 hash of "global:upgraded"
+	// Manually generating the discriminator there is just one function
+	discriminator := getAnchorDiscriminator("upgraded")
 
-	// retrieve the PDA account info
-	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
-		Commitment: rpc.CommitmentConfirmed,
-	})
-	if err != nil {
-		r.Logger.Error("failed to get PDA account info: %v", err)
-		return false
-	}
+	// Build instruction
+	data := append(discriminator, []byte{}...)
 
-	err = borsh.Deserialize(&pdaUpgraded, pdaInfo.Bytes())
-	if err != nil {
-		r.Logger.Error("failed to deserialize PDA info: %v", err)
-		return false
-	}
+	var instConnected solana.GenericInstruction
+	accountSliceConnected := []*solana.AccountMeta{}
+	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	instConnected.ProgID = r.GatewayProgram
+	instConnected.AccountValues = accountSliceConnected
+	instConnected.DataBytes = data
 
-	return pdaUpgraded.Upgraded
+	// create and sign the transaction
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{&instConnected}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("upgrade  logs: %v", out.Meta.LogMessages)
+
+	decoded, err := base64.StdEncoding.DecodeString(out.Meta.ReturnData.Data.String())
+	require.NoError(r, err)
+	return decoded[0] == 1
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
