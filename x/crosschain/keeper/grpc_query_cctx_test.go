@@ -351,6 +351,13 @@ func TestKeeper_CctxAll(t *testing.T) {
 		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{})
 		require.NoError(t, err)
 		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
+
+		// also assert unordered query return same number of results
+		resUnordered, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Unordered: true,
+		})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, len(resUnordered.CrossChainTx))
 	})
 
 	t.Run("basic ascending ordering", func(t *testing.T) {
@@ -368,5 +375,12 @@ func TestKeeper_CctxAll(t *testing.T) {
 		require.NoError(t, err)
 		slices.Reverse(createdCctx)
 		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
+
+		// also assert unordered query return same number of results
+		resUnordered, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Unordered: true,
+		})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, len(resUnordered.CrossChainTx))
 	})
 }
