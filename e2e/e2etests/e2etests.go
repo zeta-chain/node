@@ -266,7 +266,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawName,
@@ -331,7 +331,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestETHWithdrawRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertWithWithdrawName,
@@ -395,7 +395,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit ERC20 into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestERC20DepositRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawName,
@@ -452,7 +452,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestERC20WithdrawRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMArbitraryCallName,
@@ -471,14 +471,14 @@ var AllE2ETests = []runner.E2ETest{
 		"zevm -> evm call that reverts and call onRevert",
 		[]runner.ArgDefinition{},
 		TestZEVMToEVMCallRevert,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertAndAbortName,
 		"zevm -> evm call that reverts and abort with onAbort",
 		[]runner.ArgDefinition{},
 		TestZEVMToEVMCallRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallThroughContractName,
@@ -497,7 +497,7 @@ var AllE2ETests = []runner.E2ETest{
 		"evm -> zevm call fails and abort with onAbort",
 		[]runner.ArgDefinition{},
 		TestEVMToZEVMCallAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallSwapName,
@@ -743,7 +743,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM and call a contract with standard memo; revert and abort with onAbort",
 		[]runner.ArgDefinition{},
 		TestBitcoinStdMemoDepositAndCallRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoInscribedDepositAndCallName,
@@ -1008,7 +1008,7 @@ var AllE2ETests = []runner.E2ETest{
 		"update ZRC20 name and symbol",
 		[]runner.ArgDefinition{},
 		TestUpdateZRC20Name,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaclientRestartHeightName,
@@ -1027,7 +1027,7 @@ var AllE2ETests = []runner.E2ETest{
 		"update operational chain params",
 		[]runner.ArgDefinition{},
 		TestUpdateOperationalChainParams,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Special tests
