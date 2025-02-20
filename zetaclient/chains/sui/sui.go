@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/scheduler"
 	"github.com/zeta-chain/node/pkg/ticker"
+	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
@@ -105,7 +107,64 @@ func (s *Sui) group() scheduler.Group {
 }
 
 // scheduleCCTX schedules outbound cross-chain transactions.
-func (s *Sui) scheduleCCTX(_ context.Context) error {
-	// todo
+func (s *Sui) scheduleCCTX(ctx context.Context) error {
+	if err := s.updateChainParams(ctx); err != nil {
+		return errors.Wrap(err, "unable to update chain params")
+	}
+
+	zetaBlock, delay, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get zeta block from context")
+	}
+
+	time.Sleep(delay)
+
+	// #nosec G115 always in range
+	zetaHeight := uint64(zetaBlock.Block.Height)
+	chain := s.observer.Chain()
+
+	cctxList, _, err := s.observer.ZetacoreClient().ListPendingCCTX(ctx, chain)
+	if err != nil {
+		return errors.Wrap(err, "unable to list pending cctx")
+	}
+
+	for i := range cctxList {
+		cctx := cctxList[i]
+
+		if err := s.signer.ProcessCCTX(ctx, cctx, zetaHeight); err != nil {
+			outboundID := base.OutboundIDFromCCTX(cctx)
+			s.outboundLogger(outboundID).Error().Err(err).Msg("Schedule CCTX failed")
+		}
+	}
+
 	return nil
+}
+
+func (s *Sui) updateChainParams(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	chain, err := app.GetChain(s.observer.Chain().ChainId)
+	if err != nil {
+		return err
+	}
+
+	params := chain.Params()
+
+	s.observer.SetChainParams(*params)
+
+	// note that address should be in format of `$packageID,$gatewayObjectID`
+	if err := s.observer.Gateway().UpdateIDs(params.GatewayAddress); err != nil {
+		return errors.Wrap(err, "unable to update gateway ids")
+	}
+
+	return nil
+}
+
+func (s *Sui) outboundLogger(id string) *zerolog.Logger {
+	l := s.observer.Logger().Outbound.With().Str("outbound.id", id).Logger()
+
+	return &l
 }

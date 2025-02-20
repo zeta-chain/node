@@ -44,6 +44,9 @@ func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observe
 	}
 }
 
+// Gateway returns Sui gateway.
+func (ob *Observer) Gateway() *sui.Gateway { return ob.gateway }
+
 // CheckRPCStatus checks the RPC status of the chain.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	blockTime, err := ob.client.HealthCheck(ctx)
