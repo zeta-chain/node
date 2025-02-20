@@ -816,3 +816,54 @@ export declare class MsgUpdateOperationalFlagsResponse extends Message<MsgUpdate
   static equals(a: MsgUpdateOperationalFlagsResponse | PlainMessage<MsgUpdateOperationalFlagsResponse> | undefined, b: MsgUpdateOperationalFlagsResponse | PlainMessage<MsgUpdateOperationalFlagsResponse> | undefined): boolean;
 }
 
+/**
+ * MsgDisableFastConfirmation is used to disable fast confirmation for given
+ * chain ID.
+ *
+ * @generated from message zetachain.zetacore.observer.MsgDisableFastConfirmation
+ */
+export declare class MsgDisableFastConfirmation extends Message<MsgDisableFastConfirmation> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<MsgDisableFastConfirmation>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableFastConfirmation";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableFastConfirmation;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableFastConfirmation;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableFastConfirmation;
+
+  static equals(a: MsgDisableFastConfirmation | PlainMessage<MsgDisableFastConfirmation> | undefined, b: MsgDisableFastConfirmation | PlainMessage<MsgDisableFastConfirmation> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgDisableFastConfirmationResponse
+ */
+export declare class MsgDisableFastConfirmationResponse extends Message<MsgDisableFastConfirmationResponse> {
+  constructor(data?: PartialMessage<MsgDisableFastConfirmationResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgDisableFastConfirmationResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDisableFastConfirmationResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDisableFastConfirmationResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDisableFastConfirmationResponse;
+
+  static equals(a: MsgDisableFastConfirmationResponse | PlainMessage<MsgDisableFastConfirmationResponse> | undefined, b: MsgDisableFastConfirmationResponse | PlainMessage<MsgDisableFastConfirmationResponse> | undefined): boolean;
+}
+

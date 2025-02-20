@@ -59956,6 +59956,8 @@ definitions:
     type: object
   observerMsgDisableCCTXResponse:
     type: object
+  observerMsgDisableFastConfirmationResponse:
+    type: object
   observerMsgEnableCCTXResponse:
     type: object
   observerMsgRemoveChainParamsResponse:
