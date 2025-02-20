@@ -217,6 +217,7 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	// zetacore will create a revert outbound that points to the custom revert address.
 	revertOptions := crosschaintypes.RevertOptions{
 		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
+		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
 	}
 
 	// check if the memo is a cross-chain call, or simple token deposit
