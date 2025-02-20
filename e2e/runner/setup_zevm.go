@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
-	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"math/big"
 	"time"
 
@@ -17,6 +15,8 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/txserver"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
