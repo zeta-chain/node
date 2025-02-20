@@ -1,6 +1,15 @@
 # CHANGELOG
 
+## v28.0.0
+
+v28 is based on the release/v27 branch rather than develop
+
+### Fixes
+* [3563](https://github.com/zeta-chain/node/pull/3563) - upgrade cosmos-sdk to v0.50.12 to resolve GHSA-x5vx-95h7-rv4p
+
 ## v27.0.5
+
+### Fixes
 * [3554](https://github.com/zeta-chain/node/pull/3554) - disable observation of direct to TSS Address deposits on Arbitrum and Avalanch networks
 
 ## v27.0.4
