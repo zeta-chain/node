@@ -83,6 +83,11 @@ const (
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
+	 Sui tests
+	*/
+	TestSuiDepositName = "sui_deposit"
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -661,6 +666,17 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw TON from ZEVM for several recipients simultaneously",
 		[]runner.ArgDefinition{},
 		TestTONWithdrawConcurrent,
+	),
+	/*
+	 Sui tests
+	*/
+	runner.NewE2ETest(
+		TestSuiDepositName,
+		"deposit SUI into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiDeposit,
 	),
 	/*
 	 Bitcoin tests
