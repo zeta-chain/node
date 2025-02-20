@@ -498,6 +498,17 @@ func (zts ZetaTxServer) DeployZRC20s(
 		),
 		fungibletypes.NewMsgDeployFungibleCoinZRC20(
 			deployerAddr,
+			"",
+			chains.SuiLocalnet.ChainId,
+			9,
+			"SUI",
+			"SUI",
+			coin.CoinType_Gas,
+			100000,
+			nil,
+		),
+		fungibletypes.NewMsgDeployFungibleCoinZRC20(
+			deployerAddr,
 			zrc20Deployment.ERC20Addr.Hex(),
 			chains.GoerliLocalnet.ChainId,
 			6,

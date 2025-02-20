@@ -12,4 +12,6 @@ func TestSuiDeposit(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 	_ = amount
+
+	r.SUIDeposit(r.EVMAddress())
 }

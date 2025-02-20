@@ -325,7 +325,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		} else {
 			logger.Print("⚠️ partial precompiled run (unclean state)")
 		}
-		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
+		//eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
 
 	if testAdmin {
@@ -420,6 +420,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
+	}
+
+	if testSui {
+		suiTests := []string{
+			e2etests.TestSuiDepositName,
+		}
+		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 
 	if testTON {

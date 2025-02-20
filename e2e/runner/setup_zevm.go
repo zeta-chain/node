@@ -98,6 +98,7 @@ func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
+	r.SetupSUIZRC20()
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
@@ -168,6 +169,27 @@ func (r *E2ERunner) SetupTONZRC20() {
 	require.NoError(r, err)
 
 	r.TONZRC20 = TONZRC20
+}
+
+// SetupSUIZRC20 sets up the SUI ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupSUIZRC20() {
+	chainID := chains.SuiLocalnet.ChainId
+
+	// noop
+	if r.skipChainOperations(chainID) {
+		return
+	}
+
+	SUIZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainID))
+	require.NoError(r, err)
+
+	r.SUIZRC20Addr = SUIZRC20Addr
+	r.Logger.Info("SUI ZRC20 address: %s", SUIZRC20Addr.Hex())
+
+	SUIZRC20, err := zrc20.NewZRC20(SUIZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	r.SUIZRC20 = SUIZRC20
 }
 
 // EnableHeaderVerification enables the header verification for the given chain IDs
