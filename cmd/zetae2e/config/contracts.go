@@ -229,7 +229,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		if err != nil {
 			return fmt.Errorf("invalid SUIZRC20Addr: %w", err)
 		}
-		r.TONZRC20, err = zrc20.NewZRC20(r.SUIZRC20Addr, r.ZEVMClient)
+		r.SUIZRC20, err = zrc20.NewZRC20(r.SUIZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
