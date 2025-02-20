@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
+	testcontract "github.com/zeta-chain/node/testutil/contracts/example"
 )
 
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {

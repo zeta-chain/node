@@ -3,20 +3,20 @@ package keeper_test
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/ethereum/go-ethereum/core/vm"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/testutil/contracts/dapp"
 	"math/big"
 	"testing"
 
 	cosmoserror "cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -408,7 +408,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 		cctx.InboundParams.Sender = dAppContract.String()
@@ -424,7 +424,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := zk.FungibleKeeper.CallEVM(
 			ctx,

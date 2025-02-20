@@ -8,7 +8,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
+	testcontract "github.com/zeta-chain/node/testutil/contracts/withdrawer"
 )
 
 func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {

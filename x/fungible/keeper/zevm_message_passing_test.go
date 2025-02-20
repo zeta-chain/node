@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/node/testutil/contracts/dapp"
+	"github.com/zeta-chain/node/testutil/contracts/dappreverter"
 	"math/big"
 	"testing"
 
@@ -14,7 +16,6 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -26,7 +27,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -48,7 +49,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -172,7 +173,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -196,7 +197,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -323,7 +324,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 

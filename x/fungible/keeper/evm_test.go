@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/zeta-chain/node/testutil/contracts/dapp"
+	"github.com/zeta-chain/node/testutil/contracts/dappreverter"
+	"github.com/zeta-chain/node/testutil/contracts/example"
+	"github.com/zeta-chain/node/testutil/contracts/reverter"
 
 	"math/big"
 	"testing"
@@ -29,7 +33,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -202,7 +205,7 @@ func assertExampleBarValue(
 	address common.Address,
 	expected int64,
 ) {
-	exampleABI, err := contracts.ExampleMetaData.GetAbi()
+	exampleABI, err := example.ExampleMetaData.GetAbi()
 	require.NoError(t, err)
 	res, err := k.CallEVM(
 		ctx,
@@ -563,7 +566,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 
 		chainID := getValidChainID(t)
 
-		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		example, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
@@ -591,7 +594,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
-		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		example, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
@@ -614,7 +617,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		require.Equal(t, int64(42), balance.Int64())
 
 		// check onCrossChainCall has been called
-		exampleABI, err := contracts.ExampleMetaData.GetAbi()
+		exampleABI, err := example.ExampleMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err = k.CallEVM(
 			ctx,
@@ -645,7 +648,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
 		// Deploy reverter
-		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		reverter, err := k.DeployContract(ctx, reverter.ReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 
@@ -697,10 +700,10 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// Deploy example
-		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		contract, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
-		abi, err := contracts.ExampleMetaData.GetAbi()
+		abi, err := example.ExampleMetaData.GetAbi()
 		require.NoError(t, err)
 
 		// doRevert make contract reverted
@@ -1486,7 +1489,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1510,7 +1513,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -1536,7 +1539,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1553,7 +1556,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1572,7 +1575,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 		senderAddress := dAppContract
@@ -1594,7 +1597,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -1620,7 +1623,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1638,7 +1641,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 

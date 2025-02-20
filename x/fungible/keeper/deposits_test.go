@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
-	"github.com/zeta-chain/node/testutil/contracts"
+	"github.com/zeta-chain/node/testutil/contracts/example"
+	"github.com/zeta-chain/node/testutil/contracts/reverter"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"math/big"
 	"testing"
@@ -414,7 +415,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
-		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		example, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
@@ -454,7 +455,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
-		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		reverter, err := k.DeployContract(ctx, reverter.ReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 

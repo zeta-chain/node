@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"os"
 	"sync"
 	"time"
@@ -35,6 +34,7 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
