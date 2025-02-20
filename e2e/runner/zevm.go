@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"math/big"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

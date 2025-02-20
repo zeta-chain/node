@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"math/big"
 	"time"
 
@@ -18,8 +20,6 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
