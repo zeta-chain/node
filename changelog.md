@@ -17,6 +17,7 @@
 * [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
 * [3520](https://github.com/zeta-chain/node/pull/3520) - integrate SPL withdraw and call
 * [3527](https://github.com/zeta-chain/node/pull/3527) - integrate SOL/SPL withdraw and call revert
+* [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 
 ### Refactor
 

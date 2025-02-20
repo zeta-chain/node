@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 		CmdVoteTSS(),
 		CmdEnableCCTX(),
 		CmdDisableCCTX(),
+		CmdDisableFastConfirmation(),
 		CmdUpdateGasPriceIncreaseFlags(),
 		CmdUpdateOperationalFlags(),
 	)
