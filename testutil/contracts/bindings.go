@@ -22,4 +22,17 @@
 //go:generate sh -c "cat Withdrawer.json | jq .bin  | tr -d '\"'  > Withdrawer.bin"
 //go:generate sh -c "abigen --abi Withdrawer.abi --bin Withdrawer.bin  --pkg contracts --type Withdrawer --out Withdrawer.go"
 
+// Dapp
+//
+//go:generate sh -c "solc --evm-version paris Dapp.sol --combined-json abi,bin | jq '.contracts.\"Dapp.sol:Dapp\"'  > Dapp.json"
+//go:generate sh -c "cat Dapp.json | jq .abi > Dapp.abi"
+//go:generate sh -c "cat Dapp.json | jq .bin  | tr -d '\"'  > Dapp.bin"
+//go:generate sh -c "abigen --abi Dapp.abi --bin Dapp.bin  --pkg contracts --type Dapp --out Dapp.go"
+
+// DappReverter
+//go:generate sh -c "solc --evm-version paris DappReverter.sol --combined-json abi,bin | jq '.contracts.\"DappReverter.sol:DappReverter\"'  > DappReverter.json"
+//go:generate sh -c "cat DappReverter.json | jq .abi > DappReverter.abi"
+//go:generate sh -c "cat DappReverter.json | jq .bin  | tr -d '\"'  > DappReverter.bin"
+//go:generate sh -c "abigen --abi DappReverter.abi --bin DappReverter.bin  --pkg contracts --type DappReverter --out DappReverter.go"
+
 package contracts
