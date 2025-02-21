@@ -85,6 +85,7 @@ type ZetaTxServer struct {
 	address         []string
 	blockTimeout    time.Duration
 	authorityClient authoritytypes.QueryClient
+	validatorKeys   keyring.Keyring
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -134,16 +135,22 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		addresses = append(addresses, accAddr.String())
 	}
 
+	validatorsKeyring, err := keyring.New(fmt.Sprintf("operatorKeys"), keyring.BackendTest, "/root/.zetacored/", nil, cdc, hd.EthSecp256k1Option())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator keyring: %w", err)
+	}
+
 	clientCtx := newContext(rpc, cdc, reg, kr, chainID)
 	txf := newFactory(clientCtx)
 
 	return &ZetaTxServer{
-		ctx:          ctx,
-		clientCtx:    clientCtx,
-		txFactory:    txf,
-		name:         names,
-		address:      addresses,
-		blockTimeout: 2 * time.Minute,
+		ctx:           ctx,
+		clientCtx:     clientCtx,
+		txFactory:     txf,
+		name:          names,
+		address:       addresses,
+		blockTimeout:  2 * time.Minute,
+		validatorKeys: validatorsKeyring,
 	}, nil
 }
 
