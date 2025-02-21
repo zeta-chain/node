@@ -24,7 +24,8 @@ GATEWAY_PROGRAM_ID=$(solana-keygen pubkey gateway-keypair.json)
 
 echo "Gateway program ID: $GATEWAY_PROGRAM_ID"
 echo "Starting upgrade loop"
-# Add infinite loop to check for execute-update file
+# Execute upgrade when execute-update file is found.
+# This file is created by the orchestrator when trying to upgrade the program
 while true; do
     if [ -f "/data/execute-update" ]; then
         echo "Found execute-update file, performing upgrade"

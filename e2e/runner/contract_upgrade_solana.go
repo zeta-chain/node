@@ -12,12 +12,12 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
+
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 // VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
 func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool {
-
 	pdaComputed := r.ComputePdaAddress()
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,
@@ -46,7 +46,11 @@ func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool
 
 	// Verify that data does not change
 	require.Equal(r, pdaDataBefore.Nonce, pdaDataAfter.Nonce)
-	require.Equal(r, ethcommon.BytesToAddress(pdaDataBefore.TssAddress[:]), ethcommon.BytesToAddress(pdaDataAfter.TssAddress[:]))
+	require.Equal(
+		r,
+		ethcommon.BytesToAddress(pdaDataBefore.TssAddress[:]),
+		ethcommon.BytesToAddress(pdaDataAfter.TssAddress[:]),
+	)
 	require.Equal(r, pdaDataBefore.Authority, pdaDataAfter.Authority)
 	require.Equal(r, pdaDataBefore.ChainID, pdaDataAfter.ChainID)
 	require.Equal(r, pdaDataBefore.DepositPaused, pdaDataAfter.DepositPaused)
@@ -58,7 +62,7 @@ func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
 	require.NoError(r, err)
 	// Calculate the instruction discriminator for "upgraded"
 	// Anchor uses the first 8 bytes of the sha256 hash of "global:upgraded"
-	// Manually generating the discriminator there is just one function
+	// Manually generating the discriminator as there is just one extra function in the new program
 	discriminator := getAnchorDiscriminator("upgraded")
 	// Build instruction
 	data := append(discriminator, []byte{}...)
@@ -93,6 +97,9 @@ func getAnchorDiscriminator(methodName string) []byte {
 	return hash[:8]
 }
 
+// triggerSolanaUpgrade triggers the Solana upgrade by creating a file `execute-update` on the Solana container
+// The shell script on the Solana container will remove the file after completing the upgrade
+// Refer: contrib/localnet/solana/start-solana.sh
 func triggerSolanaUpgrade() error {
 	// Create the execute-update file on Solana container
 	createCmd := exec.Command("ssh", "root@solana", "touch", "/data/execute-update")
