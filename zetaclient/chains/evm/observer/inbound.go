@@ -162,20 +162,28 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
 	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
 
-	// query the gateway logs
-	// TODO: refactor in a more declarative design. Example: storing the list of contract and events to listen in an array
-	// https://github.com/zeta-chain/node/issues/2493
-	lastScannedGatewayDeposit, err := ob.ObserveGatewayDeposit(ctx, startBlock, toBlock)
+	var (
+		lastScannedGatewayDeposit        = startBlock - 1
+		lastScannedGatewayCall           = startBlock - 1
+		lastScannedGatewayDepositAndCall = startBlock - 1
+	)
+
+	gatewayLogs, err := ob.fetchGatewayLogs(ctx, startBlock, toBlock)
 	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error observing deposit events from Gateway contract")
-	}
-	lastScannedGatewayCall, err := ob.ObserveGatewayCall(ctx, startBlock, toBlock)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error observing call events from Gateway contract")
-	}
-	lastScannedGatewayDepositAndCall, err := ob.ObserveGatewayDepositAndCall(ctx, startBlock, toBlock)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error observing depositAndCall events from Gateway contract")
+		ob.Logger().Inbound.Error().Err(err).Msg("get gateway logs")
+	} else {
+		lastScannedGatewayDeposit, err = ob.observeGatewayDeposit(ctx, startBlock, toBlock, gatewayLogs)
+		if err != nil {
+			ob.Logger().Inbound.Error().Err(err).Msg("error observing deposit events from Gateway contract")
+		}
+		lastScannedGatewayCall, err = ob.observeGatewayCall(ctx, startBlock, toBlock, gatewayLogs)
+		if err != nil {
+			ob.Logger().Inbound.Error().Err(err).Msg("error observing call events from Gateway contract")
+		}
+		lastScannedGatewayDepositAndCall, err = ob.observeGatewayDepositAndCall(ctx, startBlock, toBlock, gatewayLogs)
+		if err != nil {
+			ob.Logger().Inbound.Error().Err(err).Msg("error observing depositAndCall events from Gateway contract")
+		}
 	}
 
 	// note: using the lowest height for all events is not perfect,
