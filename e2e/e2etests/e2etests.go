@@ -85,7 +85,8 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName = "sui_deposit"
+	TestSuiDepositName        = "sui_deposit"
+	TestSuiDepositAndCallName = "sui_deposit_and_call"
 
 	/*
 	 Bitcoin tests
@@ -677,6 +678,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiDeposit,
+	),
+	runner.NewE2ETest(
+		TestSuiDepositAndCallName,
+		"deposit SUI into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiDepositAndCall,
 	),
 	/*
 	 Bitcoin tests

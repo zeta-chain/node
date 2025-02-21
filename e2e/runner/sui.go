@@ -29,6 +29,25 @@ func (r *E2ERunner) SUIDeposit(
 	return resp
 }
 
+// SUIDepositAndCall calls DepositAndCall on SUI
+func (r *E2ERunner) SUIDepositAndCall(
+	receiver ethcommon.Address,
+	payload []byte,
+) models.SuiTransactionBlockResponse {
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+
+	// retrieve SUI coin object to deposit
+	coinObjectId, err := r.splitSUI(signer, math.NewUint(100000))
+	require.NoError(r, err)
+
+	// create the tx
+	resp, err := r.executeSUIDepositAndCall(signer, coinObjectId, receiver, payload)
+	require.NoError(r, err)
+
+	return resp
+}
+
 // executeSUIDeposit executes a deposit on the SUI contract
 func (r *E2ERunner) executeSUIDeposit(
 	signer *sui.SignerSecp256k1,
@@ -43,6 +62,44 @@ func (r *E2ERunner) executeSUIDeposit(
 		Function:        "deposit",
 		TypeArguments:   []any{string(zetasui.SUI)},
 		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex()},
+		GasBudget:       "5000000000",
+	})
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, err
+	}
+
+	// sign the tx
+	signature, err := signer.SignTransactionBlock(tx.TxBytes)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, err
+	}
+	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:     tx.TxBytes,
+		Signature:   []string{signature},
+		RequestType: "WaitForLocalExecution",
+	})
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, err
+	}
+
+	return resp, nil
+}
+
+// executeSUIDepositAndCall executes a depositAndCall on the SUI contract
+func (r *E2ERunner) executeSUIDepositAndCall(
+	signer *sui.SignerSecp256k1,
+	coinObjectID string,
+	receiver ethcommon.Address,
+	payload []byte,
+) (models.SuiTransactionBlockResponse, error) {
+	// create the tx
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          signer.Address(),
+		PackageObjectId: r.GatewayPackageID,
+		Module:          "gateway",
+		Function:        "deposit_and_call",
+		TypeArguments:   []any{string(zetasui.SUI)},
+		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex(), payload},
 		GasBudget:       "5000000000",
 	})
 	if err != nil {

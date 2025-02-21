@@ -425,6 +425,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testSui {
 		suiTests := []string{
 			e2etests.TestSuiDepositName,
+			e2etests.TestSuiDepositAndCallName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}

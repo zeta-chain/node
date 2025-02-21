@@ -8,16 +8,18 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSuiDeposit(r *runner.E2ERunner, args []string) {
+func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 	_ = amount
 
-	// make the deposit transaction
-	resp := r.SUIDeposit(r.EVMAddress())
+	payload := randomPayload(r)
 
-	r.Logger.Info("Sui deposit tx: %s", resp.Digest)
+	// make the deposit transaction
+	resp := r.SUIDepositAndCall(r.TestDAppV2ZEVMAddr, []byte(payload))
+
+	r.Logger.Info("Sui deposit and call tx: %s", resp.Digest)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
