@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -84,6 +85,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	}
 	require.NotEmpty(r, objectID, "find objectID")
 
+	// deploy fake USDC
+	_, _ = r.deployFakeUSDC()
+
 	// set Sui contract values
 	r.GatewayPackageID = packageID
 	r.GatewayObjectID = objectID
@@ -91,6 +95,57 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// set the chain params
 	err = r.ensureSuiChainParams()
 	require.NoError(r, err)
+}
+
+func (r *E2ERunner) deployFakeUSDC() (string, string) {
+	client := r.Clients.Sui
+	deployerSigner, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	deployerAddress := deployerSigner.Address()
+
+	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
+		Sender:          deployerAddress,
+		CompiledModules: []string{suicontract.FakeUSDCBytecodeBase64()},
+		Dependencies: []string{
+			"0x0000000000000000000000000000000000000000000000000000000000000001",
+			"0x0000000000000000000000000000000000000000000000000000000000000002",
+		},
+		GasBudget: "5000000000",
+	})
+	require.NoError(r, err, "create publish tx")
+
+	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	require.NoError(r, err, "sign transaction")
+
+	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:   publishReq.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:        true,
+			ShowBalanceChanges: true,
+			ShowEvents:         true,
+			ShowObjectChanges:  true,
+		},
+		RequestType: "WaitForLocalExecution",
+	})
+	require.NoError(r, err)
+
+	var packageID, treasuryCap string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "published" {
+			packageID = change.PackageId
+		}
+	}
+	require.NotEmpty(r, packageID, "find packageID")
+
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "created" && strings.Contains(change.ObjectType, "TreasuryCap") {
+			treasuryCap = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, treasuryCap, "find objectID")
+
+	return packageID, treasuryCap
 }
 
 func (r *E2ERunner) ensureSuiChainParams() error {
