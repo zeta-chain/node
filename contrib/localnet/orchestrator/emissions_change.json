@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "plan": {
+        "height": "8694491",
+        "info": "{\"binaries\":{\"darwin/amd64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetacored-darwin-amd64?checksum=sha256:1838f07bba40616505bd4b7ee6d86c008428a5584eb31cca563c900d2b91cab9\",\"darwin/arm64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetacored-darwin-arm64?checksum=sha256:50a88f6ef38a32e828c6c142b5f6f5852c45b376d86902d5c6ef77aa4caca2b9\",\"linux/amd64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetacored-linux-amd64?checksum=sha256:98e96f6a5c38478c8bb1b66286506203c9a268f58e011cb4f262761da36208f6\",\"linux/arm64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetacored-linux-arm64?checksum=sha256:d4e3b434c445b69837235c45b05843c05b98e1d5d6a2189b219cb08b48291f99\",\"zetaclientd-linux/amd64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetaclientd-linux-amd64?checksum=sha256:9b13705811edbeaedab5fbb45397f87a1bfca3d0bbdbf3c7f1d7989ba67239cd\",\"zetaclientd-linux/arm64\":\"https://github.com/zeta-chain/node/releases/download/v26.0.0/zetaclientd-linux-arm64?checksum=sha256:67ff4a27c82f67c706ea728bacd28bc3ff16b52b37b956b2d07991bdd65d9ce8\"}}",
+        "name": "v26",
+        "time": "0001-01-01T00:00:00Z",
+        "upgraded_client_state": null
+      },
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
+    }
+  ],
+  "metadata": "https://github.com/zeta-chain/node/releases/tag/v26.0.0",
+  "deposit": "100000000azeta",
+  "title": "v26 upgrade",
+  "summary": "This is the v26 upgrade for the ZetaChain Athens Testnet."
+}

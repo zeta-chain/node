@@ -207,6 +207,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run setup steps that do not require tss
 	if !skipSetup {
 		noError(deployerRunner.FundEmissionsPool())
+		logger.Print("running gov proposals")
+		deployerRunner.ZetaTxServer.CreateGovProposal()
 	}
 
 	// wait for keygen to be completed

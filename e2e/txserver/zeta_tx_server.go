@@ -85,6 +85,7 @@ type ZetaTxServer struct {
 	address         []string
 	blockTimeout    time.Duration
 	authorityClient authoritytypes.QueryClient
+	validatorKeys   keyring.Keyring
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -134,17 +135,29 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		addresses = append(addresses, accAddr.String())
 	}
 
+	validatorsKeyring, err := keyring.New(fmt.Sprintf("operatorKeys"), keyring.BackendTest, "/root/.zetacored/", nil, cdc, hd.EthSecp256k1Option())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator keyring: %w", err)
+	}
+
 	clientCtx := newContext(rpc, cdc, reg, kr, chainID)
-	txf := newFactory(clientCtx)
+	txf := newFactory(clientCtx, clientCtx.Keyring)
 
 	return &ZetaTxServer{
-		ctx:          ctx,
-		clientCtx:    clientCtx,
-		txFactory:    txf,
-		name:         names,
-		address:      addresses,
-		blockTimeout: 2 * time.Minute,
+		ctx:           ctx,
+		clientCtx:     clientCtx,
+		txFactory:     txf,
+		name:          names,
+		address:       addresses,
+		blockTimeout:  2 * time.Minute,
+		validatorKeys: validatorsKeyring,
 	}, nil
+}
+
+func (zts ZetaTxServer) UpdateKeyring(kr keyring.Keyring) ZetaTxServer {
+	zts.clientCtx = zts.clientCtx.WithKeyring(kr)
+	zts.txFactory = newFactory(zts.clientCtx, kr)
+	return zts
 }
 
 // GetAccountName returns the account name from the given index
@@ -739,10 +752,10 @@ func newContext(
 }
 
 // newFactory returns the tx factory for msg server
-func newFactory(clientCtx client.Context) tx.Factory {
+func newFactory(clientCtx client.Context, keyring keyring.Keyring) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
-		WithKeybase(clientCtx.Keyring).
+		WithKeybase(keyring).
 		WithGas(10000000).
 		WithGasAdjustment(1).
 		WithSignMode(signing.SignMode_SIGN_MODE_UNSPECIFIED).
