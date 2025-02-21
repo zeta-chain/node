@@ -491,10 +491,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	require.True(
-		deployerRunner,
-		deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
-	)
+	if testSolana {
+		require.True(
+			deployerRunner,
+			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
+		)
+	}
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
