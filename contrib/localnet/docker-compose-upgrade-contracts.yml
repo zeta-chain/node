@@ -1,6 +1,0 @@
-version: "3"
-# This docker-compose updates the services to use the old version of the zetanode image
-
-services:
-  solana:
-    entrypoint: ["/usr/bin/start-solana-upgrade.sh"]

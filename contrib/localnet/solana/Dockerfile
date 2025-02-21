@@ -1,10 +1,13 @@
 FROM ghcr.io/zeta-chain/solana-docker:2.0.24
 
+# Set working directory for the container
 WORKDIR /data
+
+# Copy and make executable the main Solana startup script
 COPY ./start-solana.sh /usr/bin/start-solana.sh
-COPY ./start-solana-upgrade.sh /usr/bin/start-solana-upgrade.sh
 RUN chmod +x /usr/bin/start-solana.sh
-RUN chmod +x /usr/bin/start-solana-upgrade.sh
+
+# Copy Solana program files and their keypairs
 COPY ./gateway.so .
 COPY ./gateway-keypair.json .
 COPY ./connected.so .
@@ -13,6 +16,12 @@ COPY ./connected_spl.so .
 COPY ./connected_spl-keypair.json .
 COPY ./gateway_upgrade.so .
 
+# Setup SSH server
+# Expose port 22 for SSH access
+EXPOSE 22
+# Install and configure SSH server
+RUN apt update && apt install -y openssh-server
+RUN mkdir /run/sshd
 
 ENTRYPOINT [ "bash" ]
 CMD [ "/usr/bin/start-solana.sh" ]

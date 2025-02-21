@@ -20,11 +20,3 @@ type PdaInfo struct {
 	// DepositPaused is the flag to indicate if the deposit is paused
 	DepositPaused bool
 }
-
-// PdaInfoUpgraded represents the PDA for the gateway program
-
-type PdaInfoUpgraded struct {
-	PdaInfo
-	// Upgraded is the flag to indicate if the PDA is upgraded
-	Upgraded bool
-}

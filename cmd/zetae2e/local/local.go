@@ -287,7 +287,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
-		require.True(deployerRunner, deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()))
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
@@ -491,6 +490,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	require.True(deployerRunner, deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()))
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)

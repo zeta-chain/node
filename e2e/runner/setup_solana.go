@@ -1,9 +1,6 @@
 package runner
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
-	"fmt"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -150,49 +147,6 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	// deploy test spl
 	mintAccount := r.DeploySPL(&privkey, true)
 	r.SPLAddr = mintAccount.PublicKey()
-}
-
-func getAnchorDiscriminator(methodName string) []byte {
-	// In Anchor, the namespace is "global" + method name
-	namespace := fmt.Sprintf("global:%s", methodName)
-
-	// Calculate SHA256
-	hash := sha256.Sum256([]byte(namespace))
-
-	// Return first 8 bytes
-	return hash[:8]
-}
-
-// VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
-func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool {
-	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
-	require.NoError(r, err)
-
-	// Calculate the instruction discriminator for "upgraded"
-	// Anchor uses the first 8 bytes of the sha256 hash of "global:upgraded"
-	// Manually generating the discriminator there is just one function
-	discriminator := getAnchorDiscriminator("upgraded")
-
-	// Build instruction
-	data := append(discriminator, []byte{}...)
-
-	var instConnected solana.GenericInstruction
-	accountSliceConnected := []*solana.AccountMeta{}
-	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
-	instConnected.ProgID = r.GatewayProgram
-	instConnected.AccountValues = accountSliceConnected
-	instConnected.DataBytes = data
-
-	// create and sign the transaction
-	signedTx := r.CreateSignedTransaction([]solana.Instruction{&instConnected}, privkey, []solana.PrivateKey{})
-
-	// broadcast the transaction and wait for finalization
-	_, out := r.BroadcastTxSync(signedTx)
-	r.Logger.Info("upgrade  logs: %v", out.Meta.LogMessages)
-
-	decoded, err := base64.StdEncoding.DecodeString(out.Meta.ReturnData.Data.String())
-	require.NoError(r, err)
-	return decoded[0] == 1
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
