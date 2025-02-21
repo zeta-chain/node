@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -12,12 +13,11 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
-	_ = amount
 
 	payload := randomPayload(r)
 
 	// make the deposit transaction
-	resp := r.SUIDepositAndCall(r.TestDAppV2ZEVMAddr, []byte(payload))
+	resp := r.SUIDepositAndCall(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte(payload))
 
 	r.Logger.Info("Sui deposit and call tx: %s", resp.Digest)
 

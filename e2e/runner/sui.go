@@ -14,12 +14,13 @@ import (
 // SUIDeposit calls Deposit on SUI
 func (r *E2ERunner) SUIDeposit(
 	receiver ethcommon.Address,
+	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId, err := r.splitSUI(signer, math.NewUint(100000))
+	coinObjectId, err := r.splitSUI(signer, amount)
 	require.NoError(r, err)
 
 	// create the tx
@@ -32,13 +33,14 @@ func (r *E2ERunner) SUIDeposit(
 // SUIDepositAndCall calls DepositAndCall on SUI
 func (r *E2ERunner) SUIDepositAndCall(
 	receiver ethcommon.Address,
+	amount math.Uint,
 	payload []byte,
 ) models.SuiTransactionBlockResponse {
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId, err := r.splitSUI(signer, math.NewUint(100000))
+	coinObjectId, err := r.splitSUI(signer, amount)
 	require.NoError(r, err)
 
 	// create the tx
@@ -125,30 +127,41 @@ func (r *E2ERunner) executeSUIDepositAndCall(
 
 // splitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
 func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objId string, err error) {
-	return r.findSUIWithBalanceAbove(signer.Address(), balance)
+	// find the coin to split
+	originalCoin, err := r.findSUIWithBalanceAbove(signer.Address(), balance)
+	if err != nil {
+		return "", err
+	}
 
-	// TODO: there is an issue splitting the coin -> fix this
-	//// find the coin to split
-	//originalCoin, err := r.findSUIWithBalanceAbove(signer.Address(), balance)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//// split the coin using the PaySui API
-	//tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
-	//	Signer:      signer.Address(),
-	//	SuiObjectId: []string{originalCoin},
-	//	Recipient:   []string{signer.Address()},
-	//	Amount:      []string{balance.String()},
-	//	GasBudget:   "5000000000",
-	//})
-	//
-	//// sign the split tx
-	//_, err = signer.SignTransactionBlock(tx.TxBytes)
-	//require.NoError(r, err)
-	//
-	//// find the split coin
-	//return r.findSUIWithBalance(signer.Address(), balance)
+	// split the coin using the PaySui API
+	tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
+		Signer:      signer.Address(),
+		SuiObjectId: []string{originalCoin},
+		Recipient:   []string{signer.Address()},
+		Amount:      []string{balance.String()},
+		GasBudget:   "5000000000",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// sign the split tx
+	signature, err := signer.SignTransactionBlock(tx.TxBytes)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:     tx.TxBytes,
+		Signature:   []string{signature},
+		RequestType: "WaitForLocalExecution",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// find the split coin
+	return r.findSUIWithBalance(signer.Address(), balance)
 }
 
 func (r *E2ERunner) findSUIWithBalance(
