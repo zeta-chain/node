@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -91,5 +92,52 @@ func TestCrypto(t *testing.T) {
 		resBin, err := base64.StdEncoding.DecodeString(res)
 		require.NoError(t, err)
 		require.Equal(t, (1 + 64 + 33), len(resBin))
+	})
+
+	t.Run("SignerSecp256k1", func(t *testing.T) {
+		for _, tt := range []struct {
+			privKey string
+			address string
+		}{
+			{
+				privKey: "suiprivkey1q8h7ejwfcdn6gc2x9kddtd9vld3kvuvtr9gdtj9qcf7nqnw94tvl79cwfq4",
+				address: "0x68f6d05fd44366bd431405e8ea32e2d2f8e330d98e0089c9447ecfbbdf6e236f",
+			},
+			{
+				privKey: "suiprivkey1qxghtp2vncr94s8h7ctvgf58gy27l9nch75ka2jh37qr90xuyxhlwk5khxc",
+				address: "0x8ec6f13affbf48c73550567f2a1cb8f05474c0133ebf745f91a2f3b971c1ec9a",
+			},
+			{
+				privKey: "suiprivkey1q99wkv3fj352cn97yu5r9jwqhcvyyk6t9scwrftyjgqgflandfgc70r74hg",
+				address: "0xa0f6b839f7945065ebdd030cec8e6e30d01a74c8cb31b1945909fd426c2cef80",
+			},
+		} {
+			t.Run(tt.privKey, func(t *testing.T) {
+				// ARRANGE
+				// Given a private key
+				_, privateKeyBytes, err := bech32.DecodeAndConvert(tt.privKey)
+				require.NoError(t, err)
+				require.Equal(t, byte(flagSecp256k1), privateKeyBytes[0])
+
+				// Given signer (pk imported w/o flag byte)
+				signer := NewSignerSecp256k1(privateKeyBytes[1:])
+
+				// ACT
+				// Check signer's Sui address
+				address := signer.Address()
+
+				// Sign some stub tx
+				// We don't have a good way outside e2e to verify the signature is correct,
+				// but let's exercise it anyway
+				const exampleBase64 = "ZXhhbXBsZQo="
+				_, errSign := signer.SignTxBlock(models.TxnMetaData{
+					TxBytes: exampleBase64,
+				})
+
+				// ASSERT
+				require.Equal(t, tt.address, address)
+				require.NoError(t, errSign)
+			})
+		}
 	})
 }

@@ -3,10 +3,13 @@ package sui
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	secp256k1signer "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 )
@@ -78,4 +81,46 @@ func SerializeSignatureECDSA(signature [65]byte, publicKey []byte) (string, erro
 	copy(serialized[1+sigLen:], publicKey)
 
 	return base64.StdEncoding.EncodeToString(serialized), nil
+}
+
+// SignerSecp256k1 represents Sui Secp256k1 signer.
+type SignerSecp256k1 struct {
+	pk      *secp256k1.PrivateKey
+	address string
+}
+
+// NewSignerSecp256k1 creates new SignerSecp256k1.
+func NewSignerSecp256k1(privateKeyBytes []byte) *SignerSecp256k1 {
+	pk := secp256k1.PrivKeyFromBytes(privateKeyBytes)
+	address := AddressFromPubKeyECDSA(pk.PubKey().ToECDSA())
+
+	return &SignerSecp256k1{pk: pk, address: address}
+}
+
+func (s *SignerSecp256k1) Address() string {
+	return s.address
+}
+
+func (s *SignerSecp256k1) SignTxBlock(tx models.TxnMetaData) (string, error) {
+	digest, err := Digest(tx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get digest")
+	}
+
+	// Another hashing is required for ECDSA.
+	// https://docs.sui.io/concepts/cryptography/transaction-auth/signatures#signature-requirements
+	digestWrapped := sha256.Sum256(digest[:])
+
+	// returns V[1b] | R[32b] | S[32b], But we need R | S | V
+	sig := secp256k1signer.SignCompact(s.pk, digestWrapped[:], false)
+
+	var sigReordered [65]byte
+	copy(sigReordered[0:32], sig[1:33])   // Copy R[32]
+	copy(sigReordered[32:64], sig[33:65]) // Copy S[32]
+	sigReordered[64] = sig[0]             // Move V[1] to the end
+
+	pubKey := s.pk.PubKey().ToECDSA()
+	pubKeyBytes := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y)
+
+	return SerializeSignatureECDSA(sigReordered, pubKeyBytes)
 }
