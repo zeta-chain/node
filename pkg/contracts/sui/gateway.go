@@ -34,6 +34,7 @@ const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000
 const (
 	Deposit        EventType = "DepositEvent"
 	DepositAndCall EventType = "DepositAndCallEvent"
+	Withdraw       EventType = "WithdrawEvent"
 )
 
 const moduleName = "gateway"
@@ -66,11 +67,29 @@ type Event struct {
 	content any
 }
 
-// Inbound extract Inbound.
-func (e *Event) Inbound() (Inbound, error) {
-	v, ok := e.content.(Inbound)
+func (e *Event) IsDeposit() bool {
+	return e.EventType == Deposit || e.EventType == DepositAndCall
+}
+
+// Deposit extract DepositData.
+func (e *Event) Deposit() (DepositData, error) {
+	v, ok := e.content.(DepositData)
 	if !ok {
-		return Inbound{}, errors.Errorf("invalid content type %T", e.content)
+		return DepositData{}, errors.Errorf("invalid content type %T", e.content)
+	}
+
+	return v, nil
+}
+
+func (e *Event) IsWithdraw() bool {
+	return e.EventType == Withdraw
+}
+
+// Withdrawal extract WithdrawData.
+func (e *Event) Withdrawal() (WithdrawData, error) {
+	v, ok := e.content.(WithdrawData)
+	if !ok {
+		return WithdrawData{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -159,7 +178,9 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 	// Parse specific events
 	switch eventType {
 	case Deposit, DepositAndCall:
-		content, err = parseInbound(event, eventType)
+		content, err = parseDeposit(event, eventType)
+	case Withdraw:
+		content, err = parseWithdrawal(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
