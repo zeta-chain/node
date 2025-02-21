@@ -152,6 +152,18 @@ message MsgDisableCCTX {
 }
 ```
 
+## MsgDisableFastConfirmation
+
+DisableFastConfirmation disables fast confirmation for the given chain ID
+Inbound and outbound will be only confirmed using SAFE confirmation count on disabled chains
+
+```proto
+message MsgDisableFastConfirmation {
+	string creator = 1;
+	int64 chain_id = 2;
+}
+```
+
 ## MsgUpdateGasPriceIncreaseFlags
 
 UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
