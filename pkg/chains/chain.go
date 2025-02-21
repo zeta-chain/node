@@ -134,8 +134,9 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		if err != nil {
 			return nil, fmt.Errorf("invalid TON address %q: %w", addr, err)
 		}
-
 		return []byte(acc.ToRaw()), nil
+	case IsSuiChain(chainID, additionalChains):
+		return []byte(addr), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}

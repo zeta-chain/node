@@ -23,11 +23,14 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to ensure inbound cursor")
 	}
 
+	ob.Logger().Inbound.Info().Msg("Cursor: " + ob.getCursor())
+
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
 		Module:    ob.gateway.Module(),
-		Cursor:    ob.getCursor(),
-		Limit:     client.DefaultEventsLimit,
+		// TODO: fix issue with cursor
+		Cursor: "", //ob.getCursor(),
+		Limit:  client.DefaultEventsLimit,
 	}
 
 	// Sui has a nice access-pattern of scrolling through contract events
@@ -35,6 +38,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to query module events")
 	}
+
+	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing sui inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.

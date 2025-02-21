@@ -58,6 +58,9 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.Solana.GatewayProgramID = config.DoubleQuotedString(r.GatewayProgram.String())
 	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
 
+	conf.Contracts.Sui.GatewayPackageID = config.DoubleQuotedString(r.GatewayPackageID)
+	conf.Contracts.Sui.GatewayObjectID = config.DoubleQuotedString(r.GatewayObjectID)
+
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
 	conf.Contracts.EVM.CustodyAddr = config.DoubleQuotedString(r.ERC20CustodyAddr.Hex())

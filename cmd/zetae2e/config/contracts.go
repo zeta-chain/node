@@ -117,6 +117,14 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}
 
+	// set Sui contracts
+	if c := conf.Contracts.Sui.GatewayPackageID; c != "" {
+		r.GatewayPackageID = c.String()
+	}
+	if c := conf.Contracts.Sui.GatewayObjectID; c != "" {
+		r.GatewayObjectID = c.String()
+	}
+
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
