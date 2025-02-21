@@ -113,7 +113,8 @@ func Test_MsgExecuteHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, []byte("hello"), []*solana.AccountMeta{}).Hash()
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, []byte("hello"), []*solana.AccountMeta{}).
+			Hash()
 
 		// ASSERT
 		require.EqualValues(t, hash[:], wantHashBytes)
@@ -138,7 +139,8 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender, []byte("hello"), []*solana.AccountMeta{}).Hash()
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender, []byte("hello"), []*solana.AccountMeta{}).
+			Hash()
 
 		// ASSERT
 		require.EqualValues(t, hash[:], wantHashBytes)
