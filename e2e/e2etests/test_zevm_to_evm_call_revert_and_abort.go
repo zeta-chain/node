@@ -14,10 +14,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
-
-	amount := utils.ParseBigInt(r, args[0])
+func TestZEVMToEVMCallRevertAndAbort(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 0)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -26,16 +24,13 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the withdraw
-	tx := r.ETHWithdrawAndCall(
+	tx := r.ZEVMToEMVCall(
 		sample.EthAddress(), // non-existing address
-		amount,
 		[]byte("revert"),
 		gatewayzevm.RevertOptions{
-			RevertAddress: sample.EthAddress(), // non-existing address
-			CallOnRevert:  true,
-			RevertMessage: []byte(
-				"withdraw",
-			), // withdraw is passed as message to create a withdraw in onAbort and test cctx can be created
+			RevertAddress:    sample.EthAddress(), // non-existing address
+			CallOnRevert:     true,
+			RevertMessage:    []byte("revert"),
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
@@ -43,7 +38,7 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
 	// check onAbort was called
@@ -52,19 +47,8 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.True(r, aborted)
 
 	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "withdraw")
+	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
 	require.NoError(r, err)
 	require.EqualValues(r, r.ETHZRC20Addr.Hex(), abortContext.Asset.Hex())
-
-	// check the create withdraw get mined
-	cctxWithdrawFromAbort := utils.WaitCctxMinedByInboundHash(
-		r.Ctx,
-		cctx.Index,
-		r.CctxClient,
-		r.Logger,
-		r.CctxTimeout,
-	)
-
-	// check the cctx status
-	utils.RequireCCTXStatus(r, cctxWithdrawFromAbort, crosschaintypes.CctxStatus_OutboundMined)
+	require.EqualValues(r, int64(0), abortContext.Amount.Int64())
 }

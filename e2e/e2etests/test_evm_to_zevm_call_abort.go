@@ -14,48 +14,30 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
+func TestEVMToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
-
-	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
 	// deploy testabort contract
 	testAbortAddr, _, testAbort, err := testabort.DeployTestAbort(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
-	// perform the deposit
-	tx := r.ERC20DepositAndCall(
+	// perform the withdraw
+	tx := r.EVMToZEMVCall(
 		sample.EthAddress(), // non-existing address
-		big.NewInt(
-			1,
-		), // a very small amount is passed so the cctx will be aborted as the fee for reverts cannot be paid
 		[]byte("revert"),
 		gatewayevm.RevertOptions{
-			RevertAddress:    r.TestDAppV2EVMAddr,
-			CallOnRevert:     true,
-			RevertMessage:    []byte("revert"),
-			OnRevertGasLimit: big.NewInt(200000),
+			OnRevertGasLimit: big.NewInt(0),
 			AbortAddress:     testAbortAddr,
 		},
 	)
 
-	// wait for the cctx to be reverted
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit_and_call")
+	r.Logger.CCTX(*cctx, "call")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.True(r, aborted)
-
-	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
-	require.NoError(r, err)
-	require.EqualValues(r, r.ERC20ZRC20Addr.Hex(), abortContext.Asset.Hex())
-
-	// check abort contract received the tokens
-	balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
 }

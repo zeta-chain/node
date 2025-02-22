@@ -64,6 +64,9 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestETHWithdrawRevertAndAbortName,
 			e2etests.TestETHWithdrawAndCallRevertWithWithdrawName,
 			e2etests.TestDepositAndCallOutOfGasName,
+			e2etests.TestZEVMToEVMCallRevertName,
+			e2etests.TestZEVMToEVMCallRevertAndAbortName,
+			e2etests.TestEVMToZEVMCallAbortName,
 		),
 	)
 
