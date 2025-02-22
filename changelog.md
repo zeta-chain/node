@@ -17,7 +17,7 @@
 * [3520](https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 * [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
-* [3551](https://github.com/zeta-chain/node/pull/3551) - support for fast inbound confirmation
+* [3551](https://github.com/zeta-chain/node/pull/3551) - support for EVM chain and Bitcoin chain inbound fast confirmation
 
 ### Refactor
 
