@@ -18,6 +18,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
 		e2etests.TestETHDepositAndCallName,
+		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,

@@ -149,3 +149,25 @@ func TestCoinType_SupportsRefund(t *testing.T) {
 		})
 	}
 }
+
+func TestCoinType_IsFungible(t *testing.T) {
+	tests := []struct {
+		name string
+		c    coin.CoinType
+		want bool
+	}{
+		{"Gas is fungible", coin.CoinType_Gas, true},
+		{"ERC20 is fungible", coin.CoinType_ERC20, true},
+		{"Zeta is fungible", coin.CoinType_Zeta, true},
+		{"Cmd is not fungible", coin.CoinType_Cmd, false},
+		{"CoinType_NoAssetCall is irrelevant and not fungible", coin.CoinType_NoAssetCall, false},
+		{"Unknown coin type is not fungible", coin.CoinType(100), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.IsFungible(); got != tt.want {
+				t.Errorf("CoinType.IsFungible() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -27,6 +27,7 @@ func startBitcoinTests(
 	bitcoinDepositTests := []string{
 		e2etests.TestBitcoinDonationName,
 		e2etests.TestBitcoinDepositName,
+		e2etests.TestBitcoinDepositFastConfirmationName,
 		e2etests.TestBitcoinDepositAndCallName,
 		e2etests.TestBitcoinDepositAndCallRevertName,
 		e2etests.TestBitcoinStdMemoDepositName,
@@ -140,7 +141,14 @@ func initBitcoinRunner(
 	verbose, initNetwork, createWallet bool,
 ) *runner.E2ERunner {
 	// initialize runner for bitcoin test
-	runner, err := initTestRunner(name, conf, deployerRunner, account, runner.NewLogger(verbose, printColor, name))
+	runner, err := initTestRunner(
+		name,
+		conf,
+		deployerRunner,
+		account,
+		runner.NewLogger(verbose, printColor, name),
+		runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
+	)
 	testutil.NoError(err)
 
 	// setup TSS address and setup deployer wallet

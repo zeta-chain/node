@@ -3,7 +3,6 @@ package base
 import (
 	"context"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/constant"
@@ -77,30 +76,26 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 ) (bool, error) {
 	// fast confirmation applies to chains that use confirmation count (e.g. EVM chains and Bitcoin)
 	// these chains should have their liquidity cap multiplier set explicitly
-	multiplier, found := constant.InboundFastConfirmationLiquidityMultiplierMap[msg.SenderChainId]
-	if !found {
+	chainID := msg.SenderChainId
+	multiplier, enabled := constant.GetInboundFastConfirmationLiquidityMultiplier(chainID)
+	if !enabled {
 		return false, nil
 	}
 
-	// fast inbound confirmation is only allowed for simple deposit using V2 workflow
+	// check eligibility
 	if !msg.EligibleForFastConfirmation() {
 		return false, nil
 	}
 
 	// query liquidity cap for asset
-	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, msg.SenderChainId, msg.Asset)
+	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, msg.Asset)
 	if err != nil {
-		return false, errors.Wrapf(
-			err,
-			"unable to get foreign coins for asset %s on chain %d",
-			msg.Asset,
-			msg.SenderChainId,
-		)
+		return false, errors.Wrapf(err, "unable to get foreign coins for asset %s on chain %d", msg.Asset, chainID)
 	}
 
 	// ensure the deposit amount does not exceed amount cap
-	fastConfirmationAmountCap := sdkmath.LegacyNewDecFromBigInt(fCoins.LiquidityCap.BigInt()).Mul(multiplier)
-	if sdkmath.LegacyNewDecFromBigInt(msg.Amount.BigInt()).GT(fastConfirmationAmountCap) {
+	fastAmountCap := constant.CalcInboundFastAmountCap(fCoins.LiquidityCap, multiplier)
+	if msg.Amount.BigInt().Cmp(fastAmountCap) > 0 {
 		return false, nil
 	}
 
@@ -113,8 +108,10 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 // example 2: given lastBlock = 100, lastScanned = 90, confirmation = 10, then 1 unscanned block (block 91)
 func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit uint64) (from uint64, end uint64) {
 	// got unscanned blocks or not?
+	// returning same values to indicate no unscanned block
+	nextBlock := lastScanned + 1
 	if lastBlock < lastScanned+confirmation {
-		return 0, 0
+		return nextBlock, nextBlock
 	}
 
 	// calculate the highest confirmed block
@@ -122,13 +119,9 @@ func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit ui
 	highestConfirmed := lastBlock - confirmation + 1
 
 	// calculate a range of unscanned blocks within block limit
-	from = lastScanned + 1
-	end = from + blockLimit
-
 	// 'end' is exclusive, so ensure it is not greater than (highestConfirmed+1)
-	if end > highestConfirmed+1 {
-		end = highestConfirmed + 1
-	}
+	from = nextBlock
+	end = min(from+blockLimit, highestConfirmed+1)
 
 	return from, end
 }

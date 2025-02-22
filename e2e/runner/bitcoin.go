@@ -280,7 +280,9 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	txid, err := btcRPC.SendRawTransaction(r.Ctx, stx, true)
 	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
-	_, err = r.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
+
+	// mine 1 block to confirm the transaction
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, btcDeployerAddress)
 	require.NoError(r, err)
 	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
 	require.NoError(r, err)

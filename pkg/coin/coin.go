@@ -38,3 +38,7 @@ func GetAzetaDecFromAmountInZeta(zetaAmount string) (sdkmath.LegacyDec, error) {
 func (c CoinType) SupportsRefund() bool {
 	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
 }
+
+func (c CoinType) IsFungible() bool {
+	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
+}

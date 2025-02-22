@@ -395,26 +395,16 @@ func (ob *Observer) PostVoteInbound(
 
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod:   "PostVoteInbound",
-		logs.FieldTx:       txHash,
-		logs.FieldCoinType: coinType.String(),
+		logs.FieldMethod:           "PostVoteInbound",
+		logs.FieldTx:               txHash,
+		logs.FieldCoinType:         coinType.String(),
+		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
 	}
 
 	// make sure the message is valid to avoid unnecessary retries
 	if err := msg.ValidateBasic(); err != nil {
 		ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("invalid inbound vote message")
 		return "", nil
-	}
-
-	// skip early observed inbounds that are not eligible for fast confirmation
-	if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
-		eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, msg)
-		if err != nil {
-			return "", errors.Wrap(err, "unable to determine inbound fast confirmation eligibility")
-		}
-		if !eligible {
-			return "", nil
-		}
 	}
 
 	// post vote to zetacore

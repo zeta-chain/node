@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/zeta-chain/node/pkg/crypto"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
@@ -14,9 +16,16 @@ func (c *Client) GetForeignCoinsFromAsset(
 	chainID int64,
 	asset string,
 ) (fungibletypes.ForeignCoins, error) {
+	// convert asset to checksum address or empty string (for Gas asset)
+	assetAddress := ethcommon.HexToAddress(asset)
+	assetChecksum := assetAddress.Hex()
+	if crypto.IsEmptyAddress(assetAddress) {
+		assetChecksum = ""
+	}
+
 	request := &fungibletypes.QueryGetForeignCoinsFromAssetRequest{
 		ChainId: chainID,
-		Asset:   asset,
+		Asset:   assetChecksum,
 	}
 
 	resp, err := c.Fungible.ForeignCoinsFromAsset(ctx, request)

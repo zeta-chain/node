@@ -28,27 +28,41 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 
-	// get the block range to scan
-	startBlock, endBlock := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
-	if startBlock >= endBlock {
-		return nil
+	// scan SAFE confirmed blocks
+	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	if startBlockSafe < endBlockSafe {
+		// observe inbounds for the block range [startBlock, endBlock-1]
+		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", startBlockSafe).
+				Uint64("to", endBlockSafe-1).
+				Msg("error observing inbounds in block range")
+		}
+
+		// save last scanned block to both memory and db
+		if lastScannedNew > ob.LastBlockScanned() {
+			logger.Info().
+				Uint64("from", startBlockSafe).
+				Uint64("to", lastScannedNew).
+				Msg("observed blocks for inbounds")
+			if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
+				return errors.Wrapf(err, "unable to save last scanned Bitcoin block %d", lastScannedNew)
+			}
+		}
 	}
 
-	// observe inbounds for the block range [startBlock, endBlock-1]
-	lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlock, endBlock-1)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Uint64("from", startBlock).
-			Uint64("to", endBlock-1).
-			Msg("error observing inbounds in block range")
-	}
-
-	// save last scanned block to both memory and db
-	if lastScannedNew > ob.LastBlockScanned() {
-		logger.Info().Uint64("from", startBlock).Uint64("to", lastScannedNew).Msg("observed blocks for inbounds")
-		if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
-			return errors.Wrapf(err, "unable to save last scanned Bitcoin block %d", lastScannedNew)
+	// scan FAST confirmed blocks if available
+	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
+	if endBlockSafe < endBlockFast {
+		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", endBlockSafe).
+				Uint64("to", endBlockFast-1).
+				Msg("error observing inbounds in block range (fast)")
 		}
 	}
 
@@ -93,6 +107,21 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		for _, event := range events {
 			msg := ob.GetInboundVoteFromBtcEvent(event)
 			if msg != nil {
+				// skip early observed inbound that is not eligible for fast confirmation
+				if msg.ConfirmationMode == types.ConfirmationMode_FAST {
+					eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, msg)
+					if err != nil {
+						return blockNumber - 1, errors.Wrapf(
+							err,
+							"unable to determine inbound fast confirmation eligibility for tx %s",
+							event.TxHash,
+						)
+					}
+					if !eligible {
+						continue
+					}
+				}
+
 				_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 				if err != nil {
 					// we have to re-scan this block next time
@@ -135,7 +164,6 @@ func FilterAndParseIncomingTx(
 
 		if event != nil {
 			events = append(events, event)
-			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 

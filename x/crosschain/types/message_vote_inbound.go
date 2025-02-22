@@ -159,6 +159,11 @@ func (msg *MsgVoteInbound) Digest() string {
 
 // EligibleForFastConfirmation determines if the inbound msg is eligible for fast confirmation
 func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
+	// only fungible coins are eligible for fast confirmation
+	if !msg.CoinType.IsFungible() {
+		return false
+	}
+
 	switch msg.ProtocolContractVersion {
 	case ProtocolContractVersion_V1:
 		// msg using protocol contract version V1 is not eligible for fast confirmation because:
@@ -168,8 +173,7 @@ func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
 		return false
 	case ProtocolContractVersion_V2:
 		// in protocol contract version V2, simple deposit is distinguished from depositAndCall/NoAssetCall
-		// see the method `ProcessV2Deposit` in `x/fungible/keeper/v2_deposits.go`
-		return !msg.IsCrossChainCall && msg.CoinType != coin.CoinType_NoAssetCall
+		return !msg.IsCrossChainCall
 	default:
 		return false
 	}
