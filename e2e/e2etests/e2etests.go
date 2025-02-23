@@ -85,8 +85,10 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName        = "sui_deposit"
-	TestSuiDepositAndCallName = "sui_deposit_and_call"
+	TestSuiDepositName             = "sui_deposit"
+	TestSuiDepositAndCallName      = "sui_deposit_and_call"
+	TestSuiTokenDepositName        = "sui_token_deposit"
+	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call"
 
 	/*
 	 Bitcoin tests
@@ -686,6 +688,22 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestSuiTokenDepositName,
+		"deposit fungible token SUI into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "1000000"},
+		},
+		TestSuiTokenDeposit,
+	),
+	runner.NewE2ETest(
+		TestSuiTokenDepositAndCallName,
+		"deposit fungible token into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "1000000"},
+		},
+		TestSuiTokenDepositAndCall,
 	),
 	/*
 	 Bitcoin tests
