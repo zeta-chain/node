@@ -19,10 +19,10 @@ func (r *E2ERunner) SUIDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId := r.splitSUI(signer, amount)
+	coinObjectID := r.splitSUI(signer, amount)
 
 	// create the tx
-	return r.executeDeposit(signer, string(zetasui.SUI), coinObjectId, receiver)
+	return r.executeDeposit(signer, string(zetasui.SUI), coinObjectID, receiver)
 }
 
 // SUIDepositAndCall calls DepositAndCall on Sui
@@ -35,10 +35,10 @@ func (r *E2ERunner) SUIDepositAndCall(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId := r.splitSUI(signer, amount)
+	coinObjectID := r.splitSUI(signer, amount)
 
 	// create the tx
-	return r.executeDepositAndCall(signer, string(zetasui.SUI), coinObjectId, receiver, payload)
+	return r.executeDepositAndCall(signer, string(zetasui.SUI), coinObjectID, receiver, payload)
 }
 
 // SuiFungibleTokenDeposit calls Deposit with fungible token on Sui
@@ -50,10 +50,10 @@ func (r *E2ERunner) SuiFungibleTokenDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId := r.splitSUI(signer, amount)
+	coinObjectID := r.splitSUI(signer, amount)
 
 	// create the tx
-	return r.executeDeposit(signer, r.SuiTokenCoinType, coinObjectId, receiver)
+	return r.executeDeposit(signer, r.SuiTokenCoinType, coinObjectID, receiver)
 }
 
 // SuiFungibleTokenDepositAndCall calls DepositAndCall with fungible token on Sui
@@ -66,10 +66,10 @@ func (r *E2ERunner) SuiFungibleTokenDepositAndCall(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId := r.splitUSDC(signer, amount)
+	coinObjectID := r.splitUSDC(signer, amount)
 
 	// create the tx
-	return r.executeDepositAndCall(signer, r.SuiTokenCoinType, coinObjectId, receiver, payload)
+	return r.executeDepositAndCall(signer, r.SuiTokenCoinType, coinObjectID, receiver, payload)
 }
 
 // MintSuiUSDC mints FakeUSDC on Sui to a receiver
@@ -141,7 +141,7 @@ func (r *E2ERunner) executeDepositAndCall(
 }
 
 // splitUSDC splits USDC coin and obtain a USDC coin object with the wanted balance
-func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objId string) {
+func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
 	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, r.SuiTokenCoinType)
 
@@ -160,7 +160,7 @@ func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (o
 }
 
 // splitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
-func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objId string) {
+func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
 	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, string(zetasui.SUI))
 
@@ -184,7 +184,7 @@ func (r *E2ERunner) findSuiCoinWithBalance(
 	address string,
 	balance math.Uint,
 	coinType string,
-) (coinId string) {
+) (coinID string) {
 	return r.findSuiCoin(address, balance, coinType, func(a, b math.Uint) bool {
 		return a.Equal(b)
 	})
@@ -194,7 +194,7 @@ func (r *E2ERunner) findSuiCoinWithBalanceAbove(
 	address string,
 	balanceAbove math.Uint,
 	coinType string,
-) (coinId string) {
+) (coinID string) {
 	return r.findSuiCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
 		return a.GTE(b)
 	})
@@ -207,7 +207,7 @@ func (r *E2ERunner) findSuiCoin(
 	balance math.Uint,
 	coinType string,
 	comp compFunc,
-) (coinId string) {
+) (coinID string) {
 	res, err := r.Clients.Sui.SuiXGetCoins(r.Ctx, models.SuiXGetCoinsRequest{
 		Owner:    address,
 		CoinType: coinType,
