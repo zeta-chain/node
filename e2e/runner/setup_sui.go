@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/pkg/errors"
@@ -12,8 +13,11 @@ import (
 
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
 	"github.com/zeta-chain/node/e2e/utils"
+	suiutils "github.com/zeta-chain/node/e2e/utils/sui"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -69,7 +73,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	})
 	require.NoError(r, err)
 
-	var packageID, objectID string
+	// find packageID
+	var packageID, gatewayID, whitelistID string
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "published" {
 			packageID = change.PackageId
@@ -77,26 +82,40 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	}
 	require.NotEmpty(r, packageID, "find packageID")
 
+	// find gateway objectID
 	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "created" && change.ObjectType == gatewayType {
-			objectID = change.ObjectId
+			gatewayID = change.ObjectId
 		}
 	}
-	require.NotEmpty(r, objectID, "find objectID")
+	require.NotEmpty(r, gatewayID, "find gatewayID")
+
+	// find whitelist objectID
+	whitelistType := fmt.Sprintf("%s::gateway::WhitelistCap", packageID)
+	for _, change := range resp.ObjectChanges {
+		if change.Type == "created" && change.ObjectType == whitelistType {
+			whitelistID = change.ObjectId
+		}
+	}
+
+	// set Sui gateway values
+	r.GatewayPackageID = packageID
+	r.GatewayObjectID = gatewayID
 
 	// deploy fake USDC
-	_, _ = r.deployFakeUSDC()
+	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
+	r.whitelistFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
 
-	// set Sui contract values
-	r.GatewayPackageID = packageID
-	r.GatewayObjectID = objectID
+	r.SuiTokenCoinType = fakeUSDCCoinType
+	r.SuiTokenTreasuryCap = treasuryCap
 
 	// set the chain params
-	err = r.ensureSuiChainParams()
+	err = r.setSuiChainParams()
 	require.NoError(r, err)
 }
 
+// deployFakeUSDC deploys the FakeUSDC contract on Sui
 func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	client := r.Clients.Sui
 	deployerSigner, err := r.Account.SuiSigner()
@@ -145,10 +164,49 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	}
 	require.NotEmpty(r, treasuryCap, "find objectID")
 
-	return packageID, treasuryCap
+	coinType := packageID + "::fake_usdc::FakeUSDC"
+
+	return coinType, treasuryCap
 }
 
-func (r *E2ERunner) ensureSuiChainParams() error {
+// whitelistFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it
+func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
+	// we use DeployFungibleCoinZRC20 and whitelist manually because whitelist cctx are currently not supported for Sui
+	// TODO: change this logic and use MsgWhitelistERC20 once it's supported
+	// https://github.com/zeta-chain/node/issues/3569
+
+	// deploy zrc20
+	liqCap := math.NewUint(10e18)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
+		fakeUSDCCoinType,
+		chains.SuiLocalnet.ChainId,
+		6,
+		"Sui's FakeUSDC",
+		"USDC.SUI",
+		coin.CoinType_ERC20,
+		100000,
+		&liqCap,
+	))
+	require.NoError(r, err)
+
+	// whitelist zrc20
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          signer.Address(),
+		PackageObjectId: r.GatewayPackageID,
+		Module:          "gateway",
+		Function:        "whitelist",
+		TypeArguments:   []any{fakeUSDCCoinType},
+		Arguments:       []any{r.GatewayObjectID, whitelistCap},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+
+	r.executeSuiTx(signer, tx)
+}
+
+// set the chain params for Sui
+func (r *E2ERunner) setSuiChainParams() error {
 	if r.ZetaTxServer == nil {
 		return errors.New("ZetaTxServer is not initialized")
 	}

@@ -38,6 +38,14 @@ func suiTestRoutine(
 		// get tokens for the account
 		suiRunner.RequestSuiFaucetToken(conf.RPCs.SuiFaucet)
 
+		suiRunnerSigner, err := suiRunner.Account.SuiSigner()
+		if err != nil {
+			return err
+		}
+
+		// mint fungible tokens to the account
+		deployerRunner.MintSuiUSDC("10000000", suiRunnerSigner.Address())
+
 		// run sui test
 		testsToRun, err := suiRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,

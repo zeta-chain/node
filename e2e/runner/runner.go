@@ -120,6 +120,12 @@ type E2ERunner struct {
 	GatewayPackageID string
 	GatewayObjectID  string
 
+	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
+	SuiTokenCoinType string
+
+	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
+	SuiTokenTreasuryCap string
+
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
 	ZetaEth           *zetaeth.ZetaEth

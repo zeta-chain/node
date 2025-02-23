@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/utils/sui"
@@ -20,14 +19,10 @@ func (r *E2ERunner) SUIDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId, err := r.splitSUI(signer, amount)
-	require.NoError(r, err)
+	coinObjectId := r.splitSUI(signer, amount)
 
 	// create the tx
-	resp, err := r.executeSUIDeposit(signer, coinObjectId, receiver)
-	require.NoError(r, err)
-
-	return resp
+	return r.executeSUIDeposit(signer, coinObjectId, receiver)
 }
 
 // SUIDepositAndCall calls DepositAndCall on SUI
@@ -40,14 +35,33 @@ func (r *E2ERunner) SUIDepositAndCall(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectId, err := r.splitSUI(signer, amount)
-	require.NoError(r, err)
+	coinObjectId := r.splitSUI(signer, amount)
 
 	// create the tx
-	resp, err := r.executeSUIDepositAndCall(signer, coinObjectId, receiver, payload)
+	return r.executeSUIDepositAndCall(signer, coinObjectId, receiver, payload)
+}
+
+// MintSuiUSDC mints FakeUSDC on Sui to a receiver
+// this function requires the signer to be the owner of the trasuryCap
+func (r *E2ERunner) MintSuiUSDC(
+	amount,
+	receiver string,
+) models.SuiTransactionBlockResponse {
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+
+	// create the tx
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          signer.Address(),
+		PackageObjectId: r.GatewayPackageID,
+		Module:          "fake_usdc",
+		Function:        "mint",
+		Arguments:       []any{r.SuiTokenTreasuryCap, amount, receiver},
+		GasBudget:       "5000000000",
+	})
 	require.NoError(r, err)
 
-	return resp
+	return r.executeSuiTx(signer, tx)
 }
 
 // executeSUIDeposit executes a deposit on the SUI contract
@@ -55,7 +69,7 @@ func (r *E2ERunner) executeSUIDeposit(
 	signer *sui.SignerSecp256k1,
 	coinObjectID string,
 	receiver ethcommon.Address,
-) (models.SuiTransactionBlockResponse, error) {
+) models.SuiTransactionBlockResponse {
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
@@ -66,25 +80,9 @@ func (r *E2ERunner) executeSUIDeposit(
 		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex()},
 		GasBudget:       "5000000000",
 	})
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
+	require.NoError(r, err)
 
-	// sign the tx
-	signature, err := signer.SignTransactionBlock(tx.TxBytes)
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
-	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
-		RequestType: "WaitForLocalExecution",
-	})
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
-
-	return resp, nil
+	return r.executeSuiTx(signer, tx)
 }
 
 // executeSUIDepositAndCall executes a depositAndCall on the SUI contract
@@ -93,7 +91,7 @@ func (r *E2ERunner) executeSUIDepositAndCall(
 	coinObjectID string,
 	receiver ethcommon.Address,
 	payload []byte,
-) (models.SuiTransactionBlockResponse, error) {
+) models.SuiTransactionBlockResponse {
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
@@ -104,34 +102,15 @@ func (r *E2ERunner) executeSUIDepositAndCall(
 		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex(), payload},
 		GasBudget:       "5000000000",
 	})
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
+	require.NoError(r, err)
 
-	// sign the tx
-	signature, err := signer.SignTransactionBlock(tx.TxBytes)
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
-	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
-		RequestType: "WaitForLocalExecution",
-	})
-	if err != nil {
-		return models.SuiTransactionBlockResponse{}, err
-	}
-
-	return resp, nil
+	return r.executeSuiTx(signer, tx)
 }
 
 // splitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
-func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objId string, err error) {
+func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objId string) {
 	// find the coin to split
-	originalCoin, err := r.findSUIWithBalanceAbove(signer.Address(), balance)
-	if err != nil {
-		return "", err
-	}
+	originalCoin := r.findSUIWithBalanceAbove(signer.Address(), balance)
 
 	// split the coin using the PaySui API
 	tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
@@ -141,24 +120,9 @@ func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (ob
 		Amount:      []string{balance.String()},
 		GasBudget:   "5000000000",
 	})
-	if err != nil {
-		return "", err
-	}
+	require.NoError(r, err)
 
-	// sign the split tx
-	signature, err := signer.SignTransactionBlock(tx.TxBytes)
-	if err != nil {
-		return "", err
-	}
-
-	_, err = r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
-		RequestType: "WaitForLocalExecution",
-	})
-	if err != nil {
-		return "", err
-	}
+	r.executeSuiTx(signer, tx)
 
 	// find the split coin
 	return r.findSUIWithBalance(signer.Address(), balance)
@@ -167,7 +131,7 @@ func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (ob
 func (r *E2ERunner) findSUIWithBalance(
 	address string,
 	balance math.Uint,
-) (coinId string, err error) {
+) (coinId string) {
 	return r.findSUI(address, balance, func(a, b math.Uint) bool {
 		return a.Equal(b)
 	})
@@ -176,7 +140,7 @@ func (r *E2ERunner) findSUIWithBalance(
 func (r *E2ERunner) findSUIWithBalanceAbove(
 	address string,
 	balanceAbove math.Uint,
-) (coinId string, err error) {
+) (coinId string) {
 	return r.findSUI(address, balanceAbove, func(a, b math.Uint) bool {
 		return a.GTE(b)
 	})
@@ -188,24 +152,40 @@ func (r *E2ERunner) findSUI(
 	address string,
 	balance math.Uint,
 	comp compFunc,
-) (coinId string, err error) {
+) (coinId string) {
 	res, err := r.Clients.Sui.SuiXGetCoins(r.Ctx, models.SuiXGetCoinsRequest{
 		Owner:    address,
 		CoinType: string(zetasui.SUI),
 	})
-	if err != nil {
-		return "", err
-	}
+	require.NoError(r, err)
 
 	for _, data := range res.Data {
 		coinBalance, err := math.ParseUint(data.Balance)
-		if err != nil {
-			return "", err
-		}
+		require.NoError(r, err)
+
 		if comp(coinBalance, balance) {
-			return data.CoinObjectId, nil
+			return data.CoinObjectId
 		}
 	}
 
-	return "", errors.New("no coin found")
+	require.FailNow(r, "coin not found")
+	return ""
+}
+
+func (r *E2ERunner) executeSuiTx(
+	signer *sui.SignerSecp256k1,
+	tx models.TxnMetaData,
+) models.SuiTransactionBlockResponse {
+	// sign the tx
+	signature, err := signer.SignTransactionBlock(tx.TxBytes)
+	require.NoError(r, err, "sign transaction")
+
+	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
+		TxBytes:     tx.TxBytes,
+		Signature:   []string{signature},
+		RequestType: "WaitForLocalExecution",
+	})
+	require.NoError(r, err)
+
+	return resp
 }
