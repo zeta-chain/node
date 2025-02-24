@@ -19,7 +19,7 @@ var errTxNotFound = errors.New("no tx found")
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	if err := ob.ensureCursor(ctx); err != nil {
+	if err := ob.ensureCursor(); err != nil {
 		return errors.Wrap(err, "unable to ensure inbound cursor")
 	}
 

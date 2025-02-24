@@ -63,30 +63,11 @@ func TestObserver(t *testing.T) {
 
 		const usdc = "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
 
-		// Given gateway object from RPC (for "ensuring" the initial scroll cursor)
-		gatewayRequest := models.SuiGetObjectRequest{
-			ObjectId: ts.gateway.PackageID(),
-			Options: models.SuiObjectDataOptions{
-				ShowPreviousTransaction: true,
-			},
-		}
-
-		gatewayObject := models.SuiObjectResponse{
-			Data: &models.SuiObjectData{
-				ObjectId:            ts.gateway.PackageID(),
-				PreviousTransaction: "ABC123_first_tx",
-			},
-		}
-
-		ts.suiMock.
-			On("SuiGetObject", mock.Anything, gatewayRequest).
-			Return(gatewayObject, nil)
-
 		// Given list of gateway events...
 		expectedQuery := client.EventQuery{
 			PackageID: ts.gateway.PackageID(),
 			Module:    ts.gateway.Module(),
-			Cursor:    "ABC123_first_tx#0",
+			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
 		}
 

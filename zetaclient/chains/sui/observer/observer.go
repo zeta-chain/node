@@ -99,7 +99,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 }
 
 // ensureCursor ensures tx scroll cursor for inbound observations
-func (ob *Observer) ensureCursor(ctx context.Context) error {
+func (ob *Observer) ensureCursor() error {
 	if ob.LastTxScanned() != "" {
 		return nil
 	}
