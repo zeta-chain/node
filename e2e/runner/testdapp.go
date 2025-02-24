@@ -7,7 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 )
 
 // AssertTestDAppZEVMCalled is a function that asserts the values of the test dapp on the ZEVM
