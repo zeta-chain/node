@@ -23,7 +23,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	liquidityCap := math.NewUintFromBigInt(supply).Add(liquidityCapArg)
 	amountLessThanCap := liquidityCapArg.BigInt().Div(liquidityCapArg.BigInt(), big.NewInt(10)) // 1/10 of the cap
 	amountMoreThanCap := liquidityCapArg.BigInt().Mul(liquidityCapArg.BigInt(), big.NewInt(10)) // 10 times the cap
-	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr.Hex(), liquidityCap)
+	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr, liquidityCap)
 	require.NoError(r, err)
 
 	r.Logger.Info("set liquidity cap tx hash: %s", res.TxHash)
@@ -62,7 +62,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Deposit succeeded")
 
 	r.Logger.Info("Removing the liquidity cap")
-	res, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.ETHZRC20Addr.Hex())
+	res, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.ETHZRC20Addr)
 	require.NoError(r, err)
 	r.Logger.Info("remove liquidity cap tx hash: %s", res.TxHash)
 

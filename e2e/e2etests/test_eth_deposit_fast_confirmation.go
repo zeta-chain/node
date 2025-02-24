@@ -55,7 +55,7 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// note: the percentage should not be too small as it may block other tests
 	liquidityCap, _ := mathpkg.IncreaseUintByPercent(supplyUint, 50)
 	require.True(r, liquidityCap.GT(sdkmath.ZeroUint()))
-	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr.Hex(), liquidityCap)
+	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr, liquidityCap)
 	require.NoError(r, err)
 	r.Logger.Info("set liquidity cap to %s tx hash: %s", liquidityCap.String(), res.TxHash)
 
@@ -69,11 +69,13 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ASSERT-1
 	// wait for the cctx to be FAST confirmed
+	timeStart := time.Now()
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.Equal(r, crosschaintypes.ConfirmationMode_FAST, cctx.InboundParams.ConfirmationMode)
+	fastConfirmTime := time.Since(timeStart)
 
-	r.Logger.Info("FAST confirmed deposit succeeded")
+	r.Logger.Info("FAST confirmed deposit succeeded in %f seconds", fastConfirmTime.Seconds())
 
 	// ACT-2
 	// deposit with amount more than fast amount cap
@@ -83,11 +85,19 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ASSERT-2
 	// wait for the cctx to be SAFE confirmed
+	timeStart = time.Now()
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
+	safeConfirmTime := time.Since(timeStart)
 
-	r.Logger.Info("SAFE confirmed deposit succeeded")
+	r.Logger.Info("SAFE confirmed deposit succeeded in %f seconds", safeConfirmTime.Seconds())
+
+	// ensure FAST confirmation is faster than SAFE confirmation
+	// using 3 seconds is good enough to check the difference on local goerli network
+	timeSaved := safeConfirmTime - fastConfirmTime
+	r.Logger.Info("FAST confirmation saved %f seconds", timeSaved.Seconds())
+	require.True(r, timeSaved > 3*time.Second)
 
 	// TEARDOWN
 	// restore old chain params
@@ -95,6 +105,6 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "failed to restore chain params")
 
 	// remove the liquidity cap
-	_, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.ETHZRC20Addr.Hex())
+	_, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.ETHZRC20Addr)
 	require.NoError(r, err)
 }

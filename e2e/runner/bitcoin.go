@@ -28,6 +28,11 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
+const (
+	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
+	BTCRegnetBlockTime = 6 * time.Second
+)
+
 // ListDeployerUTXOs list the deployer's UTXOs
 func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 	// query UTXOs from node
@@ -416,7 +421,7 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 				require.NoError(r, err)
 
-				time.Sleep(6 * time.Second)
+				time.Sleep(BTCRegnetBlockTime)
 			}
 		}
 	}()
