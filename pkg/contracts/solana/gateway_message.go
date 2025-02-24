@@ -8,6 +8,8 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
+// NOTE: Following consts and identifier are used in outbounds message hashes for consistency.
+// Instruction specific byte identifiers are used to encode instruction in hash with fixed amount of space.
 const (
 	InstructionWithdraw          byte = 1
 	InstructionWithdrawSplToken  byte = 2
@@ -17,6 +19,7 @@ const (
 	InstructionIncrementNonce    byte = 7
 )
 
+// InstructionIdentifier is used at beginning of message hash to make it project specific.
 var InstructionIdentifier = []byte("ZETACHAIN")
 
 // MsgWithdraw is the message for the Solana gateway withdraw instruction
