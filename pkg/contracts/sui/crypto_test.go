@@ -2,6 +2,7 @@ package sui
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"testing"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -80,18 +81,34 @@ func TestCrypto(t *testing.T) {
 
 	t.Run("SerializeSignatureECDSA", func(t *testing.T) {
 		// ARRANGE
+		// Given a pubKey
+		enc, _ := hex.DecodeString(
+			"04760c4460e5336ac9bbd87952a3c7ec4363fc0a97bd31c86430806e287b437fd1b01abc6e1db640cf3106b520344af1d58b00b57823db3e1407cbc433e1b6d04d",
+		)
+		pubKey, err := crypto.UnmarshalPubkey(enc)
+		require.NoError(t, err)
+
+		// Given signature
 		signature := [65]byte{0, 1, 3}
-		pubKey := [33]byte{4, 5, 6}
 
 		// ACT
-		res, err := SerializeSignatureECDSA(signature, pubKey[:])
+		res, err := SerializeSignatureECDSA(signature, crypto.CompressPubkey(pubKey))
 
 		// ASSERT
 		require.NoError(t, err)
 
+		// Check signature
 		resBin, err := base64.StdEncoding.DecodeString(res)
 		require.NoError(t, err)
 		require.Equal(t, (1 + 64 + 33), len(resBin))
+
+		// ACT 2
+		pubKey2, signature2, err := DeserializeSignatureECDSA(res)
+
+		// ASSERT 2
+		require.NoError(t, err)
+		assert.True(t, pubKey2.Equal(pubKey))
+		assert.Equal(t, signature[:64], signature2[:])
 	})
 
 	t.Run("SignerSecp256k1", func(t *testing.T) {

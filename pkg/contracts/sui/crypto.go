@@ -10,6 +10,7 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	secp256k1signer "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/blake2b"
 )
@@ -81,6 +82,36 @@ func SerializeSignatureECDSA(signature [65]byte, publicKey []byte) (string, erro
 	copy(serialized[1+sigLen:], publicKey)
 
 	return base64.StdEncoding.EncodeToString(serialized), nil
+}
+
+// DeserializeSignatureECDSA deserializes SUI secp256k1 signature.
+// Returns ECDSA public key and signature.
+// Sequence: `flag(1b) + sig(64b) + compressedPubKey(33b)`
+func DeserializeSignatureECDSA(sigBase64 string) (*ecdsa.PublicKey, [64]byte, error) {
+	// flag + sig + pubKey
+	const expectedLen = 1 + 64 + 33
+
+	sigBytes, err := base64.StdEncoding.DecodeString(sigBase64)
+	switch {
+	case err != nil:
+		return nil, [64]byte{}, errors.Wrap(err, "failed to decode signature")
+	case len(sigBytes) != expectedLen:
+		return nil, [64]byte{}, errors.Errorf("invalid signature length (got %d, want %d)", len(sigBytes), expectedLen)
+	case sigBytes[0] != flagSecp256k1:
+		return nil, [64]byte{}, errors.Errorf("invalid signature flag (got %d, want %d)", sigBytes[0], flagSecp256k1)
+	case len(sigBytes[65:]) != 33:
+		return nil, [64]byte{}, errors.Errorf("invalid public key length (got %d, want %d)", len(sigBytes[65:]), 33)
+	}
+
+	pk, err := crypto.DecompressPubkey(sigBytes[65:])
+	if err != nil {
+		return nil, [64]byte{}, errors.Wrap(err, "failed to decompress public key")
+	}
+
+	var sig [64]byte
+	copy(sig[:], sigBytes[1:65])
+
+	return pk, sig, nil
 }
 
 // SignerSecp256k1 represents Sui Secp256k1 signer.
