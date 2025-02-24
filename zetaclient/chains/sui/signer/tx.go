@@ -64,11 +64,11 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	return s.client.MoveCall(ctx, req)
 }
 
-// broadcast attaches signature to tx and broadcasts it to Sui network
-func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]byte) error {
+// broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
+func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]byte) (string, error) {
 	sigBase64, err := sui.SerializeSignatureECDSA(sig, s.TSS().PubKey().Bytes(true))
 	if err != nil {
-		return errors.Wrap(err, "unable to serialize signature")
+		return "", errors.Wrap(err, "unable to serialize signature")
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
@@ -76,10 +76,10 @@ func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]b
 		Signature: []string{sigBase64},
 	}
 
-	_, err = s.client.SuiExecuteTransactionBlock(ctx, req)
+	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
 	if err != nil {
-		return errors.Wrap(err, "unable to execute tx block")
+		return "", errors.Wrap(err, "unable to execute tx block")
 	}
 
-	return nil
+	return res.Digest, nil
 }
