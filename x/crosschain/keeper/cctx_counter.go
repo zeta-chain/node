@@ -56,6 +56,7 @@ func (k Keeper) setCctxCounterIndex(ctx sdk.Context, cctx types.CrossChainTx) {
 	}
 
 	// must use big endian so most significant bytes are first for sortability
-	nextCounterBytes := sdk.Uint64ToBigEndian(nextCounter)
+	// we binary OR the counter so it sorts in descending rather than ascending order by default
+	nextCounterBytes := sdk.Uint64ToBigEndian(^nextCounter)
 	counterIndexStore.Set(nextCounterBytes, cctxIndex[:])
 }

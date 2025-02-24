@@ -350,6 +350,7 @@ func TestKeeper_CctxAll(t *testing.T) {
 
 		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{})
 		require.NoError(t, err)
+		slices.Reverse(createdCctx)
 		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
 
 		// also assert unordered query return same number of results
@@ -373,7 +374,6 @@ func TestKeeper_CctxAll(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		slices.Reverse(createdCctx)
 		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
 
 		// also assert unordered query return same number of results
