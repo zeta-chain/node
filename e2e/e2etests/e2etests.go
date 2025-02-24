@@ -87,8 +87,8 @@ const (
 	*/
 	TestSuiDepositName             = "sui_deposit"
 	TestSuiDepositAndCallName      = "sui_deposit_and_call"
-	TestSuiTokenDepositName        = "sui_token_deposit"
-	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call"
+	TestSuiTokenDepositName        = "sui_token_deposit"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
