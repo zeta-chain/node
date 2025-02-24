@@ -10,7 +10,7 @@
 # Trap signals and forward to children
 trap 'kill -- -$$' SIGINT SIGTERM
 
-service ssh start
+/usr/sbin/sshd
 
 get_zetacored_version() {
   retries=10
