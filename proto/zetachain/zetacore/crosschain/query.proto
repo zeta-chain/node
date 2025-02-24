@@ -325,6 +325,9 @@ message QueryGetCctxResponse { CrossChainTx CrossChainTx = 1; }
 
 message QueryAllCctxRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // Bulk dump all CCTX without ordering.
+  // This is useful for initializing a CCTX indexer.
+  bool unordered = 2;
 }
 
 message QueryAllCctxResponse {
