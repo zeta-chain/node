@@ -41,7 +41,7 @@ func (k Keeper) getNextCctxCounter(ctx sdk.Context) uint64 {
 	return nextCounter
 }
 
-// setCctxCounterIndex sets the CCTX in the counter index
+// setCctxCounterIndex sets a new CCTX in the counter index
 //
 // note that we use the raw bytes in the index rather than the hex encoded bytes
 // like in the main store

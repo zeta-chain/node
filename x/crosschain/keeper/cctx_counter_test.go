@@ -12,7 +12,12 @@ func TestCounter(t *testing.T) {
 	initialCounter := keeper.GetCctxCounter(ctx)
 	require.Zero(t, initialCounter)
 
-	nextVal := uint64(1)
+	nextVal := keeper.GetNextCctxCounter(ctx)
+	require.Greater(t, nextVal, initialCounter)
+	require.Equal(t, nextVal, keeper.GetCctxCounter(ctx))
+
+	// also test direct set
+	nextVal += 1
 	keeper.SetCctxCounter(ctx, nextVal)
 	require.Equal(t, nextVal, keeper.GetCctxCounter(ctx))
 }
