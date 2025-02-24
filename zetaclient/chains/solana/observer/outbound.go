@@ -109,6 +109,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
+	if inst.InstructionDiscriminator() == contracts.DiscriminatorIncrementNonce {
+		outboundStatus = chains.ReceiveStatus_failed
+	}
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
@@ -145,9 +148,13 @@ func (ob *Observer) PostVoteOutbound(
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
 	// and the vote msg won't trigger ZEVM interaction
 	const (
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		retryGasLimit = 0
+		gasLimit = zetacore.PostVoteOutboundGasLimit
 	)
+
+	var retryGasLimit uint64
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
 
 	// post vote to zetacore
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
@@ -299,6 +306,12 @@ func ParseGatewayInstruction(
 	// the instruction should be an invocation of the gateway program
 	if !programID.Equals(gatewayID) {
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
+	}
+
+	// first check if it was simple nonce increment instruction, which indicates that outbound failed
+	inst, err := contracts.ParseInstructionIncrementNonce(instruction)
+	if err == nil {
+		return inst, nil
 	}
 
 	// parse the outbound instruction

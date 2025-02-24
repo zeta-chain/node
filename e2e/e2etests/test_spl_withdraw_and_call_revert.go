@@ -4,24 +4,21 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls connected program on solana
-// message and zevm sender are stored in connected program pda, and withdrawn spl tokens are stored
-// in connected program pda and account provided in remaining accounts to demonstrate that spl tokens
-// can be moved to accounts in connected program as well as gateway program
-func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
+// execution is reverted in connected program on_call function
+func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	withdrawAmount := utils.ParseBigInt(r, args[0])
@@ -65,69 +62,40 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL before withdraw: %s", connectedPdaBalanceBefore.Value.Amount)
 
+	// use a random address to get the revert amount
+	revertAddress := sample.EthAddress()
+	balance, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	require.NoError(r, err)
+	require.EqualValues(r, int64(0), balance.Int64())
+
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
 		runner.ConnectedSPLProgramID,
 		withdrawAmount,
 		approvedAmount,
-		[]byte("hello"),
+		[]byte("revert"),
 		gatewayzevm.RevertOptions{
+			RevertAddress:    revertAddress,
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// get SPL ZRC20 balance after withdraw
 	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("runner balance of SPL after withdraw: %d", zrc20BalanceAfter)
 
-	// check pda account info of connected program
-	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
+	balanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	r.Logger.Info("runner balance of SOL after withdraw: %d", balanceAfter)
+
+	// check the balance of revert address is equal to withdraw amount
+	balance, err = r.SPLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
-	type ConnectedPdaInfo struct {
-		Discriminator [8]byte
-		LastSender    [20]byte
-		LastMessage   string
-	}
-	pda := ConnectedPdaInfo{}
-	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())
-	require.NoError(r, err)
-
-	require.Equal(r, "hello", pda.LastMessage)
-	require.Equal(r, r.ZEVMAuth.From.String(), common.BytesToAddress(pda.LastSender[:]).String())
-
-	// verify balances are updated
-	receiverBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, receiverAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-	r.Logger.Info("receiver balance of SPL after withdraw: %s", receiverBalanceAfter.Value.Amount)
-
-	connectedPdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(
-		r.Ctx,
-		connectedPdaAta,
-		rpc.CommitmentConfirmed,
-	)
-	require.NoError(r, err)
-	r.Logger.Info("connected pda balance of SPL after withdraw: %s", connectedPdaBalanceAfter.Value.Amount)
-
-	// verify half of amount is added to receiver ata and half to connected pda ata
-	halfWithdrawAmount := new(big.Int).Div(withdrawAmount, big.NewInt(2))
-	require.EqualValues(
-		r,
-		new(big.Int).Add(halfWithdrawAmount, utils.ParseBigInt(r, receiverBalanceBefore.Value.Amount)).String(),
-		utils.ParseBigInt(r, receiverBalanceAfter.Value.Amount).String(),
-	)
-
-	require.EqualValues(
-		r,
-		new(big.Int).Add(halfWithdrawAmount, utils.ParseBigInt(r, connectedPdaBalanceBefore.Value.Amount)).String(),
-		utils.ParseBigInt(r, connectedPdaBalanceAfter.Value.Amount).String(),
-	)
-
-	// verify amount is subtracted on zrc20
-	require.EqualValues(r, new(big.Int).Sub(zrc20BalanceBefore, withdrawAmount).String(), zrc20BalanceAfter.String())
+	require.Equal(r, withdrawAmount.Int64(), balance.Int64())
 }

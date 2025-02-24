@@ -11,21 +11,26 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWhitelist creates and signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
-func (signer *Signer) createAndSignMsgWhitelist(
+// createAndSignMsgIncrementNonce creates and signs a increment_nonce message for gateway increment_nonce instruction with TSS.
+func (signer *Signer) createAndSignMsgIncrementNonce(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
-	whitelistCandidate solana.PublicKey,
-	whitelistEntry solana.PublicKey,
-) (*contracts.MsgWhitelist, error) {
+	cancelTx bool,
+) (*contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
+	amount := params.Amount.Uint64()
 
-	// prepare whitelist msg and compute hash
-	msg := contracts.NewMsgWhitelist(whitelistCandidate, whitelistEntry, chainID, nonce)
+	// zero out the amount if cancelTx is set. It's legal to withdraw 0 lamports through the gateway.
+	if cancelTx {
+		amount = 0
+	}
+
+	// prepare increment_nonce msg and compute hash
+	msg := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
 	msgHash := msg.Hash()
 
 	// sign the message with TSS to get an ECDSA signature.
@@ -39,18 +44,21 @@ func (signer *Signer) createAndSignMsgWhitelist(
 	return msg.SetSignature(signature), nil
 }
 
-// createWhitelistInstruction wraps the whitelist 'msg' into a Solana instruction.
-func (signer *Signer) createWhitelistInstruction(msg *contracts.MsgWhitelist) (*solana.GenericInstruction, error) {
-	// create whitelist_spl_mint instruction with program call data
-	dataBytes, err := borsh.Serialize(contracts.WhitelistInstructionParams{
-		Discriminator: contracts.DiscriminatorWhitelistSplMint,
+// createIncrementNonceInstruction wraps the increment_nonce 'msg' into a Solana instruction.
+func (signer *Signer) createIncrementNonceInstruction(
+	msg contracts.MsgIncrementNonce,
+) (*solana.GenericInstruction, error) {
+	// create increment_nonce instruction with program call data
+	dataBytes, err := borsh.Serialize(contracts.IncrementNonceInstructionParams{
+		Discriminator: contracts.DiscriminatorIncrementNonce,
+		Amount:        msg.Amount(),
 		Signature:     msg.SigRS(),
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize whitelist_spl_mint instruction")
+		return nil, errors.Wrap(err, "cannot serialize increment_nonce instruction")
 	}
 
 	inst := &solana.GenericInstruction{
@@ -59,9 +67,6 @@ func (signer *Signer) createWhitelistInstruction(msg *contracts.MsgWhitelist) (*
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
 			solana.Meta(signer.pda).WRITE(),
-			solana.Meta(msg.WhitelistEntry()).WRITE(),
-			solana.Meta(msg.WhitelistCandidate()),
-			solana.Meta(solana.SystemProgramID),
 		},
 	}
 
