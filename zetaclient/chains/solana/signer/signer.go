@@ -213,6 +213,43 @@ func (signer *Signer) TryProcessOutbound(
 	signer.broadcastOutbound(ctx, tx, fallbackTx, chainID, nonce, logger, zetacoreClient)
 }
 
+// signTx creates and signs solana tx containing provided instruction with relayer key.
+func (signer *Signer) signTx(ctx context.Context, inst *solana.GenericInstruction) (*solana.Transaction, error) {
+	// get a recent blockhash
+	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		return nil, errors.Wrap(err, "getLatestBlockhash error")
+	}
+
+	// create a transaction that wraps the instruction
+	tx, err := solana.NewTransaction(
+		[]solana.Instruction{
+			// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
+			// https://github.com/zeta-chain/node/issues/2599
+			// programs.ComputeBudgetSetComputeUnitLimit(computeUnitLimit),
+			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
+			inst},
+		recent.Value.Blockhash,
+		solana.TransactionPayer(signer.relayerKey.PublicKey()),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create new tx")
+	}
+
+	// relayer signs the transaction
+	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
+		if key.Equals(signer.relayerKey.PublicKey()) {
+			return signer.relayerKey
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "signer unable to sign transaction")
+	}
+
+	return tx, nil
+}
+
 // broadcastOutbound sends the signed transaction to the Solana network
 func (signer *Signer) broadcastOutbound(
 	ctx context.Context,
@@ -308,12 +345,12 @@ func (signer *Signer) prepareIncrementNonceTx(
 	}
 
 	// sign the increment_nonce transaction by relayer key
-	tx, err := signer.signIncrementNonceTx(ctx, *msg)
+	inst, err := signer.createIncrementNonceInstruction(*msg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating increment nonce instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) prepareWithdrawTx(
@@ -345,12 +382,12 @@ func (signer *Signer) prepareWithdrawTx(
 	}
 
 	// sign the withdraw transaction by relayer key
-	tx, err := signer.signWithdrawTx(ctx, *msg)
+	inst, err := signer.createWithdrawInstruction(*msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "signWithdrawTx error")
+		return nil, errors.Wrap(err, "error creating withdraw instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) prepareExecuteTx(
@@ -408,12 +445,12 @@ func (signer *Signer) prepareExecuteTx(
 	}
 
 	// sign the execute transaction by relayer key
-	tx, err := signer.signExecuteTx(ctx, *msgExecute)
+	inst, err := signer.createExecuteInstruction(*msgExecute)
 	if err != nil {
-		return nil, errors.Wrap(err, "signExecuteTx error")
+		return nil, errors.Wrap(err, "error creating execute instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) prepareWithdrawSPLTx(
@@ -458,12 +495,12 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	}
 
 	// sign the withdraw transaction by relayer key
-	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
+	inst, err := signer.createWithdrawSPLInstruction(*msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "signWithdrawSPLTx error")
+		return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) prepareExecuteSPLTx(
@@ -530,12 +567,12 @@ func (signer *Signer) prepareExecuteSPLTx(
 	}
 
 	// sign the execute spl transaction by relayer key
-	tx, err := signer.signExecuteSPLTx(ctx, *msgExecuteSpl)
+	inst, err := signer.createExecuteSPLInstruction(*msgExecuteSpl)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating execute SPL instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) prepareWhitelistTx(
@@ -567,12 +604,12 @@ func (signer *Signer) prepareWhitelistTx(
 	}
 
 	// sign the whitelist transaction by relayer key
-	tx, err := signer.signWhitelistTx(ctx, msg)
+	inst, err := signer.createWhitelistInstruction(msg)
 	if err != nil {
-		return nil, errors.Wrap(err, "signWhitelistTx error")
+		return nil, errors.Wrap(err, "error creating whitelist instruction")
 	}
 
-	return tx, nil
+	return signer.signTx(ctx, inst)
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/errors"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -85,11 +84,8 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	return msg.SetSignature(signature), nil
 }
 
-// signExecuteSPLTx wraps the execute spl 'msg' into a Solana transaction and signs it with the relayer key.
-func (signer *Signer) signExecuteSPLTx(
-	ctx context.Context,
-	msg contracts.MsgExecuteSPL,
-) (*solana.Transaction, error) {
+// createExecuteSPLInstruction wraps the execute spl 'msg' into a Solana instruction.
+func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (*solana.GenericInstruction, error) {
 	// create execute spl instruction with program call data
 	dataBytes, err := borsh.Serialize(contracts.ExecuteSPLInstructionParams{
 		Discriminator: contracts.DiscriminatorExecuteSPL,
@@ -130,42 +126,11 @@ func (signer *Signer) signExecuteSPLTx(
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 
-	inst := solana.GenericInstruction{
+	inst := &solana.GenericInstruction{
 		ProgID:        signer.gatewayID,
 		DataBytes:     dataBytes,
 		AccountValues: allAccounts,
 	}
-	// get a recent blockhash
-	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
-	if err != nil {
-		return nil, errors.Wrap(err, "GetLatestBlockhash error")
-	}
 
-	// create a transaction that wraps the instruction
-	tx, err := solana.NewTransaction(
-		[]solana.Instruction{
-			// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
-			// https://github.com/zeta-chain/node/issues/2599
-			// programs.ComputeBudgetSetComputeUnitLimit(computeUnitLimit),
-			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
-			&inst},
-		recent.Value.Blockhash,
-		solana.TransactionPayer(signer.relayerKey.PublicKey()),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create new tx")
-	}
-
-	// relayer signs the transaction
-	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
-		if key.Equals(signer.relayerKey.PublicKey()) {
-			return signer.relayerKey
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "signer unable to sign transaction")
-	}
-
-	return tx, nil
+	return inst, nil
 }

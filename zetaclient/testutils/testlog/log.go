@@ -2,7 +2,9 @@ package testlog
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"testing"
 
@@ -39,6 +41,9 @@ func (b *concurrentBytesBuffer) Write(p []byte) (n int, err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	const silencePanicSubstring = "Log in goroutine"
+	defer func() { silencePanic(recover(), silencePanicSubstring) }()
+
 	return b.buf.Write(p)
 }
 
@@ -47,4 +52,18 @@ func (b *concurrentBytesBuffer) string() string {
 	defer b.mu.RUnlock()
 
 	return b.buf.String()
+}
+
+func silencePanic(r any, substr string) {
+	// noop
+	if r == nil {
+		return
+	}
+
+	panicStr := fmt.Sprintf("%v", r)
+	if strings.Contains(panicStr, substr) {
+		return
+	}
+
+	panic(panicStr)
 }

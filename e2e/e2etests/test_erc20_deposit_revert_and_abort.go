@@ -15,9 +15,7 @@ import (
 )
 
 func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
-
-	amount := utils.ParseBigInt(r, args[0])
+	require.Len(r, args, 0)
 
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
 
@@ -28,14 +26,18 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// perform the deposit
 	tx := r.ERC20DepositAndCall(
 		sample.EthAddress(), // non-existing address
-		amount, []byte("revert"),
+		big.NewInt(
+			1,
+		), // a very small amount is passed so the cctx will be aborted as the fee for reverts cannot be paid
+		[]byte("revert"),
 		gatewayevm.RevertOptions{
-			RevertAddress:    sample.EthAddress(), // non-existing address
+			RevertAddress:    r.TestDAppV2EVMAddr,
 			CallOnRevert:     true,
 			RevertMessage:    []byte("revert"),
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
-		})
+		},
+	)
 
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
