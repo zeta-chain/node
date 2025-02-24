@@ -27,7 +27,7 @@ func (wc *withdrawCap) valid() bool {
 		return false
 	}
 
-	return time.Now().Sub(wc.fetchedAt) < withdrawCapTTL
+	return time.Since(wc.fetchedAt) < withdrawCapTTL
 }
 
 func (wc *withdrawCap) set(objectID string) {
