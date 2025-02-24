@@ -21,6 +21,8 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+const changeTypeCreated = "created"
+
 // RequestSuiFaucetToken requests SUI tokens from the faucet for the runner account
 func (r *E2ERunner) RequestSuiFaucetToken(faucetURL string) {
 	deployerSigner, err := r.Account.SuiSigner()
@@ -85,7 +87,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// find gateway objectID
 	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
 	for _, change := range resp.ObjectChanges {
-		if change.Type == "created" && change.ObjectType == gatewayType {
+		if change.Type == changeTypeCreated && change.ObjectType == gatewayType {
 			gatewayID = change.ObjectId
 		}
 	}
@@ -94,7 +96,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// find whitelist objectID
 	whitelistType := fmt.Sprintf("%s::gateway::WhitelistCap", packageID)
 	for _, change := range resp.ObjectChanges {
-		if change.Type == "created" && change.ObjectType == whitelistType {
+		if change.Type == changeTypeCreated && change.ObjectType == whitelistType {
 			whitelistID = change.ObjectId
 		}
 	}
@@ -158,7 +160,7 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	require.NotEmpty(r, packageID, "find packageID")
 
 	for _, change := range resp.ObjectChanges {
-		if change.Type == "created" && strings.Contains(change.ObjectType, "TreasuryCap") {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "TreasuryCap") {
 			treasuryCap = change.ObjectId
 		}
 	}

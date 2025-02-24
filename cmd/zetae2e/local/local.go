@@ -325,7 +325,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		} else {
 			logger.Print("⚠️ partial precompiled run (unclean state)")
 		}
-		//eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
+		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
 
 	if testAdmin {
