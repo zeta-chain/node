@@ -95,7 +95,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
 			mock.Anything,
@@ -142,7 +142,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount := big.NewInt(42)
 
 			// expect DepositCoinZeta to be called
-			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 			fungibleMock.On(
 				"ZRC20DepositAndCallContract",
 				mock.Anything,
@@ -206,7 +206,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount := big.NewInt(42)
 
 			// expect DepositCoinZeta to be called
-			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+			// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 			fungibleMock.On(
 				"ZRC20DepositAndCallContract",
 				mock.Anything,
@@ -296,7 +296,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 		errDeposit := errors.New("deposit failed")
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
@@ -342,7 +342,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 		errDeposit := errors.New("deposit failed")
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
@@ -388,7 +388,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
 			mock.Anything,
@@ -433,7 +433,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.FungibleTokenCoinType, msg.Asset)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
 			mock.Anything,

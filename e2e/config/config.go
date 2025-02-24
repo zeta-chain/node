@@ -133,9 +133,10 @@ type Solana struct {
 
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
-	GatewayPackageID DoubleQuotedString `yaml:"gateway_package_id"`
-	GatewayObjectID  DoubleQuotedString `yaml:"gateway_object_id"`
-	CoinType         DoubleQuotedString `yaml:"coin_type"`
+	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
+	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
+	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain

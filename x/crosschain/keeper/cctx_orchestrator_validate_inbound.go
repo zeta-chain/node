@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -20,9 +21,8 @@ func (k Keeper) ValidateInbound(
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
 	}
-	err := k.CheckIfTSSMigrationTransfer(ctx, msg)
-	if err != nil {
-		return nil, err
+	if err := k.CheckIfTSSMigrationTransfer(ctx, msg); err != nil {
+		return nil, errors.Wrap(err, "tss migration transfer check failed")
 	}
 
 	// Do not process if inbound is disabled
@@ -33,7 +33,7 @@ func (k Keeper) ValidateInbound(
 	// create a new CCTX from the inbound message. The status of the new CCTX is set to PendingInbound.
 	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create new CCTX")
 	}
 
 	// Initiate outbound, the process function manages the state commit and cctx status change.
@@ -43,7 +43,7 @@ func (k Keeper) ValidateInbound(
 		ShouldPayGas: shouldPayGas,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to initiate outbound")
 	}
 
 	inCctxIndex, ok := ctx.Value(InCCTXIndexKey).(string)

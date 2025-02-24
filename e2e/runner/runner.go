@@ -273,6 +273,8 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 
 	r.GatewayPackageID = other.GatewayPackageID
 	r.GatewayObjectID = other.GatewayObjectID
+	r.SuiTokenCoinType = other.SuiTokenCoinType
+	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)

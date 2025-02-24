@@ -124,6 +124,12 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if c := conf.Contracts.Sui.GatewayObjectID; c != "" {
 		r.GatewayObjectID = c.String()
 	}
+	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
+		r.SuiTokenCoinType = c.String()
+	}
+	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
+		r.SuiTokenTreasuryCap = c.String()
+	}
 
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")

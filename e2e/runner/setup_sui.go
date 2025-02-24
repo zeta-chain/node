@@ -164,7 +164,10 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	}
 	require.NotEmpty(r, treasuryCap, "find objectID")
 
-	coinType := packageID + "::fake_usdc::FakeUSDC"
+	coinType := packageID + "::fake_usdc::FAKE_USDC"
+
+	// strip 0x from packageID
+	coinType = coinType[2:]
 
 	return coinType, treasuryCap
 }
@@ -196,7 +199,7 @@ func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDC
 		PackageObjectId: r.GatewayPackageID,
 		Module:          "gateway",
 		Function:        "whitelist",
-		TypeArguments:   []any{fakeUSDCCoinType},
+		TypeArguments:   []any{"0x" + fakeUSDCCoinType},
 		Arguments:       []any{r.GatewayObjectID, whitelistCap},
 		GasBudget:       "5000000000",
 	})

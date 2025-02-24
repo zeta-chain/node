@@ -197,10 +197,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// monitor block production to ensure we fail fast if there are consensus failures
 	go monitorBlockProductionCancel(ctx, cancel, conf)
 
-	if testSui && !skipSetup {
-		deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
-	}
-
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
@@ -260,6 +256,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams()
+
+		if testSui {
+			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
+		}
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}

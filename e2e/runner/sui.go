@@ -1,6 +1,9 @@
 package runner
 
 import (
+	"fmt"
+	"strings"
+
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -50,10 +53,10 @@ func (r *E2ERunner) SuiFungibleTokenDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectID := r.splitSUI(signer, amount)
+	coinObjectID := r.splitUSDC(signer, amount)
 
 	// create the tx
-	return r.executeDeposit(signer, r.SuiTokenCoinType, coinObjectID, receiver)
+	return r.executeDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
 }
 
 // SuiFungibleTokenDepositAndCall calls DepositAndCall with fungible token on Sui
@@ -69,7 +72,7 @@ func (r *E2ERunner) SuiFungibleTokenDepositAndCall(
 	coinObjectID := r.splitUSDC(signer, amount)
 
 	// create the tx
-	return r.executeDepositAndCall(signer, r.SuiTokenCoinType, coinObjectID, receiver, payload)
+	return r.executeDepositAndCall(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver, payload)
 }
 
 // MintSuiUSDC mints FakeUSDC on Sui to a receiver
@@ -81,12 +84,22 @@ func (r *E2ERunner) MintSuiUSDC(
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
+	r.Logger.Print("data")
+	r.Logger.Print(amount)
+	r.Logger.Print(receiver)
+
+	// extract the package ID from the coin type
+	splitted := strings.Split(r.SuiTokenCoinType, "::")
+	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name>")
+	packageID := "0x" + splitted[0]
+
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.GatewayPackageID,
+		PackageObjectId: packageID,
 		Module:          "fake_usdc",
 		Function:        "mint",
+		TypeArguments:   []any{},
 		Arguments:       []any{r.SuiTokenTreasuryCap, amount, receiver},
 		GasBudget:       "5000000000",
 	})
@@ -143,7 +156,7 @@ func (r *E2ERunner) executeDepositAndCall(
 // splitUSDC splits USDC coin and obtain a USDC coin object with the wanted balance
 func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, r.SuiTokenCoinType)
+	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 
 	tx, err := r.Clients.Sui.SplitCoin(r.Ctx, models.SplitCoinRequest{
 		Signer:       signer.Address(),
@@ -156,7 +169,7 @@ func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (o
 	r.executeSuiTx(signer, tx)
 
 	// find the split coin
-	return r.findSuiCoinWithBalance(signer.Address(), balance, r.SuiTokenCoinType)
+	return r.findSuiCoinWithBalance(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 }
 
 // splitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
@@ -223,7 +236,7 @@ func (r *E2ERunner) findSuiCoin(
 		}
 	}
 
-	require.FailNow(r, "coin not found")
+	require.FailNow(r, fmt.Sprintf("coin %s not found for address %s", coinType, address))
 	return ""
 }
 

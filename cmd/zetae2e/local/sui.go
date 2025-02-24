@@ -44,7 +44,9 @@ func suiTestRoutine(
 		}
 
 		// mint fungible tokens to the account
-		deployerRunner.MintSuiUSDC("10000000", suiRunnerSigner.Address())
+		txRes := deployerRunner.MintSuiUSDC("10000000", suiRunnerSigner.Address())
+
+		deployerRunner.Logger.Info("Sui USDC mint tx: %s", txRes.Digest)
 
 		// run sui test
 		testsToRun, err := suiRunner.GetE2ETestsToRunByName(
