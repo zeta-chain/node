@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -140,18 +140,6 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		Str(logs.FieldMethod, "observeInboundInBlockRange").
 		Uint64("start_block", startBlock).Uint64("to_block", toBlock).Logger()
 
-	// task 1:  query evm chain for zeta sent logs (read at most 100 blocks in one go)
-	lastScannedZetaSent, err := ob.ObserveZetaSent(ctx, startBlock, toBlock)
-	if err != nil {
-		logger.Error().Err(err).Msg("error observing zeta sent events from ZetaConnector contract")
-	}
-
-	// task 2: query evm chain for deposited logs (read at most 100 blocks in one go)
-	lastScannedDeposited, err := ob.ObserveERC20Deposited(ctx, startBlock, toBlock)
-	if err != nil {
-		logger.Error().Err(err).Msg("error observing deposited events from ERC20Custody contract")
-	}
-
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
 	lastScannedTssRecvd, err := ob.ObserveTSSReceive(ctx, startBlock, toBlock)
 	if err != nil {
@@ -163,24 +151,38 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 	ob.FilterTSSOutbound(ctx, startBlock, toBlock)
 
 	var (
+		lastScannedZetaSent              = startBlock - 1
+		lastScannedDeposited             = startBlock - 1
 		lastScannedGatewayDeposit        = startBlock - 1
 		lastScannedGatewayCall           = startBlock - 1
 		lastScannedGatewayDepositAndCall = startBlock - 1
 	)
 
-	gatewayLogs, err := ob.fetchGatewayLogs(ctx, startBlock, toBlock)
+	logs, err := ob.fetchLogs(ctx, startBlock, toBlock)
 	if err != nil {
 		ob.Logger().Inbound.Error().Err(err).Msg("get gateway logs")
 	} else {
-		lastScannedGatewayDeposit, err = ob.observeGatewayDeposit(ctx, startBlock, toBlock, gatewayLogs)
+		// handle connector contract deposit
+		lastScannedZetaSent, err = ob.observeZetaSent(ctx, startBlock, toBlock, logs)
+		if err != nil {
+			logger.Error().Err(err).Msg("error observing zeta sent events from ZetaConnector contract")
+		}
+
+		// handle legacy erc20 direct deposit logs
+		lastScannedDeposited, err = ob.observeERC20Deposited(ctx, startBlock, toBlock, logs)
+		if err != nil {
+			logger.Error().Err(err).Msg("error observing deposited events from ERC20Custody contract")
+		}
+
+		lastScannedGatewayDeposit, err = ob.observeGatewayDeposit(ctx, startBlock, toBlock, logs)
 		if err != nil {
 			ob.Logger().Inbound.Error().Err(err).Msg("error observing deposit events from Gateway contract")
 		}
-		lastScannedGatewayCall, err = ob.observeGatewayCall(ctx, startBlock, toBlock, gatewayLogs)
+		lastScannedGatewayCall, err = ob.observeGatewayCall(ctx, startBlock, toBlock, logs)
 		if err != nil {
 			ob.Logger().Inbound.Error().Err(err).Msg("error observing call events from Gateway contract")
 		}
-		lastScannedGatewayDepositAndCall, err = ob.observeGatewayDepositAndCall(ctx, startBlock, toBlock, gatewayLogs)
+		lastScannedGatewayDepositAndCall, err = ob.observeGatewayDepositAndCall(ctx, startBlock, toBlock, logs)
 		if err != nil {
 			ob.Logger().Inbound.Error().Err(err).Msg("error observing depositAndCall events from Gateway contract")
 		}
@@ -200,9 +202,46 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 	return lowestLastScannedBlock
 }
 
-// ObserveZetaSent queries the ZetaSent event from the connector contract and posts to zetacore
+func (ob *Observer) fetchLogs(ctx context.Context, startBlock, toBlock uint64) ([]ethtypes.Log, error) {
+	gatewayAddr, _, err := ob.GetGatewayContract()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get gateway contract")
+	}
+
+	erc20Addr, _, err := ob.GetERC20CustodyContract()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get erc20 custody contract")
+	}
+
+	connectorAddr, _, err := ob.GetConnectorContract()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't get connector contract")
+	}
+
+	addresses := []ethcommon.Address{gatewayAddr, erc20Addr, connectorAddr}
+
+	logs, err := ob.evmClient.FilterLogs(ctx, ethereum.FilterQuery{
+		FromBlock: new(big.Int).SetUint64(startBlock),
+		ToBlock:   new(big.Int).SetUint64(toBlock),
+		Addresses: addresses,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "filter logs")
+	}
+
+	// increment prom counter
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
+
+	return logs, nil
+}
+
+// observeZetaSent queries the ZetaSent event from the connector contract and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) observeZetaSent(
+	ctx context.Context,
+	startBlock, toBlock uint64,
+	logs []ethtypes.Log,
+) (uint64, error) {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return 0, err
@@ -214,29 +253,24 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 		// we have to re-scan from this block next time
 		return startBlock - 1, errors.Wrap(err, "error getting connector contract")
 	}
-	iter, err := connector.FilterZetaSent(&bind.FilterOpts{
-		Start:   startBlock,
-		End:     &toBlock,
-		Context: ctx,
-	}, []ethcommon.Address{}, []*big.Int{})
-	if err != nil {
-		// we have to re-scan from this block next time
-		return startBlock - 1, errors.Wrap(err, "error filtering ZetaSent events")
-	}
 
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*zetaconnector.ZetaConnectorNonEthZetaSent, 0)
-	for iter.Next() {
+	for _, log := range logs {
 		// sanity check tx event
-		err := common.ValidateEvmTxLog(&iter.Event.Raw, addrConnector, "", common.TopicsZetaSent)
+		err := common.ValidateEvmTxLog(&log, addrConnector, "", common.TopicsZetaSent)
+		if err != nil {
+			continue
+		}
+		event, err := connector.ParseZetaSent(log)
 		if err == nil {
-			events = append(events, iter.Event)
+			events = append(events, event)
 			continue
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
 			Msgf("ObserveZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
-				iter.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iter.Event.Raw.BlockNumber)
+				log.TxHash.Hex(), ob.Chain().ChainId, log.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {
@@ -283,9 +317,13 @@ func (ob *Observer) ObserveZetaSent(ctx context.Context, startBlock, toBlock uin
 	return toBlock, nil
 }
 
-// ObserveERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetacore
+// observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetacore
 // returns the last block successfully scanned
-func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+func (ob *Observer) observeERC20Deposited(
+	ctx context.Context,
+	startBlock, toBlock uint64,
+	logs []ethtypes.Log,
+) (uint64, error) {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
@@ -293,29 +331,23 @@ func (ob *Observer) ObserveERC20Deposited(ctx context.Context, startBlock, toBlo
 		return startBlock - 1, errors.Wrap(err, "error getting ERC20Custody contract")
 	}
 
-	iter, err := erc20custodyContract.FilterDeposited(&bind.FilterOpts{
-		Start:   startBlock,
-		End:     &toBlock,
-		Context: ctx,
-	}, []ethcommon.Address{})
-	if err != nil {
-		// we have to re-scan from this block next time
-		return startBlock - 1, errors.Wrap(err, "error filtering ERC20 Deposited events")
-	}
-
 	// collect and sort events by block number, then tx index, then log index (ascending)
 	events := make([]*erc20custody.ERC20CustodyDeposited, 0)
-	for iter.Next() {
+	for _, log := range logs {
 		// sanity check tx event
-		err := common.ValidateEvmTxLog(&iter.Event.Raw, addrCustody, "", common.TopicsDeposited)
+		err := common.ValidateEvmTxLog(&log, addrCustody, "", common.TopicsDeposited)
+		if err != nil {
+			continue
+		}
+		event, err := erc20custodyContract.ParseDeposited(log)
 		if err == nil {
-			events = append(events, iter.Event)
+			events = append(events, event)
 			continue
 		}
 		ob.Logger().Inbound.Warn().
 			Err(err).
 			Msgf("ObserveERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
-				iter.Event.Raw.TxHash.Hex(), ob.Chain().ChainId, iter.Event.Raw.BlockNumber)
+				log.TxHash.Hex(), ob.Chain().ChainId, log.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
 		if events[i].Raw.BlockNumber == events[j].Raw.BlockNumber {

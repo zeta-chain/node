@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"math/big"
 	"sort"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -22,7 +20,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -59,27 +56,6 @@ func (ob *Observer) isEventProcessable(
 	}
 
 	return true
-}
-
-func (ob *Observer) fetchGatewayLogs(ctx context.Context, startBlock, toBlock uint64) ([]ethtypes.Log, error) {
-	gatewayAddr, _, err := ob.GetGatewayContract()
-	if err != nil {
-		return nil, errors.Wrap(err, "can't get gateway contract")
-	}
-
-	logs, err := ob.evmClient.FilterLogs(ctx, ethereum.FilterQuery{
-		FromBlock: new(big.Int).SetUint64(startBlock),
-		ToBlock:   new(big.Int).SetUint64(toBlock),
-		Addresses: []ethcommon.Address{gatewayAddr},
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "filter logs")
-	}
-
-	// increment prom counter
-	metrics.GetFilterLogsPerChain.WithLabelValues(ob.Chain().Name).Inc()
-
-	return logs, nil
 }
 
 // observeGatewayDeposit queries the gateway contract for deposit events
