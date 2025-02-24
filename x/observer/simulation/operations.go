@@ -14,6 +14,7 @@ import (
 var (
 	TypeMsgEnableCCTX                  = sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{})
 	TypeMsgDisableCCTX                 = sdk.MsgTypeURL(&observertypes.MsgDisableCCTX{})
+	TypeMsgDisableFastConfirmation     = sdk.MsgTypeURL(&observertypes.MsgDisableFastConfirmation{})
 	TypeMsgVoteTSS                     = sdk.MsgTypeURL(&observertypes.MsgVoteTSS{})
 	TypeMsgUpdateKeygen                = sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{})
 	TypeMsgUpdateObserver              = sdk.MsgTypeURL(&observertypes.MsgUpdateObserver{})
@@ -39,6 +40,7 @@ var (
 const (
 	OpWeightMsgTypeMsgEnableCCTX                  = "op_weight_msg_enable_crosschain_flags"         // #nosec G101 not a hardcoded credential
 	OpWeightMsgTypeMsgDisableCCTX                 = "op_weight_msg_disable_crosschain_flags"        // #nosec G101 not a hardcoded credential
+	OpWeightMsgTypeMsgDisableFastConfirmation     = "op_weight_msg_disable_fast_confirmation"       // #nosec G101 not a hardcoded credential
 	OpWeightMsgTypeMsgVoteTSS                     = "op_weight_msg_vote_tss"                        // #nosec G101 not a hardcoded credential
 	OpWeightMsgTypeMsgUpdateKeygen                = "op_weight_msg_update_keygen"                   // #nosec G101 not a hardcoded credential
 	OpWeightMsgTypeMsgUpdateObserver              = "op_weight_msg_update_observer"                 // #nosec G101 not a hardcoded credential
@@ -53,6 +55,7 @@ const (
 	// Arrived at this number based on the weights used in the cosmos sdk staking module and through some trial and error
 	DefaultWeightMsgTypeMsgEnableCCTX                  = 100
 	DefaultWeightMsgTypeMsgDisableCCTX                 = 10
+	DefaultWeightMsgTypeMsgDisableFastConfirmation     = 10
 	DefaultWeightMsgTypeMsgVoteTSS                     = 10
 	DefaultWeightMsgTypeMsgUpdateKeygen                = 10
 	DefaultWeightMsgTypeMsgUpdateObserver              = 10
@@ -70,6 +73,7 @@ func WeightedOperations(
 	var (
 		weightMsgTypeMsgEnableCCTX                  int
 		weightMsgTypeMsgDisableCCTX                 int
+		weightMsgTypeMsgDisableFastConfirmation     int
 		weightMsgTypeMsgVoteTSS                     int
 		weightMsgTypeMsgUpdateKeygen                int
 		weightMsgTypeMsgUpdateObserver              int
@@ -88,6 +92,11 @@ func WeightedOperations(
 	appParams.GetOrGenerate(OpWeightMsgTypeMsgDisableCCTX, &weightMsgTypeMsgDisableCCTX, nil,
 		func(_ *rand.Rand) {
 			weightMsgTypeMsgDisableCCTX = DefaultWeightMsgTypeMsgDisableCCTX
+		})
+
+	appParams.GetOrGenerate(OpWeightMsgTypeMsgDisableFastConfirmation, &weightMsgTypeMsgDisableFastConfirmation, nil,
+		func(_ *rand.Rand) {
+			weightMsgTypeMsgDisableFastConfirmation = DefaultWeightMsgTypeMsgDisableFastConfirmation
 		})
 
 	appParams.GetOrGenerate(OpWeightMsgTypeMsgVoteTSS, &weightMsgTypeMsgVoteTSS, nil,
@@ -143,6 +152,11 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgTypeMsgDisableCCTX,
 			SimulateDisableCCTX(k),
+		),
+
+		simulation.NewWeightedOperation(
+			weightMsgTypeMsgDisableFastConfirmation,
+			SimulateDisableFastConfirmation(k),
 		),
 
 		simulation.NewWeightedOperation(

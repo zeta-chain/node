@@ -411,6 +411,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}),
 			sdk.MsgTypeURL(&observertypes.MsgDisableCCTX{}),
+			sdk.MsgTypeURL(&observertypes.MsgDisableFastConfirmation{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgDisableHeaderVerification{}),
 		}
 

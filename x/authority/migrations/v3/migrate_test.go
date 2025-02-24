@@ -20,6 +20,7 @@ func TestMigrateStore(t *testing.T) {
 		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgRemoveInboundTracker")
 		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateOperationalChainParams")
 		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateChainParams")
+		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgDisableFastConfirmation")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act

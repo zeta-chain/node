@@ -1,18 +1,16 @@
 package scheduler
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	cometbft "github.com/cometbft/cometbft/types"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 func TestScheduler(t *testing.T) {
@@ -42,8 +40,8 @@ func TestScheduler(t *testing.T) {
 		assert.Equal(t, int32(2), counter)
 
 		// Check logs
-		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
-		assert.Contains(t, ts.logBuffer.String(), `"task.group":"default"`)
+		assert.Contains(t, ts.logger.String(), "Stopped scheduler task")
+		assert.Contains(t, ts.logger.String(), `"task.group":"default"`)
 	})
 
 	t.Run("More opts", func(t *testing.T) {
@@ -81,8 +79,8 @@ func TestScheduler(t *testing.T) {
 		assert.Equal(t, int32(4), counter)
 
 		// Also check that log fields are present
-		assert.Contains(t, ts.logBuffer.String(), `"task.name":"counter-inc","task.group":"my-custom-group"`)
-		assert.Contains(t, ts.logBuffer.String(), `"blockchain":"doge","validators":["alice","bob"]`)
+		assert.Contains(t, ts.logger.String(), `"task.name":"counter-inc","task.group":"my-custom-group"`)
+		assert.Contains(t, ts.logger.String(), `"blockchain":"doge","validators":["alice","bob"]`)
 	})
 
 	t.Run("Task can stop itself", func(t *testing.T) {
@@ -175,12 +173,12 @@ func TestScheduler(t *testing.T) {
 		// ASSERT
 		assert.Equal(t, int32(6), counter)
 
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.001,"ticker.new_interval":0.05`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.05,"ticker.new_interval":0.1`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.1,"ticker.new_interval":0.15`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.15,"ticker.new_interval":0.2`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.2,"ticker.new_interval":0.25`)
-		assert.Contains(t, ts.logBuffer.String(), `"ticker.old_interval":0.25,"ticker.new_interval":0.3`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.001,"ticker.new_interval":0.05`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.05,"ticker.new_interval":0.1`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.1,"ticker.new_interval":0.15`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.15,"ticker.new_interval":0.2`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.2,"ticker.new_interval":0.25`)
+		assert.Contains(t, ts.logger.String(), `"ticker.old_interval":0.25,"ticker.new_interval":0.3`)
 	})
 
 	t.Run("Multiple tasks in different groups", func(t *testing.T) {
@@ -229,11 +227,11 @@ func TestScheduler(t *testing.T) {
 		}
 
 		// Make sure Alice.A and Alice.B are stopped
-		assert.Regexp(t, shutdownLogPattern("alice", "a"), ts.logBuffer.String())
-		assert.Regexp(t, shutdownLogPattern("alice", "b"), ts.logBuffer.String())
+		assert.Regexp(t, shutdownLogPattern("alice", "a"), ts.logger.String())
+		assert.Regexp(t, shutdownLogPattern("alice", "b"), ts.logger.String())
 
 		// But Bob.C is still running
-		assert.NotRegexp(t, shutdownLogPattern("bob", "c"), ts.logBuffer.String())
+		assert.NotRegexp(t, shutdownLogPattern("bob", "c"), ts.logger.String())
 
 		// ACT #2
 		time.Sleep(200 * time.Millisecond)
@@ -241,7 +239,7 @@ func TestScheduler(t *testing.T) {
 
 		// ASSERT #2
 		// Bob.C is not running
-		assert.Regexp(t, shutdownLogPattern("bob", "c"), ts.logBuffer.String())
+		assert.Regexp(t, shutdownLogPattern("bob", "c"), ts.logger.String())
 	})
 
 	t.Run("Block tick: tick is faster than the block", func(t *testing.T) {
@@ -274,8 +272,8 @@ func TestScheduler(t *testing.T) {
 
 		// ASSERT
 		assert.Equal(t, int64(21), counter)
-		assert.Contains(t, ts.logBuffer.String(), "Stopped scheduler task")
-		assert.Contains(t, ts.logBuffer.String(), `"task.type":"block_ticker"`)
+		assert.Contains(t, ts.logger.String(), "Stopped scheduler task")
+		assert.Contains(t, ts.logger.String(), `"task.type":"block_ticker"`)
 	})
 
 	t.Run("Block tick: tick is slower than the block", func(t *testing.T) {
@@ -349,7 +347,7 @@ func TestScheduler(t *testing.T) {
 		// ASSERT
 		// zero indicates that Stop() waits for current iteration to finish (graceful shutdown)
 		assert.Equal(t, int64(0), counter)
-		assert.Contains(t, ts.logBuffer.String(), "Block channel closed")
+		assert.Contains(t, ts.logger.String(), "Block channel closed")
 	})
 }
 
@@ -357,19 +355,19 @@ type testSuite struct {
 	ctx       context.Context
 	scheduler *Scheduler
 
-	logger    zerolog.Logger
-	logBuffer *bytes.Buffer
+	logger *testlog.Log
 }
 
 func newTestSuite(t *testing.T) *testSuite {
-	logBuffer := &bytes.Buffer{}
-	logger := zerolog.New(io.MultiWriter(zerolog.NewTestWriter(t), logBuffer))
+	logger := testlog.New(t)
+
+	scheduler := New(logger.Logger, time.Second)
+	t.Cleanup(scheduler.Stop)
 
 	return &testSuite{
 		ctx:       context.Background(),
-		scheduler: New(logger, time.Second),
+		scheduler: scheduler,
 		logger:    logger,
-		logBuffer: logBuffer,
 	}
 }
 
