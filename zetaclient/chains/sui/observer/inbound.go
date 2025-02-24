@@ -28,9 +28,8 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
 		Module:    ob.gateway.Module(),
-		// TODO: fix issue with cursor
-		Cursor: "", //ob.getCursor(),
-		Limit:  client.DefaultEventsLimit,
+		Cursor:    ob.getCursor(),
+		Limit:     client.DefaultEventsLimit,
 	}
 
 	// Sui has a nice access-pattern of scrolling through contract events

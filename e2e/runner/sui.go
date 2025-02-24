@@ -84,10 +84,6 @@ func (r *E2ERunner) MintSuiUSDC(
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
-	r.Logger.Print("data")
-	r.Logger.Print(amount)
-	r.Logger.Print(receiver)
-
 	// extract the package ID from the coin type
 	splitted := strings.Split(r.SuiTokenCoinType, "::")
 	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name>")

@@ -24,7 +24,7 @@ func suiTestRoutine(
 			"sui",
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserSolana, // TODO: define a Sui accoutn
+			conf.AdditionalAccounts.UserSolana, // TODO: define a Sui account
 			runner.NewLogger(verbose, color.FgHiCyan, "sui"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)

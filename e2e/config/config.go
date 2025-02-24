@@ -413,8 +413,6 @@ func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 }
 
 // SuiSigner derives the blake2b hash from the private key
-// TODO: add a dedicated private key / address pair for Sui so it can be used with a regular account from a wallet
-// for a localnet test this works
 func (a Account) SuiSigner() (*sui_utils.SignerSecp256k1, error) {
 	privateKeyBytes, err := hex.DecodeString(a.RawPrivateKey.String())
 	if err != nil {
