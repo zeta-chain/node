@@ -12,7 +12,7 @@
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
 * [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
 * [3538](https://github.com/zeta-chain/node/pull/3538) - implement `MsgUpdateOperationalChainParams` for updating operational-related chain params with operational policy
-* [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
+* [3534](https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
 * [3541](https://github.com/zeta-chain/node/pull/3541) - implement `MsgUpdateZRC20Name` to update the name or symbol of a ZRC20 token
 * [3520](https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 * [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
@@ -33,6 +33,7 @@
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
+* [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
 
 ## v27.0.1
 
