@@ -98,6 +98,6 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "failed to restore chain params")
 
 	// remove the liquidity cap
-	_, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.ETHZRC20Addr.Hex())
+	_, err = r.ZetaTxServer.RemoveZRC20LiquidityCap(r.BTCZRC20Addr.Hex())
 	require.NoError(r, err)
 }

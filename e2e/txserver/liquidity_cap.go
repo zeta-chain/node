@@ -11,6 +11,19 @@ import (
 
 // SetZRC20LiquidityCap sets the liquidity cap for given ZRC20 token
 func (zts ZetaTxServer) SetZRC20LiquidityCap(zrc20Addr string, liquidityCap math.Uint) (*sdktypes.TxResponse, error) {
+	return zts.updateZRC20LiquidityCap(zrc20Addr, liquidityCap)
+}
+
+// RemoveZRC20LiquidityCap removes the liquidity cap for given ZRC20 token
+func (zts ZetaTxServer) RemoveZRC20LiquidityCap(zrc20Addr string) (*sdktypes.TxResponse, error) {
+	return zts.updateZRC20LiquidityCap(zrc20Addr, math.ZeroUint())
+}
+
+// updateZRC20LiquidityCap updates the liquidity cap for given ZRC20 token
+func (zts ZetaTxServer) updateZRC20LiquidityCap(
+	zrc20Addr string,
+	liquidityCap math.Uint,
+) (*sdktypes.TxResponse, error) {
 	// create msg
 	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
 		zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
@@ -22,24 +35,6 @@ func (zts ZetaTxServer) SetZRC20LiquidityCap(zrc20Addr string, liquidityCap math
 	res, err := zts.BroadcastTx(utils.OperationalPolicyName, msg)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to set ZRC20 liquidity cap for %s", zrc20Addr)
-	}
-
-	return res, nil
-}
-
-// RemoveZRC20LiquidityCap removes the liquidity cap for given ZRC20 token
-func (zts ZetaTxServer) RemoveZRC20LiquidityCap(zrc20Addr string) (*sdktypes.TxResponse, error) {
-	// create msg with zero liquidity cap
-	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
-		zts.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		zrc20Addr,
-		math.ZeroUint(),
-	)
-
-	// broadcast tx
-	res, err := zts.BroadcastTx(utils.OperationalPolicyName, msg)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to remove ZRC20 liquidity cap for %s", zrc20Addr)
 	}
 
 	return res, nil
