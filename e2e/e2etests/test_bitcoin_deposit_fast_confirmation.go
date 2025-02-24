@@ -40,7 +40,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "failed to enable inbound fast confirmation")
 
 	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
-	time.Sleep(constant.ZetaBlockTime)
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 1, 10*time.Second)
 	r.Logger.Info("enabled inbound fast confirmation")
 
 	// query current BTC ZRC20 supply
