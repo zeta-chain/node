@@ -30,6 +30,7 @@ func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool
 	require.NoError(r, err)
 
 	if err := triggerSolanaUpgrade(); err != nil {
+		r.Logger.Error("failed to trigger Solana upgrade: %v", err)
 		return false
 	}
 	r.Logger.Print("⚙️ Solana upgrade completed")
