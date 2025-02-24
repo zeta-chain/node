@@ -253,6 +253,7 @@ func TestCCTXQueryPaginated(t *testing.T) {
 				Offset:     offset,
 				Limit:      limit,
 				CountTotal: total,
+				Reverse:    true,
 			},
 		}
 	}
