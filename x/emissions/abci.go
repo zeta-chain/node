@@ -114,9 +114,9 @@ func DistributeObserverRewards(
 		// Maturity blocks is used for distribution of rewards and deletion of finalized ballots
 		// and pending ballots at the maturity height, are simply ignored
 		maturityBlocks = params.BallotMaturityBlocks
-		// The pendingBallotsBufferBlocks is a buffer number of blocks which is provided for pending ballots to allow them to be finalized
-		pendingBallotsBufferBlocks = params.PendingBallotsBufferBlocks
-		maturedBallots             []string
+		// The pendingBallotsDeletionBufferBlocks is a buffer number of blocks which is provided for pending ballots to allow them to be finalized
+		pendingBallotsDeletionBufferBlocks = params.PendingBallotsDeletionBufferBlocks
+		maturedBallots                     []string
 	)
 
 	err := emissionsKeeper.GetBankKeeper().
@@ -151,12 +151,12 @@ func DistributeObserverRewards(
 
 	// Processing Step 3a: Delete all finalized ballots at `maturityBlocksForFinalizedBallots` height
 	// This step optionally deletes the `BallotListForHeight` if all ballots are finalized and deleted
-	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, maturityBlocks)
+	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, maturityBlocks, false)
 
 	// Processing Step 3b: Delete all ballots at the buffered maturity height.
 	// This step deletes all remaining ballots and the `BallotListForHeight`.
-	bufferedMaturityBlocks := maturityBlocks + pendingBallotsBufferBlocks
-	emissionsKeeper.GetObserverKeeper().ClearAllMaturedBallotsAndBallotList(ctx, bufferedMaturityBlocks)
+	bufferedMaturityBlocks := maturityBlocks + pendingBallotsDeletionBufferBlocks
+	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, bufferedMaturityBlocks, true)
 	return nil
 }
 

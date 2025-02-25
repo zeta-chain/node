@@ -120,7 +120,7 @@ func TestValidate(t *testing.T) {
 
 	t.Run("should error if pending ballots buffer blocks is negative", func(t *testing.T) {
 		params := NewParams()
-		params.PendingBallotsBufferBlocks = -100
+		params.PendingBallotsDeletionBufferBlocks = -100
 		require.Error(t, params.Validate())
 	})
 }

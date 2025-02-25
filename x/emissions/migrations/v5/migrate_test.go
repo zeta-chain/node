@@ -71,7 +71,11 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
 		require.Equal(t, mainnetParams.BlockRewardAmount, updatedParams.BlockRewardAmount)
-		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
+		require.Equal(
+			t,
+			types.DefaultParams().PendingBallotsDeletionBufferBlocks,
+			updatedParams.PendingBallotsDeletionBufferBlocks,
+		)
 	})
 
 	t.Run("successfully migrate store even if tssSignerEmissionPercentage is missing", func(t *testing.T) {
@@ -100,7 +104,11 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
 		require.Equal(t, mainnetParams.BlockRewardAmount, updatedParams.BlockRewardAmount)
-		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
+		require.Equal(
+			t,
+			types.DefaultParams().PendingBallotsDeletionBufferBlocks,
+			updatedParams.PendingBallotsDeletionBufferBlocks,
+		)
 	})
 
 	t.Run("successfully migrate store even if block reward is missing", func(t *testing.T) {
@@ -127,7 +135,11 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, mainnetParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 		require.Equal(t, mainnetParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
 		require.Equal(t, types.DefaultParams().BlockRewardAmount, updatedParams.BlockRewardAmount)
-		require.Equal(t, types.DefaultParams().PendingBallotsBufferBlocks, updatedParams.PendingBallotsBufferBlocks)
+		require.Equal(
+			t,
+			types.DefaultParams().PendingBallotsDeletionBufferBlocks,
+			updatedParams.PendingBallotsDeletionBufferBlocks,
+		)
 	})
 
 	t.Run("migrate store even if existing params are not found", func(t *testing.T) {

@@ -19,8 +19,7 @@ type AccountKeeper interface {
 type ObserverKeeper interface {
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val observertypes.BallotListForHeight, found bool)
-	ClearAllMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocks int64)
-	ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocks int64)
+	ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocks int64, deleteAllBallots bool)
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
 	GetSupportedChains(ctx sdk.Context) []chains.Chain

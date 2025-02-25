@@ -60460,7 +60460,7 @@ definitions:
         format: int64
       block_reward_amount:
         type: string
-      pending_ballots_buffer_blocks:
+      pending_ballots_deletion_buffer_blocks:
         type: string
         format: int64
     title: |-
@@ -60472,7 +60472,7 @@ definitions:
          ObserverSlashAmount:         100000000000000000,
          BallotMaturityBlocks:        100,
          BlockRewardAmount:           9620949074074074074.074070733466756687,
-         PendingBallotsBufferBlocks: 144000
+         PendingBallotsDeletionBufferBlocks: 144000
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:

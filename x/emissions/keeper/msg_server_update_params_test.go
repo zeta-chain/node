@@ -57,7 +57,7 @@ func TestMsgServer_UpdateParams(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		params := types.DefaultParams()
-		params.PendingBallotsBufferBlocks = -1
+		params.PendingBallotsDeletionBufferBlocks = -1
 		_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 			Authority: k.GetAuthority(),
 			Params:    params,

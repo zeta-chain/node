@@ -10,13 +10,13 @@ import (
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		ValidatorEmissionPercentage: "00.50",
-		ObserverEmissionPercentage:  "00.25",
-		TssSignerEmissionPercentage: "00.25",
-		ObserverSlashAmount:         ObserverSlashAmount,
-		BallotMaturityBlocks:        int64(BallotMaturityBlocks),
-		BlockRewardAmount:           BlockReward,
-		PendingBallotsBufferBlocks:  PendingBallotsBufferBlocks,
+		ValidatorEmissionPercentage:        "00.50",
+		ObserverEmissionPercentage:         "00.25",
+		TssSignerEmissionPercentage:        "00.25",
+		ObserverSlashAmount:                ObserverSlashAmount,
+		BallotMaturityBlocks:               int64(BallotMaturityBlocks),
+		BlockRewardAmount:                  BlockReward,
+		PendingBallotsDeletionBufferBlocks: PendingBallotsBufferBlocks,
 	}
 }
 
@@ -42,7 +42,7 @@ func (p Params) Validate() error {
 	if err := validateBlockRewardsAmount(p.BlockRewardAmount); err != nil {
 		return err
 	}
-	if err := validatePendingBallotsBufferBlocks(p.PendingBallotsBufferBlocks); err != nil {
+	if err := validatePendingBallotsBufferBlocks(p.PendingBallotsDeletionBufferBlocks); err != nil {
 		return err
 	}
 	return validateObserverSlashAmount(p.ObserverSlashAmount)
@@ -135,9 +135,8 @@ func validatePendingBallotsBufferBlocks(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	// pending ballots buffer blocks can be 0 to delete pending ballots immediately
-	if v < 0 {
-		return fmt.Errorf("pending ballots buffer blocks must not be negative")
+	if v < 1 {
+		return fmt.Errorf("pending ballots buffer blocks must not be less that 1")
 	}
 	return nil
 }
