@@ -18,3 +18,7 @@ func (k Keeper) UpdateInboundHashToCCTX(ctx sdk.Context, cctx types.CrossChainTx
 func (k Keeper) SetNonceToCCTX(ctx sdk.Context, cctx types.CrossChainTx, tssPubkey string) {
 	k.setNonceToCCTX(ctx, cctx, tssPubkey)
 }
+
+func (k Keeper) GetNextCctxCounter(ctx sdk.Context) uint64 {
+	return k.getNextCctxCounter(ctx)
+}
