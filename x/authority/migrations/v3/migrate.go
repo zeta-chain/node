@@ -16,7 +16,6 @@ func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
 ) error {
-	//
 	var (
 		authorizationList            = types.DefaultAuthorizationsList()
 		updateZRC20NameAuthorization = types.Authorization{
@@ -25,6 +24,18 @@ func MigrateStore(
 		}
 		removeInboundAuthorization = types.Authorization{
 			MsgUrl:           "/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
+			AuthorizedPolicy: types.PolicyType_groupEmergency,
+		}
+		updateOperationalChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
+		}
+		updateChainParamsAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgUpdateChainParams",
+			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		}
+		disableFastConfirmationAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.observer.MsgDisableFastConfirmation",
 			AuthorizedPolicy: types.PolicyType_groupEmergency,
 		}
 	)
@@ -38,6 +49,9 @@ func MigrateStore(
 	// Add the new authorization
 	authorizationList.SetAuthorization(updateZRC20NameAuthorization)
 	authorizationList.SetAuthorization(removeInboundAuthorization)
+	authorizationList.SetAuthorization(updateOperationalChainParamsAuthorization)
+	authorizationList.SetAuthorization(updateChainParamsAuthorization)
+	authorizationList.SetAuthorization(disableFastConfirmationAuthorization)
 
 	// Validate the authorization list
 	err := authorizationList.Validate()

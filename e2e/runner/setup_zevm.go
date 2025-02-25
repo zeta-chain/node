@@ -15,11 +15,11 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/txserver"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -324,9 +324,6 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
 
 	// update the chain params
-	_, err = r.ZetaTxServer.BroadcastTx(e2eutils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(e2eutils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 }

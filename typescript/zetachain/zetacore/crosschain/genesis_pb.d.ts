@@ -64,6 +64,11 @@ export declare class GenesisState extends Message<GenesisState> {
    */
   rateLimiterFlags?: RateLimiterFlags;
 
+  /**
+   * @generated from field: uint64 counter = 18;
+   */
+  counter: bigint;
+
   constructor(data?: PartialMessage<GenesisState>);
 
   static readonly runtime: typeof proto3;

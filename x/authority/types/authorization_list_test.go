@@ -396,10 +396,10 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}),
 			sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}),
-			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateOperationalFlags{}),
+			sdk.MsgTypeURL(&observertypes.MsgUpdateOperationalChainParams{}),
 		}
 
 		// EmergencyPolicyMessageList is a list of messages that can be authorized by the emergency policy
@@ -411,6 +411,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgPauseZRC20{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateKeygen{}),
 			sdk.MsgTypeURL(&observertypes.MsgDisableCCTX{}),
+			sdk.MsgTypeURL(&observertypes.MsgDisableFastConfirmation{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgDisableHeaderVerification{}),
 		}
 
@@ -435,6 +436,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&types.MsgUpdateChainInfo{}),
 			sdk.MsgTypeURL(&types.MsgRemoveChainInfo{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
+			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

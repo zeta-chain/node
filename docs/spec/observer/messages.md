@@ -152,6 +152,18 @@ message MsgDisableCCTX {
 }
 ```
 
+## MsgDisableFastConfirmation
+
+DisableFastConfirmation disables fast confirmation for the given chain ID
+Inbound and outbound will be only confirmed using SAFE confirmation count on disabled chains
+
+```proto
+message MsgDisableFastConfirmation {
+	string creator = 1;
+	int64 chain_id = 2;
+}
+```
+
 ## MsgUpdateGasPriceIncreaseFlags
 
 UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
@@ -170,6 +182,25 @@ message MsgUpdateGasPriceIncreaseFlags {
 message MsgUpdateOperationalFlags {
 	string creator = 1;
 	OperationalFlags operational_flags = 2;
+}
+```
+
+## MsgUpdateOperationalChainParams
+
+UpdateOperationalChainParams updates the operational-related chain params
+Unlike MsgUpdateChainParams, this message doesn't allow updated sensitive values such as the gateway contract to listen to on connected chains
+
+```proto
+message MsgUpdateOperationalChainParams {
+	string creator = 1;
+	int64 chain_id = 2;
+	uint64 gas_price_ticker = 3;
+	uint64 inbound_ticker = 4;
+	uint64 outbound_ticker = 5;
+	uint64 watch_utxo_ticker = 6;
+	int64 outbound_schedule_interval = 7;
+	int64 outbound_schedule_lookahead = 8;
+	ConfirmationParams confirmation_params = 9;
 }
 ```
 

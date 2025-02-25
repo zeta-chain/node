@@ -31,9 +31,11 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 		amount,
 		[]byte("revert"),
 		gatewayzevm.RevertOptions{
-			RevertAddress:    sample.EthAddress(), // non-existing address
-			CallOnRevert:     true,
-			RevertMessage:    []byte("revert"),
+			RevertAddress: sample.EthAddress(), // non-existing address
+			CallOnRevert:  true,
+			RevertMessage: []byte(
+				"withdraw",
+			), // withdraw is passed as message to create a withdraw in onAbort and test cctx can be created
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
@@ -50,12 +52,19 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.True(r, aborted)
 
 	// check abort context was passed
-	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "revert")
+	abortContext, err := testAbort.GetAbortedWithMessage(&bind.CallOpts{}, "withdraw")
 	require.NoError(r, err)
 	require.EqualValues(r, r.ETHZRC20Addr.Hex(), abortContext.Asset.Hex())
 
-	// check abort contract received the tokens
-	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
+	// check the create withdraw get mined
+	cctxWithdrawFromAbort := utils.WaitCctxMinedByInboundHash(
+		r.Ctx,
+		cctx.Index,
+		r.CctxClient,
+		r.Logger,
+		r.CctxTimeout,
+	)
+
+	// check the cctx status
+	utils.RequireCCTXStatus(r, cctxWithdrawFromAbort, crosschaintypes.CctxStatus_OutboundMined)
 }

@@ -28197,6 +28197,13 @@ paths:
           in: query
           required: false
           type: boolean
+        - name: unordered
+          description: |-
+            Bulk dump all CCTX without ordering.
+            This is useful for initializing a CCTX indexer.
+          in: query
+          required: false
+          type: boolean
       tags:
         - Query
   /zeta-chain/crosschain/cctx/{chainID}/{nonce}:
@@ -59926,6 +59933,8 @@ definitions:
     type: object
   observerMsgDisableCCTXResponse:
     type: object
+  observerMsgDisableFastConfirmationResponse:
+    type: object
   observerMsgEnableCCTXResponse:
     type: object
   observerMsgRemoveChainParamsResponse:
@@ -59939,6 +59948,8 @@ definitions:
   observerMsgUpdateKeygenResponse:
     type: object
   observerMsgUpdateObserverResponse:
+    type: object
+  observerMsgUpdateOperationalChainParamsResponse:
     type: object
   observerMsgUpdateOperationalFlagsResponse:
     type: object

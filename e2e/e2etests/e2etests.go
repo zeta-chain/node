@@ -46,8 +46,11 @@ const (
 
 	TestZEVMToEVMArbitraryCallName       = "zevm_to_evm_arbitrary_call"
 	TestZEVMToEVMCallName                = "zevm_to_evm_call"
+	TestZEVMToEVMCallRevertName          = "zevm_to_evm_call_revert"
+	TestZEVMToEVMCallRevertAndAbortName  = "zevm_to_evm_call_revert_and_abort"
 	TestZEVMToEVMCallThroughContractName = "zevm_to_evm_call_through_contract"
 	TestEVMToZEVMCallName                = "evm_to_zevm_call"
+	TestEVMToZEVMCallAbortName           = "evm_to_zevm_abort_call"
 
 	TestDepositAndCallSwapName      = "deposit_and_call_swap"
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
@@ -56,19 +59,21 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName                      = "solana_deposit"
-	TestSolanaWithdrawName                     = "solana_withdraw"
-	TestSolanaWithdrawAndCallName              = "solana_withdraw_and_call"
-	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
-	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
-	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
-	TestSPLDepositName                         = "spl_deposit"
-	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
-	TestSPLWithdrawName                        = "spl_withdraw"
-	TestSPLWithdrawAndCallName                 = "spl_withdraw_and_call"
-	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
+	TestSolanaDepositName                       = "solana_deposit"
+	TestSolanaWithdrawName                      = "solana_withdraw"
+	TestSolanaWithdrawAndCallName               = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallRevertWithCallName = "solana_withdraw_and_call_revert_with_call"
+	TestSolanaDepositAndCallName                = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName          = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName  = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName             = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName            = "solana_withdraw_restricted"
+	TestSPLDepositName                          = "spl_deposit"
+	TestSPLDepositAndCallName                   = "spl_deposit_and_call"
+	TestSPLWithdrawName                         = "spl_withdraw"
+	TestSPLWithdrawAndCallName                  = "spl_withdraw_and_call"
+	TestSPLWithdrawAndCallRevertName            = "spl_withdraw_and_call_revert"
+	TestSPLWithdrawAndCreateReceiverAtaName     = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -93,6 +98,7 @@ const (
 	TestBitcoinStdMemoDepositAndCallName                   = "bitcoin_std_memo_deposit_and_call"
 	TestBitcoinStdMemoDepositAndCallRevertName             = "bitcoin_std_memo_deposit_and_call_revert"
 	TestBitcoinStdMemoDepositAndCallRevertOtherAddressName = "bitcoin_std_memo_deposit_and_call_revert_other_address"
+	TestBitcoinStdMemoDepositAndCallRevertAndAbortName     = "bitcoin_std_memo_deposit_and_call_revert_and_abort"
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
@@ -134,21 +140,22 @@ const (
 	 Admin tests
 	 Test admin functionalities
 	*/
-	TestWhitelistERC20Name            = "whitelist_erc20"
-	TestDepositEtherLiquidityCapName  = "deposit_eth_liquidity_cap"
-	TestMigrateChainSupportName       = "migrate_chain_support"
-	TestPauseZRC20Name                = "pause_zrc20"
-	TestUpdateBytecodeZRC20Name       = "update_bytecode_zrc20"
-	TestUpdateBytecodeConnectorName   = "update_bytecode_connector"
-	TestRateLimiterName               = "rate_limiter"
-	TestCriticalAdminTransactionsName = "critical_admin_transactions"
-	TestPauseERC20CustodyName         = "pause_erc20_custody"
-	TestMigrateERC20CustodyFundsName  = "migrate_erc20_custody_funds"
-	TestMigrateTSSName                = "migrate_tss"
-	TestSolanaWhitelistSPLName        = "solana_whitelist_spl"
-	TestUpdateZRC20NameName           = "update_zrc20_name"
-	TestZetaclientRestartHeightName   = "zetaclient_restart_height"
-	TestZetaclientSignerOffsetName    = "zetaclient_signer_offset"
+	TestWhitelistERC20Name               = "whitelist_erc20"
+	TestDepositEtherLiquidityCapName     = "deposit_eth_liquidity_cap"
+	TestMigrateChainSupportName          = "migrate_chain_support"
+	TestPauseZRC20Name                   = "pause_zrc20"
+	TestUpdateBytecodeZRC20Name          = "update_bytecode_zrc20"
+	TestUpdateBytecodeConnectorName      = "update_bytecode_connector"
+	TestRateLimiterName                  = "rate_limiter"
+	TestCriticalAdminTransactionsName    = "critical_admin_transactions"
+	TestPauseERC20CustodyName            = "pause_erc20_custody"
+	TestMigrateERC20CustodyFundsName     = "migrate_erc20_custody_funds"
+	TestMigrateTSSName                   = "migrate_tss"
+	TestSolanaWhitelistSPLName           = "solana_whitelist_spl"
+	TestUpdateZRC20NameName              = "update_zrc20_name"
+	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
+	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
+	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 
 	/*
 	 Operational tests
@@ -261,7 +268,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawName,
@@ -321,12 +328,12 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawRevertAndAbortName,
-		"withdraw Ether from ZEVM, revert, then abort with onAbort",
+		"withdraw Ether from ZEVM, revert, then abort with onAbort, check onAbort can created cctx",
 		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestETHWithdrawRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallRevertWithWithdrawName,
@@ -387,12 +394,10 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestERC20DepositRevertAndAbortName,
-		"deposit ERC20 into ZEVM, revert, then abort with onAbort",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "10000000000000000000"},
-		},
+		"deposit ERC20 into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
+		[]runner.ArgDefinition{},
 		TestERC20DepositRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestERC20WithdrawName,
@@ -449,7 +454,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestERC20WithdrawRevertAndAbort,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMArbitraryCallName,
@@ -464,6 +469,20 @@ var AllE2ETests = []runner.E2ETest{
 		TestZEVMToEVMCall,
 	),
 	runner.NewE2ETest(
+		TestZEVMToEVMCallRevertName,
+		"zevm -> evm call that reverts and call onRevert",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZEVMToEVMCallRevertAndAbortName,
+		"zevm -> evm call that reverts and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestZEVMToEVMCallRevertAndAbort,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
 		TestZEVMToEVMCallThroughContractName,
 		"zevm -> evm call through intermediary contract",
 		[]runner.ArgDefinition{},
@@ -474,6 +493,13 @@ var AllE2ETests = []runner.E2ETest{
 		"evm -> zevm call",
 		[]runner.ArgDefinition{},
 		TestEVMToZEVMCall,
+	),
+	runner.NewE2ETest(
+		TestEVMToZEVMCallAbortName,
+		"evm -> zevm call fails and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestEVMToZEVMCallAbort,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestDepositAndCallSwapName,
@@ -510,12 +536,28 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaWithdrawAndCall,
 	),
 	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallRevertWithCallName,
+		"withdraw SOL from ZEVM and call solana program that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
 		TestSPLWithdrawAndCallName,
 		"withdraw SPL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCallRevertName,
+		"withdraw SPL from ZEVM and call solana program that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
@@ -713,6 +755,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.1"},
 		},
 		TestBitcoinStdMemoDepositAndCallRevertOtherAddress,
+	),
+	runner.NewE2ETest(
+		TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
+		"deposit Bitcoin into ZEVM and call a contract with standard memo; revert and abort with onAbort",
+		[]runner.ArgDefinition{},
+		TestBitcoinStdMemoDepositAndCallRevertAndAbort,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoInscribedDepositAndCallName,
@@ -977,7 +1026,7 @@ var AllE2ETests = []runner.E2ETest{
 		"update ZRC20 name and symbol",
 		[]runner.ArgDefinition{},
 		TestUpdateZRC20Name,
-		runner.WithMinimumVersion("v28.0.0"),
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaclientRestartHeightName,
@@ -990,6 +1039,13 @@ var AllE2ETests = []runner.E2ETest{
 		"zetaclient signer offset",
 		[]runner.ArgDefinition{},
 		TestZetaclientSignerOffset,
+	),
+	runner.NewE2ETest(
+		TestUpdateOperationalChainParamsName,
+		"update operational chain params",
+		[]runner.ArgDefinition{},
+		TestUpdateOperationalChainParams,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Special tests

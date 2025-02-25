@@ -10,10 +10,10 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 )
 
 // SetupEVM setup contracts on EVM with v2 contracts

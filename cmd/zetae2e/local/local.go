@@ -340,6 +340,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCriticalAdminTransactionsName,
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
+			e2etests.TestUpdateOperationalChainParamsName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
@@ -403,6 +404,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
 			e2etests.TestSolanaWithdrawAndCallName,
+			e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
 			e2etests.TestSolanaDepositAndCallName,
 			e2etests.TestSolanaDepositAndCallRevertName,
 			e2etests.TestSolanaDepositAndCallRevertWithDustName,
@@ -414,6 +416,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositAndCallName,
 			e2etests.TestSPLWithdrawName,
 			e2etests.TestSPLWithdrawAndCallName,
+			e2etests.TestSPLWithdrawAndCallRevertName,
 			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
 			e2etests.TestSolanaWhitelistSPLName,
 		}

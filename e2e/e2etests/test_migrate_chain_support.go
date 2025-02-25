@@ -61,10 +61,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
 
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 
 	// setup the gas token
@@ -110,10 +107,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
 	chainParams.IsSupported = false
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 
 	// restart ZetaClient to pick up the new chain
