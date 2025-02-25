@@ -59,11 +59,16 @@ func FromPath(path string) (*GlobalConfigurationFile, error) {
 
 // FromSource returns a parsed configuration file from a URL or a file path.
 func FromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
-	if u, err := url.Parse(urlOrPath); err == nil {
-		return FromURL(ctx, u.String())
+	if cfg, err := FromPath(urlOrPath); err == nil {
+		return cfg, nil
 	}
 
-	return FromPath(urlOrPath)
+	u, err := url.Parse(urlOrPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse URL")
+	}
+
+	return FromURL(ctx, u.String())
 }
 
 // FetchGasConfig fetches gas price from the config.
