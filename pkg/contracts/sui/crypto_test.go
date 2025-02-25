@@ -92,7 +92,7 @@ func TestCrypto(t *testing.T) {
 		signature := [65]byte{0, 1, 3}
 
 		// ACT
-		res, err := SerializeSignatureECDSA(signature, crypto.CompressPubkey(pubKey))
+		res, err := SerializeSignatureECDSA(signature, pubKey)
 
 		// ASSERT
 		require.NoError(t, err)

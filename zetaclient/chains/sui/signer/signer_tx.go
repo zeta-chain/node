@@ -66,7 +66,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 
 // broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
 func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]byte) (string, error) {
-	sigBase64, err := sui.SerializeSignatureECDSA(sig, s.TSS().PubKey().Bytes(true))
+	sigBase64, err := sui.SerializeSignatureECDSA(sig, s.TSS().PubKey().AsECDSA())
 	if err != nil {
 		return "", errors.Wrap(err, "unable to serialize signature")
 	}

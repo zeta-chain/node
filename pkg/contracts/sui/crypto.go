@@ -66,20 +66,22 @@ func AddressFromPubKeyECDSA(pk *ecdsa.PublicKey) string {
 
 // SerializeSignatureECDSA serializes secp256k1 sig (R|S|V) and a publicKey into base64 string
 // https://docs.sui.io/concepts/cryptography/transaction-auth/signatures
-func SerializeSignatureECDSA(signature [65]byte, publicKey []byte) (string, error) {
+func SerializeSignatureECDSA(signature [65]byte, pubKey *ecdsa.PublicKey) (string, error) {
 	// we don't need the last V byte for recovery
 	const sigLen = 64
-
-	// compressed public key
 	const pubKeyLen = 33
-	if len(publicKey) != pubKeyLen {
-		return "", errors.Errorf("invalid publicKey length (got %d, want %d)", len(publicKey), pubKeyLen)
+
+	pubKeyBytes := crypto.CompressPubkey(pubKey)
+
+	// should not happen
+	if len(pubKeyBytes) != pubKeyLen {
+		return "", errors.Errorf("invalid pubKey length (got %d, want %d)", len(pubKeyBytes), pubKeyLen)
 	}
 
 	serialized := make([]byte, 1+sigLen+pubKeyLen)
 	serialized[0] = flagSecp256k1
 	copy(serialized[1:], signature[:sigLen])
-	copy(serialized[1+sigLen:], publicKey)
+	copy(serialized[1+sigLen:], pubKeyBytes)
 
 	return base64.StdEncoding.EncodeToString(serialized), nil
 }
@@ -150,8 +152,5 @@ func (s *SignerSecp256k1) SignTxBlock(tx models.TxnMetaData) (string, error) {
 	copy(sigReordered[32:64], sig[33:65]) // Copy S[32]
 	sigReordered[64] = sig[0]             // Move V[1] to the end
 
-	pubKey := s.pk.PubKey().ToECDSA()
-	pubKeyBytes := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y)
-
-	return SerializeSignatureECDSA(sigReordered, pubKeyBytes)
+	return SerializeSignatureECDSA(sigReordered, &s.pk.ToECDSA().PublicKey)
 }
