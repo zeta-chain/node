@@ -26800,20 +26800,20 @@ paths:
                       format: byte
       tags:
         - Query
-  /zeta-chain/authority/authorization/{msg_url}:
+  /zeta-chain/authority/authorization/{msgUrl}:
     get:
-      operationId: Query_Authorization
+      operationId: Authorization
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/authorityQueryAuthorizationResponse'
+            $ref: '#/definitions/zetachain.zetacore.authority.QueryAuthorizationResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: msg_url
+        - name: msgUrl
           in: path
           required: true
           type: string
@@ -26821,61 +26821,61 @@ paths:
         - Query
   /zeta-chain/authority/authorizations:
     get:
-      operationId: Query_AuthorizationList
+      operationId: AuthorizationList
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/authorityQueryAuthorizationListResponse'
+            $ref: '#/definitions/zetachain.zetacore.authority.QueryAuthorizationListResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/authority/chainInfo:
     get:
       summary: Queries ChainInfo
-      operationId: Query_ChainInfo
+      operationId: ChainInfo
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/authorityQueryGetChainInfoResponse'
+            $ref: '#/definitions/zetachain.zetacore.authority.QueryGetChainInfoResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/authority/policies:
     get:
       summary: Queries Policies
-      operationId: Query_Policies
+      operationId: Policies
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/authorityQueryGetPoliciesResponse'
+            $ref: '#/definitions/zetachain.zetacore.authority.QueryGetPoliciesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of cctx items.
-      operationId: Query_CctxAll
+      operationId: CctxAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -26903,7 +26903,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -26932,16 +26932,16 @@ paths:
   /zeta-chain/crosschain/cctx/{chainID}/{nonce}:
     get:
       summary: Queries a cctx by nonce.
-      operationId: Query_CctxByNonce
+      operationId: CctxByNonce
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chainID
           in: path
@@ -26958,16 +26958,16 @@ paths:
   /zeta-chain/crosschain/cctx/{index}:
     get:
       summary: Queries a send by index.
-      operationId: Query_Cctx
+      operationId: Cctx
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: index
           in: path
@@ -26977,16 +26977,16 @@ paths:
         - Query
   /zeta-chain/crosschain/convertGasToZeta:
     get:
-      operationId: Query_ConvertGasToZeta
+      operationId: ConvertGasToZeta
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryConvertGasToZetaResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryConvertGasToZetaResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chainId
           in: query
@@ -27002,16 +27002,16 @@ paths:
   /zeta-chain/crosschain/gasPrice:
     get:
       summary: Queries a list of gasPrice items.
-      operationId: Query_GasPriceAll
+      operationId: GasPriceAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllGasPriceResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllGasPriceResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27039,7 +27039,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27061,16 +27061,16 @@ paths:
   /zeta-chain/crosschain/gasPrice/{index}:
     get:
       summary: Queries a gasPrice by index.
-      operationId: Query_GasPrice
+      operationId: GasPrice
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetGasPriceResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetGasPriceResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: index
           in: path
@@ -27081,16 +27081,16 @@ paths:
   /zeta-chain/crosschain/inTxHashToCctx:
     get:
       summary: 'Deprecated(v17): use InboundHashToCctxAll'
-      operationId: Query_InTxHashToCctxAll
+      operationId: InTxHashToCctxAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundHashToCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27118,7 +27118,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27141,16 +27141,16 @@ paths:
   /zeta-chain/crosschain/inTxHashToCctx/{inboundHash}:
     get:
       summary: 'Deprecated(v17): use InboundHashToCctx'
-      operationId: Query_InTxHashToCctx
+      operationId: InTxHashToCctx
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetInboundHashToCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: inboundHash
           in: path
@@ -27162,16 +27162,16 @@ paths:
   /zeta-chain/crosschain/inTxHashToCctxData/{inboundHash}:
     get:
       summary: 'Deprecated(v17): use InboundHashToCctxData'
-      operationId: Query_InTxHashToCctxData
+      operationId: InTxHashToCctxData
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryInboundHashToCctxDataResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryInboundHashToCctxDataResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: inboundHash
           in: path
@@ -27183,16 +27183,16 @@ paths:
   /zeta-chain/crosschain/inTxTracker:
     get:
       summary: 'Deprecated(v17): use InboundTrackerAll'
-      operationId: Query_InTxTrackerAll
+      operationId: InTxTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundTrackersResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackersResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27220,7 +27220,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27240,21 +27240,21 @@ paths:
       tags:
         - Query
       deprecated: true
-  /zeta-chain/crosschain/inTxTrackerByChain/{chain_id}:
+  /zeta-chain/crosschain/inTxTrackerByChain/{chainId}:
     get:
       summary: 'Deprecated(v17): use InboundTrackerAllByChain'
-      operationId: Query_InTxTrackerAllByChain
+      operationId: InTxTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundTrackerByChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -27285,7 +27285,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27308,16 +27308,16 @@ paths:
   /zeta-chain/crosschain/inboundHashToCctx:
     get:
       summary: Queries a list of InboundHashToCctx items.
-      operationId: Query_InboundHashToCctxAll
+      operationId: InboundHashToCctxAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundHashToCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27345,7 +27345,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27367,16 +27367,16 @@ paths:
   /zeta-chain/crosschain/inboundHashToCctx/{inboundHash}:
     get:
       summary: Queries a InboundHashToCctx by index.
-      operationId: Query_InboundHashToCctx
+      operationId: InboundHashToCctx
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetInboundHashToCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetInboundHashToCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: inboundHash
           in: path
@@ -27387,16 +27387,16 @@ paths:
   /zeta-chain/crosschain/inboundHashToCctxData/{inboundHash}:
     get:
       summary: Queries a InboundHashToCctx data by index.
-      operationId: Query_InboundHashToCctxData
+      operationId: InboundHashToCctxData
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryInboundHashToCctxDataResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryInboundHashToCctxDataResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: inboundHash
           in: path
@@ -27404,44 +27404,44 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/inboundTracker/{chain_id}/{tx_hash}:
+  /zeta-chain/crosschain/inboundTracker/{chainId}/{txHash}:
     get:
-      operationId: Query_InboundTracker
+      operationId: InboundTracker
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryInboundTrackerResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryInboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
           format: int64
-        - name: tx_hash
+        - name: txHash
           in: path
           required: true
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/inboundTrackerByChain/{chain_id}:
+  /zeta-chain/crosschain/inboundTrackerByChain/{chainId}:
     get:
-      operationId: Query_InboundTrackerAllByChain
+      operationId: InboundTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundTrackerByChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -27472,7 +27472,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27493,16 +27493,16 @@ paths:
         - Query
   /zeta-chain/crosschain/inboundTrackers:
     get:
-      operationId: Query_InboundTrackerAll
+      operationId: InboundTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllInboundTrackersResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllInboundTrackersResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27530,7 +27530,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27552,16 +27552,16 @@ paths:
   /zeta-chain/crosschain/lastBlockHeight:
     get:
       summary: Queries a list of lastBlockHeight items.
-      operationId: Query_LastBlockHeightAll
+      operationId: LastBlockHeightAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllLastBlockHeightResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllLastBlockHeightResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27589,7 +27589,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27611,16 +27611,16 @@ paths:
   /zeta-chain/crosschain/lastBlockHeight/{index}:
     get:
       summary: Queries a lastBlockHeight by index.
-      operationId: Query_LastBlockHeight
+      operationId: LastBlockHeight
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetLastBlockHeightResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetLastBlockHeightResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: index
           in: path
@@ -27631,31 +27631,31 @@ paths:
   /zeta-chain/crosschain/lastZetaHeight:
     get:
       summary: Queries a list of lastMetaHeight items.
-      operationId: Query_LastZetaHeight
+      operationId: LastZetaHeight
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryLastZetaHeightResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryLastZetaHeightResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/crosschain/outTxTracker:
     get:
       summary: 'Deprecated(v17): use OutboundTrackerAll'
-      operationId: Query_OutTxTrackerAll
+      operationId: OutTxTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutboundTrackerResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27683,7 +27683,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27706,16 +27706,16 @@ paths:
   /zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}:
     get:
       summary: 'Deprecated(v17): use OutboundTracker'
-      operationId: Query_OutTxTracker
+      operationId: OutTxTracker
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetOutboundTrackerResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chainID
           in: path
@@ -27733,16 +27733,16 @@ paths:
   /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
     get:
       summary: 'Deprecated(v17): use OutboundTrackerAllByChain'
-      operationId: Query_OutTxTrackerAllByChain
+      operationId: OutTxTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutboundTrackerByChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chain
           in: path
@@ -27775,7 +27775,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27798,16 +27798,16 @@ paths:
   /zeta-chain/crosschain/outboundTracker:
     get:
       summary: Queries a list of OutboundTracker items.
-      operationId: Query_OutboundTrackerAll
+      operationId: OutboundTrackerAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutboundTrackerResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -27835,7 +27835,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27857,16 +27857,16 @@ paths:
   /zeta-chain/crosschain/outboundTracker/{chainID}/{nonce}:
     get:
       summary: Queries a outbound tracker by index.
-      operationId: Query_OutboundTracker
+      operationId: OutboundTracker
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetOutboundTrackerResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryGetOutboundTrackerResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chainID
           in: path
@@ -27882,16 +27882,16 @@ paths:
         - Query
   /zeta-chain/crosschain/outboundTrackerByChain/{chain}:
     get:
-      operationId: Query_OutboundTrackerAllByChain
+      operationId: OutboundTrackerAllByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAllOutboundTrackerByChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryAllOutboundTrackerByChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: chain
           in: path
@@ -27924,7 +27924,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -27946,18 +27946,18 @@ paths:
   /zeta-chain/crosschain/pendingCctx:
     get:
       summary: Queries a list of pending cctxs.
-      operationId: Query_ListPendingCctx
+      operationId: ListPendingCctx
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryListPendingCctxResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryListPendingCctxResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: query
           required: false
           type: string
@@ -27972,16 +27972,16 @@ paths:
   /zeta-chain/crosschain/pendingCctxWithinRateLimit:
     get:
       summary: Queries a list of pending cctxs within rate limit.
-      operationId: Query_ListPendingCctxWithinRateLimit
+      operationId: ListPendingCctxWithinRateLimit
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryListPendingCctxWithinRateLimitResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: limit
           in: query
@@ -27992,46 +27992,46 @@ paths:
         - Query
   /zeta-chain/crosschain/protocolFee:
     get:
-      operationId: Query_ProtocolFee
+      operationId: ProtocolFee
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryMessagePassingProtocolFeeResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryMessagePassingProtocolFeeResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/crosschain/rateLimiterFlags:
     get:
       summary: Queries the rate limiter flags
-      operationId: Query_RateLimiterFlags
+      operationId: RateLimiterFlags
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryRateLimiterFlagsResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryRateLimiterFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/crosschain/rateLimiterInput:
     get:
       summary: Queries the input data of rate limiter.
-      operationId: Query_RateLimiterInput
+      operationId: RateLimiterInput
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryRateLimiterInputResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryRateLimiterInputResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: limit
           in: query
@@ -28047,61 +28047,61 @@ paths:
         - Query
   /zeta-chain/crosschain/zetaAccounting:
     get:
-      operationId: Query_ZetaAccounting
+      operationId: ZetaAccounting
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryZetaAccountingResponse'
+            $ref: '#/definitions/zetachain.zetacore.crosschain.QueryZetaAccountingResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/emissions/list_addresses:
     get:
       summary: Queries a list of ListBalances items.
-      operationId: Query_ListPoolAddresses
+      operationId: ListPoolAddresses
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/emissionsQueryListPoolAddressesResponse'
+            $ref: '#/definitions/zetachain.zetacore.emissions.QueryListPoolAddressesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/emissions/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: Query_Params
+      operationId: Params
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/emissionsQueryParamsResponse'
+            $ref: '#/definitions/zetachain.zetacore.emissions.QueryParamsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/emissions/show_available_emissions/{address}:
     get:
       summary: Queries a list of ShowAvailableEmissions items.
-      operationId: Query_ShowAvailableEmissions
+      operationId: ShowAvailableEmissions
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/emissionsQueryShowAvailableEmissionsResponse'
+            $ref: '#/definitions/zetachain.zetacore.emissions.QueryShowAvailableEmissionsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: address
           in: path
@@ -28112,16 +28112,16 @@ paths:
   /zeta-chain/fungible/code_hash/{address}:
     get:
       summary: Code hash query the code hash of a contract.
-      operationId: Query_CodeHash
+      operationId: CodeHash
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryCodeHashResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryCodeHashResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: address
           in: path
@@ -28132,16 +28132,16 @@ paths:
   /zeta-chain/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
-      operationId: Query_ForeignCoinsAll
+      operationId: ForeignCoinsAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryAllForeignCoinsResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryAllForeignCoinsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28169,7 +28169,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28191,16 +28191,16 @@ paths:
   /zeta-chain/fungible/foreign_coins/{index}:
     get:
       summary: Queries a ForeignCoins by index.
-      operationId: Query_ForeignCoins
+      operationId: ForeignCoins
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryGetForeignCoinsResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryGetForeignCoinsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: index
           in: path
@@ -28211,33 +28211,33 @@ paths:
   /zeta-chain/fungible/gas_stability_pool_address:
     get:
       summary: Queries the address of a gas stability pool on a given chain.
-      operationId: Query_GasStabilityPoolAddress
+      operationId: GasStabilityPoolAddress
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryGetGasStabilityPoolAddressResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddressResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
-  /zeta-chain/fungible/gas_stability_pool_balance/{chain_id}:
+  /zeta-chain/fungible/gas_stability_pool_balance/{chainId}:
     get:
       summary: Queries the balance of a gas stability pool on a given chain.
-      operationId: Query_GasStabilityPoolBalance
+      operationId: GasStabilityPoolBalance
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryGetGasStabilityPoolBalanceResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalanceResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -28247,30 +28247,30 @@ paths:
   /zeta-chain/fungible/system_contract:
     get:
       summary: Queries SystemContract
-      operationId: Query_SystemContract
+      operationId: SystemContract
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryGetSystemContractResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryGetSystemContractResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/lightclient/block_headers:
     get:
-      operationId: Query_BlockHeaderAll
+      operationId: BlockHeaderAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryAllBlockHeaderResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryAllBlockHeaderResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28298,7 +28298,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28317,38 +28317,40 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/lightclient/block_headers/{block_hash}:
+      deprecated: true
+  /zeta-chain/lightclient/block_headers/{blockHash}:
     get:
-      operationId: Query_BlockHeader
+      operationId: BlockHeader
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryGetBlockHeaderResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryGetBlockHeaderResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: block_hash
+        - name: blockHash
           in: path
           required: true
           type: string
           format: byte
       tags:
         - Query
+      deprecated: true
   /zeta-chain/lightclient/chain_state:
     get:
-      operationId: Query_ChainStateAll
+      operationId: ChainStateAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryAllChainStateResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryAllChainStateResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28376,7 +28378,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28395,77 +28397,81 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/lightclient/chain_state/{chain_id}:
+      deprecated: true
+  /zeta-chain/lightclient/chain_state/{chainId}:
     get:
-      operationId: Query_ChainState
+      operationId: ChainState
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryGetChainStateResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryGetChainStateResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
           format: int64
       tags:
         - Query
+      deprecated: true
   /zeta-chain/lightclient/header_enabled_chains:
     get:
-      operationId: Query_HeaderEnabledChains
+      operationId: HeaderEnabledChains
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryHeaderEnabledChainsResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
+      deprecated: true
   /zeta-chain/lightclient/header_supported_chains:
     get:
-      operationId: Query_HeaderSupportedChains
+      operationId: HeaderSupportedChains
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryHeaderSupportedChainsResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryHeaderSupportedChainsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
+      deprecated: true
   /zeta-chain/lightclient/prove:
     get:
-      operationId: Query_Prove
+      operationId: Prove
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/lightclientQueryProveResponse'
+            $ref: '#/definitions/zetachain.zetacore.lightclient.QueryProveResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: query
           required: false
           type: string
           format: int64
-        - name: tx_hash
+        - name: txHash
           in: query
           required: false
           type: string
-        - name: proof.ethereum_proof.keys
+        - name: proof.ethereumProof.keys
           in: query
           required: false
           type: array
@@ -28473,7 +28479,7 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
-        - name: proof.ethereum_proof.values
+        - name: proof.ethereumProof.values
           in: query
           required: false
           type: array
@@ -28481,62 +28487,63 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
-        - name: proof.bitcoin_proof.tx_bytes
+        - name: proof.bitcoinProof.txBytes
           in: query
           required: false
           type: string
           format: byte
-        - name: proof.bitcoin_proof.path
+        - name: proof.bitcoinProof.path
           in: query
           required: false
           type: string
           format: byte
-        - name: proof.bitcoin_proof.index
+        - name: proof.bitcoinProof.index
           in: query
           required: false
           type: integer
           format: int64
-        - name: block_hash
+        - name: blockHash
           in: query
           required: false
           type: string
-        - name: tx_index
+        - name: txIndex
           in: query
           required: false
           type: string
           format: int64
       tags:
         - Query
+      deprecated: true
   /zeta-chain/observer/TSS:
     get:
       summary: Queries a tSS by index.
-      operationId: Query_TSS
+      operationId: TSS
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetTSSResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetTSSResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
-  /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
+  /zeta-chain/observer/ballot_by_identifier/{ballotIdentifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
-      operationId: Query_BallotByIdentifier
+      operationId: BallotByIdentifier
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryBallotByIdentifierResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryBallotByIdentifierResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: ballot_identifier
+        - name: ballotIdentifier
           in: path
           required: true
           type: string
@@ -28545,16 +28552,16 @@ paths:
   /zeta-chain/observer/ballots:
     get:
       summary: Query all ballots
-      operationId: Query_Ballots
+      operationId: Ballots
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryBallotsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryBallotsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28582,7 +28589,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28601,21 +28608,21 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}:
+  /zeta-chain/observer/blame_by_chain_and_nonce/{chainId}/{nonce}:
     get:
       summary: Queries a list of VoterByIdentifier items.
-      operationId: Query_BlamesByChainAndNonce
+      operationId: BlamesByChainAndNonce
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryBlameByChainAndNonceResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryBlameByChainAndNonceResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -28627,21 +28634,21 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/blame_by_identifier/{blame_identifier}:
+  /zeta-chain/observer/blame_by_identifier/{blameIdentifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
-      operationId: Query_BlameByIdentifier
+      operationId: BlameByIdentifier
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryBlameByIdentifierResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryBlameByIdentifierResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: blame_identifier
+        - name: blameIdentifier
           in: path
           required: true
           type: string
@@ -28650,16 +28657,16 @@ paths:
   /zeta-chain/observer/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
-      operationId: Query_ChainNoncesAll
+      operationId: ChainNoncesAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryAllChainNoncesResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryAllChainNoncesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28687,7 +28694,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28706,21 +28713,21 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/observer/chainNonces/{chain_id}:
+  /zeta-chain/observer/chainNonces/{chainId}:
     get:
       summary: Queries a chainNonces by index.
-      operationId: Query_ChainNonces
+      operationId: ChainNonces
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetChainNoncesResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetChainNoncesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -28729,48 +28736,48 @@ paths:
         - Query
   /zeta-chain/observer/crosschain_flags:
     get:
-      operationId: Query_CrosschainFlags
+      operationId: CrosschainFlags
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetCrosschainFlagsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetCrosschainFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/getAllTssFundsMigrators:
     get:
       summary: Queries all TssFundMigratorInfo
-      operationId: Query_TssFundsMigratorInfoAll
+      operationId: TssFundsMigratorInfoAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/getTssFundsMigrator:
     get:
       summary: Queries the TssFundMigratorInfo for a specific chain
-      operationId: Query_TssFundsMigratorInfo
+      operationId: TssFundsMigratorInfo
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryTssFundsMigratorInfoResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryTssFundsMigratorInfoResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: query
           required: false
           type: string
@@ -28780,16 +28787,16 @@ paths:
   /zeta-chain/observer/get_all_blame_records:
     get:
       summary: Queries a list of VoterByIdentifier items.
-      operationId: Query_GetAllBlameRecords
+      operationId: GetAllBlameRecords
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryAllBlameRecordsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryAllBlameRecordsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28817,7 +28824,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -28839,104 +28846,104 @@ paths:
   /zeta-chain/observer/get_chain_params:
     get:
       summary: Queries a list of GetChainParams items.
-      operationId: Query_GetChainParams
+      operationId: GetChainParams
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetChainParamsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetChainParamsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
-  /zeta-chain/observer/get_chain_params_for_chain/{chain_id}:
+  /zeta-chain/observer/get_chain_params_for_chain/{chainId}:
     get:
       summary: Queries a list of GetChainParamsForChain items.
-      operationId: Query_GetChainParamsForChain
+      operationId: GetChainParamsForChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetChainParamsForChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetChainParamsForChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_tss_address/{bitcoin_chain_id}:
+  /zeta-chain/observer/get_tss_address/{bitcoinChainId}:
     get:
       summary: Queries a list of GetTssAddress items.
-      operationId: Query_GetTssAddress
+      operationId: GetTssAddress
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetTssAddressResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetTssAddressResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: bitcoin_chain_id
+        - name: bitcoinChainId
           in: path
           required: true
           type: string
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}:
+  /zeta-chain/observer/get_tss_address_historical/{finalizedZetaHeight}/{bitcoinChainId}:
     get:
-      operationId: Query_GetTssAddressByFinalizedHeight
+      operationId: GetTssAddressByFinalizedHeight
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetTssAddressByFinalizedHeightResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: finalized_zeta_height
+        - name: finalizedZetaHeight
           in: path
           required: true
           type: string
           format: int64
-        - name: bitcoin_chain_id
+        - name: bitcoinChainId
           in: path
           required: true
           type: string
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}:
+  /zeta-chain/observer/has_voted/{ballotIdentifier}/{voterAddress}:
     get:
       summary: Query if a voter has voted for a ballot
-      operationId: Query_HasVoted
+      operationId: HasVoted
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryHasVotedResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryHasVotedResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: ballot_identifier
+        - name: ballotIdentifier
           in: path
           required: true
           type: string
-        - name: voter_address
+        - name: voterAddress
           in: path
           required: true
           type: string
@@ -28945,31 +28952,31 @@ paths:
   /zeta-chain/observer/keygen:
     get:
       summary: Queries a keygen by index.
-      operationId: Query_Keygen
+      operationId: Keygen
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetKeygenResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetKeygenResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/nodeAccount:
     get:
       summary: Queries a list of nodeAccount items.
-      operationId: Query_NodeAccountAll
+      operationId: NodeAccountAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryAllNodeAccountResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryAllNodeAccountResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -28997,7 +29004,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -29019,16 +29026,16 @@ paths:
   /zeta-chain/observer/nodeAccount/{index}:
     get:
       summary: Queries a nodeAccount by index.
-      operationId: Query_NodeAccount
+      operationId: NodeAccount
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetNodeAccountResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryGetNodeAccountResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: index
           in: path
@@ -29039,45 +29046,45 @@ paths:
   /zeta-chain/observer/observer_set:
     get:
       summary: Queries a list of ObserversByChainAndType items.
-      operationId: Query_ObserverSet
+      operationId: ObserverSet
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryObserverSetResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryObserverSetResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/operationalFlags:
     get:
       summary: Queries operational flags
-      operationId: Query_OperationalFlags
+      operationId: OperationalFlags
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryOperationalFlagsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryOperationalFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/pendingNonces:
     get:
-      operationId: Query_PendingNoncesAll
+      operationId: PendingNoncesAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryAllPendingNoncesResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryAllPendingNoncesResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -29105,7 +29112,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -29124,20 +29131,20 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/observer/pendingNonces/{chain_id}:
+  /zeta-chain/observer/pendingNonces/{chainId}:
     get:
-      operationId: Query_PendingNoncesByChain
+      operationId: PendingNoncesByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryPendingNoncesByChainResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryPendingNoncesByChainResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
-        - name: chain_id
+        - name: chainId
           in: path
           required: true
           type: string
@@ -29146,30 +29153,30 @@ paths:
         - Query
   /zeta-chain/observer/supportedChains:
     get:
-      operationId: Query_SupportedChains
+      operationId: SupportedChains
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQuerySupportedChainsResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QuerySupportedChainsResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/observer/tssHistory:
     get:
-      operationId: Query_TssHistory
+      operationId: TssHistory
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryTssHistoryResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryTssHistoryResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       parameters:
         - name: pagination.key
           description: |-
@@ -29197,7 +29204,7 @@ paths:
           required: false
           type: string
           format: uint64
-        - name: pagination.count_total
+        - name: pagination.countTotal
           description: |-
             count_total is set to true  to indicate that the result set should include
             a count of the total number of items available for pagination in UIs.
@@ -29219,31 +29226,31 @@ paths:
   /zeta-chain/zetacore/fungible/gas_stability_pool_balance:
     get:
       summary: Queries all gas stability pool balances.
-      operationId: Query_GasStabilityPoolBalanceAll
+      operationId: GasStabilityPoolBalanceAll
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/fungibleQueryAllGasStabilityPoolBalanceResponse'
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /zeta-chain/zetacore/observer/show_observer_count:
     get:
       summary: Queries a list of ShowObserverCount items.
-      operationId: Query_ShowObserverCount
+      operationId: ShowObserverCount
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryShowObserverCountResponse'
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryShowObserverCountResponse'
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/googlerpcStatus'
+            $ref: '#/definitions/google.rpc.Status'
       tags:
         - Query
   /ethermint/evm/v1/account/{address}:
@@ -33263,6 +33270,13 @@ definitions:
           reverse is set to true if results are to be returned in the descending order.
 
           Since: cosmos-sdk 0.43
+      countTotal:
+        type: boolean
+        description: |-
+          count_total is set to true  to indicate that the result set should include
+          a count of the total number of items available for pagination in UIs.
+          count_total is only respected when offset is used. It is ignored when key
+          is set.
     description: |-
       message SomeRequest {
                Foo some_parameter = 1;
@@ -33287,6 +33301,13 @@ definitions:
         title: |-
           total is total number of results available if PageRequest.count_total
           was set, its value is undefined otherwise
+      nextKey:
+        type: string
+        format: byte
+        description: |-
+          next_key is the key to be passed to PageRequest.key to
+          query the next page most efficiently. It will be empty if
+          there are no more results.
     description: |-
       PageResponse is to be embedded in gRPC response messages where the
       corresponding request message has used PageRequest.
@@ -33347,6 +33368,8 @@ definitions:
         format: byte
         description: >-
           Must be a valid serialized protocol buffer of the above specified type.
+      '@type':
+        type: string
     description: >-
       `Any` contains an arbitrary serialized protocol buffer message along with a
 
@@ -33440,6 +33463,7 @@ definitions:
             "@type": "type.googleapis.com/google.protobuf.Duration",
             "value": "1.212s"
           }
+    additionalProperties: {}
   grpc.gateway.runtime.Error:
     type: object
     properties:
@@ -57349,39 +57373,86 @@ definitions:
 
               field's configuration is global (not module specific).
     description: QueryConfigRequest is the Query/Config response type.
-  QueryAllGasStabilityPoolBalanceResponseBalance:
+  google.rpc.Status:
     type: object
     properties:
-      chain_id:
+      code:
+        type: integer
+        format: int32
+      message:
         type: string
-        format: int64
-      balance:
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/google.protobuf.Any'
+  zetachain.zetacore.authority.Authorization:
+    type: object
+    properties:
+      msgUrl:
         type: string
-  authorityMsgAddAuthorizationResponse:
+        title: The URL of the message that needs to be authorized
+      authorizedPolicy:
+        $ref: '#/definitions/zetachain.zetacore.authority.PolicyType'
+        title: The policy that is authorized to access the message
+    title: |-
+      Authorization defines the authorization required to access use a message
+      which needs special permissions
+  zetachain.zetacore.authority.AuthorizationList:
+    type: object
+    properties:
+      authorizations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.authority.Authorization'
+    title: AuthorizationList holds the list of authorizations on zetachain
+  zetachain.zetacore.authority.ChainInfo:
+    type: object
+    properties:
+      chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.pkg.chains.Chain'
+    title: |-
+      ChainInfo contains static information about the chains
+      This structure is used to dynamically update these info on a live network
+      before hardcoding the values in a upgrade
+  zetachain.zetacore.authority.MsgAddAuthorizationResponse:
     type: object
     description: MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
-  authorityMsgRemoveAuthorizationResponse:
+  zetachain.zetacore.authority.MsgRemoveAuthorizationResponse:
     type: object
     description: |-
       MsgRemoveAuthorizationResponse defines the MsgRemoveAuthorizationResponse
       service.
-  authorityMsgRemoveChainInfoResponse:
+  zetachain.zetacore.authority.MsgRemoveChainInfoResponse:
     type: object
     description: MsgRemoveChainInfoResponse defines the MsgRemoveChainInfoResponse service.
-  authorityMsgUpdateChainInfoResponse:
+  zetachain.zetacore.authority.MsgUpdateChainInfoResponse:
     type: object
     description: MsgUpdateChainInfoResponse defines the MsgUpdateChainInfoResponse service.
-  authorityMsgUpdatePoliciesResponse:
+  zetachain.zetacore.authority.MsgUpdatePoliciesResponse:
     type: object
     description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
-  authorityPolicy:
+  zetachain.zetacore.authority.Policies:
     type: object
     properties:
-      policy_type:
-        $ref: '#/definitions/authorityPolicyType'
+      items:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.authority.Policy'
+    title: Policy contains info about authority policies
+  zetachain.zetacore.authority.Policy:
+    type: object
+    properties:
+      policyType:
+        $ref: '#/definitions/zetachain.zetacore.authority.PolicyType'
       address:
         type: string
-  authorityPolicyType:
+  zetachain.zetacore.authority.PolicyType:
     type: string
     enum:
       - groupEmergency
@@ -57399,39 +57470,1458 @@ definitions:
 
       Used for empty policy, no action is allowed
     title: PolicyType defines the type of policy
-  authorityQueryAuthorizationListResponse:
+  zetachain.zetacore.authority.QueryAuthorizationListResponse:
     type: object
     properties:
-      authorization_list:
-        $ref: '#/definitions/zetacoreauthorityAuthorizationList'
+      authorizationList:
+        $ref: '#/definitions/zetachain.zetacore.authority.AuthorizationList'
     title: |-
       QueryAuthorizationListResponse is the response type for the
       Query/AuthorizationList RPC
-  authorityQueryAuthorizationResponse:
+  zetachain.zetacore.authority.QueryAuthorizationResponse:
     type: object
     properties:
       authorization:
-        $ref: '#/definitions/zetacoreauthorityAuthorization'
+        $ref: '#/definitions/zetachain.zetacore.authority.Authorization'
     description: |-
       QueryAuthorizationResponse is the response type for the Query/Authorization
       RPC method.
-  authorityQueryGetChainInfoResponse:
+  zetachain.zetacore.authority.QueryGetChainInfoResponse:
     type: object
     properties:
-      chain_info:
-        $ref: '#/definitions/zetacoreauthorityChainInfo'
+      chainInfo:
+        $ref: '#/definitions/zetachain.zetacore.authority.ChainInfo'
     description: |-
       QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
       method.
-  authorityQueryGetPoliciesResponse:
+  zetachain.zetacore.authority.QueryGetPoliciesResponse:
     type: object
     properties:
       policies:
-        $ref: '#/definitions/zetacoreauthorityPolicies'
+        $ref: '#/definitions/zetachain.zetacore.authority.Policies'
     description: |-
       QueryGetPoliciesResponse is the response type for the Query/Policies RPC
       method.
-  chainsCCTXGateway:
+  zetachain.zetacore.crosschain.CallOptions:
+    type: object
+    properties:
+      gasLimit:
+        type: string
+        format: uint64
+      isArbitraryCall:
+        type: boolean
+  zetachain.zetacore.crosschain.CctxStatus:
+    type: string
+    enum:
+      - PendingInbound
+      - PendingOutbound
+      - OutboundMined
+      - PendingRevert
+      - Reverted
+      - Aborted
+    default: PendingInbound
+    description: |2-
+       - PendingInbound: some observer sees inbound tx
+       - PendingOutbound: super majority observer see inbound tx
+       - OutboundMined: the corresponding outbound tx is mined
+       - PendingRevert: outbound cannot succeed; should revert inbound
+       - Reverted: inbound reverted.
+       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
+  zetachain.zetacore.crosschain.ConfirmationMode:
+    type: string
+    enum:
+      - SAFE
+      - FAST
+    default: SAFE
+    title: |-
+      - SAFE: an inbound/outbound is confirmed using safe confirmation count
+       - FAST: an inbound/outbound is confirmed using fast confirmation count
+  zetachain.zetacore.crosschain.Conversion:
+    type: object
+    properties:
+      zrc20:
+        type: string
+      rate:
+        type: string
+  zetachain.zetacore.crosschain.CrossChainTx:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      zetaFees:
+        type: string
+      relayedMessage:
+        type: string
+        title: Not used by protocol , just relayed across
+      cctxStatus:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.Status'
+      inboundParams:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.InboundParams'
+      outboundParams:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.OutboundParams'
+      protocolContractVersion:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.ProtocolContractVersion'
+      revertOptions:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.RevertOptions'
+  zetachain.zetacore.crosschain.GasPrice:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      chainId:
+        type: string
+        format: int64
+      signers:
+        type: array
+        items:
+          type: string
+      blockNums:
+        type: array
+        items:
+          type: string
+          format: uint64
+      prices:
+        type: array
+        items:
+          type: string
+          format: uint64
+      medianIndex:
+        type: string
+        format: uint64
+        title: index of the median gas price in the prices array
+      priorityFees:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: priority fees for EIP-1559
+  zetachain.zetacore.crosschain.InboundHashToCctx:
+    type: object
+    properties:
+      inboundHash:
+        type: string
+      cctxIndex:
+        type: array
+        items:
+          type: string
+  zetachain.zetacore.crosschain.InboundParams:
+    type: object
+    properties:
+      sender:
+        type: string
+        title: this address is the immediate contract/EOA that calls
+      senderChainId:
+        type: string
+        format: int64
+        title: the Connector.send()
+      txOrigin:
+        type: string
+        title: this address is the EOA that signs the inbound tx
+      coinType:
+        $ref: '#/definitions/zetachain.zetacore.pkg.coin.CoinType'
+      asset:
+        type: string
+        title: for ERC20 coin type, the asset is an address of the ERC20 contract
+      amount:
+        type: string
+      observedHash:
+        type: string
+      observedExternalHeight:
+        type: string
+        format: uint64
+      ballotIndex:
+        type: string
+      finalizedZetaHeight:
+        type: string
+        format: uint64
+      txFinalizationStatus:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.TxFinalizationStatus'
+      isCrossChainCall:
+        type: boolean
+        title: |-
+          this field describes if a smart contract call should be made for a inbound
+          with assets only used for protocol contract version 2
+      status:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.InboundStatus'
+        title: status of the inbound observation
+      confirmationMode:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
+        title: confirmation mode used for the inbound
+  zetachain.zetacore.crosschain.InboundStatus:
+    type: string
+    enum:
+      - SUCCESS
+      - INSUFFICIENT_DEPOSITOR_FEE
+      - INVALID_RECEIVER_ADDRESS
+    default: SUCCESS
+    description: |-
+      - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
+      depositor fee
+       - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
+    title: InboundStatus represents the status of an observed inbound
+  zetachain.zetacore.crosschain.InboundTracker:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      txHash:
+        type: string
+      coinType:
+        $ref: '#/definitions/zetachain.zetacore.pkg.coin.CoinType'
+  zetachain.zetacore.crosschain.LastBlockHeight:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      chain:
+        type: string
+      lastInboundHeight:
+        type: string
+        format: uint64
+      lastOutboundHeight:
+        type: string
+        format: uint64
+  zetachain.zetacore.crosschain.MsgAbortStuckCCTXResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgAddInboundTrackerResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgAddOutboundTrackerResponse:
+    type: object
+    properties:
+      isRemoved:
+        type: boolean
+        title: if the tx was removed from the tracker due to no pending cctx
+  zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFundsResponse:
+    type: object
+    properties:
+      cctxIndex:
+        type: string
+  zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgRefundAbortedCCTXResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgRemoveInboundTrackerResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgRemoveOutboundTrackerResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatusResponse:
+    type: object
+    properties:
+      cctxIndex:
+        type: string
+  zetachain.zetacore.crosschain.MsgUpdateRateLimiterFlagsResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgVoteGasPriceResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgVoteInboundResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgVoteOutboundResponse:
+    type: object
+  zetachain.zetacore.crosschain.MsgWhitelistERC20Response:
+    type: object
+    properties:
+      zrc20Address:
+        type: string
+      cctxIndex:
+        type: string
+  zetachain.zetacore.crosschain.OutboundParams:
+    type: object
+    properties:
+      receiver:
+        type: string
+      receiverChainId:
+        type: string
+        format: int64
+      coinType:
+        $ref: '#/definitions/zetachain.zetacore.pkg.coin.CoinType'
+      amount:
+        type: string
+      tssNonce:
+        type: string
+        format: uint64
+      gasLimit:
+        type: string
+        format: uint64
+        title: Deprecated (v21), use CallOptions
+      gasPrice:
+        type: string
+      gasPriorityFee:
+        type: string
+      hash:
+        type: string
+        title: |-
+          the above are commands for zetaclients
+          the following fields are used when the outbound tx is mined
+      ballotIndex:
+        type: string
+      observedExternalHeight:
+        type: string
+        format: uint64
+      gasUsed:
+        type: string
+        format: uint64
+      effectiveGasPrice:
+        type: string
+      effectiveGasLimit:
+        type: string
+        format: uint64
+      tssPubkey:
+        type: string
+      txFinalizationStatus:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.TxFinalizationStatus'
+      callOptions:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.CallOptions'
+      confirmationMode:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.ConfirmationMode'
+        title: confirmation mode used for the outbound
+  zetachain.zetacore.crosschain.OutboundTracker:
+    type: object
+    properties:
+      index:
+        type: string
+        title: 'format: "chain-nonce"'
+      chainId:
+        type: string
+        format: int64
+      nonce:
+        type: string
+        format: uint64
+      hashList:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.TxHash'
+  zetachain.zetacore.crosschain.ProtocolContractVersion:
+    type: string
+    enum:
+      - V1
+      - V2
+    default: V1
+    title: |-
+      ProtocolContractVersion represents the version of the protocol contract used
+      for cctx workflow
+  zetachain.zetacore.crosschain.QueryAllCctxResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllGasPriceResponse:
+    type: object
+    properties:
+      GasPrice:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.GasPrice'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllInboundHashToCctxResponse:
+    type: object
+    properties:
+      inboundHashToCctx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.InboundHashToCctx'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllInboundTrackerByChainResponse:
+    type: object
+    properties:
+      inboundTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.InboundTracker'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllInboundTrackersResponse:
+    type: object
+    properties:
+      inboundTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.InboundTracker'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllLastBlockHeightResponse:
+    type: object
+    properties:
+      LastBlockHeight:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.LastBlockHeight'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllOutboundTrackerByChainResponse:
+    type: object
+    properties:
+      outboundTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.OutboundTracker'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryAllOutboundTrackerResponse:
+    type: object
+    properties:
+      outboundTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.OutboundTracker'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.crosschain.QueryConvertGasToZetaResponse:
+    type: object
+    properties:
+      outboundGasInZeta:
+        type: string
+      protocolFeeInZeta:
+        type: string
+      ZetaBlockHeight:
+        type: string
+        format: uint64
+  zetachain.zetacore.crosschain.QueryGetCctxResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+  zetachain.zetacore.crosschain.QueryGetGasPriceResponse:
+    type: object
+    properties:
+      GasPrice:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.GasPrice'
+  zetachain.zetacore.crosschain.QueryGetInboundHashToCctxResponse:
+    type: object
+    properties:
+      inboundHashToCctx:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.InboundHashToCctx'
+  zetachain.zetacore.crosschain.QueryGetLastBlockHeightResponse:
+    type: object
+    properties:
+      LastBlockHeight:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.LastBlockHeight'
+  zetachain.zetacore.crosschain.QueryGetOutboundTrackerResponse:
+    type: object
+    properties:
+      outboundTracker:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.OutboundTracker'
+  zetachain.zetacore.crosschain.QueryInboundHashToCctxDataResponse:
+    type: object
+    properties:
+      CrossChainTxs:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+  zetachain.zetacore.crosschain.QueryInboundTrackerResponse:
+    type: object
+    properties:
+      inboundTracker:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.InboundTracker'
+  zetachain.zetacore.crosschain.QueryLastZetaHeightResponse:
+    type: object
+    properties:
+      Height:
+        type: string
+        format: int64
+  zetachain.zetacore.crosschain.QueryListPendingCctxResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+      totalPending:
+        type: string
+        format: uint64
+  zetachain.zetacore.crosschain.QueryListPendingCctxWithinRateLimitResponse:
+    type: object
+    properties:
+      crossChainTx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+      totalPending:
+        type: string
+        format: uint64
+      currentWithdrawWindow:
+        type: string
+        format: int64
+      currentWithdrawRate:
+        type: string
+      rateLimitExceeded:
+        type: boolean
+  zetachain.zetacore.crosschain.QueryMessagePassingProtocolFeeResponse:
+    type: object
+    properties:
+      feeInZeta:
+        type: string
+  zetachain.zetacore.crosschain.QueryRateLimiterFlagsResponse:
+    type: object
+    properties:
+      rateLimiterFlags:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.RateLimiterFlags'
+  zetachain.zetacore.crosschain.QueryRateLimiterInputResponse:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      cctxsMissed:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+      cctxsPending:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.CrossChainTx'
+      totalPending:
+        type: string
+        format: uint64
+      pastCctxsValue:
+        type: string
+      pendingCctxsValue:
+        type: string
+      lowestPendingCctxHeight:
+        type: string
+        format: int64
+  zetachain.zetacore.crosschain.QueryZetaAccountingResponse:
+    type: object
+    properties:
+      abortedZetaAmount:
+        type: string
+  zetachain.zetacore.crosschain.RateLimiterFlags:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      window:
+        type: string
+        format: int64
+        title: window in blocks
+      rate:
+        type: string
+        title: rate in azeta per block
+      conversions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.crosschain.Conversion'
+        title: conversion in azeta per token
+  zetachain.zetacore.crosschain.RevertOptions:
+    type: object
+    properties:
+      revertAddress:
+        type: string
+      callOnRevert:
+        type: boolean
+      abortAddress:
+        type: string
+      revertMessage:
+        type: string
+        format: byte
+      revertGasLimit:
+        type: string
+    title: RevertOptions represents the options for reverting a cctx
+  zetachain.zetacore.crosschain.Status:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/zetachain.zetacore.crosschain.CctxStatus'
+      statusMessage:
+        type: string
+        description: |-
+          status_message carries information about the status transitions:
+          why they were triggered, old and new status.
+      errorMessage:
+        type: string
+        description: |-
+          error_message carries information about the error that caused the tx
+          to be PendingRevert, Reverted or Aborted.
+      lastUpdateTimestamp:
+        type: string
+        format: int64
+      isAbortRefunded:
+        type: boolean
+      createdTimestamp:
+        type: string
+        format: int64
+        description: when the CCTX was created. only populated on new transactions.
+      errorMessageRevert:
+        type: string
+        title: |-
+          error_message_revert carries information about the revert outbound tx ,
+          which is created if the first outbound tx fails
+      errorMessageAbort:
+        type: string
+        title: error_message_abort carries information when aborting the CCTX fails
+  zetachain.zetacore.crosschain.TxFinalizationStatus:
+    type: string
+    enum:
+      - NotFinalized
+      - Finalized
+      - Executed
+    default: NotFinalized
+    title: |-
+      - NotFinalized: the corresponding tx is not finalized
+       - Finalized: the corresponding tx is finalized but not executed yet
+       - Executed: the corresponding tx is executed
+  zetachain.zetacore.crosschain.TxHash:
+    type: object
+    properties:
+      txHash:
+        type: string
+      txSigner:
+        type: string
+      proven:
+        type: boolean
+  zetachain.zetacore.emissions.MsgUpdateParamsResponse:
+    type: object
+  zetachain.zetacore.emissions.MsgWithdrawEmissionResponse:
+    type: object
+  zetachain.zetacore.emissions.Params:
+    type: object
+    properties:
+      validatorEmissionPercentage:
+        type: string
+      observerEmissionPercentage:
+        type: string
+      tssSignerEmissionPercentage:
+        type: string
+      observerSlashAmount:
+        type: string
+      ballotMaturityBlocks:
+        type: string
+        format: int64
+      blockRewardAmount:
+        type: string
+    title: |-
+      Params defines the parameters for the module.
+      Sample values:
+         ValidatorEmissionPercentage: "00.50",
+         ObserverEmissionPercentage:  "00.25",
+         TssSignerEmissionPercentage: "00.25",
+         ObserverSlashAmount:         100000000000000000,
+         BallotMaturityBlocks:        100,
+         BlockRewardAmount:           9620949074074074074.074070733466756687,
+  zetachain.zetacore.emissions.QueryListPoolAddressesResponse:
+    type: object
+    properties:
+      undistributedObserverBalancesAddress:
+        type: string
+      undistributedTssBalancesAddress:
+        type: string
+      emissionModuleAddress:
+        type: string
+  zetachain.zetacore.emissions.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        $ref: '#/definitions/zetachain.zetacore.emissions.Params'
+        description: params holds all the parameters of this module.
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetachain.zetacore.emissions.QueryShowAvailableEmissionsResponse:
+    type: object
+    properties:
+      amount:
+        type: string
+  zetachain.zetacore.fungible.ForeignCoins:
+    type: object
+    properties:
+      zrc20ContractAddress:
+        type: string
+        description: index
+        title: string index = 1;
+      asset:
+        type: string
+      foreignChainId:
+        type: string
+        format: int64
+      decimals:
+        type: integer
+        format: int64
+      name:
+        type: string
+      symbol:
+        type: string
+      coinType:
+        $ref: '#/definitions/zetachain.zetacore.pkg.coin.CoinType'
+      gasLimit:
+        type: string
+        format: uint64
+      paused:
+        type: boolean
+      liquidityCap:
+        type: string
+  zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response:
+    type: object
+    properties:
+      address:
+        type: string
+  zetachain.zetacore.fungible.MsgDeploySystemContractsResponse:
+    type: object
+    properties:
+      uniswapV2Factory:
+        type: string
+      wzeta:
+        type: string
+      uniswapV2Router:
+        type: string
+      connectorZEVM:
+        type: string
+      systemContract:
+        type: string
+  zetachain.zetacore.fungible.MsgPauseZRC20Response:
+    type: object
+  zetachain.zetacore.fungible.MsgRemoveForeignCoinResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUnpauseZRC20Response:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateSystemContractResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCapResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateZRC20NameResponse:
+    type: object
+  zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFeeResponse:
+    type: object
+  zetachain.zetacore.fungible.QueryAllForeignCoinsResponse:
+    type: object
+    properties:
+      foreignCoins:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.fungible.ForeignCoins'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse:
+    type: object
+    properties:
+      balances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse.Balance'
+  zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse.Balance:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      balance:
+        type: string
+  zetachain.zetacore.fungible.QueryCodeHashResponse:
+    type: object
+    properties:
+      codeHash:
+        type: string
+  zetachain.zetacore.fungible.QueryGetForeignCoinsResponse:
+    type: object
+    properties:
+      foreignCoins:
+        $ref: '#/definitions/zetachain.zetacore.fungible.ForeignCoins'
+  zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddressResponse:
+    type: object
+    properties:
+      cosmosAddress:
+        type: string
+      evmAddress:
+        type: string
+  zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalanceResponse:
+    type: object
+    properties:
+      balance:
+        type: string
+  zetachain.zetacore.fungible.QueryGetSystemContractResponse:
+    type: object
+    properties:
+      SystemContract:
+        $ref: '#/definitions/zetachain.zetacore.fungible.SystemContract'
+  zetachain.zetacore.fungible.SystemContract:
+    type: object
+    properties:
+      systemContract:
+        type: string
+      connectorZevm:
+        type: string
+      gateway:
+        type: string
+  zetachain.zetacore.lightclient.ChainState:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      latestHeight:
+        type: string
+        format: int64
+      earliestHeight:
+        type: string
+        format: int64
+      latestBlockHash:
+        type: string
+        format: byte
+    title: ChainState defines the overall state of the block headers for a given chain
+  zetachain.zetacore.lightclient.HeaderSupportedChain:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      enabled:
+        type: boolean
+    title: |-
+      HeaderSupportedChain is a structure containing information of weather a chain
+      is enabled or not for block header verification
+  zetachain.zetacore.lightclient.MsgDisableHeaderVerificationResponse:
+    type: object
+  zetachain.zetacore.lightclient.MsgEnableHeaderVerificationResponse:
+    type: object
+  zetachain.zetacore.lightclient.QueryAllBlockHeaderResponse:
+    type: object
+    properties:
+      blockHeaders:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.pkg.proofs.BlockHeader'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.lightclient.QueryAllChainStateResponse:
+    type: object
+    properties:
+      chainState:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.lightclient.ChainState'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.lightclient.QueryGetBlockHeaderResponse:
+    type: object
+    properties:
+      blockHeader:
+        $ref: '#/definitions/zetachain.zetacore.pkg.proofs.BlockHeader'
+  zetachain.zetacore.lightclient.QueryGetChainStateResponse:
+    type: object
+    properties:
+      chainState:
+        $ref: '#/definitions/zetachain.zetacore.lightclient.ChainState'
+  zetachain.zetacore.lightclient.QueryHeaderEnabledChainsResponse:
+    type: object
+    properties:
+      headerEnabledChains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.lightclient.HeaderSupportedChain'
+  zetachain.zetacore.lightclient.QueryHeaderSupportedChainsResponse:
+    type: object
+    properties:
+      headerSupportedChains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.lightclient.HeaderSupportedChain'
+  zetachain.zetacore.lightclient.QueryProveResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
+  zetachain.zetacore.observer.Ballot:
+    type: object
+    properties:
+      index:
+        type: string
+      ballotIdentifier:
+        type: string
+      voterList:
+        type: array
+        items:
+          type: string
+      votes:
+        type: array
+        items:
+          $ref: '#/definitions/zetachain.zetacore.observer.VoteType'
+      observationType:
+        $ref: '#/definitions/zetachain.zetacore.observer.ObservationType'
+      ballotThreshold:
+        type: string
+      ballotStatus:
+        $ref: '#/definitions/zetachain.zetacore.observer.BallotStatus'
+      ballotCreationHeight:
+        type: string
+        format: int64
+    title: https://github.com/zeta-chain/node/issues/939
+  zetachain.zetacore.observer.BallotStatus:
+    type: string
+    enum:
+      - BallotFinalized_SuccessObservation
+      - BallotFinalized_FailureObservation
+      - BallotInProgress
+    default: BallotFinalized_SuccessObservation
+  zetachain.zetacore.observer.Blame:
+    type: object
+    properties:
+      index:
+        type: string
+      failureReason:
+        type: string
+      nodes:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.Node'
+  zetachain.zetacore.observer.ChainNonces:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+        title: 'deprecated(v19): index has been replaced by chain_id for unique identifier'
+      chainId:
+        type: string
+        format: int64
+      nonce:
+        type: string
+        format: uint64
+      signers:
+        type: array
+        items:
+          type: string
+      finalizedHeight:
+        type: string
+        format: uint64
+  zetachain.zetacore.observer.ChainParams:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      confirmationCount:
+        type: string
+        format: uint64
+        title: 'Deprecated(v28): use confirmation_params instead'
+      gasPriceTicker:
+        type: string
+        format: uint64
+      inboundTicker:
+        type: string
+        format: uint64
+      outboundTicker:
+        type: string
+        format: uint64
+      watchUtxoTicker:
+        type: string
+        format: uint64
+      zetaTokenContractAddress:
+        type: string
+      connectorContractAddress:
+        type: string
+      erc20CustodyContractAddress:
+        type: string
+      outboundScheduleInterval:
+        type: string
+        format: int64
+      outboundScheduleLookahead:
+        type: string
+        format: int64
+      ballotThreshold:
+        type: string
+      minObserverDelegation:
+        type: string
+      isSupported:
+        type: boolean
+      gatewayAddress:
+        type: string
+      confirmationParams:
+        $ref: '#/definitions/zetachain.zetacore.observer.ConfirmationParams'
+        title: Advanced confirmation parameters for chain to support fast observation
+  zetachain.zetacore.observer.ChainParamsList:
+    type: object
+    properties:
+      chainParams:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.ChainParams'
+  zetachain.zetacore.observer.ConfirmationParams:
+    type: object
+    properties:
+      safeInboundCount:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an inbound is
+          considered finalized.
+      fastInboundCount:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast inbound observation, which is
+          shorter than safe_inbound_count.
+      safeOutboundCount:
+        type: string
+        format: uint64
+        description: |-
+          This is the safe number of confirmations to wait before an outbound is
+          considered finalized.
+      fastOutboundCount:
+        type: string
+        format: uint64
+        description: |-
+          This is the number of confirmations for fast outbound observation, which is
+          shorter than safe_outbound_count.
+  zetachain.zetacore.observer.CrosschainFlags:
+    type: object
+    properties:
+      isInboundEnabled:
+        type: boolean
+      isOutboundEnabled:
+        type: boolean
+      gasPriceIncreaseFlags:
+        $ref: '#/definitions/zetachain.zetacore.observer.GasPriceIncreaseFlags'
+  zetachain.zetacore.observer.GasPriceIncreaseFlags:
+    type: object
+    properties:
+      epochLength:
+        type: string
+        format: int64
+      retryInterval:
+        type: string
+      gasPriceIncreasePercent:
+        type: integer
+        format: int64
+      gasPriceIncreaseMax:
+        type: integer
+        format: int64
+        title: |-
+          Maximum gas price increase in percent of the median gas price
+          Default is used if 0
+      maxPendingCctxs:
+        type: integer
+        format: int64
+        title: |-
+          Maximum number of pending crosschain transactions to check for gas price
+          increase
+  zetachain.zetacore.observer.Keygen:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/zetachain.zetacore.observer.KeygenStatus'
+        title: 0--to generate key; 1--generated; 2--error
+      granteePubkeys:
+        type: array
+        items:
+          type: string
+      blockNumber:
+        type: string
+        format: int64
+        title: the blocknum that the key needs to be generated
+  zetachain.zetacore.observer.KeygenStatus:
+    type: string
+    enum:
+      - PendingKeygen
+      - KeyGenSuccess
+      - KeyGenFailed
+    default: PendingKeygen
+  zetachain.zetacore.observer.LastObserverCount:
+    type: object
+    properties:
+      count:
+        type: string
+        format: uint64
+      lastChangeHeight:
+        type: string
+        format: int64
+  zetachain.zetacore.observer.MsgAddObserverResponse:
+    type: object
+  zetachain.zetacore.observer.MsgDisableCCTXResponse:
+    type: object
+  zetachain.zetacore.observer.MsgDisableFastConfirmationResponse:
+    type: object
+  zetachain.zetacore.observer.MsgEnableCCTXResponse:
+    type: object
+  zetachain.zetacore.observer.MsgRemoveChainParamsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgResetChainNoncesResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateChainParamsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlagsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateKeygenResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateObserverResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateOperationalChainParamsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgUpdateOperationalFlagsResponse:
+    type: object
+  zetachain.zetacore.observer.MsgVoteBlameResponse:
+    type: object
+  zetachain.zetacore.observer.MsgVoteBlockHeaderResponse:
+    type: object
+    properties:
+      ballotCreated:
+        type: boolean
+      voteFinalized:
+        type: boolean
+  zetachain.zetacore.observer.MsgVoteTSSResponse:
+    type: object
+    properties:
+      ballotCreated:
+        type: boolean
+      voteFinalized:
+        type: boolean
+      keygenSuccess:
+        type: boolean
+  zetachain.zetacore.observer.Node:
+    type: object
+    properties:
+      pubKey:
+        type: string
+      blameData:
+        type: string
+        format: byte
+      blameSignature:
+        type: string
+        format: byte
+  zetachain.zetacore.observer.NodeAccount:
+    type: object
+    properties:
+      operator:
+        type: string
+      granteeAddress:
+        type: string
+      granteePubkey:
+        $ref: '#/definitions/zetachain.zetacore.pkg.crypto.PubKeySet'
+      nodeStatus:
+        $ref: '#/definitions/zetachain.zetacore.observer.NodeStatus'
+  zetachain.zetacore.observer.NodeStatus:
+    type: string
+    enum:
+      - Unknown
+      - Whitelisted
+      - Standby
+      - Ready
+      - Active
+      - Disabled
+    default: Unknown
+  zetachain.zetacore.observer.ObservationType:
+    type: string
+    enum:
+      - EmptyObserverType
+      - InboundTx
+      - OutboundTx
+      - TSSKeyGen
+      - TSSKeySign
+    default: EmptyObserverType
+  zetachain.zetacore.observer.ObserverUpdateReason:
+    type: string
+    enum:
+      - Undefined
+      - Tombstoned
+      - AdminUpdate
+    default: Undefined
+  zetachain.zetacore.observer.OperationalFlags:
+    type: object
+    properties:
+      restartHeight:
+        type: string
+        format: int64
+        description: |-
+          Height for a coordinated zetaclient restart.
+          Will be ignored if missed.
+      signerBlockTimeOffset:
+        type: string
+        description: |-
+          Offset from the zetacore block time to initiate signing.
+          Should be calculated and set based on max(zetaclient_core_block_latency).
+      minimumVersion:
+        type: string
+        description: |-
+          Minimum version of zetaclient that is allowed to run. This must be either
+          a valid semver string (v23.0.1) or empty. If empty, all versions are
+          allowed.
+    description: Flags for the top-level operation of zetaclient.
+  zetachain.zetacore.observer.PendingNonces:
+    type: object
+    properties:
+      nonceLow:
+        type: string
+        format: int64
+      nonceHigh:
+        type: string
+        format: int64
+      chainId:
+        type: string
+        format: int64
+      tss:
+        type: string
+    title: store key is tss+chainid
+  zetachain.zetacore.observer.QueryAllBlameRecordsResponse:
+    type: object
+    properties:
+      blameInfo:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.Blame'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.QueryAllChainNoncesResponse:
+    type: object
+    properties:
+      ChainNonces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.ChainNonces'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.QueryAllNodeAccountResponse:
+    type: object
+    properties:
+      NodeAccount:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.NodeAccount'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.QueryAllPendingNoncesResponse:
+    type: object
+    properties:
+      pendingNonces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.PendingNonces'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.QueryBallotByIdentifierResponse:
+    type: object
+    properties:
+      ballotIdentifier:
+        type: string
+      voters:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.VoterList'
+      observationType:
+        $ref: '#/definitions/zetachain.zetacore.observer.ObservationType'
+      ballotStatus:
+        $ref: '#/definitions/zetachain.zetacore.observer.BallotStatus'
+  zetachain.zetacore.observer.QueryBallotsResponse:
+    type: object
+    properties:
+      ballots:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.Ballot'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.QueryBlameByChainAndNonceResponse:
+    type: object
+    properties:
+      blameInfo:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.Blame'
+  zetachain.zetacore.observer.QueryBlameByIdentifierResponse:
+    type: object
+    properties:
+      blameInfo:
+        $ref: '#/definitions/zetachain.zetacore.observer.Blame'
+  zetachain.zetacore.observer.QueryGetChainNoncesResponse:
+    type: object
+    properties:
+      ChainNonces:
+        $ref: '#/definitions/zetachain.zetacore.observer.ChainNonces'
+  zetachain.zetacore.observer.QueryGetChainParamsForChainResponse:
+    type: object
+    properties:
+      chainParams:
+        $ref: '#/definitions/zetachain.zetacore.observer.ChainParams'
+  zetachain.zetacore.observer.QueryGetChainParamsResponse:
+    type: object
+    properties:
+      chainParams:
+        $ref: '#/definitions/zetachain.zetacore.observer.ChainParamsList'
+  zetachain.zetacore.observer.QueryGetCrosschainFlagsResponse:
+    type: object
+    properties:
+      crosschainFlags:
+        $ref: '#/definitions/zetachain.zetacore.observer.CrosschainFlags'
+  zetachain.zetacore.observer.QueryGetKeygenResponse:
+    type: object
+    properties:
+      keygen:
+        $ref: '#/definitions/zetachain.zetacore.observer.Keygen'
+  zetachain.zetacore.observer.QueryGetNodeAccountResponse:
+    type: object
+    properties:
+      nodeAccount:
+        $ref: '#/definitions/zetachain.zetacore.observer.NodeAccount'
+  zetachain.zetacore.observer.QueryGetTSSResponse:
+    type: object
+    properties:
+      TSS:
+        $ref: '#/definitions/zetachain.zetacore.observer.TSS'
+  zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
+  zetachain.zetacore.observer.QueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
+  zetachain.zetacore.observer.QueryHasVotedResponse:
+    type: object
+    properties:
+      hasVoted:
+        type: boolean
+  zetachain.zetacore.observer.QueryObserverSetResponse:
+    type: object
+    properties:
+      observers:
+        type: array
+        items:
+          type: string
+  zetachain.zetacore.observer.QueryOperationalFlagsResponse:
+    type: object
+    properties:
+      operationalFlags:
+        $ref: '#/definitions/zetachain.zetacore.observer.OperationalFlags'
+  zetachain.zetacore.observer.QueryPendingNoncesByChainResponse:
+    type: object
+    properties:
+      pendingNonces:
+        $ref: '#/definitions/zetachain.zetacore.observer.PendingNonces'
+  zetachain.zetacore.observer.QueryShowObserverCountResponse:
+    type: object
+    properties:
+      lastObserverCount:
+        $ref: '#/definitions/zetachain.zetacore.observer.LastObserverCount'
+  zetachain.zetacore.observer.QuerySupportedChainsResponse:
+    type: object
+    properties:
+      chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.pkg.chains.Chain'
+  zetachain.zetacore.observer.QueryTssFundsMigratorInfoAllResponse:
+    type: object
+    properties:
+      tssFundsMigrators:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.TssFundMigratorInfo'
+  zetachain.zetacore.observer.QueryTssFundsMigratorInfoResponse:
+    type: object
+    properties:
+      tssFundsMigrator:
+        $ref: '#/definitions/zetachain.zetacore.observer.TssFundMigratorInfo'
+  zetachain.zetacore.observer.QueryTssHistoryResponse:
+    type: object
+    properties:
+      tssList:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetachain.zetacore.observer.TSS'
+      pagination:
+        $ref: '#/definitions/cosmos.base.query.v1beta1.PageResponse'
+  zetachain.zetacore.observer.TSS:
+    type: object
+    properties:
+      tssPubkey:
+        type: string
+      tssParticipantList:
+        type: array
+        items:
+          type: string
+      operatorAddressList:
+        type: array
+        items:
+          type: string
+      finalizedZetaHeight:
+        type: string
+        format: int64
+      keyGenZetaHeight:
+        type: string
+        format: int64
+  zetachain.zetacore.observer.TssFundMigratorInfo:
+    type: object
+    properties:
+      chainId:
+        type: string
+        format: int64
+      migrationCctxIndex:
+        type: string
+  zetachain.zetacore.observer.VoteType:
+    type: string
+    enum:
+      - SuccessObservation
+      - FailureObservation
+      - NotYetVoted
+    default: SuccessObservation
+    description: |2-
+       - FailureObservation: Failure observation means , the the message that
+       - NotYetVoted: this voter is observing failed / reverted . It does
+      not mean it was unable to observe.
+  zetachain.zetacore.observer.VoterList:
+    type: object
+    properties:
+      voterAddress:
+        type: string
+      voteType:
+        $ref: '#/definitions/zetachain.zetacore.observer.VoteType'
+  zetachain.zetacore.pkg.chains.CCTXGateway:
     type: string
     enum:
       - zevm
@@ -57443,35 +58933,35 @@ definitions:
        - observers: observers is the CCTX gateway for chains relying on the observer set to
       observe inbounds and TSS for outbounds
     title: CCTXGateway describes for the chain the gateway used to handle CCTX outbounds
-  chainsChain:
+  zetachain.zetacore.pkg.chains.Chain:
     type: object
     properties:
-      chain_id:
+      chainId:
         type: string
         format: int64
         title: ChainId is the unique identifier of the chain
-      chain_name:
-        $ref: '#/definitions/chainsChainName'
+      chainName:
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.ChainName'
         title: |-
           ChainName is the name of the chain
           Deprecated(v19): replaced with Name
       network:
-        $ref: '#/definitions/chainsNetwork'
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.Network'
         title: Network is the network of the chain
-      network_type:
-        $ref: '#/definitions/chainsNetworkType'
+      networkType:
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.NetworkType'
         description: 'NetworkType is the network type of the chain: mainnet, testnet, etc..'
       vm:
-        $ref: '#/definitions/chainsVm'
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.Vm'
         title: Vm is the virtual machine used in the chain
       consensus:
-        $ref: '#/definitions/chainsConsensus'
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.Consensus'
         title: Consensus is the underlying consensus algorithm used by the chain
-      is_external:
+      isExternal:
         type: boolean
         title: IsExternal describe if the chain is ZetaChain or external
-      cctx_gateway:
-        $ref: '#/definitions/chainsCCTXGateway'
+      cctxGateway:
+        $ref: '#/definitions/zetachain.zetacore.pkg.chains.CCTXGateway'
         title: CCTXGateway is the gateway used to handle CCTX outbounds
       name:
         type: string
@@ -57479,7 +58969,7 @@ definitions:
     title: |-
       Chain represents static data about a blockchain network
       it is identified by a unique chain ID
-  chainsChainName:
+  zetachain.zetacore.pkg.chains.ChainName:
     type: string
     enum:
       - empty
@@ -57508,7 +58998,7 @@ definitions:
     title: |-
       ChainName represents the name of the chain
       Deprecated(v19): replaced with Chain.Name as string
-  chainsConsensus:
+  zetachain.zetacore.pkg.chains.Consensus:
     type: string
     enum:
       - ethereum
@@ -57528,7 +59018,7 @@ definitions:
       Consensus represents the consensus algorithm used by the chain
       this can represent the consensus of a L1
       this can also represent the solution of a L2
-  chainsNetwork:
+  zetachain.zetacore.pkg.chains.Network:
     type: string
     enum:
       - eth
@@ -57549,7 +59039,7 @@ definitions:
       Network represents the network of the chain
       there is a single instance of the network on mainnet
       then the network can have eventual testnets or devnets
-  chainsNetworkType:
+  zetachain.zetacore.pkg.chains.NetworkType:
     type: string
     enum:
       - mainnet
@@ -57560,7 +59050,7 @@ definitions:
     title: |-
       NetworkType represents the network type of the chain
       Mainnet, Testnet, Privnet, Devnet
-  chainsReceiveStatus:
+  zetachain.zetacore.pkg.chains.ReceiveStatus:
     type: string
     enum:
       - created
@@ -57572,7 +59062,7 @@ definitions:
       ReceiveStatus represents the status of an outbound
       TODO: Rename and move
       https://github.com/zeta-chain/node/issues/2257
-  chainsVm:
+  zetachain.zetacore.pkg.chains.Vm:
     type: string
     enum:
       - no_vm
@@ -57584,7 +59074,7 @@ definitions:
     title: |-
       Vm represents the virtual machine type of the chain to support smart
       contracts
-  coinCoinType:
+  zetachain.zetacore.pkg.coin.CoinType:
     type: string
     enum:
       - Zeta
@@ -57598,471 +59088,7 @@ definitions:
        - ERC20: ERC20 token
        - Cmd: no asset, used for admin command
        - NoAssetCall: no asset, used for contract call
-  crosschainCallOptions:
-    type: object
-    properties:
-      gas_limit:
-        type: string
-        format: uint64
-      is_arbitrary_call:
-        type: boolean
-  crosschainCctxStatus:
-    type: string
-    enum:
-      - PendingInbound
-      - PendingOutbound
-      - OutboundMined
-      - PendingRevert
-      - Reverted
-      - Aborted
-    default: PendingInbound
-    description: |2-
-       - PendingInbound: some observer sees inbound tx
-       - PendingOutbound: super majority observer see inbound tx
-       - OutboundMined: the corresponding outbound tx is mined
-       - PendingRevert: outbound cannot succeed; should revert inbound
-       - Reverted: inbound reverted.
-       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort.
-  crosschainConfirmationMode:
-    type: string
-    enum:
-      - SAFE
-      - FAST
-    default: SAFE
-    title: |-
-      - SAFE: an inbound/outbound is confirmed using safe confirmation count
-       - FAST: an inbound/outbound is confirmed using fast confirmation count
-  crosschainConversion:
-    type: object
-    properties:
-      zrc20:
-        type: string
-      rate:
-        type: string
-  crosschainCrossChainTx:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      zeta_fees:
-        type: string
-      relayed_message:
-        type: string
-        title: Not used by protocol , just relayed across
-      cctx_status:
-        $ref: '#/definitions/zetacorecrosschainStatus'
-      inbound_params:
-        $ref: '#/definitions/crosschainInboundParams'
-      outbound_params:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainOutboundParams'
-      protocol_contract_version:
-        $ref: '#/definitions/crosschainProtocolContractVersion'
-      revert_options:
-        $ref: '#/definitions/crosschainRevertOptions'
-  crosschainInboundParams:
-    type: object
-    properties:
-      sender:
-        type: string
-        title: this address is the immediate contract/EOA that calls
-      sender_chain_id:
-        type: string
-        format: int64
-        title: the Connector.send()
-      tx_origin:
-        type: string
-        title: this address is the EOA that signs the inbound tx
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-      asset:
-        type: string
-        title: for ERC20 coin type, the asset is an address of the ERC20 contract
-      amount:
-        type: string
-      observed_hash:
-        type: string
-      observed_external_height:
-        type: string
-        format: uint64
-      ballot_index:
-        type: string
-      finalized_zeta_height:
-        type: string
-        format: uint64
-      tx_finalization_status:
-        $ref: '#/definitions/crosschainTxFinalizationStatus'
-      is_cross_chain_call:
-        type: boolean
-        title: |-
-          this field describes if a smart contract call should be made for a inbound
-          with assets only used for protocol contract version 2
-      status:
-        $ref: '#/definitions/crosschainInboundStatus'
-        title: status of the inbound observation
-      confirmation_mode:
-        $ref: '#/definitions/crosschainConfirmationMode'
-        title: confirmation mode used for the inbound
-  crosschainInboundStatus:
-    type: string
-    enum:
-      - SUCCESS
-      - INSUFFICIENT_DEPOSITOR_FEE
-      - INVALID_RECEIVER_ADDRESS
-    default: SUCCESS
-    description: |-
-      - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
-      depositor fee
-       - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
-    title: InboundStatus represents the status of an observed inbound
-  crosschainMsgAbortStuckCCTXResponse:
-    type: object
-  crosschainMsgAddInboundTrackerResponse:
-    type: object
-  crosschainMsgAddOutboundTrackerResponse:
-    type: object
-    properties:
-      is_removed:
-        type: boolean
-        title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgMigrateERC20CustodyFundsResponse:
-    type: object
-    properties:
-      cctx_index:
-        type: string
-  crosschainMsgMigrateTssFundsResponse:
-    type: object
-  crosschainMsgRefundAbortedCCTXResponse:
-    type: object
-  crosschainMsgRemoveInboundTrackerResponse:
-    type: object
-  crosschainMsgRemoveOutboundTrackerResponse:
-    type: object
-  crosschainMsgUpdateERC20CustodyPauseStatusResponse:
-    type: object
-    properties:
-      cctx_index:
-        type: string
-  crosschainMsgUpdateRateLimiterFlagsResponse:
-    type: object
-  crosschainMsgUpdateTssAddressResponse:
-    type: object
-  crosschainMsgVoteGasPriceResponse:
-    type: object
-  crosschainMsgVoteInboundResponse:
-    type: object
-  crosschainMsgVoteOutboundResponse:
-    type: object
-  crosschainMsgWhitelistERC20Response:
-    type: object
-    properties:
-      zrc20_address:
-        type: string
-      cctx_index:
-        type: string
-  crosschainOutboundParams:
-    type: object
-    properties:
-      receiver:
-        type: string
-      receiver_chainId:
-        type: string
-        format: int64
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-      amount:
-        type: string
-      tss_nonce:
-        type: string
-        format: uint64
-      gas_limit:
-        type: string
-        format: uint64
-        title: Deprecated (v21), use CallOptions
-      gas_price:
-        type: string
-      gas_priority_fee:
-        type: string
-      hash:
-        type: string
-        title: |-
-          the above are commands for zetaclients
-          the following fields are used when the outbound tx is mined
-      ballot_index:
-        type: string
-      observed_external_height:
-        type: string
-        format: uint64
-      gas_used:
-        type: string
-        format: uint64
-      effective_gas_price:
-        type: string
-      effective_gas_limit:
-        type: string
-        format: uint64
-      tss_pubkey:
-        type: string
-      tx_finalization_status:
-        $ref: '#/definitions/crosschainTxFinalizationStatus'
-      call_options:
-        $ref: '#/definitions/crosschainCallOptions'
-      confirmation_mode:
-        $ref: '#/definitions/crosschainConfirmationMode'
-        title: confirmation mode used for the outbound
-  crosschainProtocolContractVersion:
-    type: string
-    enum:
-      - V1
-      - V2
-    default: V1
-    title: |-
-      ProtocolContractVersion represents the version of the protocol contract used
-      for cctx workflow
-  crosschainQueryAllCctxResponse:
-    type: object
-    properties:
-      CrossChainTx:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllGasPriceResponse:
-    type: object
-    properties:
-      GasPrice:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainGasPrice'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInboundHashToCctxResponse:
-    type: object
-    properties:
-      inboundHashToCctx:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainInboundHashToCctx'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInboundTrackerByChainResponse:
-    type: object
-    properties:
-      inboundTracker:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainInboundTracker'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllInboundTrackersResponse:
-    type: object
-    properties:
-      inboundTracker:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainInboundTracker'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllLastBlockHeightResponse:
-    type: object
-    properties:
-      LastBlockHeight:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainLastBlockHeight'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllOutboundTrackerByChainResponse:
-    type: object
-    properties:
-      outboundTracker:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainOutboundTracker'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllOutboundTrackerResponse:
-    type: object
-    properties:
-      outboundTracker:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorecrosschainOutboundTracker'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryConvertGasToZetaResponse:
-    type: object
-    properties:
-      outboundGasInZeta:
-        type: string
-      protocolFeeInZeta:
-        type: string
-      ZetaBlockHeight:
-        type: string
-        format: uint64
-  crosschainQueryGetCctxResponse:
-    type: object
-    properties:
-      CrossChainTx:
-        $ref: '#/definitions/crosschainCrossChainTx'
-  crosschainQueryGetGasPriceResponse:
-    type: object
-    properties:
-      GasPrice:
-        $ref: '#/definitions/zetacorecrosschainGasPrice'
-  crosschainQueryGetInboundHashToCctxResponse:
-    type: object
-    properties:
-      inboundHashToCctx:
-        $ref: '#/definitions/zetacorecrosschainInboundHashToCctx'
-  crosschainQueryGetLastBlockHeightResponse:
-    type: object
-    properties:
-      LastBlockHeight:
-        $ref: '#/definitions/zetacorecrosschainLastBlockHeight'
-  crosschainQueryGetOutboundTrackerResponse:
-    type: object
-    properties:
-      outboundTracker:
-        $ref: '#/definitions/zetacorecrosschainOutboundTracker'
-  crosschainQueryInboundHashToCctxDataResponse:
-    type: object
-    properties:
-      CrossChainTxs:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-  crosschainQueryInboundTrackerResponse:
-    type: object
-    properties:
-      inbound_tracker:
-        $ref: '#/definitions/zetacorecrosschainInboundTracker'
-  crosschainQueryLastZetaHeightResponse:
-    type: object
-    properties:
-      Height:
-        type: string
-        format: int64
-  crosschainQueryListPendingCctxResponse:
-    type: object
-    properties:
-      CrossChainTx:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-      totalPending:
-        type: string
-        format: uint64
-  crosschainQueryListPendingCctxWithinRateLimitResponse:
-    type: object
-    properties:
-      cross_chain_tx:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-      total_pending:
-        type: string
-        format: uint64
-      current_withdraw_window:
-        type: string
-        format: int64
-      current_withdraw_rate:
-        type: string
-      rate_limit_exceeded:
-        type: boolean
-  crosschainQueryMessagePassingProtocolFeeResponse:
-    type: object
-    properties:
-      feeInZeta:
-        type: string
-  crosschainQueryRateLimiterFlagsResponse:
-    type: object
-    properties:
-      rateLimiterFlags:
-        $ref: '#/definitions/zetacorecrosschainRateLimiterFlags'
-  crosschainQueryRateLimiterInputResponse:
-    type: object
-    properties:
-      height:
-        type: string
-        format: int64
-      cctxs_missed:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-      cctxs_pending:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainCrossChainTx'
-      total_pending:
-        type: string
-        format: uint64
-      past_cctxs_value:
-        type: string
-      pending_cctxs_value:
-        type: string
-      lowest_pending_cctx_height:
-        type: string
-        format: int64
-  crosschainQueryZetaAccountingResponse:
-    type: object
-    properties:
-      aborted_zeta_amount:
-        type: string
-  crosschainRevertOptions:
-    type: object
-    properties:
-      revert_address:
-        type: string
-      call_on_revert:
-        type: boolean
-      abort_address:
-        type: string
-      revert_message:
-        type: string
-        format: byte
-      revert_gas_limit:
-        type: string
-    title: RevertOptions represents the options for reverting a cctx
-  crosschainTxFinalizationStatus:
-    type: string
-    enum:
-      - NotFinalized
-      - Finalized
-      - Executed
-    default: NotFinalized
-    title: |-
-      - NotFinalized: the corresponding tx is not finalized
-       - Finalized: the corresponding tx is finalized but not executed yet
-       - Executed: the corresponding tx is executed
-  crosschainTxHash:
-    type: object
-    properties:
-      tx_hash:
-        type: string
-      tx_signer:
-        type: string
-      proven:
-        type: boolean
-  cryptoPubKeySet:
+  zetachain.zetacore.pkg.crypto.PubKeySet:
     type: object
     properties:
       secp256k1:
@@ -58070,659 +59096,7 @@ definitions:
       ed25519:
         type: string
     title: PubKeySet contains two pub keys , secp256k1 and ed25519
-  emissionsMsgUpdateParamsResponse:
-    type: object
-  emissionsMsgWithdrawEmissionResponse:
-    type: object
-  emissionsQueryListPoolAddressesResponse:
-    type: object
-    properties:
-      undistributed_observer_balances_address:
-        type: string
-      undistributed_tss_balances_address:
-        type: string
-      emission_module_address:
-        type: string
-  emissionsQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacoreemissionsParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
-  emissionsQueryShowAvailableEmissionsResponse:
-    type: object
-    properties:
-      amount:
-        type: string
-  fungibleMsgDeployFungibleCoinZRC20Response:
-    type: object
-    properties:
-      address:
-        type: string
-  fungibleMsgDeploySystemContractsResponse:
-    type: object
-    properties:
-      uniswapV2Factory:
-        type: string
-      wzeta:
-        type: string
-      uniswapV2Router:
-        type: string
-      connectorZEVM:
-        type: string
-      systemContract:
-        type: string
-  fungibleMsgPauseZRC20Response:
-    type: object
-  fungibleMsgRemoveForeignCoinResponse:
-    type: object
-  fungibleMsgUnpauseZRC20Response:
-    type: object
-  fungibleMsgUpdateContractBytecodeResponse:
-    type: object
-  fungibleMsgUpdateGatewayContractResponse:
-    type: object
-  fungibleMsgUpdateSystemContractResponse:
-    type: object
-  fungibleMsgUpdateZRC20LiquidityCapResponse:
-    type: object
-  fungibleMsgUpdateZRC20NameResponse:
-    type: object
-  fungibleMsgUpdateZRC20WithdrawFeeResponse:
-    type: object
-  fungibleQueryAllForeignCoinsResponse:
-    type: object
-    properties:
-      foreignCoins:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorefungibleForeignCoins'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  fungibleQueryAllGasStabilityPoolBalanceResponse:
-    type: object
-    properties:
-      balances:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/QueryAllGasStabilityPoolBalanceResponseBalance'
-  fungibleQueryCodeHashResponse:
-    type: object
-    properties:
-      code_hash:
-        type: string
-  fungibleQueryGetForeignCoinsResponse:
-    type: object
-    properties:
-      foreignCoins:
-        $ref: '#/definitions/zetacorefungibleForeignCoins'
-  fungibleQueryGetGasStabilityPoolAddressResponse:
-    type: object
-    properties:
-      cosmos_address:
-        type: string
-      evm_address:
-        type: string
-  fungibleQueryGetGasStabilityPoolBalanceResponse:
-    type: object
-    properties:
-      balance:
-        type: string
-  fungibleQueryGetSystemContractResponse:
-    type: object
-    properties:
-      SystemContract:
-        $ref: '#/definitions/zetacorefungibleSystemContract'
-  googlerpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
-  lightclientHeaderSupportedChain:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      enabled:
-        type: boolean
-    title: |-
-      HeaderSupportedChain is a structure containing information of weather a chain
-      is enabled or not for block header verification
-  lightclientMsgDisableHeaderVerificationResponse:
-    type: object
-  lightclientMsgEnableHeaderVerificationResponse:
-    type: object
-  lightclientQueryAllBlockHeaderResponse:
-    type: object
-    properties:
-      block_headers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/pkgproofsBlockHeader'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  lightclientQueryAllChainStateResponse:
-    type: object
-    properties:
-      chain_state:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacorelightclientChainState'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  lightclientQueryGetBlockHeaderResponse:
-    type: object
-    properties:
-      block_header:
-        $ref: '#/definitions/pkgproofsBlockHeader'
-  lightclientQueryGetChainStateResponse:
-    type: object
-    properties:
-      chain_state:
-        $ref: '#/definitions/zetacorelightclientChainState'
-  lightclientQueryHeaderEnabledChainsResponse:
-    type: object
-    properties:
-      header_enabled_chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/lightclientHeaderSupportedChain'
-  lightclientQueryHeaderSupportedChainsResponse:
-    type: object
-    properties:
-      header_supported_chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/lightclientHeaderSupportedChain'
-  lightclientQueryProveResponse:
-    type: object
-    properties:
-      valid:
-        type: boolean
-  observerBallot:
-    type: object
-    properties:
-      index:
-        type: string
-      ballot_identifier:
-        type: string
-      voter_list:
-        type: array
-        items:
-          type: string
-      votes:
-        type: array
-        items:
-          $ref: '#/definitions/observerVoteType'
-      observation_type:
-        $ref: '#/definitions/observerObservationType'
-      ballot_threshold:
-        type: string
-      ballot_status:
-        $ref: '#/definitions/observerBallotStatus'
-      ballot_creation_height:
-        type: string
-        format: int64
-    title: https://github.com/zeta-chain/node/issues/939
-  observerBallotStatus:
-    type: string
-    enum:
-      - BallotFinalized_SuccessObservation
-      - BallotFinalized_FailureObservation
-      - BallotInProgress
-    default: BallotFinalized_SuccessObservation
-  observerBlame:
-    type: object
-    properties:
-      index:
-        type: string
-      failure_reason:
-        type: string
-      nodes:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerNode'
-  observerChainParams:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      confirmation_count:
-        type: string
-        format: uint64
-        title: 'Deprecated(v28): use confirmation_params instead'
-      gas_price_ticker:
-        type: string
-        format: uint64
-      inbound_ticker:
-        type: string
-        format: uint64
-      outbound_ticker:
-        type: string
-        format: uint64
-      watch_utxo_ticker:
-        type: string
-        format: uint64
-      zeta_token_contract_address:
-        type: string
-      connector_contract_address:
-        type: string
-      erc20_custody_contract_address:
-        type: string
-      outbound_schedule_interval:
-        type: string
-        format: int64
-      outbound_schedule_lookahead:
-        type: string
-        format: int64
-      ballot_threshold:
-        type: string
-      min_observer_delegation:
-        type: string
-      is_supported:
-        type: boolean
-      gateway_address:
-        type: string
-      confirmation_params:
-        $ref: '#/definitions/observerConfirmationParams'
-        title: Advanced confirmation parameters for chain to support fast observation
-  observerChainParamsList:
-    type: object
-    properties:
-      chain_params:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerChainParams'
-  observerConfirmationParams:
-    type: object
-    properties:
-      safe_inbound_count:
-        type: string
-        format: uint64
-        description: |-
-          This is the safe number of confirmations to wait before an inbound is
-          considered finalized.
-      fast_inbound_count:
-        type: string
-        format: uint64
-        description: |-
-          This is the number of confirmations for fast inbound observation, which is
-          shorter than safe_inbound_count.
-      safe_outbound_count:
-        type: string
-        format: uint64
-        description: |-
-          This is the safe number of confirmations to wait before an outbound is
-          considered finalized.
-      fast_outbound_count:
-        type: string
-        format: uint64
-        description: |-
-          This is the number of confirmations for fast outbound observation, which is
-          shorter than safe_outbound_count.
-  observerGasPriceIncreaseFlags:
-    type: object
-    properties:
-      epochLength:
-        type: string
-        format: int64
-      retryInterval:
-        type: string
-      gasPriceIncreasePercent:
-        type: integer
-        format: int64
-      gasPriceIncreaseMax:
-        type: integer
-        format: int64
-        title: |-
-          Maximum gas price increase in percent of the median gas price
-          Default is used if 0
-      maxPendingCctxs:
-        type: integer
-        format: int64
-        title: |-
-          Maximum number of pending crosschain transactions to check for gas price
-          increase
-  observerKeygenStatus:
-    type: string
-    enum:
-      - PendingKeygen
-      - KeyGenSuccess
-      - KeyGenFailed
-    default: PendingKeygen
-  observerLastObserverCount:
-    type: object
-    properties:
-      count:
-        type: string
-        format: uint64
-      last_change_height:
-        type: string
-        format: int64
-  observerMsgAddObserverResponse:
-    type: object
-  observerMsgDisableCCTXResponse:
-    type: object
-  observerMsgDisableFastConfirmationResponse:
-    type: object
-  observerMsgEnableCCTXResponse:
-    type: object
-  observerMsgRemoveChainParamsResponse:
-    type: object
-  observerMsgResetChainNoncesResponse:
-    type: object
-  observerMsgUpdateChainParamsResponse:
-    type: object
-  observerMsgUpdateGasPriceIncreaseFlagsResponse:
-    type: object
-  observerMsgUpdateKeygenResponse:
-    type: object
-  observerMsgUpdateObserverResponse:
-    type: object
-  observerMsgUpdateOperationalChainParamsResponse:
-    type: object
-  observerMsgUpdateOperationalFlagsResponse:
-    type: object
-  observerMsgVoteBlameResponse:
-    type: object
-  observerMsgVoteBlockHeaderResponse:
-    type: object
-    properties:
-      ballot_created:
-        type: boolean
-      vote_finalized:
-        type: boolean
-  observerMsgVoteTSSResponse:
-    type: object
-    properties:
-      ballot_created:
-        type: boolean
-      vote_finalized:
-        type: boolean
-      keygen_success:
-        type: boolean
-  observerNode:
-    type: object
-    properties:
-      pub_key:
-        type: string
-      blame_data:
-        type: string
-        format: byte
-      blame_signature:
-        type: string
-        format: byte
-  observerNodeStatus:
-    type: string
-    enum:
-      - Unknown
-      - Whitelisted
-      - Standby
-      - Ready
-      - Active
-      - Disabled
-    default: Unknown
-  observerObservationType:
-    type: string
-    enum:
-      - EmptyObserverType
-      - InboundTx
-      - OutboundTx
-      - TSSKeyGen
-      - TSSKeySign
-    default: EmptyObserverType
-  observerObserverUpdateReason:
-    type: string
-    enum:
-      - Undefined
-      - Tombstoned
-      - AdminUpdate
-    default: Undefined
-  observerPendingNonces:
-    type: object
-    properties:
-      nonce_low:
-        type: string
-        format: int64
-      nonce_high:
-        type: string
-        format: int64
-      chain_id:
-        type: string
-        format: int64
-      tss:
-        type: string
-    title: store key is tss+chainid
-  observerQueryAllBlameRecordsResponse:
-    type: object
-    properties:
-      blame_info:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerBlame'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllChainNoncesResponse:
-    type: object
-    properties:
-      ChainNonces:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacoreobserverChainNonces'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllNodeAccountResponse:
-    type: object
-    properties:
-      NodeAccount:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacoreobserverNodeAccount'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllPendingNoncesResponse:
-    type: object
-    properties:
-      pending_nonces:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerPendingNonces'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryBallotByIdentifierResponse:
-    type: object
-    properties:
-      ballot_identifier:
-        type: string
-      voters:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerVoterList'
-      observation_type:
-        $ref: '#/definitions/observerObservationType'
-      ballot_status:
-        $ref: '#/definitions/observerBallotStatus'
-  observerQueryBallotsResponse:
-    type: object
-    properties:
-      ballots:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerBallot'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryBlameByChainAndNonceResponse:
-    type: object
-    properties:
-      blame_info:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerBlame'
-  observerQueryBlameByIdentifierResponse:
-    type: object
-    properties:
-      blame_info:
-        $ref: '#/definitions/observerBlame'
-  observerQueryGetChainNoncesResponse:
-    type: object
-    properties:
-      ChainNonces:
-        $ref: '#/definitions/zetacoreobserverChainNonces'
-  observerQueryGetChainParamsForChainResponse:
-    type: object
-    properties:
-      chain_params:
-        $ref: '#/definitions/observerChainParams'
-  observerQueryGetChainParamsResponse:
-    type: object
-    properties:
-      chain_params:
-        $ref: '#/definitions/observerChainParamsList'
-  observerQueryGetCrosschainFlagsResponse:
-    type: object
-    properties:
-      crosschain_flags:
-        $ref: '#/definitions/zetacoreobserverCrosschainFlags'
-  observerQueryGetKeygenResponse:
-    type: object
-    properties:
-      keygen:
-        $ref: '#/definitions/zetacoreobserverKeygen'
-  observerQueryGetNodeAccountResponse:
-    type: object
-    properties:
-      node_account:
-        $ref: '#/definitions/zetacoreobserverNodeAccount'
-  observerQueryGetTSSResponse:
-    type: object
-    properties:
-      TSS:
-        $ref: '#/definitions/zetacoreobserverTSS'
-  observerQueryGetTssAddressByFinalizedHeightResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
-  observerQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
-  observerQueryHasVotedResponse:
-    type: object
-    properties:
-      has_voted:
-        type: boolean
-  observerQueryObserverSetResponse:
-    type: object
-    properties:
-      observers:
-        type: array
-        items:
-          type: string
-  observerQueryOperationalFlagsResponse:
-    type: object
-    properties:
-      operational_flags:
-        $ref: '#/definitions/zetacoreobserverOperationalFlags'
-  observerQueryPendingNoncesByChainResponse:
-    type: object
-    properties:
-      pending_nonces:
-        $ref: '#/definitions/observerPendingNonces'
-  observerQueryShowObserverCountResponse:
-    type: object
-    properties:
-      last_observer_count:
-        $ref: '#/definitions/observerLastObserverCount'
-  observerQuerySupportedChainsResponse:
-    type: object
-    properties:
-      chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chainsChain'
-  observerQueryTssFundsMigratorInfoAllResponse:
-    type: object
-    properties:
-      tss_funds_migrators:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerTssFundMigratorInfo'
-  observerQueryTssFundsMigratorInfoResponse:
-    type: object
-    properties:
-      tss_funds_migrator:
-        $ref: '#/definitions/observerTssFundMigratorInfo'
-  observerQueryTssHistoryResponse:
-    type: object
-    properties:
-      tss_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacoreobserverTSS'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  observerTssFundMigratorInfo:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      migration_cctx_index:
-        type: string
-  observerVoteType:
-    type: string
-    enum:
-      - SuccessObservation
-      - FailureObservation
-      - NotYetVoted
-    default: SuccessObservation
-    description: |2-
-       - FailureObservation: Failure observation means , the the message that
-       - NotYetVoted: this voter is observing failed / reverted . It does
-      not mean it was unable to observe.
-  observerVoterList:
-    type: object
-    properties:
-      voter_address:
-        type: string
-      vote_type:
-        $ref: '#/definitions/observerVoteType'
-  pkgproofsBlockHeader:
+  zetachain.zetacore.pkg.proofs.BlockHeader:
     type: object
     properties:
       height:
@@ -58731,37 +59105,37 @@ definitions:
       hash:
         type: string
         format: byte
-      parent_hash:
+      parentHash:
         type: string
         format: byte
-      chain_id:
+      chainId:
         type: string
         format: int64
       header:
-        $ref: '#/definitions/proofsHeaderData'
+        $ref: '#/definitions/zetachain.zetacore.pkg.proofs.HeaderData'
         title: chain specific header
-  pkgproofsProof:
+  zetachain.zetacore.pkg.proofs.HeaderData:
     type: object
     properties:
-      ethereum_proof:
-        $ref: '#/definitions/proofsethereumProof'
-      bitcoin_proof:
-        $ref: '#/definitions/proofsbitcoinProof'
-  proofsHeaderData:
-    type: object
-    properties:
-      ethereum_header:
+      ethereumHeader:
         type: string
         format: byte
         title: binary encoded headers; RLP for ethereum
-      bitcoin_header:
+      bitcoinHeader:
         type: string
         format: byte
         title: 80-byte little-endian encoded binary data
-  proofsbitcoinProof:
+  zetachain.zetacore.pkg.proofs.Proof:
     type: object
     properties:
-      tx_bytes:
+      ethereumProof:
+        $ref: '#/definitions/zetachain.zetacore.pkg.proofs.ethereum.Proof'
+      bitcoinProof:
+        $ref: '#/definitions/zetachain.zetacore.pkg.proofs.bitcoin.Proof'
+  zetachain.zetacore.pkg.proofs.bitcoin.Proof:
+    type: object
+    properties:
+      txBytes:
         type: string
         format: byte
       path:
@@ -58770,7 +59144,7 @@ definitions:
       index:
         type: integer
         format: int64
-  proofsethereumProof:
+  zetachain.zetacore.pkg.proofs.ethereum.Proof:
     type: object
     properties:
       keys:
@@ -58783,430 +59157,6 @@ definitions:
         items:
           type: string
           format: byte
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  v1beta1PageRequest:
-    type: object
-    properties:
-      key:
-        type: string
-        format: byte
-        description: |-
-          key is a value returned in PageResponse.next_key to begin
-          querying the next page most efficiently. Only one of offset or key
-          should be set.
-      offset:
-        type: string
-        format: uint64
-        description: |-
-          offset is a numeric offset that can be used when key is unavailable.
-          It is less efficient than using key. Only one of offset or key should
-          be set.
-      limit:
-        type: string
-        format: uint64
-        description: |-
-          limit is the total number of results to be returned in the result page.
-          If left empty it will default to a value to be set by each app.
-      count_total:
-        type: boolean
-        description: |-
-          count_total is set to true  to indicate that the result set should include
-          a count of the total number of items available for pagination in UIs.
-          count_total is only respected when offset is used. It is ignored when key
-          is set.
-      reverse:
-        type: boolean
-        description: |-
-          reverse is set to true if results are to be returned in the descending order.
-
-          Since: cosmos-sdk 0.43
-    description: |-
-      message SomeRequest {
-               Foo some_parameter = 1;
-               PageRequest pagination = 2;
-       }
-    title: |-
-      PageRequest is to be embedded in gRPC request messages for efficient
-      pagination. Ex:
-  v1beta1PageResponse:
-    type: object
-    properties:
-      next_key:
-        type: string
-        format: byte
-        description: |-
-          next_key is the key to be passed to PageRequest.key to
-          query the next page most efficiently. It will be empty if
-          there are no more results.
-      total:
-        type: string
-        format: uint64
-        title: |-
-          total is total number of results available if PageRequest.count_total
-          was set, its value is undefined otherwise
-    description: |-
-      PageResponse is to be embedded in gRPC response messages where the
-      corresponding request message has used PageRequest.
-
-       message SomeResponse {
-               repeated Bar results = 1;
-               PageResponse page = 2;
-       }
-  zetacoreauthorityAuthorization:
-    type: object
-    properties:
-      msg_url:
-        type: string
-        title: The URL of the message that needs to be authorized
-      authorized_policy:
-        $ref: '#/definitions/authorityPolicyType'
-        title: The policy that is authorized to access the message
-    title: |-
-      Authorization defines the authorization required to access use a message
-      which needs special permissions
-  zetacoreauthorityAuthorizationList:
-    type: object
-    properties:
-      authorizations:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/zetacoreauthorityAuthorization'
-    title: AuthorizationList holds the list of authorizations on zetachain
-  zetacoreauthorityChainInfo:
-    type: object
-    properties:
-      chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chainsChain'
-    title: |-
-      ChainInfo contains static information about the chains
-      This structure is used to dynamically update these info on a live network
-      before hardcoding the values in a upgrade
-  zetacoreauthorityPolicies:
-    type: object
-    properties:
-      items:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/authorityPolicy'
-    title: Policy contains info about authority policies
-  zetacorecrosschainGasPrice:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain_id:
-        type: string
-        format: int64
-      signers:
-        type: array
-        items:
-          type: string
-      block_nums:
-        type: array
-        items:
-          type: string
-          format: uint64
-      prices:
-        type: array
-        items:
-          type: string
-          format: uint64
-      median_index:
-        type: string
-        format: uint64
-        title: index of the median gas price in the prices array
-      priority_fees:
-        type: array
-        items:
-          type: string
-          format: uint64
-        title: priority fees for EIP-1559
-  zetacorecrosschainInboundHashToCctx:
-    type: object
-    properties:
-      inbound_hash:
-        type: string
-      cctx_index:
-        type: array
-        items:
-          type: string
-  zetacorecrosschainInboundTracker:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      tx_hash:
-        type: string
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-  zetacorecrosschainLastBlockHeight:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain:
-        type: string
-      lastInboundHeight:
-        type: string
-        format: uint64
-      lastOutboundHeight:
-        type: string
-        format: uint64
-  zetacorecrosschainOutboundTracker:
-    type: object
-    properties:
-      index:
-        type: string
-        title: 'format: "chain-nonce"'
-      chain_id:
-        type: string
-        format: int64
-      nonce:
-        type: string
-        format: uint64
-      hash_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainTxHash'
-  zetacorecrosschainRateLimiterFlags:
-    type: object
-    properties:
-      enabled:
-        type: boolean
-      window:
-        type: string
-        format: int64
-        title: window in blocks
-      rate:
-        type: string
-        title: rate in azeta per block
-      conversions:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainConversion'
-        title: conversion in azeta per token
-  zetacorecrosschainStatus:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/crosschainCctxStatus'
-      status_message:
-        type: string
-        description: |-
-          status_message carries information about the status transitions:
-          why they were triggered, old and new status.
-      error_message:
-        type: string
-        description: |-
-          error_message carries information about the error that caused the tx
-          to be PendingRevert, Reverted or Aborted.
-      lastUpdate_timestamp:
-        type: string
-        format: int64
-      isAbortRefunded:
-        type: boolean
-      created_timestamp:
-        type: string
-        format: int64
-        description: when the CCTX was created. only populated on new transactions.
-      error_message_revert:
-        type: string
-        title: |-
-          error_message_revert carries information about the revert outbound tx ,
-          which is created if the first outbound tx fails
-      error_message_abort:
-        type: string
-        title: error_message_abort carries information when aborting the CCTX fails
-  zetacoreemissionsParams:
-    type: object
-    properties:
-      validator_emission_percentage:
-        type: string
-      observer_emission_percentage:
-        type: string
-      tss_signer_emission_percentage:
-        type: string
-      observer_slash_amount:
-        type: string
-      ballot_maturity_blocks:
-        type: string
-        format: int64
-      block_reward_amount:
-        type: string
-    title: |-
-      Params defines the parameters for the module.
-      Sample values:
-         ValidatorEmissionPercentage: "00.50",
-         ObserverEmissionPercentage:  "00.25",
-         TssSignerEmissionPercentage: "00.25",
-         ObserverSlashAmount:         100000000000000000,
-         BallotMaturityBlocks:        100,
-         BlockRewardAmount:           9620949074074074074.074070733466756687,
-  zetacorefungibleForeignCoins:
-    type: object
-    properties:
-      zrc20_contract_address:
-        type: string
-        description: index
-        title: string index = 1;
-      asset:
-        type: string
-      foreign_chain_id:
-        type: string
-        format: int64
-      decimals:
-        type: integer
-        format: int64
-      name:
-        type: string
-      symbol:
-        type: string
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-      gas_limit:
-        type: string
-        format: uint64
-      paused:
-        type: boolean
-      liquidity_cap:
-        type: string
-  zetacorefungibleSystemContract:
-    type: object
-    properties:
-      system_contract:
-        type: string
-      connector_zevm:
-        type: string
-      gateway:
-        type: string
-  zetacorelightclientChainState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
-    title: ChainState defines the overall state of the block headers for a given chain
-  zetacoreobserverChainNonces:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-        title: 'deprecated(v19): index has been replaced by chain_id for unique identifier'
-      chain_id:
-        type: string
-        format: int64
-      nonce:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
-  zetacoreobserverCrosschainFlags:
-    type: object
-    properties:
-      isInboundEnabled:
-        type: boolean
-      isOutboundEnabled:
-        type: boolean
-      gasPriceIncreaseFlags:
-        $ref: '#/definitions/observerGasPriceIncreaseFlags'
-  zetacoreobserverKeygen:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/observerKeygenStatus'
-        title: 0--to generate key; 1--generated; 2--error
-      granteePubkeys:
-        type: array
-        items:
-          type: string
-      blockNumber:
-        type: string
-        format: int64
-        title: the blocknum that the key needs to be generated
-  zetacoreobserverNodeAccount:
-    type: object
-    properties:
-      operator:
-        type: string
-      granteeAddress:
-        type: string
-      granteePubkey:
-        $ref: '#/definitions/cryptoPubKeySet'
-      nodeStatus:
-        $ref: '#/definitions/observerNodeStatus'
-  zetacoreobserverOperationalFlags:
-    type: object
-    properties:
-      restart_height:
-        type: string
-        format: int64
-        description: |-
-          Height for a coordinated zetaclient restart.
-          Will be ignored if missed.
-      signer_block_time_offset:
-        type: string
-        description: |-
-          Offset from the zetacore block time to initiate signing.
-          Should be calculated and set based on max(zetaclient_core_block_latency).
-      minimum_version:
-        type: string
-        description: |-
-          Minimum version of zetaclient that is allowed to run. This must be either
-          a valid semver string (v23.0.1) or empty. If empty, all versions are
-          allowed.
-    description: Flags for the top-level operation of zetaclient.
-  zetacoreobserverTSS:
-    type: object
-    properties:
-      tss_pubkey:
-        type: string
-      tss_participant_list:
-        type: array
-        items:
-          type: string
-      operator_address_list:
-        type: array
-        items:
-          type: string
-      finalizedZetaHeight:
-        type: string
-        format: int64
-      keyGenZetaHeight:
-        type: string
-        format: int64
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:
