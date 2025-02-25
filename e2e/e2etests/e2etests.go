@@ -60,19 +60,21 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName                      = "solana_deposit"
-	TestSolanaWithdrawName                     = "solana_withdraw"
-	TestSolanaWithdrawAndCallName              = "solana_withdraw_and_call"
-	TestSolanaDepositAndCallName               = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRevertName         = "solana_deposit_and_call_revert"
-	TestSolanaDepositAndCallRevertWithDustName = "solana_deposit_and_call_revert_with_dust"
-	TestSolanaDepositRestrictedName            = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName           = "solana_withdraw_restricted"
-	TestSPLDepositName                         = "spl_deposit"
-	TestSPLDepositAndCallName                  = "spl_deposit_and_call"
-	TestSPLWithdrawName                        = "spl_withdraw"
-	TestSPLWithdrawAndCallName                 = "spl_withdraw_and_call"
-	TestSPLWithdrawAndCreateReceiverAtaName    = "spl_withdraw_and_create_receiver_ata"
+	TestSolanaDepositName                       = "solana_deposit"
+	TestSolanaWithdrawName                      = "solana_withdraw"
+	TestSolanaWithdrawAndCallName               = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallRevertWithCallName = "solana_withdraw_and_call_revert_with_call"
+	TestSolanaDepositAndCallName                = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName          = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithDustName  = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaDepositRestrictedName             = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName            = "solana_withdraw_restricted"
+	TestSPLDepositName                          = "spl_deposit"
+	TestSPLDepositAndCallName                   = "spl_deposit_and_call"
+	TestSPLWithdrawName                         = "spl_withdraw"
+	TestSPLWithdrawAndCallName                  = "spl_withdraw_and_call"
+	TestSPLWithdrawAndCallRevertName            = "spl_withdraw_and_call_revert"
+	TestSPLWithdrawAndCreateReceiverAtaName     = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -542,12 +544,28 @@ var AllE2ETests = []runner.E2ETest{
 		TestSolanaWithdrawAndCall,
 	),
 	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallRevertWithCallName,
+		"withdraw SOL from ZEVM and call solana program that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCallRevertWithCall,
+	),
+	runner.NewE2ETest(
 		TestSPLWithdrawAndCallName,
 		"withdraw SPL from ZEVM and call solana program",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestSPLWithdrawAndCallRevertName,
+		"withdraw SPL from ZEVM and call solana program that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSPLWithdrawAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
