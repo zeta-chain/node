@@ -4,10 +4,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 )
 
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
