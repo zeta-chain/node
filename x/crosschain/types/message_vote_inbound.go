@@ -159,8 +159,8 @@ func (msg *MsgVoteInbound) Digest() string {
 
 // EligibleForFastConfirmation determines if the inbound msg is eligible for fast confirmation
 func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
-	// only fungible coins are eligible for fast confirmation
-	if !msg.CoinType.IsFungible() {
+	// only asset CoinType is eligible for fast confirmation
+	if !msg.CoinType.IsAsset() {
 		return false
 	}
 
