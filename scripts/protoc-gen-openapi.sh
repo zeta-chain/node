@@ -67,8 +67,8 @@ for key in $keys; do
     name=$(echo $key | cut -d '/' -f 3)
     # Check if the standard module is not imported in the app.go
     if ! grep -q "github.com/cosmos/cosmos-sdk/x/$name" $APP_GO; then
-      # Keep the standard "base" and "tx" endpoints
-      if [[ $name == "base" || $name == "tx" ]]; then
+      # Keep the standard "base", "tx", and "upgrade" endpoints
+      if [[ $name == "base" || $name == "tx" || $name == "upgrade" ]]; then
         continue
       fi
       # If not found, delete the key from the YAML file in-place
