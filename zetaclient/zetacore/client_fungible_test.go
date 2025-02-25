@@ -6,7 +6,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/testutil/sample"
 
@@ -15,28 +14,23 @@ import (
 )
 
 func Test_GetForeignCoinsFromAsset(t *testing.T) {
-	erc20Asset := sample.EthAddress().Hex()
+	erc20Asset := sample.EthAddress()
 
 	tests := []struct {
-		name    string
-		chainID int64
-		asset   string
-		errMsg  string
+		name         string
+		chainID      int64
+		assetAddress ethcommon.Address
+		errMsg       string
 	}{
 		{
-			name:    "get ERC20 foreign coins from asset",
-			chainID: 1,
-			asset:   erc20Asset,
+			name:         "get ERC20 foreign coins from asset",
+			chainID:      1,
+			assetAddress: erc20Asset,
 		},
 		{
-			name:    "get Gas foreign coins from zero-address asset",
-			chainID: 1,
-			asset:   constant.EVMZeroAddress,
-		},
-		{
-			name:    "get Gas foreign coins from empty asset",
-			chainID: 1,
-			asset:   "",
+			name:         "get Gas foreign coins from zero-address asset",
+			chainID:      1,
+			assetAddress: ethcommon.Address{},
 		},
 	}
 
@@ -44,13 +38,12 @@ func Test_GetForeignCoinsFromAsset(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// ARRANGE
 			// construct foreign coin
-			assetAddress := ethcommon.HexToAddress(tt.asset)
-			asset := assetAddress.Hex()
-			if crypto.IsEmptyAddress(assetAddress) {
-				asset = ""
+			assetString := tt.assetAddress.Hex()
+			if crypto.IsEmptyAddress(tt.assetAddress) {
+				assetString = ""
 			}
 			fCoins := sample.ForeignCoins(t, "0x123")
-			fCoins.Asset = asset
+			fCoins.Asset = assetString
 			fCoins.ForeignChainId = tt.chainID
 
 			// mock RPC server
@@ -71,7 +64,7 @@ func Test_GetForeignCoinsFromAsset(t *testing.T) {
 
 			// ACT
 			ctx := context.Background()
-			resp, err := client.GetForeignCoinsFromAsset(ctx, tt.chainID, tt.asset)
+			resp, err := client.GetForeignCoinsFromAsset(ctx, tt.chainID, tt.assetAddress)
 
 			// ASSERT
 			if tt.errMsg != "" {
@@ -83,33 +76,4 @@ func Test_GetForeignCoinsFromAsset(t *testing.T) {
 			require.Equal(t, fCoins, resp)
 		})
 	}
-}
-
-func Test_GetForeignCoinsFromAsset1(t *testing.T) {
-	// Given input and output
-	fCoinERC20 := sample.ForeignCoins(t, "0x123")
-	input := fungibletypes.QueryGetForeignCoinsFromAssetRequest{
-		ChainId: fCoinERC20.ForeignChainId,
-		Asset:   fCoinERC20.Asset,
-	}
-	expectedOutput := &fungibletypes.QueryGetForeignCoinsFromAssetResponse{
-		ForeignCoins: fCoinERC20,
-	}
-
-	// ARRANGE
-	ctx := context.Background()
-	method := "/zetachain.zetacore.fungible.Query/ForeignCoinsFromAsset"
-	setupMockServer(t, fungibletypes.RegisterQueryServer, method, input, expectedOutput)
-	client := setupZetacoreClient(
-		t,
-		withDefaultObserverKeys(),
-		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
-	)
-
-	// ACT
-	resp, err := client.GetForeignCoinsFromAsset(ctx, fCoinERC20.ForeignChainId, fCoinERC20.Asset)
-
-	// ASSERT
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.ForeignCoins, resp)
 }

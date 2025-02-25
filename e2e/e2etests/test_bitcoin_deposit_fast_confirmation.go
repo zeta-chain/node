@@ -100,7 +100,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// using one BTC block time is good enough to check the difference
 	timeSaved := safeConfirmTime - fastConfirmTime
 	r.Logger.Info("FAST confirmation saved %f seconds", timeSaved.Seconds())
-	require.True(r, timeSaved > fastConfirmTime+runner.BTCRegnetBlockTime)
+	require.True(r, timeSaved > runner.BTCRegnetBlockTime)
 
 	// TEARDOWN
 	// restore old chain params

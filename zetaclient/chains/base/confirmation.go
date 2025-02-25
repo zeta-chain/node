@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/constant"
@@ -88,7 +89,7 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 	}
 
 	// query liquidity cap for asset
-	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, msg.Asset)
+	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, ethcommon.HexToAddress(msg.Asset))
 	if err != nil {
 		return false, errors.Wrapf(err, "unable to get foreign coins for asset %s on chain %d", msg.Asset, chainID)
 	}

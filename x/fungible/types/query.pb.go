@@ -215,6 +215,8 @@ func (m *QueryAllForeignCoinsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryGetForeignCoinsFromAssetRequest defines the request type for the
+// ForeignCoinsFromAsset RPC method.
 type QueryGetForeignCoinsFromAssetRequest struct {
 	ChainId int64  `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	Asset   string `protobuf:"bytes,2,opt,name=asset,proto3" json:"asset,omitempty"`
@@ -267,6 +269,8 @@ func (m *QueryGetForeignCoinsFromAssetRequest) GetAsset() string {
 	return ""
 }
 
+// QueryGetForeignCoinsFromAssetResponse defines the response type for the
+// ForeignCoinsFromAsset RPC method.
 type QueryGetForeignCoinsFromAssetResponse struct {
 	ForeignCoins ForeignCoins `protobuf:"bytes,1,opt,name=foreignCoins,proto3" json:"foreignCoins"`
 }

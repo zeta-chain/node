@@ -59619,6 +59619,9 @@ definitions:
     properties:
       foreignCoins:
         $ref: '#/definitions/fungibleForeignCoins'
+    description: |-
+      QueryGetForeignCoinsFromAssetResponse defines the response type for the
+      ForeignCoinsFromAsset RPC method.
   fungibleQueryGetForeignCoinsResponse:
     type: object
     properties:

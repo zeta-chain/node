@@ -14,18 +14,17 @@ import (
 func (c *Client) GetForeignCoinsFromAsset(
 	ctx context.Context,
 	chainID int64,
-	asset string,
+	assetAddress ethcommon.Address,
 ) (fungibletypes.ForeignCoins, error) {
 	// convert asset to checksum address or empty string (for Gas asset)
-	assetAddress := ethcommon.HexToAddress(asset)
-	assetChecksum := assetAddress.Hex()
+	assetString := assetAddress.Hex()
 	if crypto.IsEmptyAddress(assetAddress) {
-		assetChecksum = ""
+		assetString = ""
 	}
 
 	request := &fungibletypes.QueryGetForeignCoinsFromAssetRequest{
 		ChainId: chainID,
-		Asset:   assetChecksum,
+		Asset:   assetString,
 	}
 
 	resp, err := c.Fungible.ForeignCoinsFromAsset(ctx, request)
@@ -33,7 +32,7 @@ func (c *Client) GetForeignCoinsFromAsset(
 		return fungibletypes.ForeignCoins{}, errors.Wrapf(
 			err,
 			"unable to get foreign coins for asset %s on chain %d",
-			asset,
+			assetString,
 			chainID,
 		)
 	}

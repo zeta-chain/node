@@ -111,6 +111,9 @@ export declare class QueryAllForeignCoinsResponse extends Message<QueryAllForeig
 }
 
 /**
+ * QueryGetForeignCoinsFromAssetRequest defines the request type for the
+ * ForeignCoinsFromAsset RPC method.
+ *
  * @generated from message zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetRequest
  */
 export declare class QueryGetForeignCoinsFromAssetRequest extends Message<QueryGetForeignCoinsFromAssetRequest> {
@@ -140,6 +143,9 @@ export declare class QueryGetForeignCoinsFromAssetRequest extends Message<QueryG
 }
 
 /**
+ * QueryGetForeignCoinsFromAssetResponse defines the response type for the
+ * ForeignCoinsFromAsset RPC method.
+ *
  * @generated from message zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetResponse
  */
 export declare class QueryGetForeignCoinsFromAssetResponse extends Message<QueryGetForeignCoinsFromAssetResponse> {

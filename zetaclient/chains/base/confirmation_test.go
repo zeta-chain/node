@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/test-go/testify/mock"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -418,12 +419,13 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			ob := newTestSuite(t, chain)
 
 			// mock up the foreign coins RPC
+			assetAddress := ethcommon.HexToAddress(tt.msg.Asset)
 			if tt.failForeignCoinsRPC {
-				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, tt.msg.Asset).
+				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).
 					Maybe().
 					Return(fungibletypes.ForeignCoins{}, errors.New("rpc failed"))
 			} else {
-				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, tt.msg.Asset).Maybe().Return(fungibletypes.ForeignCoins{LiquidityCap: liquidityCap}, nil)
+				ob.zetacore.On("GetForeignCoinsFromAsset", mock.Anything, chain.ChainId, assetAddress).Maybe().Return(fungibletypes.ForeignCoins{LiquidityCap: liquidityCap}, nil)
 			}
 
 			// ACT
