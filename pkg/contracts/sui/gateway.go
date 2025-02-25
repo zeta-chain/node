@@ -197,6 +197,31 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 	}, nil
 }
 
+// ParseTxWithdrawal a syntax sugar around ParseEvent and Withdrawal.
+func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (event Event, w WithdrawData, err error) {
+	if len(tx.Events) == 0 {
+		err = errors.New("missing events")
+		return event, w, err
+	}
+
+	event, err = gw.ParseEvent(tx.Events[0])
+	if err != nil {
+		return event, w, err
+	}
+
+	if !event.IsWithdraw() {
+		err = errors.Errorf("invalid event type %s", event.EventType)
+		return event, w, err
+	}
+
+	w, err = event.Withdrawal()
+	if err != nil {
+		return event, w, err
+	}
+
+	return event, w, err
+}
+
 type eventDescriptor struct {
 	packageID string
 	module    string

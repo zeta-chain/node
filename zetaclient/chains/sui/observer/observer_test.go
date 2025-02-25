@@ -287,6 +287,87 @@ func TestObserver(t *testing.T) {
 		assert.True(t, ts.OutboundCreated(nonce))
 		assert.False(t, ts.OutboundCreated(nonce+1))
 	})
+
+	t.Run("VoteOutbound", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given Sui Gateway
+		gw := ts.Gateway()
+
+		// Given cctx
+		const nonce = 333
+		cctx := sample.CrossChainTxV2(t, "0x123")
+		cctx.OutboundParams = []*cctypes.OutboundParams{{TssNonce: nonce}}
+
+		// Given Sui receiver
+		const receiver = "0xAliceOnSui"
+
+		// Given a valid Sui outbound tx with Withdrawal event
+		const digest = "0xSuiTxDigest"
+		tx := models.SuiTransactionBlockResponse{
+			Digest:     digest,
+			Checkpoint: "999",
+			Effects: models.SuiEffects{
+				Status: models.ExecutionStatus{Status: "success"},
+				GasUsed: models.GasCostSummary{
+					ComputationCost: "200",
+					StorageCost:     "300",
+					StorageRebate:   "50",
+				},
+			},
+			Events: []models.SuiEventResponse{{
+				Id:        models.EventId{TxDigest: digest, EventSeq: "1"},
+				PackageId: gw.PackageID(),
+				Sender:    ts.TSS().PubKey().AddressSui(),
+				Type:      fmt.Sprintf("%s::%s::%s", gw.PackageID(), gw.Module(), "WithdrawEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(sui.SUI),
+					"amount":    "200",
+					"sender":    ts.TSS().PubKey().AddressSui(),
+					"receiver":  receiver,
+					"nonce":     fmt.Sprintf("%d", nonce),
+				},
+			}},
+		}
+
+		// What was fetched during ProcessOutboundTracker(...)
+		ts.setTx(tx, nonce)
+
+		// Given a gas price that was set during PostGasPrice(...)
+		ts.setLatestGasPrice(1000)
+
+		// Given outbound votes catcher
+		ts.CatchOutboundVotes()
+
+		// ACT
+		err := ts.VoteOutbound(ts.ctx, cctx)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Len(t, ts.outboundVotesBag, 1)
+
+		vote := ts.outboundVotesBag[0]
+
+		// common
+		assert.Equal(t, chains.ReceiveStatus_success, vote.Status)
+		assert.Equal(t, cctx.Index, vote.CctxHash)
+		assert.Equal(t, uint64(nonce), vote.OutboundTssNonce)
+		assert.Equal(t, ts.Chain().ChainId, vote.OutboundChain)
+
+		// digest + checkpoint
+		assert.Equal(t, digest, vote.ObservedOutboundHash)
+		assert.Equal(t, uint64(999), vote.ObservedOutboundBlockHeight)
+
+		// amount
+		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
+
+		// gas
+		assert.Equal(t, uint64(maxGasLimit), vote.ObservedOutboundEffectiveGasLimit)
+		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
+		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
+	})
 }
 
 type testSuite struct {
@@ -298,7 +379,8 @@ type testSuite struct {
 	log      *testlog.Log
 	gateway  *sui.Gateway
 
-	inboundVotesBag []*cctypes.MsgVoteInbound
+	inboundVotesBag  []*cctypes.MsgVoteInbound
+	outboundVotesBag []*cctypes.MsgVoteOutbound
 
 	*Observer
 }
@@ -392,6 +474,18 @@ func (ts *testSuite) CatchInboundVotes() {
 
 	ts.zetaMock.
 		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(callback).
+		Maybe()
+}
+
+func (ts *testSuite) CatchOutboundVotes() {
+	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteOutbound) (string, string, error) {
+		ts.outboundVotesBag = append(ts.outboundVotesBag, msg)
+		return "", "", nil
+	}
+
+	ts.zetaMock.
+		On("PostVoteOutbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
 }

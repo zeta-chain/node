@@ -4,18 +4,26 @@ import (
 	"context"
 	"strconv"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // https://github.com/zeta-chain/protocol-contracts-sui/blob/9d08a70817d8cc7cf799b9ae12c59b6e0b8aaab9/sources/gateway.move#L125
 // (excluding last arg of `ctx`)
 const expectedWithdrawArgs = 5
+
+// 50 SUI
+// https://docs.sui.io/concepts/tokenomics/gas-in-sui#gas-budgets
+const maxGasLimit = 50_000_000_000
 
 // OutboundCreated checks if the outbound tx exists in the memory
 // and has valid nonce & signature
@@ -71,7 +79,85 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 // VoteOutbound calculates outbound result based on cctx and in-mem Sui tx
 // and votes the ballot to zetacore.
 func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cc.CrossChainTx) error {
-	// todo
+	chainID := ob.Chain().ChainId
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+	// should be fetched by ProcessOutboundTrackers routine
+	// if exists, we can safely assume it's authentic and nonce is valid
+	tx, ok := ob.getTx(nonce)
+	if !ok {
+		return errors.Errorf("missing tx for nonce %d", nonce)
+	}
+
+	// used instead of block height
+	checkpoint, err := strconv.ParseUint(tx.Checkpoint, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "unable to parse checkpoint")
+	}
+
+	// parse status, coinType, and amount
+	var (
+		status    = chains.ReceiveStatus_failed
+		coinType  = coin.CoinType_Gas
+		amount    = math.NewUint(0)
+		isSuccess = tx.Effects.Status.Status == "success"
+	)
+
+	if isSuccess {
+		status = chains.ReceiveStatus_success
+
+		_, w, err := ob.gateway.ParseTxWithdrawal(tx)
+		if err != nil {
+			return errors.Wrap(err, "unable to parse tx withdrawal")
+		}
+
+		if !w.IsGas() {
+			coinType = coin.CoinType_ERC20
+		}
+
+		amount = w.Amount
+	}
+
+	// Gas parameters
+	// Gas price *might* change once per epoch (~24h), so using the latest value is fine.
+	// #nosec G115 - always in range
+	outboundGasPrice := math.NewInt(int64(ob.getLatestGasPrice()))
+
+	// This might happen after zetacore restart when PostGasPrice has not been called yet. retry later.
+	if outboundGasPrice.IsZero() {
+		return errors.New("latest gas price is zero")
+	}
+
+	outboundGasUsed, err := parseGasUsed(tx)
+	if err != nil {
+		return errors.Wrap(err, "unable to parse gas used")
+	}
+
+	// Create message
+	msg := cc.NewMsgVoteOutbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		cctx.Index,
+		tx.Digest,
+		checkpoint,
+		outboundGasUsed,
+		outboundGasPrice,
+		maxGasLimit,
+		amount,
+		status,
+		chainID,
+		nonce,
+		coinType,
+		cc.ConfirmationMode_SAFE,
+	)
+
+	// TODO compliance checks
+	// https://github.com/zeta-chain/node/issues/3584
+
+	if err := ob.postVoteOutbound(ctx, msg); err != nil {
+		return errors.Wrap(err, "unable to post vote outbound")
+	}
+
+	ob.unsetTx(nonce)
 
 	return nil
 }
@@ -81,8 +167,9 @@ func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cc.CrossChainTx, d
 	res, err := ob.client.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
 		Digest: digest,
 		Options: models.SuiTransactionBlockOptions{
-			ShowEvents: true,
-			ShowInput:  true,
+			ShowEvents:  true,
+			ShowInput:   true,
+			ShowEffects: true,
 		},
 	})
 
@@ -136,6 +223,28 @@ func (ob *Observer) validateOutbound(cctx *cc.CrossChainTx, tx models.SuiTransac
 	return nil
 }
 
+func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cc.MsgVoteOutbound) error {
+	const gasLimit = zetacore.PostVoteOutboundGasLimit
+
+	retryGasLimit := uint64(0)
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
+
+	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to post vote outbound")
+	case zetaTxHash != "":
+		ob.Logger().Outbound.Info().
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldBallot, ballot).
+			Msg("PostVoteOutbound: posted outbound vote successfully")
+	}
+
+	return nil
+}
+
 func (ob *Observer) getTx(nonce uint64) (models.SuiTransactionBlockResponse, bool) {
 	ob.txMu.RLock()
 	defer ob.txMu.RUnlock()
@@ -178,4 +287,29 @@ func parseNonceFromWithdrawInputs(inputs []models.SuiCallArg) (uint64, error) {
 	}
 
 	return strconv.ParseUint(raw["value"].(string), 10, 64)
+}
+
+func parseGasUsed(tx models.SuiTransactionBlockResponse) (uint64, error) {
+	gas := tx.Effects.GasUsed
+
+	compCost, err := parseUint64(gas.ComputationCost)
+	if err != nil {
+		return 0, errors.Wrap(err, "comp cost")
+	}
+
+	storageCost, err := parseUint64(gas.StorageCost)
+	if err != nil {
+		return 0, errors.Wrap(err, "storage cost")
+	}
+
+	storageRebate, err := parseUint64(gas.StorageRebate)
+	if err != nil {
+		return 0, errors.Wrap(err, "storage rebate")
+	}
+
+	return compCost + storageCost - storageRebate, nil
+}
+
+func parseUint64(v string) (uint64, error) {
+	return strconv.ParseUint(v, 10, 64)
 }

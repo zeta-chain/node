@@ -24,6 +24,9 @@ type Observer struct {
 	// nonce -> sui outbound tx
 	txMap map[uint64]models.SuiTransactionBlockResponse
 	txMu  sync.RWMutex
+
+	latestGasPrice uint64
+	gasPriceMu     sync.RWMutex
 }
 
 // RPC represents subset of Sui RPC methods.
@@ -99,12 +102,27 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// no priority fee for Sui
 	const priorityFee = 0
 
+	ob.setLatestGasPrice(gasPrice)
+
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
 	}
 
 	return nil
+}
+
+func (ob *Observer) getLatestGasPrice() uint64 {
+	ob.gasPriceMu.RLock()
+	defer ob.gasPriceMu.RUnlock()
+
+	return ob.latestGasPrice
+}
+
+func (ob *Observer) setLatestGasPrice(price uint64) {
+	ob.gasPriceMu.Lock()
+	defer ob.gasPriceMu.Unlock()
+	ob.latestGasPrice = price
 }
 
 // ensureCursor ensures tx scroll cursor for inbound observations
