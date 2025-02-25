@@ -59,7 +59,13 @@ func New(
 // ProcessCCTX schedules outbound cross-chain transaction.
 // Build --> Sign --> Broadcast --(async)--> Wait for execution --> PostOutboundTracker
 func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	var (
+		outboundID = base.OutboundIDFromCCTX(cctx)
+		nonce      = cctx.GetCurrentOutboundParam().TssNonce
+	)
+
+	s.MarkOutbound(outboundID, true)
+	defer func() { s.MarkOutbound(outboundID, false) }()
 
 	tx, err := s.buildWithdrawal(ctx, cctx)
 	if err != nil {
