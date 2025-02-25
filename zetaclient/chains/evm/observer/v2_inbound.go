@@ -186,7 +186,10 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	}
 
 	// determine confirmation mode
-	confirmationMode := ob.GetInboundConfirmationMode(event.Raw.BlockNumber)
+	confirmationMode := types.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.Raw.BlockNumber) {
+		confirmationMode = types.ConfirmationMode_SAFE
+	}
 
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),

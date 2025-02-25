@@ -223,47 +223,6 @@ func Test_IsBlockConfirmedForInboundFast(t *testing.T) {
 	}
 }
 
-func Test_GetInboundConfirmationMode(t *testing.T) {
-	chain := chains.BitcoinMainnet
-
-	tests := []struct {
-		name         string
-		scannedBlock uint64
-		lastBlock    uint64
-		confParams   observertypes.ConfirmationParams
-		expected     crosschaintypes.ConfirmationMode
-	}{
-		{
-			name:         "should return SAFE confirmation mode",
-			scannedBlock: 100,
-			lastBlock:    101, // got 2 confirmations
-			confParams: observertypes.ConfirmationParams{
-				SafeInboundCount: 2,
-			},
-			expected: crosschaintypes.ConfirmationMode_SAFE,
-		},
-		{
-			name:         "should return FAST confirmation mode",
-			scannedBlock: 100,
-			lastBlock:    100, // got 1 confirmation, need one more
-			confParams: observertypes.ConfirmationParams{
-				SafeInboundCount: 2,
-			},
-			expected: crosschaintypes.ConfirmationMode_FAST,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
-			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			mode := ob.GetInboundConfirmationMode(tt.scannedBlock)
-			require.Equal(t, tt.expected, mode)
-		})
-	}
-}
-
 func Test_IsBlockConfirmedForOutboundSafe(t *testing.T) {
 	chain := chains.BitcoinMainnet
 

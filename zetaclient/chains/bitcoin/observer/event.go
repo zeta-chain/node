@@ -184,7 +184,10 @@ func (ob *Observer) NewInboundVoteFromLegacyMemo(
 	amountSats *big.Int,
 ) *crosschaintypes.MsgVoteInbound {
 	// determine confirmation mode
-	confirmationMode := ob.GetInboundConfirmationMode(event.BlockNumber)
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
 
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -225,7 +228,10 @@ func (ob *Observer) NewInboundVoteFromStdMemo(
 	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
 
 	// determine confirmation mode
-	confirmationMode := ob.GetInboundConfirmationMode(event.BlockNumber)
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
 
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),

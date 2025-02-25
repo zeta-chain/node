@@ -45,16 +45,6 @@ func (ob *Observer) IsBlockConfirmedForInboundFast(blockNumber uint64) bool {
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
 }
 
-// GetInboundConfirmationMode returns the confirmation mode for given inbound block number.
-//   - It assumes the given block is at least FAST confirmed.
-//   - It returns SAFE mode if the given block reaches SAFE confirmation count.
-func (ob *Observer) GetInboundConfirmationMode(scannedBlock uint64) crosschaintypes.ConfirmationMode {
-	if ob.IsBlockConfirmedForInboundSafe(scannedBlock) {
-		return crosschaintypes.ConfirmationMode_SAFE
-	}
-	return crosschaintypes.ConfirmationMode_FAST
-}
-
 // IsBlockConfirmedForOutboundSafe checks if the block number is confirmed using outbound safe confirmation count.
 func (ob *Observer) IsBlockConfirmedForOutboundSafe(blockNumber uint64) bool {
 	lastBlock := ob.LastBlock()
