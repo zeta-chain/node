@@ -39,6 +39,7 @@
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
+* [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 
 ## v28.0.0
 
