@@ -88,6 +88,10 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 	return NewPubKeyFromECDSA(*pk)
 }
 
+func (k PubKey) AsECDSA() *ecdsa.PublicKey {
+	return k.ecdsaPubKey
+}
+
 // Bytes marshals pubKey to bytes either as compressed or uncompressed slice.
 //
 // In ECDSA, a compressed pubKey includes only the X and a parity bit for the Y,
@@ -96,7 +100,7 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 func (k PubKey) Bytes(compress bool) []byte {
 	pk := k.ecdsaPubKey
 	if compress {
-		return elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
+		return crypto.CompressPubkey(pk)
 	}
 
 	return crypto.FromECDSAPub(pk)
