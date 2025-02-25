@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.16.2
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.26.1
 
 go mod download
 

@@ -27137,6 +27137,7 @@ paths:
           type: boolean
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/inTxHashToCctx/{inboundHash}:
     get:
       summary: 'Deprecated(v17): use InboundHashToCctx'
@@ -27157,6 +27158,7 @@ paths:
           type: string
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/inTxHashToCctxData/{inboundHash}:
     get:
       summary: 'Deprecated(v17): use InboundHashToCctxData'
@@ -27177,6 +27179,7 @@ paths:
           type: string
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/inTxTracker:
     get:
       summary: 'Deprecated(v17): use InboundTrackerAll'
@@ -27236,6 +27239,7 @@ paths:
           type: boolean
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/inTxTrackerByChain/{chain_id}:
     get:
       summary: 'Deprecated(v17): use InboundTrackerAllByChain'
@@ -27300,6 +27304,7 @@ paths:
           type: boolean
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/inboundHashToCctx:
     get:
       summary: Queries a list of InboundHashToCctx items.
@@ -27697,6 +27702,7 @@ paths:
           type: boolean
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}:
     get:
       summary: 'Deprecated(v17): use OutboundTracker'
@@ -27723,6 +27729,7 @@ paths:
           format: uint64
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
     get:
       summary: 'Deprecated(v17): use OutboundTrackerAllByChain'
@@ -27787,6 +27794,7 @@ paths:
           type: boolean
       tags:
         - Query
+      deprecated: true
   /zeta-chain/crosschain/outboundTracker:
     get:
       summary: Queries a list of OutboundTracker items.
@@ -28733,6 +28741,42 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/getAllTssFundsMigrators:
+    get:
+      summary: Queries all TssFundMigratorInfo
+      operationId: Query_TssFundsMigratorInfoAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/getTssFundsMigrator:
+    get:
+      summary: Queries the TssFundMigratorInfo for a specific chain
+      operationId: Query_TssFundsMigratorInfo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssFundsMigratorInfoResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/get_all_blame_records:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -28870,42 +28914,6 @@ paths:
         - name: bitcoin_chain_id
           in: path
           required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /zeta-chain/observer/getAllTssFundsMigrators:
-    get:
-      summary: Queries all TssFundMigratorInfo
-      operationId: Query_TssFundsMigratorInfoAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryTssFundsMigratorInfoAllResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
-  /zeta-chain/observer/getTssFundsMigrator:
-    get:
-      summary: Queries the TssFundMigratorInfo for a specific chain
-      operationId: Query_TssFundsMigratorInfo
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryTssFundsMigratorInfoResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: query
-          required: false
           type: string
           format: int64
       tags:
@@ -57349,39 +57357,6 @@ definitions:
         format: int64
       balance:
         type: string
-  authorityAuthorization:
-    type: object
-    properties:
-      msg_url:
-        type: string
-        title: The URL of the message that needs to be authorized
-      authorized_policy:
-        $ref: '#/definitions/authorityPolicyType'
-        title: The policy that is authorized to access the message
-    title: |-
-      Authorization defines the authorization required to access use a message
-      which needs special permissions
-  authorityAuthorizationList:
-    type: object
-    properties:
-      authorizations:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/authorityAuthorization'
-    title: AuthorizationList holds the list of authorizations on zetachain
-  authorityChainInfo:
-    type: object
-    properties:
-      chains:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chainsChain'
-    title: |-
-      ChainInfo contains static information about the chains
-      This structure is used to dynamically update these info on a live network
-      before hardcoding the values in a upgrade
   authorityMsgAddAuthorizationResponse:
     type: object
     description: MsgAddAuthorizationResponse defines the MsgAddAuthorizationResponse service.
@@ -57399,15 +57374,6 @@ definitions:
   authorityMsgUpdatePoliciesResponse:
     type: object
     description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
-  authorityPolicies:
-    type: object
-    properties:
-      items:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/authorityPolicy'
-    title: Policy contains info about authority policies
   authorityPolicy:
     type: object
     properties:
@@ -57437,7 +57403,7 @@ definitions:
     type: object
     properties:
       authorization_list:
-        $ref: '#/definitions/authorityAuthorizationList'
+        $ref: '#/definitions/zetacoreauthorityAuthorizationList'
     title: |-
       QueryAuthorizationListResponse is the response type for the
       Query/AuthorizationList RPC
@@ -57445,7 +57411,7 @@ definitions:
     type: object
     properties:
       authorization:
-        $ref: '#/definitions/authorityAuthorization'
+        $ref: '#/definitions/zetacoreauthorityAuthorization'
     description: |-
       QueryAuthorizationResponse is the response type for the Query/Authorization
       RPC method.
@@ -57453,7 +57419,7 @@ definitions:
     type: object
     properties:
       chain_info:
-        $ref: '#/definitions/authorityChainInfo'
+        $ref: '#/definitions/zetacoreauthorityChainInfo'
     description: |-
       QueryGetChainInfoResponse is the response type for the Query/ChainInfo RPC
       method.
@@ -57461,7 +57427,7 @@ definitions:
     type: object
     properties:
       policies:
-        $ref: '#/definitions/authorityPolicies'
+        $ref: '#/definitions/zetacoreauthorityPolicies'
     description: |-
       QueryGetPoliciesResponse is the response type for the Query/Policies RPC
       method.
@@ -57698,49 +57664,6 @@ definitions:
         $ref: '#/definitions/crosschainProtocolContractVersion'
       revert_options:
         $ref: '#/definitions/crosschainRevertOptions'
-  crosschainGasPrice:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain_id:
-        type: string
-        format: int64
-      signers:
-        type: array
-        items:
-          type: string
-      block_nums:
-        type: array
-        items:
-          type: string
-          format: uint64
-      prices:
-        type: array
-        items:
-          type: string
-          format: uint64
-      median_index:
-        type: string
-        format: uint64
-        title: index of the median gas price in the prices array
-      priority_fees:
-        type: array
-        items:
-          type: string
-          format: uint64
-        title: priority fees for EIP-1559
-  crosschainInboundHashToCctx:
-    type: object
-    properties:
-      inbound_hash:
-        type: string
-      cctx_index:
-        type: array
-        items:
-          type: string
   crosschainInboundParams:
     type: object
     properties:
@@ -57796,31 +57719,6 @@ definitions:
       depositor fee
        - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
     title: InboundStatus represents the status of an observed inbound
-  crosschainInboundTracker:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      tx_hash:
-        type: string
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-  crosschainLastBlockHeight:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain:
-        type: string
-      lastInboundHeight:
-        type: string
-        format: uint64
-      lastOutboundHeight:
-        type: string
-        format: uint64
   crosschainMsgAbortStuckCCTXResponse:
     type: object
   crosschainMsgAddInboundTrackerResponse:
@@ -57916,23 +57814,6 @@ definitions:
       confirmation_mode:
         $ref: '#/definitions/crosschainConfirmationMode'
         title: confirmation mode used for the outbound
-  crosschainOutboundTracker:
-    type: object
-    properties:
-      index:
-        type: string
-        title: 'format: "chain-nonce"'
-      chain_id:
-        type: string
-        format: int64
-      nonce:
-        type: string
-        format: uint64
-      hash_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainTxHash'
   crosschainProtocolContractVersion:
     type: string
     enum:
@@ -57959,7 +57840,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainGasPrice'
+          $ref: '#/definitions/zetacorecrosschainGasPrice'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllInboundHashToCctxResponse:
@@ -57969,7 +57850,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInboundHashToCctx'
+          $ref: '#/definitions/zetacorecrosschainInboundHashToCctx'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllInboundTrackerByChainResponse:
@@ -57979,7 +57860,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInboundTracker'
+          $ref: '#/definitions/zetacorecrosschainInboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllInboundTrackersResponse:
@@ -57989,7 +57870,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainInboundTracker'
+          $ref: '#/definitions/zetacorecrosschainInboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllLastBlockHeightResponse:
@@ -57999,7 +57880,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainLastBlockHeight'
+          $ref: '#/definitions/zetacorecrosschainLastBlockHeight'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllOutboundTrackerByChainResponse:
@@ -58009,7 +57890,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainOutboundTracker'
+          $ref: '#/definitions/zetacorecrosschainOutboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllOutboundTrackerResponse:
@@ -58019,7 +57900,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/crosschainOutboundTracker'
+          $ref: '#/definitions/zetacorecrosschainOutboundTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryConvertGasToZetaResponse:
@@ -58041,22 +57922,22 @@ definitions:
     type: object
     properties:
       GasPrice:
-        $ref: '#/definitions/crosschainGasPrice'
+        $ref: '#/definitions/zetacorecrosschainGasPrice'
   crosschainQueryGetInboundHashToCctxResponse:
     type: object
     properties:
       inboundHashToCctx:
-        $ref: '#/definitions/crosschainInboundHashToCctx'
+        $ref: '#/definitions/zetacorecrosschainInboundHashToCctx'
   crosschainQueryGetLastBlockHeightResponse:
     type: object
     properties:
       LastBlockHeight:
-        $ref: '#/definitions/crosschainLastBlockHeight'
+        $ref: '#/definitions/zetacorecrosschainLastBlockHeight'
   crosschainQueryGetOutboundTrackerResponse:
     type: object
     properties:
       outboundTracker:
-        $ref: '#/definitions/crosschainOutboundTracker'
+        $ref: '#/definitions/zetacorecrosschainOutboundTracker'
   crosschainQueryInboundHashToCctxDataResponse:
     type: object
     properties:
@@ -58069,7 +57950,7 @@ definitions:
     type: object
     properties:
       inbound_tracker:
-        $ref: '#/definitions/crosschainInboundTracker'
+        $ref: '#/definitions/zetacorecrosschainInboundTracker'
   crosschainQueryLastZetaHeightResponse:
     type: object
     properties:
@@ -58114,7 +57995,7 @@ definitions:
     type: object
     properties:
       rateLimiterFlags:
-        $ref: '#/definitions/crosschainRateLimiterFlags'
+        $ref: '#/definitions/zetacorecrosschainRateLimiterFlags'
   crosschainQueryRateLimiterInputResponse:
     type: object
     properties:
@@ -58146,24 +58027,6 @@ definitions:
     properties:
       aborted_zeta_amount:
         type: string
-  crosschainRateLimiterFlags:
-    type: object
-    properties:
-      enabled:
-        type: boolean
-      window:
-        type: string
-        format: int64
-        title: window in blocks
-      rate:
-        type: string
-        title: rate in azeta per block
-      conversions:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainConversion'
-        title: conversion in azeta per token
   crosschainRevertOptions:
     type: object
     properties:
@@ -58232,34 +58095,6 @@ definitions:
     properties:
       amount:
         type: string
-  fungibleForeignCoins:
-    type: object
-    properties:
-      zrc20_contract_address:
-        type: string
-        description: index
-        title: string index = 1;
-      asset:
-        type: string
-      foreign_chain_id:
-        type: string
-        format: int64
-      decimals:
-        type: integer
-        format: int64
-      name:
-        type: string
-      symbol:
-        type: string
-      coin_type:
-        $ref: '#/definitions/coinCoinType'
-      gas_limit:
-        type: string
-        format: uint64
-      paused:
-        type: boolean
-      liquidity_cap:
-        type: string
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
     properties:
@@ -58303,7 +58138,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/fungibleForeignCoins'
+          $ref: '#/definitions/zetacorefungibleForeignCoins'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   fungibleQueryAllGasStabilityPoolBalanceResponse:
@@ -58323,7 +58158,7 @@ definitions:
     type: object
     properties:
       foreignCoins:
-        $ref: '#/definitions/fungibleForeignCoins'
+        $ref: '#/definitions/zetacorefungibleForeignCoins'
   fungibleQueryGetGasStabilityPoolAddressResponse:
     type: object
     properties:
@@ -58340,16 +58175,7 @@ definitions:
     type: object
     properties:
       SystemContract:
-        $ref: '#/definitions/fungibleSystemContract'
-  fungibleSystemContract:
-    type: object
-    properties:
-      system_contract:
-        type: string
-      connector_zevm:
-        type: string
-      gateway:
-        type: string
+        $ref: '#/definitions/zetacorefungibleSystemContract'
   googlerpcStatus:
     type: object
     properties:
@@ -58363,22 +58189,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
-  lightclientChainState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
-    title: ChainState defines the overall state of the block headers for a given chain
   lightclientHeaderSupportedChain:
     type: object
     properties:
@@ -58401,7 +58211,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/proofsBlockHeader'
+          $ref: '#/definitions/pkgproofsBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   lightclientQueryAllChainStateResponse:
@@ -58411,19 +58221,19 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/lightclientChainState'
+          $ref: '#/definitions/zetacorelightclientChainState'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   lightclientQueryGetBlockHeaderResponse:
     type: object
     properties:
       block_header:
-        $ref: '#/definitions/proofsBlockHeader'
+        $ref: '#/definitions/pkgproofsBlockHeader'
   lightclientQueryGetChainStateResponse:
     type: object
     properties:
       chain_state:
-        $ref: '#/definitions/lightclientChainState'
+        $ref: '#/definitions/zetacorelightclientChainState'
   lightclientQueryHeaderEnabledChainsResponse:
     type: object
     properties:
@@ -58489,27 +58299,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerChainNonces:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-        title: 'deprecated(v19): index has been replaced by chain_id for unique identifier'
-      chain_id:
-        type: string
-        format: int64
-      nonce:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
   observerChainParams:
     type: object
     properties:
@@ -58590,15 +58379,6 @@ definitions:
         description: |-
           This is the number of confirmations for fast outbound observation, which is
           shorter than safe_outbound_count.
-  observerCrosschainFlags:
-    type: object
-    properties:
-      isInboundEnabled:
-        type: boolean
-      isOutboundEnabled:
-        type: boolean
-      gasPriceIncreaseFlags:
-        $ref: '#/definitions/observerGasPriceIncreaseFlags'
   observerGasPriceIncreaseFlags:
     type: object
     properties:
@@ -58622,20 +58402,6 @@ definitions:
         title: |-
           Maximum number of pending crosschain transactions to check for gas price
           increase
-  observerKeygen:
-    type: object
-    properties:
-      status:
-        $ref: '#/definitions/observerKeygenStatus'
-        title: 0--to generate key; 1--generated; 2--error
-      granteePubkeys:
-        type: array
-        items:
-          type: string
-      blockNumber:
-        type: string
-        format: int64
-        title: the blocknum that the key needs to be generated
   observerKeygenStatus:
     type: string
     enum:
@@ -58705,17 +58471,6 @@ definitions:
       blame_signature:
         type: string
         format: byte
-  observerNodeAccount:
-    type: object
-    properties:
-      operator:
-        type: string
-      granteeAddress:
-        type: string
-      granteePubkey:
-        $ref: '#/definitions/cryptoPubKeySet'
-      nodeStatus:
-        $ref: '#/definitions/observerNodeStatus'
   observerNodeStatus:
     type: string
     enum:
@@ -58742,27 +58497,6 @@ definitions:
       - Tombstoned
       - AdminUpdate
     default: Undefined
-  observerOperationalFlags:
-    type: object
-    properties:
-      restart_height:
-        type: string
-        format: int64
-        description: |-
-          Height for a coordinated zetaclient restart.
-          Will be ignored if missed.
-      signer_block_time_offset:
-        type: string
-        description: |-
-          Offset from the zetacore block time to initiate signing.
-          Should be calculated and set based on max(zetaclient_core_block_latency).
-      minimum_version:
-        type: string
-        description: |-
-          Minimum version of zetaclient that is allowed to run. This must be either
-          a valid semver string (v23.0.1) or empty. If empty, all versions are
-          allowed.
-    description: Flags for the top-level operation of zetaclient.
   observerPendingNonces:
     type: object
     properties:
@@ -58795,7 +58529,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerChainNonces'
+          $ref: '#/definitions/zetacoreobserverChainNonces'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllNodeAccountResponse:
@@ -58805,7 +58539,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerNodeAccount'
+          $ref: '#/definitions/zetacoreobserverNodeAccount'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllPendingNoncesResponse:
@@ -58859,7 +58593,7 @@ definitions:
     type: object
     properties:
       ChainNonces:
-        $ref: '#/definitions/observerChainNonces'
+        $ref: '#/definitions/zetacoreobserverChainNonces'
   observerQueryGetChainParamsForChainResponse:
     type: object
     properties:
@@ -58874,22 +58608,22 @@ definitions:
     type: object
     properties:
       crosschain_flags:
-        $ref: '#/definitions/observerCrosschainFlags'
+        $ref: '#/definitions/zetacoreobserverCrosschainFlags'
   observerQueryGetKeygenResponse:
     type: object
     properties:
       keygen:
-        $ref: '#/definitions/observerKeygen'
+        $ref: '#/definitions/zetacoreobserverKeygen'
   observerQueryGetNodeAccountResponse:
     type: object
     properties:
       node_account:
-        $ref: '#/definitions/observerNodeAccount'
+        $ref: '#/definitions/zetacoreobserverNodeAccount'
   observerQueryGetTSSResponse:
     type: object
     properties:
       TSS:
-        $ref: '#/definitions/observerTSS'
+        $ref: '#/definitions/zetacoreobserverTSS'
   observerQueryGetTssAddressByFinalizedHeightResponse:
     type: object
     properties:
@@ -58920,7 +58654,7 @@ definitions:
     type: object
     properties:
       operational_flags:
-        $ref: '#/definitions/observerOperationalFlags'
+        $ref: '#/definitions/zetacoreobserverOperationalFlags'
   observerQueryPendingNoncesByChainResponse:
     type: object
     properties:
@@ -58959,28 +58693,9 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerTSS'
+          $ref: '#/definitions/zetacoreobserverTSS'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  observerTSS:
-    type: object
-    properties:
-      tss_pubkey:
-        type: string
-      tss_participant_list:
-        type: array
-        items:
-          type: string
-      operator_address_list:
-        type: array
-        items:
-          type: string
-      finalizedZetaHeight:
-        type: string
-        format: int64
-      keyGenZetaHeight:
-        type: string
-        format: int64
   observerTssFundMigratorInfo:
     type: object
     properties:
@@ -59007,14 +58722,7 @@ definitions:
         type: string
       vote_type:
         $ref: '#/definitions/observerVoteType'
-  pkgproofsProof:
-    type: object
-    properties:
-      ethereum_proof:
-        $ref: '#/definitions/proofsethereumProof'
-      bitcoin_proof:
-        $ref: '#/definitions/proofsbitcoinProof'
-  proofsBlockHeader:
+  pkgproofsBlockHeader:
     type: object
     properties:
       height:
@@ -59032,6 +58740,13 @@ definitions:
       header:
         $ref: '#/definitions/proofsHeaderData'
         title: chain specific header
+  pkgproofsProof:
+    type: object
+    properties:
+      ethereum_proof:
+        $ref: '#/definitions/proofsethereumProof'
+      bitcoin_proof:
+        $ref: '#/definitions/proofsbitcoinProof'
   proofsHeaderData:
     type: object
     properties:
@@ -59142,6 +58857,151 @@ definitions:
                repeated Bar results = 1;
                PageResponse page = 2;
        }
+  zetacoreauthorityAuthorization:
+    type: object
+    properties:
+      msg_url:
+        type: string
+        title: The URL of the message that needs to be authorized
+      authorized_policy:
+        $ref: '#/definitions/authorityPolicyType'
+        title: The policy that is authorized to access the message
+    title: |-
+      Authorization defines the authorization required to access use a message
+      which needs special permissions
+  zetacoreauthorityAuthorizationList:
+    type: object
+    properties:
+      authorizations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/zetacoreauthorityAuthorization'
+    title: AuthorizationList holds the list of authorizations on zetachain
+  zetacoreauthorityChainInfo:
+    type: object
+    properties:
+      chains:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chainsChain'
+    title: |-
+      ChainInfo contains static information about the chains
+      This structure is used to dynamically update these info on a live network
+      before hardcoding the values in a upgrade
+  zetacoreauthorityPolicies:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/authorityPolicy'
+    title: Policy contains info about authority policies
+  zetacorecrosschainGasPrice:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      chain_id:
+        type: string
+        format: int64
+      signers:
+        type: array
+        items:
+          type: string
+      block_nums:
+        type: array
+        items:
+          type: string
+          format: uint64
+      prices:
+        type: array
+        items:
+          type: string
+          format: uint64
+      median_index:
+        type: string
+        format: uint64
+        title: index of the median gas price in the prices array
+      priority_fees:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: priority fees for EIP-1559
+  zetacorecrosschainInboundHashToCctx:
+    type: object
+    properties:
+      inbound_hash:
+        type: string
+      cctx_index:
+        type: array
+        items:
+          type: string
+  zetacorecrosschainInboundTracker:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      tx_hash:
+        type: string
+      coin_type:
+        $ref: '#/definitions/coinCoinType'
+  zetacorecrosschainLastBlockHeight:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      chain:
+        type: string
+      lastInboundHeight:
+        type: string
+        format: uint64
+      lastOutboundHeight:
+        type: string
+        format: uint64
+  zetacorecrosschainOutboundTracker:
+    type: object
+    properties:
+      index:
+        type: string
+        title: 'format: "chain-nonce"'
+      chain_id:
+        type: string
+        format: int64
+      nonce:
+        type: string
+        format: uint64
+      hash_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainTxHash'
+  zetacorecrosschainRateLimiterFlags:
+    type: object
+    properties:
+      enabled:
+        type: boolean
+      window:
+        type: string
+        format: int64
+        title: window in blocks
+      rate:
+        type: string
+        title: rate in azeta per block
+      conversions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainConversion'
+        title: conversion in azeta per token
   zetacorecrosschainStatus:
     type: object
     properties:
@@ -59199,6 +59059,154 @@ definitions:
          ObserverSlashAmount:         100000000000000000,
          BallotMaturityBlocks:        100,
          BlockRewardAmount:           9620949074074074074.074070733466756687,
+  zetacorefungibleForeignCoins:
+    type: object
+    properties:
+      zrc20_contract_address:
+        type: string
+        description: index
+        title: string index = 1;
+      asset:
+        type: string
+      foreign_chain_id:
+        type: string
+        format: int64
+      decimals:
+        type: integer
+        format: int64
+      name:
+        type: string
+      symbol:
+        type: string
+      coin_type:
+        $ref: '#/definitions/coinCoinType'
+      gas_limit:
+        type: string
+        format: uint64
+      paused:
+        type: boolean
+      liquidity_cap:
+        type: string
+  zetacorefungibleSystemContract:
+    type: object
+    properties:
+      system_contract:
+        type: string
+      connector_zevm:
+        type: string
+      gateway:
+        type: string
+  zetacorelightclientChainState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
+    title: ChainState defines the overall state of the block headers for a given chain
+  zetacoreobserverChainNonces:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+        title: 'deprecated(v19): index has been replaced by chain_id for unique identifier'
+      chain_id:
+        type: string
+        format: int64
+      nonce:
+        type: string
+        format: uint64
+      signers:
+        type: array
+        items:
+          type: string
+      finalizedHeight:
+        type: string
+        format: uint64
+  zetacoreobserverCrosschainFlags:
+    type: object
+    properties:
+      isInboundEnabled:
+        type: boolean
+      isOutboundEnabled:
+        type: boolean
+      gasPriceIncreaseFlags:
+        $ref: '#/definitions/observerGasPriceIncreaseFlags'
+  zetacoreobserverKeygen:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/observerKeygenStatus'
+        title: 0--to generate key; 1--generated; 2--error
+      granteePubkeys:
+        type: array
+        items:
+          type: string
+      blockNumber:
+        type: string
+        format: int64
+        title: the blocknum that the key needs to be generated
+  zetacoreobserverNodeAccount:
+    type: object
+    properties:
+      operator:
+        type: string
+      granteeAddress:
+        type: string
+      granteePubkey:
+        $ref: '#/definitions/cryptoPubKeySet'
+      nodeStatus:
+        $ref: '#/definitions/observerNodeStatus'
+  zetacoreobserverOperationalFlags:
+    type: object
+    properties:
+      restart_height:
+        type: string
+        format: int64
+        description: |-
+          Height for a coordinated zetaclient restart.
+          Will be ignored if missed.
+      signer_block_time_offset:
+        type: string
+        description: |-
+          Offset from the zetacore block time to initiate signing.
+          Should be calculated and set based on max(zetaclient_core_block_latency).
+      minimum_version:
+        type: string
+        description: |-
+          Minimum version of zetaclient that is allowed to run. This must be either
+          a valid semver string (v23.0.1) or empty. If empty, all versions are
+          allowed.
+    description: Flags for the top-level operation of zetaclient.
+  zetacoreobserverTSS:
+    type: object
+    properties:
+      tss_pubkey:
+        type: string
+      tss_participant_list:
+        type: array
+        items:
+          type: string
+      operator_address_list:
+        type: array
+        items:
+          type: string
+      finalizedZetaHeight:
+        type: string
+        format: int64
+      keyGenZetaHeight:
+        type: string
+        format: int64
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:
