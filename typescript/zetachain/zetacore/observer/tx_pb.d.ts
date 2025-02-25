@@ -242,6 +242,11 @@ export declare class MsgUpdateOperationalChainParams extends Message<MsgUpdateOp
    */
   confirmationParams?: ConfirmationParams;
 
+  /**
+   * @generated from field: bool skip_block_scan = 10;
+   */
+  skipBlockScan: boolean;
+
   constructor(data?: PartialMessage<MsgUpdateOperationalChainParams>);
 
   static readonly runtime: typeof proto3;

@@ -158,8 +158,8 @@ func initBitcoinRunner(
 		runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := runner.LegacyDepositEther()
-		txERC20Deposit := runner.LegacyDepositERC20()
+		txEtherDeposit := runner.DepositEtherDeployer()
+		txERC20Deposit := runner.DepositERC20Deployer()
 
 		runner.WaitForMinedCCTX(txEtherDeposit)
 		runner.WaitForMinedCCTX(txERC20Deposit)

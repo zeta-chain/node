@@ -58469,6 +58469,11 @@ definitions:
       confirmationParams:
         $ref: '#/definitions/zetachain.zetacore.observer.ConfirmationParams'
         title: Advanced confirmation parameters for chain to support fast observation
+      skipBlockScan:
+        type: boolean
+        description: |-
+          Skip actions that require scanning the contents of each block.
+          The main thing this disables is transfers directly to the TSS address.
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:

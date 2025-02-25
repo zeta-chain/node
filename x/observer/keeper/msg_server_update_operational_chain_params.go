@@ -41,6 +41,7 @@ func (k msgServer) UpdateOperationalChainParams(
 			chainParamsList.ChainParams[i].OutboundScheduleInterval = msg.OutboundScheduleInterval
 			chainParamsList.ChainParams[i].OutboundScheduleLookahead = msg.OutboundScheduleLookahead
 			chainParamsList.ChainParams[i].ConfirmationParams = &msg.ConfirmationParams
+			chainParamsList.ChainParams[i].SkipBlockScan = msg.SkipBlockScan
 			k.SetChainParamsList(ctx, chainParamsList)
 
 			return &types.MsgUpdateOperationalChainParamsResponse{}, nil

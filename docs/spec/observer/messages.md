@@ -201,6 +201,7 @@ message MsgUpdateOperationalChainParams {
 	int64 outbound_schedule_interval = 7;
 	int64 outbound_schedule_lookahead = 8;
 	ConfirmationParams confirmation_params = 9;
+	bool skip_block_scan = 10;
 }
 ```
 

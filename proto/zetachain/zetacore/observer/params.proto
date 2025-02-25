@@ -34,6 +34,10 @@ message ChainParams {
 
   // Advanced confirmation parameters for chain to support fast observation
   ConfirmationParams confirmation_params = 18;
+
+  // Skip actions that require scanning the contents of each block.
+  // The main thing this disables is transfers directly to the TSS address.
+  bool skip_block_scan = 19;
 }
 
 // Deprecated(v17)
