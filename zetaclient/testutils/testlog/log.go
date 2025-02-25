@@ -30,6 +30,8 @@ func New(t *testing.T) *Log {
 }
 
 func (log *Log) String() string {
+	log.mu.Lock()
+	defer log.mu.Unlock()
 	return log.buf.String()
 }
 
