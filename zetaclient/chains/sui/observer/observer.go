@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -19,6 +20,10 @@ type Observer struct {
 	*base.Observer
 	client  RPC
 	gateway *sui.Gateway
+
+	// nonce -> sui outbound tx
+	txMap map[uint64]models.SuiTransactionBlockResponse
+	txMu  sync.RWMutex
 }
 
 // RPC represents subset of Sui RPC methods.
@@ -41,6 +46,7 @@ func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observe
 		Observer: baseObserver,
 		client:   client,
 		gateway:  gateway,
+		txMap:    make(map[uint64]models.SuiTransactionBlockResponse),
 	}
 }
 

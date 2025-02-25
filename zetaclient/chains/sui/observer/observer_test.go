@@ -24,6 +24,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
+var someArgStub = map[string]any{}
+
 func TestObserver(t *testing.T) {
 	t.Run("PostGasPrice", func(t *testing.T) {
 		// ARRANGE
@@ -221,6 +223,70 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, math.NewUint(1000), vote.Amount)
 		assert.Equal(t, evmAlice.String(), vote.Receiver)
 	})
+
+	t.Run("ProcessOutboundTrackers", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given cctx
+		const nonce = 333
+		cctx := sample.CrossChainTxV2(t, "0x123")
+		cctx.OutboundParams = []*cctypes.OutboundParams{{TssNonce: nonce}}
+
+		ts.MockCCTXByNonce(cctx)
+
+		// Given outbound tracker
+		const digest = "0xSuiTxHash"
+		tracker := cctypes.OutboundTracker{
+			Index:    "0xAAA",
+			ChainId:  ts.Chain().ChainId,
+			Nonce:    nonce,
+			HashList: []*cctypes.TxHash{{TxHash: digest}},
+		}
+
+		ts.MockOutboundTrackers([]cctypes.OutboundTracker{tracker})
+
+		// Given Sui tx signature
+		sigBase64, err := sui.SerializeSignatureECDSA([65]byte{1, 2, 3}, ts.TSS().PubKey().AsECDSA())
+		require.NoError(t, err)
+
+		// Given Sui tx
+		tx := models.SuiTransactionBlockResponse{
+			Digest:     digest,
+			Checkpoint: "123",
+			Effects: models.SuiEffects{
+				Status: models.ExecutionStatus{Status: "success"},
+			},
+			Transaction: models.SuiTransactionBlock{
+				Data: models.SuiTransactionBlockData{
+					Transaction: models.SuiTransactionBlockKind{
+						Inputs: []models.SuiCallArg{
+							someArgStub,
+							someArgStub,
+							map[string]any{
+								"type":      "pure",
+								"valueType": "u64",
+								"value":     fmt.Sprintf("%d", nonce),
+							},
+							someArgStub,
+							someArgStub,
+						},
+					},
+				},
+				TxSignatures: []string{sigBase64},
+			},
+		}
+
+		ts.MockGetTxOnce(tx)
+
+		// ACT
+		err = ts.ProcessOutboundTrackers(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+		assert.True(t, ts.OutboundCreated(nonce))
+		assert.False(t, ts.OutboundCreated(nonce+1))
+	})
 }
 
 type testSuite struct {
@@ -243,8 +309,6 @@ func newTestSuite(t *testing.T) *testSuite {
 	chain := chains.SuiMainnet
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 	require.NotEmpty(t, chainParams.GatewayAddress)
-
-	// todo zctx with chain & params (in future PRs)
 
 	zetacore := mocks.NewZetacoreClient(t).
 		WithZetaChain().
@@ -316,6 +380,10 @@ func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events 
 	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, req).Return(res, nil).Once()
 }
 
+func (ts *testSuite) MockGetTxOnce(tx models.SuiTransactionBlockResponse) {
+	ts.suiMock.On("SuiGetTransactionBlock", mock.Anything, mock.Anything).Return(tx, nil).Once()
+}
+
 func (ts *testSuite) CatchInboundVotes() {
 	callback := func(_ context.Context, _, _ uint64, msg *cctypes.MsgVoteInbound) (string, string, error) {
 		ts.inboundVotesBag = append(ts.inboundVotesBag, msg)
@@ -326,4 +394,18 @@ func (ts *testSuite) CatchInboundVotes() {
 		On("PostVoteInbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(callback).
 		Maybe()
+}
+
+func (ts *testSuite) MockCCTXByNonce(cctx *cctypes.CrossChainTx) *mock.Call {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+	return ts.zetaMock.
+		On("GetCctxByNonce", ts.ctx, ts.Chain().ChainId, nonce).
+		Return(cctx, nil)
+}
+
+func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *mock.Call {
+	return ts.zetaMock.
+		On("GetAllOutboundTrackerByChain", mock.Anything, ts.Chain().ChainId, mock.Anything).
+		Return(trackers, nil)
 }
