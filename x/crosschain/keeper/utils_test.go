@@ -2,6 +2,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"math/big"
 	"testing"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/node/pkg/ptr"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"

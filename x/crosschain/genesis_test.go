@@ -51,6 +51,7 @@ func TestGenesis(t *testing.T) {
 			sample.InboundHashToCctx(t, "0x2"),
 		},
 		RateLimiterFlags: sample.RateLimiterFlags(),
+		Counter:          1,
 	}
 
 	// Init and export

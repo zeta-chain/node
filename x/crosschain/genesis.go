@@ -55,6 +55,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	k.SetRateLimiterFlags(ctx, genState.RateLimiterFlags)
+
+	k.SetCctxCounter(ctx, genState.Counter)
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -96,6 +98,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		genesis.RateLimiterFlags = rateLimiterFlags
 	}
+
+	genesis.Counter = k.GetCctxCounter(ctx)
 
 	return &genesis
 }

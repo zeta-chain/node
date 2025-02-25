@@ -8,6 +8,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -55,7 +56,15 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// withdraw and call
-	tx := r.WithdrawAndCallSOLZRC20(runner.ConnectedProgramID, withdrawAmount, approvedAmount, []byte("hello"))
+	tx := r.WithdrawAndCallSOLZRC20(
+		runner.ConnectedProgramID,
+		withdrawAmount,
+		approvedAmount,
+		[]byte("hello"),
+		gatewayzevm.RevertOptions{
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
