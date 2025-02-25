@@ -32,11 +32,12 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.EqualValues(r, coin.CoinType_Gas, cctx.InboundParams.CoinType)
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
-
-	// check the payload was received on the contract
-	r.AssertTestDAppZEVMCalled(true, payload, amount)
+	require.True(r, cctx.InboundParams.IsCrossChainCall)
 
 	newBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
+
+	// check the payload was received on the contract
+	r.AssertTestDAppZEVMCalled(true, payload, amount)
 }
