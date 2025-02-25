@@ -6,7 +6,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -75,11 +75,8 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 	ctx context.Context,
 	msg *crosschaintypes.MsgVoteInbound,
 ) (bool, error) {
-	// fast confirmation applies to chains that use confirmation count (e.g. EVM chains and Bitcoin)
-	// these chains should have their liquidity cap multiplier set explicitly
-	chainID := msg.SenderChainId
-	multiplier, enabled := constant.GetInboundFastConfirmationLiquidityMultiplier(chainID)
-	if !enabled {
+	// check if fast confirmation is enabled
+	if !ob.ChainParams().IsInboundFastConfirmationEnabled() {
 		return false, nil
 	}
 
@@ -89,14 +86,15 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 	}
 
 	// query liquidity cap for asset
+	chainID := msg.SenderChainId
 	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, ethcommon.HexToAddress(msg.Asset))
 	if err != nil {
 		return false, errors.Wrapf(err, "unable to get foreign coins for asset %s on chain %d", msg.Asset, chainID)
 	}
 
 	// ensure the deposit amount does not exceed amount cap
-	fastAmountCap := constant.CalcInboundFastAmountCap(fCoins.LiquidityCap, multiplier)
-	if msg.Amount.BigInt().Cmp(fastAmountCap) > 0 {
+	fastAmountCap := chains.CalcInboundFastConfirmationAmountCap(chainID, fCoins.LiquidityCap)
+	if msg.Amount.GT(fastAmountCap) {
 		return false, nil
 	}
 

@@ -11,7 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/chains"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -61,10 +61,12 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ACT-1
 	// deposit with exactly fast amount cap, should be fast confirmed
-	multiplier, enabled := constant.GetInboundFastConfirmationLiquidityMultiplier(chainID)
-	require.True(r, enabled)
-	fastAmountCap := constant.CalcInboundFastAmountCap(liquidityCap, multiplier)
-	tx := r.ETHDeposit(r.EVMAddress(), fastAmountCap, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	fastAmountCap := chains.CalcInboundFastConfirmationAmountCap(chainID, liquidityCap)
+	tx := r.ETHDeposit(
+		r.EVMAddress(),
+		fastAmountCap.BigInt(),
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 	r.Logger.Info("deposited exactly fast amount %d cap tx hash: %s", fastAmountCap, tx.Hash().Hex())
 
 	// ASSERT-1
@@ -79,7 +81,7 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ACT-2
 	// deposit with amount more than fast amount cap
-	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap, big.NewInt(1))
+	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap.BigInt(), big.NewInt(1))
 	tx = r.ETHDeposit(r.EVMAddress(), amountMoreThanCap, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	r.Logger.Info("deposited more than fast amount cap %d tx hash: %s", amountMoreThanCap, tx.Hash().Hex())
 

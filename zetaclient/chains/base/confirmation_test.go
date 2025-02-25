@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -352,18 +351,23 @@ func Test_IsBlockConfirmedForOutboundFast(t *testing.T) {
 func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 	chain := chains.Ethereum
 	liquidityCap := sdkmath.NewUint(100_000)
-	multiplier := constant.DefaultInboundFastConfirmationLiquidityMultiplier
-	fastAmountCap := constant.CalcInboundFastAmountCap(liquidityCap, multiplier)
+	fastAmountCap := chains.CalcInboundFastConfirmationAmountCap(chain.ChainId, liquidityCap)
+	confParamsEnabled := observertypes.ConfirmationParams{
+		SafeInboundCount: 2,
+		FastInboundCount: 1,
+	}
 
 	tests := []struct {
 		name                string
+		confParams          observertypes.ConfirmationParams
 		msg                 *crosschaintypes.MsgVoteInbound
 		failForeignCoinsRPC bool
 		eligible            bool
 		errMsg              string
 	}{
 		{
-			name: "eligible for fast confirmation",
+			name:       "eligible for fast confirmation",
+			confParams: confParamsEnabled,
 			msg: &crosschaintypes.MsgVoteInbound{
 				SenderChainId:           chain.ChainId,
 				Amount:                  sdkmath.NewUint(fastAmountCap.Uint64()),
@@ -374,14 +378,19 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			eligible: true,
 		},
 		{
-			name: "not eligible if multiplier not set for chain id",
+			name: "not eligible if fast confirmation is disabled",
+			confParams: observertypes.ConfirmationParams{
+				SafeInboundCount: 2,
+				FastInboundCount: 2, // equal to safe confirmation, effectively disabled
+			},
 			msg: &crosschaintypes.MsgVoteInbound{
 				SenderChainId: chains.SolanaMainnet.ChainId, // not set for Solana
 			},
 			eligible: false,
 		},
 		{
-			name: "not eligible if not fungible",
+			name:       "not eligible if protocol contract version V1 is used",
+			confParams: confParamsEnabled,
 			msg: &crosschaintypes.MsgVoteInbound{
 				SenderChainId:           chain.ChainId,
 				ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1, // not eligible for V1
@@ -389,7 +398,8 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			eligible: false,
 		},
 		{
-			name: "return error if foreign coins query RPC fails",
+			name:       "return error if foreign coins query RPC fails",
+			confParams: confParamsEnabled,
 			msg: &crosschaintypes.MsgVoteInbound{
 				SenderChainId:           chain.ChainId,
 				CoinType:                coin.CoinType_Gas,
@@ -401,7 +411,8 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 			errMsg:              "unable to get foreign coins",
 		},
 		{
-			name: "not eligible if amount exceeds fast amount cap",
+			name:       "not eligible if amount exceeds fast amount cap",
+			confParams: confParamsEnabled,
 			msg: &crosschaintypes.MsgVoteInbound{
 				SenderChainId:           chain.ChainId,
 				Amount:                  sdkmath.NewUint(fastAmountCap.Uint64() + 1), // +1 to exceed
@@ -416,7 +427,7 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// ARRANGE
-			ob := newTestSuite(t, chain)
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
 
 			// mock up the foreign coins RPC
 			assetAddress := ethcommon.HexToAddress(tt.msg.Asset)

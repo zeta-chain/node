@@ -326,6 +326,23 @@ func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 	require.Error(s.T(), cp.Validate())
 }
 
+func Test_IsInboundFastConfirmationEnabled(t *testing.T) {
+	cp := sample.ChainParams(1)
+
+	// fast confirmation is enabled
+	cp.ConfirmationParams.SafeInboundCount = 2
+	cp.ConfirmationParams.FastInboundCount = 1
+	require.True(t, cp.IsInboundFastConfirmationEnabled())
+
+	// fast confirmation is disabled if fast count = 0
+	cp.ConfirmationParams.FastInboundCount = 0
+	require.False(t, cp.IsInboundFastConfirmationEnabled())
+
+	// fast confirmation is disabled if fast count == safe count
+	cp.ConfirmationParams.FastInboundCount = 2
+	require.False(t, cp.IsInboundFastConfirmationEnabled())
+}
+
 func Test_InboundConfirmationSafe(t *testing.T) {
 	cp := sample.ChainParams(1)
 

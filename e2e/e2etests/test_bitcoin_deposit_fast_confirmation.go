@@ -11,7 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/chains"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -58,9 +58,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ACT-1
 	// deposit with exactly fast amount cap, should be fast confirmed
-	multiplier, enabled := constant.GetInboundFastConfirmationLiquidityMultiplier(chainID)
-	require.True(r, enabled)
-	fastAmountCap := constant.CalcInboundFastAmountCap(liquidityCap, multiplier)
+	fastAmountCap := chains.CalcInboundFastConfirmationAmountCap(chainID, liquidityCap)
 	fastAmountCapFloat := float64(fastAmountCap.Uint64()) / btcutil.SatoshiPerBitcoin
 	txHash := r.DepositBTCWithExactAmount(fastAmountCapFloat, nil)
 	r.Logger.Info("deposited exactly fast amount %d cap tx hash: %s", fastAmountCap, txHash)
@@ -77,7 +75,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// ACT-2
 	// deposit with amount more than fast amount cap
-	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap, big.NewInt(1))
+	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap.BigInt(), big.NewInt(1))
 	amountMoreThanCapFloat := float64(amountMoreThanCap.Uint64()) / btcutil.SatoshiPerBitcoin
 	txHash = r.DepositBTCWithExactAmount(amountMoreThanCapFloat, nil)
 	r.Logger.Info("deposited more than fast amount cap %d tx hash: %s", amountMoreThanCap, txHash)
