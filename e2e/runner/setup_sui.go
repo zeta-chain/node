@@ -8,10 +8,13 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
+	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	suiutils "github.com/zeta-chain/node/e2e/utils/sui"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -182,7 +185,7 @@ func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDC
 
 	// deploy zrc20
 	liqCap := math.NewUint(10e18)
-	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		fakeUSDCCoinType,
 		chains.SuiLocalnet.ChainId,
@@ -193,6 +196,15 @@ func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDC
 		100000,
 		&liqCap,
 	))
+	require.NoError(r, err)
+
+	// extract the zrc20 address from event and set the erc20 address in the runner
+	deployedEvent, ok := txserver.EventOfType[*fungibletypes.EventZRC20Deployed](res.Events)
+	require.True(r, ok, "unable to find deployed zrc20 event")
+
+	r.SuiTokenZRC20Addr = ethcommon.HexToAddress(deployedEvent.Contract)
+	require.NotEqualValues(r, ethcommon.Address{}, r.SuiTokenZRC20Addr)
+	r.SuiTokenZRC20, err = zrc20.NewZRC20(r.SuiTokenZRC20Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
 	// whitelist zrc20

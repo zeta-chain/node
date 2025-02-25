@@ -143,20 +143,22 @@ type E2ERunner struct {
 
 	// contracts zevm
 	// zrc20 contracts
-	ERC20ZRC20Addr ethcommon.Address
-	ERC20ZRC20     *zrc20.ZRC20
-	SPLZRC20Addr   ethcommon.Address
-	SPLZRC20       *zrc20.ZRC20
-	ETHZRC20Addr   ethcommon.Address
-	ETHZRC20       *zrc20.ZRC20
-	BTCZRC20Addr   ethcommon.Address
-	BTCZRC20       *zrc20.ZRC20
-	SOLZRC20Addr   ethcommon.Address
-	SOLZRC20       *zrc20.ZRC20
-	TONZRC20Addr   ethcommon.Address
-	TONZRC20       *zrc20.ZRC20
-	SUIZRC20Addr   ethcommon.Address
-	SUIZRC20       *zrc20.ZRC20
+	ERC20ZRC20Addr    ethcommon.Address
+	ERC20ZRC20        *zrc20.ZRC20
+	SPLZRC20Addr      ethcommon.Address
+	SPLZRC20          *zrc20.ZRC20
+	ETHZRC20Addr      ethcommon.Address
+	ETHZRC20          *zrc20.ZRC20
+	BTCZRC20Addr      ethcommon.Address
+	BTCZRC20          *zrc20.ZRC20
+	SOLZRC20Addr      ethcommon.Address
+	SOLZRC20          *zrc20.ZRC20
+	TONZRC20Addr      ethcommon.Address
+	TONZRC20          *zrc20.ZRC20
+	SUIZRC20Addr      ethcommon.Address
+	SUIZRC20          *zrc20.ZRC20
+	SuiTokenZRC20Addr ethcommon.Address
+	SuiTokenZRC20     *zrc20.ZRC20
 
 	// other contracts
 	UniswapV2FactoryAddr ethcommon.Address
@@ -259,6 +261,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.SOLZRC20Addr = other.SOLZRC20Addr
 	r.TONZRC20Addr = other.TONZRC20Addr
 	r.SUIZRC20Addr = other.SUIZRC20Addr
+	r.SuiTokenZRC20Addr = other.SuiTokenZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -314,6 +317,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 	r.SUIZRC20, err = zrc20.NewZRC20(r.SUIZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.SuiTokenZRC20, err = zrc20.NewZRC20(r.SuiTokenZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -407,6 +414,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("SUIZRC20:       %s", r.SUIZRC20Addr.Hex())
+	r.Logger.Print("SuiTokenZRC20:  %s", r.SuiTokenZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())

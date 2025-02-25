@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -15,6 +16,9 @@ func TestSuiTokenDeposit(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
+	oldBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	// make the deposit transaction
 	resp := r.SuiFungibleTokenDeposit(r.EVMAddress(), math.NewUintFromBigInt(amount))
 
@@ -25,4 +29,9 @@ func TestSuiTokenDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	require.EqualValues(r, coin.CoinType_ERC20, cctx.InboundParams.CoinType)
+	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
+	newBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
 }

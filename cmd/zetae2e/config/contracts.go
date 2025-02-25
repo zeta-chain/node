@@ -249,6 +249,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.ZEVM.SuiTokenZRC20Addr; c != "" {
+		r.SuiTokenZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SuiTokenZRC20Addr: %w", err)
+		}
+		r.SuiTokenZRC20, err = zrc20.NewZRC20(r.SuiTokenZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
 	if c := conf.Contracts.ZEVM.UniswapFactoryAddr; c != "" {
 		r.UniswapV2FactoryAddr, err = c.AsEVMAddress()
 		if err != nil {
