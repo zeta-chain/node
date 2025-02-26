@@ -22,9 +22,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if err := ob.ensureCursor(); err != nil {
 		return errors.Wrap(err, "unable to ensure inbound cursor")
 	}
-
-	ob.Logger().Inbound.Info().Msg("Cursor: " + ob.getCursor())
-
+	
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
 		Module:    ob.gateway.Module(),
