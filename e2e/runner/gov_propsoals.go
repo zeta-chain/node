@@ -1,15 +1,19 @@
 package runner
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
 	"github.com/zeta-chain/node/e2e/txserver"
 )
 
@@ -20,7 +24,12 @@ const (
 	EndOfE2E   ExecuteProposalSequence = "end"
 )
 
-func (r *E2ERunner) CreateGovProposal(sequence ExecuteProposalSequence) error {
+// CreateGovProposals creates and votes on proposals from the given directory
+// The directory should contain JSON files with the correct proposal format
+// The directories currently used are:
+// - /contrib/orchestrator/proposals_e2e_start
+// - /contrib/orchestrator/proposals_e2e_end
+func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
 
 	// List keys to verify that the keyring is working
@@ -58,7 +67,7 @@ func (r *E2ERunner) CreateGovProposal(sequence ExecuteProposalSequence) error {
 
 		// Parse the proposal file
 		// Returning an error here as all proposals added to the directory should be valid
-		parsedProposal, msgs, deposit, err := r.ZetaTxServer.ParseSubmitProposal(proposalPath)
+		parsedProposal, msgs, deposit, err := parseSubmitProposal(r.ZetaTxServer.GetCodec(), proposalPath)
 		if err != nil {
 			return fmt.Errorf("failed to parse proposal file %s: %w", file.Name(), err)
 		}
@@ -131,4 +140,47 @@ func voteGovProposals(proposalId uint64, zts txserver.ZetaTxServer, validatorKey
 		}
 	}
 	return nil
+}
+
+type proposal struct {
+	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
+	Messages  []json.RawMessage `json:"messages,omitempty"`
+	Metadata  string            `json:"metadata"`
+	Deposit   string            `json:"deposit"`
+	Title     string            `json:"title"`
+	Summary   string            `json:"summary"`
+	Expedited bool              `json:"expedited"`
+}
+
+// parseSubmitProposal reads and parses the proposal.
+func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk.Coins, error) {
+	var proposal proposal
+
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return proposal, nil, nil, err
+	}
+
+	err = json.Unmarshal(contents, &proposal)
+	if err != nil {
+		return proposal, nil, nil, err
+	}
+
+	msgs := make([]sdk.Msg, len(proposal.Messages))
+	for i, anyJSON := range proposal.Messages {
+		var msg sdk.Msg
+		err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg)
+		if err != nil {
+			return proposal, nil, nil, err
+		}
+
+		msgs[i] = msg
+	}
+
+	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+	if err != nil {
+		return proposal, nil, nil, err
+	}
+
+	return proposal, msgs, deposit, nil
 }

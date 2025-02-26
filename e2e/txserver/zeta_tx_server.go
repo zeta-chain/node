@@ -135,7 +135,14 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		addresses = append(addresses, accAddr.String())
 	}
 
-	validatorsKeyring, err := keyring.New(fmt.Sprintf("operatorKeys"), keyring.BackendTest, "/root/.zetacored/", nil, cdc, hd.EthSecp256k1Option())
+	validatorsKeyring, err := keyring.New(
+		fmt.Sprintf("operatorKeys"),
+		keyring.BackendTest,
+		"/root/.zetacored/",
+		nil,
+		cdc,
+		hd.EthSecp256k1Option(),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create validator keyring: %w", err)
 	}
@@ -167,6 +174,10 @@ func (zts ZetaTxServer) GetAccountName(index int) string {
 		return ""
 	}
 	return zts.name[index]
+}
+
+func (zts ZetaTxServer) GetCodec() codec.Codec {
+	return zts.clientCtx.Codec
 }
 
 // GetAccountAddress returns the account address from the given index
