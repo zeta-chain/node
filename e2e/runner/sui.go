@@ -113,11 +113,11 @@ func (r *E2ERunner) suiExecuteDeposit(
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.GatewayPackageID,
+		PackageObjectId: r.SuiGateway.PackageID(),
 		Module:          "gateway",
 		Function:        "deposit",
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex()},
+		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver.Hex()},
 		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err)
@@ -136,11 +136,11 @@ func (r *E2ERunner) suiExecuteDepositAndCall(
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.GatewayPackageID,
+		PackageObjectId: r.SuiGateway.PackageID(),
 		Module:          "gateway",
 		Function:        "deposit_and_call",
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{r.GatewayObjectID, coinObjectID, receiver.Hex(), payload},
+		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver.Hex(), payload},
 		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err)

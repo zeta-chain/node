@@ -100,9 +100,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 		}
 	}
 
-	// set Sui gateway values
-	r.GatewayPackageID = packageID
-	r.GatewayObjectID = gatewayID
+	// Set sui gateway
+	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
 	// deploy fake USDC
 	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
@@ -207,11 +206,11 @@ func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUS
 	// whitelist zrc20
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.GatewayPackageID,
+		PackageObjectId: r.SuiGateway.PackageID(),
 		Module:          "gateway",
 		Function:        "whitelist",
 		TypeArguments:   []any{"0x" + fakeUSDCCoinType},
-		Arguments:       []any{r.GatewayObjectID, whitelistCap},
+		Arguments:       []any{r.SuiGateway.ObjectID(), whitelistCap},
 		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err)
@@ -243,7 +242,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              r.GatewayPackageID,
+		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,

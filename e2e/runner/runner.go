@@ -40,6 +40,7 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -117,8 +118,7 @@ type E2ERunner struct {
 	SPLAddr        solana.PublicKey
 
 	// contract Sui
-	GatewayPackageID string
-	GatewayObjectID  string
+	SuiGateway *sui.Gateway
 
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
@@ -274,8 +274,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 
 	r.GatewayProgram = other.GatewayProgram
 
-	r.GatewayPackageID = other.GatewayPackageID
-	r.GatewayObjectID = other.GatewayObjectID
+	r.SuiGateway = other.SuiGateway
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
 
@@ -401,8 +400,12 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("SPL:            %s", r.SPLAddr.String())
 
 	r.Logger.Print(" --- 📜Sui addresses ---")
-	r.Logger.Print("GatewayPackageID: %s", r.GatewayPackageID)
-	r.Logger.Print("GatewayObjectID:  %s", r.GatewayObjectID)
+	if r.SuiGateway != nil {
+		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
+		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+	} else {
+		r.Logger.Print("💤 Sui tests disabled")
+	}
 
 	// zevm contracts
 	r.Logger.Print(" --- 📜zEVM contracts ---")
