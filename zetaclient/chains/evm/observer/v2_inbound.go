@@ -66,7 +66,7 @@ func (ob *Observer) observeGatewayDeposit(
 	rawLogs []ethtypes.Log,
 ) (uint64, error) {
 	// filter ERC20CustodyDeposited logs
-	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
+	gatewayAddr, gatewayContract, err := ob.getGatewayContract()
 	if err != nil {
 		// lastScanned is startBlock - 1
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
@@ -209,7 +209,7 @@ func (ob *Observer) observeGatewayCall(
 	startBlock, toBlock uint64,
 	rawLogs []ethtypes.Log,
 ) (uint64, error) {
-	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
+	gatewayAddr, gatewayContract, err := ob.getGatewayContract()
 	if err != nil {
 		// lastScanned is startBlock - 1
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
@@ -326,7 +326,7 @@ func (ob *Observer) observeGatewayDepositAndCall(
 	startBlock, toBlock uint64,
 	rawLogs []ethtypes.Log,
 ) (uint64, error) {
-	gatewayAddr, gatewayContract, err := ob.GetGatewayContract()
+	gatewayAddr, gatewayContract, err := ob.getGatewayContract()
 	if err != nil {
 		// lastScanned is startBlock - 1
 		return startBlock - 1, errors.Wrap(err, "can't get gateway contract")
