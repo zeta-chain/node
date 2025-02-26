@@ -135,8 +135,10 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		addresses = append(addresses, accAddr.String())
 	}
 
+	// initialize validators keyring. The validator keys have been copied to this location in the docker image.
+	// Refer contrib/localnet/orchestrator/Dockerfile.fastbuild for more details
 	validatorsKeyring, err := keyring.New(
-		fmt.Sprintf("operatorKeys"),
+		"validatorKeys",
 		keyring.BackendTest,
 		"/root/.zetacored/",
 		nil,
@@ -148,7 +150,7 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 	}
 
 	clientCtx := newContext(rpc, cdc, reg, kr, chainID)
-	txf := newFactory(clientCtx, clientCtx.Keyring)
+	txf := newFactory(clientCtx)
 
 	return &ZetaTxServer{
 		ctx:               ctx,
@@ -161,9 +163,10 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 	}, nil
 }
 
+// UpdateKeyring updates the keyring being used by the ZetaTxServer
 func (zts ZetaTxServer) UpdateKeyring(kr keyring.Keyring) ZetaTxServer {
 	zts.clientCtx = zts.clientCtx.WithKeyring(kr)
-	zts.txFactory = newFactory(zts.clientCtx, kr)
+	zts.txFactory = newFactory(zts.clientCtx)
 	return zts
 }
 
@@ -176,6 +179,7 @@ func (zts ZetaTxServer) GetAccountName(index int) string {
 	return zts.name[index]
 }
 
+// GetCodec returns the codec for the ZetaTxServer
 func (zts ZetaTxServer) GetCodec() codec.Codec {
 	return zts.clientCtx.Codec
 }
@@ -215,6 +219,8 @@ func (zts ZetaTxServer) MustGetAccountAddressFromName(name string) string {
 	}
 	return addr.String()
 }
+
+// GetValidatorsKeyring returns the validators keyring
 func (zts ZetaTxServer) GetValidatorsKeyring() keyring.Keyring {
 	return zts.validatorsKeyring
 }
@@ -766,10 +772,10 @@ func newContext(
 }
 
 // newFactory returns the tx factory for msg server
-func newFactory(clientCtx client.Context, keyring keyring.Keyring) tx.Factory {
+func newFactory(clientCtx client.Context) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
-		WithKeybase(keyring).
+		WithKeybase(clientCtx.Keyring).
 		WithGas(10000000).
 		WithGasAdjustment(1).
 		WithSignMode(signing.SignMode_SIGN_MODE_UNSPECIFIED).

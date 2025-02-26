@@ -208,7 +208,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		noError(deployerRunner.FundEmissionsPool())
 	}
-
+	// Run the proposals under the start sequence(proposals_e2e_start folder)
 	noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
 
 	// wait for keygen to be completed

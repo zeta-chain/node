@@ -71,7 +71,7 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		if err != nil {
 			return fmt.Errorf("failed to parse proposal file %s: %w", file.Name(), err)
 		}
-		r.Logger.Print("Executing proposal , file name: %s title: %s", file.Name(), parsedProposal.Title)
+		r.Logger.Print("executing proposal : file name: %s title: %s", file.Name(), parsedProposal.Title)
 
 		// Create the proposal message
 		msg, err := govv1.NewMsgSubmitProposal(
@@ -94,16 +94,16 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		}
 
 		// Extract the proposal ID
-		proposalId := uint64(0)
+		proposalID := uint64(0)
 		for _, event := range res.Events {
 			if event.Type == types.EventTypeSubmitProposal {
 				for _, attr := range event.Attributes {
-					if string(attr.Key) == types.AttributeKeyProposalID {
+					if attr.Key == types.AttributeKeyProposalID {
 						id, err := strconv.ParseUint(attr.Value, 10, 64)
 						if err != nil {
 							return err
 						}
-						proposalId = id
+						proposalID = id
 						break
 					}
 				}
@@ -111,14 +111,14 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		}
 
 		// First proposal ID is always 1
-		if proposalId == 0 {
+		if proposalID == 0 {
 			return fmt.Errorf("failed to extract proposal ID from transaction for proposal %s", file.Name())
 		}
 
 		// Vote on the proposal
-		err = voteGovProposals(proposalId, newZts, validatorKeys)
+		err = voteGovProposals(proposalID, newZts, validatorKeys)
 		if err != nil {
-			return fmt.Errorf("failed to vote on proposal %d: %w", proposalId, err)
+			return fmt.Errorf("failed to vote on proposal %d: %w", proposalID, err)
 		}
 	}
 	return nil
