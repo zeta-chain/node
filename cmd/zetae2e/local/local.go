@@ -208,8 +208,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		noError(deployerRunner.FundEmissionsPool())
 		logger.Print("running gov proposals")
-		deployerRunner.ZetaTxServer.CreateGovProposal()
 	}
+
+	noError(deployerRunner.CreateGovProposal(runner.StartOfE2E))
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -492,6 +493,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+	noError(deployerRunner.CreateGovProposal(runner.EndOfE2E))
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 

@@ -77,15 +77,15 @@ const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
-	ctx             context.Context
-	clientCtx       client.Context
-	txFactory       tx.Factory
-	name            []string
-	mnemonic        []string
-	address         []string
-	blockTimeout    time.Duration
-	authorityClient authoritytypes.QueryClient
-	validatorKeys   keyring.Keyring
+	ctx               context.Context
+	clientCtx         client.Context
+	txFactory         tx.Factory
+	name              []string
+	mnemonic          []string
+	address           []string
+	blockTimeout      time.Duration
+	authorityClient   authoritytypes.QueryClient
+	validatorsKeyring keyring.Keyring
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -144,13 +144,13 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 	txf := newFactory(clientCtx, clientCtx.Keyring)
 
 	return &ZetaTxServer{
-		ctx:           ctx,
-		clientCtx:     clientCtx,
-		txFactory:     txf,
-		name:          names,
-		address:       addresses,
-		blockTimeout:  2 * time.Minute,
-		validatorKeys: validatorsKeyring,
+		ctx:               ctx,
+		clientCtx:         clientCtx,
+		txFactory:         txf,
+		name:              names,
+		address:           addresses,
+		blockTimeout:      2 * time.Minute,
+		validatorsKeyring: validatorsKeyring,
 	}, nil
 }
 
@@ -203,6 +203,9 @@ func (zts ZetaTxServer) MustGetAccountAddressFromName(name string) string {
 		panic(err)
 	}
 	return addr.String()
+}
+func (zts ZetaTxServer) GetValidatorsKeyring() keyring.Keyring {
+	return zts.validatorsKeyring
 }
 
 // GetAllAccountAddress returns all account addresses
