@@ -17,6 +17,9 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 )
 
+// ExecuteProposalSequence defines the sequence of proposals execution during the e2e tests
+// StartOfE2E : this sequence is executed at the beginning of the e2e tests
+// EndOfE2E : this sequence is executed at the end of the e2e tests
 type ExecuteProposalSequence string
 
 const (
@@ -41,7 +44,7 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		return fmt.Errorf("no validator keys found")
 	}
 	zetaTxServer := r.ZetaTxServer
-	newZts := zetaTxServer.UpdateKeyring(validatorsKeyring)
+	validatorsTxServer := zetaTxServer.UpdateKeyring(validatorsKeyring)
 
 	// Use the first validator as the depositor for all proposals
 	depositor := validatorKeys[0]
@@ -71,7 +74,7 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		if err != nil {
 			return fmt.Errorf("failed to parse proposal file %s: %w", file.Name(), err)
 		}
-		r.Logger.Print("executing proposal : file name: %s title: %s", file.Name(), parsedProposal.Title)
+		r.Logger.Print("executing proposal: file name: %s title: %s", file.Name(), parsedProposal.Title)
 
 		// Create the proposal message
 		msg, err := govv1.NewMsgSubmitProposal(
@@ -88,7 +91,7 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		}
 
 		// Broadcast the transaction
-		res, err := newZts.BroadcastTx(depositor.Name, msg)
+		res, err := validatorsTxServer.BroadcastTx(depositor.Name, msg)
 		if err != nil {
 			return fmt.Errorf("failed to broadcast transaction for proposal %s: %w", file.Name(), err)
 		}
@@ -116,7 +119,7 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		}
 
 		// Vote on the proposal
-		err = voteGovProposals(proposalID, newZts, validatorKeys)
+		err = voteGovProposals(proposalID, validatorsTxServer, validatorKeys)
 		if err != nil {
 			return fmt.Errorf("failed to vote on proposal %d: %w", proposalID, err)
 		}
@@ -125,18 +128,22 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 }
 
 // Vote yes on the proposal from both the validators
-func voteGovProposals(proposalId uint64, zts txserver.ZetaTxServer, validatorKeys []*keyring.Record) error {
+func voteGovProposals(
+	proposalID uint64,
+	validatorsTxServer txserver.ZetaTxServer,
+	validatorKeys []*keyring.Record,
+) error {
 	for _, key := range validatorKeys {
 		address, err := key.GetAddress()
 		if err != nil {
 			return fmt.Errorf("failed to get address for key %s: %w", key.Name, err)
 		}
 		// Create the message
-		msg := govv1.NewMsgVote(address, proposalId, govv1.VoteOption_VOTE_OPTION_YES, "vote")
+		msg := govv1.NewMsgVote(address, proposalID, govv1.VoteOption_VOTE_OPTION_YES, "vote")
 
-		_, err = zts.BroadcastTx(key.Name, msg)
+		_, err = validatorsTxServer.BroadcastTx(key.Name, msg)
 		if err != nil {
-			return fmt.Errorf("failed to broadcast transaction for vote on proposal %d: %w", proposalId, err)
+			return fmt.Errorf("failed to broadcast transaction for vote on proposal %d: %w", proposalID, err)
 		}
 	}
 	return nil
