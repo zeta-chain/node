@@ -20,7 +20,7 @@ func TestSuiTokenDeposit(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// make the deposit transaction
-	resp := r.SuiFungibleTokenDeposit(r.EVMAddress(), math.NewUintFromBigInt(amount))
+	resp := r.SuiDepositFungibleToken(r.EVMAddress(), math.NewUintFromBigInt(amount))
 
 	r.Logger.Info("Sui deposit tx: %s", resp.Digest)
 

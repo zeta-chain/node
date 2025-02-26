@@ -106,7 +106,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	// deploy fake USDC
 	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
-	r.whitelistFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
+	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
 
 	r.SuiTokenCoinType = fakeUSDCCoinType
 	r.SuiTokenTreasuryCap = treasuryCap
@@ -117,6 +117,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 }
 
 // deployFakeUSDC deploys the FakeUSDC contract on Sui
+// it returns the coinType to be used as asset value for zrc20 and treasuryCap object ID that allows to mint tokens
 func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	client := r.Clients.Sui
 	deployerSigner, err := r.Account.SuiSigner()
@@ -173,8 +174,8 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	return coinType, treasuryCap
 }
 
-// whitelistFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it
-func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
+// whitelistSuiFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it
+func (r *E2ERunner) whitelistSuiFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
 	// we use DeployFungibleCoinZRC20 and whitelist manually because whitelist cctx are currently not supported for Sui
 	// TODO: change this logic and use MsgWhitelistERC20 once it's supported
 	// https://github.com/zeta-chain/node/issues/3569
@@ -215,7 +216,7 @@ func (r *E2ERunner) whitelistFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDC
 	})
 	require.NoError(r, err)
 
-	r.executeSuiTx(signer, tx)
+	r.suiExecuteTx(signer, tx)
 }
 
 // set the chain params for Sui

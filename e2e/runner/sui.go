@@ -13,8 +13,8 @@ import (
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
-// SUIDeposit calls Deposit on Sui
-func (r *E2ERunner) SUIDeposit(
+// SuiDepositSUI calls Deposit on Sui
+func (r *E2ERunner) SuiDepositSUI(
 	receiver ethcommon.Address,
 	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
@@ -22,14 +22,14 @@ func (r *E2ERunner) SUIDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectID := r.splitSUI(signer, amount)
+	coinObjectID := r.suiSplitSUI(signer, amount)
 
 	// create the tx
-	return r.executeDeposit(signer, string(zetasui.SUI), coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, string(zetasui.SUI), coinObjectID, receiver)
 }
 
-// SUIDepositAndCall calls DepositAndCall on Sui
-func (r *E2ERunner) SUIDepositAndCall(
+// SuiDepositAndCallSUI calls DepositAndCall on Sui
+func (r *E2ERunner) SuiDepositAndCallSUI(
 	receiver ethcommon.Address,
 	amount math.Uint,
 	payload []byte,
@@ -38,14 +38,14 @@ func (r *E2ERunner) SUIDepositAndCall(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectID := r.splitSUI(signer, amount)
+	coinObjectID := r.suiSplitSUI(signer, amount)
 
 	// create the tx
-	return r.executeDepositAndCall(signer, string(zetasui.SUI), coinObjectID, receiver, payload)
+	return r.suiExecuteDepositAndCall(signer, string(zetasui.SUI), coinObjectID, receiver, payload)
 }
 
-// SuiFungibleTokenDeposit calls Deposit with fungible token on Sui
-func (r *E2ERunner) SuiFungibleTokenDeposit(
+// SuiDepositFungibleToken calls Deposit with fungible token on Sui
+func (r *E2ERunner) SuiDepositFungibleToken(
 	receiver ethcommon.Address,
 	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
@@ -53,10 +53,10 @@ func (r *E2ERunner) SuiFungibleTokenDeposit(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectID := r.splitUSDC(signer, amount)
+	coinObjectID := r.suiSplitUSDC(signer, amount)
 
 	// create the tx
-	return r.executeDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
 }
 
 // SuiFungibleTokenDepositAndCall calls DepositAndCall with fungible token on Sui
@@ -69,15 +69,15 @@ func (r *E2ERunner) SuiFungibleTokenDepositAndCall(
 	require.NoError(r, err, "get deployer signer")
 
 	// retrieve SUI coin object to deposit
-	coinObjectID := r.splitUSDC(signer, amount)
+	coinObjectID := r.suiSplitUSDC(signer, amount)
 
 	// create the tx
-	return r.executeDepositAndCall(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver, payload)
+	return r.suiExecuteDepositAndCall(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver, payload)
 }
 
-// MintSuiUSDC mints FakeUSDC on Sui to a receiver
+// SuiMintUSDC mints FakeUSDC on Sui to a receiver
 // this function requires the signer to be the owner of the trasuryCap
-func (r *E2ERunner) MintSuiUSDC(
+func (r *E2ERunner) SuiMintUSDC(
 	amount,
 	receiver string,
 ) models.SuiTransactionBlockResponse {
@@ -101,11 +101,11 @@ func (r *E2ERunner) MintSuiUSDC(
 	})
 	require.NoError(r, err)
 
-	return r.executeSuiTx(signer, tx)
+	return r.suiExecuteTx(signer, tx)
 }
 
-// executeDeposit executes a deposit on the SUI contract
-func (r *E2ERunner) executeDeposit(
+// suiExecuteDeposit executes a deposit on the SUI contract
+func (r *E2ERunner) suiExecuteDeposit(
 	signer *sui.SignerSecp256k1,
 	coinType string,
 	coinObjectID string,
@@ -123,11 +123,11 @@ func (r *E2ERunner) executeDeposit(
 	})
 	require.NoError(r, err)
 
-	return r.executeSuiTx(signer, tx)
+	return r.suiExecuteTx(signer, tx)
 }
 
-// executeSUIDepositAndCall executes a depositAndCall on the SUI contract
-func (r *E2ERunner) executeDepositAndCall(
+// suiExecuteDepositAndCall executes a depositAndCall on the SUI contract
+func (r *E2ERunner) suiExecuteDepositAndCall(
 	signer *sui.SignerSecp256k1,
 	coinType string,
 	coinObjectID string,
@@ -146,13 +146,13 @@ func (r *E2ERunner) executeDepositAndCall(
 	})
 	require.NoError(r, err)
 
-	return r.executeSuiTx(signer, tx)
+	return r.suiExecuteTx(signer, tx)
 }
 
-// splitUSDC splits USDC coin and obtain a USDC coin object with the wanted balance
-func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
+// suiSplitUSDC splits USDC coin and obtain a USDC coin object with the wanted balance
+func (r *E2ERunner) suiSplitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
+	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 
 	tx, err := r.Clients.Sui.SplitCoin(r.Ctx, models.SplitCoinRequest{
 		Signer:       signer.Address(),
@@ -162,16 +162,16 @@ func (r *E2ERunner) splitUSDC(signer *sui.SignerSecp256k1, balance math.Uint) (o
 	})
 
 	require.NoError(r, err)
-	r.executeSuiTx(signer, tx)
+	r.suiExecuteTx(signer, tx)
 
 	// find the split coin
-	return r.findSuiCoinWithBalance(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
+	return r.suiFindCoinWithBalance(signer.Address(), balance, "0x"+r.SuiTokenCoinType)
 }
 
-// splitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
-func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
+// suiSplitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
+func (r *E2ERunner) suiSplitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.findSuiCoinWithBalanceAbove(signer.Address(), balance, string(zetasui.SUI))
+	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, string(zetasui.SUI))
 
 	// split the coin using the PaySui API
 	tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
@@ -183,35 +183,35 @@ func (r *E2ERunner) splitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (ob
 	})
 	require.NoError(r, err)
 
-	r.executeSuiTx(signer, tx)
+	r.suiExecuteTx(signer, tx)
 
 	// find the split coin
-	return r.findSuiCoinWithBalance(signer.Address(), balance, string(zetasui.SUI))
+	return r.suiFindCoinWithBalance(signer.Address(), balance, string(zetasui.SUI))
 }
 
-func (r *E2ERunner) findSuiCoinWithBalance(
+func (r *E2ERunner) suiFindCoinWithBalance(
 	address string,
 	balance math.Uint,
 	coinType string,
 ) (coinID string) {
-	return r.findSuiCoin(address, balance, coinType, func(a, b math.Uint) bool {
+	return r.suiFindCoin(address, balance, coinType, func(a, b math.Uint) bool {
 		return a.Equal(b)
 	})
 }
 
-func (r *E2ERunner) findSuiCoinWithBalanceAbove(
+func (r *E2ERunner) suiFindCoinWithBalanceAbove(
 	address string,
 	balanceAbove math.Uint,
 	coinType string,
 ) (coinID string) {
-	return r.findSuiCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
+	return r.suiFindCoin(address, balanceAbove, coinType, func(a, b math.Uint) bool {
 		return a.GTE(b)
 	})
 }
 
 type compFunc func(a, b math.Uint) bool
 
-func (r *E2ERunner) findSuiCoin(
+func (r *E2ERunner) suiFindCoin(
 	address string,
 	balance math.Uint,
 	coinType string,
@@ -236,7 +236,7 @@ func (r *E2ERunner) findSuiCoin(
 	return ""
 }
 
-func (r *E2ERunner) executeSuiTx(
+func (r *E2ERunner) suiExecuteTx(
 	signer *sui.SignerSecp256k1,
 	tx models.TxnMetaData,
 ) models.SuiTransactionBlockResponse {

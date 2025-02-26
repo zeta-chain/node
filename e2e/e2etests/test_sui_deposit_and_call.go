@@ -22,7 +22,7 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	payload := randomPayload(r)
 
 	// make the deposit transaction
-	resp := r.SUIDepositAndCall(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte(payload))
+	resp := r.SuiDepositAndCallSUI(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte(payload))
 
 	r.Logger.Info("Sui deposit and call tx: %s", resp.Digest)
 
