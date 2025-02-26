@@ -7,6 +7,7 @@ import (
 const (
 	// defaultInboundFastConfirmationLiquidityDivisor is the default ZRC20 liquidity cap divisor for inbound fast confirmation
 	// For example: given a liquidity cap of 1M, the fast confirmation cap is 1M / 4000 = 250.
+	// It represents 0.025% of the liquidity cap set for a token
 	defaultInboundFastConfirmationLiquidityDivisor = uint64(4000)
 )
 
