@@ -23,6 +23,7 @@
 * [3527](https://github.com/zeta-chain/node/pull/3527) - integrate SOL/SPL withdraw and call revert
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 * [3548](https://github.com/zeta-chain/node/pull/3548) - ensure cctx list is sorted by creation time
+* [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
 * [3551](https://github.com/zeta-chain/node/pull/3551) - support for EVM chain and Bitcoin chain inbound fast confirmation
 
 ### Refactor

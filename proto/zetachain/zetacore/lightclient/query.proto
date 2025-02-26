@@ -17,39 +17,46 @@ service Query {
   rpc BlockHeaderAll(QueryAllBlockHeaderRequest)
       returns (QueryAllBlockHeaderResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/block_headers";
+    option deprecated = true;
   }
 
   rpc BlockHeader(QueryGetBlockHeaderRequest)
       returns (QueryGetBlockHeaderResponse) {
     option (google.api.http).get =
         "/zeta-chain/lightclient/block_headers/{block_hash}";
+    option deprecated = true;
   }
 
   rpc ChainStateAll(QueryAllChainStateRequest)
       returns (QueryAllChainStateResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/chain_state";
+    option deprecated = true;
   }
 
   rpc ChainState(QueryGetChainStateRequest)
       returns (QueryGetChainStateResponse) {
     option (google.api.http).get =
         "/zeta-chain/lightclient/chain_state/{chain_id}";
+    option deprecated = true;
   }
 
   rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/prove";
+    option deprecated = true;
   }
 
   rpc HeaderSupportedChains(QueryHeaderSupportedChainsRequest)
       returns (QueryHeaderSupportedChainsResponse) {
     option (google.api.http).get =
         "/zeta-chain/lightclient/header_supported_chains";
+    option deprecated = true;
   }
 
   rpc HeaderEnabledChains(QueryHeaderEnabledChainsRequest)
       returns (QueryHeaderEnabledChainsResponse) {
     option (google.api.http).get =
         "/zeta-chain/lightclient/header_enabled_chains";
+    option deprecated = true;
   }
 }
 

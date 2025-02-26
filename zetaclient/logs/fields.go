@@ -8,6 +8,7 @@ const (
 	FieldChain            = "chain"
 	FieldChainNetwork     = "chain_network"
 	FieldNonce            = "nonce"
+	FieldTracker          = "tracker_id"
 	FieldTx               = "tx"
 	FieldOutboundID       = "outbound_id"
 	FieldBlock            = "block"
