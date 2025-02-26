@@ -92,5 +92,6 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	}
 	deployerRunner.UpdateTSSAddressForConnector()
 	deployerRunner.UpdateTSSAddressForERC20custody()
+	deployerRunner.UpdateTSSAddressForGateway()
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }
