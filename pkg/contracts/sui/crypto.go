@@ -90,28 +90,37 @@ func SerializeSignatureECDSA(signature [65]byte, pubKey *ecdsa.PublicKey) (strin
 // Returns ECDSA public key and signature.
 // Sequence: `flag(1b) + sig(64b) + compressedPubKey(33b)`
 func DeserializeSignatureECDSA(sigBase64 string) (*ecdsa.PublicKey, [64]byte, error) {
-	// flag + sig + pubKey
-	const expectedLen = 1 + 64 + 33
+	const (
+		flagLen     = 1
+		sigLen      = 64
+		pubLen      = 33
+		expectedLen = flagLen + sigLen + pubLen
+		pubOffset   = flagLen + sigLen
+	)
 
 	sigBytes, err := base64.StdEncoding.DecodeString(sigBase64)
 	switch {
 	case err != nil:
 		return nil, [64]byte{}, errors.Wrap(err, "failed to decode signature")
 	case len(sigBytes) != expectedLen:
-		return nil, [64]byte{}, errors.Errorf("invalid signature length (got %d, want %d)", len(sigBytes), expectedLen)
+		return nil, [64]byte{}, errors.Errorf("invalid sig length (got %d, want %d)", len(sigBytes), expectedLen)
 	case sigBytes[0] != flagSecp256k1:
-		return nil, [64]byte{}, errors.Errorf("invalid signature flag (got %d, want %d)", sigBytes[0], flagSecp256k1)
-	case len(sigBytes[65:]) != 33:
-		return nil, [64]byte{}, errors.Errorf("invalid public key length (got %d, want %d)", len(sigBytes[65:]), 33)
+		return nil, [64]byte{}, errors.Errorf("invalid sig flag (got %d, want %d)", sigBytes[0], flagSecp256k1)
+	case len(sigBytes[pubOffset:]) != pubLen:
+		return nil, [64]byte{}, errors.Errorf(
+			"invalid pubKey length (got %d, want %d)",
+			len(sigBytes[pubOffset:]),
+			pubLen,
+		)
 	}
 
-	pk, err := crypto.DecompressPubkey(sigBytes[65:])
+	pk, err := crypto.DecompressPubkey(sigBytes[pubOffset:])
 	if err != nil {
 		return nil, [64]byte{}, errors.Wrap(err, "failed to decompress public key")
 	}
 
 	var sig [64]byte
-	copy(sig[:], sigBytes[1:65])
+	copy(sig[:], sigBytes[flagLen:pubOffset])
 
 	return pk, sig, nil
 }

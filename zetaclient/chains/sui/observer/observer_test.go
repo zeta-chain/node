@@ -94,7 +94,7 @@ func TestObserver(t *testing.T) {
 
 		// ...two of which are valid (1 & 3)
 		events := []models.SuiEventResponse{
-			ts.SampleEvent("TX_1_ok", string(sui.Deposit), map[string]any{
+			ts.SampleEvent("TX_1_ok", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "200",
 				"sender":    "SUI_BOB",
@@ -106,7 +106,7 @@ func TestObserver(t *testing.T) {
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
-			ts.SampleEvent("TX_3_ok", string(sui.DepositAndCall), map[string]any{
+			ts.SampleEvent("TX_3_ok", string(sui.DepositAndCallEvent), map[string]any{
 				// USDC
 				"coin_type": usdc,
 				"amount":    "300",
@@ -114,7 +114,7 @@ func TestObserver(t *testing.T) {
 				"receiver":  evmAlice.String(),
 				"payload":   []any{float64(1), float64(2), float64(3)},
 			}),
-			ts.SampleEvent("TX_4_invalid_data", string(sui.Deposit), map[string]any{
+			ts.SampleEvent("TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "hello",
 				"sender":    "SUI_BOB",
@@ -195,7 +195,7 @@ func TestObserver(t *testing.T) {
 		evmAlice := sample.EthAddress()
 
 		ts.OnGetTx("TX_TRACKER_1", "15000", true, []models.SuiEventResponse{
-			ts.SampleEvent("TX_TRACKER_1", string(sui.Deposit), map[string]any{
+			ts.SampleEvent("TX_TRACKER_1", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
 				"sender":    "SUI_ALICE",

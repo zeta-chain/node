@@ -51,7 +51,7 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, Deposit, out.EventType)
+				assert.Equal(t, DepositEvent, out.EventType)
 				assert.Equal(t, uint64(0), out.EventIndex)
 
 				deposit, err := out.Deposit()
@@ -82,7 +82,7 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
@@ -113,7 +113,7 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
@@ -144,7 +144,7 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, Withdraw, out.EventType)
+				assert.Equal(t, WithdrawEvent, out.EventType)
 
 				wd, err := out.Withdrawal()
 				require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestParseEvent(t *testing.T) {
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId:         packageID,
-				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", Deposit),
+				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", DepositEvent),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",

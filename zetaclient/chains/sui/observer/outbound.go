@@ -45,13 +45,19 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		nonce := tracker.Nonce
 
-		// should not happen
-		if len(tracker.HashList) == 0 {
-			return errors.Errorf("empty outbound tracker hash for nonce %d", nonce)
-		}
-
 		// already loaded
 		if _, ok := ob.getTx(nonce); ok {
+			continue
+		}
+
+		// should not happen
+		if len(tracker.HashList) == 0 {
+			// we don't want to block other cctxs, so let's error and continue
+			ob.Logger().Outbound.Error().
+				Str(logs.FieldMethod, "ProcessOutboundTrackers").
+				Uint64(logs.FieldNonce, nonce).
+				Str(logs.FieldTracker, tracker.Index).
+				Msg("Tracker hash list is empty!")
 			continue
 		}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DepositData represents data for a Sui deposit/depositAndCall event
-type DepositData struct {
+// Deposit represents data for a Sui deposit/depositAndCall event
+type Deposit struct {
 	// Note: CoinType is what is used as Asset field in the ForeignCoin object
 	CoinType         CoinType
 	Amount           math.Uint
@@ -18,61 +18,61 @@ type DepositData struct {
 	IsCrossChainCall bool
 }
 
-func (d *DepositData) IsGas() bool {
+func (d *Deposit) IsGas() bool {
 	return d.CoinType == SUI
 }
 
-func parseDeposit(event models.SuiEventResponse, eventType EventType) (DepositData, error) {
+func parseDeposit(event models.SuiEventResponse, eventType EventType) (Deposit, error) {
 	parsedJSON := event.ParsedJson
 
 	coinType, err := extractStr(parsedJSON, "coin_type")
 	if err != nil {
-		return DepositData{}, err
+		return Deposit{}, err
 	}
 
 	amountRaw, err := extractStr(parsedJSON, "amount")
 	if err != nil {
-		return DepositData{}, err
+		return Deposit{}, err
 	}
 
 	amount, err := math.ParseUint(amountRaw)
 	if err != nil {
-		return DepositData{}, errors.Wrap(err, "unable to parse amount")
+		return Deposit{}, errors.Wrap(err, "unable to parse amount")
 	}
 
 	sender, err := extractStr(parsedJSON, "sender")
 	if err != nil {
-		return DepositData{}, err
+		return Deposit{}, err
 	}
 
 	receiverRaw, err := extractStr(parsedJSON, "receiver")
 	if err != nil {
-		return DepositData{}, err
+		return Deposit{}, err
 	}
 
 	receiver := ethcommon.HexToAddress(receiverRaw)
 	if receiver == (ethcommon.Address{}) {
-		return DepositData{}, errors.Errorf("invalid receiver address %q", receiverRaw)
+		return Deposit{}, errors.Errorf("invalid receiver address %q", receiverRaw)
 	}
 
 	var isCrosschainCall bool
 	var payload []byte
 
-	if eventType == DepositAndCall {
+	if eventType == DepositAndCallEvent {
 		isCrosschainCall = true
 
 		payloadRaw, ok := parsedJSON["payload"].([]any)
 		if !ok {
-			return DepositData{}, errors.New("invalid payload")
+			return Deposit{}, errors.New("invalid payload")
 		}
 
 		payload, err = convertPayload(payloadRaw)
 		if err != nil {
-			return DepositData{}, errors.Wrap(err, "unable to convert payload")
+			return Deposit{}, errors.Wrap(err, "unable to convert payload")
 		}
 	}
 
-	return DepositData{
+	return Deposit{
 		CoinType:         CoinType(coinType),
 		Amount:           amount,
 		Sender:           sender,

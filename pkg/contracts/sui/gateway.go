@@ -32,9 +32,9 @@ const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000
 
 // Event types
 const (
-	Deposit        EventType = "DepositEvent"
-	DepositAndCall EventType = "DepositAndCallEvent"
-	Withdraw       EventType = "WithdrawEvent"
+	DepositEvent        EventType = "DepositEvent"
+	DepositAndCallEvent EventType = "DepositAndCallEvent"
+	WithdrawEvent       EventType = "WithdrawEvent"
 )
 
 const moduleName = "gateway"
@@ -68,28 +68,28 @@ type Event struct {
 }
 
 func (e *Event) IsDeposit() bool {
-	return e.EventType == Deposit || e.EventType == DepositAndCall
+	return e.EventType == DepositEvent || e.EventType == DepositAndCallEvent
 }
 
 // Deposit extract DepositData.
-func (e *Event) Deposit() (DepositData, error) {
-	v, ok := e.content.(DepositData)
+func (e *Event) Deposit() (Deposit, error) {
+	v, ok := e.content.(Deposit)
 	if !ok {
-		return DepositData{}, errors.Errorf("invalid content type %T", e.content)
+		return Deposit{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
 }
 
 func (e *Event) IsWithdraw() bool {
-	return e.EventType == Withdraw
+	return e.EventType == WithdrawEvent
 }
 
 // Withdrawal extract WithdrawData.
-func (e *Event) Withdrawal() (WithdrawData, error) {
-	v, ok := e.content.(WithdrawData)
+func (e *Event) Withdrawal() (Withdrawal, error) {
+	v, ok := e.content.(Withdrawal)
 	if !ok {
-		return WithdrawData{}, errors.Errorf("invalid content type %T", e.content)
+		return Withdrawal{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -177,9 +177,9 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 
 	// Parse specific events
 	switch eventType {
-	case Deposit, DepositAndCall:
+	case DepositEvent, DepositAndCallEvent:
 		content, err = parseDeposit(event, eventType)
-	case Withdraw:
+	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
@@ -198,7 +198,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 }
 
 // ParseTxWithdrawal a syntax sugar around ParseEvent and Withdrawal.
-func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (event Event, w WithdrawData, err error) {
+func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (event Event, w Withdrawal, err error) {
 	if len(tx.Events) == 0 {
 		err = errors.New("missing events")
 		return event, w, err
