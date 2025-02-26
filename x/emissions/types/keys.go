@@ -55,10 +55,5 @@ var (
 	// PendingBallotsBufferBlocks is a buffer number of blocks
 	//(in addition to BallotMaturityBlocks)
 	// that we use only for pending ballots before deleting them
-	PendingBallotsBufferBlocks = SecondsToBlocks(60 * 60 * 24 * 10) // 10 days
+	PendingBallotsBufferBlocks = int64(144000) // 10 days(60 * 60 * 24 * 10)
 )
-
-// SecondsToBlocks converts seconds to blocks.It assumes that block time is 6 seconds
-func SecondsToBlocks(secs int64) int64 {
-	return secs / 6
-}
