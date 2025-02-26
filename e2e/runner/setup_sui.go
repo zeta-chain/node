@@ -16,10 +16,10 @@ import (
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
-	suiutils "github.com/zeta-chain/node/e2e/utils/sui"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -47,7 +47,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	client := r.Clients.Sui
 
-	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
+	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
 		CompiledModules: []string{suicontract.GatewayBytecodeBase64()},
 		Dependencies: []string{
@@ -58,11 +58,11 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	})
 	require.NoError(r, err, "create publish tx")
 
-	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	signature, err := deployerSigner.SignTxBlock(publishTx)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   publishReq.TxBytes,
+		TxBytes:   publishTx.TxBytes,
 		Signature: []string{signature},
 		Options: models.SuiTransactionBlockOptions{
 			ShowEffects:        true,
@@ -100,9 +100,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 		}
 	}
 
-	// set Sui gateway values
-	r.GatewayPackageID = packageID
-	r.GatewayObjectID = gatewayID
+	// Set sui gateway
+	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
 	// deploy fake USDC
 	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
@@ -135,7 +134,7 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	})
 	require.NoError(r, err, "create publish tx")
 
-	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	signature, err := deployerSigner.SignTxBlock(publishReq)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
@@ -175,7 +174,7 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 }
 
 // whitelistSuiFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it
-func (r *E2ERunner) whitelistSuiFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
+func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
 	// we use DeployFungibleCoinZRC20 and whitelist manually because whitelist cctx are currently not supported for Sui
 	// TODO: change this logic and use MsgWhitelistERC20 once it's supported
 	// https://github.com/zeta-chain/node/issues/3569
@@ -207,11 +206,11 @@ func (r *E2ERunner) whitelistSuiFakeUSDC(signer *suiutils.SignerSecp256k1, fakeU
 	// whitelist zrc20
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
-		PackageObjectId: r.GatewayPackageID,
+		PackageObjectId: r.SuiGateway.PackageID(),
 		Module:          "gateway",
 		Function:        "whitelist",
 		TypeArguments:   []any{"0x" + fakeUSDCCoinType},
-		Arguments:       []any{r.GatewayObjectID, whitelistCap},
+		Arguments:       []any{r.SuiGateway.ObjectID(), whitelistCap},
 		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err)
@@ -243,7 +242,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              r.GatewayPackageID,
+		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,

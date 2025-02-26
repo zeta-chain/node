@@ -12,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -53,9 +54,8 @@ const (
 var (
 	TestTimeout        = 20 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
+	noError            = testutil.NoError
 )
-
-var noError = testutil.NoError
 
 // NewLocalCmd returns the local command
 // which runs the E2E tests locally on the machine with localnet for each blockchain
@@ -288,7 +288,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
-
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
 
@@ -506,6 +505,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	if testSolana {
+		require.True(
+			deployerRunner,
+			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
+		)
+	}
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)

@@ -23,6 +23,7 @@
 * [3527](https://github.com/zeta-chain/node/pull/3527) - integrate SOL/SPL withdraw and call revert
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 * [3548](https://github.com/zeta-chain/node/pull/3548) - ensure cctx list is sorted by creation time
+* [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
 
 ### Refactor
 
@@ -39,6 +40,7 @@
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
+* [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
 
 ## v28.0.0

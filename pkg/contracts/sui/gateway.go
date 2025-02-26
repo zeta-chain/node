@@ -2,8 +2,10 @@ package sui
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -17,7 +19,13 @@ type EventType string
 
 // Gateway contains the API to read inbounds and sign outbounds to the Sui gateway
 type Gateway struct {
+	// packageID is the package ID of the gateway
 	packageID string
+
+	// gatewayObjectID is the object ID of the gateway struct
+	objectID string
+
+	mu sync.RWMutex
 }
 
 // SUI is the coin type for SUI, native gas token
@@ -25,8 +33,9 @@ const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000
 
 // Event types
 const (
-	Deposit        EventType = "DepositEvent"
-	DepositAndCall EventType = "DepositAndCallEvent"
+	DepositEvent        EventType = "DepositEvent"
+	DepositAndCallEvent EventType = "DepositAndCallEvent"
+	WithdrawEvent       EventType = "WithdrawEvent"
 )
 
 const moduleName = "gateway"
@@ -34,11 +43,20 @@ const moduleName = "gateway"
 // ErrParseEvent event parse error
 var ErrParseEvent = errors.New("event parse error")
 
-// NewGateway creates a new Sui gateway
-// Note: packageID is the equivalent for gateway address or program ID on Solana
-// It's what will be set in gateway chain params
-func NewGateway(packageID string) *Gateway {
-	return &Gateway{packageID: packageID}
+// NewGatewayFromPairID creates a new Sui Gateway
+// from pair of `$packageID,$gatewayObjectID`
+func NewGatewayFromPairID(pair string) (*Gateway, error) {
+	packageID, gatewayObjectID, err := parsePair(pair)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewGateway(packageID, gatewayObjectID), nil
+}
+
+// NewGateway creates a new Sui Gateway.
+func NewGateway(packageID string, gatewayObjectID string) *Gateway {
+	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
 // Event represents generic event wrapper
@@ -48,27 +66,74 @@ type Event struct {
 	EventType  EventType
 
 	content any
-	inbound bool
 }
 
-// IsInbound checks whether event is Inbound.
-func (e *Event) IsInbound() bool { return e.inbound }
+func (e *Event) IsDeposit() bool {
+	return e.EventType == DepositEvent || e.EventType == DepositAndCallEvent
+}
 
-// Inbound extract Inbound.
-func (e *Event) Inbound() (Inbound, error) {
-	if !e.inbound {
-		return Inbound{}, errors.Errorf("not an inbound (%+v)", e.content)
+// Deposit extract DepositData.
+func (e *Event) Deposit() (Deposit, error) {
+	v, ok := e.content.(Deposit)
+	if !ok {
+		return Deposit{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
-	return e.content.(Inbound), nil
+	return v, nil
 }
 
+func (e *Event) IsWithdraw() bool {
+	return e.EventType == WithdrawEvent
+}
+
+// Withdrawal extract WithdrawData.
+func (e *Event) Withdrawal() (Withdrawal, error) {
+	v, ok := e.content.(Withdrawal)
+	if !ok {
+		return Withdrawal{}, errors.Errorf("invalid content type %T", e.content)
+	}
+
+	return v, nil
+}
+
+// PackageID returns object id of Gateway code
 func (gw *Gateway) PackageID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
 	return gw.packageID
 }
 
+// ObjectID returns Gateway's struct object id
+func (gw *Gateway) ObjectID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
+	return gw.objectID
+}
+
+// Module returns Gateway's module name
 func (gw *Gateway) Module() string {
 	return moduleName
+}
+
+// WithdrawCapType returns struct type of the WithdrawCap
+func (gw *Gateway) WithdrawCapType() string {
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), moduleName)
+}
+
+// UpdateIDs updates packageID and objectID.
+func (gw *Gateway) UpdateIDs(pair string) error {
+	packageID, gatewayObjectID, err := parsePair(pair)
+	if err != nil {
+		return err
+	}
+
+	gw.mu.Lock()
+	defer gw.mu.Unlock()
+
+	gw.packageID = packageID
+	gw.objectID = gatewayObjectID
+
+	return nil
 }
 
 // ParseEvent parses Event.
@@ -108,15 +173,15 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 
 	var (
 		eventType = descriptor.eventType
-		inbound   bool
 		content   any
 	)
 
 	// Parse specific events
 	switch eventType {
-	case Deposit, DepositAndCall:
-		inbound = true
-		content, err = parseInbound(event, eventType)
+	case DepositEvent, DepositAndCallEvent:
+		content, err = parseDeposit(event, eventType)
+	case WithdrawEvent:
+		content, err = parseWithdrawal(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
@@ -129,10 +194,33 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		TxHash:     txHash,
 		EventIndex: eventID,
 		EventType:  eventType,
-
-		content: content,
-		inbound: inbound,
+		content:    content,
 	}, nil
+}
+
+// ParseTxWithdrawal a syntax sugar around ParseEvent and Withdrawal.
+func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (event Event, w Withdrawal, err error) {
+	if len(tx.Events) == 0 {
+		err = errors.New("missing events")
+		return event, w, err
+	}
+
+	event, err = gw.ParseEvent(tx.Events[0])
+	if err != nil {
+		return event, w, err
+	}
+
+	if !event.IsWithdraw() {
+		err = errors.Errorf("invalid event type %s", event.EventType)
+		return event, w, err
+	}
+
+	w, err = event.Withdrawal()
+	if err != nil {
+		return event, w, err
+	}
+
+	return event, w, err
 }
 
 type eventDescriptor struct {
@@ -190,4 +278,13 @@ func convertPayload(data []any) ([]byte, error) {
 	}
 
 	return decodedPayload, nil
+}
+
+func parsePair(pair string) (string, string, error) {
+	parts := strings.Split(pair, ",")
+	if len(parts) != 2 {
+		return "", "", errors.Errorf("invalid pair %q", pair)
+	}
+
+	return parts[0], parts[1], nil
 }

@@ -56,13 +56,14 @@ func (chain Chain) IsExternalChain() bool {
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
-	switch chain.Consensus {
-	case Consensus_ethereum:
+	if chain.Vm == Vm_evm {
 		addr := ethcommon.BytesToAddress(b)
 		if addr == (ethcommon.Address{}) {
 			return "", fmt.Errorf("invalid EVM address")
 		}
 		return addr.Hex(), nil
+	}
+	switch chain.Consensus {
 	case Consensus_bitcoin:
 		addrStr := string(b)
 		chainParams, err := GetBTCChainParams(chain.ChainId)

@@ -24,6 +24,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -118,12 +119,13 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	}
 
 	// set Sui contracts
-	if c := conf.Contracts.Sui.GatewayPackageID; c != "" {
-		r.GatewayPackageID = c.String()
+	suiPackageID := conf.Contracts.Sui.GatewayPackageID
+	suiGatewayID := conf.Contracts.Sui.GatewayObjectID
+
+	if suiPackageID != "" && suiGatewayID != "" {
+		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
-	if c := conf.Contracts.Sui.GatewayObjectID; c != "" {
-		r.GatewayObjectID = c.String()
-	}
+
 	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
 		r.SuiTokenCoinType = c.String()
 	}
