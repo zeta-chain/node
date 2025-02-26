@@ -48,7 +48,6 @@ func (r *E2ERunner) UpdateTSSAddressForGateway() {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	// we have to reference ERC20Custody since it's `TssAddress` on v2 and `TSSAddress` on v1
 	tssAddressOnGateway, err := r.GatewayEVM.TssAddress(&bind.CallOpts{Context: r.Ctx})
 	require.NoError(r, err)
 	require.Equal(r, r.TSSAddress, tssAddressOnGateway)
