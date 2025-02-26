@@ -16,6 +16,7 @@ func TestParseEvent(t *testing.T) {
 	// stubs
 	const (
 		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
 		sender    = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
 		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
@@ -24,7 +25,7 @@ func TestParseEvent(t *testing.T) {
 		return fmt.Sprintf("%s::%s::%s", packageID, moduleName, t)
 	}
 
-	gw := NewGateway(packageID)
+	gw := NewGateway(packageID, gatewayID)
 
 	receiverAlice := sample.EthAddress()
 	receiverBob := sample.EthAddress()
@@ -57,19 +58,18 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, Deposit, out.EventType)
+				assert.Equal(t, DepositEvent, out.EventType)
 				assert.Equal(t, uint64(0), out.EventIndex)
 
-				assert.True(t, out.IsInbound())
-
-				inbound, err := out.Inbound()
+				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, inbound.CoinType)
-				assert.True(t, math.NewUint(100).Equal(inbound.Amount))
-				assert.Equal(t, sender, inbound.Sender)
-				assert.Equal(t, receiverAlice, inbound.Receiver)
-				assert.False(t, inbound.IsCrossChainCall)
+				assert.Equal(t, SUI, deposit.CoinType)
+				assert.True(t, math.NewUint(100).Equal(deposit.Amount))
+				assert.Equal(t, sender, deposit.Sender)
+				assert.Equal(t, receiverAlice, deposit.Receiver)
+				assert.False(t, deposit.IsCrossChainCall)
+				assert.True(t, deposit.IsGas())
 			},
 		},
 		{
@@ -89,20 +89,18 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
-				assert.True(t, out.IsInbound())
-
-				inbound, err := out.Inbound()
+				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, inbound.CoinType)
-				assert.True(t, math.NewUint(200).Equal(inbound.Amount))
-				assert.Equal(t, sender, inbound.Sender)
-				assert.Equal(t, receiverBob, inbound.Receiver)
-				assert.True(t, inbound.IsCrossChainCall)
-				assert.Equal(t, []byte{0, 1, 2}, inbound.Payload)
+				assert.Equal(t, SUI, deposit.CoinType)
+				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
+				assert.Equal(t, sender, deposit.Sender)
+				assert.Equal(t, receiverBob, deposit.Receiver)
+				assert.True(t, deposit.IsCrossChainCall)
+				assert.Equal(t, []byte{0, 1, 2}, deposit.Payload)
 			},
 		},
 		{
@@ -122,20 +120,47 @@ func TestParseEvent(t *testing.T) {
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, DepositAndCall, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
-				assert.True(t, out.IsInbound())
-
-				inbound, err := out.Inbound()
+				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, SUI, inbound.CoinType)
-				assert.True(t, math.NewUint(200).Equal(inbound.Amount))
-				assert.Equal(t, sender, inbound.Sender)
-				assert.Equal(t, receiverBob, inbound.Receiver)
-				assert.True(t, inbound.IsCrossChainCall)
-				assert.Equal(t, []byte{}, inbound.Payload)
+				assert.Equal(t, SUI, deposit.CoinType)
+				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
+				assert.Equal(t, sender, deposit.Sender)
+				assert.Equal(t, receiverBob, deposit.Receiver)
+				assert.True(t, deposit.IsCrossChainCall)
+				assert.Equal(t, []byte{}, deposit.Payload)
+			},
+		},
+		{
+			name: "withdraw",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("WithdrawEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"nonce":     "123",
+				},
+			},
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, WithdrawEvent, out.EventType)
+
+				wd, err := out.Withdrawal()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, wd.CoinType)
+				assert.True(t, math.NewUint(200).Equal(wd.Amount))
+				assert.Equal(t, sender, wd.Sender)
+				assert.Equal(t, receiverBob.String(), wd.Receiver)
+				assert.True(t, wd.IsGas())
 			},
 		},
 		// ERRORS
@@ -176,7 +201,7 @@ func TestParseEvent(t *testing.T) {
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId:         packageID,
-				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", Deposit),
+				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", DepositEvent),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",

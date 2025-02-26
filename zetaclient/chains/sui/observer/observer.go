@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -19,6 +20,13 @@ type Observer struct {
 	*base.Observer
 	client  RPC
 	gateway *sui.Gateway
+
+	// nonce -> sui outbound tx
+	txMap map[uint64]models.SuiTransactionBlockResponse
+	txMu  sync.RWMutex
+
+	latestGasPrice uint64
+	gasPriceMu     sync.RWMutex
 }
 
 // RPC represents subset of Sui RPC methods.
@@ -41,8 +49,12 @@ func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observe
 		Observer: baseObserver,
 		client:   client,
 		gateway:  gateway,
+		txMap:    make(map[uint64]models.SuiTransactionBlockResponse),
 	}
 }
+
+// Gateway returns Sui gateway.
+func (ob *Observer) Gateway() *sui.Gateway { return ob.gateway }
 
 // CheckRPCStatus checks the RPC status of the chain.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
@@ -90,12 +102,27 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// no priority fee for Sui
 	const priorityFee = 0
 
+	ob.setLatestGasPrice(gasPrice)
+
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
 	}
 
 	return nil
+}
+
+func (ob *Observer) getLatestGasPrice() uint64 {
+	ob.gasPriceMu.RLock()
+	defer ob.gasPriceMu.RUnlock()
+
+	return ob.latestGasPrice
+}
+
+func (ob *Observer) setLatestGasPrice(price uint64) {
+	ob.gasPriceMu.Lock()
+	defer ob.gasPriceMu.Unlock()
+	ob.latestGasPrice = price
 }
 
 // ensureCursor ensures tx scroll cursor for inbound observations

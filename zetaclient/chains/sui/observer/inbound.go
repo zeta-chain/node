@@ -105,8 +105,6 @@ func (ob *Observer) processInboundEvent(
 		return nil
 	case err != nil:
 		return errors.Wrap(err, "unable to parse event")
-	case !event.IsInbound():
-		ob.Logger().Inbound.Info().Msg("Not an inbound event. Skipping")
 	case event.EventIndex != 0:
 		// Is it possible to have multiple events per tx?
 		// e.g. contract "A" calls Gateway multiple times in a single tx (deposit to multiple accounts)
@@ -163,14 +161,16 @@ func (ob *Observer) constructInboundVote(
 	event sui.Event,
 	tx models.SuiTransactionBlockResponse,
 ) (*cctypes.MsgVoteInbound, error) {
-	inbound, err := event.Inbound()
+	deposit, err := event.Deposit()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to extract inbound")
 	}
 
 	coinType := coin.CoinType_Gas
-	if !inbound.IsGasDeposit() {
+	asset := ""
+	if !deposit.IsGas() {
 		coinType = coin.CoinType_ERC20
+		asset = string(deposit.CoinType)
 	}
 
 	// Sui uses checkpoint seq num instead of block height
@@ -179,21 +179,15 @@ func (ob *Observer) constructInboundVote(
 		return nil, errors.Wrap(err, "unable to parse checkpoint")
 	}
 
-	// Empty or full SUI coin name
-	var asset string
-	if !inbound.IsGasDeposit() {
-		asset = string(inbound.CoinType)
-	}
-
 	return cctypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		inbound.Sender,
+		deposit.Sender,
 		ob.Chain().ChainId,
-		inbound.Sender,
-		inbound.Receiver.String(),
+		deposit.Sender,
+		deposit.Receiver.String(),
 		ob.ZetacoreClient().Chain().ChainId,
-		inbound.Amount,
-		hex.EncodeToString(inbound.Payload),
+		deposit.Amount,
+		hex.EncodeToString(deposit.Payload),
 		event.TxHash,
 		checkpointSeqNum,
 		zetacore.PostVoteInboundCallOptionsGasLimit,
@@ -204,6 +198,6 @@ func (ob *Observer) constructInboundVote(
 		false,
 		cctypes.InboundStatus_SUCCESS,
 		cctypes.ConfirmationMode_SAFE,
-		cctypes.WithCrossChainCall(inbound.IsCrossChainCall),
+		cctypes.WithCrossChainCall(deposit.IsCrossChainCall),
 	), nil
 }

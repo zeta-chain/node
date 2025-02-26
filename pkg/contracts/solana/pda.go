@@ -16,4 +16,7 @@ type PdaInfo struct {
 
 	// ChainId is the Solana chain id
 	ChainID uint64
+
+	// DepositPaused is the flag to indicate if the deposit is paused
+	DepositPaused bool
 }

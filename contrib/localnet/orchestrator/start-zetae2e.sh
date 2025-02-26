@@ -10,6 +10,8 @@
 # Trap signals and forward to children
 trap 'kill -- -$$' SIGINT SIGTERM
 
+/usr/sbin/sshd
+
 get_zetacored_version() {
   retries=10
   node_info=""

@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"gopkg.in/yaml.v3"
 
-	sui_utils "github.com/zeta-chain/node/e2e/utils/sui"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 // DoubleQuotedString forces a string to be double quoted when marshaling to yaml.
@@ -419,14 +419,14 @@ func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(a.RawPrivateKey.String())
 }
 
-// SuiSigner derives the blake2b hash from the private key
-func (a Account) SuiSigner() (*sui_utils.SignerSecp256k1, error) {
+// SuiAddress derives the blake2b hash from the private key
+func (a Account) SuiSigner() (*sui.SignerSecp256k1, error) {
 	privateKeyBytes, err := hex.DecodeString(a.RawPrivateKey.String())
 	if err != nil {
 		return nil, fmt.Errorf("decode private key: %w", err)
 	}
-	signer := sui_utils.NewSignerSecp256k1FromSecretKey(privateKeyBytes)
-	return signer, nil
+
+	return sui.NewSignerSecp256k1(privateKeyBytes), nil
 }
 
 // Validate that the address and the private key specified in the

@@ -20,9 +20,10 @@ import (
 
 // Scheduler represents background task scheduler.
 type Scheduler struct {
-	tasks  map[uuid.UUID]*Task
-	mu     sync.RWMutex
-	logger zerolog.Logger
+	tasks           map[uuid.UUID]*Task
+	mu              sync.RWMutex
+	logger          zerolog.Logger
+	defaultInterval time.Duration
 }
 
 // Executable arbitrary function that can be executed.
@@ -68,10 +69,15 @@ type taskOpts struct {
 }
 
 // New Scheduler instance.
-func New(logger zerolog.Logger) *Scheduler {
+func New(logger zerolog.Logger, defaultInterval time.Duration) *Scheduler {
+	if defaultInterval <= 0 {
+		defaultInterval = time.Second * 10
+	}
+
 	return &Scheduler{
-		tasks:  make(map[uuid.UUID]*Task),
-		logger: logger.With().Str("module", "scheduler").Logger(),
+		tasks:           make(map[uuid.UUID]*Task),
+		logger:          logger.With().Str("module", "scheduler").Logger(),
+		defaultInterval: defaultInterval,
 	}
 }
 
@@ -87,7 +93,7 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	}
 
 	config := &taskOpts{
-		interval: time.Second * 10,
+		interval: s.defaultInterval,
 	}
 
 	for _, opt := range opts {
