@@ -41,7 +41,7 @@ func (r *E2ERunner) ETHDeposit(
 	return tx
 }
 
-// DepositEther sends Ethers into ZEVM using V2 protocol contracts
+// DepositEtherDeployer sends Ethers into ZEVM using V2 protocol contracts
 func (r *E2ERunner) DepositEtherDeployer() ethcommon.Hash {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
 	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
