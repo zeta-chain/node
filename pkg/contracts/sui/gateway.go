@@ -1,8 +1,8 @@
 package sui
 
 import (
-	"fmt"
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"

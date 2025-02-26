@@ -16,10 +16,10 @@ import (
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
-	suiutils "github.com/zeta-chain/node/e2e/utils/sui"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -135,7 +135,7 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 	})
 	require.NoError(r, err, "create publish tx")
 
-	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	signature, err := deployerSigner.SignTxBlock(publishReq)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
@@ -175,7 +175,7 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 }
 
 // whitelistSuiFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it
-func (r *E2ERunner) whitelistSuiFakeUSDC(signer *suiutils.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
+func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUSDCCoinType, whitelistCap string) {
 	// we use DeployFungibleCoinZRC20 and whitelist manually because whitelist cctx are currently not supported for Sui
 	// TODO: change this logic and use MsgWhitelistERC20 once it's supported
 	// https://github.com/zeta-chain/node/issues/3569

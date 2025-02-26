@@ -9,8 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/zeta-chain/node/e2e/utils/sui"
-	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 // SuiDepositSUI calls Deposit on Sui
@@ -25,7 +24,7 @@ func (r *E2ERunner) SuiDepositSUI(
 	coinObjectID := r.suiSplitSUI(signer, amount)
 
 	// create the tx
-	return r.suiExecuteDeposit(signer, string(zetasui.SUI), coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, string(sui.SUI), coinObjectID, receiver)
 }
 
 // SuiDepositAndCallSUI calls DepositAndCall on Sui
@@ -41,7 +40,7 @@ func (r *E2ERunner) SuiDepositAndCallSUI(
 	coinObjectID := r.suiSplitSUI(signer, amount)
 
 	// create the tx
-	return r.suiExecuteDepositAndCall(signer, string(zetasui.SUI), coinObjectID, receiver, payload)
+	return r.suiExecuteDepositAndCall(signer, string(sui.SUI), coinObjectID, receiver, payload)
 }
 
 // SuiDepositFungibleToken calls Deposit with fungible token on Sui
@@ -171,7 +170,7 @@ func (r *E2ERunner) suiSplitUSDC(signer *sui.SignerSecp256k1, balance math.Uint)
 // suiSplitSUI splits SUI coin and obtain a SUI coin object with the wanted balance
 func (r *E2ERunner) suiSplitSUI(signer *sui.SignerSecp256k1, balance math.Uint) (objID string) {
 	// find the coin to split
-	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, string(zetasui.SUI))
+	originalCoin := r.suiFindCoinWithBalanceAbove(signer.Address(), balance, string(sui.SUI))
 
 	// split the coin using the PaySui API
 	tx, err := r.Clients.Sui.PaySui(r.Ctx, models.PaySuiRequest{
@@ -186,7 +185,7 @@ func (r *E2ERunner) suiSplitSUI(signer *sui.SignerSecp256k1, balance math.Uint) 
 	r.suiExecuteTx(signer, tx)
 
 	// find the split coin
-	return r.suiFindCoinWithBalance(signer.Address(), balance, string(zetasui.SUI))
+	return r.suiFindCoinWithBalance(signer.Address(), balance, string(sui.SUI))
 }
 
 func (r *E2ERunner) suiFindCoinWithBalance(
@@ -241,7 +240,7 @@ func (r *E2ERunner) suiExecuteTx(
 	tx models.TxnMetaData,
 ) models.SuiTransactionBlockResponse {
 	// sign the tx
-	signature, err := signer.SignTransactionBlock(tx.TxBytes)
+	signature, err := signer.SignTxBlock(tx)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
