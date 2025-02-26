@@ -90,7 +90,12 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 		logger.Print("❌ tss migration failed")
 		os.Exit(1)
 	}
+
+	// Update TSS address for contracts in connected chains
+	// TODO : Update TSS address for other chains if necessary
+	// https://github.com/zeta-chain/node/issues/3599
 	deployerRunner.UpdateTSSAddressForConnector()
 	deployerRunner.UpdateTSSAddressForERC20custody()
+	deployerRunner.UpdateTSSAddressForGateway()
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }
