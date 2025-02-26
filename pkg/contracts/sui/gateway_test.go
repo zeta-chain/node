@@ -1,6 +1,7 @@
 package sui
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -27,6 +28,12 @@ func TestParseEvent(t *testing.T) {
 
 	receiverAlice := sample.EthAddress()
 	receiverBob := sample.EthAddress()
+
+	var payload []any
+	payloadBytes := []byte(base64.StdEncoding.EncodeToString([]byte{0, 1, 2}))
+	for _, p := range payloadBytes {
+		payload = append(payload, float64(p))
+	}
 
 	for _, tt := range []struct {
 		name        string
@@ -77,7 +84,7 @@ func TestParseEvent(t *testing.T) {
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
-					"payload":   []any{float64(0), float64(1), float64(2)},
+					"payload":   payload,
 				},
 			},
 			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {

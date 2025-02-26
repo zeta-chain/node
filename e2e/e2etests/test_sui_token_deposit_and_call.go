@@ -16,7 +16,7 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	oldBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	oldBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 
 	payload := randomPayload(r)
@@ -36,7 +36,7 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)
 
-	newBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	newBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
 }
