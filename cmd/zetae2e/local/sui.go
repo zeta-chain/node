@@ -35,13 +35,13 @@ func suiTestRoutine(
 		suiRunner.Logger.Print("🏃 starting Sui tests")
 		startTime := time.Now()
 
-		// get tokens for the account
-		suiRunner.RequestSuiFaucetToken(conf.RPCs.SuiFaucet)
-
 		suiRunnerSigner, err := suiRunner.Account.SuiSigner()
 		if err != nil {
 			return err
 		}
+
+		// get tokens for the account
+		suiRunner.RequestSuiFromFaucet(conf.RPCs.SuiFaucet, suiRunnerSigner.Address())
 
 		// mint fungible tokens to the account
 		txRes := deployerRunner.MintSuiUSDC("10000000", suiRunnerSigner.Address())

@@ -26,14 +26,10 @@ import (
 
 const changeTypeCreated = "created"
 
-// RequestSuiFaucetToken requests SUI tokens from the faucet for the runner account
-func (r *E2ERunner) RequestSuiFaucetToken(faucetURL string) {
-	deployerSigner, err := r.Account.SuiSigner()
-	require.NoError(r, err, "get deployer signer")
-	deployerAddress := deployerSigner.Address()
-
+// RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
+func (r *E2ERunner) RequestSuiFromFaucet(faucetURL, recipient string) {
 	header := map[string]string{}
-	err = sui.RequestSuiFromFaucet(faucetURL, deployerAddress, header)
+	err := sui.RequestSuiFromFaucet(faucetURL, recipient, header)
 	require.NoError(r, err, "sui faucet request to %s", faucetURL)
 }
 
