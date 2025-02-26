@@ -34,7 +34,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to query module events")
 	}
 
-	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing sui inbound events")
+	if len(events) == 0 {
+		ob.Logger().Inbound.Debug().Msg("No inbound events found")
+		return nil
+	}
+
+	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
