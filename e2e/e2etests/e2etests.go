@@ -91,6 +91,8 @@ const (
 	TestSuiDepositAndCallName      = "sui_deposit_and_call"
 	TestSuiTokenDepositName        = "sui_token_deposit"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawName            = "sui_withdraw"
+	TestSuiTokenWithdrawName       = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
@@ -720,6 +722,22 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
 		},
 		TestSuiTokenDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawName,
+		"withdraw SUI from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawName,
+		"withdraw fungible token from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "1000000"},
+		},
+		TestSuiTokenWithdraw,
 	),
 	/*
 	 Bitcoin tests
