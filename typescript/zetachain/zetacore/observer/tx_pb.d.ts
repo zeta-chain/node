@@ -243,9 +243,9 @@ export declare class MsgUpdateOperationalChainParams extends Message<MsgUpdateOp
   confirmationParams?: ConfirmationParams;
 
   /**
-   * @generated from field: bool skip_block_scan = 10;
+   * @generated from field: bool disable_block_scan = 10;
    */
-  skipBlockScan: boolean;
+  disableBlockScan: boolean;
 
   constructor(data?: PartialMessage<MsgUpdateOperationalChainParams>);
 

@@ -151,7 +151,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 	)
 
 	// we now only take these actions on specific configurable chains
-	if !ob.ChainParams().SkipBlockScan {
+	if !ob.ChainParams().DisableBlockScan {
 		// query the incoming tx to TSS address (read at most 100 blocks in one go)
 		lastScannedTssRecvd, err = ob.observeTSSReceive(ctx, startBlock, toBlock)
 		if err != nil {

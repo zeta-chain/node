@@ -145,7 +145,7 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 				SafeInboundCount:  1008,
 				SafeOutboundCount: 1009,
 			},
-			SkipBlockScan: true,
+			DisableBlockScan: true,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
@@ -163,7 +163,7 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 		require.NotEqualValues(t, originalChainParams.OutboundScheduleInterval, msg.OutboundScheduleInterval)
 		require.NotEqualValues(t, originalChainParams.OutboundScheduleLookahead, msg.OutboundScheduleLookahead)
 		require.NotEqualValues(t, *originalChainParams.ConfirmationParams, msg.ConfirmationParams)
-		require.NotEqualValues(t, originalChainParams.SkipBlockScan, msg.SkipBlockScan)
+		require.NotEqualValues(t, originalChainParams.DisableBlockScan, msg.DisableBlockScan)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{

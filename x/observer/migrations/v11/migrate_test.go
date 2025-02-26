@@ -46,11 +46,11 @@ func TestMigrateStore(t *testing.T) {
 		require.Len(t, newChainParams.ChainParams, len(oldChainParams.ChainParams))
 
 		for _, params := range newChainParams.ChainParams {
-			// verify that chains that should have SkipBlockScan set to true
+			// verify that chains that should have DisableBlockScan set to true
 			if params.ChainId == chains.Amoy.ChainId || params.ChainId == chains.ArbitrumMainnet.ChainId {
-				require.True(t, params.SkipBlockScan, "SkipBlockScan should be true for chain %d", params.ChainId)
+				require.True(t, params.DisableBlockScan, "DisableBlockScan should be true for chain %d", params.ChainId)
 			} else {
-				require.False(t, params.SkipBlockScan, "SkipBlockScan should be false for chain %d", params.ChainId)
+				require.False(t, params.DisableBlockScan, "DisableBlockScan should be false for chain %d", params.ChainId)
 			}
 		}
 	})

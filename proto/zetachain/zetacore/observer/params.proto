@@ -37,7 +37,7 @@ message ChainParams {
 
   // Skip actions that require scanning the contents of each block.
   // The main thing this disables is transfers directly to the TSS address.
-  bool skip_block_scan = 19;
+  bool disable_block_scan = 19;
 }
 
 // Deprecated(v17)

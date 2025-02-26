@@ -124,9 +124,9 @@ export declare class ChainParams extends Message<ChainParams> {
    * Skip actions that require scanning the contents of each block.
    * The main thing this disables is transfers directly to the TSS address.
    *
-   * @generated from field: bool skip_block_scan = 19;
+   * @generated from field: bool disable_block_scan = 19;
    */
-  skipBlockScan: boolean;
+  disableBlockScan: boolean;
 
   constructor(data?: PartialMessage<ChainParams>);
 
