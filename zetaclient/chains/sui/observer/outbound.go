@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
-	cc "github.com/zeta-chain/node/x/crosschain/types"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -78,7 +78,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 // VoteOutbound calculates outbound result based on cctx and in-mem Sui tx
 // and votes the ballot to zetacore.
-func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cc.CrossChainTx) error {
+func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx) error {
 	chainID := ob.Chain().ChainId
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
@@ -134,7 +134,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cc.CrossChainTx) err
 	}
 
 	// Create message
-	msg := cc.NewMsgVoteOutbound(
+	msg := cctypes.NewMsgVoteOutbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		cctx.Index,
 		tx.Digest,
@@ -147,7 +147,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cc.CrossChainTx) err
 		chainID,
 		nonce,
 		coinType,
-		cc.ConfirmationMode_SAFE,
+		cctypes.ConfirmationMode_SAFE,
 	)
 
 	// TODO compliance checks
@@ -163,7 +163,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cc.CrossChainTx) err
 }
 
 // loadOutboundTx loads cross-chain outbound tx by digest and ensures its authenticity.
-func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cc.CrossChainTx, digest string) error {
+func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cctypes.CrossChainTx, digest string) error {
 	res, err := ob.client.SuiGetTransactionBlock(ctx, models.SuiGetTransactionBlockRequest{
 		Digest: digest,
 		Options: models.SuiTransactionBlockOptions{
@@ -188,7 +188,7 @@ func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cc.CrossChainTx, d
 
 // validateOutbound validates the authenticity of the outbound transaction.
 // Note that it doesn't care about successful execution (e.g. something failed).
-func (ob *Observer) validateOutbound(cctx *cc.CrossChainTx, tx models.SuiTransactionBlockResponse) error {
+func (ob *Observer) validateOutbound(cctx *cctypes.CrossChainTx, tx models.SuiTransactionBlockResponse) error {
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	inputs := tx.Transaction.Data.Transaction.Inputs
@@ -223,7 +223,7 @@ func (ob *Observer) validateOutbound(cctx *cc.CrossChainTx, tx models.SuiTransac
 	return nil
 }
 
-func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cc.MsgVoteOutbound) error {
+func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOutbound) error {
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
 	retryGasLimit := uint64(0)
@@ -305,6 +305,11 @@ func parseGasUsed(tx models.SuiTransactionBlockResponse) (uint64, error) {
 	storageRebate, err := parseUint64(gas.StorageRebate)
 	if err != nil {
 		return 0, errors.Wrap(err, "storage rebate")
+	}
+
+	// should not happen
+	if (compCost + storageCost) < storageRebate {
+		return 0, errors.New("storage rebate exceeds total costs")
 	}
 
 	return compCost + storageCost - storageRebate, nil

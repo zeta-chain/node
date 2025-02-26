@@ -25,8 +25,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	case params.ReceiverChainId != s.Chain().ChainId:
 		return tx, errors.Errorf("invalid receiver chain id %d", params.ReceiverChainId)
 	case cctx.ProtocolContractVersion != cctypes.ProtocolContractVersion_V2:
-		v := cctx.ProtocolContractVersion
-		return tx, errors.Errorf("invalid protocol version %q", v)
+		return tx, errors.Errorf("invalid protocol version %q", cctx.ProtocolContractVersion)
 	case cctx.InboundParams == nil:
 		return tx, errors.New("inbound params are nil")
 	case cctx.InboundParams.IsCrossChainCall:

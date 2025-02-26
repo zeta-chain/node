@@ -47,6 +47,8 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 
 		res, err := s.client.SuiGetTransactionBlock(ctx, req)
 		switch {
+		case ctx.Err() != nil:
+			return errors.Wrap(ctx.Err(), "Failed to get transaction block")
 		case err != nil:
 			logger.Error().Err(err).Msg("Failed to get transaction block")
 			continue
