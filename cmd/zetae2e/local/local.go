@@ -417,7 +417,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWhitelistSPLName,
 		}
 
-		// Add newly added tests(v29) if not running and upgrade
+		// Add newly added tests(v29) if not running an upgrade
 		if !deployerRunner.IsRunningUpgrade() {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaWithdrawAndCallName,
