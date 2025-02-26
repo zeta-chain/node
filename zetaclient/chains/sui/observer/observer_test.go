@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -65,30 +66,11 @@ func TestObserver(t *testing.T) {
 
 		const usdc = "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
 
-		// Given gateway object from RPC (for "ensuring" the initial scroll cursor)
-		gatewayRequest := models.SuiGetObjectRequest{
-			ObjectId: ts.gateway.PackageID(),
-			Options: models.SuiObjectDataOptions{
-				ShowPreviousTransaction: true,
-			},
-		}
-
-		gatewayObject := models.SuiObjectResponse{
-			Data: &models.SuiObjectData{
-				ObjectId:            ts.gateway.PackageID(),
-				PreviousTransaction: "ABC123_first_tx",
-			},
-		}
-
-		ts.suiMock.
-			On("SuiGetObject", mock.Anything, gatewayRequest).
-			Return(gatewayObject, nil)
-
 		// Given list of gateway events...
 		expectedQuery := client.EventQuery{
 			PackageID: ts.gateway.PackageID(),
 			Module:    ts.gateway.Module(),
-			Cursor:    "ABC123_first_tx,0",
+			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
 		}
 
@@ -112,7 +94,7 @@ func TestObserver(t *testing.T) {
 				"amount":    "300",
 				"sender":    "SUI_ALICE",
 				"receiver":  evmAlice.String(),
-				"payload":   []any{float64(1), float64(2), float64(3)},
+				"payload":   preparePayload([]byte{1, 2, 3}),
 			}),
 			ts.SampleEvent("TX_4_invalid_data", string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
@@ -141,7 +123,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, "TX_4_invalid_data,0", ts.LastTxScanned())
 
 		// Check for transactions
-		assert.Equal(t, 2, len(ts.inboundVotesBag))
+		require.Equal(t, 2, len(ts.inboundVotesBag))
 
 		vote1 := ts.inboundVotesBag[0]
 		assert.Equal(t, "TX_1_ok", vote1.InboundHash)
@@ -502,4 +484,15 @@ func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *m
 	return ts.zetaMock.
 		On("GetAllOutboundTrackerByChain", mock.Anything, ts.Chain().ChainId, mock.Anything).
 		Return(trackers, nil)
+}
+
+func preparePayload(payload []byte) []any {
+	payloadBytes := []byte(base64.StdEncoding.EncodeToString(payload))
+
+	var out []any
+	for _, p := range payloadBytes {
+		out = append(out, float64(p))
+	}
+
+	return out
 }
