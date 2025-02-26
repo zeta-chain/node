@@ -23,7 +23,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	client := r.Clients.Sui
 
-	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
+	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
 		CompiledModules: []string{suicontract.GatewayBytecodeBase64()},
 		Dependencies: []string{
@@ -34,11 +34,11 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	})
 	require.NoError(r, err, "create publish tx")
 
-	signature, err := deployerSigner.SignTransactionBlock(publishReq.TxBytes)
+	signature, err := deployerSigner.SignTxBlock(publishTx)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   publishReq.TxBytes,
+		TxBytes:   publishTx.TxBytes,
 		Signature: []string{signature},
 		Options: models.SuiTransactionBlockOptions{
 			ShowEffects:        true,

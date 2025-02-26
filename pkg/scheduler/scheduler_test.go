@@ -34,10 +34,10 @@ func TestScheduler(t *testing.T) {
 		ts.scheduler.Stop()
 
 		// ASSERT
-		// Counter should be 1 because we invoke a task once on a start,
-		// once after 10 second (default interval),
+		// Counter should be 2 because we invoke a task once on a start,
+		// once after 1 second
 		// and then at T=1.5s we stop the scheduler.
-		assert.Equal(t, int32(1), counter)
+		assert.Equal(t, int32(2), counter)
 
 		// Check logs
 		assert.Contains(t, ts.logger.String(), "Stopped scheduler task")
@@ -361,7 +361,7 @@ type testSuite struct {
 func newTestSuite(t *testing.T) *testSuite {
 	logger := testlog.New(t)
 
-	scheduler := New(logger.Logger)
+	scheduler := New(logger.Logger, time.Second)
 	t.Cleanup(scheduler.Stop)
 
 	return &testSuite{
