@@ -103,6 +103,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// Set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
+	// deploy SUI zrc20
+	r.deploySUIZRC20()
+
 	// deploy fake USDC
 	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
@@ -113,6 +116,27 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// set the chain params
 	err = r.setSuiChainParams()
 	require.NoError(r, err)
+}
+
+// deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
+func (r *E2ERunner) deploySUIZRC20() {
+	// send message to deploy SUI zrc20
+	adminAddr := r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		adminAddr,
+		"",
+		chains.SuiLocalnet.ChainId,
+		9,
+		"SUI",
+		"SUI",
+		coin.CoinType_Gas,
+		100000,
+		nil,
+	))
+	require.NoError(r, err)
+
+	// set the address in the store
+	r.SetupSUIZRC20()
 }
 
 // deployFakeUSDC deploys the FakeUSDC contract on Sui
