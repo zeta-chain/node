@@ -40,7 +40,6 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		return errorsmod.Wrap(types.ErrChainParamsNotFound, "failed to get chain params")
 	}
 
-	// set new fields to the same value as 'confirmation_count'
 	for _, chainParams := range allChainParams.ChainParams {
 		if chainParams == nil {
 			continue
