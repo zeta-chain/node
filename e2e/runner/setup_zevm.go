@@ -74,6 +74,12 @@ func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 		r.Logger.Info("System contract deployments took %s\n", time.Since(startTime))
 	}()
 
+	// ensure Sui chain info exists for the upgrade test
+	// TODO: remove this logic after v29 upgrade
+	// https://github.com/zeta-chain/node/issues/3545
+	err := r.ZetaTxServer.UpdateChainInfo(chains.SuiLocalnet)
+	require.NoError(r, err)
+
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	deployedZRC20Addresses, err := r.ZetaTxServer.DeployZRC20s(
 		zrc20Deployment,
