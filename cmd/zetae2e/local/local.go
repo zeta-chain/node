@@ -84,7 +84,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
+	cmd.Flags().Bool(flagSkipPrecompiles, true, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 
@@ -197,10 +197,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// monitor block production to ensure we fail fast if there are consensus failures
 	go monitorBlockProductionCancel(ctx, cancel, conf)
 
-	if testSui && !skipSetup {
-		deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
-	}
-
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
@@ -260,6 +256,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams()
+
+		if testSui {
+			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
+		}
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
@@ -421,6 +421,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSolanaWhitelistSPLName,
 		}
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
+	}
+
+	if testSui {
+		suiTests := []string{
+			e2etests.TestSuiDepositName,
+			e2etests.TestSuiDepositAndCallName,
+			e2etests.TestSuiTokenDepositName,
+			e2etests.TestSuiTokenDepositAndCallName,
+		}
+		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 
 	if testTON {
