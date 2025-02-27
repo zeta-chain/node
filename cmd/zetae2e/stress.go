@@ -129,7 +129,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	// setup TSS addresses
 	noError(e2eTest.SetTSSAddresses())
-	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed)
+	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed, false)
 
 	// If stress test is running on local docker environment
 	switch stressTestArgs.network {
