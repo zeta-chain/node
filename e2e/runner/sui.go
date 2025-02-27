@@ -31,8 +31,8 @@ func (r *E2ERunner) SuiWithdrawSUI(
 	receiver string,
 	amount *big.Int,
 ) *ethtypes.Transaction {
-	receiverBytes, err := hex.DecodeString(receiver)
-	require.NoError(r, err)
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
 
 	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,

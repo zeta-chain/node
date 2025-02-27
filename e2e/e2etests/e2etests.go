@@ -695,7 +695,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiDepositName,
 		"deposit SUI into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in mist", DefaultValue: "10000000"},
+			{Description: "amount in mist", DefaultValue: "10000000000"},
 		},
 		TestSuiDeposit,
 	),

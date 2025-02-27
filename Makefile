@@ -318,7 +318,7 @@ start-ton-test: e2e-images
 
 start-sui-test: e2e-images
 	@echo "--> Starting sui test"
-	export E2E_ARGS="--skip-regular --test-sui" && \
+	export E2E_ARGS="--skip-regular --test-sui --verbose" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
 
 start-legacy-test: e2e-images

@@ -75,13 +75,13 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 
 	// find packageID
-	var packageID, gatewayID, whitelistID string
+	var packageID, gatewayID, whitelistCapID, withdrawCapID string
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "published" {
 			packageID = change.PackageId
 		}
 	}
-	require.NotEmpty(r, packageID, "find packageID")
+	require.NotEmpty(r, packageID, "packageID not found")
 
 	// find gateway objectID
 	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
@@ -90,25 +90,37 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 			gatewayID = change.ObjectId
 		}
 	}
-	require.NotEmpty(r, gatewayID, "find gatewayID")
+	require.NotEmpty(r, gatewayID, "gatewayID not found")
 
-	// find whitelist objectID
+	// find WhitelistCap objectID
 	whitelistType := fmt.Sprintf("%s::gateway::WhitelistCap", packageID)
 	for _, change := range resp.ObjectChanges {
 		if change.Type == changeTypeCreated && change.ObjectType == whitelistType {
-			whitelistID = change.ObjectId
+			whitelistCapID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, whitelistCapID, "whitelistID not found")
+
+	// find WithdrawCap objectID
+	withdrawCapType := fmt.Sprintf("%s::gateway::WithdrawCap", packageID)
+	for _, change := range resp.ObjectChanges {
+		if change.Type == changeTypeCreated && change.ObjectType == withdrawCapType {
+			withdrawCapID = change.ObjectId
 		}
 	}
 
-	// Set sui gateway
+	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
 	// deploy fake USDC
 	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
-	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
+	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	r.SuiTokenCoinType = fakeUSDCCoinType
 	r.SuiTokenTreasuryCap = treasuryCap
+
+	// send withdraw cap to TSS
+	r.sendWithdrawCapToTSS(deployerSigner, withdrawCapID)
 
 	// set the chain params
 	err = r.setSuiChainParams()
@@ -275,4 +287,16 @@ func (r *E2ERunner) setSuiChainParams() error {
 	}
 
 	return errors.New("unable to set Sui chain params")
+}
+
+func (r *E2ERunner) sendWithdrawCapToTSS(signer *zetasui.SignerSecp256k1, withdrawCapID string) {
+	tx, err := r.Clients.Sui.TransferObject(r.Ctx, models.TransferObjectRequest{
+		Signer:    signer.Address(),
+		ObjectId:  withdrawCapID,
+		Recipient: r.SuiTSSAddress,
+		GasBudget: "5000000000",
+	})
+	require.NoError(r, err)
+
+	r.suiExecuteTx(signer, tx)
 }
