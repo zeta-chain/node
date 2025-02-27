@@ -313,7 +313,7 @@ func MockProcessV2RevertDeposit(
 	// inboundSender string
 	// amount *big.Int
 	// chainID int64
-	// coinType coin.CoinType
+	// coinType coin.FungibleTokenCoinType
 	// asset string
 	// revertAddress common.Address
 	// callOnRevert bool

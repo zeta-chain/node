@@ -144,7 +144,7 @@ func TestCoinType_SupportsRefund(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.c.SupportsRefund(); got != tt.want {
-				t.Errorf("CoinType.SupportsRefund() = %v, want %v", got, tt.want)
+				t.Errorf("FungibleTokenCoinType.SupportsRefund() = %v, want %v", got, tt.want)
 			}
 		})
 	}
