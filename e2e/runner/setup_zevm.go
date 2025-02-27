@@ -97,7 +97,6 @@ func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
-	r.SetupSUIZRC20()
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain

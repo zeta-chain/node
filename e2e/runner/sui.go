@@ -51,8 +51,8 @@ func (r *E2ERunner) SuiWithdrawFungibleToken(
 	receiver string,
 	amount *big.Int,
 ) *ethtypes.Transaction {
-	receiverBytes, err := hex.DecodeString(receiver)
-	require.NoError(r, err)
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
 
 	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
@@ -139,7 +139,7 @@ func (r *E2ERunner) SuiMintUSDC(
 
 	// extract the package ID from the coin type
 	splitted := strings.Split(r.SuiTokenCoinType, "::")
-	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name>")
+	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name> - %s", r.SuiTokenCoinType)
 	packageID := "0x" + splitted[0]
 
 	// create the tx

@@ -196,14 +196,14 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 			packageID = change.PackageId
 		}
 	}
-	require.NotEmpty(r, packageID, "find packageID")
+	require.NotEmpty(r, packageID, "packageID not found")
 
 	for _, change := range resp.ObjectChanges {
 		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "TreasuryCap") {
 			treasuryCap = change.ObjectId
 		}
 	}
-	require.NotEmpty(r, treasuryCap, "find objectID")
+	require.NotEmpty(r, treasuryCap, "objectID not found")
 
 	coinType := packageID + "::fake_usdc::FAKE_USDC"
 
