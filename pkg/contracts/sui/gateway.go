@@ -1,6 +1,7 @@
 package sui
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -270,7 +271,13 @@ func convertPayload(data []any) ([]byte, error) {
 		}
 	}
 
-	return payload, nil
+	// Sui encode bytes in base64
+	decodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode payload from base64")
+	}
+
+	return decodedPayload, nil
 }
 
 func parsePair(pair string) (string, string, error) {

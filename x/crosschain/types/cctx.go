@@ -180,7 +180,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		ConfirmationMode: m.GetCurrentOutboundParam().ConfirmationMode,
 	}
 
-	// TODO : Refactor to move CoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
+	// TODO : Refactor to move FungibleTokenCoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
 	if m.InboundParams != nil {
 		revertTxParams.CoinType = m.InboundParams.CoinType
 	}
