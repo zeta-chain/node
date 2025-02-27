@@ -81,15 +81,9 @@ func WaitCctxsMinedByInboundHash(
 		var cctxs []*crosschaintypes.CrossChainTx
 
 		timedOut := time.Since(startTime) > timeout
-		if timedOut {
-			require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
-			return cctxs
-		}
+		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
-		if ctx.Err() != nil {
-			require.NoError(t, ctx.Err())
-			return cctxs
-		}
+		require.NoError(t, ctx.Err())
 
 		time.Sleep(500 * time.Millisecond)
 
@@ -162,11 +156,7 @@ func WaitCCTXMinedByIndex(
 
 	for i := 0; ; i++ {
 		require.False(t, time.Since(startTime) > timeout, "waiting cctx timeout, cctx not mined, cctx: %s", cctxIndex)
-
-		if ctx.Err() != nil {
-			require.NoError(t, ctx.Err())
-			return &crosschaintypes.CrossChainTx{}
-		}
+		require.NoError(t, ctx.Err())
 
 		if i > 0 {
 			time.Sleep(500 * time.Millisecond)
