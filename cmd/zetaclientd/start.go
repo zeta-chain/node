@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/graceful"
@@ -62,9 +63,9 @@ func Start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		logger.Std.Err(err).Msg("loading restricted addresses config")
 	} else {
-		graceful.AddStarter(ctx, func(ctx context.Context) error {
+		bg.Work(ctx, func(ctx context.Context) error {
 			return config.WatchRestrictedAddressesConfig(ctx, cfg, globalOpts.ZetacoreHome, logger.Std)
-		})
+		}, bg.WithName("watch_restricted_addresses_config"), bg.WithLogger(logger.Std))
 	}
 
 	telemetry, err := startTelemetry(ctx, cfg)
