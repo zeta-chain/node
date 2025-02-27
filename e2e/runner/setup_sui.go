@@ -41,9 +41,12 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err, "get deployer signer")
 	deployerAddress := deployerSigner.Address()
 
-	header := map[string]string{}
-	err = sui.RequestSuiFromFaucet(faucetURL, deployerAddress, header)
-	require.NoError(r, err, "sui faucet request to %s", faucetURL)
+	// fund deployer
+	r.RequestSuiFromFaucet(faucetURL, deployerAddress)
+
+	// fund the TSS
+	// TODO: this step might no longer necessary if a custom solution is implemented for the TSS funding
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	client := r.Clients.Sui
 

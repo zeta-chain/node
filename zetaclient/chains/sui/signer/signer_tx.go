@@ -42,7 +42,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
 		amount    = params.Amount.String()
-		gasBudget = strconv.FormatUint(params.CallOptions.GasLimit, 10)
+		gasBudget = "5000000000" // TODO: use gas limit -> strconv.FormatUint(params.CallOptions.GasLimit, 10)
 	)
 
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
@@ -71,8 +71,9 @@ func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]b
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   tx.TxBytes,
-		Signature: []string{sigBase64},
+		TxBytes:     tx.TxBytes,
+		Signature:   []string{sigBase64},
+		RequestType: "WaitForLocalExecution",
 	}
 
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
