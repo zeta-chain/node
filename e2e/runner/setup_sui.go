@@ -121,6 +121,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
 func (r *E2ERunner) deploySUIZRC20() {
 	// send message to deploy SUI zrc20
+	liqCap := math.NewUint(10e18)
 	adminAddr := r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName)
 	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		adminAddr,
@@ -131,7 +132,7 @@ func (r *E2ERunner) deploySUIZRC20() {
 		"SUI",
 		coin.CoinType_Gas,
 		100000,
-		nil,
+		&liqCap,
 	))
 	require.NoError(r, err)
 
