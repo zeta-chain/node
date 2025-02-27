@@ -86,6 +86,14 @@ const (
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
+	 Sui tests
+	*/
+	TestSuiDepositName             = "sui_deposit"
+	TestSuiDepositAndCallName      = "sui_deposit_and_call"
+	TestSuiTokenDepositName        = "sui_token_deposit"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -685,6 +693,41 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw TON from ZEVM for several recipients simultaneously",
 		[]runner.ArgDefinition{},
 		TestTONWithdrawConcurrent,
+	),
+	/*
+	 Sui tests
+	*/
+	runner.NewE2ETest(
+		TestSuiDepositName,
+		"deposit SUI into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiDeposit,
+	),
+	runner.NewE2ETest(
+		TestSuiDepositAndCallName,
+		"deposit SUI into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestSuiTokenDepositName,
+		"deposit fungible token SUI into ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "1000000"},
+		},
+		TestSuiTokenDeposit,
+	),
+	runner.NewE2ETest(
+		TestSuiTokenDepositAndCallName,
+		"deposit fungible token into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "1000000"},
+		},
+		TestSuiTokenDepositAndCall,
 	),
 	/*
 	 Bitcoin tests

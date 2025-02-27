@@ -17,7 +17,7 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 100
+const DefaultEventsLimit = 50
 
 const filterMoveEventModule = "MoveEventModule"
 

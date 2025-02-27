@@ -347,7 +347,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	return mintAccount
 }
 
-// BroadcastTxSync broadcasts a transaction once and checks if it's confirmed
+// BroadcastTxSyncOnce broadcasts a transaction once and checks if it's confirmed
 func (r *E2ERunner) BroadcastTxSyncOnce(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult, bool) {
 	// broadcast the transaction
 	r.Logger.Info("Broadcast once start")

@@ -16,7 +16,7 @@ import (
 )
 
 // gatewayGasLimit is the gas limit for the gateway functions
-var gatewayGasLimit = big.NewInt(1_000_000)
+var gatewayGasLimit = big.NewInt(1_500_000)
 
 // CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract
 // function updateGatewayAddress(address addr)

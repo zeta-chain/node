@@ -19,9 +19,7 @@ var errTxNotFound = errors.New("no tx found")
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	if err := ob.ensureCursor(ctx); err != nil {
-		return errors.Wrap(err, "unable to ensure inbound cursor")
-	}
+	ob.ensureCursor()
 
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
@@ -36,6 +34,13 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return errors.Wrap(err, "unable to query module events")
 	}
 
+	if len(events) == 0 {
+		ob.Logger().Inbound.Debug().Msg("No inbound events found")
+		return nil
+	}
+
+	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing inbound events")
+
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
@@ -46,7 +51,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			// try again later
 			ob.Logger().Inbound.Warn().Err(err).
 				Str(logs.FieldTx, event.Id.TxDigest).
-				Msg("TX not found or unfinalized. Pausing")
+				Msg("TX not found or not finalized. Pausing")
 			return nil
 		case err != nil:
 			// failed processing also updates the cursor
