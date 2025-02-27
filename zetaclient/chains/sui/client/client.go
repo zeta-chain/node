@@ -17,7 +17,7 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 100
+const DefaultEventsLimit = 50
 
 const filterMoveEventModule = "MoveEventModule"
 
@@ -130,9 +130,34 @@ func (p *EventQuery) asRequest() (models.SuiXQueryEventsRequest, error) {
 	}, nil
 }
 
+// GetOwnedObjectID returns the first owned object ID by owner address and struct type.
+// If no objects found or multiple objects found, returns error.
+func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error) {
+	res, err := c.SuiXGetOwnedObjects(ctx, models.SuiXGetOwnedObjectsRequest{
+		Address: ownerAddress,
+		Query: models.SuiObjectResponseQuery{
+			Filter: map[string]any{
+				"StructType": structType,
+			},
+		},
+		Limit: 1,
+	})
+
+	switch {
+	case err != nil:
+		return "", errors.Wrap(err, "unable to get owned objects")
+	case len(res.Data) == 0:
+		return "", errors.New("no objects found")
+	case len(res.Data) > 1:
+		return "", errors.New("multiple objects found")
+	}
+
+	return res.Data[0].Data.ObjectId, nil
+}
+
 // EncodeCursor encodes event ID into cursor.
 func EncodeCursor(id models.EventId) string {
-	return fmt.Sprintf("%s#%s", id.TxDigest, id.EventSeq)
+	return fmt.Sprintf("%s,%s", id.TxDigest, id.EventSeq)
 }
 
 // DecodeCursor decodes cursor into event ID.
@@ -141,7 +166,7 @@ func DecodeCursor(cursor string) (*models.EventId, error) {
 		return nil, nil
 	}
 
-	parts := strings.Split(cursor, "#")
+	parts := strings.Split(cursor, ",")
 	if len(parts) != 2 {
 		return nil, errors.New("invalid cursor format")
 	}

@@ -20,6 +20,7 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/keysign"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 
@@ -87,6 +88,10 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 	return NewPubKeyFromECDSA(*pk)
 }
 
+func (k PubKey) AsECDSA() *ecdsa.PublicKey {
+	return k.ecdsaPubKey
+}
+
 // Bytes marshals pubKey to bytes either as compressed or uncompressed slice.
 //
 // In ECDSA, a compressed pubKey includes only the X and a parity bit for the Y,
@@ -95,7 +100,7 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 func (k PubKey) Bytes(compress bool) []byte {
 	pk := k.ecdsaPubKey
 	if compress {
-		return elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
+		return crypto.CompressPubkey(pk)
 	}
 
 	return crypto.FromECDSAPub(pk)
@@ -129,6 +134,11 @@ func (k PubKey) BTCPayToAddrScript(chainID int64) ([]byte, error) {
 // AddressEVM returns the ethereum address of the public key.
 func (k PubKey) AddressEVM() eth.Address {
 	return crypto.PubkeyToAddress(*k.ecdsaPubKey)
+}
+
+// AddressSui returns Sui address of the public key.
+func (k PubKey) AddressSui() string {
+	return sui.AddressFromPubKeyECDSA(k.ecdsaPubKey)
 }
 
 // VerifySignature checks that keysign.Signature is valid and origins from expected TSS public key.

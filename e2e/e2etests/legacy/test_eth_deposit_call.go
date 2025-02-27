@@ -4,9 +4,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/contracts/example"
+	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -18,7 +19,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	value := utils.ParseBigInt(r, args[0])
 
 	r.Logger.Info("Deploying example contract")
-	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	exampleAddr, _, exampleContract, err := example.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
 	r.Logger.Info("Example contract deployed")

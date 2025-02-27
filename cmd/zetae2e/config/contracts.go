@@ -19,11 +19,12 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -115,6 +116,21 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 
 	if c := conf.Contracts.Solana.SPLAddr; c != "" {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	// set Sui contracts
+	suiPackageID := conf.Contracts.Sui.GatewayPackageID
+	suiGatewayID := conf.Contracts.Sui.GatewayObjectID
+
+	if suiPackageID != "" && suiGatewayID != "" {
+		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
+	}
+
+	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
+		r.SuiTokenCoinType = c.String()
+	}
+	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
+		r.SuiTokenTreasuryCap = c.String()
 	}
 
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
@@ -219,6 +235,28 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid TONZRC20Addr: %w", err)
 		}
 		r.TONZRC20, err = zrc20.NewZRC20(r.TONZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.SUIZRC20Addr; c != "" {
+		r.SUIZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SUIZRC20Addr: %w", err)
+		}
+		r.SUIZRC20, err = zrc20.NewZRC20(r.SUIZRC20Addr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.SuiTokenZRC20Addr; c != "" {
+		r.SuiTokenZRC20Addr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid SuiTokenZRC20Addr: %w", err)
+		}
+		r.SuiTokenZRC20, err = zrc20.NewZRC20(r.SuiTokenZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

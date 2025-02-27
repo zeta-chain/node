@@ -6,9 +6,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/contracts/gatewayzevmcaller"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	gatewayzevmcaller "github.com/zeta-chain/node/pkg/contracts/gatewayzevmcaller"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 

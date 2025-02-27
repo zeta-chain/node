@@ -123,7 +123,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	// Services
 	var (
-		schedulerService = scheduler.New(logger.Logger)
+		schedulerService = scheduler.New(logger.Logger, time.Second)
 		zetacore         = mocks.NewZetacoreClient(t)
 		tss              = mocks.NewTSS(t)
 	)

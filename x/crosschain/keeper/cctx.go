@@ -103,7 +103,14 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&cctx)
-	store.Set(types.KeyPrefix(cctx.Index), b)
+	cctxIndex := types.KeyPrefix(cctx.Index)
+
+	isUpdate := store.Has(cctxIndex)
+	store.Set(cctxIndex, b)
+
+	if !isUpdate {
+		k.setCctxCounterIndex(ctx, cctx)
+	}
 }
 
 // GetCrossChainTx returns a cctx from its index

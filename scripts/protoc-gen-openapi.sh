@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.16.2
+set -eo pipefail
+
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.26.1
 
 go mod download
 
@@ -54,12 +56,19 @@ keys=$(yq e '.paths | keys' $OUTPUT_DIR/$MERGED_SWAGGER_FILE)
 for key in $keys; do
   # Check if key starts with '/cosmos/NAME'
   if [[ $key == "/cosmos/"* ]]; then
+    # Exclude paths starting with /cosmos/gov/v1beta1
+    # these endpoints are broken post v0.47 upgrade
+    if [[ $key == "/cosmos/gov/v1beta1"* ]]; then
+      yq e "del(.paths.\"$key\")" -i $OUTPUT_DIR/$MERGED_SWAGGER_FILE
+      continue
+    fi
+
     # Extract NAME
     name=$(echo $key | cut -d '/' -f 3)
     # Check if the standard module is not imported in the app.go
     if ! grep -q "github.com/cosmos/cosmos-sdk/x/$name" $APP_GO; then
-      # Keep the standard "base" and "tx" endpoints
-      if [[ $name == "base" || $name == "tx" ]]; then
+      # Keep the standard "base", "tx", and "upgrade" endpoints
+      if [[ $name == "base" || $name == "tx" || $name == "upgrade" ]]; then
         continue
       fi
       # If not found, delete the key from the YAML file in-place
