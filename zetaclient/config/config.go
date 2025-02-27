@@ -97,20 +97,20 @@ func getRestrictedAddressAbsPath(basePath string) (string, error) {
 	file := filepath.Join(basePath, folder, restrictedAddressesPath)
 	file, err := filepath.Abs(file)
 	if err != nil {
-		return "", fmt.Errorf("abs %s: %w", file, err)
+		return "", errors.Wrapf(err, "absolute path conversion for %s", file)
 	}
 	return file, nil
 }
 
 func loadRestrictedAddressesConfig(cfg Config, file string) error {
-	input, err := os.ReadFile(file)
+	input, err := os.ReadFile(file) // #nosec G304
 	if err != nil {
-		return fmt.Errorf("reading file %s: %w", file, err)
+		return errors.Wrapf(err, "reading file %s", file)
 	}
 	addresses := []string{}
 	err = json.Unmarshal(input, &addresses)
 	if err != nil {
-		return fmt.Errorf("invalid json: %w", err)
+		return errors.Wrap(err, "invalid json")
 	}
 
 	restrictedAddressBookLock.Lock()
@@ -129,7 +129,7 @@ func loadRestrictedAddressesConfig(cfg Config, file string) error {
 func LoadRestrictedAddressesConfig(cfg Config, basePath string) error {
 	file, err := getRestrictedAddressAbsPath(basePath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "getting restricted address path")
 	}
 	return loadRestrictedAddressesConfig(cfg, file)
 }
@@ -139,12 +139,13 @@ func LoadRestrictedAddressesConfig(cfg Config, basePath string) error {
 func WatchRestrictedAddressesConfig(ctx context.Context, cfg Config, basePath string, logger zerolog.Logger) error {
 	file, err := getRestrictedAddressAbsPath(basePath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "getting restricted address path")
 	}
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return fmt.Errorf("creating file watcher: %w", err)
+		return errors.Wrap(err, "creating file watcher")
 	}
+	defer watcher.Close()
 
 	// Watch the config directory
 	// If you only watch the file, the watch will be disconnected if/when
@@ -152,11 +153,8 @@ func WatchRestrictedAddressesConfig(ctx context.Context, cfg Config, basePath st
 	dir := filepath.Dir(file)
 	err = watcher.Add(dir)
 	if err != nil {
-		watcher.Close()
-		return fmt.Errorf("watching directory %s: %w", dir, err)
+		return errors.Wrapf(err, "watching directory %s", dir)
 	}
-
-	defer watcher.Close()
 
 	for {
 		select {
@@ -188,7 +186,7 @@ func WatchRestrictedAddressesConfig(ctx context.Context, cfg Config, basePath st
 			if !ok {
 				return nil
 			}
-			return fmt.Errorf("watcher error: %w", err)
+			return errors.Wrap(err, "watcher error")
 		}
 	}
 }
