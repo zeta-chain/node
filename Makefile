@@ -352,7 +352,7 @@ zetanode-upgrade: e2e-images
 .PHONY: zetanode-upgrade
 endif
 
-start-upgrade-test: zetanode-upgrade
+start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
