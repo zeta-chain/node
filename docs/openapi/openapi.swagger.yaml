@@ -60174,12 +60174,16 @@ definitions:
         type: string
       btc:
         type: string
+      sui:
+        type: string
   observerQueryGetTssAddressResponse:
     type: object
     properties:
       eth:
         type: string
       btc:
+        type: string
+      sui:
         type: string
   observerQueryHasVotedResponse:
     type: object

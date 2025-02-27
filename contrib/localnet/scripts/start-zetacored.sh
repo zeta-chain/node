@@ -269,6 +269,9 @@ then
 # emissions withdraw tester
   address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# sui tester
+  address=$(yq -r '.additional_accounts.user_sui.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta

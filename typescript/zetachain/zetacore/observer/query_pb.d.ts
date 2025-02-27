@@ -490,6 +490,11 @@ export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddre
    */
   btc: string;
 
+  /**
+   * @generated from field: string sui = 3;
+   */
+  sui: string;
+
   constructor(data?: PartialMessage<QueryGetTssAddressResponse>);
 
   static readonly runtime: typeof proto3;
@@ -547,6 +552,11 @@ export declare class QueryGetTssAddressByFinalizedHeightResponse extends Message
    * @generated from field: string btc = 2;
    */
   btc: string;
+
+  /**
+   * @generated from field: string sui = 3;
+   */
+  sui: string;
 
   constructor(data?: PartialMessage<QueryGetTssAddressByFinalizedHeightResponse>);
 
