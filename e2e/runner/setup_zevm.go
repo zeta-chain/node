@@ -32,8 +32,6 @@ var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
 func (r *E2ERunner) SetTSSAddresses() error {
-	r.Logger.Print("⚙️ setting up TSS address")
-
 	btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
 	if err != nil {
 		return err

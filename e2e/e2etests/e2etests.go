@@ -698,6 +698,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "10000000000"},
 		},
 		TestSuiDeposit,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositAndCallName,
@@ -706,6 +707,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiDepositAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenDepositName,
@@ -714,6 +716,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
 		},
 		TestSuiTokenDeposit,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenDepositAndCallName,
@@ -722,6 +725,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
 		},
 		TestSuiTokenDepositAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawName,
@@ -730,6 +734,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawName,
@@ -738,6 +743,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
 		},
 		TestSuiTokenWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Bitcoin tests
