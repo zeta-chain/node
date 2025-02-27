@@ -40,6 +40,7 @@ import (
 
 var (
 	BigIntZero                 = big.NewInt(0)
+	DefaultGasLimit            = big.NewInt(200_000)
 	ZEVMGasLimitDepositAndCall = big.NewInt(1_500_000)
 	ZEVMGasLimitConnectorCall  = big.NewInt(1_500_000)
 )
@@ -258,7 +259,7 @@ func (k Keeper) DepositZRC20(
 		types.ModuleAddressEVM,
 		contract,
 		BigIntZero,
-		big.NewInt(200_000),
+		DefaultGasLimit,
 		true,
 		false,
 		"deposit",
@@ -283,7 +284,7 @@ func (k Keeper) UpdateZRC20ProtocolFlatFee(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		big.NewInt(100_000),
+		DefaultGasLimit,
 		true,
 		false,
 		"updateProtocolFlatFee",
@@ -307,7 +308,7 @@ func (k Keeper) UpdateZRC20GasLimit(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		big.NewInt(100_000),
+		DefaultGasLimit,
 		true,
 		false,
 		"updateGasLimit",
