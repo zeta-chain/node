@@ -15,7 +15,7 @@ type observerKeeper interface {
 	SetChainParamsList(ctx sdk.Context, chainParams types.ChainParamsList)
 }
 
-var disableBlockScanChainIDs = []int64{
+var disableTssBlockScanChainIDs = []int64{
 	// localnet
 	chains.GoerliLocalnet.ChainId,
 
@@ -44,8 +44,8 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		if chainParams == nil {
 			continue
 		}
-		if slices.Contains(disableBlockScanChainIDs, chainParams.ChainId) {
-			chainParams.DisableBlockScan = true
+		if slices.Contains(disableTssBlockScanChainIDs, chainParams.ChainId) {
+			chainParams.DisableTssBlockScan = true
 		}
 	}
 

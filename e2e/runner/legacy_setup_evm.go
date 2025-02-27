@@ -137,7 +137,7 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool) {
 	chainParams := currentChainParamsRes.ChainParams
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
-	chainParams.DisableBlockScan = false
+	chainParams.DisableTssBlockScan = false
 
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err, "failed to update chain params")

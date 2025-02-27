@@ -421,7 +421,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 			SafeOutboundCount: 1,
 			FastOutboundCount: 1,
 		},
-		DisableBlockScan: true,
+		DisableTssBlockScan: true,
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {

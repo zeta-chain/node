@@ -243,9 +243,9 @@ export declare class MsgUpdateOperationalChainParams extends Message<MsgUpdateOp
   confirmationParams?: ConfirmationParams;
 
   /**
-   * @generated from field: bool disable_block_scan = 10;
+   * @generated from field: bool disable_tss_block_scan = 10;
    */
-  disableBlockScan: boolean;
+  disableTssBlockScan: boolean;
 
   constructor(data?: PartialMessage<MsgUpdateOperationalChainParams>);
 

@@ -58469,7 +58469,7 @@ definitions:
       confirmationParams:
         $ref: '#/definitions/zetachain.zetacore.observer.ConfirmationParams'
         title: Advanced confirmation parameters for chain to support fast observation
-      disableBlockScan:
+      disableTssBlockScan:
         type: boolean
         description: |-
           Skip actions that require scanning the contents of each block.
