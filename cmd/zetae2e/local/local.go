@@ -208,10 +208,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		noError(deployerRunner.FundEmissionsPool())
 	}
-	// Run the proposals under the start sequence(proposals_e2e_start folder)
-	if !skipRegular {
-		noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
-	}
 
 	// wait for keygen to be completed
 	// if setup is skipped, we assume that the keygen is already completed
@@ -295,6 +291,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
+
+	// Run the proposals under the start sequence(proposals_e2e_start folder)
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
+	}
 
 	// run tests
 	var eg errgroup.Group
