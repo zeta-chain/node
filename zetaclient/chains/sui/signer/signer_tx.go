@@ -2,8 +2,6 @@ package signer
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 
@@ -39,7 +37,6 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	}
 
 	var (
-		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
 		amount    = params.Amount.String()
 		gasBudget = "5000000000" // TODO: use gas limit -> strconv.FormatUint(params.CallOptions.GasLimit, 10)
@@ -56,7 +53,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		Module:          s.gateway.Module(),
 		Function:        funcWithdraw,
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, withdrawCapID},
+		Arguments:       []any{s.gateway.ObjectID(), amount, recipient, withdrawCapID},
 		GasBudget:       gasBudget,
 	}
 
