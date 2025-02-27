@@ -1,6 +1,11 @@
 name: "CodeQL - ZetaChain Custom checks "
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  pull_request:
 
 jobs:
   analyze:
