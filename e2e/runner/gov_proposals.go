@@ -163,7 +163,7 @@ type proposal struct {
 func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk.Coins, error) {
 	var proposal proposal
 
-	contents, err := os.ReadFile(path)
+	contents, err := os.ReadFile(path) // #nosec G304 - used for testing only
 	if err != nil {
 		return proposal, nil, nil, err
 	}
