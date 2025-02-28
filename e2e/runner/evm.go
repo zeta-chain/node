@@ -23,6 +23,9 @@ func (r *E2ERunner) ETHDeposit(
 	amount *big.Int,
 	revertOptions gatewayevm.RevertOptions,
 ) *ethtypes.Transaction {
+	r.Lock()
+	defer r.Unlock()
+
 	// set the value of the transaction
 	previousValue := r.EVMAuth.Value
 	defer func() {
@@ -36,6 +39,24 @@ func (r *E2ERunner) ETHDeposit(
 	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
 
 	return tx
+}
+
+// DepositEtherDeployer sends Ethers into ZEVM using V2 protocol contracts
+func (r *E2ERunner) DepositEtherDeployer() ethcommon.Hash {
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	return tx.Hash()
+}
+
+// DepositERC20Deployer sends ERC20 into ZEVM using v2 protocol contracts
+func (r *E2ERunner) DepositERC20Deployer() ethcommon.Hash {
+	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
+
+	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
+
+	oneHundred := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100))
+	tx := r.ERC20Deposit(r.EVMAddress(), oneHundred, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	return tx.Hash()
 }
 
 // ETHDepositAndCall calls DepositAndCall of Gateway with gas token on EVM

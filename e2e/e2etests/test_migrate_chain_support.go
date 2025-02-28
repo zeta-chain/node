@@ -49,7 +49,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner, err := configureEVM2(r)
 	require.NoError(r, err)
 
-	newRunner.LegacySetupEVM(false)
+	newRunner.LegacySetupEVM(false, false)
 
 	// mint some ERC20
 	newRunner.MintERC20OnEVM(10000)
@@ -182,7 +182,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// deposit ERC20 on ZetaChain
-	txERC20Deposit := newRunner.LegacyDepositERC20()
+	txERC20Deposit := newRunner.DepositERC20Deployer()
 	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// stop mining

@@ -455,7 +455,12 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
 	r.Logger.Error("Test failed")
-	r.CtxCancel(fmt.Errorf("FailNow on %s", r.Name))
+	err := fmt.Errorf("FailNow on %s", r.Name)
+	r.CtxCancel(err)
+	// this panic ensures that the test routine exits fast.
+	// it should be caught and handled gracefully so long
+	// as the test is being executed by RunE2ETest().
+	panic(err)
 }
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {

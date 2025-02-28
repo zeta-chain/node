@@ -85,6 +85,8 @@ func WaitCctxsMinedByInboundHash(
 		timedOut := time.Since(startTime) > timeout
 		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
+		require.NoError(t, ctx.Err())
+
 		time.Sleep(500 * time.Millisecond)
 
 		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
@@ -156,6 +158,7 @@ func WaitCCTXMinedByIndex(
 
 	for i := 0; ; i++ {
 		require.False(t, time.Since(startTime) > timeout, "waiting cctx timeout, cctx not mined, cctx: %s", cctxIndex)
+		require.NoError(t, ctx.Err())
 
 		if i > 0 {
 			time.Sleep(500 * time.Millisecond)

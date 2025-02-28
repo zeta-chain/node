@@ -230,7 +230,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startTime := time.Now()
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
