@@ -44,8 +44,14 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
 		amount    = params.Amount.String()
-		gasBudget = "5000000000" // TODO: use gas limit -> strconv.FormatUint(params.CallOptions.GasLimit, 10)
 	)
+
+	// Gas budget is gas limit * gas price
+	gasPrice, err := strconv.ParseUint(params.GasPrice, 10, 64)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to parse gas price")
+	}
+	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
 
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
 	if err != nil {

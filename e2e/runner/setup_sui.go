@@ -119,14 +119,14 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.deploySUIZRC20()
 
 	// deploy fake USDC
-	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
+	fakeUSDCCoinType, treasuryCap := r.deploySuiFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	r.SuiTokenCoinType = fakeUSDCCoinType
 	r.SuiTokenTreasuryCap = treasuryCap
 
 	// send withdraw cap to TSS
-	r.sendWithdrawCapToTSS(deployerSigner, withdrawCapID)
+	r.suiSendWithdrawCapToTSS(deployerSigner, withdrawCapID)
 
 	// set the chain params
 	err = r.setSuiChainParams()
@@ -146,7 +146,7 @@ func (r *E2ERunner) deploySUIZRC20() {
 		"SUI",
 		"SUI",
 		coin.CoinType_Gas,
-		100000,
+		10000,
 		&liqCap,
 	))
 	require.NoError(r, err)
@@ -155,9 +155,9 @@ func (r *E2ERunner) deploySUIZRC20() {
 	r.SetupSUIZRC20()
 }
 
-// deployFakeUSDC deploys the FakeUSDC contract on Sui
+// deploySuiFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the coinType to be used as asset value for zrc20 and treasuryCap object ID that allows to mint tokens
-func (r *E2ERunner) deployFakeUSDC() (string, string) {
+func (r *E2ERunner) deploySuiFakeUSDC() (string, string) {
 	client := r.Clients.Sui
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
@@ -229,7 +229,7 @@ func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUS
 		"Sui's FakeUSDC",
 		"USDC.SUI",
 		coin.CoinType_ERC20,
-		100000,
+		10000,
 		&liqCap,
 	))
 	require.NoError(r, err)
@@ -317,7 +317,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 	return errors.New("unable to set Sui chain params")
 }
 
-func (r *E2ERunner) sendWithdrawCapToTSS(signer *zetasui.SignerSecp256k1, withdrawCapID string) {
+func (r *E2ERunner) suiSendWithdrawCapToTSS(signer *zetasui.SignerSecp256k1, withdrawCapID string) {
 	tx, err := r.Clients.Sui.TransferObject(r.Ctx, models.TransferObjectRequest{
 		Signer:    signer.Address(),
 		ObjectId:  withdrawCapID,
