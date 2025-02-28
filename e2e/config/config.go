@@ -3,7 +3,6 @@ package config
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -13,8 +12,11 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
+	tonwallet "github.com/tonkeeper/tongo/wallet"
 	"gopkg.in/yaml.v3"
 
+	"github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
@@ -60,9 +62,10 @@ type Account struct {
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
 	SolanaAddress    DoubleQuotedString `yaml:"solana_address"`
 	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
+	TONPrivateKey    DoubleQuotedString `yaml:"ton_private_key"`
 }
 
-// AdditionalAccounts are extra accounts required to run specific tests
+// AdditionalAccounts are extra  required to run specific tests
 type AdditionalAccounts struct {
 	UserLegacyERC20       Account `yaml:"user_legacy_erc20"`
 	UserLegacyZeta        Account `yaml:"user_legacy_zeta"`
@@ -72,6 +75,7 @@ type AdditionalAccounts struct {
 	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
 	UserSolana            Account `yaml:"user_solana"`
 	UserSPL               Account `yaml:"user_spl"`
+	UserTON               Account `yaml:"user_ton"`
 	UserSui               Account `yaml:"user_sui"`
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
@@ -102,7 +106,8 @@ type RPCs struct {
 	EVM               string     `yaml:"evm"`
 	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
 	Solana            string     `yaml:"solana"`
-	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	TON               string     `yaml:"ton_liteserver_config"`
+	TONFaucet         string     `yaml:"ton_faucet"`
 	Sui               string     `yaml:"sui"`
 	SuiFaucet         string     `yaml:"sui_faucet"`
 	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
@@ -123,6 +128,7 @@ type Contracts struct {
 	EVM    EVM    `yaml:"evm"`
 	ZEVM   ZEVM   `yaml:"zevm"`
 	Solana Solana `yaml:"solana"`
+	TON    TON    `yaml:"ton"`
 	Sui    Sui    `yaml:"sui"`
 }
 
@@ -130,6 +136,11 @@ type Contracts struct {
 type Solana struct {
 	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
 	SPLAddr          DoubleQuotedString `yaml:"spl"`
+}
+
+// TON contains the address of predeployed contracts on the TON chain
+type TON struct {
+	GatewayAccountID DoubleQuotedString `yaml:"gateway_account_id"`
 }
 
 // Sui contains the addresses of predeployed contracts on the Sui chain
@@ -189,6 +200,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
+			TON:          "http://ton:8000/lite-client.json",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
@@ -255,6 +267,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserBitcoinDeposit,
 		a.UserBitcoinWithdraw,
 		a.UserSolana,
+		a.UserTON,
 		a.UserSui,
 		a.UserSPL,
 		a.UserLegacyEther,
@@ -351,6 +364,10 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
+	c.AdditionalAccounts.UserTON, err = generateAccount()
+	if err != nil {
+		return err
+	}
 	c.AdditionalAccounts.UserSui, err = generateAccount()
 	if err != nil {
 		return err
@@ -427,6 +444,18 @@ func (a Account) SuiSigner() (*sui.SignerSecp256k1, error) {
 	}
 
 	return sui.NewSignerSecp256k1(privateKeyBytes), nil
+}
+
+// AsTONWallet derives TON V5R1 wallet from Account's mnemonic.
+// Make sure that the wallet IS deployed on the network.
+func (a Account) AsTONWallet(client *ton.Client) (*tonwallet.Wallet, error) {
+	pk, err := ton.PrivateKeyFromHex(a.TONPrivateKey.String())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get private key")
+	}
+
+	_, w, err := ton.ConstructWalletFromPrivateKey(pk, client)
+	return w, err
 }
 
 // Validate that the address and the private key specified in the
