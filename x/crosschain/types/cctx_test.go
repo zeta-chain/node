@@ -316,3 +316,40 @@ func TestCrossChainTx_SetReverted(t *testing.T) {
 	require.Equal(t, cctx.CctxStatus.StatusMessage, "")
 	require.Equal(t, cctx.CctxStatus.ErrorMessageRevert, "")
 }
+
+func TestCrossChainTx_IsWithdrawAndCall(t *testing.T) {
+	t.Run("withdraw and call", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.True(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("not withdraw and call", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = false
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("not pending outbound status", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("nil inbound", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams = nil
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("nil status", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus = nil
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+}
