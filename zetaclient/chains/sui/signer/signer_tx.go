@@ -28,11 +28,13 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Errorf("invalid protocol version %q", cctx.ProtocolContractVersion)
 	case cctx.InboundParams == nil:
 		return tx, errors.New("inbound params are nil")
-	case cctx.InboundParams.IsCrossChainCall:
+	case cctx.InboundParams.IsCrossChainCall && cctx.CctxStatus.Status == cctypes.CctxStatus_PendingOutbound:
+		// NOTE: we check for pending outbound status, reverting cross-chain calls are treated as regular withdraws
 		return tx, errors.New("withdrawAndCall is not supported yet")
 	case params.CoinType == coin.CoinType_Gas:
 		coinType = string(sui.SUI)
 	case params.CoinType == coin.CoinType_ERC20:
+		// NOTE: 0x prefix is required for coin type other than SUI
 		coinType = "0x" + cctx.InboundParams.Asset
 	default:
 		return tx, errors.Errorf("unsupported coin type %q", params.CoinType.String())
