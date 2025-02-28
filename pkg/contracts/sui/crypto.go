@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const flagSecp256k1 = 0x01
+const FlagSecp256k1 = 0x01
 
 // Digest calculates tx digest (hash) for further signing by TSS.
 func Digest(tx models.TxnMetaData) ([32]byte, error) {
@@ -56,7 +56,7 @@ func AddressFromPubKeyECDSA(pk *ecdsa.PublicKey) string {
 	pubBytes := elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
 
 	raw := make([]byte, 1+len(pubBytes))
-	raw[0] = flagSecp256k1
+	raw[0] = FlagSecp256k1
 	copy(raw[1:], pubBytes)
 
 	addrBytes := blake2b.Sum256(raw)
@@ -79,7 +79,7 @@ func SerializeSignatureECDSA(signature [65]byte, pubKey *ecdsa.PublicKey) (strin
 	}
 
 	serialized := make([]byte, 1+sigLen+pubKeyLen)
-	serialized[0] = flagSecp256k1
+	serialized[0] = FlagSecp256k1
 	copy(serialized[1:], signature[:sigLen])
 	copy(serialized[1+sigLen:], pubKeyBytes)
 
@@ -104,8 +104,8 @@ func DeserializeSignatureECDSA(sigBase64 string) (*ecdsa.PublicKey, [64]byte, er
 		return nil, [64]byte{}, errors.Wrap(err, "failed to decode signature")
 	case len(sigBytes) != expectedLen:
 		return nil, [64]byte{}, errors.Errorf("invalid sig length (got %d, want %d)", len(sigBytes), expectedLen)
-	case sigBytes[0] != flagSecp256k1:
-		return nil, [64]byte{}, errors.Errorf("invalid sig flag (got %d, want %d)", sigBytes[0], flagSecp256k1)
+	case sigBytes[0] != FlagSecp256k1:
+		return nil, [64]byte{}, errors.Errorf("invalid sig flag (got %d, want %d)", sigBytes[0], FlagSecp256k1)
 	case len(sigBytes[pubOffset:]) != pubLen:
 		return nil, [64]byte{}, errors.Errorf(
 			"invalid pubKey length (got %d, want %d)",

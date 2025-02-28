@@ -1,8 +1,9 @@
-package sui
+package sui_test
 
 import (
 	"encoding/base64"
 	"encoding/hex"
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"testing"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -33,7 +34,7 @@ func TestCrypto(t *testing.T) {
 		const expectedDigestBase64 = "A1NY74R1IScWR/GPtOMNHVY/RwTNzWHlUbOkwp3911g="
 
 		// ACT
-		digest, err := Digest(tx)
+		digest, err := zetasui.Digest(tx)
 
 		digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
@@ -72,7 +73,7 @@ func TestCrypto(t *testing.T) {
 			require.NoError(t, err)
 
 			// ACT
-			addr := AddressFromPubKeyECDSA(pk)
+			addr := zetasui.AddressFromPubKeyECDSA(pk)
 
 			// ASSERT
 			assert.Equal(t, tt.address, addr)
@@ -92,7 +93,7 @@ func TestCrypto(t *testing.T) {
 		signature := [65]byte{0, 1, 3}
 
 		// ACT
-		res, err := SerializeSignatureECDSA(signature, pubKey)
+		res, err := zetasui.SerializeSignatureECDSA(signature, pubKey)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -103,7 +104,7 @@ func TestCrypto(t *testing.T) {
 		require.Equal(t, (1 + 64 + 33), len(resBin))
 
 		// ACT 2
-		pubKey2, signature2, err := DeserializeSignatureECDSA(res)
+		pubKey2, signature2, err := zetasui.DeserializeSignatureECDSA(res)
 
 		// ASSERT 2
 		require.NoError(t, err)
@@ -134,10 +135,10 @@ func TestCrypto(t *testing.T) {
 				// Given a private key
 				_, privateKeyBytes, err := bech32.DecodeAndConvert(tt.privKey)
 				require.NoError(t, err)
-				require.Equal(t, byte(flagSecp256k1), privateKeyBytes[0])
+				require.Equal(t, byte(zetasui.FlagSecp256k1), privateKeyBytes[0])
 
 				// Given signer (pk imported w/o flag byte)
-				signer := NewSignerSecp256k1(privateKeyBytes[1:])
+				signer := zetasui.NewSignerSecp256k1(privateKeyBytes[1:])
 
 				// ACT
 				// Check signer's Sui address
