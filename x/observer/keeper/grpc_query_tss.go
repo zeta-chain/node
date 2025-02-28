@@ -53,9 +53,6 @@ func (k Keeper) GetTssAddress(
 		return nil, status.Error(codes.NotFound, "current tss not set")
 	}
 
-	pubKey := tss.TssPubkey
-	_ = pubKey
-
 	ethAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
