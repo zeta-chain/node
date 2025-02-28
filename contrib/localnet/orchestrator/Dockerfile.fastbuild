@@ -8,6 +8,8 @@ COPY --from=geth /usr/local/bin/geth /usr/local/bin/
 COPY --from=solana /usr/bin/solana /usr/local/bin/
 
 COPY contrib/localnet/orchestrator/start-zetae2e.sh /work/
+COPY contrib/localnet/orchestrator/proposals_e2e_start/ /work/proposals_e2e_start/
+COPY contrib/localnet/orchestrator/proposals_e2e_end/ /work/proposals_e2e_end/
 COPY contrib/localnet/scripts/wait-for-ton.sh /work/
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
 RUN chmod +x /work/*.sh

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* The CCTX List RPC (`/zeta-chain/crosschain/cctx`) will now return CCTXs ordered by creation time. CCTXs from before the upgrade will not be displayed. Use the `?unordered=true` parameter to revert to the old behavior.
+
 ### Features
 
 * [3414](https://github.com/zeta-chain/node/pull/3414) - support advanced abort workflow (onAbort)
@@ -10,18 +14,23 @@
 * [3455](https://github.com/zeta-chain/node/pull/3455) - add `track-cctx` command to zetatools
 * [3506](https://github.com/zeta-chain/node/pull/3506) - define `ConfirmationMode` enum and add it to `InboundParams`, `OutboundParams`, `MsgVoteInbound` and `MsgVoteOutbound`
 * [3469](https://github.com/zeta-chain/node/pull/3469) - add `MsgRemoveInboundTracker` to remove inbound trackers. This message can be triggered by the emergency policy.
-* [3450](https://github.com/zeta-chain/node/pull/3450) - SOL withdraw and call integration
+* [3450](https://github.com/zeta-chain/node/pull/3450) - integrate SOL withdraw and call
 * [3538](https://github.com/zeta-chain/node/pull/3538) - implement `MsgUpdateOperationalChainParams` for updating operational-related chain params with operational policy
-* [3534] (https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
+* [3534](https://github.com/zeta-chain/node/pull/3534) - Add Sui deposit & depositAndCall
 * [3541](https://github.com/zeta-chain/node/pull/3541) - implement `MsgUpdateZRC20Name` to update the name or symbol of a ZRC20 token
-* [3520](https://github.com/zeta-chain/node/pull/3520) - SPL withdraw and call integration
 * [3439](https://github.com/zeta-chain/node/pull/3439) - use protocol contracts V2 with TON deposits
+* [3520](https://github.com/zeta-chain/node/pull/3520) - integrate SPL withdraw and call
+* [3527](https://github.com/zeta-chain/node/pull/3527) - integrate SOL/SPL withdraw and call revert
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
+* [3548](https://github.com/zeta-chain/node/pull/3548) - ensure cctx list is sorted by creation time
+* [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
+* [3600](https://github.com/zeta-chain/node/pull/3600) - add dedicated zetaclient restricted addresses config. This file will be automatically reloaded when it changes without needing to restart zetaclient.
 
 ### Refactor
 
 * [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3496](https://github.com/zeta-chain/node/pull/3496) - zetaclient uses `ConfirmationParams` instead of old `ConfirmationCount`; use block ranged based observation for btc and evm chain.
+* [3594](https://github.com/zeta-chain/node/pull/3594) - set outbound hash in cctx when adding outbound tracker
 * [3553](https://github.com/zeta-chain/node/pull/3553) — add a new buffer blocks param to delay deletion of pending ballots
 
 ### Fixes
@@ -29,11 +38,32 @@
 * [3501](https://github.com/zeta-chain/node/pull/3501) - fix E2E test failure caused by nil `ConfirmationParams` for Solana and TON
 * [3509](https://github.com/zeta-chain/node/pull/3509) - schedule Bitcoin TSS keysign on interval to avoid TSS keysign spam
 * [3517](https://github.com/zeta-chain/node/pull/3517) - remove duplicate gateway event appending to fix false positive on multiple events in same tx
+* [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
 
 ### Tests
 
 * [3430](https://github.com/zeta-chain/node/pull/3430) - add simulation test for MsgWithDrawEmission
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
+* [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
+* [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
+* [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
+
+## v28.0.0
+
+v28 is based on the release/v27 branch rather than develop
+
+### Fixes
+* [3563](https://github.com/zeta-chain/node/pull/3563) - upgrade cosmos-sdk to v0.50.12 to resolve GHSA-x5vx-95h7-rv4p
+
+## v27.0.5
+
+### Fixes
+* [3554](https://github.com/zeta-chain/node/pull/3554) - disable observation of direct to TSS Address deposits on Arbitrum and Avalanch networks
+
+## v27.0.4
+
+### Fixes
+* [3508](https://github.com/zeta-chain/node/pull/3508) - fix empty from field in eth receipt rpc method
 
 ## v27.0.1
 

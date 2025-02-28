@@ -2,7 +2,8 @@ package testlog
 
 import (
 	"bytes"
-	"io"
+	"fmt"
+	"strings"
 	"sync"
 	"testing"
 
@@ -11,40 +12,63 @@ import (
 
 type Log struct {
 	zerolog.Logger
-	buf *concurrentBytesBuffer
-}
-
-type concurrentBytesBuffer struct {
+	t   *testing.T
 	buf *bytes.Buffer
-	mu  sync.RWMutex
+	mu  sync.Mutex
 }
 
 // New creates a new Log instance with a buffer and a test writer.
 func New(t *testing.T) *Log {
-	buf := &concurrentBytesBuffer{
+	log := &Log{
+		t:   t,
 		buf: &bytes.Buffer{},
-		mu:  sync.RWMutex{},
 	}
 
-	log := zerolog.New(io.MultiWriter(zerolog.NewTestWriter(t), buf))
+	log.Logger = zerolog.New(log)
 
-	return &Log{Logger: log, buf: buf}
+	return log
 }
 
 func (log *Log) String() string {
-	return log.buf.string()
+	log.mu.Lock()
+	defer log.mu.Unlock()
+	return log.buf.String()
 }
 
-func (b *concurrentBytesBuffer) Write(p []byte) (n int, err error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+func (log *Log) Write(p []byte) (n int, err error) {
+	log.mu.Lock()
+	defer log.mu.Unlock()
 
-	return b.buf.Write(p)
+	// silence panics in case this log line is written AFTER test termination.
+	const silencePanicSubstring = "Log in goroutine"
+	defer func() { silencePanic(recover(), silencePanicSubstring) }()
+
+	// write to the buffer first
+	n, err = log.buf.Write(p)
+	if err != nil {
+		return n, fmt.Errorf("failed to write to buffer: %w", err)
+	}
+
+	// Strip trailing newline because t.Log always adds one.
+	// (copied from zerolog NewTestWriter)
+	p = bytes.TrimRight(p, "\n")
+
+	// Then write to test output
+	log.t.Log(string(p))
+
+	return len(p), nil
 }
 
-func (b *concurrentBytesBuffer) string() string {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
+func silencePanic(r any, substr string) {
+	// noop
+	if r == nil {
+		return
+	}
 
-	return b.buf.String()
+	panicStr := fmt.Sprintf("%v", r)
+	if strings.Contains(panicStr, substr) {
+		return
+	}
+
+	panic(panicStr)
 }

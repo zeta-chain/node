@@ -180,7 +180,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 		ConfirmationMode: m.GetCurrentOutboundParam().ConfirmationMode,
 	}
 
-	// TODO : Refactor to move CoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
+	// TODO : Refactor to move FungibleTokenCoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
 	if m.InboundParams != nil {
 		revertTxParams.CoinType = m.InboundParams.CoinType
 	}
@@ -267,6 +267,18 @@ func (m CrossChainTx) SetOutboundBallotIndex(index string) {
 // GetCctxIndexFromBytes returns the CCTX index from a byte array.
 func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
+}
+
+// GetCctxIndexFromArbitraryBytes converts an arbitrary byte slice to a CCTX index string.
+// Returns an error if the input slice is less than 32 bytes.
+func GetCctxIndexFromArbitraryBytes(sendHash []byte) (string, error) {
+	if len(sendHash) < 32 {
+		return "", fmt.Errorf("input byte slice length %d is less than required 32 bytes", len(sendHash))
+	}
+
+	var indexBytes [32]byte
+	copy(indexBytes[:], sendHash[:32])
+	return GetCctxIndexFromBytes(indexBytes), nil
 }
 
 // NewCCTX creates a new CCTX from a MsgVoteInbound message and a TSS pubkey.

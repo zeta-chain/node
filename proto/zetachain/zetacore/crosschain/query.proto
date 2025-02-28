@@ -166,12 +166,14 @@ service Query {
       returns (QueryGetOutboundTrackerResponse) {
     option (google.api.http).get =
         "/zeta-chain/crosschain/outTxTracker/{chainID}/{nonce}";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use OutboundTrackerAll
   rpc OutTxTrackerAll(QueryAllOutboundTrackerRequest)
       returns (QueryAllOutboundTrackerResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/outTxTracker";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use OutboundTrackerAllByChain
@@ -179,6 +181,7 @@ service Query {
       returns (QueryAllOutboundTrackerByChainResponse) {
     option (google.api.http).get =
         "/zeta-chain/crosschain/outTxTrackerByChain/{chain}";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use InboundTrackerAllByChain
@@ -186,12 +189,14 @@ service Query {
       returns (QueryAllInboundTrackerByChainResponse) {
     option (google.api.http).get =
         "/zeta-chain/crosschain/inTxTrackerByChain/{chain_id}";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use InboundTrackerAll
   rpc InTxTrackerAll(QueryAllInboundTrackersRequest)
       returns (QueryAllInboundTrackersResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxTracker";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use InboundHashToCctx
@@ -199,6 +204,7 @@ service Query {
       returns (QueryGetInboundHashToCctxResponse) {
     option (google.api.http).get =
         "/zeta-chain/crosschain/inTxHashToCctx/{inboundHash}";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use InboundHashToCctxData
@@ -206,12 +212,14 @@ service Query {
       returns (QueryInboundHashToCctxDataResponse) {
     option (google.api.http).get =
         "/zeta-chain/crosschain/inTxHashToCctxData/{inboundHash}";
+    option deprecated = true;
   }
 
   // Deprecated(v17): use InboundHashToCctxAll
   rpc InTxHashToCctxAll(QueryAllInboundHashToCctxRequest)
       returns (QueryAllInboundHashToCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
+    option deprecated = true;
   }
 }
 
@@ -325,6 +333,9 @@ message QueryGetCctxResponse { CrossChainTx CrossChainTx = 1; }
 
 message QueryAllCctxRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // Bulk dump all CCTX without ordering.
+  // This is useful for initializing a CCTX indexer.
+  bool unordered = 2;
 }
 
 message QueryAllCctxResponse {

@@ -42,6 +42,9 @@ var (
 	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
 	DiscriminatorExecute = idlgateway.IDLGateway.GetDiscriminator("execute")
 
+	// DiscriminatorIncrementNonce returns the discriminator for Solana gateway 'increment_nonce' instruction
+	DiscriminatorIncrementNonce = idlgateway.IDLGateway.GetDiscriminator("increment_nonce")
+
 	// DiscriminatorExecuteSPL returns the discriminator for Solana gateway 'execute_spl_token' instruction
 	DiscriminatorExecuteSPL = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token")
 

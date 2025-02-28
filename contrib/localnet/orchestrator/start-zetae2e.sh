@@ -10,6 +10,8 @@
 # Trap signals and forward to children
 trap 'kill -- -$$' SIGINT SIGTERM
 
+/usr/sbin/sshd
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -113,6 +115,9 @@ fund_eth_from_config '.additional_accounts.user_bitcoin_withdraw.evm_address' 10
 # unlock solana tester accounts
 fund_eth_from_config '.additional_accounts.user_solana.evm_address' 10000 "solana tester"
 
+# unlock sui tester accounts
+fund_eth_from_config '.additional_accounts.user_sui.evm_address' 10000 "sui tester"
+
 # unlock miscellaneous tests accounts
 fund_eth_from_config '.additional_accounts.user_misc.evm_address' 10000 "misc tester"
 
@@ -139,6 +144,20 @@ fund_eth_from_config '.additional_accounts.user_erc20_revert.evm_address' 10000 
 
 # unlock emissions withdraw tests accounts
 fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
+
+mkdir -p /root/.zetacored/keyring-test/
+for i in 0 1; do
+    ssh root@zetacore$i "test -d /root/.zetacored/keyring-test/" && \
+    (echo "Source directory found in zetacore$i, copying operator keys" && \
+    mkdir -p /root/zetacore$i/ && \
+
+    scp -r root@zetacore$i:/root/.zetacored/keyring-test/ /root/zetacore$i/keyring-test/ && \
+    echo "Files copied successfully from zetacore$i") || \
+    echo "Error: keyring-test directory not found in zetacore$i container"
+
+    zetacored keys rename operator operator$i --home=/root/zetacore$i/ --keyring-backend=test --yes
+    cp -r /root/zetacore$i/keyring-test/* /root/.zetacored/keyring-test/
+done
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then

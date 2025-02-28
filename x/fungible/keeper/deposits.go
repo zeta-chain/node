@@ -260,7 +260,10 @@ func (k Keeper) getAndCheckZRC20(
 	} else {
 		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
 		if !found {
-			return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrForeignCoinNotFound
+			return ethcommon.Address{}, types.ForeignCoins{}, errors.Wrapf(
+				crosschaintypes.ErrForeignCoinNotFound,
+				"asset: %s, chainID %d", asset, chainID,
+			)
 		}
 	}
 	zrc20Contract = ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)
