@@ -1,0 +1,26 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.consensus.v1.MsgUpdateParams",
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr",
+      "block": {
+        "max_bytes": "22020096",
+        "max_gas": "150000000"
+      },
+      "evidence": {
+        "max_age_num_blocks": "100000",
+        "max_age_duration": "172800s",
+        "max_bytes": "1048576"
+      },
+      "validator": {
+        "pub_key_types": [
+          "ed25519"
+        ]
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "1000000000000000000azeta",
+  "title": "Update Max Gas Limit to 150M",
+  "summary": "Update Max Gas Limit to 150M ZetaChain Athens Testnet."
+}

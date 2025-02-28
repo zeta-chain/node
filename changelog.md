@@ -25,6 +25,7 @@
 * [3548](https://github.com/zeta-chain/node/pull/3548) - ensure cctx list is sorted by creation time
 * [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
 * [3600](https://github.com/zeta-chain/node/pull/3600) - add dedicated zetaclient restricted addresses config. This file will be automatically reloaded when it changes without needing to restart zetaclient.
+* [3578](https://github.com/zeta-chain/node/pull/3578) - Add disable_tss_block_scan parameter. This parameter will be used to disable expensive block scanning actions on non-ethereum EVM Chains.
 
 ### Refactor
 
@@ -45,6 +46,7 @@
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
 * [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
+* [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
 
 ## v28.0.0
 

@@ -96,7 +96,7 @@ func Uint64InRange(low, high uint64) uint64 {
 	return r.Uint64()%(high-low) + low
 }
 
-// Uint64InRange returns a sample uint64 in the given ranges
+// Uint64InRangeFromRand returns a sample uint64 in the given ranges
 func Uint64InRangeFromRand(r *rand.Rand, low, high uint64) uint64 {
 	if low == high {
 		return low // avoid division by zero

@@ -468,9 +468,10 @@ func (r *E2ERunner) FailNow() {
 	r.Logger.Error("Failure: %s", err.Error())
 	r.CtxCancel(err)
 
-	// Give some time to other goroutines to finish
-	time.Sleep(time.Second)
-	os.Exit(1)
+	// this panic ensures that the test routine exits fast.
+	// it should be caught and handled gracefully so long
+	// as the test is being executed by RunE2ETest().
+	panic(err)
 }
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
