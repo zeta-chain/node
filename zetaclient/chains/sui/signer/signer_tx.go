@@ -33,7 +33,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	case params.CoinType == coin.CoinType_Gas:
 		coinType = string(sui.SUI)
 	case params.CoinType == coin.CoinType_ERC20:
-		coinType = cctx.InboundParams.Asset
+		coinType = "0x" + cctx.InboundParams.Asset
 	default:
 		return tx, errors.Errorf("unsupported coin type %q", params.CoinType.String())
 	}

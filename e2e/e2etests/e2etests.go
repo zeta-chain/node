@@ -740,7 +740,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiTokenWithdrawName,
 		"withdraw fungible token from ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in base unit", DefaultValue: "1000000"},
+			{Description: "amount in base unit", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdraw,
 		runner.WithMinimumVersion("v29.0.0"),
