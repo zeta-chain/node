@@ -45,7 +45,12 @@ func TestMigrateStore(t *testing.T) {
 		require.True(t, found)
 		require.Len(t, newChainParams.ChainParams, len(oldChainParams.ChainParams))
 
-		for _, params := range newChainParams.ChainParams {
+		for i, params := range newChainParams.ChainParams {
+			// verify that old values are untouched
+			oldParams := oldChainParams.ChainParams[i]
+			require.Equal(t, oldParams.IsSupported, params.IsSupported)
+			require.Equal(t, oldParams.GatewayAddress, params.GatewayAddress)
+
 			// verify that chains that should have DisableTssBlockScan set to true
 			if params.ChainId == chains.Amoy.ChainId || params.ChainId == chains.ArbitrumMainnet.ChainId {
 				require.True(
