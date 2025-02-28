@@ -20,7 +20,6 @@ type LegacyParams struct {
 	ObserverSlashAmount         cosmossdk_io_math.Int       `protobuf:"bytes,9,opt,name=observer_slash_amount,json=observerSlashAmount,proto3,customtype=cosmossdk.io/math.Int"    json:"observer_slash_amount"`
 	BallotMaturityBlocks        int64                       `protobuf:"varint,10,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3"                                 json:"ballot_maturity_blocks,omitempty"`
 	BlockRewardAmount           cosmossdk_io_math.LegacyDec `protobuf:"bytes,11,opt,name=block_reward_amount,json=blockRewardAmount,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"block_reward_amount"`
-	PendingBallotsBufferBlocks  int64                       `protobuf:"varint,12,opt,name=pending_ballots_buffer_blocks,json=pendingBallotsBufferBlocks,proto3"                    json:"pending_ballots_buffer_blocks,omitempty"`
 }
 
 func (l *LegacyParams) Reset() {
