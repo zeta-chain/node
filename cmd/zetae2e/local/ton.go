@@ -23,7 +23,7 @@ func tonTestRoutine(
 			"ton",
 			conf,
 			deployerRunner,
-			conf.DefaultAccount,
+			conf.AdditionalAccounts.UserTON,
 			runner.NewLogger(verbose, color.FgCyan, "ton"),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
@@ -37,10 +37,6 @@ func tonTestRoutine(
 		tests, err := tonRunner.GetE2ETestsToRunByName(e2etests.AllE2ETests, testNames...)
 		if err != nil {
 			return errors.Wrap(err, "unable to get ton tests to run")
-		}
-
-		if err := tonRunner.SetupTON(); err != nil {
-			return errors.Wrap(err, "unable to setup TON account")
 		}
 
 		if err := tonRunner.RunE2ETests(tests); err != nil {
