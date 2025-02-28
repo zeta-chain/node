@@ -17,6 +17,10 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	balanceBefore := r.SuiGetFungibleTokenBalance(signer.Address())
+
 	// add liquidity in pool to allow revert fee to be paid
 	zetaAmount := big.NewInt(1e18)
 	zrc20Amount := big.NewInt(9000000000)
@@ -34,4 +38,9 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.EqualValues(r, coin.CoinType_ERC20, cctx.InboundParams.CoinType)
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
+	// check the balance after the failed deposit is higher than balance before - amount
+	// reason it's not equal is because of the gas fee for revert
+	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
+	require.Greater(r, balanceAfter, balanceBefore-amount.Uint64())
 }

@@ -15,6 +15,10 @@ func TestSuiDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	balanceBefore := r.SuiGetSUIBalance(signer.Address())
+
 	// make the deposit transaction
 	resp := r.SuiDepositAndCallSUI(r.TestDAppV2ZEVMAddr, math.NewUintFromBigInt(amount), []byte("revert"))
 
@@ -26,4 +30,9 @@ func TestSuiDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.EqualValues(r, coin.CoinType_Gas, cctx.InboundParams.CoinType)
 	require.True(r, cctx.InboundParams.IsCrossChainCall)
+
+	// check the balance after the failed deposit is higher than balance before - amount
+	// reason it's not equal is because of the gas fee for revert
+	balanceAfter := r.SuiGetSUIBalance(signer.Address())
+	require.Greater(r, balanceAfter, balanceBefore-amount.Uint64())
 }

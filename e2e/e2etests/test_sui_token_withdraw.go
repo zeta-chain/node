@@ -14,6 +14,8 @@ func TestSuiTokenWithdraw(r *runner.E2ERunner, args []string) {
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 
+	balanceBefore := r.SuiGetFungibleTokenBalance(signer.Address())
+
 	amount := utils.ParseBigInt(r, args[0])
 
 	r.SuiApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
@@ -25,5 +27,9 @@ func TestSuiTokenWithdraw(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// check the balance after the withdraw
+	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
+	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -15,6 +16,34 @@ import (
 
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
+
+// SuiGetSUIBalance returns the SUI balance of an address
+func (r *E2ERunner) SuiGetSUIBalance(addr string) uint64 {
+	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
+		Owner:    addr,
+		CoinType: string(sui.SUI),
+	})
+	require.NoError(r, err)
+
+	balance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+	require.NoError(r, err)
+
+	return balance
+}
+
+// SuiGetFungibleTokenBalance returns the fungible token balance of an address
+func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
+	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
+		Owner:    addr,
+		CoinType: "0x" + r.SuiTokenCoinType,
+	})
+	require.NoError(r, err)
+
+	balance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+	require.NoError(r, err)
+
+	return balance
+}
 
 // SuiApproveSUIZRC20 approves SUI ZRC20 on EVM to a specific address
 func (r *E2ERunner) SuiApproveSUIZRC20(allowed ethcommon.Address) {
