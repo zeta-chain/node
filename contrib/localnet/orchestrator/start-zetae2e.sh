@@ -115,6 +115,9 @@ fund_eth_from_config '.additional_accounts.user_bitcoin_withdraw.evm_address' 10
 # unlock solana tester accounts
 fund_eth_from_config '.additional_accounts.user_solana.evm_address' 10000 "solana tester"
 
+# unlock ton tester accounts
+fund_eth_from_config '.additional_accounts.user_ton.evm_address' 10000 "ton tester"
+
 # unlock sui tester accounts
 fund_eth_from_config '.additional_accounts.user_sui.evm_address' 10000 "sui tester"
 

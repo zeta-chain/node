@@ -246,6 +246,9 @@ then
 # solana tester
   address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+# ton tester
+  address=$(yq -r '.additional_accounts.user_ton.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # sui tester
   address=$(yq -r '.additional_accounts.user_sui.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta# migration tester
