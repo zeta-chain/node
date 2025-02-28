@@ -150,10 +150,7 @@ func (r *E2ERunner) tonProvisionUser(
 	deployer *ton.Deployer,
 	amount math.Uint,
 ) *wallet.Wallet {
-	pk, err := ton.PrivateKeyFromHex(user.TONPrivateKey.String())
-	require.NoError(r, err, "unable to create TON user private key")
-
-	accInit, wt, err := ton.ConstructWalletFromPrivateKey(pk, r.Clients.TON)
+	accInit, wt, err := user.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err, "unable to create wallet from TON user account")
 
 	err = deployer.Deploy(ctx, accInit, amount)

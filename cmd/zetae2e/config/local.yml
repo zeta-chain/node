@@ -40,7 +40,7 @@ additional_accounts:
     bech32_address: "zeta13a5yvmysdsncc704e093wy5wm0akp394tkrwje"
     evm_address: "0x8f68466C906c278c79F5CbcB17128EdBfb60C4b5"
     private_key: "a85f64e560fbef77422272b162915da8170152cf3983567b66f20a5494544591"
-    ton_private_key: "6c87e1b6852388d9b3438492807b4f47a03486d9ec0c11a65e2ebc48a706dbac"
+    solana_private_key: "2AB2oDXWey3uhwYVj4bbJ4cGbz7R2ZMePJpY5r84KyVeUq2z89nsfWgcnb1sH1jUvRaCxXV2DBwMNUobQUfTbeqq"
   user_sui:
     bech32_address: "zeta1qluk7yfyqfejwss64lqmn7de6svudcedz94zs2"
     evm_address: "0x07F96F1124027327421AAFc1B9F9B9D419C6e32d"

@@ -29,7 +29,7 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
 	// Given a sender
-	sender, err := r.Account.AsTONWallet(r.Clients.TON)
+	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
 	// ACT

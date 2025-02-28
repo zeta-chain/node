@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gagliardetto/solana-go"
 	"github.com/pkg/errors"
 	tonwallet "github.com/tonkeeper/tongo/wallet"
 	"gopkg.in/yaml.v3"
@@ -62,7 +64,6 @@ type Account struct {
 	RawPrivateKey    DoubleQuotedString `yaml:"private_key"`
 	SolanaAddress    DoubleQuotedString `yaml:"solana_address"`
 	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
-	TONPrivateKey    DoubleQuotedString `yaml:"ton_private_key"`
 }
 
 // AdditionalAccounts are extra  required to run specific tests
@@ -446,19 +447,19 @@ func (a Account) SuiSigner() (*sui.SignerSecp256k1, error) {
 	return sui.NewSignerSecp256k1(privateKeyBytes), nil
 }
 
-// AsTONWallet derives TON V5R1 wallet from Account's mnemonic.
-// Make sure that the wallet IS deployed on the network.
-func (a Account) AsTONWallet(client *ton.Client) (*tonwallet.Wallet, error) {
-	pk, err := ton.PrivateKeyFromHex(a.TONPrivateKey.String())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get private key")
-	}
+// AsTONWallet derives TON V5R1 wallet solana private key
+func (a Account) AsTONWallet(client *ton.Client) (*ton.AccountInit, *tonwallet.Wallet, error) {
+	pk := solana.MustPrivateKeyFromBase58(a.SolanaPrivateKey.String())
 
-	_, w, err := ton.ConstructWalletFromPrivateKey(pk, client)
-	return w, err
+	// Extract the seed bytes (first 32 bytes) from the ed25519 private key
+	// ed25519 private key is 64 bytes: 32 bytes seed + 32 bytes public key
+	seed := pk[:ed25519.SeedSize]
+
+	rawPk := ed25519.NewKeyFromSeed(seed)
+
+	return ton.ConstructWalletFromPrivateKey(rawPk, client)
 }
 
-// Validate that the address and the private key specified in the
 // config actually match
 func (a Account) Validate() error {
 	privateKey, err := a.PrivateKey()

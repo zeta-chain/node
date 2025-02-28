@@ -29,7 +29,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("zEVM sender's ZRC20 TON balance before withdraw: %d", senderZRC20BalanceBefore)
 
 	// Given a receiver
-	receiver, err := r.Account.AsTONWallet(r.Clients.TON)
+	_, receiver, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
 	receiverBalanceBefore, err := r.Clients.TON.GetBalanceOf(r.Ctx, receiver.GetAddress(), true)

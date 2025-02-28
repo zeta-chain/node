@@ -26,7 +26,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// Given a sender
-	sender, err := r.Account.AsTONWallet(r.Clients.TON)
+	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
 	// Ensure zevmauth user has ZETA balance
