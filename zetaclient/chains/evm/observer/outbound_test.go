@@ -70,7 +70,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 			ComplianceConfig: config.ComplianceConfig{},
 		}
 		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
-		config.LoadComplianceConfig(cfg)
+		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// post outbound vote
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)

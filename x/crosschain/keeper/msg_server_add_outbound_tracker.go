@@ -63,6 +63,12 @@ func (k msgServer) AddOutboundTracker(
 		return nil, cosmoserrors.Wrapf(authoritytypes.ErrUnauthorized, "Creator %s", msg.Creator)
 	}
 
+	// set the outbound hash from the last tracker and save it in the store
+	// this value is helpful for explorer or front-end application to find the outbound hash, it has no on-chain utility
+	// the hash will be replaced with the actual hash, if different, when the outbound transaction is observed and voted
+	cctx.CrossChainTx.GetCurrentOutboundParam().Hash = msg.TxHash
+	k.SetCrossChainTx(ctx, *cctx.CrossChainTx)
+
 	// fetch the tracker
 	// if the tracker does not exist, initialize a new one
 	tracker, found := k.GetOutboundTracker(ctx, msg.ChainId, msg.Nonce)

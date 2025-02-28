@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/graceful"
@@ -58,6 +59,15 @@ func Start(_ *cobra.Command, _ []string) error {
 	appContext := zctx.New(cfg, passes.relayerKeys(), logger.Std)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
+	err = config.LoadRestrictedAddressesConfig(cfg, globalOpts.ZetacoreHome)
+	if err != nil {
+		logger.Std.Err(err).Msg("loading restricted addresses config")
+	} else {
+		bg.Work(ctx, func(ctx context.Context) error {
+			return config.WatchRestrictedAddressesConfig(ctx, cfg, globalOpts.ZetacoreHome, logger.Std)
+		}, bg.WithName("watch_restricted_addresses_config"), bg.WithLogger(logger.Std))
+	}
+
 	telemetry, err := startTelemetry(ctx, cfg)
 	if err != nil {
 		return errors.Wrap(err, "unable to start telemetry")
@@ -77,7 +87,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to update app context")
 	}
 
-	log.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
+	log.Debug().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	granteePubKeyBech32, err := resolveObserverPubKeyBech32(cfg, passes.hotkey)
 	if err != nil {
