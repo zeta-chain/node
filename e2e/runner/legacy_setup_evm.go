@@ -39,7 +39,7 @@ func (r *E2ERunner) LegacySetEVMContractsFromConfig() {
 }
 
 // LegacySetupEVM setup legacy contracts on EVM for e2e test
-func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool) {
+func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool, legacyTestRunning bool) {
 	r.Logger.Print("⚙️ setting up EVM network legacy contracts")
 	startTime := time.Now()
 	defer func() {
@@ -137,6 +137,9 @@ func (r *E2ERunner) LegacySetupEVM(contractsDeployed bool) {
 	chainParams := currentChainParamsRes.ChainParams
 	chainParams.ConnectorContractAddress = r.ConnectorEthAddr.Hex()
 	chainParams.ZetaTokenContractAddress = r.ZetaEthAddr.Hex()
+	if legacyTestRunning {
+		chainParams.DisableTssBlockScan = false
+	}
 
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err, "failed to update chain params")

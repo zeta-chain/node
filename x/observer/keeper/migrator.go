@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	v10 "github.com/zeta-chain/node/x/observer/migrations/v10"
+	v11 "github.com/zeta-chain/node/x/observer/migrations/v11"
 	v8 "github.com/zeta-chain/node/x/observer/migrations/v8"
 	v9 "github.com/zeta-chain/node/x/observer/migrations/v9"
 )
@@ -60,4 +61,9 @@ func (m Migrator) Migrate8to9(ctx sdk.Context) error {
 // Migrate9to10 migrates the store from consensus version 9 to 10
 func (m Migrator) Migrate9to10(ctx sdk.Context) error {
 	return v10.MigrateStore(ctx, m.observerKeeper)
+}
+
+// Migrate10to11 migrates the store from consensus version 10 to 11
+func (m Migrator) Migrate10to11(ctx sdk.Context) error {
+	return v11.MigrateStore(ctx, m.observerKeeper)
 }

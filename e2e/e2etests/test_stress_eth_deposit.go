@@ -2,10 +2,12 @@ package e2etests
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -29,7 +31,8 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		hash := r.LegacyDepositEtherWithAmount(depositAmount)
+		tx := r.ETHDeposit(r.EVMAddress(), depositAmount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+		hash := tx.Hash()
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
