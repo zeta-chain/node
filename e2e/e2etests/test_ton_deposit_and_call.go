@@ -13,30 +13,35 @@ import (
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	// Given deployer
-	ctx, deployer := r.Ctx, r.TONDeployer
+	ctx := r.Ctx
+
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
 
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
 	// Given approx depositAndCall fee
-	depositFee, err := r.TONGateway.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)
+	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)
 	require.NoError(r, err)
 
-	// Given sample wallet with a balance of 50 TON
-	sender, err := deployer.CreateWallet(ctx, toncontracts.Coins(50))
+	// Given a sender
+	sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
+
+	// Ensure zevmauth user has ZETA balance
+	// todo check pre-PR code base (prev code)
 
 	// Given sample zEVM contract
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
-	require.NoError(r, err)
+	require.NoError(r, err, "unable to deploy example contract")
 	r.Logger.Info("Example zevm contract deployed at: %s", contractAddr.String())
 
 	// Given call data
 	callData := []byte("hello from TON!")
 
 	// ACT
-	_, err = r.TONDepositAndCall(sender, amount, contractAddr, callData)
+	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)

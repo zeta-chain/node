@@ -6,6 +6,7 @@ import (
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -18,17 +19,25 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		data   = []byte("hello reverter")
 	)
 
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
+
 	// Given deployer mock revert contract
 	// deploy a reverter contract in ZEVM
 	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
 
+	// Given a sender
+	sender, err := r.Account.AsTONWallet(r.Clients.TON)
+	require.NoError(r, err)
+
 	// ACT
 	// Send a deposit and call transaction from the deployer (faucet)
 	// to the reverter contract
 	cctx, err := r.TONDepositAndCall(
-		&r.TONDeployer.Wallet,
+		gw,
+		sender,
 		amount,
 		reverterAddr,
 		data,
