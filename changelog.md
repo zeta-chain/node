@@ -26,6 +26,7 @@
 * [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
 * [3600](https://github.com/zeta-chain/node/pull/3600) - add dedicated zetaclient restricted addresses config. This file will be automatically reloaded when it changes without needing to restart zetaclient.
 * [3578](https://github.com/zeta-chain/node/pull/3578) - Add disable_tss_block_scan parameter. This parameter will be used to disable expensive block scanning actions on non-ethereum EVM Chains.
+* [3551](https://github.com/zeta-chain/node/pull/3551) - support for EVM chain and Bitcoin chain inbound fast confirmation
 
 ### Refactor
 

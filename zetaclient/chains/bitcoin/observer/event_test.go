@@ -367,6 +367,9 @@ func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
 		// test amount
 		amountSats := big.NewInt(1000)
 
+		// mock SAFE confirmed block
+		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
+
 		// expected vote
 		expectedVote := crosschaintypes.MsgVoteInbound{
 			Sender:             event.FromAddress,
@@ -421,6 +424,9 @@ func Test_NewInboundVoteFromStdMemo(t *testing.T) {
 
 		// test amount
 		amountSats := big.NewInt(1000)
+
+		// mock SAFE confirmed block
+		ob.WithLastBlock(event.BlockNumber + ob.ChainParams().InboundConfirmationSafe())
 
 		// expected vote
 		memoBytesExpected := event.MemoStd.Payload
