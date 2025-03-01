@@ -70,7 +70,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 			ComplianceConfig: config.ComplianceConfig{},
 		}
 		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
-		config.LoadComplianceConfig(cfg)
+		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// post outbound vote
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
@@ -565,7 +565,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 //		// load archived outbound receipt that contains ZetaReceived event
 //		// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 //		nonce := uint64(9718)
-//		coinType := coin.CoinType(5) // unknown coin type
+//		coinType := coin.FungibleTokenCoinType(5) // unknown coin type
 //		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(
 //			t,
 //			TestDataDir,

@@ -75,7 +75,7 @@ func (k msgServer) VoteInbound(
 		msg.InboundHash,
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, voteInboundID)
+		return nil, sdkerrors.Wrap(err, "failed to vote on inbound ballot")
 	}
 
 	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
@@ -102,7 +102,7 @@ func (k msgServer) VoteInbound(
 
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, voteInboundID)
+		return nil, sdkerrors.Wrap(err, "failed to validate inbound")
 	}
 	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveObservedInboundInformation(ctx, cctx, msg.EventIndex)

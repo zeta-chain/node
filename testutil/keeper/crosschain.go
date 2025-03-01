@@ -313,7 +313,7 @@ func MockProcessV2RevertDeposit(
 	// inboundSender string
 	// amount *big.Int
 	// chainID int64
-	// coinType coin.CoinType
+	// coinType coin.FungibleTokenCoinType
 	// asset string
 	// revertAddress common.Address
 	// callOnRevert bool
@@ -486,11 +486,11 @@ func MockCctxByNonce(
 	observerKeeper *crosschainmocks.CrosschainObserverKeeper,
 	cctxStatus types.CctxStatus,
 	isErr bool,
-) {
+) string {
 	if isErr {
 		// return error on GetTSS to make CctxByNonce return error
 		observerKeeper.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false).Once()
-		return
+		return ""
 	}
 
 	cctx := sample.CrossChainTx(t, sample.StringRandom(sample.Rand(), 10))
@@ -505,4 +505,6 @@ func MockCctxByNonce(
 			CctxIndex: cctx.Index,
 		}, true).
 		Once()
+
+	return cctx.Index
 }

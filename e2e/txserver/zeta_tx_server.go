@@ -77,14 +77,15 @@ const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
-	ctx             context.Context
-	clientCtx       client.Context
-	txFactory       tx.Factory
-	name            []string
-	mnemonic        []string
-	address         []string
-	blockTimeout    time.Duration
-	authorityClient authoritytypes.QueryClient
+	ctx               context.Context
+	clientCtx         client.Context
+	txFactory         tx.Factory
+	name              []string
+	mnemonic          []string
+	address           []string
+	blockTimeout      time.Duration
+	authorityClient   authoritytypes.QueryClient
+	validatorsKeyring keyring.Keyring
 }
 
 // NewZetaTxServer returns a new TxServer with provided account
@@ -134,31 +135,60 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		addresses = append(addresses, accAddr.String())
 	}
 
+	// initialize validators keyring. The validator keys have been copied to this location in the docker image.
+	// Refer contrib/localnet/orchestrator/Dockerfile.fastbuild for more details
+	validatorsKeyring, err := keyring.New(
+		"validatorKeys",
+		keyring.BackendTest,
+		"/root/.zetacored/",
+		nil,
+		cdc,
+		hd.EthSecp256k1Option(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator keyring: %w", err)
+	}
+
 	clientCtx := newContext(rpc, cdc, reg, kr, chainID)
 	txf := newFactory(clientCtx)
 
 	return &ZetaTxServer{
-		ctx:          ctx,
-		clientCtx:    clientCtx,
-		txFactory:    txf,
-		name:         names,
-		address:      addresses,
-		blockTimeout: 2 * time.Minute,
+		ctx:               ctx,
+		clientCtx:         clientCtx,
+		txFactory:         txf,
+		name:              names,
+		address:           addresses,
+		blockTimeout:      2 * time.Minute,
+		validatorsKeyring: validatorsKeyring,
 	}, nil
 }
 
+// UpdateKeyring updates the keyring being used by the ZetaTxServer
+// This returns a copy of the ZetaTxServer with the updated keyring
+func (zts *ZetaTxServer) UpdateKeyring(kr keyring.Keyring) ZetaTxServer {
+	ztsUpdated := *zts
+	ztsUpdated.clientCtx = ztsUpdated.clientCtx.WithKeyring(kr)
+	ztsUpdated.txFactory = newFactory(ztsUpdated.clientCtx)
+	return ztsUpdated
+}
+
 // GetAccountName returns the account name from the given index
-// returns empty string if index is out of bound, error should be handled by caller
-func (zts ZetaTxServer) GetAccountName(index int) string {
+// returns empty string if index is out of bound, caller should handle error
+func (zts *ZetaTxServer) GetAccountName(index int) string {
 	if index >= len(zts.name) {
 		return ""
 	}
 	return zts.name[index]
 }
 
+// GetCodec returns the codec for the ZetaTxServer
+func (zts *ZetaTxServer) GetCodec() codec.Codec {
+	return zts.clientCtx.Codec
+}
+
 // GetAccountAddress returns the account address from the given index
 // returns empty string if index is out of bound, error should be handled by caller
-func (zts ZetaTxServer) GetAccountAddress(index int) string {
+func (zts *ZetaTxServer) GetAccountAddress(index int) string {
 	if index >= len(zts.address) {
 		return ""
 	}
@@ -166,7 +196,7 @@ func (zts ZetaTxServer) GetAccountAddress(index int) string {
 }
 
 // GetAccountAddressFromName returns the account address from the given name
-func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
+func (zts *ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 	acc, err := zts.clientCtx.Keyring.Key(name)
 	if err != nil {
 		return "", err
@@ -180,7 +210,7 @@ func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
 
 // MustGetAccountAddressFromName returns the account address from the given name.It panics on error
 // and should be used in tests only
-func (zts ZetaTxServer) MustGetAccountAddressFromName(name string) string {
+func (zts *ZetaTxServer) MustGetAccountAddressFromName(name string) string {
 	acc, err := zts.clientCtx.Keyring.Key(name)
 	if err != nil {
 		panic(err)
@@ -192,14 +222,19 @@ func (zts ZetaTxServer) MustGetAccountAddressFromName(name string) string {
 	return addr.String()
 }
 
+// GetValidatorsKeyring returns the validators keyring
+func (zts *ZetaTxServer) GetValidatorsKeyring() keyring.Keyring {
+	return zts.validatorsKeyring
+}
+
 // GetAllAccountAddress returns all account addresses
-func (zts ZetaTxServer) GetAllAccountAddress() []string {
+func (zts *ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
 }
 
 // GetAccountMnemonic returns the account name from the given index
 // returns empty string if index is out of bound, error should be handled by caller
-func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
+func (zts *ZetaTxServer) GetAccountMnemonic(index int) string {
 	if index >= len(zts.mnemonic) {
 		return ""
 	}
@@ -208,7 +243,7 @@ func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
 
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
 // and waiting for blockTime for tx to be included in the block
-func (zts ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
+func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
 	// Find number and sequence and set it
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -244,7 +279,7 @@ func (zts ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdkt
 	return broadcastWithBlockTimeout(zts, txBytes)
 }
 
-func broadcastWithBlockTimeout(zts ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
+func broadcastWithBlockTimeout(zts *ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
 	res, err := zts.clientCtx.BroadcastTx(txBytes)
 	if err != nil {
 		if res == nil {
@@ -309,7 +344,7 @@ type intoAny interface {
 // It takes into account that the required policy get updated in v28 operational -> admin
 // TODO: remove retry after v28 upgrade
 // https://github.com/zeta-chain/node/issues/3545
-func (zts ZetaTxServer) UpdateChainParams(chainParams *observertypes.ChainParams) error {
+func (zts *ZetaTxServer) UpdateChainParams(chainParams *observertypes.ChainParams) error {
 	if _, err := zts.BroadcastTx(utils.AdminPolicyName, observertypes.NewMsgUpdateChainParams(
 		zts.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		chainParams,
@@ -324,7 +359,7 @@ func (zts ZetaTxServer) UpdateChainParams(chainParams *observertypes.ChainParams
 }
 
 // EnableHeaderVerification enables the header verification for the given chain IDs
-func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
+func (zts *ZetaTxServer) EnableHeaderVerification(account string, chainIDList []int64) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -343,7 +378,7 @@ func (zts ZetaTxServer) EnableHeaderVerification(account string, chainIDList []i
 }
 
 // UpdateGatewayAddress updates the gateway address
-func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error {
+func (zts *ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -364,7 +399,7 @@ func (zts ZetaTxServer) UpdateGatewayAddress(account, gatewayAddr string) error 
 
 // DeploySystemContracts deploys the system contracts
 // returns the addresses of uniswap factory, router
-func (zts ZetaTxServer) DeploySystemContracts(
+func (zts *ZetaTxServer) DeploySystemContracts(
 	accountOperational, accountAdmin string,
 ) (SystemContractAddresses, error) {
 	// retrieve account
@@ -415,7 +450,7 @@ func (zts ZetaTxServer) DeploySystemContracts(
 
 // DeployZRC20s deploys the ZRC20 contracts
 // returns the addresses of erc20 and spl zrc20
-func (zts ZetaTxServer) DeployZRC20s(
+func (zts *ZetaTxServer) DeployZRC20s(
 	zrc20Deployment ZRC20Deployment,
 	skipChain func(chainID int64) bool,
 ) (*ZRC20Addresses, error) {
@@ -581,7 +616,7 @@ func (zts ZetaTxServer) DeployZRC20s(
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount
-func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error {
+func (zts *ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -610,7 +645,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error
 	return err
 }
 
-func (zts ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account, observer string) error {
+func (zts *ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account, observer string) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -633,7 +668,7 @@ func (zts ZetaTxServer) WithdrawAllEmissions(withdrawAmount sdkmath.Int, account
 }
 
 // UpdateKeygen sets a new keygen height . The new height is the current height + 30
-func (zts ZetaTxServer) UpdateKeygen(height int64) error {
+func (zts *ZetaTxServer) UpdateKeygen(height int64) error {
 	keygenHeight := height + 30
 	_, err := zts.BroadcastTx(zts.GetAccountName(0), observertypes.NewMsgUpdateKeygen(
 		zts.GetAccountAddress(0),
@@ -648,7 +683,7 @@ func (zts *ZetaTxServer) SetAuthorityClient(authorityClient authoritytypes.Query
 }
 
 // InitializeLiquidityCaps initializes the liquidity cap for the given coin with a large value
-func (zts ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
+func (zts *ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
 	liquidityCap := sdkmath.NewUint(1e18).MulUint64(1e12)
 
 	msgs := make([]sdktypes.Msg, len(zrc20s))
@@ -665,7 +700,7 @@ func (zts ZetaTxServer) InitializeLiquidityCaps(zrc20s ...string) error {
 
 // fetchMessagePermissions fetches the message permissions for a given message
 // return a bool preV19 to indicate the node is preV19 and the query doesn't exist
-func (zts ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytypes.PolicyType, bool, error) {
+func (zts *ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytypes.PolicyType, bool, error) {
 	msgURL := sdktypes.MsgTypeURL(msg)
 
 	res, err := zts.authorityClient.Authorization(zts.ctx, &authoritytypes.QueryAuthorizationRequest{

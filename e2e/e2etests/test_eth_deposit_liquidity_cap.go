@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -29,8 +30,11 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("set liquidity cap tx hash: %s", res.TxHash)
 	r.Logger.Info("Depositing more than liquidity cap should make cctx reverted")
 
-	signedTx, err := r.LegacySendEther(r.TSSAddress, amountMoreThanCap, nil)
-	require.NoError(r, err)
+	signedTx := r.ETHDeposit(
+		r.EVMAddress(),
+		amountMoreThanCap,
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
@@ -44,8 +48,11 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	initialBal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
-	signedTx, err = r.LegacySendEther(r.TSSAddress, amountLessThanCap, nil)
-	require.NoError(r, err)
+	signedTx = r.ETHDeposit(
+		r.EVMAddress(),
+		amountLessThanCap,
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
@@ -69,8 +76,11 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	initialBal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 
-	signedTx, err = r.LegacySendEther(r.TSSAddress, amountMoreThanCap, nil)
-	require.NoError(r, err)
+	signedTx = r.ETHDeposit(
+		r.EVMAddress(),
+		amountMoreThanCap,
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)

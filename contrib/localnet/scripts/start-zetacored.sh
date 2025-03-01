@@ -189,10 +189,10 @@ then
 
   # Update governance and other chain parameters for localnet
   jq '
-    .app_state.gov.params.voting_period="100s" |
+    .app_state.gov.params.voting_period="30s" |
     .app_state.gov.params.quorum="0.1" |
     .app_state.gov.params.threshold="0.1" |
-    .app_state.gov.params.expedited_voting_period = "50s" |
+    .app_state.gov.params.expedited_voting_period = "10s" |
     .app_state.gov.deposit_params.min_deposit[0].denom = "azeta" |
     .app_state.gov.params.min_deposit[0].denom = "azeta" |
     .app_state.staking.params.bond_denom = "azeta" |
@@ -246,7 +246,9 @@ then
 # solana tester
   address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# migration tester
+# sui tester
+  address=$(yq -r '.additional_accounts.user_sui.bech32_address' /root/config.yml)
+  zetacored add-genesis-account "$address" 100000000000000000000000000azeta# migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
   zetacored add-genesis-account "$address" 100000000000000000000000000azeta
 # precompile tester

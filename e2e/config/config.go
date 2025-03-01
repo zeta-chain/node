@@ -72,6 +72,7 @@ type AdditionalAccounts struct {
 	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
 	UserSolana            Account `yaml:"user_solana"`
 	UserSPL               Account `yaml:"user_spl"`
+	UserSui               Account `yaml:"user_sui"`
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
 	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
@@ -122,12 +123,21 @@ type Contracts struct {
 	EVM    EVM    `yaml:"evm"`
 	ZEVM   ZEVM   `yaml:"zevm"`
 	Solana Solana `yaml:"solana"`
+	Sui    Sui    `yaml:"sui"`
 }
 
 // Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
 	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
 	SPLAddr          DoubleQuotedString `yaml:"spl"`
+}
+
+// Sui contains the addresses of predeployed contracts on the Sui chain
+type Sui struct {
+	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
+	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
+	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -151,6 +161,8 @@ type ZEVM struct {
 	SOLZRC20Addr       DoubleQuotedString `yaml:"sol_zrc20"`
 	SPLZRC20Addr       DoubleQuotedString `yaml:"spl_zrc20"`
 	TONZRC20Addr       DoubleQuotedString `yaml:"ton_zrc20"`
+	SUIZRC20Addr       DoubleQuotedString `yaml:"sui_zrc20"`
+	SuiTokenZRC20Addr  DoubleQuotedString `yaml:"sui_token_zrc20"`
 	UniswapFactoryAddr DoubleQuotedString `yaml:"uniswap_factory"`
 	UniswapRouterAddr  DoubleQuotedString `yaml:"uniswap_router"`
 	ConnectorZEVMAddr  DoubleQuotedString `yaml:"connector_zevm"`
@@ -243,6 +255,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserBitcoinDeposit,
 		a.UserBitcoinWithdraw,
 		a.UserSolana,
+		a.UserSui,
 		a.UserSPL,
 		a.UserLegacyEther,
 		a.UserMisc,
@@ -335,6 +348,10 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserSPL, err = generateAccount()
+	if err != nil {
+		return err
+	}
+	c.AdditionalAccounts.UserSui, err = generateAccount()
 	if err != nil {
 		return err
 	}

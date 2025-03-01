@@ -153,7 +153,7 @@ func Test_BuildInboundVoteMsgFromEvent(t *testing.T) {
 
 		// restrict sender
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender}
-		config.LoadComplianceConfig(cfg)
+		config.SetRestrictedAddressesFromConfig(cfg)
 
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		require.Nil(t, msg)
@@ -173,7 +173,7 @@ func Test_IsEventProcessable(t *testing.T) {
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {

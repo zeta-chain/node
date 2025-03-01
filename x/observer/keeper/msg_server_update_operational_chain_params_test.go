@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -8,7 +10,6 @@ import (
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/observer/keeper"
 	"github.com/zeta-chain/node/x/observer/types"
-	"testing"
 )
 
 func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
@@ -144,6 +145,7 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 				SafeInboundCount:  1008,
 				SafeOutboundCount: 1009,
 			},
+			DisableTssBlockScan: true,
 		}
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 
@@ -161,6 +163,7 @@ func TestMsgServer_UpdateOperationalChainParams(t *testing.T) {
 		require.NotEqualValues(t, originalChainParams.OutboundScheduleInterval, msg.OutboundScheduleInterval)
 		require.NotEqualValues(t, originalChainParams.OutboundScheduleLookahead, msg.OutboundScheduleLookahead)
 		require.NotEqualValues(t, *originalChainParams.ConfirmationParams, msg.ConfirmationParams)
+		require.NotEqualValues(t, originalChainParams.DisableTssBlockScan, msg.DisableTssBlockScan)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{

@@ -358,6 +358,10 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	require.NoError(r, err)
 	r.Logger.Info("reveal txid: %s", txid.String())
 
+	// mine 1 block to confirm the reveal transaction
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
+	require.NoError(r, err)
+
 	return txid, revealTx.TxOut[0].Value
 }
 
