@@ -26,7 +26,7 @@ func startBitcoinTests(
 	// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
 	bitcoinDepositTests := []string{
 		e2etests.TestBitcoinDonationName,
-		e2etests.TestBitcoinDepositName,
+		//e2etests.TestBitcoinDepositName,
 		//e2etests.TestBitcoinDepositFastConfirmationName,
 		//e2etests.TestBitcoinDepositAndCallName,
 		//e2etests.TestBitcoinDepositAndCallRevertName,

@@ -13,12 +13,23 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 
 	// make a deposit with a empty memo
 	utxos := r.ListDeployerUTXOs()
-	txHash, err := r.SendToTSSFromDeployerWithMemo(0.001, utxos[:1], []byte{})
+	txHash, err := r.SendToTSSFromDeployerWithMemo(0.1, utxos[:1], []byte{})
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit")
+	r.Logger.CCTX(*cctx, "deposit empty memo")
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	require.EqualValues(r, crosschaintypes.InboundStatus_INVALID_MEMO, cctx.InboundParams.Status)
+
+	// make a deposit with an invalid memo
+	utxos = r.ListDeployerUTXOs()
+	txHash, err = r.SendToTSSFromDeployerWithMemo(0.1, utxos[:1], []byte("invalid memo"))
+	require.NoError(r, err)
+
+	// wait for the cctx to be mined
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit invalid memo")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, crosschaintypes.InboundStatus_INVALID_MEMO, cctx.InboundParams.Status)
 }
