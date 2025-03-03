@@ -119,6 +119,7 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
+	TestBitcoinDepositInvalidMemoRevertName                = "bitcoin_deposit_invalid_memo_revert"
 
 	/*
 	 Application tests
@@ -907,6 +908,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositInvalidMemoRevertName,
+		"deposit Bitcoin with invalid memo; expect revert",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositInvalidMemoRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Application tests

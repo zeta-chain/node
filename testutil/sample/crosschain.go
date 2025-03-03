@@ -179,7 +179,7 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 		ObservedExternalHeight: r.Uint64(),
 		BallotIndex:            StringRandom(r, 32),
 		FinalizedZetaHeight:    r.Uint64(),
-		Status:                 InboundStatusFromRand(r),
+		Status:                 types.InboundStatus_SUCCESS,
 		ConfirmationMode:       ConfirmationModeFromRand(r),
 	}
 }
