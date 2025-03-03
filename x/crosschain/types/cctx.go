@@ -191,33 +191,37 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 }
 
 // AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(
-	ctx sdk.Context,
-	msg MsgVoteOutbound,
-	ballotStatus observertypes.BallotStatus,
-) error {
-	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
-		if !msg.ValueReceived.Equal(m.GetCurrentOutboundParam().Amount) {
-			ctx.Logger().Error(fmt.Sprintf("VoteOutbound: Mint mismatch: %s value received vs %s cctx amount",
-				msg.ValueReceived,
-				m.GetCurrentOutboundParam().Amount))
-			return cosmoserrors.Wrap(
-				sdkerrors.ErrInvalidRequest,
-				fmt.Sprintf(
-					"ValueReceived %s does not match sent value %s",
-					msg.ValueReceived,
-					m.GetCurrentOutboundParam().Amount,
-				),
-			)
-		}
+func (m *CrossChainTx) AddOutbound(ctx sdk.Context, msg MsgVoteOutbound, status observertypes.BallotStatus) error {
+	const failure = observertypes.BallotStatus_BallotFinalized_FailureObservation
+
+	params := m.GetCurrentOutboundParam()
+
+	// amount mismatch
+	if status != failure && !msg.ValueReceived.Equal(params.Amount) {
+		errStr := fmt.Sprintf(
+			"VoteOutbound: Mint mismatch: %s value received vs %s cctx amount",
+			msg.ValueReceived,
+			params.Amount,
+		)
+
+		ctx.Logger().Error(errStr)
+
+		return cosmoserrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"ValueReceived %s does not match sent value %s",
+			msg.ValueReceived,
+			params.Amount,
+		)
 	}
-	// Update CCTX values
-	m.GetCurrentOutboundParam().Hash = msg.ObservedOutboundHash
-	m.GetCurrentOutboundParam().GasUsed = msg.ObservedOutboundGasUsed
-	m.GetCurrentOutboundParam().EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
-	m.GetCurrentOutboundParam().EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
-	m.GetCurrentOutboundParam().ObservedExternalHeight = msg.ObservedOutboundBlockHeight
-	m.GetCurrentOutboundParam().ConfirmationMode = msg.ConfirmationMode
+
+	// Update outbound values
+	params.Hash = msg.ObservedOutboundHash
+	params.GasUsed = msg.ObservedOutboundGasUsed
+	params.EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
+	params.EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
+	params.ObservedExternalHeight = msg.ObservedOutboundBlockHeight
+	params.ConfirmationMode = msg.ConfirmationMode
+
 	return nil
 }
 

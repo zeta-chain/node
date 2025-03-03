@@ -100,6 +100,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 
 			// OutboundParams
 			outbound := sample.OutboundParams(r)
+			outbound.ReceiverChainId = 42
 			outbound.EffectiveGasLimit = tc.effectiveGasLimit
 			outbound.GasUsed = tc.gasUsed
 			outbound.EffectiveGasPrice = tc.effectiveGasPrice
@@ -110,7 +111,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 				).Return(tc.fundStabilityPoolReturn)
 			}
 
-			err := k.FundGasStabilityPoolFromRemainingFees(ctx, *outbound, 42)
+			err := k.FundGasStabilityPoolFromRemainingFees(ctx, *outbound)
 			if tc.isError {
 				require.Error(t, err)
 				return

@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -119,7 +118,7 @@ func (k msgServer) VoteOutbound(
 	}
 
 	// Fund the gas stability pool with the remaining funds.
-	k.FundStabilityPool(ctx, &cctx)
+	k.fundStabilityPool(ctx, &cctx)
 
 	// Validate and process the observed outbound
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
@@ -136,58 +135,59 @@ func (k msgServer) VoteOutbound(
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
-// FundStabilityPool funds the stability pool with the remaining fees of an outbound tx
+// fundStabilityPool funds the stability pool with the remaining fees of an outbound tx
 // The funds are sent to the gas stability pool associated with the receiver chain
 // This wraps the FundGasStabilityPoolFromRemainingFees function and logs an error if it fails.We do not return an error here.
 // Event if the funding fails, the outbound tx is still processed.
-func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
-	// Fund the gas stability pool with the remaining funds
-	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutboundParam(), cctx.GetCurrentOutboundParam().ReceiverChainId); err != nil {
-		ctx.Logger().
-			Error("%s: CCTX: %s Can't fund the gas stability pool with remaining fees %s", voteOutboundID, cctx.Index, err.Error())
+func (k Keeper) fundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
+	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutboundParam()); err != nil {
+		errStr := fmt.Sprintf(
+			"VoteOutbound: CCTX: %s: can't fund the gas stability pool with remaining fees: %s",
+			cctx.Index,
+			err.Error(),
+		)
+
+		ctx.Logger().Error(errStr)
 	}
 }
 
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
-func (k Keeper) FundGasStabilityPoolFromRemainingFees(
-	ctx sdk.Context,
-	OutboundParams types.OutboundParams,
-	chainID int64,
-) error {
-	gasUsed := OutboundParams.GasUsed
-	gasLimit := OutboundParams.EffectiveGasLimit
-	gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundParams types.OutboundParams) error {
+	var (
+		chainID  = outboundParams.ReceiverChainId
+		gasUsed  = outboundParams.GasUsed
+		gasLimit = outboundParams.EffectiveGasLimit
+		gasPrice = math.NewUintFromBigInt(outboundParams.EffectiveGasPrice.BigInt())
+	)
 
-	if gasLimit == gasUsed {
+	switch {
+	case gasLimit == gasUsed:
+		// nothing to fund
 		return nil
+	case gasLimit == 0 || gasUsed == 0 || gasPrice.IsZero():
+		// We skip gas stability pool funding if one of the params is zero
+		return nil
+	case gasLimit < gasUsed:
+		return fmt.Errorf("gasLimit %d is less than the gasUsed %d", gasLimit, gasUsed)
 	}
 
-	// We skip gas stability pool funding if one of the params is zero
-	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
-		if gasLimit > gasUsed {
-			remainingGas := gasLimit - gasUsed
-			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
+	remainingGas := gasLimit - gasUsed
+	remainingFees := math.NewUint(remainingGas).Mul(gasPrice)
 
-			// We fund the stability pool with a portion of the remaining fees.
-			remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
+	// We fund the stability pool with a portion of the remaining fees.
+	remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
 
-			// Fund the gas stability pool.
-			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {
-				return err
-			}
-		} else {
-			return fmt.Errorf("%s: The gas limit %d is less than the gas used %d", voteOutboundID, gasLimit, gasUsed)
-		}
+	err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees.BigInt())
+	if err != nil {
+		return fmt.Errorf("unable to fund gas stability pool: %w", err)
 	}
 
 	return nil
 }
 
 // percentOf returns the percentage of a number
-func percentOf(n *big.Int, percent int64) *big.Int {
-	n = n.Mul(n, big.NewInt(percent))
-	n = n.Div(n, big.NewInt(100))
-	return n
+func percentOf(v math.Uint, percent uint64) math.Uint {
+	return v.MulUint64(percent).QuoUint64(100)
 }
 
 // SaveOutbound saves the outbound transaction.It does the following things in one function:
