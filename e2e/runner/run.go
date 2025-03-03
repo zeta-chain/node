@@ -49,12 +49,12 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	}()
 
 	select {
+	case <-r.Ctx.Done():
+		return fmt.Errorf("context cancelled in %s after %s", e2eTest.Name, time.Since(startTime))
 	case err := <-errChan:
 		if err != nil {
 			return fmt.Errorf("%s failed (duration %s): %w", e2eTest.Name, time.Since(startTime), err)
 		}
-	case <-r.Ctx.Done():
-		return fmt.Errorf("context cancelled in %s after %s", e2eTest.Name, time.Since(startTime))
 	}
 
 	// check zrc20 balance vs. supply

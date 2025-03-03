@@ -28188,6 +28188,31 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/fungible/foreign_coins/{chainId}/{asset}:
+    get:
+      summary: Queries a ForeignCoins by chain_id and asset.
+      operationId: ForeignCoinsFromAsset
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: asset
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/fungible/foreign_coins/{index}:
     get:
       summary: Queries a ForeignCoins by index.
@@ -58250,6 +58275,14 @@ definitions:
     properties:
       codeHash:
         type: string
+  zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetResponse:
+    type: object
+    properties:
+      foreignCoins:
+        $ref: '#/definitions/zetachain.zetacore.fungible.ForeignCoins'
+    description: |-
+      QueryGetForeignCoinsFromAssetResponse defines the response type for the
+      ForeignCoinsFromAsset RPC method.
   zetachain.zetacore.fungible.QueryGetForeignCoinsResponse:
     type: object
     properties:
@@ -58473,6 +58506,11 @@ definitions:
       confirmationParams:
         $ref: '#/definitions/zetachain.zetacore.observer.ConfirmationParams'
         title: Advanced confirmation parameters for chain to support fast observation
+      disableTssBlockScan:
+        type: boolean
+        description: |-
+          Skip actions that require scanning the contents of each block.
+          The main thing this disables is transfers directly to the TSS address.
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:
