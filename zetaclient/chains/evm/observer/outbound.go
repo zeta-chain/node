@@ -12,7 +12,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
@@ -24,7 +23,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // ProcessOutboundTrackers processes outbound trackers
@@ -87,68 +85,6 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	return nil
 }
 
-// postVoteOutbound posts vote to zetacore for the confirmed outbound
-func (ob *Observer) postVoteOutbound(
-	ctx context.Context,
-	cctxIndex string,
-	receipt *ethtypes.Receipt,
-	transaction *ethtypes.Transaction,
-	receiveValue *big.Int,
-	receiveStatus chains.ReceiveStatus,
-	nonce uint64,
-	coinType coin.CoinType,
-	logger zerolog.Logger,
-) {
-	chainID := ob.Chain().ChainId
-
-	signerAddress := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-
-	msg := crosschaintypes.NewMsgVoteOutbound(
-		signerAddress.String(),
-		cctxIndex,
-		receipt.TxHash.Hex(),
-		receipt.BlockNumber.Uint64(),
-		receipt.GasUsed,
-		math.NewIntFromBigInt(transaction.GasPrice()),
-		transaction.Gas(),
-		math.NewUintFromBigInt(receiveValue),
-		receiveStatus,
-		chainID,
-		nonce,
-		coinType,
-		crosschaintypes.ConfirmationMode_SAFE,
-	)
-
-	const gasLimit = zetacore.PostVoteOutboundGasLimit
-
-	var retryGasLimit uint64
-	if msg.Status == chains.ReceiveStatus_failed {
-		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
-	}
-
-	// post vote to zetacore
-	logFields := map[string]any{
-		"chain":    chainID,
-		"nonce":    nonce,
-		"outbound": receipt.TxHash.String(),
-	}
-	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Fields(logFields).
-			Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
-		return
-	}
-
-	// print vote tx hash and ballot
-	if zetaTxHash != "" {
-		logFields["vote"] = zetaTxHash
-		logFields["ballot"] = ballot
-		logger.Info().Fields(logFields).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
-	}
-}
-
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
 func (ob *Observer) VoteOutboundIfConfirmed(
 	ctx context.Context,
@@ -160,8 +96,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		return true, nil
 	}
 	receipt, transaction := ob.getTxNReceipt(nonce)
-	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
-	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 
 	// get connector and erc20Custody contracts
 	connectorAddr, connector, err := ob.getConnectorContract()
@@ -182,21 +116,14 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 
 	// define a few common variables
-	var receiveValue *big.Int
-	var receiveStatus chains.ReceiveStatus
-	cointype := cctx.InboundParams.CoinType
-
-	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
-		// use cctx's amount to bypass the amount check in zetacore
-		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_failed
-		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receiveStatus = chains.ReceiveStatus_success
-		}
-		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
-		return false, nil
-	}
+	var (
+		chainID       = ob.Chain().ChainId
+		txHash        = receipt.TxHash.Hex()
+		receiveValue  *big.Int
+		receiveStatus chains.ReceiveStatus
+		cointype      = cctx.InboundParams.CoinType
+		msg           *crosschaintypes.MsgVoteOutbound
+	)
 
 	// parse the received value from the outbound receipt
 	receiveValue, receiveStatus, err = parseOutboundReceivedValue(
@@ -213,15 +140,58 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		gateway,
 	)
 	if err != nil {
-		logger.Error().
-			Err(err).
-			Msgf("VoteOutboundIfConfirmed: error parsing outbound event for chain %d txhash %s", ob.Chain().ChainId, receipt.TxHash)
-		return true, err
+		return true, errors.Wrapf(err, "error parsing outbound event for chain %d txhash %s", chainID, txHash)
 	}
 
-	// post vote to zetacore
-	ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
+	msg = ob.newOutboundVote(cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype)
+
+	// skip early observed outbound that is not eligible for fast confirmation
+	if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
+		if !ob.IsOutboundEligibleForFastConfirmation(msg) {
+			return false, nil
+		}
+	}
+
+	if err = ob.PostVoteOutbound(ctx, msg); err != nil {
+		return false, errors.Wrap(err, "error posting vote outbound")
+	}
+
 	return false, nil
+}
+
+// newOutboundVote creates a MsgVoteOutbound message for the confirmed outbound
+func (ob *Observer) newOutboundVote(
+	cctxIndex string,
+	receipt *ethtypes.Receipt,
+	transaction *ethtypes.Transaction,
+	receiveValue *big.Int,
+	receiveStatus chains.ReceiveStatus,
+	nonce uint64,
+	coinType coin.CoinType,
+) *crosschaintypes.MsgVoteOutbound {
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForOutboundSafe(receipt.BlockNumber.Uint64()) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	msg := crosschaintypes.NewMsgVoteOutbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		cctxIndex,
+		receipt.TxHash.Hex(),
+		receipt.BlockNumber.Uint64(),
+		receipt.GasUsed,
+		math.NewIntFromBigInt(transaction.GasPrice()),
+		transaction.Gas(),
+		math.NewUintFromBigInt(receiveValue),
+		receiveStatus,
+		ob.Chain().ChainId,
+		nonce,
+		coinType,
+		confirmationMode,
+	)
+
+	return msg
 }
 
 // parseOutboundReceivedValue parses the received value and status from the outbound receipt
@@ -249,6 +219,13 @@ func parseOutboundReceivedValue(
 	if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 		receiveValue = transaction.Value()
 		receiveStatus = chains.ReceiveStatus_success
+	}
+
+	// compliance check, early return if the cctx is restricted and cancelled
+	// use the cctx's amount to bypass the amount check in zetacore
+	if compliance.IsCctxRestricted(cctx) {
+		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
+		return receiveValue, receiveStatus, nil
 	}
 
 	// parse outbound event for protocol contract v2
@@ -483,8 +460,16 @@ func (ob *Observer) checkConfirmedTx(
 	}
 
 	// check confirmations
-	txBlock := receipt.BlockNumber.Uint64()
-	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+	var (
+		confirmed bool
+		txBlock   = receipt.BlockNumber.Uint64()
+	)
+	if ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+		confirmed = true
+	} else if ob.ChainParams().IsOutboundFastConfirmationEnabled() {
+		confirmed = ob.IsBlockConfirmedForOutboundFast(txBlock)
+	}
+	if !confirmed {
 		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
 		return nil, nil, false
 	}

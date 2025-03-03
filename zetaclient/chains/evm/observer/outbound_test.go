@@ -6,7 +6,6 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -151,44 +150,6 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 		require.ErrorContains(t, err, "error getting erc20 custody")
 		require.True(t, continueKeysign)
 		erc20custody.ERC20CustodyMetaData.ABI = abiCustody // reset custody ABI
-	})
-}
-
-func Test_PostVoteOutbound(t *testing.T) {
-	// Note: outbound of Gas/ERC20 token can also be used for this test
-	// load archived cctx, outbound and receipt for a ZetaReceived event
-	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
-	chain := chains.Ethereum
-	nonce := uint64(9718)
-	coinType := coin.CoinType_Zeta
-	cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(
-		t,
-		TestDataDir,
-		chain.ChainId,
-		nonce,
-		testutils.EventZetaReceived,
-	)
-
-	ctx := context.Background()
-
-	t.Run("post vote outbound successfully", func(t *testing.T) {
-		// the amount and status to be used for vote
-		receiveValue := cctx.GetCurrentOutboundParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_success
-
-		// create evm client using mock zetacore client and post outbound vote
-		ob := newTestSuite(t)
-		ob.postVoteOutbound(
-			ctx,
-			cctx.Index,
-			receipt,
-			outbound,
-			receiveValue,
-			receiveStatus,
-			nonce,
-			coinType,
-			zerolog.Nop(),
-		)
 	})
 }
 

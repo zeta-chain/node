@@ -20,6 +20,7 @@ const (
 	TestETHDepositRevertAndAbortName        = "eth_deposit_revert_and_abort"
 
 	TestETHWithdrawName                          = "eth_withdraw"
+	TestETHWithdrawFastConfirmationName          = "eth_withdraw_fast_confirmation"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
 	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
@@ -294,6 +295,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestETHWithdraw,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawFastConfirmationName,
+		"withdraw Ether from ZEVM using fast confirmation",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+		},
+		TestETHWithdrawFastConfirmation,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndArbitraryCallName,

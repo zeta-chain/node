@@ -3,7 +3,9 @@ package base_test
 import (
 	"context"
 	"errors"
+	"math/rand"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -11,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -409,6 +412,63 @@ func Test_IsInboundEligibleForFastConfirmation(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+		})
+	}
+}
+
+func Test_IsOutboundEligibleForFastConfirmation(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	tests := []struct {
+		name       string
+		status     chains.ReceiveStatus
+		confParams observertypes.ConfirmationParams
+		eligible   bool
+	}{
+		{
+			name:   "eligible for fast confirmation",
+			status: chains.ReceiveStatus_success,
+			confParams: observertypes.ConfirmationParams{
+				SafeOutboundCount: 2,
+				FastOutboundCount: 1,
+			},
+			eligible: true,
+		},
+		{
+			name:   "not eligible if fast confirmation is disabled",
+			status: chains.ReceiveStatus_success,
+			confParams: observertypes.ConfirmationParams{
+				SafeOutboundCount: 2,
+				FastOutboundCount: 2,
+			},
+			eligible: false,
+		},
+		{
+			name:   "not eligible if status is failed",
+			status: chains.ReceiveStatus_failed,
+			confParams: observertypes.ConfirmationParams{
+				SafeOutboundCount: 2,
+				FastOutboundCount: 1,
+			},
+			eligible: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			chain := chains.Ethereum
+			ob := newTestSuite(t, chain, withConfirmationParams(tt.confParams))
+
+			// mock up outbound status
+			msg := sample.OutboundVoteFromRand(chain.ChainId, r)
+			msg.Status = tt.status
+
+			// ACT
+			eligible := ob.IsOutboundEligibleForFastConfirmation(&msg)
+
+			// ASSERT
+			require.Equal(t, tt.eligible, eligible)
 		})
 	}
 }

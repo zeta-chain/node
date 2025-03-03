@@ -368,6 +368,27 @@ func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteInbound {
 	}
 }
 
+// OutboundVoteFromRand creates a sample outbound vote message from a random source of randomness
+func OutboundVoteFromRand(to int64, r *rand.Rand) types.MsgVoteOutbound {
+	status := []chains.ReceiveStatus{chains.ReceiveStatus_success, chains.ReceiveStatus_failed}
+
+	return types.MsgVoteOutbound{
+		Creator:                           Bech32AccAddress().String(),
+		CctxHash:                          GetCctxIndexFromString("sampleCctxIndex"),
+		ObservedOutboundHash:              Hash().String(),
+		ObservedOutboundBlockHeight:       uint64(r.Uint32()),
+		ObservedOutboundGasUsed:           uint64(r.Uint32()),
+		ObservedOutboundEffectiveGasPrice: sdkmath.NewInt(r.Int63()),
+		ObservedOutboundEffectiveGasLimit: uint64(r.Uint32()),
+		ValueReceived:                     sdkmath.NewUint(r.Uint64()),
+		Status:                            status[r.Intn(len(status))],
+		OutboundChain:                     to,
+		OutboundTssNonce:                  uint64(r.Uint32()),
+		CoinType:                          CoinTypeFromRand(r),
+		ConfirmationMode:                  ConfirmationModeFromRand(r),
+	}
+}
+
 // InboundVoteFromRand creates a simulated inbound vote message. This function uses the provided source of randomness to generate the vote
 func InboundVoteFromRand(from, to int64, r *rand.Rand, asset string) types.MsgVoteInbound {
 	coinType := CoinTypeFromRand(r)

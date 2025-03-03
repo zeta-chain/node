@@ -2,13 +2,17 @@ package base_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -538,6 +542,57 @@ func TestPostVoteInbound(t *testing.T) {
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Empty(t, ballot)
+	})
+}
+
+func TestPostVoteOutbound(t *testing.T) {
+	ctx := context.Background()
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	msg := sample.OutboundVoteFromRand(chains.Ethereum.ChainId, r)
+
+	t.Run("should be able to post vote outbound", func(t *testing.T) {
+		// create observer and mock up RPC call
+		ob := newTestSuite(t, chains.Ethereum)
+		ob.zetacore.WithPostVoteOutbound("sampleBallot", "sampleBallotIndex")
+
+		// post vote outbound
+		err := ob.PostVoteOutbound(ctx, &msg)
+		require.NoError(t, err)
+	})
+
+	t.Run("should return error if message basic validation fails", func(t *testing.T) {
+		// create observer
+		ob := newTestSuite(t, chains.Ethereum)
+
+		// create sample message with invalid creator
+		msgCopy := msg
+		msgCopy.Creator = "invalid_creator"
+
+		// post vote outbound
+		err := ob.PostVoteOutbound(ctx, &msgCopy)
+		require.ErrorContains(t, err, "invalid outbound vote message")
+	})
+
+	t.Run("should return error if RPC call fails", func(t *testing.T) {
+		// create observer and mock up RPC failure
+		ob := newTestSuite(t, chains.Ethereum)
+		ob.zetacore.On("PostVoteOutbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", "", errors.New("rpc error"))
+
+		// post vote outbound
+		err := ob.PostVoteOutbound(ctx, &msg)
+		require.ErrorContains(t, err, "rpc error")
+	})
+
+	t.Run("should return nil if already voted", func(t *testing.T) {
+		// create observer and mock up RPC call
+		ob := newTestSuite(t, chains.Ethereum)
+		ob.zetacore.On("PostVoteOutbound", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return("", "sampleBallotIndex", nil)
+
+		// post vote outbound
+		err := ob.PostVoteOutbound(ctx, &msg)
+		require.NoError(t, err)
 	})
 }
 

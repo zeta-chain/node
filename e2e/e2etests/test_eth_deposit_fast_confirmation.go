@@ -36,8 +36,8 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
 		SafeInboundCount:  10, // approx 10 seconds, much longer than Fast confirmation time (1 second)
 		FastInboundCount:  1,
-		SafeOutboundCount: 1,
-		FastOutboundCount: 1,
+		SafeOutboundCount: resOldChainParams.ChainParams.ConfirmationParams.SafeOutboundCount,
+		FastOutboundCount: resOldChainParams.ChainParams.ConfirmationParams.FastOutboundCount,
 	}
 	err = r.ZetaTxServer.UpdateChainParams(&chainParams)
 	require.NoError(r, err, "failed to enable inbound fast confirmation")

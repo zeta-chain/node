@@ -171,6 +171,12 @@ func (cp ChainParams) InboundConfirmationFast() uint64 {
 	return cp.ConfirmationParams.SafeInboundCount
 }
 
+// IsOutboundFastConfirmationEnabled returns true if fast outbound confirmation is enabled.
+func (cp ChainParams) IsOutboundFastConfirmationEnabled() bool {
+	return cp.ConfirmationParams.FastOutboundCount > 0 &&
+		cp.ConfirmationParams.FastOutboundCount < cp.ConfirmationParams.SafeOutboundCount
+}
+
 // OutboundConfirmationSafe returns the safe number of confirmation for outbound observation.
 func (cp ChainParams) OutboundConfirmationSafe() uint64 {
 	return cp.ConfirmationParams.SafeOutboundCount

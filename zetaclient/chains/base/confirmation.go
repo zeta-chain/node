@@ -91,6 +91,18 @@ func (ob *Observer) IsInboundEligibleForFastConfirmation(
 	return true, nil
 }
 
+// IsOutboundEligibleForFastConfirmation determines if given outbound vote message is eligible for fast confirmation.
+func (ob *Observer) IsOutboundEligibleForFastConfirmation(msg *crosschaintypes.MsgVoteOutbound) bool {
+	// check if fast confirmation is enabled
+	if !ob.ChainParams().IsOutboundFastConfirmationEnabled() {
+		return false
+	}
+
+	// only successful outbound is eligible for fast confirmation, because a failed
+	// outbound status might trigger revert in the zetacore, so we don't consider it.
+	return msg.Status == chains.ReceiveStatus_success
+}
+
 // calcUnscannedBlockRange calculates the unscanned block range [from, end (exclusive)) within given block limit.
 //
 // example 1: given lastBlock =  99, lastScanned = 90, confirmation = 10, then no unscanned block

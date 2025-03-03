@@ -20,6 +20,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHDepositAndCallName,
 		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
+		e2etests.TestETHWithdrawFastConfirmationName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
 		e2etests.TestETHWithdrawAndCallThroughContractName,

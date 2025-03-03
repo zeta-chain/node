@@ -388,16 +388,11 @@ func (ob *Observer) PostVoteInbound(
 ) (string, error) {
 	const gasLimit = zetacore.PostVoteInboundGasLimit
 
-	var (
-		txHash   = msg.InboundHash
-		coinType = msg.CoinType
-	)
-
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod:           "PostVoteInbound",
-		logs.FieldTx:               txHash,
-		logs.FieldCoinType:         coinType.String(),
+		logs.FieldTx:               msg.InboundHash,
+		logs.FieldCoinType:         msg.CoinType.String(),
 		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
 	}
 
@@ -423,6 +418,48 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	return ballot, nil
+}
+
+// PostVoteOutbound posts the given vote message to zetacore.
+func (ob *Observer) PostVoteOutbound(ctx context.Context, msg *crosschaintypes.MsgVoteOutbound) error {
+	const gasLimit = zetacore.PostVoteOutboundGasLimit
+
+	var retryGasLimit uint64
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
+
+	// make sure the message is valid, just in case
+	if err := msg.ValidateBasic(); err != nil {
+		return errors.Wrap(err, "invalid outbound vote message")
+	}
+
+	// prepare logger fields
+	lf := map[string]any{
+		logs.FieldMethod:           "PostVoteOutbound",
+		logs.FieldTx:               msg.ObservedOutboundHash,
+		logs.FieldNonce:            msg.OutboundTssNonce,
+		logs.FieldCoinType:         msg.CoinType.String(),
+		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
+		logs.FieldBallot:           msg.Digest(),
+	}
+
+	// post vote to zetacore
+	zetaHash, _, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
+
+	switch {
+	case err != nil:
+		ob.logger.Inbound.Error().Err(err).Fields(lf).Msg("posted outbound vote: failed")
+		return err
+	case zetaHash == "":
+		// use debug level to avoid excessive logs for pending CCTX
+		ob.logger.Inbound.Debug().Fields(lf).Msg("posted outbound vote: already voted")
+	default:
+		lf[logs.FieldZetaTx] = zetaHash
+		ob.logger.Inbound.Info().Fields(lf).Msgf("posted outbound vote: succeed")
+	}
+
+	return nil
 }
 
 // ReportBlockLatency records the latency between the current time

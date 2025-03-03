@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
@@ -18,7 +19,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 const (
@@ -99,23 +99,16 @@ func (ob *Observer) TryIncludeOutbound(
 
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
 func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error) {
-	const (
-		// not used with Bitcoin
-		outboundGasUsed  = 0
-		outboundGasPrice = 0
-		outboundGasLimit = 0
-
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		gasRetryLimit = 0
+	var (
+		params   = *cctx.GetCurrentOutboundParam()
+		nonce    = params.TssNonce
+		coinType = cctx.InboundParams.CoinType
+		// It's safe to use cctx's amount to vote because it has already been verified in checkTxInclusion().
+		amountInSat = params.Amount.BigInt()
+		outboundID  = ob.OutboundID(nonce)
 	)
 
-	params := *cctx.GetCurrentOutboundParam()
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-
 	// get broadcasted outbound and tx result
-	outboundID := ob.OutboundID(nonce)
-	ob.Logger().Outbound.Info().Msgf("VoteOutboundIfConfirmed %s", outboundID)
-
 	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
 	res, included := ob.includedTxResults[outboundID]
@@ -146,15 +139,20 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		}
 	}
 
-	// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
-	amountInSat := params.Amount.BigInt()
+	// check confirmation
+	confirmed := false
 	// #nosec G115 always in range
-	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
+	if res.Confirmations >= int64(ob.ChainParams().OutboundConfirmationSafe()) {
+		confirmed = true
+	} else if ob.ChainParams().IsOutboundFastConfirmationEnabled() {
+		// #nosec G115 always in range
+		confirmed = res.Confirmations >= int64(ob.ChainParams().OutboundConfirmationFast())
+	}
+	if !confirmed {
 		ob.logger.Outbound.Debug().
-			Int64("currentConfirmations", res.Confirmations).
-			Uint64("requiredConfirmations", ob.ChainParams().OutboundConfirmationSafe()).
-			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
-
+			Int64("current_confirmations", res.Confirmations).
+			Uint64("required_confirmations", ob.ChainParams().OutboundConfirmationFast()).
+			Msg("outbound not confirmed yet")
 		return false, nil
 	}
 
@@ -168,53 +166,63 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		)
 	}
 
-	ob.Logger().
-		Outbound.Debug().
-		Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
+	// #nosec G115 always positive
+	msg := ob.newOutboundVote(cctx.Index, res.TxID, uint64(blockHeight), amountInSat, nonce, coinType)
 
-	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-
-	msg := crosschaintypes.NewMsgVoteOutbound(
-		signer.String(),
-		cctx.Index,
-		res.TxID,
-
-		// #nosec G115 always positive
-		uint64(blockHeight),
-
-		// not used with Bitcoin
-		outboundGasUsed,
-		math.NewInt(outboundGasPrice),
-		outboundGasLimit,
-
-		math.NewUintFromBigInt(amountInSat),
-		chains.ReceiveStatus_success,
-		ob.Chain().ChainId,
-		nonce,
-		coin.CoinType_Gas,
-		crosschaintypes.ConfirmationMode_SAFE,
-	)
-
-	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
-
-	logFields := map[string]any{
-		"outbound.external_tx_hash": res.TxID,
-		"outbound.nonce":            nonce,
-		"outbound.zeta_tx_hash":     zetaHash,
-		"outbound.ballot":           ballot,
+	// skip early observed outbound that is not eligible for fast confirmation
+	if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
+		if !ob.IsOutboundEligibleForFastConfirmation(msg) {
+			return false, nil
+		}
 	}
 
-	if err != nil {
-		ob.Logger().
-			Outbound.Error().
-			Err(err).
-			Fields(logFields).
-			Msg("VoteOutboundIfConfirmed: error confirming bitcoin outbound")
-	} else if zetaHash != "" {
-		ob.Logger().Outbound.Info().Fields(logFields).Msgf("VoteOutboundIfConfirmed: confirmed Bitcoin outbound")
+	if err = ob.PostVoteOutbound(ctx, msg); err != nil {
+		return false, errors.Wrap(err, "error posting vote outbound")
 	}
 
 	return false, nil
+}
+
+// newOutboundVote creates a MsgVoteOutbound message for the confirmed outbound
+func (ob *Observer) newOutboundVote(
+	cctxIndex string,
+	outboundHash string,
+	blockHeight uint64,
+	amountInSat *big.Int,
+	nonce uint64,
+	coinType coin.CoinType,
+) *crosschaintypes.MsgVoteOutbound {
+	const (
+		// not used with Bitcoin
+		outboundGasUsed  = 0
+		outboundGasPrice = 0
+		outboundGasLimit = 0
+		outboundStatus   = chains.ReceiveStatus_success // Bitcoin outbound never fails
+	)
+
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForOutboundSafe(blockHeight) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	msg := crosschaintypes.NewMsgVoteOutbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		cctxIndex,
+		outboundHash,
+		blockHeight,
+		outboundGasUsed,
+		math.NewInt(outboundGasPrice),
+		outboundGasLimit,
+		math.NewUintFromBigInt(amountInSat),
+		outboundStatus,
+		ob.Chain().ChainId,
+		nonce,
+		coinType,
+		confirmationMode,
+	)
+
+	return msg
 }
 
 // refreshPendingNonce tries increasing the artificial pending nonce of outbound (if lagged behind).

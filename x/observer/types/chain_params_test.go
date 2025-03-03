@@ -343,6 +343,23 @@ func Test_IsInboundFastConfirmationEnabled(t *testing.T) {
 	require.False(t, cp.IsInboundFastConfirmationEnabled())
 }
 
+func Test_IsOutboundFastConfirmationEnabled(t *testing.T) {
+	cp := sample.ChainParams(1)
+
+	// fast confirmation is enabled
+	cp.ConfirmationParams.SafeOutboundCount = 2
+	cp.ConfirmationParams.FastOutboundCount = 1
+	require.True(t, cp.IsOutboundFastConfirmationEnabled())
+
+	// fast confirmation is disabled if fast count = 0
+	cp.ConfirmationParams.FastOutboundCount = 0
+	require.False(t, cp.IsOutboundFastConfirmationEnabled())
+
+	// fast confirmation is disabled if fast count == safe count
+	cp.ConfirmationParams.FastOutboundCount = 2
+	require.False(t, cp.IsOutboundFastConfirmationEnabled())
+}
+
 func Test_InboundConfirmationSafe(t *testing.T) {
 	cp := sample.ChainParams(1)
 
