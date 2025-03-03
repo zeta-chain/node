@@ -167,9 +167,10 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name    string
-		event   *observer.BTCInboundEvent
-		nilVote bool
+		name              string
+		event             *observer.BTCInboundEvent
+		observationStatus crosschaintypes.InboundStatus
+		nilVote           bool
 	}{
 		{
 			name: "should return vote for standard memo",
@@ -181,6 +182,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
 				),
 			},
+			observationStatus: crosschaintypes.InboundStatus_SUCCESS,
 		},
 		{
 			name: "should return vote for legacy memo",
@@ -188,14 +190,15 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 				// raw address + payload
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
+			observationStatus: crosschaintypes.InboundStatus_SUCCESS,
 		},
 		{
-			name: "should return nil if unable to decode memo",
+			name: "should return vote for invalid memo",
 			event: &observer.BTCInboundEvent{
 				// standard memo that carries payload only, receiver address is empty
 				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
 			},
-			nilVote: true,
+			observationStatus: crosschaintypes.InboundStatus_INVALID_MEMO,
 		},
 		{
 			name: "should return nil on donation message",
@@ -221,6 +224,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 				require.Nil(t, msg)
 			} else {
 				require.NotNil(t, msg)
+				require.EqualValues(t, tt.observationStatus, msg.Status)
 			}
 		})
 	}

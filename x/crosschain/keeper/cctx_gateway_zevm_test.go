@@ -82,6 +82,56 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Aborted, newStatus)
 	})
 
+	t.Run("should return aborted status on unknown inbound status", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		gatewayZEVM := keeper.NewCCTXGatewayZEVM(*k)
+
+		// mock up CCTX data
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
+		cctx.InboundParams.Status = types.InboundStatus(1000)
+
+		// ACT
+		// call InitiateOutbound
+		newStatus, err := gatewayZEVM.InitiateOutbound(
+			ctx,
+			keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true},
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, types.CctxStatus_Aborted, newStatus)
+	})
+
+	//t.Run("should return reverted status on invalid memo inbound status", func(t *testing.T) {
+	//	// ARRANGE
+	//	k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+	//		UseFungibleMock: true,
+	//	})
+	//	gatewayZEVM := keeper.NewCCTXGatewayZEVM(*k)
+	//
+	//	// mock up CCTX data
+	//	cctx := sample.CrossChainTx(t, "test")
+	//	cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingOutbound}
+	//	cctx.InboundParams.Status = types.InboundStatus_INVALID_MEMO
+	//
+	//	// ACT
+	//	// call InitiateOutbound
+	//	newStatus, err := gatewayZEVM.InitiateOutbound(
+	//		ctx,
+	//		keeper.InitiateOutboundConfig{CCTX: cctx, ShouldPayGas: true},
+	//	)
+	//
+	//	// ASSERT
+	//	require.NoError(t, err)
+	//	require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	//	require.Equal(t, types.CctxStatus_Reverted, newStatus)
+	//})
+
 	t.Run(
 		"should return aborted status on 'error during deposit that is not smart contract revert'",
 		func(t *testing.T) {
