@@ -611,7 +611,7 @@ func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit filters.FilterCrit
 		return nil, err
 	}
 
-	return returnLogs(logs), err
+	return returnLogs(logs), nil
 }
 
 // UninstallFilter removes the filter with the given filter id.
