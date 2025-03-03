@@ -311,11 +311,11 @@ func TestKeeper_IsValidator(t *testing.T) {
 	})
 }
 
-func TestKeeper_FindBallot(t *testing.T) {
+func TestKeeper_GetOrCreateBallot(t *testing.T) {
 	t.Run("should err if chain params not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		_, _, err := k.FindBallot(ctx, "index", chains.Chain{
+		_, _, err := k.GetOrCreateBallot(ctx, "index", chains.Chain{
 			ChainId: 987,
 		}, types.ObservationType_InboundTx)
 		require.Error(t, err)

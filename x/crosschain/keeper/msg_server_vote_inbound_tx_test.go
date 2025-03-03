@@ -85,7 +85,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		chain, found := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
 		require.True(t, found)
 
-		ballot, _, _ := zk.ObserverKeeper.FindBallot(
+		ballot, _, _ := zk.ObserverKeeper.GetOrCreateBallot(
 			ctx,
 			msg.Digest(),
 			chain,
@@ -239,7 +239,7 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		chain, found := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
 		require.True(t, found)
 
-		ballot, _, _ := zk.ObserverKeeper.FindBallot(
+		ballot, _, _ := zk.ObserverKeeper.GetOrCreateBallot(
 			ctx,
 			msg.Digest(),
 			chain,

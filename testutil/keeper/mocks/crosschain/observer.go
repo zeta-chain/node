@@ -109,41 +109,6 @@ func (_m *CrosschainObserverKeeper) CheckIfTssPubkeyHasBeenGenerated(ctx types.C
 	return r0, r1
 }
 
-// FindBallot provides a mock function with given fields: ctx, index, chain, observationType
-func (_m *CrosschainObserverKeeper) FindBallot(ctx types.Context, index string, chain chains.Chain, observationType observertypes.ObservationType) (observertypes.Ballot, bool, error) {
-	ret := _m.Called(ctx, index, chain, observationType)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindBallot")
-	}
-
-	var r0 observertypes.Ballot
-	var r1 bool
-	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, string, chains.Chain, observertypes.ObservationType) (observertypes.Ballot, bool, error)); ok {
-		return rf(ctx, index, chain, observationType)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, string, chains.Chain, observertypes.ObservationType) observertypes.Ballot); ok {
-		r0 = rf(ctx, index, chain, observationType)
-	} else {
-		r0 = ret.Get(0).(observertypes.Ballot)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, string, chains.Chain, observertypes.ObservationType) bool); ok {
-		r1 = rf(ctx, index, chain, observationType)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	if rf, ok := ret.Get(2).(func(types.Context, string, chains.Chain, observertypes.ObservationType) error); ok {
-		r2 = rf(ctx, index, chain, observationType)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetAllChainNonces provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetAllChainNonces(ctx types.Context) []observertypes.ChainNonces {
 	ret := _m.Called(ctx)
@@ -526,6 +491,41 @@ func (_m *CrosschainObserverKeeper) GetObserverSet(ctx types.Context) (observert
 	}
 
 	return r0, r1
+}
+
+// GetOrCreateBallot provides a mock function with given fields: ctx, index, chain, observationType
+func (_m *CrosschainObserverKeeper) GetOrCreateBallot(ctx types.Context, index string, chain chains.Chain, observationType observertypes.ObservationType) (observertypes.Ballot, bool, error) {
+	ret := _m.Called(ctx, index, chain, observationType)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOrCreateBallot")
+	}
+
+	var r0 observertypes.Ballot
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, chains.Chain, observertypes.ObservationType) (observertypes.Ballot, bool, error)); ok {
+		return rf(ctx, index, chain, observationType)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, chains.Chain, observertypes.ObservationType) observertypes.Ballot); ok {
+		r0 = rf(ctx, index, chain, observationType)
+	} else {
+		r0 = ret.Get(0).(observertypes.Ballot)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, chains.Chain, observertypes.ObservationType) bool); ok {
+		r1 = rf(ctx, index, chain, observationType)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, string, chains.Chain, observertypes.ObservationType) error); ok {
+		r2 = rf(ctx, index, chain, observationType)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetPendingNonces provides a mock function with given fields: ctx, tss, chainID

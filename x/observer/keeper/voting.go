@@ -57,38 +57,39 @@ func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
 	return true
 }
 
-// FindBallot finds the ballot for the given index
-// If the ballot is not found, it creates a new ballot and returns it
-func (k Keeper) FindBallot(
+// GetOrCreateBallot finds or creates a ballot based on the given index
+func (k Keeper) GetOrCreateBallot(
 	ctx sdk.Context,
 	index string,
 	chain chains.Chain,
 	observationType types.ObservationType,
-) (ballot types.Ballot, isNew bool, err error) {
-	isNew = false
+) (ballot types.Ballot, created bool, err error) {
 	ballot, found := k.GetBallot(ctx, index)
-	if !found {
-		observerSet, _ := k.GetObserverSet(ctx)
-
-		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
-		if !found || cp == nil || !cp.IsSupported {
-			return types.Ballot{}, false, types.ErrSupportedChains
-		}
-
-		ballot = types.Ballot{
-			Index:                "",
-			BallotIdentifier:     index,
-			VoterList:            observerSet.ObserverList,
-			Votes:                types.CreateVotes(len(observerSet.ObserverList)),
-			ObservationType:      observationType,
-			BallotThreshold:      cp.BallotThreshold,
-			BallotStatus:         types.BallotStatus_BallotInProgress,
-			BallotCreationHeight: ctx.BlockHeight(),
-		}
-		isNew = true
-		k.AddBallotToList(ctx, ballot)
+	if found {
+		return ballot, false, nil
 	}
-	return
+
+	observerSet, _ := k.GetObserverSet(ctx)
+
+	cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
+	if !found || cp == nil || !cp.IsSupported {
+		return types.Ballot{}, false, types.ErrSupportedChains
+	}
+
+	ballot = types.Ballot{
+		Index:                "",
+		BallotIdentifier:     index,
+		VoterList:            observerSet.ObserverList,
+		Votes:                types.CreateVotes(len(observerSet.ObserverList)),
+		ObservationType:      observationType,
+		BallotThreshold:      cp.BallotThreshold,
+		BallotStatus:         types.BallotStatus_BallotInProgress,
+		BallotCreationHeight: ctx.BlockHeight(),
+	}
+
+	k.AddBallotToList(ctx, ballot)
+
+	return ballot, true, nil
 }
 
 func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
@@ -169,7 +170,7 @@ func (k Keeper) VoteOnBallot(
 	isFinalized bool,
 	isNew bool,
 	err error) {
-	ballot, isNew, err = k.FindBallot(ctx, ballotIndex, chain, observationType)
+	ballot, isNew, err = k.GetOrCreateBallot(ctx, ballotIndex, chain, observationType)
 	if err != nil {
 		return ballot, false, false, sdkerrors.Wrap(err, msgVoteOnBallot)
 	}

@@ -56,7 +56,7 @@ type ObserverKeeper interface {
 	) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
 	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
-	FindBallot(
+	GetOrCreateBallot(
 		ctx sdk.Context,
 		index string,
 		chain chains.Chain,
