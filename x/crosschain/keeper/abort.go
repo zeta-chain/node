@@ -101,8 +101,6 @@ func (k Keeper) ProcessAbort(
 	// note: we still set this value to true if onAbort reverted because the funds will still be deposited to the abortAddress
 	cctx.CctxStatus.IsAbortRefunded = true
 	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
-
-	return
 }
 
 // LegacyRefundAbortedAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
