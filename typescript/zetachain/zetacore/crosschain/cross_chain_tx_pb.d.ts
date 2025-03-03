@@ -124,6 +124,13 @@ export declare enum InboundStatus {
    * @generated from enum value: INVALID_RECEIVER_ADDRESS = 2;
    */
   INVALID_RECEIVER_ADDRESS = 2,
+
+  /**
+   * parse memo is invalid
+   *
+   * @generated from enum value: INVALID_MEMO = 3;
+   */
+  INVALID_MEMO = 3,
 }
 
 /**

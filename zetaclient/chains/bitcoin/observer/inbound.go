@@ -187,10 +187,11 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// decode event memo bytes
+	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
 		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
-		return nil
+		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
 	// check if the event is processable
