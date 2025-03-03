@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/indexer"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 )
@@ -272,7 +273,7 @@ func (suite *BackendTestSuite) TestTraceBlock() {
 		registerMock    func()
 		expTraceResults []*evmtypes.TxTraceResult
 		resBlock        *tmrpctypes.ResultBlock
-		config          *evmtypes.TraceConfig
+		config          *rpctypes.TraceConfig
 		expPass         bool
 	}{
 		{
@@ -280,7 +281,7 @@ func (suite *BackendTestSuite) TestTraceBlock() {
 			func() {},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockEmpty,
-			&evmtypes.TraceConfig{},
+			&rpctypes.TraceConfig{},
 			true,
 		},
 		{
@@ -293,7 +294,7 @@ func (suite *BackendTestSuite) TestTraceBlock() {
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,
-			&evmtypes.TraceConfig{},
+			&rpctypes.TraceConfig{},
 			false,
 		},
 	}

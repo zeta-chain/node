@@ -30,7 +30,7 @@ import (
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
+func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
 	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
@@ -80,7 +80,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig = config
+		traceTxRequest.TraceConfig = convertConfig(config)
 	}
 
 	// minus one to get the context of block beginning
@@ -109,7 +109,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 // executes all the transactions contained within. The return value will be one item
 // per transaction, dependent on the requested tracer.
 func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
-	config *evmtypes.TraceConfig,
+	config *rpctypes.TraceConfig,
 	block *tmrpctypes.ResultBlock,
 ) ([]*evmtypes.TxTraceResult, error) {
 	txs := block.Block.Txs
@@ -137,7 +137,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     config,
+		TraceConfig:     convertConfig(config),
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
@@ -156,4 +156,29 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	return decodedResults, nil
+}
+
+func convertConfig(config *rpctypes.TraceConfig) *evmtypes.TraceConfig {
+	if config == nil {
+		return &evmtypes.TraceConfig{}
+	}
+
+	cfg := config.TraceConfig
+
+	if config.TracerConfig != nil {
+		switch v := config.TracerConfig.(type) {
+		case string:
+			// It's already a string, use it directly
+			cfg.TracerJsonConfig = v
+		default:
+			// convert anything else to json
+			// it will be rejected by the ethermint side if it's invalid
+			jsonBytes, err := json.Marshal(v)
+			if err == nil {
+				cfg.TracerJsonConfig = string(jsonBytes)
+			}
+		}
+	}
+
+	return &cfg
 }
