@@ -46,7 +46,7 @@ func Test_Category(t *testing.T) {
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {
@@ -312,7 +312,7 @@ func Test_IsEventProcessable(t *testing.T) {
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {

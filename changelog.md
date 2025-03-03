@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v28.1.0
+
+This is a zetaclient only release.
+
+### Features
+* [3600](https://github.com/zeta-chain/node/pull/3600) - add dedicated zetaclient restricted addresses config. This file will be automatically reloaded when it changes without needing to restart zetaclient.
+
 ## v28.0.0
 
 v28 is based on the release/v27 branch rather than develop

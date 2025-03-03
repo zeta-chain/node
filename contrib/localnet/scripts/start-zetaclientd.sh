@@ -113,4 +113,7 @@ if [[ -f /root/zetaclient-config-overlay.json ]]; then
   mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
 fi
 
+# ensure restricted addresses config is initialized to avoid log spam
+echo "[]" > ~/.zetacored/config/zetaclient_restricted_addresses.json
+
 zetaclientd-supervisor start < /root/password.file
