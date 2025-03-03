@@ -63,7 +63,8 @@ type TONConfig struct {
 
 // ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
-	LogPath             string   `json:"LogPath"`
+	LogPath string `json:"LogPath"`
+	// Deprecated: use the separate restricted addresses config
 	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
