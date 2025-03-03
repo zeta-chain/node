@@ -15,6 +15,7 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // ExecuteProposalSequence defines the sequence of proposals execution during the e2e tests
@@ -74,7 +75,15 @@ func (r *E2ERunner) CreateGovProposals(sequence ExecuteProposalSequence) error {
 		if err != nil {
 			return fmt.Errorf("failed to parse proposal file %s: %w", file.Name(), err)
 		}
-		r.Logger.Print("executing proposal: file name: %s title: %s", file.Name(), parsedProposal.Title)
+		r.Logger.Info("executing proposal: file name: %s title: %s", file.Name(), parsedProposal.Title)
+
+		minVersion := parsedProposal.MinVersion
+		zetacoredVersion := r.GetZetacoredVersion()
+
+		if !utils.MinimumVersionCheck(minVersion, zetacoredVersion) {
+			r.Logger.Print("⚠️ skipping proposal - %s (minimum version %s)", parsedProposal.Title, minVersion)
+			continue
+		}
 
 		// Create the proposal message
 		msg, err := govv1.NewMsgSubmitProposal(
@@ -151,12 +160,13 @@ func voteGovProposals(
 
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages,omitempty"`
-	Metadata  string            `json:"metadata"`
-	Deposit   string            `json:"deposit"`
-	Title     string            `json:"title"`
-	Summary   string            `json:"summary"`
-	Expedited bool              `json:"expedited"`
+	Messages   []json.RawMessage `json:"messages,omitempty"`
+	Metadata   string            `json:"metadata"`
+	Deposit    string            `json:"deposit"`
+	Title      string            `json:"title"`
+	Summary    string            `json:"summary"`
+	Expedited  bool              `json:"expedited"`
+	MinVersion string            `json:"min_version,omitempty"`
 }
 
 // parseSubmitProposal reads and parses the proposal.

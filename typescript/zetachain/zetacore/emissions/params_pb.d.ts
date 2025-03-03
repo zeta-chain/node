@@ -15,6 +15,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  *    ObserverSlashAmount:         100000000000000000,
  *    BallotMaturityBlocks:        100,
  *    BlockRewardAmount:           9620949074074074074.074070733466756687,
+ *    PendingBallotsDeletionBufferBlocks: 144000
  *
  * @generated from message zetachain.zetacore.emissions.Params
  */
@@ -48,6 +49,11 @@ export declare class Params extends Message<Params> {
    * @generated from field: string block_reward_amount = 11;
    */
   blockRewardAmount: string;
+
+  /**
+   * @generated from field: int64 pending_ballots_deletion_buffer_blocks = 12;
+   */
+  pendingBallotsDeletionBufferBlocks: bigint;
 
   constructor(data?: PartialMessage<Params>);
 

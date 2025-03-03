@@ -58146,6 +58146,9 @@ definitions:
         format: int64
       blockRewardAmount:
         type: string
+      pendingBallotsDeletionBufferBlocks:
+        type: string
+        format: int64
     title: |-
       Params defines the parameters for the module.
       Sample values:
@@ -58155,6 +58158,7 @@ definitions:
          ObserverSlashAmount:         100000000000000000,
          BallotMaturityBlocks:        100,
          BlockRewardAmount:           9620949074074074074.074070733466756687,
+         PendingBallotsDeletionBufferBlocks: 144000
   zetachain.zetacore.emissions.QueryListPoolAddressesResponse:
     type: object
     properties:
