@@ -172,7 +172,7 @@ func InboundParams(r *rand.Rand) *types.InboundParams {
 		Sender:                 EthAddress().String(),
 		SenderChainId:          r.Int63(),
 		TxOrigin:               EthAddress().String(),
-		CoinType:               coin.CoinType(r.Intn(100)),
+		CoinType:               coin.CoinType_Gas,
 		Asset:                  StringRandom(r, 32),
 		Amount:                 sdkmath.NewUint(uint64(r.Int63())),
 		ObservedHash:           StringRandom(r, 32),
