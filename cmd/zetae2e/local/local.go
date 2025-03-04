@@ -29,29 +29,30 @@ import (
 )
 
 const (
-	flagContractsDeployed = "deployed"
-	flagWaitForHeight     = "wait-for"
-	FlagConfigFile        = "config"
-	flagConfigOut         = "config-out"
-	flagVerbose           = "verbose"
-	flagTestAdmin         = "test-admin"
-	flagTestPerformance   = "test-performance"
-	flagTestSolana        = "test-solana"
-	flagTestTON           = "test-ton"
-	flagTestSui           = "test-sui"
-	flagSkipRegular       = "skip-regular"
-	flagLight             = "light"
-	flagSetupOnly         = "setup-only"
-	flagSkipSetup         = "skip-setup"
-	flagTestTSSMigration  = "test-tss-migration"
-	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
-	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestLegacy        = "test-legacy"
-	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagSkipPrecompiles   = "skip-precompiles"
-	flagUpgradeContracts  = "upgrade-contracts"
-	flagTestFilter        = "test-filter"
-	flagTestStaking       = "test-staking"
+	flagContractsDeployed     = "deployed"
+	flagWaitForHeight         = "wait-for"
+	FlagConfigFile            = "config"
+	flagConfigOut             = "config-out"
+	flagVerbose               = "verbose"
+	flagTestAdmin             = "test-admin"
+	flagTestPerformance       = "test-performance"
+	flagPerformanceIterations = "performance-iterations"
+	flagTestSolana            = "test-solana"
+	flagTestTON               = "test-ton"
+	flagTestSui               = "test-sui"
+	flagSkipRegular           = "skip-regular"
+	flagLight                 = "light"
+	flagSetupOnly             = "setup-only"
+	flagSkipSetup             = "skip-setup"
+	flagTestTSSMigration      = "test-tss-migration"
+	flagSkipBitcoinSetup      = "skip-bitcoin-setup"
+	flagSkipHeaderProof       = "skip-header-proof"
+	flagTestLegacy            = "test-legacy"
+	flagSkipTrackerCheck      = "skip-tracker-check"
+	flagSkipPrecompiles       = "skip-precompiles"
+	flagUpgradeContracts      = "upgrade-contracts"
+	flagTestFilter            = "test-filter"
+	flagTestStaking           = "test-staking"
 )
 
 var (
@@ -74,6 +75,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
+	cmd.Flags().Int(flagPerformanceIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagTestSui, false, "set to true to run Sui tests")
@@ -103,29 +105,30 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose           = must(cmd.Flags().GetBool(flagVerbose))
-		configOut         = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
-		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON           = must(cmd.Flags().GetBool(flagTestTON))
-		testSui           = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		setupSolana       = testSolana || testPerformance
-		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
-		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
+		waitForHeight         = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed     = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose               = must(cmd.Flags().GetBool(flagVerbose))
+		configOut             = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin             = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance       = must(cmd.Flags().GetBool(flagTestPerformance))
+		performanceIterations = must(cmd.Flags().GetInt(flagPerformanceIterations))
+		testSolana            = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON               = must(cmd.Flags().GetBool(flagTestTON))
+		testSui               = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular           = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                 = must(cmd.Flags().GetBool(flagLight))
+		setupOnly             = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup             = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup      = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof       = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck      = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration      = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy            = must(cmd.Flags().GetBool(flagTestLegacy))
+		skipPrecompiles       = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts      = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana           = testSolana || testPerformance
+		testFilterStr         = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking           = must(cmd.Flags().GetBool(flagTestStaking))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -376,8 +379,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
-		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		eg.Go(
+			ethereumDepositPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherDepositName},
+				performanceIterations,
+			),
+		)
+		eg.Go(
+			ethereumWithdrawPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherWithdrawName},
+				performanceIterations,
+			),
+		)
 		eg.Go(
 			solanaDepositPerformanceRoutine(
 				conf,
@@ -385,7 +404,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
-				e2etests.TestStressSolanaDepositName,
+				[]string{e2etests.TestStressSolanaDepositName},
+				performanceIterations,
 			),
 		)
 		eg.Go(
@@ -395,7 +415,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
-				e2etests.TestStressSPLDepositName,
+				[]string{e2etests.TestStressSPLDepositName},
+				performanceIterations,
 			),
 		)
 		eg.Go(
@@ -405,7 +426,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
-				e2etests.TestStressSolanaWithdrawName,
+				[]string{e2etests.TestStressSolanaWithdrawName},
+				performanceIterations,
 			),
 		)
 		eg.Go(
@@ -415,7 +437,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
-				e2etests.TestStressSPLWithdrawName,
+				[]string{e2etests.TestStressSPLWithdrawName},
+				performanceIterations,
 			),
 		)
 	}

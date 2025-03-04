@@ -17,12 +17,28 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// Find the index of the count argument in ArgsDefinition.
+// Update the corresponding argument with the count value
+func updateTestCountArg(tests []runner.E2ETest, count int) {
+	for i := range tests {
+		for j, argDef := range tests[i].ArgsDefinition {
+			if argDef.Description == "count" {
+				if len(tests[i].Args) > j {
+					tests[i].Args[j] = fmt.Sprintf("%d", count)
+				}
+				break
+			}
+		}
+	}
+}
+
 // ethereumDepositPerformanceRoutine runs performance tests for Ether deposit
 func ethereumDepositPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for ether test
@@ -47,6 +63,7 @@ func ethereumDepositPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
@@ -63,7 +80,8 @@ func ethereumWithdrawPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for ether test
@@ -99,6 +117,7 @@ func ethereumWithdrawPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
@@ -117,7 +136,8 @@ func solanaDepositPerformanceRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	account config.Account,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for solana test
@@ -150,6 +170,7 @@ func solanaDepositPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("solana deposit performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("solana deposit performance test failed: %v", err)
@@ -168,7 +189,8 @@ func solanaWithdrawPerformanceRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	account config.Account,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for solana test
@@ -221,6 +243,7 @@ func solanaWithdrawPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("solana withdraw performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("solana withdraw performance test failed: %v", err)
