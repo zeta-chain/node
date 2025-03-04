@@ -80,7 +80,10 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig = convertConfig(config)
+		traceTxRequest.TraceConfig, err = convertConfig(config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// minus one to get the context of block beginning
@@ -135,9 +138,14 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 	ctxWithHeight := rpctypes.ContextWithHeight(int64(contextHeight))
 
+	traceConfig, err := convertConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     convertConfig(config),
+		TraceConfig:     traceConfig,
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
@@ -158,9 +166,9 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	return decodedResults, nil
 }
 
-func convertConfig(config *rpctypes.TraceConfig) *evmtypes.TraceConfig {
+func convertConfig(config *rpctypes.TraceConfig) (*evmtypes.TraceConfig, error) {
 	if config == nil {
-		return &evmtypes.TraceConfig{}
+		return &evmtypes.TraceConfig{}, nil
 	}
 
 	cfg := config.TraceConfig
@@ -170,15 +178,18 @@ func convertConfig(config *rpctypes.TraceConfig) *evmtypes.TraceConfig {
 		case string:
 			// It's already a string, use it directly
 			cfg.TracerJsonConfig = v
-		default:
-			// convert anything else to json
-			// it will be rejected by the ethermint side if it's invalid
+		case map[string]interface{}:
+			// this is the compliant style
+			// we need to encode it to a string before passing it to the ethermint side
 			jsonBytes, err := json.Marshal(v)
-			if err == nil {
-				cfg.TracerJsonConfig = string(jsonBytes)
+			if err != nil {
+				return nil, fmt.Errorf("unable to encode traceConfig to JSON: %w", err)
 			}
+			cfg.TracerJsonConfig = string(jsonBytes)
+		default:
+			return nil, errors.New("unexpected traceConfig type")
 		}
 	}
 
-	return &cfg
+	return &cfg, nil
 }
