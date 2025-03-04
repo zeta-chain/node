@@ -227,49 +227,49 @@ then
 # give balance to runner accounts to deploy contracts directly on zEVM
 # default account
   address=$(yq -r '.default_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # legacy erc20 tester
   address=$(yq -r '.additional_accounts.user_legacy_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # legacy zeta tester
   address=$(yq -r '.additional_accounts.user_legacy_zeta.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # legacy ethers tester
   address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # bitcoin deposit tester
   address=$(yq -r '.additional_accounts.user_bitcoin_deposit.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # bitcoin withdraw tester
   address=$(yq -r '.additional_accounts.user_bitcoin_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # solana tester
   address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # migration tester
   address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # precompile tester
   address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # ether tester
   address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # erc20 tester
   address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # ether revert tester
   address=$(yq -r '.additional_accounts.user_ether_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # erc20 revert tester
   address=$(yq -r '.additional_accounts.user_erc20_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # emissions withdraw tester
   address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 # sui tester
   address=$(yq -r '.additional_accounts.user_sui.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
