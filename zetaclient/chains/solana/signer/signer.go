@@ -145,7 +145,7 @@ func (signer *Signer) TryProcessOutbound(
 		tx = whitelistTx
 
 	case coin.CoinType_Gas:
-		if cctx.InboundParams.IsCrossChainCall && IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
+		if cctx.IsWithdrawAndCall() {
 			executeTx, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
@@ -170,7 +170,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 	case coin.CoinType_ERC20:
-		if cctx.InboundParams.IsCrossChainCall && IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
+		if cctx.IsWithdrawAndCall() {
 			executeSPLTx, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")

@@ -1,16 +1,15 @@
-package sui_test
+package sui
 
 import (
 	"encoding/base64"
 	"fmt"
-	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"testing"
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestParseEvent(t *testing.T) {
@@ -22,14 +21,14 @@ func TestParseEvent(t *testing.T) {
 		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw := zetasui.NewGateway(packageID, gatewayID)
+	gw := NewGateway(packageID, gatewayID)
 
 	eventType := func(t string) string {
 		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
 	}
 
-	receiverAlice := sample.EthAddress()
-	receiverBob := sample.EthAddress()
+	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
+	receiverBob := ethcommon.HexToAddress("0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7")
 
 	var payload []any
 	payloadBytes := []byte(base64.StdEncoding.EncodeToString([]byte{0, 1, 2}))
@@ -41,7 +40,7 @@ func TestParseEvent(t *testing.T) {
 		name        string
 		event       models.SuiEventResponse
 		errContains string
-		assert      func(t *testing.T, raw models.SuiEventResponse, out zetasui.Event)
+		assert      func(t *testing.T, raw models.SuiEventResponse, out Event)
 	}{
 		{
 			name: "deposit",
@@ -51,21 +50,21 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "100",
 					"sender":    sender,
 					"receiver":  receiverAlice.String(),
 				},
 			},
-			assert: func(t *testing.T, raw models.SuiEventResponse, out zetasui.Event) {
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, zetasui.DepositEvent, out.EventType)
+				assert.Equal(t, DepositEvent, out.EventType)
 				assert.Equal(t, uint64(0), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, zetasui.SUI, deposit.CoinType)
+				assert.Equal(t, SUI, deposit.CoinType)
 				assert.True(t, math.NewUint(100).Equal(deposit.Amount))
 				assert.Equal(t, sender, deposit.Sender)
 				assert.Equal(t, receiverAlice, deposit.Receiver)
@@ -81,22 +80,22 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
 					"payload":   payload,
 				},
 			},
-			assert: func(t *testing.T, raw models.SuiEventResponse, out zetasui.Event) {
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, zetasui.DepositAndCallEvent, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, zetasui.SUI, deposit.CoinType)
+				assert.Equal(t, SUI, deposit.CoinType)
 				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
 				assert.Equal(t, sender, deposit.Sender)
 				assert.Equal(t, receiverBob, deposit.Receiver)
@@ -112,22 +111,22 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
 					"payload":   []any{},
 				},
 			},
-			assert: func(t *testing.T, raw models.SuiEventResponse, out zetasui.Event) {
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, zetasui.DepositAndCallEvent, out.EventType)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
 				assert.Equal(t, uint64(1), out.EventIndex)
 
 				deposit, err := out.Deposit()
 				require.NoError(t, err)
 
-				assert.Equal(t, zetasui.SUI, deposit.CoinType)
+				assert.Equal(t, SUI, deposit.CoinType)
 				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
 				assert.Equal(t, sender, deposit.Sender)
 				assert.Equal(t, receiverBob, deposit.Receiver)
@@ -143,21 +142,21 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("WithdrawEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
 					"nonce":     "123",
 				},
 			},
-			assert: func(t *testing.T, raw models.SuiEventResponse, out zetasui.Event) {
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
 				assert.Equal(t, txHash, out.TxHash)
-				assert.Equal(t, zetasui.WithdrawEvent, out.EventType)
+				assert.Equal(t, WithdrawEvent, out.EventType)
 
 				wd, err := out.Withdrawal()
 				require.NoError(t, err)
 
-				assert.Equal(t, zetasui.SUI, wd.CoinType)
+				assert.Equal(t, SUI, wd.CoinType)
 				assert.True(t, math.NewUint(200).Equal(wd.Amount))
 				assert.Equal(t, sender, wd.Sender)
 				assert.Equal(t, receiverBob.String(), wd.Receiver)
@@ -202,7 +201,7 @@ func TestParseEvent(t *testing.T) {
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId:         packageID,
-				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", zetasui.DepositEvent),
+				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", DepositEvent),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",
@@ -237,7 +236,7 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "-1",
 				},
 			},
@@ -251,7 +250,7 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "300",
 					"sender":    0,
 				},
@@ -266,7 +265,7 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "300",
 					"sender":    sender,
 					"receiver":  "hello",
@@ -282,7 +281,7 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
@@ -299,7 +298,7 @@ func TestParseEvent(t *testing.T) {
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
-					"coin_type": string(zetasui.SUI),
+					"coin_type": string(SUI),
 					"amount":    "200",
 					"sender":    sender,
 					"receiver":  receiverBob.String(),
@@ -313,7 +312,7 @@ func TestParseEvent(t *testing.T) {
 			out, err := gw.ParseEvent(tt.event)
 
 			if tt.errContains != "" {
-				require.ErrorIs(t, err, zetasui.ErrParseEvent)
+				require.ErrorIs(t, err, ErrParseEvent)
 				require.ErrorContains(t, err, tt.errContains)
 				return
 			}

@@ -119,7 +119,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.deploySUIZRC20()
 
 	// deploy fake USDC
-	fakeUSDCCoinType, treasuryCap := r.deploySuiFakeUSDC()
+	fakeUSDCCoinType, treasuryCap := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	r.SuiTokenCoinType = fakeUSDCCoinType
@@ -155,9 +155,9 @@ func (r *E2ERunner) deploySUIZRC20() {
 	r.SetupSUIZRC20()
 }
 
-// deploySuiFakeUSDC deploys the FakeUSDC contract on Sui
+// suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the coinType to be used as asset value for zrc20 and treasuryCap object ID that allows to mint tokens
-func (r *E2ERunner) deploySuiFakeUSDC() (string, string) {
+func (r *E2ERunner) suiDeployFakeUSDC() (string, string) {
 	client := r.Clients.Sui
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
