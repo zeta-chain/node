@@ -82,5 +82,9 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 			break
 		}
 	}
+
+	if firstBallotCreationHeight == 0 {
+		return
+	}
 	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
