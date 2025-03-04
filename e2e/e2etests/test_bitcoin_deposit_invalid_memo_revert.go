@@ -11,6 +11,10 @@ import (
 func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
+	// mine blocks at normal speed
+	stop := r.MineBlocksIfLocalBitcoin()
+	defer stop()
+
 	// make a deposit with a empty memo
 	utxos := r.ListDeployerUTXOs()
 	txHash, err := r.SendToTSSFromDeployerWithMemo(0.1, utxos[:1], []byte{})

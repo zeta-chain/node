@@ -30,13 +30,13 @@ func startBitcoinTests(
 		e2etests.TestBitcoinDepositFastConfirmationName,
 		e2etests.TestBitcoinDepositAndCallName,
 		e2etests.TestBitcoinDepositAndCallRevertName,
-		e2etests.TestBitcoinDepositInvalidMemoRevertName,
 		e2etests.TestBitcoinStdMemoDepositName,
 		e2etests.TestBitcoinStdMemoDepositAndCallName,
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
 		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		e2etests.TestBitcoinDepositInvalidMemoRevertName,
 		e2etests.TestCrosschainSwapName,
 	}
 	bitcoinDepositTestsAdvanced := []string{
