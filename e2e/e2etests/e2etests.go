@@ -13,6 +13,7 @@ const (
 	*/
 	TestETHDepositName                      = "eth_deposit"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
+	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
 	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
 	TestETHDepositAndCallRevertName         = "eth_deposit_and_call_revert"
 	TestETHDepositAndCallRevertWithCallName = "eth_deposit_and_call_revert_with_call"
@@ -102,6 +103,7 @@ const (
 	*/
 	TestBitcoinDepositName                                 = "bitcoin_deposit"
 	TestBitcoinDepositAndCallName                          = "bitcoin_deposit_and_call"
+	TestBitcoinDepositFastConfirmationName                 = "bitcoin_deposit_fast_confirmation"
 	TestBitcoinDepositAndCallRevertName                    = "bitcoin_deposit_and_call_revert"
 	TestBitcoinDepositAndCallRevertWithDustName            = "bitcoin_deposit_and_call_revert_with_dust"
 	TestBitcoinDepositAndWithdrawWithDustName              = "bitcoin_deposit_and_withdraw_with_dust"
@@ -248,6 +250,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHDepositFastConfirmationName,
+		"deposit Ether into ZEVM using fast confirmation",
+		[]runner.ArgDefinition{},
+		TestETHDepositFastConfirmation,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
@@ -782,6 +791,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinDeposit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositFastConfirmationName,
+		"deposit Bitcoin into ZEVM using fast confirmation",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositFastConfirmation,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallName,

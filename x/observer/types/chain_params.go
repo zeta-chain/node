@@ -151,6 +151,12 @@ func (cp ChainParams) Validate() error {
 	return nil
 }
 
+// IsInboundFastConfirmationEnabled returns true if fast inbound confirmation is enabled.
+func (cp ChainParams) IsInboundFastConfirmationEnabled() bool {
+	return cp.ConfirmationParams.FastInboundCount > 0 &&
+		cp.ConfirmationParams.FastInboundCount < cp.ConfirmationParams.SafeInboundCount
+}
+
 // InboundConfirmationSafe returns the safe number of confirmation for inbound observation.
 func (cp ChainParams) InboundConfirmationSafe() uint64 {
 	return cp.ConfirmationParams.SafeInboundCount
@@ -421,6 +427,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 			SafeOutboundCount: 1,
 			FastOutboundCount: 1,
 		},
+		DisableTssBlockScan: true,
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {

@@ -9,7 +9,7 @@ import (
 )
 
 // AddAuthorization adds a new authorization in the authority module for admin message
-func (zts ZetaTxServer) AddAuthorization(msgURL string) error {
+func (zts *ZetaTxServer) AddAuthorization(msgURL string) error {
 	// retrieve account
 	accAdmin, err := zts.clientCtx.Keyring.Key(e2eutils.AdminPolicyName)
 	if err != nil {

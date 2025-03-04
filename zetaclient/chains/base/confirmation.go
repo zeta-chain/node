@@ -1,5 +1,15 @@
 package base
 
+import (
+	"context"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+)
+
 // GetScanRangeInboundSafe calculates the block range to scan using inbound safe confirmation count.
 // It returns a range of blocks [from, end (exclusive)) that need to be scanned.
 func (ob *Observer) GetScanRangeInboundSafe(blockLimit uint64) (from uint64, end uint64) {
@@ -50,14 +60,47 @@ func (ob *Observer) IsBlockConfirmedForOutboundFast(blockNumber uint64) bool {
 	return isBlockConfirmed(blockNumber, confirmation, lastBlock)
 }
 
+// IsInboundEligibleForFastConfirmation determines if given inbound vote message is eligible for fast confirmation.
+func (ob *Observer) IsInboundEligibleForFastConfirmation(
+	ctx context.Context,
+	msg *crosschaintypes.MsgVoteInbound,
+) (bool, error) {
+	// check if fast confirmation is enabled
+	if !ob.ChainParams().IsInboundFastConfirmationEnabled() {
+		return false, nil
+	}
+
+	// check eligibility
+	if !msg.EligibleForFastConfirmation() {
+		return false, nil
+	}
+
+	// query liquidity cap for asset
+	chainID := msg.SenderChainId
+	fCoins, err := ob.zetacoreClient.GetForeignCoinsFromAsset(ctx, chainID, ethcommon.HexToAddress(msg.Asset))
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to get foreign coins for asset %s on chain %d", msg.Asset, chainID)
+	}
+
+	// ensure the deposit amount does not exceed amount cap
+	fastAmountCap := chains.CalcInboundFastConfirmationAmountCap(chainID, fCoins.LiquidityCap)
+	if msg.Amount.GT(fastAmountCap) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // calcUnscannedBlockRange calculates the unscanned block range [from, end (exclusive)) within given block limit.
 //
 // example 1: given lastBlock =  99, lastScanned = 90, confirmation = 10, then no unscanned block
 // example 2: given lastBlock = 100, lastScanned = 90, confirmation = 10, then 1 unscanned block (block 91)
 func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit uint64) (from uint64, end uint64) {
 	// got unscanned blocks or not?
+	// returning same values to indicate no unscanned block
+	nextBlock := lastScanned + 1
 	if lastBlock < lastScanned+confirmation {
-		return 0, 0
+		return nextBlock, nextBlock
 	}
 
 	// calculate the highest confirmed block
@@ -65,13 +108,9 @@ func calcUnscannedBlockRange(lastBlock, lastScanned, confirmation, blockLimit ui
 	highestConfirmed := lastBlock - confirmation + 1
 
 	// calculate a range of unscanned blocks within block limit
-	from = lastScanned + 1
-	end = from + blockLimit
-
 	// 'end' is exclusive, so ensure it is not greater than (highestConfirmed+1)
-	if end > highestConfirmed+1 {
-		end = highestConfirmed + 1
-	}
+	from = nextBlock
+	end = min(from+blockLimit, highestConfirmed+1)
 
 	return from, end
 }

@@ -79,6 +79,10 @@ func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 	return m, false
 }
 
+func (m Ballot) IsFinalized() bool {
+	return m.BallotStatus != BallotStatus_BallotInProgress
+}
+
 func CreateVotes(listSize int) []VoteType {
 	voterList := make([]VoteType, listSize)
 	for i := range voterList {
@@ -90,28 +94,36 @@ func CreateVotes(listSize int) []VoteType {
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
 // It returns the total rewards units which account for the observer block rewards
 func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
+	// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
+	if m.BallotStatus == BallotStatus_BallotInProgress {
+		return 0
+	}
+
+	// Initial value for total reward units
 	totalRewardUnits := int64(0)
-	switch m.BallotStatus {
-	case BallotStatus_BallotFinalized_SuccessObservation:
-		for _, address := range m.VoterList {
-			vote := m.Votes[m.GetVoterIndex(address)]
-			if vote == VoteType_SuccessObservation {
-				rewardsMap[address] = rewardsMap[address] + 1
-				totalRewardUnits++
-				continue
-			}
-			rewardsMap[address] = rewardsMap[address] - 1
-		}
-	case BallotStatus_BallotFinalized_FailureObservation:
-		for _, address := range m.VoterList {
-			vote := m.Votes[m.GetVoterIndex(address)]
-			if vote == VoteType_FailureObservation {
-				rewardsMap[address] = rewardsMap[address] + 1
-				totalRewardUnits++
-				continue
-			}
-			rewardsMap[address] = rewardsMap[address] - 1
+
+	// Determine the winning vote type based on ballot status
+	// majorityVote is the vote type by thr majority of the observers
+	majorityVote := VoteType_SuccessObservation
+	if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
+		majorityVote = VoteType_FailureObservation
+	}
+
+	// Process votes and update rewardsMap
+	// Observer gets rewarded for a correct vote and penalized for an incorrect vote
+	// Observer gets 1 unit for a correct vote and -1 unit for an incorrect vote
+	// totalRewardUnits is the sum of all the rewards units.It is used
+	// to calculate the reward per unit based on AmountOfRewards/totalRewardUnits
+
+	for _, address := range m.VoterList {
+		vote := m.Votes[m.GetVoterIndex(address)]
+		if vote == majorityVote {
+			rewardsMap[address]++
+			totalRewardUnits++
+		} else {
+			rewardsMap[address]--
 		}
 	}
+
 	return totalRewardUnits
 }

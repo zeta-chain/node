@@ -230,7 +230,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startTime := time.Now()
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -290,6 +290,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
+
+	// Run the proposals under the start sequence(proposals_e2e_start folder)
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
+	}
 
 	// run tests
 	var eg errgroup.Group
@@ -504,6 +509,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ %v", err)
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
+	}
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())

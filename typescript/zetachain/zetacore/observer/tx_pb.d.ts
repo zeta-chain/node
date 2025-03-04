@@ -242,6 +242,11 @@ export declare class MsgUpdateOperationalChainParams extends Message<MsgUpdateOp
    */
   confirmationParams?: ConfirmationParams;
 
+  /**
+   * @generated from field: bool disable_tss_block_scan = 10;
+   */
+  disableTssBlockScan: boolean;
+
   constructor(data?: PartialMessage<MsgUpdateOperationalChainParams>);
 
   static readonly runtime: typeof proto3;

@@ -395,9 +395,10 @@ func (ob *Observer) PostVoteInbound(
 
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod:   "PostVoteInbound",
-		logs.FieldTx:       txHash,
-		logs.FieldCoinType: coinType.String(),
+		logs.FieldMethod:           "PostVoteInbound",
+		logs.FieldTx:               txHash,
+		logs.FieldCoinType:         coinType.String(),
+		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
 	}
 
 	// make sure the message is valid to avoid unnecessary retries

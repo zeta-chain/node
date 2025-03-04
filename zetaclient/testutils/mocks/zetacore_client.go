@@ -8,7 +8,11 @@ import (
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 
+	common "github.com/ethereum/go-ethereum/common"
+
 	context "context"
+
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
 
@@ -245,6 +249,34 @@ func (_m *ZetacoreClient) GetCrosschainFlags(ctx context.Context) (observertypes
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetForeignCoinsFromAsset provides a mock function with given fields: ctx, chainID, assetAddress
+func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID int64, assetAddress common.Address) (fungibletypes.ForeignCoins, error) {
+	ret := _m.Called(ctx, chainID, assetAddress)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetForeignCoinsFromAsset")
+	}
+
+	var r0 fungibletypes.ForeignCoins
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) (fungibletypes.ForeignCoins, error)); ok {
+		return rf(ctx, chainID, assetAddress)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx, chainID, assetAddress)
+	} else {
+		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, common.Address) error); ok {
+		r1 = rf(ctx, chainID, assetAddress)
 	} else {
 		r1 = ret.Error(1)
 	}
