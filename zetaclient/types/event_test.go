@@ -63,7 +63,7 @@ func Test_Catetory(t *testing.T) {
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {

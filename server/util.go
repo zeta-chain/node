@@ -135,5 +135,5 @@ func Listen(addr string, config *config.Config) (net.Listener, error) {
 	if config.JSONRPC.MaxOpenConnections > 0 {
 		ln = netutil.LimitListener(ln, config.JSONRPC.MaxOpenConnections)
 	}
-	return ln, err
+	return ln, nil
 }

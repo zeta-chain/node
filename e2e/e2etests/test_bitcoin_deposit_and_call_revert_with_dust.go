@@ -15,10 +15,6 @@ import (
 
 // TestBitcoinDepositAndCallRevertWithDust sends a Bitcoin deposit that reverts with a dust amount in the revert outbound.
 func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	require.Len(r, args, 0)
 
 	// 0.002 BTC is consumed in a deposit and revert, the dust is set to 1000 satoshis in the protocol

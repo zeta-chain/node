@@ -233,8 +233,8 @@ func TestKeeper_DeleteBallotList(t *testing.T) {
 	})
 }
 
-func TestKeeper_ClearMaturedBallots(t *testing.T) {
-	t.Run("clear matured ballots successfully", func(t *testing.T) {
+func TestKeeper_ClearFinalizedMaturedBallots(t *testing.T) {
+	t.Run("clear all matured ballots successfully with forceDeleteBallotsFlag true", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10
@@ -243,6 +243,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 			b := types.Ballot{
 				BallotIdentifier:     sample.ZetaIndex(t),
 				BallotCreationHeight: 1,
+				BallotStatus:         types.BallotStatus_BallotInProgress,
 			}
 			k.AddBallotToList(ctx, b)
 			k.SetBallot(ctx, &b)
@@ -253,18 +254,54 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, 0)
+		k.ClearFinalizedMaturedBallots(ctx, 0, true)
 
 		//Assert
 		for _, b := range ballots {
 			_, found = k.GetBallot(ctx, b.BallotIdentifier)
 			require.False(t, found)
 		}
-		_, found = k.GetBallotListForHeight(ctx, 0)
+		_, found = k.GetBallotListForHeight(ctx, 1)
 		require.False(t, found)
 	})
 
-	t.Run("clear only ballotList if no ballots are found", func(t *testing.T) {
+	t.Run(
+		"clear all matured ballots successfully and skip over ballots that are in the ballot list but not found with forceDeleteBallotsFlag true",
+		func(t *testing.T) {
+			//Arrange
+			k, ctx, _, _ := keepertest.ObserverKeeper(t)
+			numberOfBallots := 10
+			ballots := make([]types.Ballot, numberOfBallots)
+			for i := 0; i < numberOfBallots; i++ {
+				b := types.Ballot{
+					BallotIdentifier:     sample.ZetaIndex(t),
+					BallotCreationHeight: 1,
+					BallotStatus:         types.BallotStatus_BallotInProgress,
+				}
+				k.AddBallotToList(ctx, b)
+				if i%2 == 0 {
+					k.SetBallot(ctx, &b)
+				}
+				ballots[i] = b
+			}
+			_, found := k.GetBallotListForHeight(ctx, 1)
+			require.True(t, found)
+			require.Equal(t, numberOfBallots/2, len(k.GetAllBallots(ctx)))
+
+			//Act
+			k.ClearFinalizedMaturedBallots(ctx, 0, true)
+
+			//Assert
+			for _, b := range ballots {
+				_, found = k.GetBallot(ctx, b.BallotIdentifier)
+				require.False(t, found)
+			}
+			_, found = k.GetBallotListForHeight(ctx, 1)
+			require.False(t, found)
+		},
+	)
+
+	t.Run("clear only ballotList if no ballots are found  with forceDeleteBallotsFlag true", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10
@@ -282,7 +319,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, 0)
+		k.ClearFinalizedMaturedBallots(ctx, 0, true)
 
 		//Assert
 		_, found = k.GetBallotListForHeight(ctx, 1)
@@ -290,8 +327,7 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, 0, len(k.GetAllBallots(ctx)))
 	})
 
-	t.Run("do nothing if ballot list for height is not found", func(t *testing.T) {
-		// Note this condition should never happen in production as the ballot list for height should always be set when saving a ballot to state
+	t.Run("do nothing if ballot list for height is not found  with forceDeleteBallotsFlag true", func(t *testing.T) {
 		//Arrange
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		numberOfBallots := 10
@@ -309,7 +345,117 @@ func TestKeeper_ClearMaturedBallots(t *testing.T) {
 		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
 
 		//Act
-		k.ClearMaturedBallotsAndBallotList(ctx, 0)
+		k.ClearFinalizedMaturedBallots(ctx, 0, true)
+
+		//Assert
+		for _, b := range ballots {
+			_, found = k.GetBallot(ctx, b.BallotIdentifier)
+			require.True(t, found)
+		}
+	})
+
+	t.Run("clear all finalized matured ballots when calling with delete all ballots false", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		numberOfBallots := 10
+		ballots := make([]types.Ballot, numberOfBallots)
+		for i := 0; i < numberOfBallots; i++ {
+			b := types.Ballot{
+				BallotIdentifier:     sample.ZetaIndex(t),
+				BallotCreationHeight: 1,
+				BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
+			}
+			k.AddBallotToList(ctx, b)
+			k.SetBallot(ctx, &b)
+			ballots[i] = b
+		}
+		_, found := k.GetBallotListForHeight(ctx, 1)
+		require.True(t, found)
+		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
+
+		//Act
+		k.ClearFinalizedMaturedBallots(ctx, 0, false)
+
+		//Assert
+		for _, b := range ballots {
+			_, found = k.GetBallot(ctx, b.BallotIdentifier)
+			require.False(t, found)
+		}
+		_, found = k.GetBallotListForHeight(ctx, 1)
+		require.False(t, found)
+	})
+
+	t.Run(
+		"clear only finalized matured ballots if some ballots are pending with delete all ballots false",
+		func(t *testing.T) {
+			//Arrange
+			k, ctx, _, _ := keepertest.ObserverKeeper(t)
+			numberOfBallots := 10
+			finalizedBallots := make([]types.Ballot, 0)
+			pendingBallots := make([]types.Ballot, 0)
+			i := 0
+			// Add finalized ballots
+			for ; i < numberOfBallots/2; i++ {
+				b := types.Ballot{
+					BallotIdentifier:     sample.ZetaIndex(t),
+					BallotCreationHeight: 1,
+					BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
+				}
+				k.AddBallotToList(ctx, b)
+				k.SetBallot(ctx, &b)
+				finalizedBallots = append(finalizedBallots, b)
+			}
+			// Add pending ballots
+			for ; i < numberOfBallots; i++ {
+				b := types.Ballot{
+					BallotIdentifier:     sample.ZetaIndex(t),
+					BallotCreationHeight: 1,
+					BallotStatus:         types.BallotStatus_BallotInProgress,
+				}
+				k.AddBallotToList(ctx, b)
+				k.SetBallot(ctx, &b)
+				pendingBallots = append(pendingBallots, b)
+			}
+			_, found := k.GetBallotListForHeight(ctx, 1)
+			require.True(t, found)
+			require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
+
+			//Act
+			k.ClearFinalizedMaturedBallots(ctx, 0, false)
+
+			//Assert
+			for _, b := range finalizedBallots {
+				_, found = k.GetBallot(ctx, b.BallotIdentifier)
+				require.False(t, found)
+			}
+			for _, b := range pendingBallots {
+				_, found = k.GetBallot(ctx, b.BallotIdentifier)
+				require.True(t, found)
+			}
+			_, found = k.GetBallotListForHeight(ctx, 1)
+			require.True(t, found)
+		},
+	)
+
+	t.Run("do nothing if ballot list for height is not found with delete all ballots false", func(t *testing.T) {
+		//Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		numberOfBallots := 10
+		ballots := make([]types.Ballot, numberOfBallots)
+		for i := 0; i < numberOfBallots; i++ {
+			b := types.Ballot{
+				BallotIdentifier:     sample.ZetaIndex(t),
+				BallotCreationHeight: 1,
+			}
+			k.SetBallot(ctx, &b)
+			ballots[i] = b
+		}
+		_, found := k.GetBallotListForHeight(ctx, 1)
+		require.False(t, found)
+		require.Equal(t, numberOfBallots, len(k.GetAllBallots(ctx)))
+
+		//Act
+		k.ClearFinalizedMaturedBallots(ctx, 0, false)
 
 		//Assert
 		for _, b := range ballots {

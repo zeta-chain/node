@@ -76,6 +76,7 @@ type E2ERunner struct {
 	Account               config.Account
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
+	SuiTSSAddress         string
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	TONDeployer           *tonrunner.Deployer
@@ -249,6 +250,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
 	r.TSSAddress = other.TSSAddress
 	r.BTCTSSAddress = other.BTCTSSAddress
+	r.SuiTSSAddress = other.SuiTSSAddress
 
 	// copy addresses
 	r.ZetaEthAddr = other.ZetaEthAddr
@@ -455,7 +457,12 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
 	r.Logger.Error("Test failed")
-	r.CtxCancel(fmt.Errorf("FailNow on %s", r.Name))
+	err := fmt.Errorf("FailNow on %s", r.Name)
+	r.CtxCancel(err)
+	// this panic ensures that the test routine exits fast.
+	// it should be caught and handled gracefully so long
+	// as the test is being executed by RunE2ETest().
+	panic(err)
 }
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {

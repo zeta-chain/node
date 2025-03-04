@@ -28,12 +28,13 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Errorf("invalid protocol version %q", cctx.ProtocolContractVersion)
 	case cctx.InboundParams == nil:
 		return tx, errors.New("inbound params are nil")
-	case cctx.InboundParams.IsCrossChainCall:
+	case cctx.IsWithdrawAndCall():
 		return tx, errors.New("withdrawAndCall is not supported yet")
 	case params.CoinType == coin.CoinType_Gas:
 		coinType = string(sui.SUI)
 	case params.CoinType == coin.CoinType_ERC20:
-		coinType = cctx.InboundParams.Asset
+		// NOTE: 0x prefix is required for coin type other than SUI
+		coinType = "0x" + cctx.InboundParams.Asset
 	default:
 		return tx, errors.Errorf("unsupported coin type %q", params.CoinType.String())
 	}
@@ -42,8 +43,14 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
 		amount    = params.Amount.String()
-		gasBudget = strconv.FormatUint(params.CallOptions.GasLimit, 10)
 	)
+
+	// Gas budget is gas limit * gas price
+	gasPrice, err := strconv.ParseUint(params.GasPrice, 10, 64)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to parse gas price")
+	}
+	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
 
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
 	if err != nil {
@@ -71,8 +78,9 @@ func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]b
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   tx.TxBytes,
-		Signature: []string{sigBase64},
+		TxBytes:     tx.TxBytes,
+		Signature:   []string{sigBase64},
+		RequestType: "WaitForLocalExecution",
 	}
 
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)

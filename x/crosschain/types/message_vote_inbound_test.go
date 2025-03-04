@@ -622,6 +622,54 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	require.NotEqual(t, hash, hash2, "confirmation mode should change hash")
 }
 
+func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
+	tests := []struct {
+		name     string
+		msg      types.MsgVoteInbound
+		eligible bool
+	}{
+		{
+			name: "eligible for fast confirmation",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion_V2
+				return msg
+			}(),
+			eligible: true,
+		},
+		{
+			name:     "not eligible for non-fungible coin type",
+			msg:      sample.InboundVote(coin.CoinType_NoAssetCall, 1, 7000),
+			eligible: false,
+		},
+		{
+			name: "not eligible for protocol contract version V1",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion_V1
+				return msg
+			}(),
+			eligible: false,
+		},
+		{
+			name: "not eligible for unknown protocol contract version",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion(999)
+				return msg
+			}(),
+			eligible: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			eligible := tt.msg.EligibleForFastConfirmation()
+			require.Equal(t, tt.eligible, eligible)
+		})
+	}
+}
+
 func TestMsgVoteInbound_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {

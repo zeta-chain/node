@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/mod/semver"
+	"github.com/zeta-chain/node/e2e/utils"
 )
 
 // RunE2ETests runs a list of e2e tests
 func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 	zetacoredVersion := r.GetZetacoredVersion()
 	for _, e2eTest := range e2eTests {
-		if semver.Major(zetacoredVersion) != "v0" && semver.Compare(zetacoredVersion, e2eTest.MinimumVersion) < 0 {
-			// note: spacing is padded to width of completed message
-			r.Logger.Print("⚠️ skipping  - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
+		if !utils.MinimumVersionCheck(e2eTest.MinimumVersion, zetacoredVersion) {
+			r.Logger.Print("⚠️ skipping test - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
 			continue
 		}
 		if err := r.Ctx.Err(); err != nil {
@@ -50,12 +49,12 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	}()
 
 	select {
+	case <-r.Ctx.Done():
+		return fmt.Errorf("context cancelled in %s after %s", e2eTest.Name, time.Since(startTime))
 	case err := <-errChan:
 		if err != nil {
 			return fmt.Errorf("%s failed (duration %s): %w", e2eTest.Name, time.Since(startTime), err)
 		}
-	case <-r.Ctx.Done():
-		return fmt.Errorf("context cancelled in %s after %s", e2eTest.Name, time.Since(startTime))
 	}
 
 	// check zrc20 balance vs. supply

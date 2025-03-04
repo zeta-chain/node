@@ -281,6 +281,14 @@ func GetCctxIndexFromArbitraryBytes(sendHash []byte) (string, error) {
 	return GetCctxIndexFromBytes(indexBytes), nil
 }
 
+// IsWithdrawAndCall returns true if the CCTX is performing a withdraw and call operation.
+func (m CrossChainTx) IsWithdrawAndCall() bool {
+	if m.InboundParams == nil || m.CctxStatus == nil {
+		return false
+	}
+	return m.InboundParams.IsCrossChainCall && m.CctxStatus.Status == CctxStatus_PendingOutbound
+}
+
 // NewCCTX creates a new CCTX from a MsgVoteInbound message and a TSS pubkey.
 // It also validates the created cctx
 func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainTx, error) {

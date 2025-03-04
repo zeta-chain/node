@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -90,6 +91,8 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", err
 		}
 		return acc.ToRaw(), nil
+	case Consensus_sui_consensus:
+		return "0x" + hex.EncodeToString(b), nil
 	default:
 		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}

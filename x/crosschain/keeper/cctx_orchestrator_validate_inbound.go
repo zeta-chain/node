@@ -74,7 +74,7 @@ func (k Keeper) CheckIfTSSMigrationTransfer(ctx sdk.Context, msg *types.MsgVoteI
 	switch {
 	case chains.IsEVMChain(chain.ChainId, additionalChains):
 		for _, tss := range historicalTSSList {
-			ethTssAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+			ethTssAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 			if err != nil {
 				continue
 			}
@@ -88,7 +88,7 @@ func (k Keeper) CheckIfTSSMigrationTransfer(ctx sdk.Context, msg *types.MsgVoteI
 			return err
 		}
 		for _, tss := range historicalTSSList {
-			btcTssAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+			btcTssAddress, err := crypto.GetTSSAddrBTC(tss.TssPubkey, bitcoinParams)
 			if err != nil {
 				continue
 			}

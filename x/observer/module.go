@@ -21,6 +21,8 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+const ConsensusVersion = 10
+
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
@@ -155,6 +157,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 9, m.Migrate9to10); err != nil {
 		panic(err)
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 10, m.Migrate10to11); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the observer module's invariants.
@@ -179,7 +184,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 10 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the observer module.
 func (am AppModule) BeginBlock(c context.Context) error {

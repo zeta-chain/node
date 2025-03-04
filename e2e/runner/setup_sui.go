@@ -41,9 +41,12 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err, "get deployer signer")
 	deployerAddress := deployerSigner.Address()
 
-	header := map[string]string{}
-	err = sui.RequestSuiFromFaucet(faucetURL, deployerAddress, header)
-	require.NoError(r, err, "sui faucet request to %s", faucetURL)
+	// fund deployer
+	r.RequestSuiFromFaucet(faucetURL, deployerAddress)
+
+	// fund the TSS
+	// TODO: this step might no longer necessary if a custom solution is implemented for the TSS funding
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	client := r.Clients.Sui
 
@@ -75,13 +78,13 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 
 	// find packageID
-	var packageID, gatewayID, whitelistID string
+	var packageID, gatewayID, whitelistCapID, withdrawCapID string
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "published" {
 			packageID = change.PackageId
 		}
 	}
-	require.NotEmpty(r, packageID, "find packageID")
+	require.NotEmpty(r, packageID, "packageID not found")
 
 	// find gateway objectID
 	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
@@ -90,28 +93,40 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 			gatewayID = change.ObjectId
 		}
 	}
-	require.NotEmpty(r, gatewayID, "find gatewayID")
+	require.NotEmpty(r, gatewayID, "gatewayID not found")
 
-	// find whitelist objectID
+	// find WhitelistCap objectID
 	whitelistType := fmt.Sprintf("%s::gateway::WhitelistCap", packageID)
 	for _, change := range resp.ObjectChanges {
 		if change.Type == changeTypeCreated && change.ObjectType == whitelistType {
-			whitelistID = change.ObjectId
+			whitelistCapID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, whitelistCapID, "whitelistID not found")
+
+	// find WithdrawCap objectID
+	withdrawCapType := fmt.Sprintf("%s::gateway::WithdrawCap", packageID)
+	for _, change := range resp.ObjectChanges {
+		if change.Type == changeTypeCreated && change.ObjectType == withdrawCapType {
+			withdrawCapID = change.ObjectId
 		}
 	}
 
-	// Set sui gateway
+	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
 
 	// deploy fake USDC
-	fakeUSDCCoinType, treasuryCap := r.deployFakeUSDC()
-	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistID)
+	fakeUSDCCoinType, treasuryCap := r.suiDeployFakeUSDC()
+	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	r.SuiTokenCoinType = fakeUSDCCoinType
 	r.SuiTokenTreasuryCap = treasuryCap
+
+	// send withdraw cap to TSS
+	r.suiSendWithdrawCapToTSS(deployerSigner, withdrawCapID)
 
 	// set the chain params
 	err = r.setSuiChainParams()
@@ -131,7 +146,7 @@ func (r *E2ERunner) deploySUIZRC20() {
 		"SUI",
 		"SUI",
 		coin.CoinType_Gas,
-		100000,
+		10000,
 		&liqCap,
 	))
 	require.NoError(r, err)
@@ -140,9 +155,9 @@ func (r *E2ERunner) deploySUIZRC20() {
 	r.SetupSUIZRC20()
 }
 
-// deployFakeUSDC deploys the FakeUSDC contract on Sui
+// suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the coinType to be used as asset value for zrc20 and treasuryCap object ID that allows to mint tokens
-func (r *E2ERunner) deployFakeUSDC() (string, string) {
+func (r *E2ERunner) suiDeployFakeUSDC() (string, string) {
 	client := r.Clients.Sui
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
@@ -181,14 +196,14 @@ func (r *E2ERunner) deployFakeUSDC() (string, string) {
 			packageID = change.PackageId
 		}
 	}
-	require.NotEmpty(r, packageID, "find packageID")
+	require.NotEmpty(r, packageID, "packageID not found")
 
 	for _, change := range resp.ObjectChanges {
 		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "TreasuryCap") {
 			treasuryCap = change.ObjectId
 		}
 	}
-	require.NotEmpty(r, treasuryCap, "find objectID")
+	require.NotEmpty(r, treasuryCap, "objectID not found")
 
 	coinType := packageID + "::fake_usdc::FAKE_USDC"
 
@@ -214,7 +229,7 @@ func (r *E2ERunner) whitelistSuiFakeUSDC(signer *zetasui.SignerSecp256k1, fakeUS
 		"Sui's FakeUSDC",
 		"USDC.SUI",
 		coin.CoinType_ERC20,
-		100000,
+		10000,
 		&liqCap,
 	))
 	require.NoError(r, err)
@@ -300,4 +315,16 @@ func (r *E2ERunner) setSuiChainParams() error {
 	}
 
 	return errors.New("unable to set Sui chain params")
+}
+
+func (r *E2ERunner) suiSendWithdrawCapToTSS(signer *zetasui.SignerSecp256k1, withdrawCapID string) {
+	tx, err := r.Clients.Sui.TransferObject(r.Ctx, models.TransferObjectRequest{
+		Signer:    signer.Address(),
+		ObjectId:  withdrawCapID,
+		Recipient: r.SuiTSSAddress,
+		GasBudget: "5000000000",
+	})
+	require.NoError(r, err)
+
+	r.suiExecuteTx(signer, tx)
 }

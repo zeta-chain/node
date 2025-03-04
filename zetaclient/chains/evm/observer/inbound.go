@@ -112,22 +112,28 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// https://github.com/zeta-chain/node/issues/3186
 	//return nil
 
-	// get the block range to scan
-	// Note: using separate scan range for each event incur more complexity (metrics, db, etc) and not worth it
-	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
-	if startBlock >= endBlock {
-		return nil
+	// scan SAFE confirmed blocks
+	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	if startBlockSafe < endBlockSafe {
+		// observe inbounds in block range [startBlock, endBlock-1]
+		lastScannedNew := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+
+		// save last scanned block to both memory and db
+		if lastScannedNew > ob.LastBlockScanned() {
+			logger.Debug().
+				Uint64("from", startBlockSafe).
+				Uint64("to", lastScannedNew).
+				Msg("observed blocks for inbounds")
+			if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
+				return errors.Wrapf(err, "unable to save last scanned block %d", lastScannedNew)
+			}
+		}
 	}
 
-	// observe inbounds in block range [startBlock, endBlock-1]
-	lastScannedNew := ob.observeInboundInBlockRange(ctx, startBlock, endBlock-1)
-
-	// save last scanned block to both memory and db
-	if lastScannedNew > ob.LastBlockScanned() {
-		logger.Debug().Uint64("from", startBlock).Uint64("to", lastScannedNew).Msg("observed blocks for inbounds")
-		if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
-			return errors.Wrapf(err, "unable to save last scanned block %d", lastScannedNew)
-		}
+	// scan FAST confirmed blocks if available
+	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
+	if endBlockSafe < endBlockFast {
+		ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
 	}
 
 	return nil
@@ -140,23 +146,28 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		Str(logs.FieldMethod, "observeInboundInBlockRange").
 		Uint64("start_block", startBlock).Uint64("to_block", toBlock).Logger()
 
-	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd, err := ob.observeTSSReceive(ctx, startBlock, toBlock)
-	if err != nil {
-		logger.Error().Err(err).Msg("error observing TSS received gas asset")
-	}
-
-	// task 4: filter the outbounds from TSS address to supplement outbound trackers
-	// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
-	ob.filterTSSOutbound(ctx, startBlock, toBlock)
-
 	var (
+		lastScannedTssRecvd              = toBlock
 		lastScannedZetaSent              = startBlock - 1
 		lastScannedDeposited             = startBlock - 1
 		lastScannedGatewayDeposit        = startBlock - 1
 		lastScannedGatewayCall           = startBlock - 1
 		lastScannedGatewayDepositAndCall = startBlock - 1
+		err                              error
 	)
+
+	// we now only take these actions on specific configurable chains
+	if !ob.ChainParams().DisableTssBlockScan {
+		// query the incoming tx to TSS address (read at most 100 blocks in one go)
+		lastScannedTssRecvd, err = ob.observeTSSReceive(ctx, startBlock, toBlock)
+		if err != nil {
+			logger.Error().Err(err).Msg("error observing TSS received gas asset")
+		}
+
+		// filter the outbounds from TSS address to supplement outbound trackers
+		// TODO: make this a separate go routine in outbound.go after switching to smart contract V2
+		ob.filterTSSOutbound(ctx, startBlock, toBlock)
+	}
 
 	logs, err := ob.fetchLogs(ctx, startBlock, toBlock)
 	if err != nil {

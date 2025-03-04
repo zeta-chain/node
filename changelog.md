@@ -24,11 +24,17 @@
 * [3522](https://github.com/zeta-chain/node/pull/3522) - add `MsgDisableFastConfirmation` to disable fast confirmation. This message can be triggered by the emergency policy.
 * [3548](https://github.com/zeta-chain/node/pull/3548) - ensure cctx list is sorted by creation time
 * [3562](https://github.com/zeta-chain/node/pull/3562) - add Sui withdrawals
+* [3600](https://github.com/zeta-chain/node/pull/3600) - add dedicated zetaclient restricted addresses config. This file will be automatically reloaded when it changes without needing to restart zetaclient.
+* [3578](https://github.com/zeta-chain/node/pull/3578) - Add disable_tss_block_scan parameter. This parameter will be used to disable expensive block scanning actions on non-ethereum EVM Chains.
+* [3551](https://github.com/zeta-chain/node/pull/3551) - support for EVM chain and Bitcoin chain inbound fast confirmation
+* [3615](https://github.com/zeta-chain/node/pull/3615) - make Bitcoin deposit with invalid memo reverting
 
 ### Refactor
 
 * [3381](https://github.com/zeta-chain/node/pull/3381) - split Bitcoin observer and signer into small files and organize outbound logic into reusable/testable functions; renaming, type unification, etc.
 * [3496](https://github.com/zeta-chain/node/pull/3496) - zetaclient uses `ConfirmationParams` instead of old `ConfirmationCount`; use block ranged based observation for btc and evm chain.
+* [3594](https://github.com/zeta-chain/node/pull/3594) - set outbound hash in cctx when adding outbound tracker
+* [3553](https://github.com/zeta-chain/node/pull/3553) — add a new buffer blocks param to delay deletion of pending ballots
 
 ### Fixes
 
@@ -36,6 +42,7 @@
 * [3509](https://github.com/zeta-chain/node/pull/3509) - schedule Bitcoin TSS keysign on interval to avoid TSS keysign spam
 * [3517](https://github.com/zeta-chain/node/pull/3517) - remove duplicate gateway event appending to fix false positive on multiple events in same tx
 * [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
+* [3622](https://github.com/zeta-chain/node/pull/3622) - allow object for tracerConfig in `debug_traceTransaction` RPC
 
 ### Tests
 
@@ -43,6 +50,8 @@
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
 * [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
+* [3595](https://github.com/zeta-chain/node/pull/3595) - add E2E tests for Sui withdraws
+* [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
 * [3602](https://github.com/zeta-chain/node/pull/3601) - run solana tests when testing upgrades
 
 ## v28.0.0

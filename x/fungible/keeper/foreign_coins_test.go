@@ -16,10 +16,11 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-func createNForeignCoins(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ForeignCoins {
+func createNForeignCoins(t *testing.T, keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ForeignCoins {
 	items := make([]types.ForeignCoins, n)
 	for i := range items {
-		items[i].Zrc20ContractAddress = strconv.Itoa(i)
+		fCoin := sample.ForeignCoins(t, strconv.Itoa(i))
+		items[i] = fCoin
 
 		keeper.SetForeignCoins(ctx, items[i])
 	}

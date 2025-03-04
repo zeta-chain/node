@@ -27,8 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ethante "github.com/zeta-chain/ethermint/app/ante"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -37,9 +35,10 @@ import (
 )
 
 type HandlerOptions struct {
-	AccountKeeper          evmtypes.AccountKeeper
-	BankKeeper             evmtypes.BankKeeper
-	IBCKeeper              *ibckeeper.Keeper
+	AccountKeeper evmtypes.AccountKeeper
+	BankKeeper    evmtypes.BankKeeper
+	// TODO: enable back IBC
+	// IBCKeeper              *ibckeeper.Keeper
 	FeeMarketKeeper        FeeMarketKeeper
 	EvmKeeper              EVMKeeper
 	FeegrantKeeper         ante.FeegrantKeeper
@@ -76,7 +75,9 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		// Note: signature verification uses EIP instead of the cosmos signature validator
 		ethante.NewLegacyEip712SigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
+		// TODO: enable back IBC
+		// check if this ante handler is needed in non legacy cosmos ante handlers
+		// ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 		ethante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
 }
