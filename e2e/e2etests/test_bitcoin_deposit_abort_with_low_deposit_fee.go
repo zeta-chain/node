@@ -6,7 +6,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
@@ -29,6 +29,6 @@ func TestBitcoinDepositAndAbortWithLowDepositFee(r *runner.E2ERunner, args []str
 	require.Equal(r, cctx.InboundParams.Amount.Uint64(), uint64(0))
 	require.Equal(r, cctx.GetCurrentOutboundParam().Amount.Uint64(), uint64(0))
 
-	// check cctx error message
-	require.Contains(r, cctx.CctxStatus.StatusMessage, types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE.String())
+	// check cctx error
+	require.EqualValues(r, crosschaintypes.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE, cctx.InboundParams.Status)
 }

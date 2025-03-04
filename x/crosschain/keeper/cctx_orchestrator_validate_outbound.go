@@ -36,9 +36,9 @@ func (k Keeper) ValidateOutboundZEVM(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	depositErr error,
-	isContractReverted bool,
+	shouldRevert bool,
 ) (newCCTXStatus types.CctxStatus) {
-	if depositErr != nil && isContractReverted {
+	if depositErr != nil && shouldRevert {
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		// contract call reverted; should refund via a revert tx
 		revertErr := k.processFailedOutboundOnExternalChain(

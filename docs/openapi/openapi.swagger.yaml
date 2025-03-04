@@ -57685,11 +57685,13 @@ definitions:
       - SUCCESS
       - INSUFFICIENT_DEPOSITOR_FEE
       - INVALID_RECEIVER_ADDRESS
+      - INVALID_MEMO
     default: SUCCESS
     description: |-
       - INSUFFICIENT_DEPOSITOR_FEE: this field is specifically for Bitcoin when the deposit amount is less than
       depositor fee
        - INVALID_RECEIVER_ADDRESS: the receiver address parsed from the inbound is invalid
+       - INVALID_MEMO: parse memo is invalid
     title: InboundStatus represents the status of an observed inbound
   zetachain.zetacore.crosschain.InboundTracker:
     type: object
