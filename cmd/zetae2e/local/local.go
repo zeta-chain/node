@@ -153,6 +153,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	conf, err := GetConfig(cmd)
 	noError(err)
 
+	if testPerformance && performanceIterations > 100 {
+		TestTimeout = time.Hour
+	}
+
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
 	defer timeoutCancel()

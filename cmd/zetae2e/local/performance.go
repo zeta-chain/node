@@ -21,11 +21,12 @@ import (
 // Update the corresponding argument with the count value
 func updateTestCountArg(tests []runner.E2ETest, count int) {
 	for i := range tests {
+		if len(tests[i].Args) == 0 {
+			tests[i].Args = tests[i].DefaultArgs()
+		}
 		for j, argDef := range tests[i].ArgsDefinition {
-			if argDef.Description == "count" {
-				if len(tests[i].Args) > j {
-					tests[i].Args[j] = fmt.Sprintf("%d", count)
-				}
+			if argDef.Description == e2etests.CountArgDescription {
+				tests[i].Args[j] = fmt.Sprintf("%d", count)
 				break
 			}
 		}

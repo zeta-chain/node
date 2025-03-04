@@ -117,6 +117,7 @@ jobs:
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
       ADMIN_UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS }}
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
+      PERFORMANCE_TESTS_1K: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
@@ -152,6 +153,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
               core.setOutput('ADMIN_UPGRADE_TESTS', labels.includes('ADMIN_UPGRADE_TESTS'));
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
+              core.setOutput('PERFORMANCE_TESTS_1K', labels.includes('PERFORMANCE_TESTS_1K'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
@@ -198,7 +200,7 @@ jobs:
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('ADMIN_UPGRADE_TESTS', true);
-              core.setOutput('PERFORMANCE_TESTS', true);
+              core.setOutput('PERFORMANCE_TESTS_1K', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('STAKING_TESTS', true);
@@ -215,6 +217,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', makeTargets.includes('admin-test'));
               core.setOutput('ADMIN_UPGRADE_TESTS', makeTargets.includes('admin-upgrade-test'));
               core.setOutput('PERFORMANCE_TESTS', makeTargets.includes('performance-test'));
+              core.setOutput('PERFORMANCE_TESTS_1K', makeTargets.includes('performance-test-1k'));
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
@@ -258,8 +261,12 @@ jobs:
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-performance-test"
-            runs-on: buildjet-4vcpu-ubuntu-2204
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
+          - make-target: "start-e2e-performance-test-1k"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K == 'true' }}
+            timeout-minutes: 60
           - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
