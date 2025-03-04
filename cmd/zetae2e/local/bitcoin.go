@@ -36,6 +36,7 @@ func startBitcoinTests(
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
 		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
 		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		e2etests.TestBitcoinDepositInvalidMemoRevertName,
 		e2etests.TestCrosschainSwapName,
 	}
 	bitcoinDepositTestsAdvanced := []string{
