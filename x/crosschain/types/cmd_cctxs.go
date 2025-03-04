@@ -182,11 +182,11 @@ func MigrateFundCmdCCTX(
 	// set sender, receiver, gas limit, gas price and final amount based on the chain
 	switch {
 	case chains.IsEVMChain(chainID, additionalStaticChainInfo):
-		ethAddressOld, err := zetacrypto.GetTssAddrEVM(currentTSSPubKey)
+		ethAddressOld, err := zetacrypto.GetTSSAddrEVM(currentTSSPubKey)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		ethAddressNew, err := zetacrypto.GetTssAddrEVM(newTSSPubKey)
+		ethAddressNew, err := zetacrypto.GetTSSAddrEVM(newTSSPubKey)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
@@ -218,11 +218,11 @@ func MigrateFundCmdCCTX(
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		btcAddressOld, err := zetacrypto.GetTssAddrBTC(currentTSSPubKey, bitcoinNetParams)
+		btcAddressOld, err := zetacrypto.GetTSSAddrBTC(currentTSSPubKey, bitcoinNetParams)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		btcAddressNew, err := zetacrypto.GetTssAddrBTC(newTSSPubKey, bitcoinNetParams)
+		btcAddressNew, err := zetacrypto.GetTSSAddrBTC(newTSSPubKey, bitcoinNetParams)
 		if err != nil {
 			return CrossChainTx{}, err
 		}

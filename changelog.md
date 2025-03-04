@@ -48,6 +48,7 @@
 * [3503](https://github.com/zeta-chain/node/pull/3503) - add check in e2e test to ensure deletion of stale ballots
 * [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
+* [3595](https://github.com/zeta-chain/node/pull/3595) - add E2E tests for Sui withdraws
 * [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
 
 ## v28.0.0

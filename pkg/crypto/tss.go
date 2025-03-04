@@ -6,34 +6,49 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 
-// GetTssAddrEVM returns the ethereum address of the tss pubkey
-func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
+// GetTSSAddrEVM returns the ethereum address of the tss pubkey
+func GetTSSAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return keyAddr, err
 	}
-	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
+	decompressPubKey, err := crypto.DecompressPubkey(pubk.Bytes())
 	if err != nil {
 		return keyAddr, err
 	}
 
-	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
+	keyAddr = crypto.PubkeyToAddress(*decompressPubKey)
 
 	return keyAddr, nil
 }
 
-// GetTssAddrBTC returns the bitcoin address of the tss pubkey
-func GetTssAddrBTC(tssPubkey string, bitcoinParams *chaincfg.Params) (string, error) {
+// GetTSSAddrBTC returns the bitcoin address of the tss pubkey
+func GetTSSAddrBTC(tssPubkey string, bitcoinParams *chaincfg.Params) (string, error) {
 	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinParams)
 	if err != nil {
 		return "", err
 	}
 
 	return addrWPKH.EncodeAddress(), nil
+}
+
+// GetTSSAddrSui returns the sui address of the tss pubkey
+func GetTSSAddrSui(tssPubkey string) (string, error) {
+	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		return "", err
+	}
+	decompressPubKey, err := crypto.DecompressPubkey(pubk.Bytes())
+	if err != nil {
+		return "", err
+	}
+
+	return zetasui.AddressFromPubKeyECDSA(decompressPubKey), nil
 }
 
 func getKeyAddrBTCWitnessPubkeyHash(

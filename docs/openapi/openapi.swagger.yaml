@@ -58853,12 +58853,16 @@ definitions:
         type: string
       btc:
         type: string
+      sui:
+        type: string
   zetachain.zetacore.observer.QueryGetTssAddressResponse:
     type: object
     properties:
       eth:
         type: string
       btc:
+        type: string
+      sui:
         type: string
   zetachain.zetacore.observer.QueryHasVotedResponse:
     type: object
