@@ -6,6 +6,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
@@ -18,5 +19,12 @@ func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
 	_, ok := receiver.(*btcutil.AddressPubKeyHash)
 	require.True(r, ok, "Invalid receiver address specified for TestBitcoinWithdrawLegacy.")
 
-	withdrawBTCZRC20(r, receiver, amount)
+	// ACT
+	// perform the withdraw
+	tx := withdrawBTCZRC20(r, receiver, amount)
+
+	// ASSERT
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 }

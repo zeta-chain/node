@@ -193,6 +193,11 @@ func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
 	r.approveZRC20(allowed, r.ETHZRC20)
 }
 
+// ApproveBTCZRC20 approves BTC ZRC20 on EVM to a specific address
+func (r *E2ERunner) ApproveBTCZRC20(allowed ethcommon.Address) {
+	r.approveZRC20(allowed, r.BTCZRC20)
+}
+
 // ApproveERC20ZRC20 approves ERC20 ZRC20 on EVM to a specific address
 func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
 	r.approveZRC20(allowed, r.ERC20ZRC20)

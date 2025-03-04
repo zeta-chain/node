@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/bg"
+	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -66,6 +67,15 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 			if !confirmed {
 				continue
+			}
+
+			// stop if the cctx is already finalized
+			cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
+			if err != nil {
+				logger.Err(err).Msg("unable to get cctx for outbound")
+			} else if !crosschainkeeper.IsPending(cctx) {
+				logger.Info().Msg("cctx already finalized")
+				return nil
 			}
 
 			// report outbound hash to tracker

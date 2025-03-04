@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/cenkalti/backoff/v4"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -22,6 +23,24 @@ import (
 )
 
 var gasLimit = big.NewInt(250000)
+
+// BTCWithdraw calls Withdraw of Gateway with gas token on ZEVM
+func (r *E2ERunner) BTCWithdraw(
+	receiver btcutil.Address,
+	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte(receiver.EncodeAddress()),
+		amount,
+		r.BTCZRC20Addr,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
 
 // ETHWithdraw calls Withdraw of Gateway with gas token on ZEVM
 func (r *E2ERunner) ETHWithdraw(

@@ -11,10 +11,6 @@ import (
 )
 
 func TestBitcoinStdMemoDepositAndCallRevertOtherAddress(r *runner.E2ERunner, args []string) {
-	// Start mining blocks
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Parse amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])

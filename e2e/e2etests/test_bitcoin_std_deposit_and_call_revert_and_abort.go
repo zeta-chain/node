@@ -13,10 +13,6 @@ import (
 )
 
 func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []string) {
-	// Start mining blocks
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	require.Len(r, args, 0)
 	amount := 0.00000001 // 1 satoshi so revert fails because of insufficient gas
 

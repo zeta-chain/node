@@ -31,7 +31,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// define new confirmation params
 	chainParams := *resOldChainParams.ChainParams
 	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
-		SafeInboundCount:  6, // approx 36 seconds, much longer than Fast confirmation time (6 second)
+		SafeInboundCount:  4, // approx 20 seconds, much longer than Fast confirmation time (5 second)
 		FastInboundCount:  1,
 		SafeOutboundCount: resOldChainParams.ChainParams.ConfirmationParams.SafeOutboundCount,
 		FastOutboundCount: resOldChainParams.ChainParams.ConfirmationParams.FastOutboundCount,
@@ -41,7 +41,7 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
 	// wait for 2 blocks to ensure the new chain params are effective
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 20*time.Second)
+	r.WaitForBlocks(2)
 	r.Logger.Info("enabled inbound fast confirmation")
 
 	// query current BTC ZRC20 supply
@@ -81,10 +81,6 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	txHash = r.DepositBTCWithExactAmount(amountMoreThanCapFloat, nil)
 	r.Logger.Info("deposited more than fast amount cap %d tx hash: %s", amountMoreThanCap, txHash)
 
-	// mine blocks at normal speed
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// ASSERT-2
 	// wait for the cctx to be SAFE confirmed
 	timeStart = time.Now()
@@ -102,8 +98,11 @@ func TestBitcoinDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	require.True(r, timeSaved > runner.BTCRegnetBlockTime)
 
 	// TEARDOWN
-	// restore old chain params
-	err = r.ZetaTxServer.UpdateChainParams(resOldChainParams.ChainParams)
+	// restore old inbound confirmation counts
+	// note: we should NOT restore whole 'resOldChainParams' as it may interfere with fast confirmation tests on withdrawals
+	chainParams.ConfirmationParams.SafeInboundCount = resOldChainParams.ChainParams.ConfirmationParams.SafeInboundCount
+	chainParams.ConfirmationParams.FastInboundCount = resOldChainParams.ChainParams.ConfirmationParams.FastInboundCount
+	err = r.ZetaTxServer.UpdateChainParams(&chainParams)
 	require.NoError(r, err, "failed to restore chain params")
 
 	// remove the liquidity cap

@@ -44,7 +44,7 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 
 	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
 	// wait for 2 blocks to ensure the new chain params are effective
-	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 20*time.Second)
+	r.WaitForBlocks(2)
 	r.Logger.Info("enabled inbound fast confirmation")
 
 	// query current ETH ZRC20 supply
@@ -103,8 +103,11 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	require.True(r, timeSaved > 3*time.Second)
 
 	// TEARDOWN
-	// restore old chain params
-	err = r.ZetaTxServer.UpdateChainParams(resOldChainParams.ChainParams)
+	// restore old inbound confirmation params
+	// note: we should NOT restore whole 'resOldChainParams' as it may interfere with fast confirmation tests on withdrawals
+	chainParams.ConfirmationParams.SafeInboundCount = resOldChainParams.ChainParams.ConfirmationParams.SafeInboundCount
+	chainParams.ConfirmationParams.FastInboundCount = resOldChainParams.ChainParams.ConfirmationParams.FastInboundCount
+	err = r.ZetaTxServer.UpdateChainParams(&chainParams)
 	require.NoError(r, err, "failed to restore chain params")
 
 	// remove the liquidity cap

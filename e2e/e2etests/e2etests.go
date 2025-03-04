@@ -113,6 +113,7 @@ const (
 	TestBitcoinStdMemoInscribedDepositAndCallName          = "bitcoin_std_memo_inscribed_deposit_and_call"
 	TestBitcoinDepositAndAbortWithLowDepositFeeName        = "bitcoin_deposit_and_abort_with_low_deposit_fee"
 	TestBitcoinWithdrawSegWitName                          = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawFastConfirmationName                = "bitcoin_withdraw_fast_confirmation"
 	TestBitcoinWithdrawTaprootName                         = "bitcoin_withdraw_taproot"
 	TestBitcoinWithdrawMultipleName                        = "bitcoin_withdraw_multiple"
 	TestBitcoinWithdrawLegacyName                          = "bitcoin_withdraw_legacy"
@@ -856,6 +857,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawSegWit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawFastConfirmationName,
+		"withdraw BTC from ZEVM using fast confirmation",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawFastConfirmation,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawTaprootName,

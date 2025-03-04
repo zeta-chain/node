@@ -15,14 +15,9 @@ import (
 // TestBitcoinDepositAndWithdrawWithDust deposits Bitcoin and call a smart contract that withdraw dust amount
 // It tests the edge case where during a cross-chain call, a invaild withdraw is initiated (processLogs fails)
 func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	require.Len(r, args, 0)
 
 	// ARRANGE
-
 	// Deploy the withdrawer contract on ZetaChain with a withdraw amount of 100 satoshis (dust amount is 1000 satoshis)
 	withdrawerAddr, tx, _, err := withdrawer.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient, big.NewInt(100))
 	require.NoError(r, err)

@@ -15,8 +15,6 @@ import (
 )
 
 func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
 	r.ZEVMAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized

@@ -302,7 +302,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		stopMining := startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		defer stopMining()
 	}
 
 	if !skipPrecompiles {

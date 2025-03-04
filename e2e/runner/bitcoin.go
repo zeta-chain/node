@@ -15,7 +15,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/utils"
@@ -24,13 +23,12 @@ import (
 	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 const (
 	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
-	BTCRegnetBlockTime = 6 * time.Second
+	BTCRegnetBlockTime = 5 * time.Second
 )
 
 // ListDeployerUTXOs list the deployer's UTXOs
@@ -286,33 +284,6 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
 
-	// mine 1 block to confirm the transaction
-	_, err = r.GenerateToAddressIfLocalBitcoin(1, btcDeployerAddress)
-	require.NoError(r, err)
-	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
-	require.NoError(r, err)
-	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	rawtx, err := btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
-	require.NoError(r, err)
-
-	events, err := btcobserver.FilterAndParseIncomingTx(
-		r.Ctx,
-		btcRPC,
-		[]btcjson.TxRawResult{*rawtx},
-		0,
-		r.BTCTSSAddress.EncodeAddress(),
-		log.Logger,
-		r.BitcoinParams,
-	)
-	require.NoError(r, err)
-	r.Logger.Info("bitcoin inbound events:")
-	for _, event := range events {
-		r.Logger.Info("  TxHash: %s", event.TxHash)
-		r.Logger.Info("  From: %s", event.FromAddress)
-		r.Logger.Info("  To: %s", event.ToAddress)
-		r.Logger.Info("  Amount: %f", event.Value)
-		r.Logger.Info("  Memo: %x", event.MemoBytes)
-	}
 	return txid, nil
 }
 
@@ -357,10 +328,6 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	txid, err := r.BtcRPCClient.SendRawTransaction(r.Ctx, revealTx, true)
 	require.NoError(r, err)
 	r.Logger.Info("reveal txid: %s", txid.String())
-
-	// mine 1 block to confirm the reveal transaction
-	_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
-	require.NoError(r, err)
 
 	return txid, revealTx.TxOut[0].Value
 }

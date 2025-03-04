@@ -20,10 +20,6 @@ func (r *E2ERunner) AddTSSToNode() {
 	// import the TSS address
 	err := r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
-
-	// mine some blocks to get some BTC into the deployer address
-	_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
-	require.NoError(r, err)
 }
 
 // SetupBitcoinAccounts sets up the TSS account and deployer account

@@ -21,13 +21,12 @@ func startBitcoinTests(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	light, skipBitcoinSetup bool,
-) {
+) func() {
 	// start the bitcoin tests
 	// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
 	bitcoinDepositTests := []string{
 		e2etests.TestBitcoinDonationName,
 		e2etests.TestBitcoinDepositName,
-		e2etests.TestBitcoinDepositFastConfirmationName,
 		e2etests.TestBitcoinDepositAndCallName,
 		e2etests.TestBitcoinDepositAndCallRevertName,
 		e2etests.TestBitcoinStdMemoDepositName,
@@ -39,6 +38,7 @@ func startBitcoinTests(
 		e2etests.TestCrosschainSwapName,
 	}
 	bitcoinDepositTestsAdvanced := []string{
+		e2etests.TestBitcoinDepositFastConfirmationName,
 		e2etests.TestBitcoinDepositAndCallRevertWithDustName,
 		e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
 		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
@@ -49,6 +49,7 @@ func startBitcoinTests(
 		e2etests.TestLegacyZetaWithdrawBTCRevertName,
 	}
 	bitcoinWithdrawTestsAdvanced := []string{
+		e2etests.TestBitcoinWithdrawFastConfirmationName,
 		e2etests.TestBitcoinWithdrawTaprootName,
 		e2etests.TestBitcoinWithdrawLegacyName,
 		e2etests.TestBitcoinWithdrawP2SHName,
@@ -62,7 +63,7 @@ func startBitcoinTests(
 		bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
 		bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
 	}
-	bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine := bitcoinTestRoutines(
+	bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine, stopMining := bitcoinTestRoutines(
 		conf,
 		deployerRunner,
 		verbose,
@@ -70,8 +71,11 @@ func startBitcoinTests(
 		bitcoinDepositTests,
 		bitcoinWithdrawTests,
 	)
+
 	eg.Go(bitcoinDepositTestRoutine)
 	eg.Go(bitcoinWithdrawTestRoutine)
+
+	return stopMining
 }
 
 // bitcoinTestRoutines returns test routines for deposit and withdraw tests
@@ -82,7 +86,7 @@ func bitcoinTestRoutines(
 	initNetwork bool,
 	depositTests []string,
 	withdrawTests []string,
-) (func() error, func() error) {
+) (func() error, func() error, func()) {
 	// initialize runner for deposit tests
 	// deposit tests need Bitcoin node wallet to handle UTXOs
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
@@ -111,12 +115,20 @@ func bitcoinTestRoutines(
 		false,
 	)
 
+	// start mining blocks if it's local Regnet
+	// all E2E tests will be run on constant block time from now on
+	stopMining := runnerDeposit.MineBlocksIfLocalBitcoin()
+
 	// initialize funds
 	// send BTC to TSS for gas fees and to tester ZEVM address
 	if initNetwork {
+		// send BTC block rewards to the deployer address as initial funds
+		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(10, runnerDeposit.BTCDeployerAddress)
+		require.NoError(runnerDeposit, err)
+
 		// mine 101 blocks to ensure the BTC rewards are spendable
 		// Note: the block rewards can be sent to any address in here
-		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
+		_, err = runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
 		require.NoError(runnerDeposit, err)
 
 		// donate BTC to TSS and send BTC to ZEVM addresses
@@ -129,7 +141,7 @@ func bitcoinTestRoutines(
 	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
 	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
 
-	return routineDeposit, routineWithdraw
+	return routineDeposit, routineWithdraw, stopMining
 }
 
 // initBitcoinRunner initializes the Bitcoin runner for given test name and account
@@ -157,10 +169,6 @@ func initBitcoinRunner(
 
 	// initialize funds
 	if initNetwork {
-		// send some BTC block rewards to the deployer address
-		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
-		require.NoError(runner, err)
-
 		// send ERC20 token on EVM
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 1000)
 		runner.WaitForTxReceiptOnEVM(txERC20Send)

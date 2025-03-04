@@ -28,10 +28,6 @@ func withdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	// mine blocks if testing on regnet
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// withdraw amount provided as test arg BTC from ZRC20 to BTC legacy address
 	// the address "1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3" is for mainnet, not regtest
 	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)

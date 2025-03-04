@@ -21,8 +21,6 @@ import (
 
 func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	r.SetupBtcAddress(false)
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
 
 	// Pause inbound processing for tss migration
 	r.Logger.Info("Pause inbound  processing")

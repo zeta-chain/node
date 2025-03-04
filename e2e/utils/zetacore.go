@@ -5,13 +5,11 @@ import (
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -43,6 +41,24 @@ func WaitCctxMinedByInboundHash(
 	require.NotEmpty(t, cctxs, "cctx not found, inboundHash: %s", inboundHash)
 
 	return cctxs[len(cctxs)-1]
+}
+
+// GetCCTXByInboundHash gets cctx by inbound hash
+func GetCCTXByInboundHash(
+	ctx context.Context,
+	client crosschaintypes.QueryClient,
+	inboundHash string,
+) *crosschaintypes.CrossChainTx {
+	t := TestingFromContext(ctx)
+
+	// query cctx by inbound hash
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
+	res, err := client.InTxHashToCctxData(ctx, in)
+
+	require.NoError(t, err)
+	require.Len(t, res.CrossChainTxs, 1)
+
+	return &res.CrossChainTxs[0]
 }
 
 // EnsureNoCctxMinedByInboundHash ensures no cctx is mined by inbound hash
@@ -192,6 +208,53 @@ func WaitCCTXMinedByIndex(
 	}
 }
 
+// WaitOutboundTracker wait for outbound tracker to be filled with 'hashCount' hashes
+func WaitOutboundTracker(
+	ctx context.Context,
+	client crosschaintypes.QueryClient,
+	chainID int64,
+	nonce uint64,
+	hashCount int,
+	logger infoLogger,
+	timeout time.Duration,
+) []string {
+	if timeout == 0 {
+		timeout = DefaultCctxTimeout
+	}
+
+	t := TestingFromContext(ctx)
+	startTime := time.Now()
+	in := &crosschaintypes.QueryAllOutboundTrackerByChainRequest{Chain: chainID}
+
+	for {
+		timedOut := time.Since(startTime) > timeout
+		require.False(t, timedOut, "waiting outbound tracker timeout for chainID: %d, nonce: %d", chainID, nonce)
+		time.Sleep(1 * time.Second)
+
+		outboundTracker, err := client.OutboundTrackerAllByChain(ctx, in)
+		require.NoError(t, err)
+
+		// loop through all outbound trackers
+		for i, tracker := range outboundTracker.OutboundTracker {
+			if tracker.Nonce == nonce {
+				logger.Info("Tracker[%d]:\n", i)
+				logger.Info("  ChainId: %d\n", tracker.ChainId)
+				logger.Info("  Nonce: %d\n", tracker.Nonce)
+				logger.Info("  HashList:\n")
+
+				hashes := []string{}
+				for j, hash := range tracker.HashList {
+					hashes = append(hashes, hash.TxHash)
+					logger.Info("    hash[%d]: %s\n", j, hash.TxHash)
+				}
+				if len(hashes) >= hashCount {
+					return hashes
+				}
+			}
+		}
+	}
+}
+
 type WaitOpts func(c *waitConfig)
 
 // MatchStatus is the WaitOpts that matches CCTX with the given status.
@@ -336,37 +399,4 @@ func WaitForBlockHeight(
 	}
 
 	return nil
-}
-
-// WaitForZetaBlocks waits for the given number of Zeta blocks
-func WaitForZetaBlocks(
-	ctx context.Context,
-	t require.TestingT,
-	zevmClient *ethclient.Client,
-	waitBlocks uint64,
-	timeout time.Duration,
-) {
-	oldHeight, err := zevmClient.BlockNumber(ctx)
-	require.NoError(t, err)
-
-	// wait for given number of Zeta blocks
-	newHeight := oldHeight
-	startTime := time.Now()
-	checkInterval := constant.ZetaBlockTime / 2
-	for {
-		time.Sleep(checkInterval)
-		require.False(
-			t,
-			time.Since(startTime) > timeout,
-			"timeout waiting for Zeta blocks, current height: %d",
-			newHeight,
-		)
-
-		// check how many blocks elapsed
-		newHeight, err = zevmClient.BlockNumber(ctx)
-		require.NoError(t, err)
-		if newHeight >= oldHeight+waitBlocks {
-			return
-		}
-	}
 }
