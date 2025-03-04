@@ -74,6 +74,12 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 	if len(ballotsRes.Ballots) < 1 {
 		return
 	}
-	firstBallotCreationHeight := ballotsRes.Ballots[0].BallotCreationHeight
+	firstBallotCreationHeight := int64(0)
+
+	for _, ballot := range ballotsRes.Ballots {
+		if ballot.IsFinalized() {
+			firstBallotCreationHeight = ballot.BallotCreationHeight
+		}
+	}
 	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
