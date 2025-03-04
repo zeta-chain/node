@@ -1,16 +1,99 @@
 package runner
 
 import (
+	"encoding/hex"
 	"fmt"
+	"math/big"
+	"strconv"
 	"strings"
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
+
+// SuiGetSUIBalance returns the SUI balance of an address
+func (r *E2ERunner) SuiGetSUIBalance(addr string) uint64 {
+	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
+		Owner:    addr,
+		CoinType: string(sui.SUI),
+	})
+	require.NoError(r, err)
+
+	balance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+	require.NoError(r, err)
+
+	return balance
+}
+
+// SuiGetFungibleTokenBalance returns the fungible token balance of an address
+func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
+	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
+		Owner:    addr,
+		CoinType: "0x" + r.SuiTokenCoinType,
+	})
+	require.NoError(r, err)
+
+	balance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+	require.NoError(r, err)
+
+	return balance
+}
+
+// SuiApproveSUIZRC20 approves SUI ZRC20 on EVM to a specific address
+func (r *E2ERunner) SuiApproveSUIZRC20(allowed ethcommon.Address) {
+	r.approveZRC20(allowed, r.SUIZRC20)
+}
+
+// SuiApproveFungibleTokenZRC20 approves Sui fungible token ZRC20 on EVM to a specific address
+func (r *E2ERunner) SuiApproveFungibleTokenZRC20(allowed ethcommon.Address) {
+	r.approveZRC20(allowed, r.SuiTokenZRC20)
+}
+
+// SuiWithdrawSUI calls Withdraw of Gateway with SUI Zrc20 on ZEVM
+func (r *E2ERunner) SuiWithdrawSUI(
+	receiver string,
+	amount *big.Int,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SUIZRC20Addr,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// SuiWithdrawFungibleToken calls Withdraw of Gateway with Sui fungible token ZRC20 on ZEVM
+func (r *E2ERunner) SuiWithdrawFungibleToken(
+	receiver string,
+	amount *big.Int,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SuiTokenZRC20Addr,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	require.NoError(r, err)
+
+	return tx
+}
 
 // SuiDepositSUI calls Deposit on Sui
 func (r *E2ERunner) SuiDepositSUI(
@@ -85,7 +168,7 @@ func (r *E2ERunner) SuiMintUSDC(
 
 	// extract the package ID from the coin type
 	splitted := strings.Split(r.SuiTokenCoinType, "::")
-	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name>")
+	require.Len(r, splitted, 3, "coinType should be in format <packageID>::<module>::<name> - %s", r.SuiTokenCoinType)
 	packageID := "0x" + splitted[0]
 
 	// create the tx

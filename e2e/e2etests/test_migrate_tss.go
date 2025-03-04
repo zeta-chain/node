@@ -127,7 +127,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 
 	// Check balance of new TSS address to make sure all funds have been transferred
 	// BTC
-	btcTssAddress, err := zetacrypto.GetTssAddrBTC(currentTss.TSS.TssPubkey, r.BitcoinParams)
+	btcTssAddress, err := zetacrypto.GetTSSAddrBTC(currentTss.TSS.TssPubkey, r.BitcoinParams)
 	require.NoError(r, err)
 
 	btcTssAddressNew, err := btcutil.DecodeAddress(btcTssAddress, r.BitcoinParams)

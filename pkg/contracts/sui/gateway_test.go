@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestParseEvent(t *testing.T) {
@@ -21,14 +21,14 @@ func TestParseEvent(t *testing.T) {
 		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, moduleName, t)
-	}
-
 	gw := NewGateway(packageID, gatewayID)
 
-	receiverAlice := sample.EthAddress()
-	receiverBob := sample.EthAddress()
+	eventType := func(t string) string {
+		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+	}
+
+	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
+	receiverBob := ethcommon.HexToAddress("0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7")
 
 	var payload []any
 	payloadBytes := []byte(base64.StdEncoding.EncodeToString([]byte{0, 1, 2}))

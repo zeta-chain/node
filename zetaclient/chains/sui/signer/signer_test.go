@@ -42,6 +42,7 @@ func TestSigner(t *testing.T) {
 			CoinType:        coin.CoinType_Gas,
 			Amount:          amount,
 			TssNonce:        nonce,
+			GasPrice:        "1000",
 		}}
 
 		// Given mocked WithdrawCapID

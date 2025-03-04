@@ -89,10 +89,14 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName             = "sui_deposit"
-	TestSuiDepositAndCallName      = "sui_deposit_and_call"
-	TestSuiTokenDepositName        = "sui_token_deposit"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallName = "sui_token_deposit_and_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiDepositName                   = "sui_deposit"
+	TestSuiDepositAndCallName            = "sui_deposit_and_call"
+	TestSuiDepositAndCallRevertName      = "sui_deposit_and_call_revert"
+	TestSuiTokenDepositName              = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName       = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallRevertName = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawName                  = "sui_withdraw"
+	TestSuiTokenWithdrawName             = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
@@ -121,6 +125,7 @@ const (
 	TestBitcoinWithdrawP2SHName                            = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
+	TestBitcoinDepositInvalidMemoRevertName                = "bitcoin_deposit_invalid_memo_revert"
 
 	/*
 	 Application tests
@@ -713,9 +718,10 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiDepositName,
 		"deposit SUI into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "amount in mist", DefaultValue: "10000000000"},
 		},
 		TestSuiDeposit,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositAndCallName,
@@ -724,14 +730,25 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiDepositAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiDepositAndCallRevertName,
+		"deposit SUI into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "10000000000"},
+		},
+		TestSuiDepositAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenDepositName,
 		"deposit fungible token SUI into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in base unit", DefaultValue: "1000000"},
+			{Description: "amount in base unit", DefaultValue: "10000000000"},
 		},
 		TestSuiTokenDeposit,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenDepositAndCallName,
@@ -740,6 +757,34 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
 		},
 		TestSuiTokenDepositAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenDepositAndCallRevertName,
+		"deposit fungible token into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "10000000000"},
+		},
+		TestSuiTokenDepositAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawName,
+		"withdraw SUI from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawName,
+		"withdraw fungible token from ZEVM",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Bitcoin tests
@@ -927,6 +972,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestBitcoinDepositInvalidMemoRevertName,
+		"deposit Bitcoin with invalid memo; expect revert",
+		[]runner.ArgDefinition{},
+		TestBitcoinDepositInvalidMemoRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	/*
 	 Application tests

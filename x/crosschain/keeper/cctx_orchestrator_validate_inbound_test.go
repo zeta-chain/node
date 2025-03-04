@@ -501,7 +501,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 		chain := chains.Goerli
 		tssList := sample.TssList(3)
-		sender, err := crypto.GetTssAddrEVM(tssList[0].TssPubkey)
+		sender, err := crypto.GetTSSAddrEVM(tssList[0].TssPubkey)
 		require.NoError(t, err)
 
 		// Set up mocks
@@ -531,7 +531,7 @@ func TestKeeper_CheckMigration(t *testing.T) {
 		tssList := sample.TssList(3)
 		bitcoinParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 		require.NoError(t, err)
-		sender, err := crypto.GetTssAddrBTC(tssList[0].TssPubkey, bitcoinParams)
+		sender, err := crypto.GetTSSAddrBTC(tssList[0].TssPubkey, bitcoinParams)
 		require.NoError(t, err)
 
 		// Set up mocks

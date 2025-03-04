@@ -7,6 +7,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/mod/semver"
 )
 
 // ScriptPKToAddress is a hex string for P2WPKH script
@@ -44,4 +45,14 @@ func TestingFromContext(ctx context.Context) require.TestingT {
 	}
 
 	return t
+}
+
+func MinimumVersionCheck(testVersion, zetacoredVersion string) bool {
+	// If major version is "v0", return true regardless of comparison
+	if semver.Major(zetacoredVersion) == "v0" {
+		return true
+	}
+
+	// Otherwise, return true if zetacoredVersion >= testVersion
+	return semver.Compare(zetacoredVersion, testVersion) >= 0
 }
