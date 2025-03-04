@@ -7,12 +7,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
-	"github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // EnsureNoTrackers ensures that there are no trackers left on zetacore
