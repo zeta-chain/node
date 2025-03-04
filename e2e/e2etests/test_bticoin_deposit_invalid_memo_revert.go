@@ -21,7 +21,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit empty memo")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, crosschaintypes.InboundStatus_INVALID_MEMO, cctx.InboundParams.Status)
-	
+
 	// make a deposit with an invalid memo
 	utxos = r.ListDeployerUTXOs()
 	txHash, err = r.SendToTSSFromDeployerWithMemo(0.1, utxos[:1], []byte("invalid memo"))
