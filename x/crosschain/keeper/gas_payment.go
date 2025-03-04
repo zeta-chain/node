@@ -232,7 +232,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	newAmount := inputAmount.Sub(sdkmath.NewUintFromBigInt(feeInZRC20))
 
 	// mint the amount of ERC20 to be burnt as gas fee
-	_, err = k.fungibleKeeper.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, feeInZRC20)
+	_, err = k.fungibleKeeper.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, feeInZRC20, noEthereumTxEvent)
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}

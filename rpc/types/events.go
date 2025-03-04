@@ -273,7 +273,7 @@ func ParseTxBlockResult(
 	if len(txs.Txs) == 0 {
 		return nil, nil, nil
 	}
-	parsedTx := txs.Txs[0]
+	parsedTx := txs.Txs[len(txs.Txs)-1]
 	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height: height,

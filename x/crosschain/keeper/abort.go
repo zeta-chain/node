@@ -152,7 +152,7 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainGas(
 		return errorsmod.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
 	// deposit the amount to the tx origin instead of receiver as this is a refund
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt(), false); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
 	return nil
@@ -221,7 +221,7 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainERC20(
 	}
 
 	// deposit the amount to the sender
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt(), false); err != nil {
 		return errors.New("failed to deposit zrc20 on ZetaChain" + err.Error())
 	}
 

@@ -61,9 +61,9 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID1, "alpha", "alpha")
 
 		// do some operation to populate the state
-		_, err := k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(100))
+		_, err := k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(100), false)
 		require.NoError(t, err)
-		_, err = k.DepositZRC20(ctx, zrc20, addr2, big.NewInt(200))
+		_, err = k.DepositZRC20(ctx, zrc20, addr2, big.NewInt(200), false)
 		require.NoError(t, err)
 
 		// check the state
@@ -123,7 +123,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.Equal(t, chainID2, chainID.Int64())
 
 		// can continue to interact with the contract
-		_, err = k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(1000))
+		_, err = k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(1000), false)
 		require.NoError(t, err)
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
 		require.NoError(t, err)

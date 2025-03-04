@@ -96,7 +96,7 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000), false)
 		require.NoError(t, err)
 
 		// Setup method input.
@@ -136,7 +136,7 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000), false)
 		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
@@ -179,7 +179,7 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000), false)
 		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
@@ -222,7 +222,7 @@ func Test_Distribute(t *testing.T) {
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
-		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000), false)
 		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.
@@ -263,7 +263,7 @@ func Test_Distribute(t *testing.T) {
 		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
 
 		// Set caller balance.
-		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
+		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000), false)
 		require.NoError(t, err)
 
 		// Allow staking to spend ZRC20 tokens.

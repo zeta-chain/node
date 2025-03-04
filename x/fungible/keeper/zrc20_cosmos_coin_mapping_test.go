@@ -34,7 +34,7 @@ func Test_LockZRC20(t *testing.T) {
 	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit 1000 ZRC20 tokens into the fungible.
-	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal)
+	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal, false)
 
 	t.Run("should fail when trying to lock zero amount", func(t *testing.T) {
 		// Check lock with zero amount.
@@ -150,7 +150,7 @@ func Test_UnlockZRC20(t *testing.T) {
 	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit 1000 ZRC20 tokens into the fungible.
-	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal)
+	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, owner, depositTotal, false)
 
 	// Approve allowance for locker to spend owner's ZRC20 tokens.
 	approveAllowance(t, ts, zrc20ABI, owner, locker, allowanceTotal)
@@ -216,7 +216,7 @@ func Test_CheckZRC20Allowance(t *testing.T) {
 	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
 
 	// Deposit ZRC20 tokens into the fungible.
-	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, depositTotal)
+	ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, depositTotal, false)
 
 	t.Run("should fail when checking zero amount", func(t *testing.T) {
 		err = ts.fungibleKeeper.CheckZRC20Allowance(ts.ctx, owner, spender, ts.zrc20Address, big.NewInt(0))

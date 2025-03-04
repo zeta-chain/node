@@ -81,7 +81,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
 	amountAZeta := big.NewInt(1e17)
 
-	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount)
+	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, amount, false)
 	if err != nil {
 		return ethcommon.Address{}, err
 	}

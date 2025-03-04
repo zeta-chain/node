@@ -108,7 +108,7 @@ func setupZRC20Pool(
 	liquidityAmount := big.NewInt(1e17)
 
 	// mint some zrc20 and zeta
-	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, liquidityAmount)
+	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, liquidityAmount, false)
 	require.NoError(t, err)
 	err = bankKeeper.MintCoins(
 		ctx,

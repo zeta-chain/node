@@ -170,9 +170,9 @@ func (_m *CrosschainFungibleKeeper) DepositCoinZeta(ctx types.Context, to common
 	return r0
 }
 
-// DepositZRC20 provides a mock function with given fields: ctx, contract, to, amount
-func (_m *CrosschainFungibleKeeper) DepositZRC20(ctx types.Context, contract common.Address, to common.Address, amount *big.Int) (*evmtypes.MsgEthereumTxResponse, error) {
-	ret := _m.Called(ctx, contract, to, amount)
+// DepositZRC20 provides a mock function with given fields: ctx, contract, to, amount, noEthereumTxEvent
+func (_m *CrosschainFungibleKeeper) DepositZRC20(ctx types.Context, contract common.Address, to common.Address, amount *big.Int, noEthereumTxEvent bool) (*evmtypes.MsgEthereumTxResponse, error) {
+	ret := _m.Called(ctx, contract, to, amount, noEthereumTxEvent)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DepositZRC20")
@@ -180,19 +180,19 @@ func (_m *CrosschainFungibleKeeper) DepositZRC20(ctx types.Context, contract com
 
 	var r0 *evmtypes.MsgEthereumTxResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int) (*evmtypes.MsgEthereumTxResponse, error)); ok {
-		return rf(ctx, contract, to, amount)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, bool) (*evmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, contract, to, amount, noEthereumTxEvent)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int) *evmtypes.MsgEthereumTxResponse); ok {
-		r0 = rf(ctx, contract, to, amount)
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, bool) *evmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, contract, to, amount, noEthereumTxEvent)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*evmtypes.MsgEthereumTxResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int) error); ok {
-		r1 = rf(ctx, contract, to, amount)
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, bool) error); ok {
+		r1 = rf(ctx, contract, to, amount, noEthereumTxEvent)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -2,8 +2,9 @@ package staking
 
 import (
 	"encoding/json"
-	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"testing"
+
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 
 	"math/big"
 
@@ -442,7 +443,7 @@ func distributeZRC20(
 ) {
 	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
 
-	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
+	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount, false)
 	require.NoError(t, err)
 	allowStaking(t, s, amount)
 

@@ -138,6 +138,7 @@ type FungibleKeeper interface {
 		contract ethcommon.Address,
 		to ethcommon.Address,
 		amount *big.Int,
+		noEthereumTxEvent bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	ZRC20DepositAndCallContract(
 		ctx sdk.Context,

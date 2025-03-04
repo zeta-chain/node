@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
@@ -9,8 +12,6 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"math/big"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -245,7 +246,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k.SetForeignCoins(ctx, foreignCoin)
 
 		// increase total supply
-		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
+		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500), false)
 		require.NoError(t, err)
 
 		// deposit
@@ -327,7 +328,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k.SetForeignCoins(ctx, foreignCoin)
 
 		// increase total supply
-		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
+		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500), false)
 		require.NoError(t, err)
 
 		// deposit (500 + 501 > 1000)
