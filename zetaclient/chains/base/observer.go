@@ -12,7 +12,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -22,6 +21,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -408,12 +409,15 @@ func (ob *Observer) PostVoteInbound(
 	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
 	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
 	if err == nil {
-		// The cctx exists we should still vote if the ballot is present
-		_, err = ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
-		if err != nil {
-			// Query for ballot failed, the ballot does not exist we can return
-			ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
-			return cctxIndex, nil
+		// Verify ballot is not found
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			// The cctx exists we should still vote if the ballot is present
+			_, err = ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
+			if err != nil {
+				// Query for ballot failed, the ballot does not exist we can return
+				ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+				return cctxIndex, nil
+			}
 		}
 	}
 
