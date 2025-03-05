@@ -135,7 +135,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			cctx.InboundParams.SenderChainId,
 			cctx,
 			inputAmount,
-			true,
+			false,
 		)
 		if err != nil {
 			return err

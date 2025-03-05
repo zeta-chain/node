@@ -645,7 +645,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 		amountToSwap, err := k.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, ethAmount, zrc20)
 		require.NoError(t, err)
 
-		_, err = k.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, amountToSwap, false)
+		_, err = k.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, amountToSwap)
 		require.NoError(t, err)
 		k.CallZRC20Approve(
 			ctx,
@@ -787,7 +787,7 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 		amountToSwap, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, tokenAmount, inzrc20, outzrc20)
 		require.NoError(t, err)
 
-		_, err = k.DepositZRC20(ctx, inzrc20, types.ModuleAddressEVM, amountToSwap, false)
+		_, err = k.DepositZRC20(ctx, inzrc20, types.ModuleAddressEVM, amountToSwap)
 		require.NoError(t, err)
 		k.CallZRC20Approve(
 			ctx,

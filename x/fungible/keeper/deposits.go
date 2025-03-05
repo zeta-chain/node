@@ -79,7 +79,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 		return nil, false, types.ErrCallNonContract
 	}
 
-	res, err := k.DepositZRC20(ctx, zrc20Contract, to, amount, false)
+	res, err := k.DepositZRC20(ctx, zrc20Contract, to, amount)
 	return res, false, err
 }
 
@@ -118,7 +118,7 @@ func (k Keeper) ProcessDeposit(
 	}
 
 	// simple deposit
-	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount, false)
+	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 	return res, false, err
 }
 
@@ -174,7 +174,7 @@ func (k Keeper) ProcessRevert(
 			return res, err
 		} else {
 			// simply deposit back to the revert address
-			res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount, false)
+			res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
 			return res, err
 		}
 	}
@@ -215,7 +215,7 @@ func (k Keeper) ProcessAbort(
 		// simply deposit back to the revert address
 		// if the deposit fails, processing the abort entirely fails
 		// MsgRefundAbort can still be used to retry the operation later on
-		if _, err := k.DepositZRC20(ctx, zrc20Addr, abortAddress, amount, false); err != nil {
+		if _, err := k.DepositZRC20(ctx, zrc20Addr, abortAddress, amount); err != nil {
 			return nil, err
 		}
 	}

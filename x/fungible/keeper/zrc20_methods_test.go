@@ -175,7 +175,7 @@ func TestKeeper_ZRC20Transfer(t *testing.T) {
 	})
 
 	t.Run("should pass with correct input", func(t *testing.T) {
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(10), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(10))
 		transferred, err := ts.fungibleKeeper.ZRC20Transfer(
 			ts.ctx,
 			ts.zrc20Address,
@@ -255,7 +255,7 @@ func TestKeeper_ZRC20TransferFrom(t *testing.T) {
 
 	t.Run("should fail without an allowance approval", func(t *testing.T) {
 		// Deposit ZRC20 into fungible EOA.
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(1000))
 
 		// Transferring the tokens with transferFrom without approval should fail.
 		_, err = ts.fungibleKeeper.ZRC20TransferFrom(
@@ -271,7 +271,7 @@ func TestKeeper_ZRC20TransferFrom(t *testing.T) {
 
 	t.Run("should success with an allowance approval", func(t *testing.T) {
 		// Deposit ZRC20 into fungible EOA.
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, fungibletypes.ModuleAddressEVM, big.NewInt(1000))
 
 		// Approve allowance to sample.EthAddress() to spend 10 ZRC20 tokens.
 		approveAllowance(t, ts, zrc20ABI, fungibletypes.ModuleAddressEVM, sample.EthAddress(), big.NewInt(10))

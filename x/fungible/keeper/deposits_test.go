@@ -246,7 +246,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k.SetForeignCoins(ctx, foreignCoin)
 
 		// increase total supply
-		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500), false)
+		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
 		require.NoError(t, err)
 
 		// deposit
@@ -328,7 +328,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k.SetForeignCoins(ctx, foreignCoin)
 
 		// increase total supply
-		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500), false)
+		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
 		require.NoError(t, err)
 
 		// deposit (500 + 501 > 1000)

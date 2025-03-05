@@ -248,7 +248,6 @@ func (k Keeper) DepositZRC20(
 	contract common.Address,
 	to common.Address,
 	amount *big.Int,
-	noEthereumTxEvent bool,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
@@ -262,7 +261,7 @@ func (k Keeper) DepositZRC20(
 		BigIntZero,
 		DefaultGasLimit,
 		true,
-		noEthereumTxEvent,
+		false,
 		"deposit",
 		to,
 		amount,

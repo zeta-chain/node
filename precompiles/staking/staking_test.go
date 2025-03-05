@@ -443,7 +443,7 @@ func distributeZRC20(
 ) {
 	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
 
-	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount, false)
+	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
 	require.NoError(t, err)
 	allowStaking(t, s, amount)
 

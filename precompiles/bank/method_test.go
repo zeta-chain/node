@@ -122,7 +122,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should fail when bank has 0 token allowance", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 
 		methodID := ts.bankABI.Methods[DepositMethodName]
 
@@ -152,7 +152,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should fail when trying to deposit 0", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 
 		methodID := ts.bankABI.Methods[DepositMethodName]
 
@@ -179,7 +179,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should fail when trying to deposit more than allowed to bank", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 
 		// Allow bank to spend 500 ZRC20 tokens.
 		allowBank(t, ts, big.NewInt(500))
@@ -231,7 +231,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should fail when trying to deposit more than user balance", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 
 		// Allow bank to spend 500 ZRC20 tokens.
 		allowBank(t, ts, big.NewInt(1000))
@@ -285,7 +285,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should deposit tokens and retrieve balance of cosmos coin", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 		methodID := ts.bankABI.Methods[DepositMethodName]
 
 		// Allow bank to spend 500 ZRC20 tokens.
@@ -331,7 +331,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should deposit tokens, withdraw and check with balanceOf", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 		methodID := ts.bankABI.Methods[DepositMethodName]
 
 		// Allow bank to spend 500 ZRC20 tokens.
@@ -410,7 +410,7 @@ func Test_Methods(t *testing.T) {
 	t.Run("should deposit tokens and fail when withdrawing more than depositted", func(t *testing.T) {
 		ts := setupChain(t)
 		caller := fungibletypes.ModuleAddressEVM
-		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000), false)
+		ts.fungibleKeeper.DepositZRC20(ts.ctx, ts.zrc20Address, caller, big.NewInt(1000))
 		methodID := ts.bankABI.Methods[DepositMethodName]
 
 		// Allow bank to spend 500 ZRC20 tokens.

@@ -340,7 +340,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, int64(0), oldBalance.Int64())
 
 		amount := big.NewInt(100)
-		_, err = k.DepositZRC20(ctx, addr, to, amount, false)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
 		require.NoError(t, err)
 
 		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)
@@ -402,7 +402,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, int64(0), oldBalance.Int64())
 
 		amount := big.NewInt(100)
-		_, err = k.DepositZRC20(ctx, addr, to, amount, false)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
 		require.NoError(t, err)
 
 		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)

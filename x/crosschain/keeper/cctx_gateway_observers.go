@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -39,6 +40,14 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 ) (newCCTXStatus types.CctxStatus, err error) {
 	tmpCtx, commit := ctx.CacheContext()
 	outboundReceiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
+	// TODO (https://github.com/zeta-chain/node/issues/1010): workaround for this bug
+	noEthereumTxEvent := false
+	if chains.IsZetaChain(
+		config.CCTX.InboundParams.SenderChainId,
+		c.crosschainKeeper.GetAuthorityKeeper().GetAdditionalChainList(ctx),
+	) {
+		noEthereumTxEvent = true
+	}
 
 	err = func() error {
 		// If ShouldPayGas flag is set during ValidateInbound PayGasAndUpdateCctx should be called
@@ -49,7 +58,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 				outboundReceiverChainID,
 				config.CCTX,
 				config.CCTX.InboundParams.Amount,
-				true,
+				noEthereumTxEvent,
 			)
 			if err != nil {
 				return err
