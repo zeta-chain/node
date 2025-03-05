@@ -81,18 +81,21 @@ func (k Keeper) ProcessLogs(
 	if connectorZEVMAddr == (ethcommon.Address{}) {
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
+
 	gatewayAddr := ethcommon.HexToAddress(system.Gateway)
+	isLegacy := crypto.IsEmptyAddress(gatewayAddr)
 
 	// read the logs and process inbounds from emitted events
 	// run the processing for the v1 and the v2 protocol contracts
 	for _, log := range logs {
-		if !crypto.IsEmptyAddress(gatewayAddr) {
-			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, txOrigin); err != nil {
-				return errors.Wrap(err, "failed to process ZEVM inbound V2")
+		if isLegacy {
+			if err := k.ProcessZEVMInboundV1(ctx, log, connectorZEVMAddr, emittingAddress, txOrigin); err != nil {
+				return errors.Wrap(err, "failed to process ZEVM inbound V1")
 			}
 		}
-		if err := k.ProcessZEVMInboundV1(ctx, log, connectorZEVMAddr, emittingAddress, txOrigin); err != nil {
-			return errors.Wrap(err, "failed to process ZEVM inbound V1")
+
+		if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, txOrigin); err != nil {
+			return errors.Wrap(err, "failed to process ZEVM inbound V2")
 		}
 	}
 
