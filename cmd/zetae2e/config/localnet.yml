@@ -21,9 +21,9 @@ additional_accounts:
     evm_address: "0x283d810090EdF4043E75247eAeBcE848806237fD"
     private_key: "7bb523963ee2c78570fb6113d886a4184d42565e8847f1cb639f5f5e2ef5b37a"
   user_bitcoin_withdraw:
-    bech32_address: "zeta17e77anpmzhuuam67hg6x3mtqrulqh80z9chv70"
-    evm_address: "0xf67deecc3B15F9CEeF5eba3468ed601f3e0B9de2"
-    private_key: "2b3306a8ac43dbf0e350b87876c131e7e12bd49563a16de9ce8aeb664b94d559"
+    bech32_address: "zeta1p8tc84gyr7nt9ag73rykjluld4nys03e8tsa5s"
+    evm_address: "0x09d783D5041fa6b2F51e88c9697f9f6D66483E39"
+    private_key: "81e1a610dee7162f46e1eb4948e7f46f9e1e0404cf65c5d68908ea04324732cc"
   user_solana:
     bech32_address: "zeta1zqlajgj0qr8rqylf2c572t0ux8vqt45d4zngpm"
     evm_address: "0x103FD9224F00ce3013e95629e52DFc31D805D68d"

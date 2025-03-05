@@ -55,7 +55,33 @@ add_emissions_withdraw_authorizations() {
      mv temp.json "$json_file"
 }
 
+# 10 million zeta
+DEFAULT_FUND_AMOUNT="10000000000000000000000000azeta"
 
+# Funds an individual account
+fund_account() {
+  local name=$1
+  local account=$2
+  local amount=${3:-$DEFAULT_FUND_AMOUNT}
+
+  echo "Funding $name ($account) with $amount"
+
+  zetacored add-genesis-account "$account" "$amount"
+}
+
+# Funds most accounts automatically
+fund_accounts_auto() {
+  # Fund the default account first
+  local default_address=$(yq -r '.default_account.bech32_address' /root/config.yml)
+  fund_account "default_account" "$default_address"
+  
+  # Get all additional accounts and fund them
+  local accounts=$(yq -r '.additional_accounts | keys | sort | .[]' /root/config.yml)
+  for account_key in $accounts; do
+    local address=$(yq -r ".additional_accounts.$account_key.bech32_address" /root/config.yml)
+    fund_account "$account_key" "$address"
+  done
+}
 
 # create keys
 CHAINID="athens_101-1"
@@ -204,16 +230,16 @@ then
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-# set admin account
-  zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
+  # set admin account
+  fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh
 
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
   operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
 
-  zetacored add-genesis-account "$emergency_policy" 100000000000000000000000000azeta
-  zetacored add-genesis-account "$admin_policy" 100000000000000000000000000azeta
-  zetacored add-genesis-account "$operational_policy" 100000000000000000000000000azeta
+  fund_account emergency_policy "$emergency_policy"
+  fund_account admin_policy "$admin_policy"
+  fund_account operational_policy "$operational_policy"
 
   jq --arg emergency "$emergency_policy" \
     --arg operational "$operational_policy" \
@@ -224,52 +250,8 @@ then
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-# give balance to runner accounts to deploy contracts directly on zEVM
-# default account
-  address=$(yq -r '.default_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# legacy erc20 tester
-  address=$(yq -r '.additional_accounts.user_legacy_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# legacy zeta tester
-  address=$(yq -r '.additional_accounts.user_legacy_zeta.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# legacy ethers tester
-  address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# bitcoin deposit tester
-  address=$(yq -r '.additional_accounts.user_bitcoin_deposit.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# bitcoin withdraw tester
-  address=$(yq -r '.additional_accounts.user_bitcoin_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# solana tester
-  address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# migration tester
-  address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# precompile tester
-  address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# ether tester
-  address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# erc20 tester
-  address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# ether revert tester
-  address=$(yq -r '.additional_accounts.user_ether_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# erc20 revert tester
-  address=$(yq -r '.additional_accounts.user_erc20_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# emissions withdraw tester
-  address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
-# sui tester
-  address=$(yq -r '.additional_accounts.user_sui.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 10000000000000000000000000azeta
+# Automatically func most of the accounts
+fund_accounts_auto
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
