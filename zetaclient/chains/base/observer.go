@@ -417,8 +417,8 @@ func (ob *Observer) PostVoteInbound(
 		_, err = ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
 		if err != nil {
 			// Query for ballot failed, the ballot does not exist we can return
-			ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("inbound detected: cctx exists but no ballot")
-			return "", nil
+			ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+			return cctxIndex, nil
 		}
 	}
 
