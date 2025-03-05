@@ -53,7 +53,7 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("receiver balance of SPL before withdraw: %s", receiverBalanceBefore.Value.Amount)
 
 	connected := solana.MustPublicKeyFromBase58(runner.ConnectedSPLProgramID.String())
-	connectedPda, err := solanacontract.ComputeConnectedSPLPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
 
 	connectedPdaAta := r.ResolveSolanaATA(privkey, connectedPda, r.SPLAddr)

@@ -48,7 +48,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	}
 
 	// get recipient ata
-	destinationProgramPda, err := contracts.ComputeConnectedSPLPdaAddress(to)
+	destinationProgramPda, err := contracts.ComputeConnectedPdaAddress(to)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
@@ -107,7 +107,7 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 		return nil, errors.Wrapf(err, "cannot find ATA for %s and mint account %s", signer.pda, msg.MintAccount())
 	}
 
-	destinationProgramPda, err := contracts.ComputeConnectedSPLPdaAddress(msg.To())
+	destinationProgramPda, err := contracts.ComputeConnectedPdaAddress(msg.To())
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
