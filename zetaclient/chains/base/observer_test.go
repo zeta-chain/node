@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,8 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -518,9 +521,10 @@ func TestPostVoteInbound(t *testing.T) {
 		ob := newTestSuite(t, chains.Ethereum)
 
 		ob.zetacore.WithPostVoteInbound("", "sampleBallotIndex")
-
 		// post vote inbound
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		ob.zetacore.MockGetCctxByHash(msg.Digest(), errors.New("not found"))
+
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Equal(t, "sampleBallotIndex", ballot)
@@ -533,11 +537,28 @@ func TestPostVoteInbound(t *testing.T) {
 		// create sample message with long Message
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
 		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
+		ob.zetacore.MockGetCctxByHash(msg.Digest(), errors.New("not found"))
 
 		// post vote inbound
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Empty(t, ballot)
+	})
+
+	t.Run("should not post vote cctx already exists and ballot is not found", func(t *testing.T) {
+		//Arrange
+		// create observer
+		ob := newTestSuite(t, chains.Ethereum)
+		// create sample message with long Message
+		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
+		ob.zetacore.MockGetCctxByHash(msg.Digest(), nil)
+		ob.zetacore.MockGetBallotByID(msg.Digest(), status.Error(codes.NotFound, "not found ballot"))
+		// Act
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		// Assert
+		require.NoError(t, err)
+		require.Equal(t, ballot, msg.Digest())
 	})
 }
 
