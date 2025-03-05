@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -173,6 +174,11 @@ func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
 	return ts.liteClient.
 		On("GetBlockHeader", mock.Anything, id, uint32(0)).
 		Return(blockInfo, nil)
+}
+
+func (ts *testSuite) MockGetCctxByHash() *mock.Call {
+	return ts.zetacore.
+		On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, errors.New("not found"))
 }
 
 func (ts *testSuite) OnGetInboundTrackersForChain(trackers []cc.InboundTracker) *mock.Call {
