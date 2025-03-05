@@ -218,7 +218,11 @@ func (signer *Signer) TryProcessOutbound(
 }
 
 // signTx creates and signs solana tx containing provided instruction with relayer key.
-func (signer *Signer) signTx(ctx context.Context, inst *solana.GenericInstruction, limit uint64) (*solana.Transaction, error) {
+func (signer *Signer) signTx(
+	ctx context.Context,
+	inst *solana.GenericInstruction,
+	limit uint64,
+) (*solana.Transaction, error) {
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {

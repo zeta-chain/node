@@ -308,7 +308,11 @@ func ParseGatewayInstruction(
 		}
 
 		if !budgetProgramID.Equals(solana.ComputeBudget) {
-			return nil, fmt.Errorf("programID %s is not matching compute budget id %s", budgetProgramID, solana.ComputeBudget)
+			return nil, fmt.Errorf(
+				"programID %s is not matching compute budget id %s",
+				budgetProgramID,
+				solana.ComputeBudget,
+			)
 		}
 	}
 
