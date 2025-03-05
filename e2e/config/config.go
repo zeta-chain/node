@@ -66,7 +66,7 @@ type Account struct {
 	SolanaPrivateKey DoubleQuotedString `yaml:"solana_private_key"`
 }
 
-// AdditionalAccounts are extra  required to run specific tests
+// AdditionalAccounts are extra accounts required to run specific tests
 type AdditionalAccounts struct {
 	UserLegacyERC20       Account `yaml:"user_legacy_erc20"`
 	UserLegacyZeta        Account `yaml:"user_legacy_zeta"`
@@ -107,7 +107,7 @@ type RPCs struct {
 	EVM               string     `yaml:"evm"`
 	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
 	Solana            string     `yaml:"solana"`
-	TON               string     `yaml:"ton_liteserver_config"`
+	TON               string     `yaml:"ton"`
 	TONFaucet         string     `yaml:"ton_faucet"`
 	Sui               string     `yaml:"sui"`
 	SuiFaucet         string     `yaml:"sui_faucet"`

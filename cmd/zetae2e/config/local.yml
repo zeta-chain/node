@@ -117,7 +117,8 @@ rpcs:
   zetacore_grpc: "localhost:9090"
   zetacore_rpc: "http://localhost:26657"
   solana: "http://localhost:8899"
-  ton_liteserver_config: "http://ton:8111/lite-client.json"
+  # ton lite-server config url or path
+  ton: "http://ton:8111/lite-client.json"
   ton_faucet: "http://ton:8111/faucet.json"
   zetaclient_metrics: "http://localhost:8886"
 contracts:

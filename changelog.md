@@ -47,7 +47,7 @@
 * [3536](https://github.com/zeta-chain/node/pull/3536) - add e2e test for upgrading solana gateway program
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
 * [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
-* [3612](https://github.com/zeta-chain/node/pull/3612) - add support for TON live e2e2 tests
+* [3612](https://github.com/zeta-chain/node/pull/3612) - add support for TON live e2e tests
 
 ## v28.0.0
 

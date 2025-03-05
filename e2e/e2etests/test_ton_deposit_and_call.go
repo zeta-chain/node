@@ -29,10 +29,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Ensure zevmauth user has ZETA balance
-	// todo check pre-PR code base (prev code)
-
-	// Given sample zEVM contract
+	// Given sample zEVM contract deployed by userTON account
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err, "unable to deploy example contract")
 	r.Logger.Info("Example zevm contract deployed at: %s", contractAddr.String())
