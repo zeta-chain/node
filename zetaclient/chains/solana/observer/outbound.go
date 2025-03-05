@@ -292,6 +292,7 @@ func ParseGatewayInstruction(
 	}
 
 	// validate instruction count
+	// if there are 2 instructions, first one can only be optional compute budget instruction
 	instructionCount := len(tx.Message.Instructions)
 	if instructionCount < 1 || instructionCount > 2 {
 		return nil, fmt.Errorf("unexpected number of instructions: %d", instructionCount)

@@ -231,11 +231,9 @@ func (signer *Signer) signTx(
 
 	// if limit is provided, prepend compute unit limit instruction
 	var instructions []solana.Instruction
-	if limit > SolanaMaxComputeBudget {
-		limit = SolanaMaxComputeBudget
-	}
+	if limit > 0 {
+		limit = min(limit, SolanaMaxComputeBudget)
 
-	if limit > 0 && limit <= SolanaMaxComputeBudget {
 		limitInst := computebudget.NewSetComputeUnitLimitInstruction(uint32(limit)).Build()
 		instructions = append(instructions, limitInst)
 	}
