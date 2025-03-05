@@ -231,15 +231,16 @@ then
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
   # set admin account
-  fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh
+  admin_amount=100000000000000000000000000azeta # DEFAULT_FUND_AMOUNT * 10
+  fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh $admin_amount
 
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
   operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
 
-  fund_account emergency_policy "$emergency_policy"
-  fund_account admin_policy "$admin_policy"
-  fund_account operational_policy "$operational_policy"
+  fund_account emergency_policy "$emergency_policy" $admin_amount
+  fund_account admin_policy "$admin_policy" $admin_amount
+  fund_account operational_policy "$operational_policy" $admin_amount
 
   jq --arg emergency "$emergency_policy" \
     --arg operational "$operational_policy" \
@@ -250,8 +251,8 @@ then
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-# Automatically func most of the accounts
-fund_accounts_auto
+  # Automatically func most of the accounts
+  fund_accounts_auto
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
