@@ -85,6 +85,7 @@ type ZetacoreClient interface {
 	GetPendingNoncesByChain(ctx context.Context, chainID int64) (observertypes.PendingNonces, error)
 
 	GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
+	GetCctxByHash(ctx context.Context, sendHash string) (*crosschaintypes.CrossChainTx, error)
 	GetOutboundTracker(ctx context.Context, chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
 	GetAllOutboundTrackerByChain(
 		ctx context.Context,
@@ -98,6 +99,7 @@ type ZetacoreClient interface {
 	GetBTCTSSAddress(ctx context.Context, chainID int64) (string, error)
 	GetZetaHotKeyBalance(ctx context.Context) (sdkmath.Int, error)
 	GetInboundTrackersForChain(ctx context.Context, chainID int64) ([]crosschaintypes.InboundTracker, error)
+	GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error)
 
 	GetUpgradePlan(ctx context.Context) (*upgradetypes.Plan, error)
 

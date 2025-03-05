@@ -406,6 +406,22 @@ func (ob *Observer) PostVoteInbound(
 		logs.FieldCoinType: coinType.String(),
 	}
 
+	cctxIndex := msg.Digest()
+
+	// The cctx is created after the inbound ballot is finalized
+	// if the cctx already exists, we should still vote if the ballot is present
+	// if the cctx exists but the ballot does not exist, we can still try voting if the ballot is present
+	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
+	if err == nil {
+		// The cctx exists we should still vote if the ballot is present
+		_, err = ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
+		if err != nil {
+			// Query for ballot failed, the ballot does not exist we can return
+			ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("inbound detected: cctx exists but no ballot")
+			return "", nil
+		}
+	}
+
 	// make sure the message is valid to avoid unnecessary retries
 	if err := msg.ValidateBasic(); err != nil {
 		ob.logger.Inbound.Warn().Err(err).Fields(lf).Msg("invalid inbound vote message")
