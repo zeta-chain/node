@@ -44,7 +44,7 @@ func suiTestRoutine(
 		suiRunner.RequestSuiFromFaucet(conf.RPCs.SuiFaucet, suiRunnerSigner.Address())
 
 		// mint fungible tokens to the account
-		txRes := deployerRunner.SuiMintUSDC("10000000", suiRunnerSigner.Address())
+		txRes := deployerRunner.SuiMintUSDC("100000000000", suiRunnerSigner.Address())
 
 		deployerRunner.Logger.Info("Sui USDC mint tx: %s", txRes.Digest)
 

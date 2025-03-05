@@ -75,6 +75,7 @@ type E2ERunner struct {
 	Account               config.Account
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
+	SuiTSSAddress         string
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	FeeCollectorAddress   types.AccAddress
@@ -249,6 +250,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
 	r.TSSAddress = other.TSSAddress
 	r.BTCTSSAddress = other.BTCTSSAddress
+	r.SuiTSSAddress = other.SuiTSSAddress
 
 	// copy addresses
 	r.ZetaEthAddr = other.ZetaEthAddr

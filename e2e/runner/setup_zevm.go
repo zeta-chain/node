@@ -60,6 +60,7 @@ func (r *E2ERunner) SetTSSAddresses() error {
 
 	r.TSSAddress = tssAddress
 	r.BTCTSSAddress = btcTSSAddress
+	r.SuiTSSAddress = res.Sui
 
 	return nil
 }

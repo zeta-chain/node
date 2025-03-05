@@ -82,30 +82,42 @@ func (k Keeper) AddBallotToList(ctx sdk.Context, ballot types.Ballot) {
 	k.SetBallotList(ctx, &list)
 }
 
-// ClearMaturedBallotsAndBallotList deletes all matured ballots and the list of ballots for a given height.
-// It also emits an event for each ballot deleted.
-func (k Keeper) ClearMaturedBallotsAndBallotList(ctx sdk.Context, maturityBlocksParam int64) {
-	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocksParam)
+// ClearFinalizedMaturedBallots deletes all matured and finalized ballots for a given height.
 
-	// Fetch all the matured ballots, return if no matured ballots are found
-	// For the current implementation, this should never happen as ClearMaturedBallotsAndBallotList is only called after the Distribution of the rewards,
-	//	which means that there are matured ballots to be deleted
+// ClearFinalizedMaturedBallots deletes matured ballots and optionally the ballot list for a given height.
+// If deleteAllBallots is true, it deletes all ballots and always deletes the ballot list.
+// If deleteAllBallots is false, it only deletes finalized ballots and only deletes the ballot list if all ballots are deleted.
+// It emits an event for each ballot deleted.
+func (k Keeper) ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocks int64, forceDeleteAllBallots bool) {
+	maturedBallotsHeight := getMaturedBallotHeight(ctx, maturityBlocks)
 	maturedBallots, found := k.GetBallotListForHeight(ctx, maturedBallotsHeight)
 	if !found {
 		return
 	}
-	// Delete all the matured ballots and emit an event for each ballot deleted
+
+	ballotsDeleted := 0
 	for _, ballotIndex := range maturedBallots.BallotsIndexList {
-		ballot, found := k.GetBallot(ctx, ballotIndex)
-		if !found {
+		ballot, foundBallot := k.GetBallot(ctx, ballotIndex)
+		if !foundBallot {
 			continue
 		}
+
+		// Skip non-finalized ballots if we're only deleting finalized ballots
+		if !forceDeleteAllBallots && !ballot.IsFinalized() {
+			continue
+		}
+
 		k.DeleteBallot(ctx, ballotIndex)
 		logBallotDeletion(ctx, ballot)
+		ballotsDeleted++
 	}
-	// Delete the list of matured ballots
-	k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
-	return
+
+	// Delete ballot list if:
+	// 1. We're deleting all ballots (regardless of how many were actually deleted), OR
+	// 2. We deleted only finalized ballots but all ballots in the list were deleted
+	if forceDeleteAllBallots || ballotsDeleted == len(maturedBallots.BallotsIndexList) {
+		k.DeleteBallotListForHeight(ctx, maturedBallotsHeight)
+	}
 }
 
 // getMaturedBallotHeight returns the height at which a ballot is considered matured.

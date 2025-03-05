@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"math/big"
 
+	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -28,27 +31,41 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return err
 	}
 
-	// get the block range to scan
-	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
-	if startBlock >= endBlock {
-		return nil
+	// scan SAFE confirmed blocks
+	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	if startBlockSafe < endBlockSafe {
+		// observe inbounds for the block range [startBlock, endBlock-1]
+		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", startBlockSafe).
+				Uint64("to", endBlockSafe-1).
+				Msg("error observing inbounds in block range")
+		}
+
+		// save last scanned block to both memory and db
+		if lastScannedNew > ob.LastBlockScanned() {
+			logger.Info().
+				Uint64("from", startBlockSafe).
+				Uint64("to", lastScannedNew).
+				Msg("observed blocks for inbounds")
+			if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
+				return errors.Wrapf(err, "unable to save last scanned Bitcoin block %d", lastScannedNew)
+			}
+		}
 	}
 
-	// observe inbounds for the block range [startBlock, endBlock-1]
-	lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlock, endBlock-1)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Uint64("from", startBlock).
-			Uint64("to", endBlock-1).
-			Msg("error observing inbounds in block range")
-	}
-
-	// save last scanned block to both memory and db
-	if lastScannedNew > ob.LastBlockScanned() {
-		logger.Info().Uint64("from", startBlock).Uint64("to", lastScannedNew).Msg("observed blocks for inbounds")
-		if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
-			return errors.Wrapf(err, "unable to save last scanned Bitcoin block %d", lastScannedNew)
+	// scan FAST confirmed blocks if available
+	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
+	if endBlockSafe < endBlockFast {
+		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", endBlockSafe).
+				Uint64("to", endBlockFast-1).
+				Msg("error observing inbounds in block range (fast)")
 		}
 	}
 
@@ -93,6 +110,21 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 		for _, event := range events {
 			msg := ob.GetInboundVoteFromBtcEvent(event)
 			if msg != nil {
+				// skip early observed inbound that is not eligible for fast confirmation
+				if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
+					eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, msg)
+					if err != nil {
+						return blockNumber - 1, errors.Wrapf(
+							err,
+							"unable to determine inbound fast confirmation eligibility for tx %s",
+							event.TxHash,
+						)
+					}
+					if !eligible {
+						continue
+					}
+				}
+
 				_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 				if err != nil {
 					// we have to re-scan this block next time
@@ -135,7 +167,6 @@ func FilterAndParseIncomingTx(
 
 		if event != nil {
 			events = append(events, event)
-			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 
@@ -148,7 +179,7 @@ func FilterAndParseIncomingTx(
 //   - a valid MsgVoteInbound message, or
 //   - nil if no valid message can be created for whatever reasons:
 //     invalid data, not processable, invalid amount, etc.
-func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *types.MsgVoteInbound {
+func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosschaintypes.MsgVoteInbound {
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod: "GetInboundVoteFromBtcEvent",
@@ -156,10 +187,11 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *types.Ms
 	}
 
 	// decode event memo bytes
+	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
 		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
-		return nil
+		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
 	// check if the event is processable
@@ -227,4 +259,83 @@ func GetSenderAddressByVin(
 	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
 
 	return common.DecodeSenderFromScript(pkScript, net)
+}
+
+// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
+func (ob *Observer) NewInboundVoteFromLegacyMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		event.FromAddress,
+		ob.Chain().ChainId,
+		event.FromAddress,
+		event.ToAddress,
+		ob.ZetacoreClient().Chain().ChainId,
+		cosmosmath.NewUintFromBigInt(amountSats),
+		hex.EncodeToString(event.MemoBytes),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		coin.CoinType_Gas,
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+	)
+}
+
+// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
+func (ob *Observer) NewInboundVoteFromStdMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
+	// inject the 'revertAddress' specified in the memo, so that
+	// zetacore will create a revert outbound that points to the custom revert address.
+	revertOptions := crosschaintypes.RevertOptions{
+		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
+		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+	}
+
+	// check if the memo is a cross-chain call, or simple token deposit
+	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
+
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		event.FromAddress,
+		ob.Chain().ChainId,
+		event.FromAddress,
+		event.MemoStd.Receiver.Hex(),
+		ob.ZetacoreClient().Chain().ChainId,
+		cosmosmath.NewUintFromBigInt(amountSats),
+		hex.EncodeToString(event.MemoStd.Payload),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		coin.CoinType_Gas,
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		crosschaintypes.WithRevertOptions(revertOptions),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+	)
 }

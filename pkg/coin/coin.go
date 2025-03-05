@@ -38,3 +38,9 @@ func GetAzetaDecFromAmountInZeta(zetaAmount string) (sdkmath.LegacyDec, error) {
 func (c CoinType) SupportsRefund() bool {
 	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
 }
+
+// IsAsset returns true if the coin type represents transport of asset.
+// CoinType_Cmd and CoinType_NoAssetCall are not transport of asset.
+func (c CoinType) IsAsset() bool {
+	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
+}

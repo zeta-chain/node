@@ -152,13 +152,17 @@ func TestKeeper_GetTssAddress(t *testing.T) {
 		require.NoError(t, err)
 		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BitcoinRegtest.ChainId)
 		require.NoError(t, err)
-		expectedBtcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, expectedBitcoinParams)
+		expectedBtcAddress, err := crypto.GetTSSAddrBTC(tss.TssPubkey, expectedBitcoinParams)
 		require.NoError(t, err)
-		expectedEthAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+		expectedEthAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 		require.NoError(t, err)
-		require.NotNil(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
+		expectedSuiAddress, err := crypto.GetTSSAddrSui(tss.TssPubkey)
+		require.NoError(t, err)
+
+		require.EqualValues(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
 			Eth: expectedEthAddress.String(),
 			Btc: expectedBtcAddress,
+			Sui: expectedSuiAddress,
 		}, res)
 	})
 
@@ -175,13 +179,17 @@ func TestKeeper_GetTssAddress(t *testing.T) {
 		require.NoError(t, err)
 		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BitcoinTestnet4.ChainId)
 		require.NoError(t, err)
-		expectedBtcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, expectedBitcoinParams)
+		expectedBtcAddress, err := crypto.GetTSSAddrBTC(tss.TssPubkey, expectedBitcoinParams)
 		require.NoError(t, err)
-		expectedEthAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+		expectedEthAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 		require.NoError(t, err)
-		require.NotNil(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
+		expectedSuiAddress, err := crypto.GetTSSAddrSui(tss.TssPubkey)
+		require.NoError(t, err)
+
+		require.EqualValues(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
 			Eth: expectedEthAddress.String(),
 			Btc: expectedBtcAddress,
+			Sui: expectedSuiAddress,
 		}, res)
 	})
 }
@@ -242,13 +250,17 @@ func TestKeeper_GetTssAddressByFinalizedHeight(t *testing.T) {
 		require.NoError(t, err)
 		expectedBitcoinParams, err := chains.BitcoinNetParamsFromChainID(chains.BitcoinRegtest.ChainId)
 		require.NoError(t, err)
-		expectedBtcAddress, err := crypto.GetTssAddrBTC(tssList[r].TssPubkey, expectedBitcoinParams)
+		expectedBtcAddress, err := crypto.GetTSSAddrBTC(tssList[r].TssPubkey, expectedBitcoinParams)
 		require.NoError(t, err)
-		expectedEthAddress, err := crypto.GetTssAddrEVM(tssList[r].TssPubkey)
+		expectedEthAddress, err := crypto.GetTSSAddrEVM(tssList[r].TssPubkey)
 		require.NoError(t, err)
-		require.NotNil(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
+		expectedSuiAddress, err := crypto.GetTSSAddrSui(tssList[r].TssPubkey)
+		require.NoError(t, err)
+
+		require.EqualValues(t, &types.QueryGetTssAddressByFinalizedHeightResponse{
 			Eth: expectedEthAddress.String(),
 			Btc: expectedBtcAddress,
+			Sui: expectedSuiAddress,
 		}, res)
 	})
 }

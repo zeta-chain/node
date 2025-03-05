@@ -419,14 +419,16 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 
 func Test_BuildRewardsDistribution(t *testing.T) {
 	tt := []struct {
-		name         string
-		voterList    []string
-		votes        []VoteType
-		ballotStatus BallotStatus
-		expectedMap  map[string]int64
+		name                 string
+		voterList            []string
+		votes                []VoteType
+		ballotStatus         BallotStatus
+		initialMap           map[string]int64
+		expectedMap          map[string]int64
+		expectedRewardsTotal int64
 	}{
 		{
-			name:      "BallotFinalized_SuccessObservation",
+			name:      "ballot finalized as success should reward votes which voted success",
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []VoteType{
 				VoteType_SuccessObservation,
@@ -435,15 +437,17 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				VoteType_FailureObservation,
 			},
 			ballotStatus: BallotStatus_BallotFinalized_SuccessObservation,
+			initialMap:   map[string]int64{},
 			expectedMap: map[string]int64{
 				"Observer1": 1,
 				"Observer2": 1,
 				"Observer3": 1,
 				"Observer4": -1,
 			},
+			expectedRewardsTotal: 3,
 		},
 		{
-			name:      "BallotFinalized_FailureObservation",
+			name:      "ballot finalized as failure shuuld reward votes which voted failure",
 			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
 			votes: []VoteType{
 				VoteType_SuccessObservation,
@@ -452,12 +456,86 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				VoteType_FailureObservation,
 			},
 			ballotStatus: BallotStatus_BallotFinalized_FailureObservation,
+			initialMap:   map[string]int64{},
 			expectedMap: map[string]int64{
 				"Observer1": -1,
 				"Observer2": -1,
 				"Observer3": 1,
 				"Observer4": 1,
 			},
+			expectedRewardsTotal: 2,
+		},
+		{
+			name:      "pending ballot should not affect the rewards",
+			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_NotYetVoted,
+				VoteType_NotYetVoted,
+				VoteType_SuccessObservation,
+				VoteType_FailureObservation,
+			},
+			ballotStatus: BallotStatus_BallotInProgress,
+			initialMap: map[string]int64{
+				"Observer1": 1,
+				"Observer2": 2,
+				"Observer3": 1,
+				"Observer4": -1,
+			},
+			expectedMap: map[string]int64{
+				"Observer1": 1,
+				"Observer2": 2,
+				"Observer3": 1,
+				"Observer4": -1,
+			},
+			expectedRewardsTotal: 0,
+		},
+		{
+			name:      "ballot finalized as success should reward votes which voted success and successfully update rewards map",
+			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_FailureObservation,
+			},
+			ballotStatus: BallotStatus_BallotFinalized_SuccessObservation,
+			initialMap: map[string]int64{
+				"Observer1": 40,
+				"Observer2": 40,
+				"Observer3": 35,
+				"Observer4": -40,
+			},
+			expectedMap: map[string]int64{
+				"Observer1": 41,
+				"Observer2": 41,
+				"Observer3": 36,
+				"Observer4": -41,
+			},
+			expectedRewardsTotal: 3,
+		},
+		{
+			name:      "ballot finalized as failure should reward votes which voted failure and successfully update rewards map",
+			voterList: []string{"Observer1", "Observer2", "Observer3", "Observer4"},
+			votes: []VoteType{
+				VoteType_SuccessObservation,
+				VoteType_SuccessObservation,
+				VoteType_FailureObservation,
+				VoteType_FailureObservation,
+			},
+			ballotStatus: BallotStatus_BallotFinalized_FailureObservation,
+			initialMap: map[string]int64{
+				"Observer1": 40,
+				"Observer2": 40,
+				"Observer3": 35,
+				"Observer4": -40,
+			},
+			expectedMap: map[string]int64{
+				"Observer1": 39,
+				"Observer2": 39,
+				"Observer3": 36,
+				"Observer4": -39,
+			},
+			expectedRewardsTotal: 2,
 		},
 	}
 	for _, test := range tt {
@@ -472,9 +550,10 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				BallotThreshold:  sdkmath.LegacyDec{},
 				BallotStatus:     test.ballotStatus,
 			}
-			rewardsMap := map[string]int64{}
-			ballot.BuildRewardsDistribution(rewardsMap)
-			require.Equal(t, test.expectedMap, rewardsMap)
+			inputMap := test.initialMap
+			total := ballot.BuildRewardsDistribution(inputMap)
+			require.Equal(t, test.expectedMap, inputMap)
+			require.Equal(t, test.expectedRewardsTotal, total)
 		})
 	}
 }

@@ -14,10 +14,6 @@ import (
 )
 
 func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
-	// start mining blocks if local bitcoin
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// parse amount to deposit
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])

@@ -47,14 +47,17 @@ func (k Keeper) GetTssAddress(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	tss, found := k.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "current tss not set")
 	}
-	ethAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+
+	ethAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	bitcoinParams := &chaincfg.RegressionNetParams
 	if req.BitcoinChainId != 0 {
 		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
@@ -62,7 +65,12 @@ func (k Keeper) GetTssAddress(
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	btcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+	btcAddress, err := crypto.GetTSSAddrBTC(tss.TssPubkey, bitcoinParams)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	suiAddress, err := crypto.GetTSSAddrSui(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -70,6 +78,7 @@ func (k Keeper) GetTssAddress(
 	return &types.QueryGetTssAddressResponse{
 		Eth: ethAddress.String(),
 		Btc: btcAddress,
+		Sui: suiAddress,
 	}, nil
 }
 
@@ -81,14 +90,17 @@ func (k Keeper) GetTssAddressByFinalizedHeight(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	tss, found := k.GetHistoricalTssByFinalizedHeight(ctx, req.FinalizedZetaHeight)
 	if !found {
 		return nil, status.Error(codes.NotFound, "tss not found")
 	}
-	ethAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
+
+	ethAddress, err := crypto.GetTSSAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	bitcoinParams := &chaincfg.RegressionNetParams
 	if req.BitcoinChainId != 0 {
 		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
@@ -96,12 +108,19 @@ func (k Keeper) GetTssAddressByFinalizedHeight(
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	btcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+	btcAddress, err := crypto.GetTSSAddrBTC(tss.TssPubkey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	suiAddress, err := crypto.GetTSSAddrSui(tss.TssPubkey)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &types.QueryGetTssAddressByFinalizedHeightResponse{
 		Eth: ethAddress.String(),
 		Btc: btcAddress,
+		Sui: suiAddress,
 	}, nil
 }

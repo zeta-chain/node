@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -17,8 +16,7 @@ import (
 
 func TestForeignCoinsQuerySingle(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.FungibleKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNForeignCoins(keeper, ctx, 2)
+	msgs := createNForeignCoins(t, keeper, ctx, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetForeignCoinsRequest
@@ -52,7 +50,7 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.ForeignCoins(wctx, tc.request)
+			response, err := keeper.ForeignCoins(ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -66,10 +64,60 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 	}
 }
 
+func TestForeignCoinsFromAsset(t *testing.T) {
+	keeper, ctx, _, _ := keepertest.FungibleKeeper(t)
+	msgs := createNForeignCoins(t, keeper, ctx, 2)
+	for _, tc := range []struct {
+		desc     string
+		request  *types.QueryGetForeignCoinsFromAssetRequest
+		response *types.QueryGetForeignCoinsFromAssetResponse
+		err      error
+	}{
+		{
+			desc: "First",
+			request: &types.QueryGetForeignCoinsFromAssetRequest{
+				ChainId: msgs[0].ForeignChainId,
+				Asset:   msgs[0].Asset,
+			},
+			response: &types.QueryGetForeignCoinsFromAssetResponse{ForeignCoins: msgs[0]},
+		},
+		{
+			desc: "Second",
+			request: &types.QueryGetForeignCoinsFromAssetRequest{
+				ChainId: msgs[1].ForeignChainId,
+				Asset:   msgs[1].Asset,
+			},
+			response: &types.QueryGetForeignCoinsFromAssetResponse{ForeignCoins: msgs[1]},
+		},
+		{
+			desc: "Not found",
+			request: &types.QueryGetForeignCoinsFromAssetRequest{
+				ChainId: msgs[0].ForeignChainId + 1,
+				Asset:   msgs[0].Asset,
+			},
+			err: status.Error(codes.NotFound, "not found"),
+		},
+		{
+			desc:    "Invalid request",
+			request: nil,
+			err:     status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			response, err := keeper.ForeignCoinsFromAsset(ctx, tc.request)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, nullify.Fill(tc.response), nullify.Fill(response))
+			}
+		})
+	}
+}
+
 func TestForeignCoinsQueryPaginated(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.FungibleKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNForeignCoins(keeper, ctx, 5)
+	msgs := createNForeignCoins(t, keeper, ctx, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllForeignCoinsRequest {
 		return &types.QueryAllForeignCoinsRequest{
@@ -84,7 +132,7 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ForeignCoinsAll(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := keeper.ForeignCoinsAll(ctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.ForeignCoins), step)
 			require.Subset(t,
@@ -97,7 +145,7 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ForeignCoinsAll(wctx, request(next, 0, uint64(step), false))
+			resp, err := keeper.ForeignCoinsAll(ctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.ForeignCoins), step)
 			require.Subset(t,
@@ -108,7 +156,7 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.ForeignCoinsAll(wctx, request(nil, 0, 0, true))
+		resp, err := keeper.ForeignCoinsAll(ctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -117,7 +165,7 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.ForeignCoinsAll(wctx, nil)
+		_, err := keeper.ForeignCoinsAll(ctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

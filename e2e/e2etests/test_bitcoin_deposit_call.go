@@ -13,10 +13,6 @@ import (
 )
 
 func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])

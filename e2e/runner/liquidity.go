@@ -30,6 +30,18 @@ func (r *E2ERunner) AddLiquiditySPL(amountZETA, amountSPL *big.Int) {
 	r.addLiquidity(r.SPLZRC20Addr, amountZETA, amountSPL)
 }
 
+// AddLiquiditySUI adds liquidity token to the uniswap pool ZETA/SUI
+func (r *E2ERunner) AddLiquiditySUI(amountZETA, amountSUI *big.Int) {
+	r.SuiApproveSUIZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.SUIZRC20Addr, amountZETA, amountSUI)
+}
+
+// AddLiquiditySuiFungibleToken adds liquidity token to the uniswap pool ZETA/SuiFungibleToken
+func (r *E2ERunner) AddLiquiditySuiFungibleToken(amountZETA, amountToken *big.Int) {
+	r.SuiApproveFungibleTokenZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.SuiTokenZRC20Addr, amountZETA, amountToken)
+}
+
 // addLiquidity adds liquidity token to the uniswap pool ZETA/token
 // we use the provided amount of ZETA and token to add liquidity as wanted amount
 // 0 is used for the minimum amount of ZETA and token

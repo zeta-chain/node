@@ -112,22 +112,28 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	// https://github.com/zeta-chain/node/issues/3186
 	//return nil
 
-	// get the block range to scan
-	// Note: using separate scan range for each event incur more complexity (metrics, db, etc) and not worth it
-	startBlock, endBlock := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
-	if startBlock >= endBlock {
-		return nil
+	// scan SAFE confirmed blocks
+	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	if startBlockSafe < endBlockSafe {
+		// observe inbounds in block range [startBlock, endBlock-1]
+		lastScannedNew := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+
+		// save last scanned block to both memory and db
+		if lastScannedNew > ob.LastBlockScanned() {
+			logger.Debug().
+				Uint64("from", startBlockSafe).
+				Uint64("to", lastScannedNew).
+				Msg("observed blocks for inbounds")
+			if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
+				return errors.Wrapf(err, "unable to save last scanned block %d", lastScannedNew)
+			}
+		}
 	}
 
-	// observe inbounds in block range [startBlock, endBlock-1]
-	lastScannedNew := ob.observeInboundInBlockRange(ctx, startBlock, endBlock-1)
-
-	// save last scanned block to both memory and db
-	if lastScannedNew > ob.LastBlockScanned() {
-		logger.Debug().Uint64("from", startBlock).Uint64("to", lastScannedNew).Msg("observed blocks for inbounds")
-		if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
-			return errors.Wrapf(err, "unable to save last scanned block %d", lastScannedNew)
-		}
+	// scan FAST confirmed blocks if available
+	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
+	if endBlockSafe < endBlockFast {
+		ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
 	}
 
 	return nil

@@ -149,3 +149,25 @@ func TestCoinType_SupportsRefund(t *testing.T) {
 		})
 	}
 }
+
+func TestCoinType_IsAsset(t *testing.T) {
+	tests := []struct {
+		name string
+		c    coin.CoinType
+		want bool
+	}{
+		{"Gas is asset", coin.CoinType_Gas, true},
+		{"ERC20 is asset", coin.CoinType_ERC20, true},
+		{"Zeta is asset", coin.CoinType_Zeta, true},
+		{"Cmd is not asset", coin.CoinType_Cmd, false},
+		{"CoinType_NoAssetCall is irrelevant and not asset", coin.CoinType_NoAssetCall, false},
+		{"Unknown coin type is not asset", coin.CoinType(100), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.IsAsset(); got != tt.want {
+				t.Errorf("CoinType.IsAsset() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

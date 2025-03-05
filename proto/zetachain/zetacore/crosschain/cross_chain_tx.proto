@@ -42,6 +42,8 @@ enum InboundStatus {
   INSUFFICIENT_DEPOSITOR_FEE = 1;
   // the receiver address parsed from the inbound is invalid
   INVALID_RECEIVER_ADDRESS = 2;
+  // parse memo is invalid
+  INVALID_MEMO = 3;
 }
 
 message InboundParams {

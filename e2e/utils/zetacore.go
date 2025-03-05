@@ -5,11 +5,13 @@ import (
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -334,4 +336,37 @@ func WaitForBlockHeight(
 	}
 
 	return nil
+}
+
+// WaitForZetaBlocks waits for the given number of Zeta blocks
+func WaitForZetaBlocks(
+	ctx context.Context,
+	t require.TestingT,
+	zevmClient *ethclient.Client,
+	waitBlocks uint64,
+	timeout time.Duration,
+) {
+	oldHeight, err := zevmClient.BlockNumber(ctx)
+	require.NoError(t, err)
+
+	// wait for given number of Zeta blocks
+	newHeight := oldHeight
+	startTime := time.Now()
+	checkInterval := constant.ZetaBlockTime / 2
+	for {
+		time.Sleep(checkInterval)
+		require.False(
+			t,
+			time.Since(startTime) > timeout,
+			"timeout waiting for Zeta blocks, current height: %d",
+			newHeight,
+		)
+
+		// check how many blocks elapsed
+		newHeight, err = zevmClient.BlockNumber(ctx)
+		require.NoError(t, err)
+		if newHeight >= oldHeight+waitBlocks {
+			return
+		}
+	}
 }
