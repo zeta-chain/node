@@ -409,14 +409,15 @@ func (ob *Observer) PostVoteInbound(
 	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
 	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
 	if err == nil {
-		// Verify ballot is not found
-		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			// The cctx exists we should still vote if the ballot is present
 			_, err = ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
 			if err != nil {
-				// Query for ballot failed, the ballot does not exist we can return
-				ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
-				return cctxIndex, nil
+				// Verify ballot is not found
+				if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+					// Query for ballot failed, the ballot does not exist we can return
+					ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+					return cctxIndex, nil
+				}
 			}
 		}
 	}
