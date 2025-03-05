@@ -404,8 +404,8 @@ func (ob *Observer) PostVoteInbound(
 	cctxIndex := msg.Digest()
 
 	// The cctx is created after the inbound ballot is finalized
-	// if the cctx already exists, we should still vote if the ballot is present
-	// if the cctx exists but the ballot does not exist, we can still try voting if the ballot is present
+	// 1. if the cctx already exists, we could try voting if the ballot is present
+	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
 	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
 	if err == nil {
 		// The cctx exists we should still vote if the ballot is present
