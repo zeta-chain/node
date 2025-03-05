@@ -233,7 +233,7 @@ func (signer *Signer) signTx(
 	var instructions []solana.Instruction
 	if limit > 0 {
 		limit = min(limit, SolanaMaxComputeBudget)
-
+		// #nosec G115 always in range
 		limitInst := computebudget.NewSetComputeUnitLimitInstruction(uint32(limit)).Build()
 		instructions = append(instructions, limitInst)
 	}
