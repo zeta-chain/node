@@ -39,7 +39,7 @@ const (
 	broadcastRetries = 7
 
 	// SolanaMaxComputeBudget is the max compute budget for a transaction.
-	SolanaMaxComputeBudget = 1_200_000
+	SolanaMaxComputeBudget = 1_400_000
 )
 
 // Signer deals with signing Solana transactions and implements the ChainSigner interface
