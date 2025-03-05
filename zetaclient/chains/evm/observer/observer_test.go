@@ -393,7 +393,9 @@ type testSuite struct {
 }
 
 type testSuiteConfig struct {
-	chain *chains.Chain
+	chain              *chains.Chain
+	LastBlock          uint64
+	ConfirmationParams *observertypes.ConfirmationParams
 }
 
 func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
@@ -408,6 +410,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	}
 
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
+	if cfg.ConfirmationParams != nil {
+		chainParams.ConfirmationParams = cfg.ConfirmationParams
+	}
 
 	appContext, _ := getAppContext(t, chain, "", &chainParams)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
@@ -416,7 +421,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	evmMock.On("BlockNumber", mock.Anything).Return(uint64(1000), nil).Maybe()
 
 	zetacore := mocks.NewZetacoreClient(t).
-		WithKeys(&keys.Keys{}).
+		WithKeys(&keys.Keys{
+			OperatorAddress: sample.Bech32AccAddress(),
+		}).
 		WithZetaChain().
 		WithPostVoteInbound("", "").
 		WithPostVoteOutbound("", "")
@@ -434,7 +441,11 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 
 	ob, err := New(baseObserver, evmMock)
 	require.NoError(t, err)
+
 	ob.WithLastBlock(1)
+	if cfg.LastBlock > 0 {
+		ob.WithLastBlock(cfg.LastBlock)
+	}
 
 	return &testSuite{
 		Observer:    ob,

@@ -11,14 +11,14 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/config"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 )
 
-func Test_IsOutboundProcessed(t *testing.T) {
+func Test_VoteOutboundIfConfirmed(t *testing.T) {
 	// load archived outbound receipt that contains ZetaReceived event
 	// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 	chainID := chains.Ethereum.ChainId
@@ -43,9 +43,15 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
+	t.Run("should post vote and return false if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
-		ob := newTestSuite(t)
+		ob := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.LastBlock = receipt.BlockNumber.Uint64()
+			cfg.ConfirmationParams = &observertypes.ConfirmationParams{
+				SafeInboundCount:  1,
+				SafeOutboundCount: 1,
+			}
+		})
 		ob.setTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
@@ -53,36 +59,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, continueKeysign)
 	})
-	t.Run("should post vote and return true on restricted address", func(t *testing.T) {
-		// load cctx and modify sender address to arbitrary address
-		// Note: other tests cases will fail if we use the original sender address because the
-		// compliance config is globally set and will impact other tests when running in parallel
-		cctx := testutils.LoadCctxByNonce(t, chainID, nonce)
-		cctx.InboundParams.Sender = sample.EthAddress().Hex()
 
-		// create evm observer and set outbound and receipt
-		ob := newTestSuite(t)
-		ob.setTxNReceipt(nonce, receipt, outbound)
-
-		// modify compliance config to restrict sender address
-		cfg := config.Config{
-			ComplianceConfig: config.ComplianceConfig{},
-		}
-		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
-		config.SetRestrictedAddressesFromConfig(cfg)
-
-		// post outbound vote
-		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
-		require.NoError(t, err)
-		require.False(t, continueKeysign)
-	})
-	t.Run("should return false if outbound is not confirmed", func(t *testing.T) {
-		// create evm observer and DO NOT set outbound as confirmed
-		ob := newTestSuite(t)
-		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
-		require.NoError(t, err)
-		require.True(t, continueKeysign)
-	})
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := newTestSuite(t)
@@ -96,9 +73,26 @@ func Test_IsOutboundProcessed(t *testing.T) {
 		require.Error(t, err)
 		require.True(t, continueKeysign)
 	})
+
+	t.Run("should skip vote if outbound is not eligible for fast confirmation", func(t *testing.T) {
+		// create evm observer and set outbound and receipt
+		ob := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.LastBlock = receipt.BlockNumber.Uint64()
+			cfg.ConfirmationParams = &observertypes.ConfirmationParams{
+				SafeInboundCount:  1,
+				SafeOutboundCount: 2,
+				FastOutboundCount: 2, // fast confirmation is disabled
+			}
+		})
+		ob.setTxNReceipt(nonce, receipt, outbound)
+
+		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
+		require.NoError(t, err)
+		require.False(t, continueKeysign)
+	})
 }
 
-func Test_IsOutboundProcessed_ContractError(t *testing.T) {
+func Test_VoteOutboundIfConfirmed_ContractError(t *testing.T) {
 	// Note: this test is skipped because it will cause CI failure.
 	// The only way to replicate a contract error is to use an invalid ABI.
 	// See the code: https://github.com/ethereum/go-ethereum/blob/v1.10.26/accounts/abi/bind/base.go#L97
