@@ -291,13 +291,33 @@ func ParseGatewayInstruction(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
-	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token')
-	if len(tx.Message.Instructions) != 1 {
-		return nil, fmt.Errorf("want 1 instruction, got %d", len(tx.Message.Instructions))
+	// validate instruction count
+	// if there are 2 instructions, first one can only be optional compute budget instruction
+	instructionCount := len(tx.Message.Instructions)
+	if instructionCount < 1 || instructionCount > 2 {
+		return nil, fmt.Errorf("unexpected number of instructions: %d", instructionCount)
 	}
-	instruction := tx.Message.Instructions[0]
 
-	// get the program ID
+	// get gateway instruction
+	instruction := tx.Message.Instructions[instructionCount-1]
+
+	// if there are two instructions, validate the first one program is compute budget
+	if instructionCount == 2 {
+		budgetProgramID, err := tx.Message.Program(tx.Message.Instructions[0].ProgramIDIndex)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve program ID")
+		}
+
+		if !budgetProgramID.Equals(solana.ComputeBudget) {
+			return nil, fmt.Errorf(
+				"programID %s is not matching compute budget id %s",
+				budgetProgramID,
+				solana.ComputeBudget,
+			)
+		}
+	}
+
+	// validate gateway instruction program
 	programID, err := tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting program ID")

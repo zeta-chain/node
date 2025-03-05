@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
@@ -9,8 +12,6 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"math/big"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
