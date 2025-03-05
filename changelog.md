@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+* [3636](https://github.com/zeta-chain/node/pull/3636) - add a check to stop posting inbound votes if the cctx has already been created
+
 ## v28.1.0
 
 This is a zetaclient only release.
