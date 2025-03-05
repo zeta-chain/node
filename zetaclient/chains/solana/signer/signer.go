@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
@@ -36,6 +37,9 @@ const (
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 + 64 = 127 seconds, good enough for the 2 minute timeout
 	broadcastRetries = 7
+
+	// SolanaMaxComputeBudget is the max compute budget for a transaction.
+	SolanaMaxComputeBudget = 1_200_000
 )
 
 // Signer deals with signing Solana transactions and implements the ChainSigner interface
@@ -214,21 +218,31 @@ func (signer *Signer) TryProcessOutbound(
 }
 
 // signTx creates and signs solana tx containing provided instruction with relayer key.
-func (signer *Signer) signTx(ctx context.Context, inst *solana.GenericInstruction) (*solana.Transaction, error) {
+func (signer *Signer) signTx(ctx context.Context, inst *solana.GenericInstruction, limit uint64) (*solana.Transaction, error) {
 	// get a recent blockhash
 	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
 	if err != nil {
 		return nil, errors.Wrap(err, "getLatestBlockhash error")
 	}
 
+	// if limit is provided, prepend compute unit limit instruction
+	var instructions []solana.Instruction
+	if limit > SolanaMaxComputeBudget {
+		limit = SolanaMaxComputeBudget
+	}
+
+	if limit > 0 && limit <= SolanaMaxComputeBudget {
+		limitInst := computebudget.NewSetComputeUnitLimitInstruction(uint32(limit)).Build()
+		instructions = append(instructions, limitInst)
+	}
+
+	instructions = append(instructions, inst)
+
 	// create a transaction that wraps the instruction
 	tx, err := solana.NewTransaction(
-		[]solana.Instruction{
-			// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
-			// https://github.com/zeta-chain/node/issues/2599
-			// programs.ComputeBudgetSetComputeUnitLimit(computeUnitLimit),
-			// programs.ComputeBudgetSetComputeUnitPrice(computeUnitPrice),
-			inst},
+		// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
+		// https://github.com/zeta-chain/node/issues/2599
+		instructions,
 		recent.Value.Blockhash,
 		solana.TransactionPayer(signer.relayerKey.PublicKey()),
 	)
@@ -350,7 +364,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 		return nil, errors.Wrap(err, "error creating increment nonce instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, 0)
 }
 
 func (signer *Signer) prepareWithdrawTx(
@@ -387,7 +401,7 @@ func (signer *Signer) prepareWithdrawTx(
 		return nil, errors.Wrap(err, "error creating withdraw instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, 0)
 }
 
 func (signer *Signer) prepareExecuteTx(
@@ -450,7 +464,7 @@ func (signer *Signer) prepareExecuteTx(
 		return nil, errors.Wrap(err, "error creating execute instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
 }
 
 func (signer *Signer) prepareWithdrawSPLTx(
@@ -500,7 +514,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 		return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, 0)
 }
 
 func (signer *Signer) prepareExecuteSPLTx(
@@ -572,7 +586,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, errors.Wrap(err, "error creating execute SPL instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
 }
 
 func (signer *Signer) prepareWhitelistTx(
@@ -609,7 +623,7 @@ func (signer *Signer) prepareWhitelistTx(
 		return nil, errors.Wrap(err, "error creating whitelist instruction")
 	}
 
-	return signer.signTx(ctx, inst)
+	return signer.signTx(ctx, inst, 0)
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
