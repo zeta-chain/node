@@ -237,7 +237,25 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
 
 		// ASSERT
-		require.ErrorContains(t, err, "want 1 instruction, got 0")
+		require.ErrorContains(t, err, "unexpected number of instructions: 0")
+		require.Nil(t, inst)
+	})
+
+	t.Run("should return error on 2 instruction if 1st is not compute budget", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// remove all instructions
+		tx.Message.Instructions = []solana.CompiledInstruction{tx.Message.Instructions[0], tx.Message.Instructions[0]}
+
+		// ACT
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+
+		// ASSERT
+		require.Error(t, err)
 		require.Nil(t, inst)
 	})
 
