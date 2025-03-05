@@ -21,6 +21,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+	"github.com/tonkeeper/tongo/ton"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -36,12 +37,10 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
-	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
-	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -79,8 +78,6 @@ type E2ERunner struct {
 	SuiTSSAddress         string
 	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
-	TONDeployer           *tonrunner.Deployer
-	TONGateway            *toncontracts.Gateway
 	FeeCollectorAddress   types.AccAddress
 
 	// all clients.
@@ -117,6 +114,9 @@ type E2ERunner struct {
 	// programs on Solana
 	GatewayProgram solana.PublicKey
 	SPLAddr        solana.PublicKey
+
+	// TON related
+	TONGateway ton.AccountID
 
 	// contract Sui
 	SuiGateway *sui.Gateway
@@ -276,6 +276,8 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 
 	r.GatewayProgram = other.GatewayProgram
 
+	r.TONGateway = other.TONGateway
+
 	r.SuiGateway = other.SuiGateway
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
@@ -401,6 +403,13 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
 	r.Logger.Print("SPL:            %s", r.SPLAddr.String())
 
+	r.Logger.Print(" --- 📜TON addresses ---")
+	if !r.TONGateway.IsZero() {
+		r.Logger.Print("Gateway:        %s", r.TONGateway.ToRaw())
+	} else {
+		r.Logger.Print("Gateway:        not set! 💤")
+	}
+
 	r.Logger.Print(" --- 📜Sui addresses ---")
 	if r.SuiGateway != nil {
 		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
@@ -456,9 +465,11 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
-	r.Logger.Error("Test failed")
-	err := fmt.Errorf("FailNow on %s", r.Name)
+	err := fmt.Errorf("(*E2ERunner).FailNow for runner %q. Exiting", r.Name)
+
+	r.Logger.Error("Failure: %s", err.Error())
 	r.CtxCancel(err)
+
 	// this panic ensures that the test routine exits fast.
 	// it should be caught and handled gracefully so long
 	// as the test is being executed by RunE2ETest().

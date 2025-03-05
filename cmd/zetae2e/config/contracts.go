@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
+	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -116,6 +117,10 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 
 	if c := conf.Contracts.Solana.SPLAddr; c != "" {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	if c := conf.Contracts.TON.GatewayAccountID; c != "" {
+		r.TONGateway = ton.MustParseAccountID(c.String())
 	}
 
 	// set Sui contracts

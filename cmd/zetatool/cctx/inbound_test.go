@@ -8,9 +8,15 @@ import (
 	"github.com/zeta-chain/node/cmd/zetatool/cctx"
 	zetatoolcontext "github.com/zeta-chain/node/cmd/zetatool/context"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 func Test_InboundBallotIdentifier(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping live test")
+		return
+	}
+
 	tt := []struct {
 		name                     string
 		inboundHash              string
