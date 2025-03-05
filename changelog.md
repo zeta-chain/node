@@ -42,6 +42,8 @@
 * [3509](https://github.com/zeta-chain/node/pull/3509) - schedule Bitcoin TSS keysign on interval to avoid TSS keysign spam
 * [3517](https://github.com/zeta-chain/node/pull/3517) - remove duplicate gateway event appending to fix false positive on multiple events in same tx
 * [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
+* [3622](https://github.com/zeta-chain/node/pull/3622) - allow object for tracerConfig in `debug_traceTransaction` RPC
+* [3634](https://github.com/zeta-chain/node/pull/3634) - return proper synthetic tx in `eth_getBlockByNumber` RPC
 
 ### Tests
 
