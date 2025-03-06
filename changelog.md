@@ -1,5 +1,12 @@
 # CHANGELOG
 
+
+## Unreleased
+
+### Refactor
+
+* [3636](https://github.com/zeta-chain/node/pull/3636) - add a check to stop posting inbound votes if the cctx has already been created
+
 ## v29.0.0
 
 ### Breaking Changes
