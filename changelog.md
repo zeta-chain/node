@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## v29.0.0
 
 ### Breaking Changes
 
@@ -43,6 +43,7 @@
 * [3517](https://github.com/zeta-chain/node/pull/3517) - remove duplicate gateway event appending to fix false positive on multiple events in same tx
 * [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
 * [3622](https://github.com/zeta-chain/node/pull/3622) - allow object for tracerConfig in `debug_traceTransaction` RPC
+* [3634](https://github.com/zeta-chain/node/pull/3634) - return proper synthetic tx in `eth_getBlockByNumber` RPC
 
 ### Tests
 
@@ -52,7 +53,7 @@
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
 * [3595](https://github.com/zeta-chain/node/pull/3595) - add E2E tests for Sui withdraws
 * [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
-* [3602](https://github.com/zeta-chain/node/pull/3601) - run solana tests when testing upgrades
+* [3612](https://github.com/zeta-chain/node/pull/3612) - add support for TON live e2e tests
 
 ## v28.0.0
 

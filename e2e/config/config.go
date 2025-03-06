@@ -2,8 +2,8 @@ package config
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -13,8 +13,12 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gagliardetto/solana-go"
+	"github.com/pkg/errors"
+	tonwallet "github.com/tonkeeper/tongo/wallet"
 	"gopkg.in/yaml.v3"
 
+	"github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
@@ -72,6 +76,7 @@ type AdditionalAccounts struct {
 	UserBitcoinWithdraw   Account `yaml:"user_bitcoin_withdraw"`
 	UserSolana            Account `yaml:"user_solana"`
 	UserSPL               Account `yaml:"user_spl"`
+	UserTON               Account `yaml:"user_ton"`
 	UserSui               Account `yaml:"user_sui"`
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
@@ -102,7 +107,8 @@ type RPCs struct {
 	EVM               string     `yaml:"evm"`
 	Bitcoin           BitcoinRPC `yaml:"bitcoin"`
 	Solana            string     `yaml:"solana"`
-	TONSidecarURL     string     `yaml:"ton_sidecar_url"`
+	TON               string     `yaml:"ton"`
+	TONFaucet         string     `yaml:"ton_faucet"`
 	Sui               string     `yaml:"sui"`
 	SuiFaucet         string     `yaml:"sui_faucet"`
 	ZetaCoreGRPC      string     `yaml:"zetacore_grpc"`
@@ -123,6 +129,7 @@ type Contracts struct {
 	EVM    EVM    `yaml:"evm"`
 	ZEVM   ZEVM   `yaml:"zevm"`
 	Solana Solana `yaml:"solana"`
+	TON    TON    `yaml:"ton"`
 	Sui    Sui    `yaml:"sui"`
 }
 
@@ -130,6 +137,11 @@ type Contracts struct {
 type Solana struct {
 	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
 	SPLAddr          DoubleQuotedString `yaml:"spl"`
+}
+
+// TON contains the address of predeployed contracts on the TON chain
+type TON struct {
+	GatewayAccountID DoubleQuotedString `yaml:"gateway_account_id"`
 }
 
 // Sui contains the addresses of predeployed contracts on the Sui chain
@@ -189,6 +201,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
+			TON:          "http://ton:8000/lite-client.json",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
@@ -255,6 +268,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserBitcoinDeposit,
 		a.UserBitcoinWithdraw,
 		a.UserSolana,
+		a.UserTON,
 		a.UserSui,
 		a.UserSPL,
 		a.UserLegacyEther,
@@ -351,6 +365,10 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
+	c.AdditionalAccounts.UserTON, err = generateAccount()
+	if err != nil {
+		return err
+	}
 	c.AdditionalAccounts.UserSui, err = generateAccount()
 	if err != nil {
 		return err
@@ -429,7 +447,19 @@ func (a Account) SuiSigner() (*sui.SignerSecp256k1, error) {
 	return sui.NewSignerSecp256k1(privateKeyBytes), nil
 }
 
-// Validate that the address and the private key specified in the
+// AsTONWallet derives TON V5R1 wallet solana private key
+func (a Account) AsTONWallet(client *ton.Client) (*ton.AccountInit, *tonwallet.Wallet, error) {
+	pk := solana.MustPrivateKeyFromBase58(a.SolanaPrivateKey.String())
+
+	// Extract the seed bytes (first 32 bytes) from the ed25519 private key
+	// ed25519 private key is 64 bytes: 32 bytes seed + 32 bytes public key
+	seed := pk[:ed25519.SeedSize]
+
+	rawPk := ed25519.NewKeyFromSeed(seed)
+
+	return ton.ConstructWalletFromPrivateKey(rawPk, client)
+}
+
 // config actually match
 func (a Account) Validate() error {
 	privateKey, err := a.PrivateKey()

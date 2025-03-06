@@ -23,7 +23,7 @@ const (
 	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 2000000000000000000
+	ProtocolFee = 250000000000000000
 
 	// CCTXIndexLength is the length of a crosschain transaction index
 	CCTXIndexLength          = 66

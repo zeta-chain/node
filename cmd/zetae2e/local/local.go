@@ -141,11 +141,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	conf, err := GetConfig(cmd)
 	noError(err)
 
-	// temporary spaghetti to overcome e2e flags limitations
-	if !testTON {
-		conf.RPCs.TONSidecarURL = ""
-	}
-
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
 	defer timeoutCancel()
@@ -181,6 +176,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf.ZetaChainID,
 	)
 	noError(err)
+
+	// Drop this cond after TON e2e is included in the default suite
+	if !testTON {
+		conf.RPCs.TON = ""
+	}
 
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
@@ -256,6 +256,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams()
+
+		if testTON {
+			deployerRunner.SetupTON(
+				conf.RPCs.TONFaucet,
+				conf.AdditionalAccounts.UserTON,
+			)
+		}
 
 		if testSui {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)

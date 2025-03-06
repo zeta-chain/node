@@ -1,9 +1,10 @@
 package bank
 
 import (
-	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"

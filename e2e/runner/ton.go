@@ -34,13 +34,12 @@ type tonOpts struct {
 type TONOpt func(t *tonOpts)
 
 func TONExpectStatus(status cctypes.CctxStatus) TONOpt {
-	return func(t *tonOpts) {
-		t.expectedStatus = status
-	}
+	return func(t *tonOpts) { t.expectedStatus = status }
 }
 
 // TONDeposit deposit TON to Gateway contract
 func (r *E2ERunner) TONDeposit(
+	gw *toncontracts.Gateway,
 	sender *wallet.Wallet,
 	amount math.Uint,
 	zevmRecipient eth.Address,
@@ -61,7 +60,7 @@ func (r *E2ERunner) TONDeposit(
 	)
 
 	// Send TX
-	err := r.TONGateway.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
+	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send TON deposit")
 	}
@@ -79,6 +78,7 @@ func (r *E2ERunner) TONDeposit(
 
 // TONDepositAndCall deposit TON to Gateway contract with call data.
 func (r *E2ERunner) TONDepositAndCall(
+	gw *toncontracts.Gateway,
 	sender *wallet.Wallet,
 	amount math.Uint,
 	zevmRecipient eth.Address,
@@ -107,7 +107,7 @@ func (r *E2ERunner) TONDepositAndCall(
 		string(callData),
 	)
 
-	err := r.TONGateway.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
+	err := gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
 	}

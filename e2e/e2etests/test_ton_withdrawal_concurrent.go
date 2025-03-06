@@ -21,9 +21,6 @@ import (
 // and that zetaclient tolerates "invalid nonce" error from RPC.
 func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 	// ARRANGE
-	// Given a deployer
-	_, deployer := r.Ctx, r.TONDeployer
-
 	const recipientsCount = 10
 
 	// Fire withdrawals. Note that zevm sender is r.ZEVMAuth
@@ -64,7 +61,7 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 			r.Logger.Info("Withdrawal #%d complete! cctx index: %s", number, cctx.Index)
 
 			// Check recipient's balance ON TON
-			balance, err := deployer.GetBalanceOf(r.Ctx, recipient, false)
+			balance, err := r.Clients.TON.GetBalanceOf(r.Ctx, recipient, false)
 			require.NoError(r, err, "failed to get balance of %s", recipient.ToRaw())
 			require.Equal(r, amount.Uint64(), balance.Uint64())
 		}(i+1, recipient, amount, tx)

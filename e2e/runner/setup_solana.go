@@ -95,7 +95,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Info("initialize connected logs: %v", out.Meta.LogMessages)
 
 	// initialize connected_spl program
-	connectedSPLPda, err := solanacontracts.ComputeConnectedSPLPdaAddress(ConnectedSPLProgramID)
+	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedSPLProgramID)
 	require.NoError(r, err)
 
 	var instConnectedSPL solana.GenericInstruction
