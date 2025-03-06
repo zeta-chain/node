@@ -136,6 +136,36 @@ func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (
 	return r0, r1
 }
 
+// GetBallotByID provides a mock function with given fields: ctx, id
+func (_m *ZetacoreClient) GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBallotByID")
+	}
+
+	var r0 *observertypes.QueryBallotByIdentifierResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*observertypes.QueryBallotByIdentifierResponse, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *observertypes.QueryBallotByIdentifierResponse); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*observertypes.QueryBallotByIdentifierResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBlockHeight provides a mock function with given fields: ctx
 func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 	ret := _m.Called(ctx)
@@ -157,6 +187,36 @@ func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCctxByHash provides a mock function with given fields: ctx, sendHash
+func (_m *ZetacoreClient) GetCctxByHash(ctx context.Context, sendHash string) (*types.CrossChainTx, error) {
+	ret := _m.Called(ctx, sendHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCctxByHash")
+	}
+
+	var r0 *types.CrossChainTx
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.CrossChainTx, error)); ok {
+		return rf(ctx, sendHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.CrossChainTx); ok {
+		r0 = rf(ctx, sendHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.CrossChainTx)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, sendHash)
 	} else {
 		r1 = ret.Error(1)
 	}

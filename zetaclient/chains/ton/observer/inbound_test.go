@@ -142,6 +142,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -204,6 +205,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -350,6 +352,7 @@ func TestInbound(t *testing.T) {
 		for _, tx := range txs {
 			ts.MockGetBlockHeader(tx.BlockID)
 		}
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -417,6 +420,7 @@ func TestInboundTracker(t *testing.T) {
 	})
 	ts.MockGetTransaction(ts.gateway.AccountID(), txWithdrawal)
 	ts.MockGetBlockHeader(txWithdrawal.BlockID)
+	ts.MockGetCctxByHash()
 
 	// Given inbound trackers from zetacore
 	trackers := []cc.InboundTracker{
