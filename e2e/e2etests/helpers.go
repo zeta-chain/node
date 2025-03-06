@@ -3,7 +3,9 @@ package e2etests
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -83,4 +85,10 @@ func bigAdd(x *big.Int, y *big.Int) *big.Int {
 // bigSub is shorthand for new(big.Int).Sub(x, y)
 func bigSub(x *big.Int, y *big.Int) *big.Int {
 	return new(big.Int).Sub(x, y)
+}
+
+func formatDuration(d time.Duration) string {
+	minutes := int(d.Minutes())
+	seconds := d.Seconds() - float64(minutes*60)
+	return fmt.Sprintf("%dm%.1fs", minutes, seconds)
 }
