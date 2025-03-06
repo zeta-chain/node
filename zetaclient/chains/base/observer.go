@@ -449,8 +449,7 @@ func (ob *Observer) PostVoteOutbound(ctx context.Context, msg *crosschaintypes.M
 
 	switch {
 	case err != nil:
-		ob.logger.Inbound.Error().Err(err).Fields(lf).Msg("posted outbound vote: failed")
-		return err
+		return errors.Wrap(err, "failed to post outbound vote")
 	case zetaHash == "":
 		// use debug level to avoid excessive logs for pending CCTX
 		ob.logger.Inbound.Debug().Fields(lf).Msg("posted outbound vote: already voted")
