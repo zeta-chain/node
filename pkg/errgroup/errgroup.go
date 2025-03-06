@@ -15,52 +15,6 @@ import (
 	"sync"
 )
 
-// fromPanicValue takes a value recovered from a panic and converts it into an
-// error, for logging purposes.  If the value is nil, it returns nil instead of
-// an error.
-//
-// Use like:
-//
-//	 defer func() {
-//			err := fromPanicValue(recover())
-//			// log or otheriwse use err
-//		}()
-func fromPanicValue(i interface{}) error {
-	switch value := i.(type) {
-	case nil:
-		return nil
-	case string:
-		return fmt.Errorf("panic: %v\n%s", value, collectStack())
-	case error:
-		return fmt.Errorf("panic in errgroup goroutine %w\n%s", value, collectStack())
-	default:
-		return fmt.Errorf("unknown panic: %+v\n%s", value, collectStack())
-	}
-}
-
-func collectStack() []byte {
-	buf := make([]byte, 64<<10)
-	buf = buf[:runtime.Stack(buf, false)]
-	return buf
-}
-
-func catchPanics(f func() error) func() error {
-	return func() (err error) {
-		defer func() {
-			// modified from log.PanicHandler, except instead of log.Panic we
-			// set `err`, which is the named-return from our closure to
-			// `g.Group.Go`, to an error based on the panic value.
-			// We do not log here -- we are effectively returning the (panic)
-			// error to our caller which suffices.
-			if r := recover(); r != nil {
-				err = fromPanicValue(r)
-			}
-		}()
-
-		return f()
-	}
-}
-
 // A Group is a collection of goroutines working on subtasks that are part of
 // the same overall task.
 //
@@ -122,4 +76,50 @@ func (g *Group) Go(f func() error) {
 			})
 		}
 	}()
+}
+
+// fromPanicValue takes a value recovered from a panic and converts it into an
+// error, for logging purposes.  If the value is nil, it returns nil instead of
+// an error.
+//
+// Use like:
+//
+//	 defer func() {
+//			err := fromPanicValue(recover())
+//			// log or otheriwse use err
+//		}()
+func fromPanicValue(i interface{}) error {
+	switch value := i.(type) {
+	case nil:
+		return nil
+	case string:
+		return fmt.Errorf("panic: %v\n%s", value, collectStack())
+	case error:
+		return fmt.Errorf("panic in errgroup goroutine %w\n%s", value, collectStack())
+	default:
+		return fmt.Errorf("unknown panic: %+v\n%s", value, collectStack())
+	}
+}
+
+func collectStack() []byte {
+	buf := make([]byte, 64<<10)
+	buf = buf[:runtime.Stack(buf, false)]
+	return buf
+}
+
+func catchPanics(f func() error) func() error {
+	return func() (err error) {
+		defer func() {
+			// modified from log.PanicHandler, except instead of log.Panic we
+			// set `err`, which is the named-return from our closure to
+			// `g.Group.Go`, to an error based on the panic value.
+			// We do not log here -- we are effectively returning the (panic)
+			// error to our caller which suffices.
+			if r := recover(); r != nil {
+				err = fromPanicValue(r)
+			}
+		}()
+
+		return f()
+	}
 }
