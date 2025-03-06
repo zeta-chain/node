@@ -46,6 +46,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
