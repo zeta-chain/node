@@ -6,11 +6,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 )
 
@@ -99,7 +99,6 @@ func bitcoinTestRoutines(
 		color.FgYellow,
 		verbose,
 		initNetwork,
-		true,
 	)
 
 	// initialize runner for withdraw tests
@@ -113,7 +112,6 @@ func bitcoinTestRoutines(
 		color.FgHiYellow,
 		verbose,
 		initNetwork,
-		false,
 	)
 
 	// start mining blocks if it's local Regnet
@@ -152,7 +150,7 @@ func initBitcoinRunner(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	printColor color.Attribute,
-	verbose, initNetwork, createWallet bool,
+	verbose, initNetwork bool,
 ) *runner.E2ERunner {
 	// initialize runner for bitcoin test
 	runner, err := initTestRunner(
@@ -165,8 +163,7 @@ func initBitcoinRunner(
 	)
 	testutil.NoError(err)
 
-	// setup TSS address and setup deployer wallet
-	runner.SetupBitcoinAccounts(createWallet)
+	runner.BTCDeployerAddress, _ = deployerRunner.GetBtcAddress()
 
 	// initialize funds
 	if initNetwork {

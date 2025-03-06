@@ -13,7 +13,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -22,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -229,6 +229,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
+		// setup TSS address and setup deployer wallet
+		deployerRunner.SetupBitcoinAccounts(true)
+
 		//setup protocol contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
@@ -413,26 +416,35 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			logger.Print("❌ solana client is nil, maybe solana rpc is not set")
 			os.Exit(1)
 		}
+		// Run only basic solana tests if an upgrade is in progress
+		// This is done to avoid running the tests that take too long to complete
+		// Related : https://github.com/zeta-chain/node/issues/3666
 		solanaTests := []string{
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
-			e2etests.TestSolanaWithdrawAndCallName,
-			e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
-			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRevertName,
-			e2etests.TestSolanaDepositAndCallRevertWithDustName,
-			e2etests.TestSolanaDepositRestrictedName,
-			e2etests.TestSolanaWithdrawRestrictedName,
-			// TODO move under admin tests
-			// https://github.com/zeta-chain/node/issues/3085
 			e2etests.TestSPLDepositName,
-			e2etests.TestSPLDepositAndCallName,
-			e2etests.TestSPLWithdrawName,
-			e2etests.TestSPLWithdrawAndCallName,
-			e2etests.TestSPLWithdrawAndCallRevertName,
-			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
-			e2etests.TestSolanaWhitelistSPLName,
 		}
+
+		if !deployerRunner.IsRunningUpgrade() {
+			solanaTests = append(solanaTests, []string{
+				e2etests.TestSolanaDepositAndCallName,
+				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestSPLDepositAndCallName,
+				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertName,
+				e2etests.TestSolanaDepositAndCallRevertWithDustName,
+				e2etests.TestSolanaDepositRestrictedName,
+				e2etests.TestSolanaWithdrawRestrictedName,
+				// TODO move under admin tests
+				// https://github.com/zeta-chain/node/issues/3085
+				e2etests.TestSPLWithdrawName,
+				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallRevertName,
+				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+				e2etests.TestSolanaWhitelistSPLName,
+			}...)
+		}
+
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
 	}
 

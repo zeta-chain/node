@@ -559,6 +559,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallName,
@@ -567,6 +568,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallRevertWithCallName,
@@ -575,6 +577,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawAndCallRevertWithCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallName,
@@ -583,6 +586,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallRevertName,
@@ -591,6 +595,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
@@ -607,6 +612,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in spl tokens", DefaultValue: "100000"},
 		},
 		TestSPLWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCreateReceiverAtaName,
@@ -615,6 +621,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in spl tokens", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCreateReceiverAta,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertName,
@@ -623,12 +630,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertWithDustName,
 		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
 		[]runner.ArgDefinition{},
 		TestSolanaDepositAndCallRevertWithDust,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
@@ -647,12 +656,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWhitelistSPLName,
 		"whitelist SPL",
 		[]runner.ArgDefinition{},
 		TestSolanaWhitelistSPL,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLDepositName,

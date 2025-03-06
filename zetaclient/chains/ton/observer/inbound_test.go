@@ -141,6 +141,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -205,6 +206,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -347,6 +349,7 @@ func TestInbound(t *testing.T) {
 		for _, tx := range txs {
 			ts.MockGetBlockHeader(tx.BlockID)
 		}
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -420,6 +423,7 @@ func TestInboundTracker(t *testing.T) {
 		ts.TxToInboundTracker(txDeposit),
 		ts.TxToInboundTracker(txWithdrawal),
 	}
+	ts.MockGetCctxByHash()
 
 	ts.OnGetInboundTrackersForChain(trackers).Once()
 

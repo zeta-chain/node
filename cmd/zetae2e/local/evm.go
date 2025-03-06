@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/errgroup"
 )
 
 // startEVMTests starts EVM chains related tests in parallel

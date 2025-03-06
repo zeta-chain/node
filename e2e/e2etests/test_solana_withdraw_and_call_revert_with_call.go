@@ -41,7 +41,7 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	revertAddress := r.TestDAppV2ZEVMAddr
 	balance, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
-	require.EqualValues(r, int64(0), balance.Int64())
+	initialBalance := balance
 
 	payload := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payload, withdrawAmount)
@@ -80,8 +80,8 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
 
 	// check the balance of revert address is equal to withdraw amount
-	balance, err = r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	finalBalance, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
-	require.Equal(r, withdrawAmount.Int64(), balance.Int64())
+	require.Equal(r, withdrawAmount.Int64(), finalBalance.Int64()-initialBalance.Int64())
 }
