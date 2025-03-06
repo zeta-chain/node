@@ -4,7 +4,7 @@
 
 ### Fixes
 
-* [3663](https://github.com/zeta-chain/node/pull/3663/) - add a check to stop posting inbound votes if the cctx has already been created
+* [3664](https://github.com/zeta-chain/node/pull/3664/) - add a check to stop posting inbound votes if the cctx has already been created
 
 ## v29.0.0
 
