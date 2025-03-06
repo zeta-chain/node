@@ -511,8 +511,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// We set a ballot maturity of 10 blocks at the start of the tests using a governance proposal
-	// We can wait for 11 blocks to ensure that all ballot created during the test are matured as emission rewards may be slashed for some of the observers based on their vote.
+	// Default ballot maturity is set to 10 blocks.
+	// We can wait for 11 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
 	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests.for this check as we expect all observers to vote correctly.
 	if testPerformance {
 		deployerRunner.WaitForBlocks(11)
