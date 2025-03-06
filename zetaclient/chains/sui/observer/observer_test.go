@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -112,6 +113,7 @@ func TestObserver(t *testing.T) {
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
+		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
 
 		// ACT
 		err := ts.ObserveInbound(ts.ctx)
@@ -187,6 +189,7 @@ func TestObserver(t *testing.T) {
 
 		// Given votes catcher
 		ts.CatchInboundVotes()
+		ts.zetaMock.MockGetCctxByHash(errors.New("not found"))
 
 		// ACT
 		err := ts.ProcessInboundTrackers(ts.ctx)
