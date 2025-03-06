@@ -3,6 +3,7 @@ package types_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -189,6 +190,53 @@ func TestMsgVoteOutbound_Digest(t *testing.T) {
 	msgNew.ConfirmationMode = types.ConfirmationMode_FAST
 	hash2 = msgNew.Digest()
 	require.NotEqual(t, hash, hash2, "confirmation mode should change hash")
+}
+
+func TestMsgVoteOutbound_EligibleForFastConfirmation(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	tests := []struct {
+		name     string
+		msg      types.MsgVoteOutbound
+		eligible bool
+	}{
+		{
+			name: "eligible for fast confirmation",
+			msg: func() types.MsgVoteOutbound {
+				msg := sample.OutboundVoteFromRand(1, r)
+				msg.CoinType = coin.CoinType_Gas
+				msg.Status = chains.ReceiveStatus_success
+				return msg
+			}(),
+			eligible: true,
+		},
+		{
+			name: "not eligible for non-asset coin type",
+			msg: func() types.MsgVoteOutbound {
+				msg := sample.OutboundVoteFromRand(1, r)
+				msg.CoinType = coin.CoinType_Cmd
+				return msg
+			}(),
+			eligible: false,
+		},
+		{
+			name: "not eligible for failed outbound",
+			msg: func() types.MsgVoteOutbound {
+				msg := sample.OutboundVoteFromRand(1, r)
+				msg.CoinType = coin.CoinType_Gas
+				msg.Status = chains.ReceiveStatus_failed
+				return msg
+			}(),
+			eligible: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			eligible := tt.msg.EligibleForFastConfirmation()
+			require.Equal(t, tt.eligible, eligible)
+		})
+	}
 }
 
 func TestMsgVoteOutbound_GetSigners(t *testing.T) {

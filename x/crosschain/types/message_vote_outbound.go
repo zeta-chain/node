@@ -90,3 +90,15 @@ func (msg *MsgVoteOutbound) Digest() string {
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }
+
+// EligibleForFastConfirmation determines if the outbound msg is eligible for fast confirmation
+func (msg *MsgVoteOutbound) EligibleForFastConfirmation() bool {
+	// only asset CoinType is eligible for fast confirmation
+	if !msg.CoinType.IsAsset() {
+		return false
+	}
+
+	// only successful outbound is eligible for fast confirmation, because a failed
+	// outbound status might trigger revert in the zetacore, so we don't consider it.
+	return msg.Status == chains.ReceiveStatus_success
+}
