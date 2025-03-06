@@ -31,7 +31,12 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		tx := r.ETHDeposit(r.EVMAddress(), depositAmount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+		tx := r.ETHDeposit(
+			r.EVMAddress(),
+			depositAmount,
+			gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+			false,
+		)
 		hash := tx.Hash()
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
 
