@@ -510,6 +510,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+
+	// We set a ballot maturity of 10 blocks at the start of the tests using a governance proposal
+	// We can wait for 11 blocks to ensure that all ballot created during the test are matured as emission rewards may be slashed for some of the observers based on their vote.
+	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests.for this check as we expect all observers to vote correctly.
+	if testPerformance {
+		deployerRunner.WaitForBlocks(11)
+	}
+
 	noError(deployerRunner.WithdrawEmissions())
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks

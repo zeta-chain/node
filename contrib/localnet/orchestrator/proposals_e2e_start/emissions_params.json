@@ -7,7 +7,7 @@
         "observerEmissionPercentage": "0.25",
         "tssSignerEmissionPercentage": "0.25",
         "observerSlashAmount": "100000000000000000",
-        "ballotMaturityBlocks": 101,
+        "ballotMaturityBlocks": 10,
         "blockRewardAmount": "9620949074074074074.074070733466756687",
         "pendingBallotsDeletionBufferBlocks": 145222
       },
