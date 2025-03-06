@@ -191,7 +191,6 @@ func solanaWithdrawPerformanceRoutine(
 	verbose bool,
 	account config.Account,
 	testNames []string,
-	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for solana test
@@ -244,7 +243,6 @@ func solanaWithdrawPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("solana withdraw performance test failed: %v", err)
 		}
-		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("solana withdraw performance test failed: %v", err)

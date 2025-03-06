@@ -431,7 +431,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
 				[]string{e2etests.TestStressSolanaWithdrawName},
-				performanceIterations,
 			),
 		)
 		eg.Go(
@@ -442,7 +441,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
 				[]string{e2etests.TestStressSPLWithdrawName},
-				performanceIterations,
 			),
 		)
 	}
