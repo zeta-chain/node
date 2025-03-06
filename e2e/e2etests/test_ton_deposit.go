@@ -13,25 +13,27 @@ import (
 func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	// Given deployer
-	ctx, deployer := r.Ctx, r.TONDeployer
+	ctx := r.Ctx
+
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
 
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
 	// Given approx deposit fee
-	depositFee, err := r.TONGateway.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
+	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	require.NoError(r, err)
 
-	// Given sample wallet with a balance of 50 TON
-	sender, err := deployer.CreateWallet(ctx, toncontracts.Coins(50))
+	// Given a sender
+	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
 	// Given sample EVM address
 	recipient := sample.EthAddress()
 
 	// ACT
-	cctx, err := r.TONDeposit(sender, amount, recipient)
+	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
 
 	// ASSERT
 	require.NoError(r, err)

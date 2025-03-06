@@ -189,7 +189,7 @@ then
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* zetaclient0:~/.zetacored/keyring-file/
 
-# 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
+  # 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
   for NODE in "${NODELIST[@]}"; do
     INDEX=${NODE:0-1}
     ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
@@ -203,7 +203,7 @@ then
   ssh zetaclient0 mkdir -p ~/.zetacored/
   scp ~/.zetacored/os_info/os.json zetaclient0:/root/.zetacored/os.json
 
-# 2. Add the observers, authorizations, required params and accounts to the genesis.json
+  # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 25
 
@@ -251,10 +251,10 @@ then
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-  # Automatically func most of the accounts
+  # Automatically fund most of the accounts
   fund_accounts_auto
 
-# 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
+  # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
   # Copy host gentx to other nodes
   for NODE in "${NODELIST[@]}"; do

@@ -575,7 +575,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 
 	// create encoded msg
 	connected := solana.MustPublicKeyFromBase58(ConnectedSPLProgramID.String())
-	connectedPda, err := solanacontract.ComputeConnectedSPLPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
 
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 timeout_seconds=300 # 5 minutes
-poll_interval=10    # Check every 10 seconds
+poll_interval=5     # Check every 5 seconds
 
 status_url="http://ton:8000/status"
 

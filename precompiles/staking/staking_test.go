@@ -2,8 +2,9 @@ package staking
 
 import (
 	"encoding/json"
-	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"testing"
+
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 
 	"math/big"
 

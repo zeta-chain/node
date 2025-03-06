@@ -34,6 +34,11 @@ additional_accounts:
     evm_address: "0xf67deecc3B15F9CEeF5eba3468ed601f3e0B9de2"
     private_key: "2b3306a8ac43dbf0e350b87876c131e7e12bd49563a16de9ce8aeb664b94d559"
     solana_private_key: "4yqSQxDeTBvn86BuxcN5jmZb2gaobFXrBqu8kiE9rZxNkVMe3LfXmFigRsU4sRp7vk4vVP1ZCFiejDKiXBNWvs2C"
+  user_ton:
+    bech32_address: "zeta13a5yvmysdsncc704e093wy5wm0akp394tkrwje"
+    evm_address: "0x8f68466C906c278c79F5CbcB17128EdBfb60C4b5"
+    private_key: "a85f64e560fbef77422272b162915da8170152cf3983567b66f20a5494544591"
+    solana_private_key: "2AB2oDXWey3uhwYVj4bbJ4cGbz7R2ZMePJpY5r84KyVeUq2z89nsfWgcnb1sH1jUvRaCxXV2DBwMNUobQUfTbeqq"
   user_sui:
     bech32_address: "zeta1qluk7yfyqfejwss64lqmn7de6svudcedz94zs2"
     evm_address: "0x07F96F1124027327421AAFc1B9F9B9D419C6e32d"
@@ -108,14 +113,20 @@ rpcs:
     disable_tls: true
     params: regnet
   solana: "http://solana:8899"
-  ton_sidecar_url: "http://ton:8000"
+  # ton lite-server config url or path
+  ton: "http://ton:8000/lite-client.json"
+  ton_faucet: "http://ton:8000/faucet.json"
   sui: "http://sui:9000"
   sui_faucet: "http://sui:9123"
   zetacore_grpc: "zetacore0:9090"
   zetacore_rpc: "http://zetacore0:26657"
   zetaclient_metrics: "http://zetaclient0:8886"
 contracts:
-# configure localnet solana gateway program id
+  # configure localnet solana gateway program id
   solana:
     gateway_program_id: "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
     spl: ""
+  ton:
+    # e.g. "0:31503e3dd1df464216e4c4ca0eee3a40b812822c8539823e009b0720fab527b5"
+    # unique on each e2e as it's partially derived from TSS address
+    gateway_account_id: ""

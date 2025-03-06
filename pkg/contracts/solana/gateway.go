@@ -86,8 +86,3 @@ func ComputePdaAddress(connected solana.PublicKey, seed []byte) (solana.PublicKe
 func ComputeConnectedPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
 	return ComputePdaAddress(connected, []byte("connected"))
 }
-
-// ComputeConnectedSPLPdaAddress computes the PDA address for the custom program PDA with seed "connectedSPL"
-func ComputeConnectedSPLPdaAddress(connected solana.PublicKey) (solana.PublicKey, error) {
-	return ComputePdaAddress(connected, []byte("connectedSPL"))
-}
