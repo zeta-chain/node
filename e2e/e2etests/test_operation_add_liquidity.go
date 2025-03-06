@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-func parseArgsForAddLiqquidity(r *runner.E2ERunner, args []string) (*big.Int, *big.Int) {
+func parseArgsForAddLiquidity(r *runner.E2ERunner, args []string) (*big.Int, *big.Int) {
 	require.Len(r, args, 2)
 
 	liqZETA := utils.ParseBigInt(r, args[0])
@@ -20,48 +20,48 @@ func parseArgsForAddLiqquidity(r *runner.E2ERunner, args []string) (*big.Int, *b
 
 // TestOperationAddLiquidityETH is an operational test to add liquidity in the ZETA/ETH pool (evm gas token)
 func TestOperationAddLiquidityETH(r *runner.E2ERunner, args []string) {
-	liqZETA, liqETH := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqETH := parseArgsForAddLiquidity(r, args)
 	r.AddLiquidityETH(liqZETA, liqETH)
 }
 
 // TestOperationAddLiquidityERC20 is an operational test to add liquidity in the ZETA/ERC20 pool
 func TestOperationAddLiquidityERC20(r *runner.E2ERunner, args []string) {
-	liqZETA, liqERC20 := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqERC20 := parseArgsForAddLiquidity(r, args)
 	r.AddLiquidityERC20(liqZETA, liqERC20)
 }
 
 // TestOperationAddLiquidityBTC is an operational test to add liquidity in the ZETA/BTC pool
 func TestOperationAddLiquidityBTC(r *runner.E2ERunner, args []string) {
-	liqZETA, liqBTC := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqBTC := parseArgsForAddLiquidity(r, args)
 	r.AddLiquidityBTC(liqZETA, liqBTC)
 }
 
 // TestOperationAddLiquiditySOL is an operational test to add liquidity in the ZETA/SOL pool
 func TestOperationAddLiquiditySOL(r *runner.E2ERunner, args []string) {
-	liqZETA, liqSOL := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqSOL := parseArgsForAddLiquidity(r, args)
 	r.AddLiquiditySOL(liqZETA, liqSOL)
 }
 
 // TestOperationAddLiquiditySPL is an operational test to add liquidity in the ZETA/SPL pool
 func TestOperationAddLiquiditySPL(r *runner.E2ERunner, args []string) {
-	liqZETA, liqSPL := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqSPL := parseArgsForAddLiquidity(r, args)
 	r.AddLiquiditySPL(liqZETA, liqSPL)
 }
 
 // TestOperationAddLiquiditySUI is an operational test to add liquidity in the ZETA/SUI pool
 func TestOperationAddLiquiditySUI(r *runner.E2ERunner, args []string) {
-	liqZETA, liqSUI := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqSUI := parseArgsForAddLiquidity(r, args)
 	r.AddLiquidityERC20(liqZETA, liqSUI)
 }
 
 // TestOperationAddLiquiditySuiFungibleToken is an operational test to add liquidity in the ZETA/SuiFungibleToken pool
 func TestOperationAddLiquiditySuiFungibleToken(r *runner.E2ERunner, args []string) {
-	liqZETA, liqSuiToken := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqSuiToken := parseArgsForAddLiquidity(r, args)
 	r.AddLiquiditySuiFungibleToken(liqZETA, liqSuiToken)
 }
 
 // TestOperationAddLiquidityTON is an operational test to add liquidity in the ZETA/TON pool
 func TestOperationAddLiquidityTON(r *runner.E2ERunner, args []string) {
-	liqZETA, liqTON := parseArgsForAddLiqquidity(r, args)
+	liqZETA, liqTON := parseArgsForAddLiquidity(r, args)
 	r.AddLiquidityERC20(liqZETA, liqTON)
 }
