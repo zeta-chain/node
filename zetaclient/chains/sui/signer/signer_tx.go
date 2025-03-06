@@ -78,9 +78,8 @@ func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]b
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{sigBase64},
-		RequestType: "WaitForLocalExecution",
+		TxBytes:   tx.TxBytes,
+		Signature: []string{sigBase64},
 	}
 
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)

@@ -118,6 +118,32 @@ func TestClientLive(t *testing.T) {
 	})
 }
 
+func TestParseRPC(t *testing.T) {
+	// ARRANGE
+	const raw = `{
+		"jsonrpc": "2.0",
+		"id": 1,
+		"result": {
+			"digest": "8995Wsnjv3udPYGgkfWhfNsu62W2UcT7Zd2tY83MDAyG",
+			"confirmedLocalExecution": false
+		}
+	}`
+
+	// ACT
+	out, err := parseRPC[models.SuiTransactionBlockResponse]([]byte(raw))
+
+	// ASSERT
+	require.NoError(t, err)
+	require.Equal(t,
+		models.SuiTransactionBlockResponse{
+			Digest:                  "8995Wsnjv3udPYGgkfWhfNsu62W2UcT7Zd2tY83MDAyG",
+			ConfirmedLocalExecution: false,
+		},
+		out,
+	)
+
+}
+
 type testSuite struct {
 	t   *testing.T
 	ctx context.Context

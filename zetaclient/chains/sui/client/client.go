@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -155,6 +156,47 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 	return res.Data[0].Data.ObjectId, nil
 }
 
+// SuiExecuteTransactionBlock manual implementation of ISuiAPI.SuiExecuteTransactionBlock
+// That uses proper parameters signature (original has a bug in marshaling)
+//
+// @see sui.(*suiWriteTransactionImpl).SuiExecuteTransactionBlock
+// @see https://docs.sui.io/sui-api-ref#sui_executetransactionblock
+func (c *Client) SuiExecuteTransactionBlock(
+	ctx context.Context,
+	req models.SuiExecuteTransactionBlockRequest,
+) (models.SuiTransactionBlockResponse, error) {
+	const method = "sui_executeTransactionBlock"
+
+	responseOptionsNullable := any(nil)
+	if req.Options != (models.SuiTransactionBlockOptions{}) {
+		responseOptionsNullable = req.Options
+	}
+
+	requestTypeNullable := any(nil)
+	if req.RequestType != "" {
+		requestTypeNullable = req.RequestType
+	}
+
+	params := []any{
+		req.TxBytes,
+		req.Signature,
+		responseOptionsNullable,
+		requestTypeNullable,
+	}
+
+	resRaw, err := c.SuiCall(ctx, method, params...)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, errors.Wrap(err, method)
+	}
+
+	resString, ok := resRaw.(string)
+	if !ok {
+		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
+	}
+
+	return parseRPC[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
 // EncodeCursor encodes event ID into cursor.
 func EncodeCursor(id models.EventId) string {
 	return fmt.Sprintf("%s,%s", id.TxDigest, id.EventSeq)
@@ -175,4 +217,31 @@ func DecodeCursor(cursor string) (*models.EventId, error) {
 		TxDigest: parts[0],
 		EventSeq: parts[1],
 	}, nil
+}
+
+// parseRPC RPC response into a given type.
+func parseRPC[T any](raw []byte) (T, error) {
+	// {
+	//   "jsonrpc": "2.0",
+	//   "id": 1,
+	//   "result": { ...}
+	// }
+	type response struct {
+		Result json.RawMessage `json:"result"`
+	}
+
+	var (
+		outer response
+		tt    T
+	)
+
+	if err := json.Unmarshal(raw, &outer); err != nil {
+		return tt, errors.Wrap(err, "unable to parse rpc response")
+	}
+
+	if err := json.Unmarshal(outer.Result, &tt); err != nil {
+		return tt, errors.Wrapf(err, "unable to parse result into %T", tt)
+	}
+
+	return tt, nil
 }
