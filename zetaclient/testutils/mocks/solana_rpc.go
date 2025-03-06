@@ -47,6 +47,33 @@ func (_m *SolanaRPCClient) GetAccountInfo(ctx context.Context, account solana.Pu
 	return r0, r1
 }
 
+// GetAccountInfoWithOpts provides a mock function with given fields: ctx, account, opts
+func (_m *SolanaRPCClient) GetAccountInfoWithOpts(ctx context.Context, account solana.PublicKey, opts *rpc.GetAccountInfoOpts) (*rpc.GetAccountInfoResult, error) {
+	ret := _m.Called(ctx, account, opts)
+	if len(ret) == 0 {
+		panic("no return value specified for GetAccountInfoWithOpts")
+	}
+	var r0 *rpc.GetAccountInfoResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, solana.PublicKey, *rpc.GetAccountInfoOpts) (*rpc.GetAccountInfoResult, error)); ok {
+		return rf(ctx, account, opts)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, solana.PublicKey, *rpc.GetAccountInfoOpts) *rpc.GetAccountInfoResult); ok {
+		r0 = rf(ctx, account, opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*rpc.GetAccountInfoResult)
+		}
+	}
+	if rf, ok := ret.Get(1).(func(context.Context, solana.PublicKey, *rpc.GetAccountInfoOpts) error); ok {
+		r1 = rf(ctx, account, opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBalance provides a mock function with given fields: ctx, account, commitment
 func (_m *SolanaRPCClient) GetBalance(ctx context.Context, account solana.PublicKey, commitment rpc.CommitmentType) (*rpc.GetBalanceResult, error) {
 	ret := _m.Called(ctx, account, commitment)
