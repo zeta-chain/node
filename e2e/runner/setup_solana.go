@@ -181,6 +181,8 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 	}
 
 	// release v28 does not support ConfirmationParams
+	// TODO: cleanup after v29
+	// https://github.com/zeta-chain/node/issues/3545
 	if r.IsRunningUpgrade() {
 		chainParams = &observertypes.ChainParams{
 			ChainId:                     chainID,
