@@ -83,7 +83,7 @@ func (ob *Observer) IsTxFinalized(nonce uint64) bool {
 	return ob.finalizedTxResults[ob.OutboundID(nonce)] != nil
 }
 
-// checkRPCStatus checks the RPC status of the Solana chain
+// CheckRPCStatus checks the RPC status of the Solana chain
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	// Solana privnet doesn't have RPC 'GetHealth', need to differentiate
 	privnet := ob.Chain().NetworkType == chains.NetworkType_privnet

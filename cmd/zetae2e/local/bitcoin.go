@@ -6,11 +6,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 )
 
