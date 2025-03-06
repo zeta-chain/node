@@ -31,7 +31,6 @@ func RunnerFromConfig(
 		ctxCancel,
 		account,
 		e2eClients,
-
 		logger,
 		opts...,
 	)
@@ -57,6 +56,8 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	// copy contracts from deployer runner
 	conf.Contracts.Solana.GatewayProgramID = config.DoubleQuotedString(r.GatewayProgram.String())
 	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
+
+	conf.Contracts.TON.GatewayAccountID = config.DoubleQuotedString(r.TONGateway.ToRaw())
 
 	if r.SuiGateway != nil {
 		conf.Contracts.Sui.GatewayPackageID = config.DoubleQuotedString(r.SuiGateway.PackageID())

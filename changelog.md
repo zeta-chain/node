@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## v29.0.0
 
 ### Breaking Changes
 
@@ -54,6 +54,7 @@
 * [3560](https://github.com/zeta-chain/node/pull/3560) - initialize Sui E2E deposit tests
 * [3595](https://github.com/zeta-chain/node/pull/3595) - add E2E tests for Sui withdraws
 * [3591](https://github.com/zeta-chain/node/pull/3591) - add a runner for gov proposals in the e2e test.
+* [3612](https://github.com/zeta-chain/node/pull/3612) - add support for TON live e2e tests
 
 ## v28.0.0
 

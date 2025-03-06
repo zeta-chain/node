@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
 
@@ -17,18 +16,11 @@ import (
 // Deployer represents a wrapper around ton Wallet with some helpful methods.
 type Deployer struct {
 	wallet.Wallet
-	blockchain blockchain
-}
-
-type blockchain interface {
-	GetSeqno(ctx context.Context, account ton.AccountID) (uint32, error)
-	SendMessage(ctx context.Context, payload []byte) (uint32, error)
-	GetAccountState(ctx context.Context, accountID ton.AccountID) (tlb.ShardAccount, error)
-	WaitForBlocks(ctx context.Context) error
+	client *Client
 }
 
 // NewDeployer deployer constructor.
-func NewDeployer(client blockchain, cfg Faucet) (*Deployer, error) {
+func NewDeployer(client *Client, cfg Faucet) (*Deployer, error) {
 	// this is a bit outdated, but we can't change it (it's created by my-local-ton)
 	const version = wallet.V3R2
 	if cfg.WalletVersion != "V3R2" {
@@ -50,30 +42,7 @@ func NewDeployer(client blockchain, cfg Faucet) (*Deployer, error) {
 		return nil, errors.Wrap(err, "failed to create wallet")
 	}
 
-	return &Deployer{Wallet: w, blockchain: client}, nil
-}
-
-func (d *Deployer) Seqno(ctx context.Context) (uint32, error) {
-	return d.blockchain.GetSeqno(ctx, d.GetAddress())
-}
-
-// GetBalanceOf returns the balance of a given account.
-// wait=true waits for account activation.
-func (d *Deployer) GetBalanceOf(ctx context.Context, id ton.AccountID, wait bool) (math.Uint, error) {
-	if wait {
-		if err := d.waitForAccountActivation(ctx, id); err != nil {
-			return math.Uint{}, errors.Wrap(err, "failed to wait for account activation")
-		}
-	}
-
-	state, err := d.blockchain.GetAccountState(ctx, id)
-	if err != nil {
-		return math.Uint{}, errors.Wrapf(err, "failed to get account %s state", id.ToRaw())
-	}
-
-	balance := uint64(state.Account.Account.Storage.Balance.Grams)
-
-	return math.NewUint(balance), nil
+	return &Deployer{Wallet: w, client: client}, nil
 }
 
 // Fund sends the given amount of coins to the recipient. Returns tx hash and error.
@@ -93,100 +62,41 @@ func (d *Deployer) Deploy(ctx context.Context, account *AccountInit, amount math
 		Address: account.ID,
 		Code:    account.Code,
 		Data:    account.Data,
-		Mode:    1, // pay gas fees separately
+		Mode:    toncontracts.SendFlagSeparateFees,
 	}
 
 	if _, err := d.send(ctx, msg, true); err != nil {
-		return err
+		return errors.Wrapf(err, "unable to deploy account %q", account.ID.ToRaw())
 	}
 
-	return d.waitForAccountActivation(ctx, account.ID)
-}
-
-func (d *Deployer) CreateWallet(ctx context.Context, amount math.Uint) (*wallet.Wallet, error) {
-	seed := wallet.RandomSeed()
-
-	accInit, w, err := ConstructWalletFromSeed(seed, d.blockchain)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to construct wallet")
-	}
-
-	if err := d.Deploy(ctx, accInit, amount); err != nil {
-		return nil, errors.Wrap(err, "failed to deploy wallet")
-	}
-
-	// Double-check the balance
-	b, err := w.GetBalance(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get balance")
-	}
-
-	if b == 0 {
-		return nil, fmt.Errorf("balance of %s is zero", w.GetAddress().ToRaw())
-	}
-
-	return w, nil
+	return d.client.WaitForAccountActivation(ctx, account.ID)
 }
 
 func (d *Deployer) send(ctx context.Context, message wallet.Sendable, waitForBlocks bool) (ton.Bits256, error) {
 	// 2-3 blocks
 	const maxWaitingTime = 18 * time.Second
 
-	seqno, err := d.Seqno(ctx)
+	id := d.GetAddress()
+
+	seqno, err := d.client.GetSeqno(ctx, id)
 	if err != nil {
 		return ton.Bits256{}, errors.Wrap(err, "failed to get seqno")
 	}
 
-	// Note that message hash IS NOT a tra hash.
-	// It's not possible to get TX hash after tx sending
+	// Note that message hash IS NOT a tx hash.
+	// It's not possible to get tx hash right after tx sending
 	msgHash, err := d.Wallet.SendV2(ctx, 0, message)
 	if err != nil {
 		return msgHash, errors.Wrap(err, "failed to send message")
 	}
 
-	if err := d.waitForNextSeqno(ctx, seqno, maxWaitingTime); err != nil {
+	if err := d.client.WaitForNextSeqno(ctx, id, seqno, maxWaitingTime); err != nil {
 		return msgHash, errors.Wrap(err, "failed to wait for confirmation")
 	}
 
 	if waitForBlocks {
-		return msgHash, d.blockchain.WaitForBlocks(ctx)
+		return msgHash, d.client.WaitForBlocks(ctx)
 	}
 
 	return msgHash, nil
-}
-
-func (d *Deployer) waitForNextSeqno(ctx context.Context, oldSeqno uint32, timeout time.Duration) error {
-	t := time.Now()
-
-	for ; time.Since(t) < timeout; time.Sleep(timeout / 10) {
-		newSeqno, err := d.Seqno(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get seqno")
-		}
-
-		if newSeqno > oldSeqno {
-			return nil
-		}
-	}
-
-	return errors.New("waiting confirmation timeout")
-}
-
-func (d *Deployer) waitForAccountActivation(ctx context.Context, account ton.AccountID) error {
-	const interval = 5 * time.Second
-
-	for i := 0; i < 10; i++ {
-		state, err := d.blockchain.GetAccountState(ctx, account)
-		if err != nil {
-			return err
-		}
-
-		if state.Account.Status() == tlb.AccountActive {
-			return nil
-		}
-
-		time.Sleep(interval)
-	}
-
-	return fmt.Errorf("account %s is not active", account.ToRaw())
 }
