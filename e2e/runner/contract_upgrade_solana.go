@@ -69,7 +69,7 @@ func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
 	data := append(discriminator, []byte{}...)
 
 	var instConnected solana.GenericInstruction
-	accountSliceConnected := []*solana.AccountMeta{}
+	var accountSliceConnected []*solana.AccountMeta
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	instConnected.ProgID = r.GatewayProgram
 	instConnected.AccountValues = accountSliceConnected
