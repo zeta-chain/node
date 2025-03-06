@@ -51,7 +51,7 @@ func TestOperationAddLiquiditySPL(r *runner.E2ERunner, args []string) {
 // TestOperationAddLiquiditySUI is an operational test to add liquidity in the ZETA/SUI pool
 func TestOperationAddLiquiditySUI(r *runner.E2ERunner, args []string) {
 	liqZETA, liqSUI := parseArgsForAddLiquidity(r, args)
-	r.AddLiquidityERC20(liqZETA, liqSUI)
+	r.AddLiquiditySUI(liqZETA, liqSUI)
 }
 
 // TestOperationAddLiquiditySuiFungibleToken is an operational test to add liquidity in the ZETA/SuiFungibleToken pool
@@ -63,5 +63,5 @@ func TestOperationAddLiquiditySuiFungibleToken(r *runner.E2ERunner, args []strin
 // TestOperationAddLiquidityTON is an operational test to add liquidity in the ZETA/TON pool
 func TestOperationAddLiquidityTON(r *runner.E2ERunner, args []string) {
 	liqZETA, liqTON := parseArgsForAddLiquidity(r, args)
-	r.AddLiquidityERC20(liqZETA, liqTON)
+	r.AddLiquidityTON(liqZETA, liqTON)
 }
