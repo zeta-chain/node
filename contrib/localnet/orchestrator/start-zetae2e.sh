@@ -183,7 +183,7 @@ if host ton > /dev/null; then
   ./wait-for-ton.sh
 fi
 
-[[ -n $CI ]] && echo "::endgroup::"
+[[ -n $CI ]] && echo -e "\n::endgroup::"
 
 # need to make the directory if it was not mounted as a volume
 mkdir -p /root/state
@@ -202,7 +202,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
       echo "e2e setup failed"
       exit 1
     fi
-    [[ -n $CI ]] && echo "::endgroup::"
+    [[ -n $CI ]] && echo -e "\n::endgroup::"
   else
     echo "skipping e2e setup because it has already been completed"
   fi
@@ -249,7 +249,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
       echo "e2e setup failed"
       exit 1
     fi
-    [[ -n $CI ]] && echo "::endgroup::"
+    [[ -n $CI ]] && echo -e "\n::endgroup::"
   else
     echo "skipping e2e setup because it has already been completed"
   fi
@@ -323,7 +323,7 @@ else
       echo "e2e setup failed"
       exit 1
     fi
-    [[ -n $CI ]] && echo "::endgroup::"
+    [[ -n $CI ]] && echo -e "\n::endgroup::"
   else
     echo "skipping e2e setup because it has already been completed"
   fi
