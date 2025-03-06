@@ -74,6 +74,14 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 	if len(ballotsRes.Ballots) < 1 {
 		return
 	}
+
+	r.Logger.Print("Current block height: ", currentBlockHeight)
+	r.Logger.Print("Stale block start: ", staleBlockStart)
+	r.Logger.Print("Maturing block height: ", emissionsParams.Params.BallotMaturityBlocks)
+	for _, ballot := range ballotsRes.Ballots {
+		r.Logger.Print("Ballot: %s Creation Height %d", ballot.BallotIdentifier, ballot.BallotCreationHeight)
+	}
+
 	firstBallotCreationHeight := int64(0)
 
 	for _, ballot := range ballotsRes.Ballots {
@@ -82,6 +90,8 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 			break
 		}
 	}
+
+	r.Logger.Print("First finalized ballot creation height: ", firstBallotCreationHeight)
 
 	if firstBallotCreationHeight == 0 {
 		return
