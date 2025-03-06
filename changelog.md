@@ -1,7 +1,5 @@
 # CHANGELOG
 
-
-## Unreleased
 ## v29.0.0
 
 ### Breaking Changes
