@@ -45,19 +45,9 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			return errors.Wrapf(err, "failed to get balance for observer before withdrawing emissions %s", observer)
 		}
 
-		availableAmount, err := r.EmissionsClient.ShowAvailableEmissions(
-			r.Ctx,
-			&emissionstypes.QueryShowAvailableEmissionsRequest{
-				Address: observer,
-			},
-		)
+		availableCoin, err := r.FetchWithdrawAbleEmissiosn(observer)
 		if err != nil {
-			return fmt.Errorf("failed to get available emissions for observer %s: %w", observer, err)
-		}
-
-		availableCoin, err := sdk.ParseCoinNormalized(availableAmount.Amount)
-		if err != nil {
-			return fmt.Errorf("failed to parse coin amount: %w", err)
+			return err
 		}
 
 		if availableCoin.Amount.IsZero() {
@@ -66,6 +56,14 @@ func (r *E2ERunner) WithdrawEmissions() error {
 		}
 
 		if err := r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer); err != nil {
+			r.Logger.Print("failed to withdraw emissions for observer %s: %s", observer, err)
+			r.Logger.Print("Withdraw amount: %s", availableCoin.Amount)
+			availableCoinAfter, fetchErr := r.FetchWithdrawAbleEmissiosn(observer)
+			if fetchErr != nil {
+				r.Logger.Print("failed to fetch available emissions for observer %s: %s", observer, fetchErr)
+				return err
+			}
+			r.Logger.Print("Available emissions after failed withdrawal: %s", availableCoinAfter.Amount)
 			return err
 		}
 
@@ -86,4 +84,22 @@ func (r *E2ERunner) WithdrawEmissions() error {
 	}
 
 	return nil
+}
+
+func (r *E2ERunner) FetchWithdrawAbleEmissiosn(observer string) (sdk.Coin, error) {
+	availableAmount, err := r.EmissionsClient.ShowAvailableEmissions(
+		r.Ctx,
+		&emissionstypes.QueryShowAvailableEmissionsRequest{
+			Address: observer,
+		},
+	)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to get available emissions for observer %s: %w", observer, err)
+	}
+
+	availableCoin, err := sdk.ParseCoinNormalized(availableAmount.Amount)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to parse coin amount: %w", err)
+	}
+	return availableCoin, nil
 }

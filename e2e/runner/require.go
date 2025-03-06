@@ -75,9 +75,6 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 		return
 	}
 
-	r.Logger.Print("Current block height: ", currentBlockHeight)
-	r.Logger.Print("Stale block start: ", staleBlockStart)
-	r.Logger.Print("Maturing block height: ", emissionsParams.Params.BallotMaturityBlocks)
 	for _, ballot := range ballotsRes.Ballots {
 		r.Logger.Print("Ballot: %s Creation Height %d", ballot.BallotIdentifier, ballot.BallotCreationHeight)
 	}
@@ -91,10 +88,16 @@ func (r *E2ERunner) EnsureNoStaleBallots() {
 		}
 	}
 
-	r.Logger.Print("First finalized ballot creation height: ", firstBallotCreationHeight)
-
 	if firstBallotCreationHeight == 0 {
 		return
+	}
+	// Log data for debugging
+	if firstBallotCreationHeight < staleBlockStart {
+		r.Logger.Print("First finalized ballot creation height: %d is less than stale block start: %d", firstBallotCreationHeight, staleBlockStart)
+		for _, ballot := range ballotsRes.Ballots {
+			r.Logger.Print("Ballot: %s Creation Height %d BallotStatus %s\n", ballot.BallotIdentifier, ballot.BallotCreationHeight, ballot.BallotStatus)
+		}
+		r.Logger.Print("Block Maturity Height: %s", emissionsParams.Params.BallotMaturityBlocks)
 	}
 	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }
