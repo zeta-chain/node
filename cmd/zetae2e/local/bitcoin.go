@@ -95,7 +95,6 @@ func bitcoinTestRoutines(
 		color.FgYellow,
 		verbose,
 		initNetwork,
-		true,
 	)
 
 	// initialize runner for withdraw tests
@@ -109,7 +108,6 @@ func bitcoinTestRoutines(
 		color.FgHiYellow,
 		verbose,
 		initNetwork,
-		false,
 	)
 
 	// initialize funds
@@ -140,7 +138,7 @@ func initBitcoinRunner(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	printColor color.Attribute,
-	verbose, initNetwork, createWallet bool,
+	verbose, initNetwork bool,
 ) *runner.E2ERunner {
 	// initialize runner for bitcoin test
 	runner, err := initTestRunner(
