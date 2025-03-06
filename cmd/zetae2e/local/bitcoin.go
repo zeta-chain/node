@@ -153,8 +153,7 @@ func initBitcoinRunner(
 	)
 	testutil.NoError(err)
 
-	// setup TSS address and setup deployer wallet
-	runner.SetupBitcoinAccounts(createWallet)
+	runner.BTCDeployerAddress, _ = deployerRunner.GetBtcAddress()
 
 	// initialize funds
 	if initNetwork {

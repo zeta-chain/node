@@ -229,6 +229,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
+		// setup TSS address and setup deployer wallet
+		deployerRunner.SetupBitcoinAccounts(true)
+
 		//setup protocol contracts v1 as they are still supported for now
 		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
