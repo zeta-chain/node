@@ -180,29 +180,6 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		},
 	}
 
-	// release v28 does not support ConfirmationParams
-	// TODO: cleanup after v29
-	// https://github.com/zeta-chain/node/issues/3545
-	if r.IsRunningUpgrade() {
-		chainParams = &observertypes.ChainParams{
-			ChainId:                     chainID,
-			ConfirmationCount:           32,
-			ZetaTokenContractAddress:    constant.EVMZeroAddress,
-			ConnectorContractAddress:    constant.EVMZeroAddress,
-			Erc20CustodyContractAddress: constant.EVMZeroAddress,
-			GasPriceTicker:              5,
-			WatchUtxoTicker:             0,
-			InboundTicker:               2,
-			OutboundTicker:              2,
-			OutboundScheduleInterval:    2,
-			OutboundScheduleLookahead:   5,
-			BallotThreshold:             observertypes.DefaultBallotThreshold,
-			MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
-			IsSupported:                 true,
-			GatewayAddress:              r.GatewayProgram.String(),
-		}
-	}
-
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast solana chain params tx")
 	}
