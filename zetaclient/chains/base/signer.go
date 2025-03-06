@@ -112,7 +112,7 @@ func (s *Signer) Unlock() {
 	s.mu.Unlock()
 }
 
-// MarkOutboundActive marks the outbound as active.
+// MarkOutbound marks the outbound as active.
 func (s *Signer) MarkOutbound(outboundID string, active bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
