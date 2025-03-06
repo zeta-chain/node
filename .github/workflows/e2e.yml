@@ -261,10 +261,10 @@ jobs:
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-performance-test"
-            runs-on: ubuntu-22.04
+            runs-on: buildjet-8vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
           - make-target: "start-e2e-performance-test-1k"
-            runs-on: ubuntu-22.04
+            runs-on: buildjet-8vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K == 'true' }}
             timeout-minutes: 60
           - make-target: "start-e2e-import-mainnet-test"
