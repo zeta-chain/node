@@ -52,8 +52,8 @@ func (_m *ZetacoreClient) WithPostVoteInbound(zetaTxHash string, ballotIndex str
 	return _m
 }
 
-func (_m *ZetacoreClient) MockGetCctxByHash(cctxIndex string, err error) *ZetacoreClient {
-	_m.On("GetCctxByHash", mock.Anything, cctxIndex).Return(nil, err)
+func (_m *ZetacoreClient) MockGetCctxByHash(err error) *ZetacoreClient {
+	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
 	return _m
 }
 
