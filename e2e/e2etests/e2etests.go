@@ -183,7 +183,7 @@ const (
 	TestOperationAddLiquiditySOLName              = "add_liquidity_sol"
 	TestOperationAddLiquiditySPLName              = "add_liquidity_spl"
 	TestOperationAddLiquiditySUIName              = "add_liquidity_sui"
-	TestOperationAddLiquiditySuiFungibleTokenName = "add_liquidity_sui_fungible_token"
+	TestOperationAddLiquiditySuiFungibleTokenName = "add_liquidity_sui_fungible_token" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestOperationAddLiquidityTONName              = "add_liquidity_ton"
 
 	/*
