@@ -194,7 +194,7 @@ func (c *Client) SuiExecuteTransactionBlock(
 		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
 	}
 
-	return parseRPC[models.SuiTransactionBlockResponse]([]byte(resString))
+	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
 }
 
 // EncodeCursor encodes event ID into cursor.
@@ -219,8 +219,8 @@ func DecodeCursor(cursor string) (*models.EventId, error) {
 	}, nil
 }
 
-// parseRPC RPC response into a given type.
-func parseRPC[T any](raw []byte) (T, error) {
+// parseRPCResponse RPC response into a given type.
+func parseRPCResponse[T any](raw []byte) (T, error) {
 	// {
 	//   "jsonrpc": "2.0",
 	//   "id": 1,

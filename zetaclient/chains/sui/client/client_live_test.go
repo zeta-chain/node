@@ -118,7 +118,7 @@ func TestClientLive(t *testing.T) {
 	})
 }
 
-func TestParseRPC(t *testing.T) {
+func TestParseRPCResponse(t *testing.T) {
 	// ARRANGE
 	const raw = `{
 		"jsonrpc": "2.0",
@@ -130,7 +130,7 @@ func TestParseRPC(t *testing.T) {
 	}`
 
 	// ACT
-	out, err := parseRPC[models.SuiTransactionBlockResponse]([]byte(raw))
+	out, err := parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(raw))
 
 	// ASSERT
 	require.NoError(t, err)
