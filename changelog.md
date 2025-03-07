@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Fixes
+
+* [3674](https://github.com/zeta-chain/node/pull/3674) - increase EVM chain gasLimit to 25000 to avoid the gas token transfer error `intrinsic gas too low` on Arbitrum
+
 ## v29.0.0
 
 ### Breaking Changes
