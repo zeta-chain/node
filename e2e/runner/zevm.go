@@ -300,7 +300,7 @@ func (r *E2ERunner) waitForBlock(n int64) error {
 		return err
 	}
 	if height.Height < n {
-		return fmt.Errorf("waiting for %d blocks, current height %d", n, height.Height)
+		return fmt.Errorf("waiting for height: %d, current height: %d", n, height.Height)
 	}
 	return nil
 }
