@@ -109,6 +109,8 @@ type ZetacoreClient interface {
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
+	GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error)
+	GetCctxByHash(ctx context.Context, sendHash string) (*crosschaintypes.CrossChainTx, error)
 }
 
 // EVMRPCClient is the interface for EVM RPC client

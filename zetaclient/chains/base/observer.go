@@ -12,6 +12,8 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -399,6 +401,24 @@ func (ob *Observer) PostVoteInbound(
 		logs.FieldTx:               txHash,
 		logs.FieldCoinType:         coinType.String(),
 		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
+	}
+
+	cctxIndex := msg.Digest()
+	// The cctx is created after the inbound ballot is finalized
+	// 1. if the cctx already exists, we could try voting if the ballot is present
+	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
+	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
+	if err == nil {
+		// The cctx exists we should still vote if the ballot is present
+		_, ballotErr := ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
+		if ballotErr != nil {
+			// Verify ballot is not found
+			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
+				// Query for ballot failed, the ballot does not exist we can return
+				ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+				return cctxIndex, nil
+			}
+		}
 	}
 
 	// make sure the message is valid to avoid unnecessary retries

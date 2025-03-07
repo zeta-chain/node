@@ -7,6 +7,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 )
 
@@ -61,6 +62,21 @@ func (_m *ZetacoreClient) WithRateLimiterFlags(flags *crosschaintypes.RateLimite
 		on.Return(crosschaintypes.RateLimiterFlags{}, errSomethingIsWrong)
 	}
 
+	return _m
+}
+
+func (_m *ZetacoreClient) MockGetCctxByHash(err error) *ZetacoreClient {
+	_m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, err)
+	return _m
+}
+
+func (_m *ZetacoreClient) MockGetBallotByID(ballotIndex string, err error) *ZetacoreClient {
+	_m.On("GetBallotByID", mock.Anything, ballotIndex).Return(&observertypes.QueryBallotByIdentifierResponse{
+		BallotIdentifier: ballotIndex,
+		Voters:           nil,
+		ObservationType:  observertypes.ObservationType_InboundTx,
+		BallotStatus:     observertypes.BallotStatus_BallotInProgress,
+	}, err)
 	return _m
 }
 
