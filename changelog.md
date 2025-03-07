@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Features
+
+* [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
+
 ## v29.0.0
 
 ### Breaking Changes
