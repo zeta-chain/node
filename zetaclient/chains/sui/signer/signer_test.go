@@ -64,8 +64,8 @@ func TestSigner(t *testing.T) {
 				ts.Gateway.ObjectID(),
 				amount.String(),
 				fmt.Sprintf("%d", nonce),
-				"42000",
 				receiver,
+				"42000",
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
