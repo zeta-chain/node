@@ -259,7 +259,6 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	if err != nil {
 		return
 	}
-	r.Logger.Print("Waiting for %d blocks from %d", n, height.Height)
 	call := func() error {
 		return retry.Retry(r.waitForBlock(height.Height + n))
 	}
@@ -267,12 +266,6 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	bo := backoff.NewConstantBackOff(time.Second * 5)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
-
-	height, err = r.CctxClient.LastZetaHeight(r.Ctx, &types.QueryLastZetaHeightRequest{})
-	if err != nil {
-		return
-	}
-	r.Logger.Print("Waited for %d blocks, current height %d", n, height.Height)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
 
