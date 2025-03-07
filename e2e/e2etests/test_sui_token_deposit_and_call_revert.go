@@ -45,7 +45,8 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
 	require.Greater(r, balanceAfter, balanceBefore-amount.Uint64())
 
-	// check the TSS balance is left unchanged (tx fees are refunded)
+	// check the TSS balance after transaction is higher or equal to the balance before
+	// reason is that the max budget is refunded to the TSS
 	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
-	require.EqualValues(r, tssBalanceBefore, tssBalanceAfter)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
 }

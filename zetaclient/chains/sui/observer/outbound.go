@@ -19,7 +19,7 @@ import (
 
 // https://github.com/zeta-chain/protocol-contracts-sui/blob/9d08a70817d8cc7cf799b9ae12c59b6e0b8aaab9/sources/gateway.move#L125
 // (excluding last arg of `ctx`)
-const expectedWithdrawArgs = 5
+const expectedWithdrawArgs = 6
 
 // 50 SUI
 // https://docs.sui.io/concepts/tokenomics/gas-in-sui#gas-budgets
