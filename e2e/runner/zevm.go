@@ -262,9 +262,9 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	call := func() error {
 		return retry.Retry(r.waitForBlock(height.Height + n))
 	}
-
-	bo := backoff.NewConstantBackOff(time.Second * 5)
-	boWithMaxRetries := backoff.WithMaxRetries(bo, 10)
+	retryBuffer := uint64(20)
+	bo := backoff.NewConstantBackOff(time.Second * 6)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, uint64(n)+retryBuffer)
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
 }
