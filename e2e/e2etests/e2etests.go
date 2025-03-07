@@ -176,10 +176,15 @@ const (
 	 Operational tests
 	 Not used to test functionalities but do various interactions with the netwoks
 	*/
-	TestDeploy                         = "deploy"
-	TestOperationAddLiquidityETHName   = "add_liquidity_eth"
-	TestOperationAddLiquidityERC20Name = "add_liquidity_erc20"
-	TestOperationAddLiquiditySPLName   = "add_liquidity_spl"
+	TestDeploy                                    = "deploy"
+	TestOperationAddLiquidityETHName              = "add_liquidity_eth"
+	TestOperationAddLiquidityERC20Name            = "add_liquidity_erc20"
+	TestOperationAddLiquidityBTCName              = "add_liquidity_btc"
+	TestOperationAddLiquiditySOLName              = "add_liquidity_sol"
+	TestOperationAddLiquiditySPLName              = "add_liquidity_spl"
+	TestOperationAddLiquiditySUIName              = "add_liquidity_sui"
+	TestOperationAddLiquiditySuiFungibleTokenName = "add_liquidity_sui_fungible_token" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestOperationAddLiquidityTONName              = "add_liquidity_ton"
 
 	/*
 	 Stateful precompiled contracts tests
@@ -548,6 +553,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallName,
@@ -556,6 +562,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallRevertWithCallName,
@@ -564,6 +571,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawAndCallRevertWithCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallName,
@@ -572,6 +580,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCall,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCallRevertName,
@@ -580,6 +589,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallName,
@@ -596,6 +606,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in spl tokens", DefaultValue: "100000"},
 		},
 		TestSPLWithdraw,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawAndCreateReceiverAtaName,
@@ -604,6 +615,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in spl tokens", DefaultValue: "1000000"},
 		},
 		TestSPLWithdrawAndCreateReceiverAta,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertName,
@@ -612,12 +624,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCallRevert,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertWithDustName,
 		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
 		[]runner.ArgDefinition{},
 		TestSolanaDepositAndCallRevertWithDust,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositRestrictedName,
@@ -636,12 +650,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWhitelistSPLName,
 		"whitelist SPL",
 		[]runner.ArgDefinition{},
 		TestSolanaWhitelistSPL,
+		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLDepositName,
@@ -1188,6 +1204,24 @@ var AllE2ETests = []runner.E2ETest{
 		TestOperationAddLiquidityERC20,
 	),
 	runner.NewE2ETest(
+		TestOperationAddLiquidityBTCName,
+		"add liquidity to the ZETA/BTC pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountBTC", DefaultValue: "5000000000"},
+		},
+		TestOperationAddLiquidityBTC,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquiditySOLName,
+		"add liquidity to the ZETA/SOL pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountSOL", DefaultValue: "50000000000"},
+		},
+		TestOperationAddLiquiditySOL,
+	),
+	runner.NewE2ETest(
 		TestOperationAddLiquiditySPLName,
 		"add liquidity to the ZETA/SPL pool",
 		[]runner.ArgDefinition{
@@ -1195,6 +1229,33 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amountSPL", DefaultValue: "50000000000000000000"},
 		},
 		TestOperationAddLiquiditySPL,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquiditySUIName,
+		"add liquidity to the ZETA/SUI pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountSUI", DefaultValue: "50000000000"},
+		},
+		TestOperationAddLiquiditySUI,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquiditySuiFungibleTokenName,
+		"add liquidity to the ZETA/SuiFungibleToken pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountSuiFungibleToken", DefaultValue: "50000000"},
+		},
+		TestOperationAddLiquiditySuiFungibleToken,
+	),
+	runner.NewE2ETest(
+		TestOperationAddLiquidityTONName,
+		"add liquidity to the ZETA/TON pool",
+		[]runner.ArgDefinition{
+			{Description: "amountZETA", DefaultValue: "50000000000000000000"},
+			{Description: "amountTON", DefaultValue: "50000000000"},
+		},
+		TestOperationAddLiquidityTON,
 	),
 	/*
 	 Stateful precompiled contracts tests

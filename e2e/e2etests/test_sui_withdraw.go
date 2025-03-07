@@ -18,7 +18,7 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	r.SuiApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
 	tx := r.SuiWithdrawSUI(signer.Address(), amount)

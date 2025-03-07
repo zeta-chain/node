@@ -45,16 +45,6 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 	return balance
 }
 
-// SuiApproveSUIZRC20 approves SUI ZRC20 on EVM to a specific address
-func (r *E2ERunner) SuiApproveSUIZRC20(allowed ethcommon.Address) {
-	r.approveZRC20(allowed, r.SUIZRC20)
-}
-
-// SuiApproveFungibleTokenZRC20 approves Sui fungible token ZRC20 on EVM to a specific address
-func (r *E2ERunner) SuiApproveFungibleTokenZRC20(allowed ethcommon.Address) {
-	r.approveZRC20(allowed, r.SuiTokenZRC20)
-}
-
 // SuiWithdrawSUI calls Withdraw of Gateway with SUI Zrc20 on ZEVM
 func (r *E2ERunner) SuiWithdrawSUI(
 	receiver string,

@@ -85,6 +85,8 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		return errors.Wrap(err, "unable to broadcast tx")
 	}
 
+	s.Logger().Std.Info().Str(logs.FieldTx, txDigest).Msg("Broadcasted transaction")
+
 	logger := s.Logger().Std.With().
 		Str(logs.FieldMethod, "reportToOutboundTracker").
 		Int64(logs.FieldChain, s.Chain().ChainId).
