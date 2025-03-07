@@ -75,11 +75,13 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 					cctx.Index,
 				)
 			}
+			onChainDuration := time.Second * time.Duration(cctx.CctxStatus.LastUpdateTimestamp-cctx.CctxStatus.CreatedTimestamp)
 			timeToFinalized := time.Since(segmentStartTime)
 			totalTime := timeToOutboundHash + timeToFinalized
-			r.Logger.Print("index %d: withdraw SOL cctx success in %s (outbound hash: %s + finalized: %s)",
+			r.Logger.Print("index %d: withdraw SOL cctx success in %s (on chain %s) (outbound hash: %s + finalized: %s)",
 				i,
 				formatDuration(totalTime),
+				formatDuration(onChainDuration),
 				formatDuration(timeToOutboundHash),
 				formatDuration(timeToFinalized),
 			)
