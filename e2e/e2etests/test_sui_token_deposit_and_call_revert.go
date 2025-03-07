@@ -20,6 +20,7 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 	balanceBefore := r.SuiGetFungibleTokenBalance(signer.Address())
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
 
 	// add liquidity in pool to allow revert fee to be paid
 	zetaAmount := big.NewInt(1e18)
@@ -43,4 +44,8 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// reason it's not equal is because of the gas fee for revert
 	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
 	require.Greater(r, balanceAfter, balanceBefore-amount.Uint64())
+
+	// check the TSS balance is left unchanged (tx fees are refunded)
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.EqualValues(r, tssBalanceBefore, tssBalanceAfter)
 }

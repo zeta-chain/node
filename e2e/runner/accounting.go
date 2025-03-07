@@ -47,6 +47,9 @@ func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
 
 	err = r.CheckBTCTSSBalance()
 	require.NoError(r, err, "BTC balance check failed")
+
+	err = r.checkSuiTSSBalance()
+	require.NoError(r, err, "SUI balance check failed")
 }
 
 func (r *E2ERunner) checkETHTSSBalance() error {
@@ -165,6 +168,36 @@ func (r *E2ERunner) CheckSolanaTSSBalance() error {
 		"SOL: Gateway PDA Received (%d) >= ZRC20 TotalSupply (%d)",
 		pdaReceivedAmount,
 		zrc20Supply.Int64()-ZRC20SOLInitialSupply,
+	)
+
+	return nil
+}
+
+// checkSuiTSSBalance compares the TSS balance with the total supply of the SUI ZRC20 on ZetaChain
+func (r *E2ERunner) checkSuiTSSBalance() error {
+	zrc20Supply, err := r.SUIZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		return err
+	}
+
+	tssBalance := r.SuiGetSUIBalance(r.SuiTSSAddress)
+
+	// the SUI balance in TSS must not be less than the total supply on ZetaChain
+	// the amount minted to initialize the pool is subtracted from the total supply
+	// #nosec G701 test - always in range
+	if tssBalance < zrc20Supply.Uint64() {
+		// #nosec G701 test - always in range
+		return fmt.Errorf(
+			"SUI: TSS Balance (%d) < ZRC20 TotalSupply (%d)",
+			tssBalance,
+			zrc20Supply.Uint64()-10000000,
+		)
+	}
+	// #nosec G115 test - always in range
+	r.Logger.Info(
+		"SUI: TSS Balance (%d) >= ZRC20 TotalSupply (%d)",
+		tssBalance,
+		zrc20Supply.Uint64()-10000000,
 	)
 
 	return nil

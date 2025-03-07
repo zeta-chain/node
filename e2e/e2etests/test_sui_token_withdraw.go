@@ -15,6 +15,7 @@ func TestSuiTokenWithdraw(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "get deployer signer")
 
 	balanceBefore := r.SuiGetFungibleTokenBalance(signer.Address())
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
 
 	amount := utils.ParseBigInt(r, args[0])
 
@@ -32,4 +33,8 @@ func TestSuiTokenWithdraw(r *runner.E2ERunner, args []string) {
 	// check the balance after the withdraw
 	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
 	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
+
+	// check the TSS balance is left unchanged (tx fees are refunded)
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.EqualValues(r, tssBalanceBefore, tssBalanceAfter)
 }
