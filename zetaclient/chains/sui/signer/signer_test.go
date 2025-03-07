@@ -43,6 +43,9 @@ func TestSigner(t *testing.T) {
 			Amount:          amount,
 			TssNonce:        nonce,
 			GasPrice:        "1000",
+			CallOptions: &cc.CallOptions{
+				GasLimit: 42,
+			},
 		}}
 
 		// Given mocked WithdrawCapID
@@ -61,6 +64,7 @@ func TestSigner(t *testing.T) {
 				ts.Gateway.ObjectID(),
 				amount.String(),
 				fmt.Sprintf("%d", nonce),
+				"42000",
 				receiver,
 				withdrawCapID,
 			}
