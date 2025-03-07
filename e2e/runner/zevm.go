@@ -264,6 +264,7 @@ func (r *E2ERunner) WaitForBlocks(n int64) {
 	}
 	retryBuffer := uint64(20)
 	bo := backoff.NewConstantBackOff(time.Second * 6)
+	// #nosec G115 always in range
 	boWithMaxRetries := backoff.WithMaxRetries(bo, uint64(n)+retryBuffer)
 	err = retry.DoWithBackoff(call, boWithMaxRetries)
 	require.NoError(r, err, "failed to wait for %d blocks", n)
