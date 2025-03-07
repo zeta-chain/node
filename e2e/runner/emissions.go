@@ -86,7 +86,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 	return nil
 }
 
-func (r *E2ERunner) FetchWithdrawAbleEmissiosn(observer string) (sdk.Coin, error) {
+func (r *E2ERunner) FetchWithdrawableEmissions(observer string) (sdk.Coin, error) {
 	availableAmount, err := r.EmissionsClient.ShowAvailableEmissions(
 		r.Ctx,
 		&emissionstypes.QueryShowAvailableEmissionsRequest{
@@ -94,12 +94,12 @@ func (r *E2ERunner) FetchWithdrawAbleEmissiosn(observer string) (sdk.Coin, error
 		},
 	)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to get available emissions for observer %s: %w", observer, err)
+		return sdk.Coin{}, errors.Wrapf(err, "failed to get available emissions for observer %s", observer)
 	}
 
 	availableCoin, err := sdk.ParseCoinNormalized(availableAmount.Amount)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to parse coin amount: %w", err)
+		return sdk.Coin{}, errors.Wrap(err, "failed to parse coin amount")
 	}
 	return availableCoin, nil
 }
