@@ -60,7 +60,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			r.Logger.Error("Withdraw amount: %s", availableCoin.Amount)
 			availableCoinAfter, fetchErr := r.FetchWithdrawableEmissions(observer)
 			if fetchErr != nil {
-				r.Logger.Print("failed to fetch available emissions for observer %s: %s", observer, fetchErr)
+				r.Logger.Error("failed to fetch available emissions for observer %s: %s", observer, fetchErr)
 				return err
 			}
 			r.Logger.Error("Available emissions after failed withdrawal: %s", availableCoinAfter.Amount)
