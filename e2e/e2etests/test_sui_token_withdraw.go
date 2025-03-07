@@ -18,8 +18,8 @@ func TestSuiTokenWithdraw(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	r.SuiApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
-	r.SuiApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
+	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
 	tx := r.SuiWithdrawFungibleToken(signer.Address(), amount)
