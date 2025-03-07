@@ -103,6 +103,9 @@ func (r *E2ERunner) GetE2ETestsToRunByConfig(
 		if !found {
 			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
 		}
+		if r.TestFilter != nil && !r.TestFilter.MatchString(e2eTest.Name) {
+			continue
+		}
 		e2eTestToRun := E2ETest{
 			Name:           e2eTest.Name,
 			Description:    e2eTest.Description,
