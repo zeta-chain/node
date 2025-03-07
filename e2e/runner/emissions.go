@@ -56,14 +56,14 @@ func (r *E2ERunner) WithdrawEmissions() error {
 		}
 
 		if err := r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer); err != nil {
-			r.Logger.Print("failed to withdraw emissions for observer %s: %s", observer, err)
-			r.Logger.Print("Withdraw amount: %s", availableCoin.Amount)
+			r.Logger.Error("failed to withdraw emissions for observer %s: %s", observer, err)
+			r.Logger.Error("Withdraw amount: %s", availableCoin.Amount)
 			availableCoinAfter, fetchErr := r.FetchWithdrawAbleEmissiosn(observer)
 			if fetchErr != nil {
 				r.Logger.Print("failed to fetch available emissions for observer %s: %s", observer, fetchErr)
 				return err
 			}
-			r.Logger.Print("Available emissions after failed withdrawal: %s", availableCoinAfter.Amount)
+			r.Logger.Error("Available emissions after failed withdrawal: %s", availableCoinAfter.Amount)
 			return err
 		}
 
