@@ -45,7 +45,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 			return errors.Wrapf(err, "failed to get balance for observer before withdrawing emissions %s", observer)
 		}
 
-		availableCoin, err := r.FetchWithdrawAbleEmissiosn(observer)
+		availableCoin, err := r.FetchWithdrawableEmissions(observer)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ func (r *E2ERunner) WithdrawEmissions() error {
 		if err := r.ZetaTxServer.WithdrawAllEmissions(availableCoin.Amount, e2eutils.UserEmissionsWithdrawName, observer); err != nil {
 			r.Logger.Error("failed to withdraw emissions for observer %s: %s", observer, err)
 			r.Logger.Error("Withdraw amount: %s", availableCoin.Amount)
-			availableCoinAfter, fetchErr := r.FetchWithdrawAbleEmissiosn(observer)
+			availableCoinAfter, fetchErr := r.FetchWithdrawableEmissions(observer)
 			if fetchErr != nil {
 				r.Logger.Print("failed to fetch available emissions for observer %s: %s", observer, fetchErr)
 				return err
