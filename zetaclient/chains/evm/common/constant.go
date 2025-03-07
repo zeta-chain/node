@@ -14,7 +14,9 @@ const (
 	OutboundTrackerReportTimeout = 10 * time.Minute
 
 	// EthTransferGasLimit is the gas limit for a standard ETH transfer
-	EthTransferGasLimit = 21000
+	// Not all EVM chains use the same 21000 gas limit for gas token transfers, e.g. Arbitrum uses more than 21000.
+	// We choose a slightly higher number (25000) to make it compatible with all EVM chains.
+	EthTransferGasLimit = 25000
 
 	// TopicsZetaSent is the number of topics for a Zeta sent event
 	// [signature, zetaTxSenderAddress, destinationChainId]
