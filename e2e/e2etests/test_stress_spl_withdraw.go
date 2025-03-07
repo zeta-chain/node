@@ -54,7 +54,7 @@ func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 		i := i
 
 		// execute the withdraw SPL transaction
-		tx, err = r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSPLAmount)
+		tx, err := r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSPLAmount)
 		require.NoError(r, err)
 
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

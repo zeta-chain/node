@@ -44,7 +44,7 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 		i := i
 
 		// execute the withdraw SOL transaction
-		tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSOLAmount)
+		tx, err := r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSOLAmount)
 		require.NoError(r, err)
 
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -75,13 +75,12 @@ func TestStressSolanaWithdraw(r *runner.E2ERunner, args []string) {
 					cctx.Index,
 				)
 			}
-			onChainDuration := time.Second * time.Duration(cctx.CctxStatus.LastUpdateTimestamp-cctx.CctxStatus.CreatedTimestamp)
 			timeToFinalized := time.Since(segmentStartTime)
 			totalTime := timeToOutboundHash + timeToFinalized
-			r.Logger.Print("index %d: withdraw SOL cctx success in %s (on chain %s) (outbound hash: %s + finalized: %s)",
+			r.Logger.Print(
+				"index %d: withdraw SOL cctx success in %s (outbound hash: %s + finalized: %s)",
 				i,
 				formatDuration(totalTime),
-				formatDuration(onChainDuration),
 				formatDuration(timeToOutboundHash),
 				formatDuration(timeToFinalized),
 			)
