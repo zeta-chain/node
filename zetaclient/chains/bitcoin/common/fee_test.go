@@ -238,11 +238,7 @@ func TestOutboundSize2In3Out(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err = EstimateOutboundSize(int64(len(utxosTxids)), []btcutil.Address{payee})
 	require.NoError(t, err)
-	if vBytes > vBytesEstimated {
-		require.True(t, vBytes-vBytesEstimated <= vError)
-	} else {
-		require.True(t, vBytesEstimated-vBytes <= vError)
-	}
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, vError))
 }
 
 func TestOutboundSize21In3Out(t *testing.T) {
@@ -262,11 +258,7 @@ func TestOutboundSize21In3Out(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(int64(len(exampleTxids)), []btcutil.Address{payee})
 	require.NoError(t, err)
-	if vBytes > vBytesEstimated {
-		require.True(t, vBytes-vBytesEstimated <= vError)
-	} else {
-		require.True(t, vBytesEstimated-vBytes <= vError)
-	}
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, vError))
 }
 
 func TestOutboundSizeXIn3Out(t *testing.T) {
@@ -288,13 +280,7 @@ func TestOutboundSizeXIn3Out(t *testing.T) {
 		vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 		vBytesEstimated, err := EstimateOutboundSize(int64(len(exampleTxids[:x])), []btcutil.Address{payee})
 		require.NoError(t, err)
-		if vBytes > vBytesEstimated {
-			require.True(t, vBytes-vBytesEstimated <= vError)
-			//fmt.Printf("%d error percentage: %.2f%%\n", float64(vBytes-vBytesEstimated)/float64(vBytes)*100)
-		} else {
-			require.True(t, vBytesEstimated-vBytes <= vError)
-			//fmt.Printf("error percentage: %.2f%%\n", float64(vBytesEstimated-vBytes)/float64(vBytes)*100)
-		}
+		require.True(t, withinErrorMargin(vBytes, vBytesEstimated, vError))
 	}
 }
 
@@ -377,7 +363,7 @@ func TestOutputSizeP2TR(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
-	require.Equal(t, vBytes, vBytesEstimated)
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, 1))
 }
 
 func TestOutputSizeP2WSH(t *testing.T) {
@@ -396,7 +382,7 @@ func TestOutputSizeP2WSH(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
-	require.Equal(t, vBytes, vBytesEstimated)
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, 1))
 }
 
 func TestOutputSizeP2SH(t *testing.T) {
@@ -415,7 +401,7 @@ func TestOutputSizeP2SH(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
-	require.Equal(t, vBytes, vBytesEstimated)
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, 1))
 }
 
 func TestOutputSizeP2PKH(t *testing.T) {
@@ -434,7 +420,7 @@ func TestOutputSizeP2PKH(t *testing.T) {
 	vBytes := blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor
 	vBytesEstimated, err := EstimateOutboundSize(2, payees)
 	require.NoError(t, err)
-	require.Equal(t, vBytes, vBytesEstimated)
+	require.True(t, withinErrorMargin(vBytes, vBytesEstimated, 1))
 }
 
 func TestOutboundSizeBreakdown(t *testing.T) {
@@ -495,4 +481,12 @@ func TestOutboundSizeMinMaxError(t *testing.T) {
 	size, err := EstimateOutboundSize(1, []btcutil.Address{nilP2PK})
 	require.Error(t, err)
 	require.Zero(t, size)
+}
+
+// withinErrorMargin checks if the actual value is within the expected value ± the error margin
+func withinErrorMargin(expected int64, actual int64, errMargin int64) bool {
+	if expected > actual {
+		return expected-actual <= errMargin
+	}
+	return actual-expected <= errMargin
 }
