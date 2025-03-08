@@ -27,8 +27,7 @@ func Test_ParsePubKeysFromPath(t *testing.T) {
 			// ARRANGE
 			logger := zerolog.New(zerolog.NewTestWriter(t))
 
-			dir, err := os.MkdirTemp("", "test-tss")
-			require.NoError(t, err)
+			dir := t.TempDir()
 
 			generateKeyShareFiles(t, tt.n, dir)
 
