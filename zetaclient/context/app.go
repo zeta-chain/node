@@ -3,6 +3,7 @@ package context
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -10,7 +11,6 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

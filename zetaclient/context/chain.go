@@ -3,11 +3,11 @@ package context
 import (
 	"cmp"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observer "github.com/zeta-chain/node/x/observer/types"
