@@ -210,6 +210,15 @@ func MatchReverted() WaitOpts {
 	})
 }
 
+// HasOutboundTxHash returns true when the CCTX has been assigned an outbound hash.
+// This now happens when the first tracker is written.
+func HasOutboundTxHash() WaitOpts {
+	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		return len(tx.OutboundParams) > 0 &&
+			tx.OutboundParams[0].Hash != ""
+	})
+}
+
 // Matches adds a filter to WaitCctxByInboundHash that checks cctxs match provided callback.
 // ALL cctxs should match this filter.
 func Matches(fn func(tx crosschaintypes.CrossChainTx) bool) WaitOpts {
@@ -228,10 +237,9 @@ func WaitCctxRevertedByInboundHash(
 	c CCTXClient,
 ) crosschaintypes.CrossChainTx {
 	// wait for cctx to be reverted
-	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
-	require.Len(t, cctxs, 1)
+	cctx := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
 
-	return cctxs[0]
+	return cctx
 }
 
 // WaitCctxAbortedByInboundHash waits until cctx is aborted by inbound hash.
@@ -242,10 +250,9 @@ func WaitCctxAbortedByInboundHash(
 	c CCTXClient,
 ) crosschaintypes.CrossChainTx {
 	// wait for cctx to be aborted
-	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
-	require.Len(t, cctxs, 1)
+	cctx := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
 
-	return cctxs[0]
+	return cctx
 }
 
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.
@@ -255,7 +262,7 @@ func WaitCctxByInboundHash(
 	hash string,
 	c CCTXClient,
 	opts ...WaitOpts,
-) []crosschaintypes.CrossChainTx {
+) crosschaintypes.CrossChainTx {
 	const tick = time.Millisecond * 200
 
 	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
@@ -295,7 +302,7 @@ func WaitCctxByInboundHash(
 		case err != nil:
 			require.NoError(t, err, "failed to get cctx by inbound hash: %s", hash)
 		case len(out.CrossChainTxs) > 0 && matches(out.CrossChainTxs):
-			return out.CrossChainTxs
+			return out.CrossChainTxs[0]
 		case ctx.Err() == nil:
 			require.NoError(t, err, "failed to get cctx by inbound hash (ctx error): %s", hash)
 		}
