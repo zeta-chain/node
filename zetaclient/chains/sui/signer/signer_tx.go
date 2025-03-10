@@ -63,7 +63,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		Module:          s.gateway.Module(),
 		Function:        funcWithdraw,
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, withdrawCapID},
+		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudget, withdrawCapID},
 		GasBudget:       gasBudget,
 	}
 
