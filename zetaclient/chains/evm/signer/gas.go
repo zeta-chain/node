@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
 const maxGasLimit = 2_500_000
 
 // Gas represents gas parameters for EVM transactions.
