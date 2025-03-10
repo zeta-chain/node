@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	pkgchains "github.com/zeta-chain/node/pkg/chains"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -73,6 +74,12 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
+	}
+
+	// temp fix to unblock stuck transaction
+	// purpose is to deploy to zetaclient, wait for tx to be broadcasted, and deploy old zetaclient back
+	if params.ReceiverChainId == pkgchains.ArbitrumSepolia.ChainId {
+		limit = 100_000
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
