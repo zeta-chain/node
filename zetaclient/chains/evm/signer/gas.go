@@ -69,14 +69,7 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 		limit  = params.CallOptions.GasLimit
 	)
 
-	switch {
-	case limit < minGasLimit:
-		limit = minGasLimit
-		logger.Warn().
-			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low. Setting to the minimum (%d)", minGasLimit)
-	case limit > maxGasLimit:
+	if limit > maxGasLimit {
 		limit = maxGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
