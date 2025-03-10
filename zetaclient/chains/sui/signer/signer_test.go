@@ -43,6 +43,9 @@ func TestSigner(t *testing.T) {
 			Amount:          amount,
 			TssNonce:        nonce,
 			GasPrice:        "1000",
+			CallOptions: &cc.CallOptions{
+				GasLimit: 42,
+			},
 		}}
 
 		// Given mocked WithdrawCapID
@@ -62,6 +65,7 @@ func TestSigner(t *testing.T) {
 				amount.String(),
 				fmt.Sprintf("%d", nonce),
 				receiver,
+				"42000",
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
