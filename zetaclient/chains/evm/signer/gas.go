@@ -10,10 +10,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const (
-	minGasLimit = 100_000
-	maxGasLimit = 1_000_000
-)
+const maxGasLimit = 1_000_000
 
 // Gas represents gas parameters for EVM transactions.
 //
