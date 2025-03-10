@@ -28,36 +28,12 @@ func TestGasFromCCTX(t *testing.T) {
 		assert        func(t *testing.T, g Gas)
 	}{
 		{
-			name: "legacy: gas is too low",
-			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), ""),
-			assert: func(t *testing.T, g Gas) {
-				assert.True(t, g.isLegacy())
-				assertGasEquals(t, Gas{
-					Limit:       minGasLimit,
-					PriorityFee: gwei(0),
-					Price:       gwei(2),
-				}, g)
-			},
-		},
-		{
-			name: "london: gas is too low",
-			cctx: makeCCTX(minGasLimit-200, gwei(2).String(), gwei(1).String()),
-			assert: func(t *testing.T, g Gas) {
-				assert.False(t, g.isLegacy())
-				assertGasEquals(t, Gas{
-					Limit:       minGasLimit,
-					Price:       gwei(2),
-					PriorityFee: gwei(1),
-				}, g)
-			},
-		},
-		{
 			name: "pre London gas logic",
-			cctx: makeCCTX(minGasLimit+100, gwei(3).String(), ""),
+			cctx: makeCCTX(21_000, gwei(3).String(), ""),
 			assert: func(t *testing.T, g Gas) {
 				assert.True(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					Limit:       100_100,
+					Limit:       21_000,
 					Price:       gwei(3),
 					PriorityFee: gwei(0),
 				}, g)
@@ -65,11 +41,11 @@ func TestGasFromCCTX(t *testing.T) {
 		},
 		{
 			name: "post London gas logic",
-			cctx: makeCCTX(minGasLimit+200, gwei(4).String(), gwei(1).String()),
+			cctx: makeCCTX(21_000, gwei(4).String(), gwei(1).String()),
 			assert: func(t *testing.T, g Gas) {
 				assert.False(t, g.isLegacy())
 				assertGasEquals(t, Gas{
-					Limit:       100_200,
+					Limit:       21_000,
 					Price:       gwei(4),
 					PriorityFee: gwei(1),
 				}, g)
