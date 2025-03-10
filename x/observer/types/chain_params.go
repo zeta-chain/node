@@ -466,7 +466,8 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
 		params1.GatewayAddress == params2.GatewayAddress &&
-		confirmationParamsEqual(params1.ConfirmationParams, params2.ConfirmationParams)
+		confirmationParamsEqual(params1.ConfirmationParams, params2.ConfirmationParams) &&
+		params1.DisableTssBlockScan == params2.DisableTssBlockScan
 }
 
 // confirmationParamsEqual returns true if two confirmation params are equal
