@@ -225,6 +225,7 @@ then
     .app_state.crisis.constant_fee.denom = "azeta" |
     .app_state.mint.params.mint_denom = "azeta" |
     .app_state.evm.params.evm_denom = "azeta" |
+    .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
     .consensus.params.block.max_gas = "500000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
