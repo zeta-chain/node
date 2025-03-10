@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"syscall"
 	"time"
 
@@ -49,6 +50,7 @@ const (
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
+	flagTestFilter        = "test-filter"
 )
 
 var (
@@ -87,6 +89,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagSkipPrecompiles, true, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
+	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -119,7 +122,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		setupSolana       = testSolana || testPerformance
+		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
 	)
+
+	testFilter := regexp.MustCompile(testFilterStr)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
@@ -191,6 +197,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf.DefaultAccount,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
+		runner.WithTestFilter(testFilter),
 	)
 	noError(err)
 
