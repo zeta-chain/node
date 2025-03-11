@@ -48,7 +48,7 @@ func (r *E2ERunner) UnStakeToBelowMinimumObserverDelegation() error {
 	}
 
 	// We need to unstake to just below the minimum observer delegation to trigger the hooks which would remove the observer
-	// This works as expected , however the hardcoded value of 1zeta (1000000000000000000azeta) is not ideal, for this check
+	// This works as expected , however the hardcoded value of 1zeta (1000000000000000000azeta), for the `min_observer_delegation` is not ideal, for this check
 	// The minimum accepted value for `MIN_SELF_DELEGATION` is also 1zeta , therefore this unstake message ends up removing the validator from the validator set as well.
 	// NOTE : although the MIN_SELF_DELEGATION is set to 1, it does not mean 1azeta , when calculating the default power reduction is accounted for, therefore 1ZETA = 1 unit of voting power and not 1 azeta
 	// Ideally we should be able to test removing the observer from the observer set, without affecting the validator set.
