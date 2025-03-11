@@ -150,6 +150,10 @@ func newTestSuite(t *testing.T) *testSuite {
 		gwAccountID = ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b")
 	)
 
+	// create base signer
+	baseSigner, err := base.NewSigner(chain, tss, 1, 0, logger)
+	require.NoError(t, err)
+
 	ts := &testSuite{
 		ctx: ctx,
 		t:   t,
@@ -163,7 +167,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		tss:      tss,
 
 		gw:         toncontracts.NewGateway(gwAccountID),
-		baseSigner: base.NewSigner(chain, tss, logger),
+		baseSigner: baseSigner,
 	}
 
 	// Setup mocks

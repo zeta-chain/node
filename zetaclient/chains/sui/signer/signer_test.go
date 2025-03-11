@@ -141,7 +141,9 @@ func newTestSuite(t *testing.T) *testSuite {
 	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
-	baseSigner := base.NewSigner(chain, tss, logger)
+	baseSigner, err := base.NewSigner(chain, tss, 1, 0, logger)
+	require.NoError(t, err)
+
 	signer := New(baseSigner, suiMock, gw, zetacore)
 
 	ts := &testSuite{

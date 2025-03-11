@@ -1,16 +1,29 @@
 package base
 
 import (
+	"context"
+	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
+)
+
+const (
+	// DefaultTSSSignatureCacheSize is the default number of signatures that the signer will keep in cache.
+	// Caching 200 recent transactions signatures is good enough for most chains because zetaclients don't
+	// look ahead for more than 200 outbound transactions.
+	DefaultTSSSignatureCacheSize = 200
+
+	// DefaultTSSSignatureExpiration is the default expiration time for cached TSS signatures.
+	DefaultTSSSignatureExpiration = time.Minute * 30
 )
 
 // Signer is the base structure for grouping the common logic between chain signers.
@@ -30,13 +43,22 @@ type Signer struct {
 
 	activeOutbounds map[string]time.Time
 
+	// tssSignatureCache stores cached TSS signatures
+	tssSignatureCache *TSSSignatureCache
+
 	// mu protects fields from concurrent access
 	// Note: base signer simply provides the mutex. It's the sub-struct's responsibility to use it to be thread-safe
 	mu sync.Mutex
 }
 
 // NewSigner creates a new base signer.
-func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Signer {
+func NewSigner(
+	chain chains.Chain,
+	tss interfaces.TSSSigner,
+	sigCacheSize int,
+	sigExpiration time.Duration,
+	logger Logger,
+) (*Signer, error) {
 	withLogFields := func(log zerolog.Logger) zerolog.Logger {
 		return log.With().
 			Int64(logs.FieldChain, chain.ChainId).
@@ -44,16 +66,22 @@ func NewSigner(chain chains.Chain, tss interfaces.TSSSigner, logger Logger) *Sig
 			Logger()
 	}
 
+	tssSignatureCache, err := NewTSSSignatureCache(sigCacheSize, sigExpiration)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating tss signature cache")
+	}
+
 	return &Signer{
 		chain:                 chain,
 		tss:                   tss,
 		outboundBeingReported: make(map[string]bool),
 		activeOutbounds:       make(map[string]time.Time),
+		tssSignatureCache:     tssSignatureCache,
 		logger: Logger{
 			Std:        withLogFields(logger.Std),
 			Compliance: withLogFields(logger.Compliance),
 		},
-	}
+	}, nil
 }
 
 // Chain returns the chain for the signer.
@@ -69,6 +97,70 @@ func (s *Signer) TSS() interfaces.TSSSigner {
 // Logger returns the logger for the signer.
 func (s *Signer) Logger() *Logger {
 	return &s.logger
+}
+
+// TSSSign signs a given digest with TSS.
+func (s *Signer) TSSSign(ctx context.Context, digest []byte, height, nonce uint64) (sig65B [65]byte, err error) {
+	// get cached signature if available
+	pkBech32 := s.tss.PubKey().Bech32String()
+	sig65B, found := s.tssSignatureCache.Get(pkBech32, digest)
+	if found {
+		return sig65B, nil
+	}
+
+	// sign the digest with TSS
+	sig65B, err = s.TSS().Sign(ctx, digest, height, nonce, s.Chain().ChainId)
+	if err != nil {
+		return [65]byte{}, errors.Wrap(err, "tss Sign failed")
+	}
+
+	// add signature to the cache
+	s.tssSignatureCache.Add(pkBech32, digest, sig65B)
+	s.Logger().Std.Info().
+		Str(logs.FieldMethod, "Sign").
+		Str("tss_addr", s.TSS().PubKey().AddressEVM().Hex()).
+		Uint64("height", height).
+		Uint64(logs.FieldNonce, nonce).
+		Str("digest", hex.EncodeToString(digest)).
+		Str("signature", hex.EncodeToString(sig65B[:])).
+		Msg("add new tss signature to cache")
+
+	return sig65B, nil
+}
+
+// TSSSignBatch signs a batch of digests with TSS.
+func (s *Signer) TSSSignBatch(
+	ctx context.Context,
+	digests [][]byte,
+	height, nonce uint64,
+) (sig65Bs [][65]byte, err error) {
+	// get cached signatures if available
+	pkBech32 := s.tss.PubKey().Bech32String()
+	sig65Bs, found := s.tssSignatureCache.GetBatch(pkBech32, digests)
+	if found {
+		return sig65Bs, nil
+	}
+
+	// sign the digests with TSS
+	sig65Bs, err = s.TSS().SignBatch(ctx, digests, height, nonce, s.Chain().ChainId)
+	if err != nil {
+		return nil, errors.Wrap(err, "tss SignBatch failed")
+	}
+
+	// add signatures to the cache
+	err = s.tssSignatureCache.AddBatch(pkBech32, digests, sig65Bs)
+	if err != nil {
+		return nil, err
+	}
+	s.Logger().Std.Info().
+		Str(logs.FieldMethod, "SignBatch").
+		Str("tss_addr", s.TSS().PubKey().AddressEVM().Hex()).
+		Uint64("height", height).
+		Uint64(logs.FieldNonce, nonce).
+		Int("batch_size", len(digests)).
+		Msg("add new tss signatures to cache")
+
+	return sig65Bs, nil
 }
 
 // SetBeingReportedFlag sets the outbound as being reported if not already set.

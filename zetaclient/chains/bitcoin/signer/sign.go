@@ -219,9 +219,9 @@ func (signer *Signer) SignTx(
 	}
 
 	// sign the tx with TSS
-	sig65Bs, err := signer.TSS().SignBatch(ctx, witnessHashes, height, nonce, signer.Chain().ChainId)
+	sig65Bs, err := signer.TSSSignBatch(ctx, witnessHashes, height, nonce)
 	if err != nil {
-		return errors.Wrap(err, "SignBatch failed")
+		return errors.Wrap(err, "unable to sign Bitcoin transaction")
 	}
 
 	// add witnesses to the tx

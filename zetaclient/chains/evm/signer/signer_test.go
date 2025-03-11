@@ -56,8 +56,11 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	logger := testlog.New(t)
 
-	baseSigner := base.NewSigner(chain, tss, base.Logger{Std: logger.Logger, Compliance: logger.Logger})
+	// create base signer
+	baseSigner, err := base.NewSigner(chain, tss, 1, 0, base.Logger{Std: logger.Logger, Compliance: logger.Logger})
+	require.NoError(t, err)
 
+	// create evm signer
 	s, err := New(
 		baseSigner,
 		evmClient,

@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+	btccommon "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	btcsigner "github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/evm"
@@ -36,8 +37,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 )
-
-const btcBlocksPerDay = 144
 
 func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
 	// should not happen
@@ -75,7 +74,11 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner, err := oc.newBaseSigner(chain)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base signer")
+	}
+
 	signer := btcsigner.New(baseSigner, rpcClient)
 
 	return bitcoin.New(oc.scheduler, observer, signer), nil
@@ -112,6 +115,11 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
+	baseSigner, err := oc.newBaseSigner(chain)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base signer")
+	}
+
 	var (
 		zetaConnectorAddress = ethcommon.HexToAddress(chain.Params().ConnectorContractAddress)
 		erc20CustodyAddress  = ethcommon.HexToAddress(chain.Params().Erc20CustodyContractAddress)
@@ -119,7 +127,7 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	)
 
 	signer, err := evmsigner.New(
-		oc.newBaseSigner(chain),
+		baseSigner,
 		evmClient,
 		zetaConnectorAddress,
 		erc20CustodyAddress,
@@ -173,7 +181,10 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 		return nil, errors.Wrap(err, "unable to load relayer key")
 	}
 
-	baseSigner := oc.newBaseSigner(chain)
+	baseSigner, err := oc.newBaseSigner(chain)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base signer")
+	}
 
 	// create Solana signer
 	signer, err := solanasigner.New(baseSigner, rpcClient, gwAddress, relayerKey)
@@ -215,7 +226,12 @@ func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, err
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
-	signer := suisigner.New(oc.newBaseSigner(chain), suiClient, gateway, oc.deps.Zetacore)
+	baseSigner, err := oc.newBaseSigner(chain)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base signer")
+	}
+
+	signer := suisigner.New(baseSigner, suiClient, gateway, oc.deps.Zetacore)
 
 	return sui.New(oc.scheduler, observer, signer), nil
 }
@@ -258,7 +274,12 @@ func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, err
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), lightClient, gw)
+	baseSigner, err := oc.newBaseSigner(chain)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base signer")
+	}
+
+	signer := tonsigner.New(baseSigner, lightClient, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
@@ -276,7 +297,7 @@ func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, 
 
 	blocksCacheSize := base.DefaultBlockCacheSize
 	if chain.IsBitcoin() {
-		blocksCacheSize = btcBlocksPerDay
+		blocksCacheSize = btccommon.BlocksPerDay
 	}
 
 	return base.NewObserver(
@@ -291,8 +312,14 @@ func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, 
 	)
 }
 
-func (oc *V2) newBaseSigner(chain zctx.Chain) *base.Signer {
-	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base)
+func (oc *V2) newBaseSigner(chain zctx.Chain) (*base.Signer, error) {
+	signatureCacheSize := base.DefaultTSSSignatureCacheSize
+	signatureExpiration := base.DefaultTSSSignatureExpiration
+	if chain.IsBitcoin() {
+		signatureCacheSize = btccommon.TSSSignatureCacheSize
+	}
+
+	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, signatureCacheSize, signatureExpiration, oc.logger.base)
 }
 
 func btcDatabaseFileName(chain chains.Chain) string {

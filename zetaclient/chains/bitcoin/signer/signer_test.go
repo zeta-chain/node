@@ -67,7 +67,8 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create signer
-	baseSigner := base.NewSigner(chain, tss, baseLogger)
+	baseSigner, err := base.NewSigner(chain, tss, 1, 0, baseLogger)
+	require.NoError(t, err)
 	signer := signer.New(baseSigner, rpcClient)
 
 	// create test suite and observer

@@ -179,6 +179,6 @@ type SolanaRPCClient interface {
 // TSSSigner is the interface for TSS signer
 type TSSSigner interface {
 	PubKey() tss.PubKey
-	Sign(ctx context.Context, data []byte, height, nonce uint64, chainID int64) ([65]byte, error)
+	Sign(ctx context.Context, digest []byte, height, nonce uint64, chainID int64) ([65]byte, error)
 	SignBatch(ctx context.Context, digests [][]byte, height, nonce uint64, chainID int64) ([][65]byte, error)
 }

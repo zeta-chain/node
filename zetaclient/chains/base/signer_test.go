@@ -18,7 +18,10 @@ func createSigner(t *testing.T) *base.Signer {
 	logger := base.DefaultLogger()
 
 	// create signer
-	return base.NewSigner(chain, tss, logger)
+	signer, err := base.NewSigner(chain, tss, 1, 0, logger)
+	require.NoError(t, err)
+
+	return signer
 }
 
 func TestNewSigner(t *testing.T) {

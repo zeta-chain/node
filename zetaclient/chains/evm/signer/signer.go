@@ -3,7 +3,6 @@ package signer
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -154,37 +152,34 @@ func (signer *Signer) Sign(
 	nonce uint64,
 	height uint64,
 ) (*ethtypes.Transaction, []byte, []byte, error) {
-	signer.Logger().Std.Debug().
-		Str("tss_pub_key", signer.TSS().PubKey().AddressEVM().String()).
-		Msg("Signing evm transaction")
+	// prepare logger
+	logger := signer.Logger().Std.With().
+		Str(logs.FieldMethod, "Sign").
+		Str("tss_addr", signer.TSS().PubKey().AddressEVM().Hex()).
+		Uint64(logs.FieldNonce, nonce).Logger()
+	logger.Debug().Msg("signing evm transaction")
 
+	// create tx
 	chainID := big.NewInt(signer.Chain().ChainId)
 	tx, err := newTx(chainID, data, to, amount, gas, nonce)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	hashBytes := signer.client.Hash(tx).Bytes()
+	// sign the tx with TSS
+	digest := signer.client.Hash(tx).Bytes()
+	sig65B, err := signer.TSSSign(ctx, digest, height, nonce)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "unable to sign evm transaction")
+	}
 
-	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
+	// attach signature to the tx
+	signedTX, err := tx.WithSignature(signer.client.Signer, sig65B[:])
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	log.Debug().Msgf("Sign: Signature: %s", hex.EncodeToString(sig[:]))
-	pubk, err := crypto.SigToPub(hashBytes, sig[:])
-	if err != nil {
-		signer.Logger().Std.Error().Err(err).Msgf("SigToPub error")
-	}
-
-	addr := crypto.PubkeyToAddress(*pubk)
-	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.client.Signer, sig[:])
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return signedTX, sig[:], hashBytes[:], nil
+	return signedTX, sig65B[:], digest[:], nil
 }
 
 func newTx(
