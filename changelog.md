@@ -14,7 +14,7 @@
 
 ### Tests
 
-* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `unstake` tx , to test observer staking hooks
+* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
 
 ## v29.0.0
 
