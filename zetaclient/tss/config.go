@@ -10,7 +10,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	tsscommon "github.com/zeta-chain/go-tss/common"
 )
 
 const (
