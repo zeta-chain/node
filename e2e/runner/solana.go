@@ -403,6 +403,7 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 
 		if isConfirmed {
 			r.Logger.Info("Tx broadcasted and confirmed")
+			require.Nil(r, out.Meta.Err, out.Meta.LogMessages)
 			return sig, out
 		}
 

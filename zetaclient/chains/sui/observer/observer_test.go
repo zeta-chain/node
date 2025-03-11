@@ -256,6 +256,7 @@ func TestObserver(t *testing.T) {
 							},
 							someArgStub,
 							someArgStub,
+							someArgStub,
 						},
 					},
 				},

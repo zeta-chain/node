@@ -216,6 +216,11 @@ func TestChainParamsEqual(t *testing.T) {
 	cp = copyParams(params)
 	cp.ConfirmationParams.FastOutboundCount = params.ConfirmationParams.FastOutboundCount + 1
 	require.False(t, types.ChainParamsEqual(*params, *cp))
+
+	// DisableTSSBlockScan matters
+	cp = copyParams(params)
+	cp.DisableTssBlockScan = !params.DisableTssBlockScan
+	require.False(t, types.ChainParamsEqual(*params, *cp))
 }
 
 func (s *UpdateChainParamsSuite) SetupTest() {

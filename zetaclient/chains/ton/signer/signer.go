@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/liteclient"
 	"github.com/tonkeeper/tongo/tlb"
@@ -32,9 +31,8 @@ type LiteClient interface {
 // Signer represents TON signer.
 type Signer struct {
 	*base.Signer
-	client          LiteClient
-	gateway         *toncontracts.Gateway
-	signaturesCache *lru.Cache
+	client  LiteClient
+	gateway *toncontracts.Gateway
 }
 
 // Signable represents a message that can be signed.
@@ -52,17 +50,12 @@ const (
 	Success Outcome = "success"
 )
 
-const signaturesHashSize = 1024
-
 // New Signer constructor.
 func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gateway) *Signer {
-	sigCache, _ := lru.New(signaturesHashSize)
-
 	return &Signer{
-		Signer:          baseSigner,
-		client:          client,
-		gateway:         gateway,
-		signaturesCache: sigCache,
+		Signer:  baseSigner,
+		client:  client,
+		gateway: gateway,
 	}
 }
 
@@ -163,16 +156,11 @@ func (s *Signer) ProcessOutbound(
 }
 
 // SignMessage signs TON external message using TSS
+// Note that TSS has in-mem cache for existing signatures to abort duplicate signing requests.
 func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonce uint64) error {
 	hash, err := msg.Hash()
 	if err != nil {
 		return errors.Wrap(err, "unable to hash message")
-	}
-
-	// cache hit
-	if sig, ok := s.getSignature(hash); ok {
-		msg.SetSignature(sig)
-		return nil
 	}
 
 	chainID := s.Chain().ChainId
@@ -184,25 +172,8 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 	}
 
 	msg.SetSignature(sig)
-	s.setSignature(hash, sig)
 
 	return nil
-}
-
-// because signed msg might fail due to high nonce,
-// we need to make sure that signature is cached to avoid redundant TSS calls
-func (s *Signer) getSignature(hash [32]byte) ([65]byte, bool) {
-	sig, ok := s.signaturesCache.Get(hash)
-	if !ok {
-		return [65]byte{}, false
-	}
-
-	return sig.([65]byte), true
-}
-
-// caches signature
-func (s *Signer) setSignature(hash [32]byte, sig [65]byte) {
-	s.signaturesCache.Add(hash, sig)
 }
 
 // Sample (from local ton):

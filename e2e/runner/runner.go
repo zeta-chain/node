@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"sync"
 	"time"
 
@@ -64,6 +65,12 @@ const (
 func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
 	return func(r *E2ERunner) {
 		r.ZetaTxServer = txServer
+	}
+}
+
+func WithTestFilter(testFilter *regexp.Regexp) E2ERunnerOption {
+	return func(r *E2ERunner) {
+		r.TestFilter = testFilter
 	}
 }
 
@@ -192,6 +199,7 @@ type E2ERunner struct {
 	CtxCancel        context.CancelCauseFunc
 	Logger           *Logger
 	BitcoinParams    *chaincfg.Params
+	TestFilter       *regexp.Regexp
 	mutex            sync.Mutex
 	zetacoredVersion string
 }

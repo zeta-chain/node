@@ -2,10 +2,14 @@ package tss
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -61,8 +65,17 @@ type Service struct {
 	postBlame bool
 	metrics   *Metrics
 
+	mu       sync.RWMutex
+	sigCache map[int64]*sigCache
+
 	logger zerolog.Logger
 }
+
+// sigCache is a LRU cache of "requestHash" -> signatures.
+type sigCache = lru.Cache[string, [][65]byte]
+
+// signatures per chain
+const sigCacheSize = 512
 
 // Metrics Prometheus metrics for the TSS service.
 type Metrics struct {
@@ -117,7 +130,6 @@ var noopMetrics = Metrics{
 }
 
 // NewService Service constructor.
-// TODO LRU cache
 func NewService(
 	keySigner KeySigner,
 	tssPubKeyBech32 string,
@@ -151,7 +163,11 @@ func NewService(
 		zetacore:      zetacore,
 		postBlame:     cfg.postBlame,
 		metrics:       cfg.metrics,
-		logger:        logger,
+
+		sigCache: make(map[int64]*sigCache),
+		mu:       sync.RWMutex{},
+
+		logger: logger,
 	}, nil
 }
 
@@ -181,8 +197,6 @@ func (s *Service) SignBatch(
 		return nil, errors.New("empty digests list")
 	}
 
-	// todo check cache for digest & block height & chainID -> return signature (LRU cache)
-
 	digestsBase64 := make([]string, len(digests))
 	for i, digest := range digests {
 		digestsBase64[i] = base64EncodeString(digest)
@@ -196,6 +210,14 @@ func (s *Service) SignBatch(
 		nil,
 		Version,
 	)
+
+	if sigs, ok := s.getSignatureCached(chainID, req); ok {
+		s.logger.Info().
+			Fields(keysignLogFields(req, height, nonce, chainID)).
+			Msg("Signature cache hit")
+
+		return sigs, nil
+	}
 
 	res, err := s.sign(req, nonce, chainID)
 	switch {
@@ -221,7 +243,7 @@ func (s *Service) SignBatch(
 		return nil, errors.Wrap(err, "unable to verify signatures")
 	}
 
-	// todo sig save to LRU cache (chain-id + digest). We need LRU per EACH chain
+	s.setSignatureCached(chainID, req, sigs)
 
 	return sigs, nil
 }
@@ -320,6 +342,34 @@ func (s *Service) blameFailure(
 	return errFailure
 }
 
+func (s *Service) getSignatureCached(chainID int64, req keysign.Request) ([][65]byte, bool) {
+	return s.getChainSignatureCache(chainID).Get(requestToKey(req))
+}
+
+func (s *Service) setSignatureCached(chainID int64, req keysign.Request, sigs [][65]byte) {
+	s.getChainSignatureCache(chainID).Add(requestToKey(req), sigs)
+}
+
+func (s *Service) getChainSignatureCache(chainID int64) *sigCache {
+	s.mu.RLock()
+	cache, ok := s.sigCache[chainID]
+	s.mu.RUnlock()
+
+	if ok {
+		return cache
+	}
+
+	// init case
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// err is always nil in this case
+	cache, _ = lru.New[string, [][65]byte](sigCacheSize)
+	s.sigCache[chainID] = cache
+
+	return cache
+}
+
 func keysignLogFields(req keysign.Request, height, nonce uint64, chainID int64) map[string]any {
 	return map[string]any{
 		"keysign.chain_id":     chainID,
@@ -327,4 +377,17 @@ func keysignLogFields(req keysign.Request, height, nonce uint64, chainID int64) 
 		"keysign.nonce":        nonce,
 		"keysign.request":      req,
 	}
+}
+
+func requestToKey(r keysign.Request) string {
+	raw := fmt.Sprintf(
+		"%s;%s;%s",
+		r.Version,
+		strings.Join(r.Messages, ","),
+		strings.Join(r.SignerPubKeys, ","),
+	)
+
+	h := sha256.Sum256([]byte(raw))
+
+	return hex.EncodeToString(h[:])
 }

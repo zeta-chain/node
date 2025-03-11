@@ -285,6 +285,7 @@ services:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+      - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
 
