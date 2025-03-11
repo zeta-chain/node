@@ -237,7 +237,7 @@ stop-localnet:
 
 # delete any volume ending in persist
 clear-localnet-persistence:
-	docker volume rm $(docker volume ls -qf "label=localnet=true")
+	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
 
 ###############################################################################
 ###                         E2E tests               						###
