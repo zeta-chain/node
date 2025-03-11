@@ -577,7 +577,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.EnsureNoStaleBallots()
 	}
 
-	// Run a unstake to below minimum observer delegation to trigger the hooks which would remove the observer
 	// This should only be run at the end to the test as it would remove the observer.
 	if testStaking {
 		deployerRunner.Logger.Print("running staking tests")

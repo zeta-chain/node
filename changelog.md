@@ -12,6 +12,10 @@
 
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 
+### Tests
+
+* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `unstake` tx , to test observer staking hooks
+
 ## v29.0.0
 
 ### Breaking Changes

@@ -10,6 +10,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// UnStakeToBelowMinimumObserverDelegation  unstakes the validator self delegation to below the minimum observer delegation
 func (r *E2ERunner) UnStakeToBelowMinimumObserverDelegation() error {
 	// Arrange
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
