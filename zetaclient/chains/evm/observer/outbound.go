@@ -175,7 +175,7 @@ func (ob *Observer) newOutboundVote(
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
 	}
 
-	msg := crosschaintypes.NewMsgVoteOutbound(
+	return crosschaintypes.NewMsgVoteOutbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		cctxIndex,
 		receipt.TxHash.Hex(),
@@ -190,8 +190,6 @@ func (ob *Observer) newOutboundVote(
 		coinType,
 		confirmationMode,
 	)
-
-	return msg
 }
 
 // parseOutboundReceivedValue parses the received value and status from the outbound receipt

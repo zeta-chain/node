@@ -206,7 +206,7 @@ func (ob *Observer) newOutboundVote(
 		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
 	}
 
-	msg := crosschaintypes.NewMsgVoteOutbound(
+	return crosschaintypes.NewMsgVoteOutbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		cctxIndex,
 		outboundHash,
@@ -221,8 +221,6 @@ func (ob *Observer) newOutboundVote(
 		coinType,
 		confirmationMode,
 	)
-
-	return msg
 }
 
 // refreshPendingNonce tries increasing the artificial pending nonce of outbound (if lagged behind).
