@@ -6,8 +6,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	pkgchains "github.com/zeta-chain/node/pkg/chains"
 
+	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
