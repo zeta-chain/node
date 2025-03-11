@@ -76,8 +76,8 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
 	}
 
-	// temp fix to unblock stuck transaction
-	// purpose is to deploy to zetaclient, wait for tx to be broadcasted, and deploy old zetaclient back
+	// TODO: temp fix to unblock stuck transaction on testnet release/v29
+	// limit matches value set in zrc20 Arbitrum gas token
 	if params.ReceiverChainId == pkgchains.ArbitrumSepolia.ChainId && limit < 100_000 {
 		limit = 100_000
 	}
