@@ -579,8 +579,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// This should only be run at the end to the test as it would remove the observer.
 	if testStaking {
-		deployerRunner.Logger.Print("running staking tests")
-		require.NoError(deployerRunner, deployerRunner.UnStakeToBelowMinimumObserverDelegation())
+		deployerRunner.UndelegateToBelowMinimumObserverDelegation()
 	}
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
