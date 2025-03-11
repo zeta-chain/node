@@ -226,6 +226,7 @@ then
     .app_state.mint.params.mint_denom = "azeta" |
     .app_state.evm.params.evm_denom = "azeta" |
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
+    .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
     .consensus.params.block.max_gas = "500000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
@@ -256,7 +257,7 @@ then
   fund_accounts_auto
 
   # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
-  zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
+  zetacored gentx operator 1000000000000000001azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
   # Copy host gentx to other nodes
   for NODE in "${NODELIST[@]}"; do
     ssh $NODE mkdir -p ~/.zetacored/config/gentx/peer/
@@ -267,7 +268,7 @@ then
   for NODE in "${NODELIST[@]}"; do
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
-      ssh $NODE zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+      ssh $NODE zetacored gentx operator 1000000000000000001azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
       scp $NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
