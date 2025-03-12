@@ -1,6 +1,8 @@
 package sui
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -10,16 +12,21 @@ import (
 // Deposit represents data for a Sui deposit/depositAndCall event
 type Deposit struct {
 	// Note: CoinType is what is used as Asset field in the ForeignCoin object
-	CoinType         CoinType
-	Amount           math.Uint
-	Sender           string
-	Receiver         ethcommon.Address
-	Payload          []byte
-	IsCrossChainCall bool
+	CoinType              CoinType
+	Amount                math.Uint
+	Sender                string
+	Receiver              ethcommon.Address
+	Payload               []byte
+	IsCrossChainCall      bool
+	InvalidDepositMessage string
 }
 
 func (d *Deposit) IsGas() bool {
 	return d.CoinType == SUI
+}
+
+func (d *Deposit) IsInvalid() bool {
+	return d.InvalidDepositMessage != ""
 }
 
 func parseDeposit(event models.SuiEventResponse, eventType EventType) (Deposit, error) {
@@ -51,8 +58,11 @@ func parseDeposit(event models.SuiEventResponse, eventType EventType) (Deposit, 
 	}
 
 	receiver := ethcommon.HexToAddress(receiverRaw)
+	var invalidMessage string
 	if receiver == (ethcommon.Address{}) {
-		return Deposit{}, errors.Errorf("invalid receiver address %q", receiverRaw)
+		// receiver is data set by the user, if the format is invalid we don't return an error but set the deposit as invalid
+		// so it is observed and reverted to the sender
+		invalidMessage = fmt.Sprintf("invalid receiver address %q", receiverRaw)
 	}
 
 	var isCrosschainCall bool
@@ -73,11 +83,12 @@ func parseDeposit(event models.SuiEventResponse, eventType EventType) (Deposit, 
 	}
 
 	return Deposit{
-		CoinType:         CoinType(coinType),
-		Amount:           amount,
-		Sender:           sender,
-		Receiver:         receiver,
-		Payload:          payload,
-		IsCrossChainCall: isCrosschainCall,
+		CoinType:              CoinType(coinType),
+		Amount:                amount,
+		Sender:                sender,
+		Receiver:              receiver,
+		Payload:               payload,
+		IsCrossChainCall:      isCrosschainCall,
+		InvalidDepositMessage: invalidMessage,
 	}, nil
 }

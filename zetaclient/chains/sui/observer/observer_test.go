@@ -103,13 +103,20 @@ func TestObserver(t *testing.T) {
 				"sender":    "SUI_BOB",
 				"receiver":  evmBob.String(),
 			}),
+			ts.SampleEvent("TX_5_invalid_receiver", string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  "invalid_evm_address",
+			}),
 		}
 
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
-		// Given 2 transaction blocks
+		// Given 3 transaction blocks
 		ts.OnGetTx("TX_1_ok", "10000", false, nil)
 		ts.OnGetTx("TX_3_ok", "20000", false, nil)
+		ts.OnGetTx("TX_5_invalid_receiver", "30000", false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -121,11 +128,11 @@ func TestObserver(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 
-		// Check that final cursor is on INVALID event, that's expected
-		assert.Equal(t, "TX_4_invalid_data,0", ts.LastTxScanned())
+		// Check that final cursor is on last event, that's expected
+		assert.Equal(t, "TX_5_invalid_receiver,0", ts.LastTxScanned())
 
 		// Check for transactions
-		require.Equal(t, 2, len(ts.inboundVotesBag))
+		require.Equal(t, 3, len(ts.inboundVotesBag))
 
 		vote1 := ts.inboundVotesBag[0]
 		assert.Equal(t, "TX_1_ok", vote1.InboundHash)
@@ -135,6 +142,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, math.NewUint(200), vote1.Amount)
 		assert.Equal(t, "", vote1.Asset)
 		assert.Equal(t, evmBob.String(), vote1.Receiver)
+		assert.Equal(t, cctypes.InboundStatus_SUCCESS, vote1.Status)
 
 		vote3 := ts.inboundVotesBag[1]
 		assert.Equal(t, "TX_3_ok", vote3.InboundHash)
@@ -145,8 +153,19 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, math.NewUint(300), vote3.Amount)
 		assert.Equal(t, evmAlice.String(), vote3.Receiver)
 		assert.Equal(t, "010203", vote3.Message)
+		assert.Equal(t, cctypes.InboundStatus_SUCCESS, vote3.Status)
 
-		// Check that other 2 txs are skipped
+		vote5 := ts.inboundVotesBag[2]
+		assert.Equal(t, "TX_5_invalid_receiver", vote5.InboundHash)
+		assert.Equal(t, uint64(30_000), vote5.InboundBlockHeight)
+		assert.Equal(t, coin.CoinType_Gas, vote5.CoinType)
+		assert.Equal(t, false, vote5.IsCrossChainCall)
+		assert.Equal(t, math.NewUint(200), vote5.Amount)
+		assert.Equal(t, "", vote5.Asset)
+		assert.Equal(t, "0x0000000000000000000000000000000000000000", vote5.Receiver)
+		assert.Equal(t, cctypes.InboundStatus_INVALID_RECEIVER_ADDRESS, vote5.Status)
+
+		// Check that invalid 2 txs are skipped
 		assert.Contains(
 			t,
 			ts.log.String(),

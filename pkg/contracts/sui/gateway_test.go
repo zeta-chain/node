@@ -258,7 +258,7 @@ func TestParseEvent(t *testing.T) {
 			errContains: "invalid sender",
 		},
 		{
-			name: "invalid receiver",
+			name: "invalid receiver can still be parsed",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId: packageID,
@@ -271,7 +271,6 @@ func TestParseEvent(t *testing.T) {
 					"receiver":  "hello",
 				},
 			},
-			errContains: `invalid receiver address "hello"`,
 		},
 		{
 			name: "invalid payload",

@@ -182,6 +182,12 @@ func (ob *Observer) constructInboundVote(
 		return nil, errors.Wrap(err, "unable to parse checkpoint")
 	}
 
+	inboundStatus := cctypes.InboundStatus_SUCCESS
+	if deposit.IsInvalid() {
+		// invalid receiver address is currently the only invalid deposit reason
+		inboundStatus = cctypes.InboundStatus_INVALID_RECEIVER_ADDRESS
+	}
+
 	return cctypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
 		deposit.Sender,
@@ -199,7 +205,7 @@ func (ob *Observer) constructInboundVote(
 		event.EventIndex,
 		cctypes.ProtocolContractVersion_V2,
 		false,
-		cctypes.InboundStatus_SUCCESS,
+		inboundStatus,
 		cctypes.ConfirmationMode_SAFE,
 		cctypes.WithCrossChainCall(deposit.IsCrossChainCall),
 	), nil
