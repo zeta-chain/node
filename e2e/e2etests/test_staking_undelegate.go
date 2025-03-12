@@ -1,4 +1,4 @@
-package runner
+package e2etests
 
 import (
 	sdkmath "cosmossdk.io/math"
@@ -6,11 +6,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/e2e/runner"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // UndelegateToBelowMinimumObserverDelegation  undelegates the validator self delegation to below the minimum observer delegation
-func (r *E2ERunner) UndelegateToBelowMinimumObserverDelegation() {
+func UndelegateToBelowMinimumObserverDelegation(r *runner.E2ERunner, _ []string) {
 	r.Logger.Print("running staking tests")
 	// Arrange
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
