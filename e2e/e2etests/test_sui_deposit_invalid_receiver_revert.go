@@ -1,0 +1,46 @@
+package e2etests
+
+import (
+	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/testutil/sample"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+)
+
+func TestSuiDepositInvalidReceiverRevert(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 1)
+
+	amount := utils.ParseBigInt(r, args[0])
+
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	balanceBefore := r.SuiGetSUIBalance(signer.Address())
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
+
+	// make the deposit transaction with invalid receiver
+	// note: length check is already performed at the smart contract level on Sui
+	resp := r.SuiDepositSUI(sample.StringRandom(sample.Rand(), 42), math.NewUintFromBigInt(amount))
+
+	r.Logger.Info("Sui deposit tx: %s", resp.Digest)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
+	require.EqualValues(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	require.EqualValues(r, coin.CoinType_Gas, cctx.InboundParams.CoinType)
+	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
+	// check the balance after the failed deposit is higher than balance before - amount
+	// reason it's not equal is because of the gas fee for revert
+	balanceAfter := r.SuiGetSUIBalance(signer.Address())
+	require.Greater(r, balanceAfter, balanceBefore-amount.Uint64())
+
+	// check the TSS balance after transaction is higher or equal to the balance before
+	// reason is that the max budget is refunded to the TSS
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
+}

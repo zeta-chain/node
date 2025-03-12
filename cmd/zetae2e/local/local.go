@@ -462,6 +462,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositName,
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
+			e2etests.TestSuiDepositInvalidReceiverRevertName,
 			e2etests.TestSuiWithdrawName,
 			e2etests.TestSuiTokenWithdrawName,
 		}

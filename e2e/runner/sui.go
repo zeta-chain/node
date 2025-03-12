@@ -86,8 +86,9 @@ func (r *E2ERunner) SuiWithdrawFungibleToken(
 }
 
 // SuiDepositSUI calls Deposit on Sui
+// This function uses string as receiver to allow testing invalid receiver
 func (r *E2ERunner) SuiDepositSUI(
-	receiver ethcommon.Address,
+	receiver string,
 	amount math.Uint,
 ) models.SuiTransactionBlockResponse {
 	signer, err := r.Account.SuiSigner()
@@ -128,7 +129,7 @@ func (r *E2ERunner) SuiDepositFungibleToken(
 	coinObjectID := r.suiSplitUSDC(signer, amount)
 
 	// create the tx
-	return r.suiExecuteDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver)
+	return r.suiExecuteDeposit(signer, "0x"+r.SuiTokenCoinType, coinObjectID, receiver.Hex())
 }
 
 // SuiFungibleTokenDepositAndCall calls DepositAndCall with fungible token on Sui
@@ -181,7 +182,7 @@ func (r *E2ERunner) suiExecuteDeposit(
 	signer *sui.SignerSecp256k1,
 	coinType string,
 	coinObjectID string,
-	receiver ethcommon.Address,
+	receiver string,
 ) models.SuiTransactionBlockResponse {
 	// create the tx
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
@@ -190,7 +191,7 @@ func (r *E2ERunner) suiExecuteDeposit(
 		Module:          "gateway",
 		Function:        "deposit",
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver.Hex()},
+		Arguments:       []any{r.SuiGateway.ObjectID(), coinObjectID, receiver},
 		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err)

@@ -88,14 +88,15 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName                   = "sui_deposit"
-	TestSuiDepositAndCallName            = "sui_deposit_and_call"
-	TestSuiDepositAndCallRevertName      = "sui_deposit_and_call_revert"
-	TestSuiTokenDepositName              = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallName       = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallRevertName = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawName                  = "sui_withdraw"
-	TestSuiTokenWithdrawName             = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiDepositName                      = "sui_deposit"
+	TestSuiDepositAndCallName               = "sui_deposit_and_call"
+	TestSuiDepositAndCallRevertName         = "sui_deposit_and_call_revert"
+	TestSuiTokenDepositName                 = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName          = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallRevertName    = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiDepositInvalidReceiverRevertName = "sui_deposit_invalid_receiver_revert"
+	TestSuiWithdrawName                     = "sui_withdraw"
+	TestSuiTokenWithdrawName                = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
@@ -772,6 +773,15 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSuiTokenDepositAndCallRevert,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiDepositInvalidReceiverRevertName,
+		"deposit fungible token SUI into ZEVM with an invalid receiver; expect revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "10000000000"},
+		},
+		TestSuiDepositInvalidReceiverRevert,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawName,
