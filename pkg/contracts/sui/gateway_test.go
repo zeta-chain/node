@@ -271,6 +271,21 @@ func TestParseEvent(t *testing.T) {
 					"receiver":  "hello",
 				},
 			},
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, DepositEvent, out.EventType)
+				assert.Equal(t, uint64(0), out.EventIndex)
+
+				deposit, err := out.Deposit()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, deposit.CoinType)
+				assert.True(t, math.NewUint(300).Equal(deposit.Amount))
+				assert.Equal(t, sender, deposit.Sender)
+				assert.False(t, deposit.IsCrossChainCall)
+				assert.True(t, deposit.IsGas())
+				assert.True(t, deposit.IsInvalid())
+			},
 		},
 		{
 			name: "invalid payload",
