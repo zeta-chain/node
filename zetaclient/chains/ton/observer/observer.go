@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -23,6 +24,8 @@ type Observer struct {
 	gateway *toncontracts.Gateway
 
 	outbounds *lru.Cache
+
+	latestGasPrice atomic.Uint64
 }
 
 const outboundsCacheSize = 1024
@@ -83,14 +86,19 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get latest masterchain block")
 	}
 
+	blockNum := uint64(blockID.Seqno)
+
 	// There's no concept of priority fee in TON
 	const priorityFee = 0
 
-	_, errVote := ob.
-		ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, uint64(blockID.Seqno))
+	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, blockNum)
+	if err != nil {
+		return errors.Wrap(err, "failed to post gas price")
+	}
 
-	return errVote
+	ob.setLatestGasPrice(gasPrice)
+
+	return nil
 }
 
 // CheckRPCStatus checks TON RPC status and alerts if necessary.
@@ -122,4 +130,14 @@ func (ob *Observer) getLatestMasterchainBlock(ctx context.Context) (ton.BlockIDE
 	}
 
 	return mc.Last.ToBlockIdExt(), nil
+}
+
+func (ob *Observer) getLatestGasPrice() (uint64, bool) {
+	price := ob.latestGasPrice.Load()
+
+	return price, price != 0
+}
+
+func (ob *Observer) setLatestGasPrice(price uint64) {
+	ob.latestGasPrice.Store(price)
 }
