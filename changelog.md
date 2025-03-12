@@ -1,7 +1,25 @@
 # CHANGELOG
 
-## Unreleased
+## v28.1.4
 
+### Fixes
+* [3702](https://github.com/zeta-chain/node/pull/3702) - upgrade cosmos sdk to v0.50.13
+
+## v28.1.3
+
+### Fixes
+
+* [3680](https://github.com/zeta-chain/node/pull/3680) - evm chains: use gasLimit from CCTX
+* [3684](https://github.com/zeta-chain/node/pull/3684) - add DisableTssBlockScan to the chain params equality check function
+
+## v28.1.2
+
+### Fixes
+* [3667](https://github.com/zeta-chain/node/pull/3667) - increase gas limit 21000 -> 25000 to fix Arbitrum gas token withdraw error
+
+## v28.1.1
+
+### Fixes
 * [3636](https://github.com/zeta-chain/node/pull/3636) - add a check to stop posting inbound votes if the cctx has already been created
 
 ## v28.1.0
