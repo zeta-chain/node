@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v29.0.3
+
+### Fixes
+
+* [3702](https://github.com/zeta-chain/node/pull/3702) - upgrade cosmos sdk to v0.50.13
+
+## v29.0.2
+
+### Fixes
+
+* [3680](https://github.com/zeta-chain/node/pull/3680) - evm chains: use gasLimit from CCTX
+* [3684](https://github.com/zeta-chain/node/pull/3684) - add DisableTssBlockScan to the chain params equality check function
+
 ## v29.0.1
 
 ### Fixes
