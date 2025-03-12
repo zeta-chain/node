@@ -6,6 +6,9 @@
 
 * [3702](https://github.com/zeta-chain/node/pull/3702) - upgrade cosmos sdk to v0.50.13
 
+### Features
+* [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
+
 ## v29.0.2
 
 ### Fixes
@@ -18,7 +21,7 @@
 ### Fixes
 
 * [3664](https://github.com/zeta-chain/node/pull/3664/) - add a check to stop posting inbound votes if the cctx has already been created
-
+ 
 ## v29.0.0
 
 ### Breaking Changes
