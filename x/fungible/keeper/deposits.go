@@ -8,6 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -101,10 +102,10 @@ func (k Keeper) ProcessDeposit(
 		return nil, false, errors.New("ZETA asset is currently unsupported for deposit with V2 protocol contracts")
 	}
 
-	context := systemcontract.ZContext{
-		Origin:  []byte{},
-		Sender:  ethcommon.BytesToAddress(from),
-		ChainID: big.NewInt(senderChainID),
+	context := gatewayzevm.MessageContext{
+		Sender:    from,
+		SenderEVM: ethcommon.BytesToAddress(from),
+		ChainID:   big.NewInt(senderChainID),
 	}
 
 	if coinType == coin.CoinType_NoAssetCall {
