@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,9 +35,14 @@ func (c CCTXGatewayZEVM) InitiateOutbound(
 			StatusMessage:        "inbound observation failed",
 		})
 		return types.CctxStatus_Aborted, nil
-	case types.InboundStatus_INVALID_MEMO:
-		// when invalid memo is reported, the CCTX is reverted to the sender
-		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(ctx, config.CCTX, errors.New("invalid memo"), true)
+	case types.InboundStatus_INVALID_MEMO, types.InboundStatus_INVALID_RECEIVER_ADDRESS:
+		// invalid observation but can be reverted to the sender
+		newCCTXStatus = c.crosschainKeeper.ValidateOutboundZEVM(
+			ctx,
+			config.CCTX,
+			fmt.Errorf("observation error %s", config.CCTX.InboundParams.Status.String()),
+			true,
+		)
 		return newCCTXStatus, nil
 	case types.InboundStatus_SUCCESS:
 		// process the deposit normally
