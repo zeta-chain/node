@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/emissions/exported"
-	v4 "github.com/zeta-chain/node/x/emissions/migrations/v4"
 	v5 "github.com/zeta-chain/node/x/emissions/migrations/v5"
 )
 
@@ -23,8 +22,8 @@ func NewMigrator(k Keeper, ss exported.Subspace) Migrator {
 }
 
 // Migrate3to4 migrates the store from consensus version 3 to 4
-func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	return v4.MigrateStore(ctx, m.keeper)
+func (m Migrator) Migrate3to4(_ sdk.Context) error {
+	return nil
 }
 
 // Migrate4to5 migrates the store from consensus version 4 to 5
