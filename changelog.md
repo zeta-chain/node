@@ -3,6 +3,7 @@
 ### Features
 
 * [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
+* [3698](https://github.com/zeta-chain/node/pull/3698) - revert Sui deposit with invalid receiver
 
 # CHANGELOG
 
