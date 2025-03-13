@@ -40,7 +40,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 
 	// ACT
 	// Send BTC to TSS address with memo
-	txHash, depositAmount := r.InscribeToTSSFromDeployerWithMemo(amount, memoBytes, int64(feeRate))
+	txHash, depositAmount, commitAddress := r.InscribeToTSSFromDeployerWithMemo(amount, memoBytes, int64(feeRate))
 
 	// ASSERT
 	// wait for the cctx to be mined
@@ -56,6 +56,6 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 		r,
 		contract,
 		big.NewInt(receiveAmount),
-		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+		[]byte(commitAddress),
 	)
 }
