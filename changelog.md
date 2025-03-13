@@ -12,6 +12,10 @@
 
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 
+### Refactor
+
+* [3700](https://github.com/zeta-chain/node/pull/3700) - use sender and senderEVM in cross-chain call message context
+
 ## v29.0.0
 
 ### Breaking Changes
