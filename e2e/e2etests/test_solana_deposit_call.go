@@ -32,5 +32,11 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContractWithMsg(r, contract, depositAmount, data)
+	utils.MustHaveCalledExampleContractWithMsg(
+		r,
+		contract,
+		depositAmount,
+		data,
+		r.GetSolanaPrivKey().PublicKey().String(),
+	)
 }
