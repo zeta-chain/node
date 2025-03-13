@@ -50,7 +50,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313125916-81384522f7d4
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313183129-95f9ecc7b78e
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
