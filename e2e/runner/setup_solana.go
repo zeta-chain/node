@@ -169,7 +169,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		InboundTicker:               2,
 		OutboundTicker:              2,
 		OutboundScheduleInterval:    2,
-		OutboundScheduleLookahead:   5,
+		OutboundScheduleLookahead:   20,
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,

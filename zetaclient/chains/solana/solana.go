@@ -179,7 +179,7 @@ func (s *Solana) scheduleCCTX(ctx context.Context) error {
 		// 1. schedule the very first cctx (there can be multiple) created in the last Zeta block.
 		// 2. schedule new cctx only when there is no other older cctx to process
 		isCCTXNewlyCreated := inboundParams.ObservedExternalHeight == zetaHeight
-		shouldProcessCCTXImmedately := isCCTXNewlyCreated && needsProcessingCtr == 0
+		shouldProcessCCTXImmedately := isCCTXNewlyCreated
 
 		// even if the outbound is currently active, we should increment this counter
 		// to avoid immediate processing logic
