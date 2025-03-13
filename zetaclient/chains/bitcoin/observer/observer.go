@@ -20,7 +20,7 @@ import (
 )
 
 type RPC interface {
-	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+	Healthcheck(ctx context.Context) (time.Time, error)
 
 	GetBlockCount(ctx context.Context) (int64, error)
 	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)

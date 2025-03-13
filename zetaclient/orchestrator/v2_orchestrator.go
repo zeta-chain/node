@@ -94,9 +94,13 @@ func (oc *V2) Start(ctx context.Context) error {
 
 	blocksTicker := scheduler.BlockTicker(newBlocksChan)
 
+	// refresh preflight metrics in a lazy manner
+	preflightTicker := scheduler.Interval(1 * time.Minute)
+
 	oc.scheduler.Register(ctx, oc.UpdateContext, opts("update_context", contextInterval)...)
 	oc.scheduler.Register(ctx, oc.SyncChains, opts("sync_chains", syncInterval)...)
 	oc.scheduler.Register(ctx, oc.updateMetrics, opts("update_metrics", blocksTicker)...)
+	oc.scheduler.Register(ctx, oc.reportPreflightMetrics, opts("report_preflight_metrics", preflightTicker)...)
 
 	return nil
 }
@@ -251,6 +255,19 @@ func (oc *V2) updateMetrics(ctx context.Context) error {
 	// 4. Update metrics
 	burnRate := ts.HotKeyBurnRate.GetBurnRate().Int64()
 	metrics.HotKeyBurnRate.Set(float64(burnRate))
+
+	return nil
+}
+
+func (oc *V2) reportPreflightMetrics(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger); err != nil {
+		return errors.Wrap(err, "unable to report preflight metrics")
+	}
 
 	return nil
 }

@@ -23,7 +23,7 @@ func Test_SolanaRPCLive(t *testing.T) {
 	LiveTest_GetFirstSignatureForAddress(t)
 	LiveTest_GetSignaturesForAddressUntil(t)
 	LiveTest_GetSignaturesForAddressUntil_Version0(t)
-	LiveTest_CheckRPCStatus(t)
+	LiveTest_HealthCheck(t)
 }
 
 func LiveTest_GetTransactionWithVersion(t *testing.T) {
@@ -99,12 +99,12 @@ func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func LiveTest_CheckRPCStatus(t *testing.T) {
+func LiveTest_HealthCheck(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
 	// check the RPC status
 	ctx := context.Background()
-	_, err := rpc.CheckRPCStatus(ctx, client, false)
+	_, err := rpc.HealthCheck(ctx, client, false)
 	require.NoError(t, err)
 }

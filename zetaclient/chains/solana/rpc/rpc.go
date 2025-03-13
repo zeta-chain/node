@@ -147,8 +147,8 @@ func GetTransaction(
 	}
 }
 
-// CheckRPCStatus checks the RPC status of the solana chain
-func CheckRPCStatus(ctx context.Context, client interfaces.SolanaRPCClient, privnet bool) (time.Time, error) {
+// HealthCheck checks the health of the RPC endpoint and returns the last block time
+func HealthCheck(ctx context.Context, client interfaces.SolanaRPCClient, privnet bool) (time.Time, error) {
 	// query solana health (always return "ok" unless --trusted-validator is provided)
 	if !privnet {
 		_, err := client.GetHealth(ctx)
