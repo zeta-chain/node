@@ -57,7 +57,7 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 		contract,
 		big.NewInt(int64(amount)),
 		data,
-		r.GetSolanaPrivKey().PublicKey().String(),
+		[]byte(r.GetSolanaPrivKey().PublicKey().String()),
 	)
 
 	// verify balances are updated

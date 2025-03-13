@@ -19,6 +19,7 @@ func MustHaveCalledExampleContract(
 	t require.TestingT,
 	contract *testcontract.Example,
 	amount *big.Int,
+	sender []byte,
 ) {
 	bar, err := contract.Bar(&bind.CallOpts{})
 	require.NoError(t, err)
@@ -27,6 +28,10 @@ func MustHaveCalledExampleContract(
 		amount.Uint64(),
 		bar.Uint64(),
 	)
+
+	actualSender, err := contract.LastSender(&bind.CallOpts{})
+	require.NoError(t, err)
+	require.EqualValues(t, sender, actualSender)
 }
 
 // MustHaveCalledExampleContractWithMsg checks if the contract has been called correctly with correct amount and msg
@@ -35,7 +40,7 @@ func MustHaveCalledExampleContractWithMsg(
 	contract *testcontract.Example,
 	amount *big.Int,
 	msg []byte,
-	senderAddr string,
+	sender []byte,
 ) {
 	bar, err := contract.Bar(&bind.CallOpts{})
 	require.NoError(t, err)
@@ -49,7 +54,7 @@ func MustHaveCalledExampleContractWithMsg(
 	require.NoError(t, err)
 	require.Equal(t, string(msg), string(lastMsg))
 
-	sender, err := contract.LastSender(&bind.CallOpts{})
+	actualSender, err := contract.LastSender(&bind.CallOpts{})
 	require.NoError(t, err)
-	require.EqualValues(t, []byte(senderAddr), sender)
+	require.EqualValues(t, sender, actualSender)
 }

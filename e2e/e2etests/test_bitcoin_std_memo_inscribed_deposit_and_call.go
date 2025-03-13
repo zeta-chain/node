@@ -52,5 +52,10 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	depositFeeSats, err := common.GetSatoshis(common.DefaultDepositorFee)
 	require.NoError(r, err)
 	receiveAmount := depositAmount - depositFeeSats
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(receiveAmount))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(receiveAmount),
+		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+	)
 }

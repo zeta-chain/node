@@ -37,6 +37,6 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 		contract,
 		depositAmount,
 		data,
-		r.GetSolanaPrivKey().PublicKey().String(),
+		[]byte(r.GetSolanaPrivKey().PublicKey().String()),
 	)
 }
