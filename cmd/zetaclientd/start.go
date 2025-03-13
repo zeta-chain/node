@@ -145,10 +145,11 @@ func Start(_ *cobra.Command, _ []string) error {
 	// It also handles background configuration updates from zetacore
 	taskScheduler := scheduler.New(logger.Std, 0)
 	maestroDeps := &orchestrator.Dependencies{
-		Zetacore:  zetacoreClient,
-		TSS:       tss,
-		DBPath:    dbPath,
-		Telemetry: telemetry,
+		Zetacore:            zetacoreClient,
+		TSS:                 tss,
+		DBPath:              dbPath,
+		Telemetry:           telemetry,
+		IsLeadSolanaRelayer: cfg.IsLeadSolanaRelayer,
 	}
 
 	maestro, err := orchestrator.NewV2(taskScheduler, maestroDeps, logger)

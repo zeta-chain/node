@@ -50,10 +50,11 @@ type ObserverSigner interface {
 }
 
 type Dependencies struct {
-	Zetacore  interfaces.ZetacoreClient
-	TSS       interfaces.TSSSigner
-	DBPath    string
-	Telemetry *metrics.TelemetryServer
+	Zetacore            interfaces.ZetacoreClient
+	TSS                 interfaces.TSSSigner
+	DBPath              string
+	Telemetry           *metrics.TelemetryServer
+	IsLeadSolanaRelayer bool
 }
 
 func NewV2(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logger) (*V2, error) {
@@ -168,7 +169,7 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		case chain.IsEVM():
 			observerSigner, err = oc.bootstrapEVM(ctx, chain)
 		case chain.IsSolana():
-			observerSigner, err = oc.bootstrapSolana(ctx, chain)
+			observerSigner, err = oc.bootstrapSolana(ctx, chain, oc.deps.IsLeadSolanaRelayer)
 		case chain.IsSui():
 			observerSigner, err = oc.bootstrapSui(ctx, chain)
 		case chain.IsTON():

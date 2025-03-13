@@ -95,6 +95,7 @@ type Config struct {
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath      string         `json:"RelayerKeyPath"`
+	IsLeadSolanaRelayer bool           `json:"IsLeadSolanaRelayer"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`

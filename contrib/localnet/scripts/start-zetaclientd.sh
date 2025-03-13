@@ -85,6 +85,9 @@ then
     # import relayer private key for zetaclient0
     import_relayer_key 0
 
+    # zetaclient0 is the lead relayer
+    jq '.IsLeadSolanaRelayer = true' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
+
     # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json

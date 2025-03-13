@@ -58,6 +58,8 @@ type Signer struct {
 
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
+
+	isLeadRelayer bool
 }
 
 // New Signer constructor.
@@ -66,6 +68,7 @@ func New(
 	solClient interfaces.SolanaRPCClient,
 	gatewayAddress string,
 	relayerKey *keys.RelayerKey,
+	isLeadRelayer bool,
 ) (*Signer, error) {
 	// parse gateway ID and PDA
 	gatewayID, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
@@ -88,11 +91,12 @@ func New(
 	}
 
 	return &Signer{
-		Signer:     baseSigner,
-		client:     solClient,
-		gatewayID:  gatewayID,
-		relayerKey: rk,
-		pda:        pda,
+		Signer:        baseSigner,
+		client:        solClient,
+		gatewayID:     gatewayID,
+		relayerKey:    rk,
+		pda:           pda,
+		isLeadRelayer: isLeadRelayer,
 	}, nil
 }
 
@@ -312,7 +316,7 @@ func (signer *Signer) broadcastOutbound(
 			// Commitment "processed" will simulate tx against more recent state
 			// thus fails faster once a tx is already broadcasted and processed by the cluster.
 			// This reduces the number of "failed" txs due to repeated broadcast attempts.
-			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
+			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed, SkipPreflight: signer.isLeadRelayer},
 		)
 		if err != nil {
 			// in case it is not failure due to nonce mismatch, replace tx with fallback tx

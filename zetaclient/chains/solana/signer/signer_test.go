@@ -90,7 +90,7 @@ func Test_NewSigner(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			baseSigner := base.NewSigner(tt.chain, tt.tss, tt.logger)
-			s, err := signer.New(baseSigner, tt.solClient, tt.chainParams.GatewayAddress, tt.relayerKey)
+			s, err := signer.New(baseSigner, tt.solClient, tt.chainParams.GatewayAddress, tt.relayerKey, true)
 			if tt.errMessage != "" {
 				require.ErrorContains(t, err, tt.errMessage)
 				require.Nil(t, s)
@@ -112,7 +112,7 @@ func Test_SetGatewayAddress(t *testing.T) {
 	// helper functor to create signer
 	signerCreator := func() *signer.Signer {
 		baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
-		s, err := signer.New(baseSigner, nil, chainParams.GatewayAddress, nil)
+		s, err := signer.New(baseSigner, nil, chainParams.GatewayAddress, nil, true)
 		require.NoError(t, err)
 
 		return s
@@ -164,7 +164,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 	baseSigner := base.NewSigner(chain, nil, base.DefaultLogger())
 
 	// create signer and set relayer balance metrics
-	s, err := signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
+	s, err := signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey, true)
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)
 
@@ -180,7 +180,7 @@ func Test_SetRelayerBalanceMetrics(t *testing.T) {
 
 	// create signer and set relayer balance metrics again
 	baseSigner = base.NewSigner(chain, nil, base.DefaultLogger())
-	s, err = signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey)
+	s, err = signer.New(baseSigner, mckClient, chainParams.GatewayAddress, relayerKey, true)
 	require.NoError(t, err)
 	s.SetRelayerBalanceMetrics(ctx)
 

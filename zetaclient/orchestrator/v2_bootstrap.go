@@ -132,7 +132,7 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	return evm.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.Solana, error) {
+func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain, isLeadRelayer bool) (*solana.Solana, error) {
 	// should not happen
 	if !chain.IsSolana() {
 		return nil, errors.New("chain is not Solana")
@@ -176,7 +176,7 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 	baseSigner := oc.newBaseSigner(chain)
 
 	// create Solana signer
-	signer, err := solanasigner.New(baseSigner, rpcClient, gwAddress, relayerKey)
+	signer, err := solanasigner.New(baseSigner, rpcClient, gwAddress, relayerKey, isLeadRelayer)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create signer")
 	}
