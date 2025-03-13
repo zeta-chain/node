@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"cosmossdk.io/errors"
@@ -59,7 +60,8 @@ type Signer struct {
 	// pda is the program derived address of the gateway program
 	pda solana.PublicKey
 
-	isLeadRelayer bool
+	isLeadRelayer     bool
+	maxProcessedNonce atomic.Uint64
 }
 
 // New Signer constructor.
@@ -287,6 +289,16 @@ func (signer *Signer) broadcastOutbound(
 		logs.FieldTx:     tx.Signatures[0].String(),
 	}
 
+	if !signer.isLeadRelayer {
+		time.Sleep(time.Second * 2)
+	}
+
+	maxProcessedNonce := signer.maxProcessedNonce.Load()
+	if signer.isLeadRelayer && nonce <= maxProcessedNonce && nonce != 0 {
+		logger.Info().Msg("lead relayer will only process transaction once")
+		return
+	}
+
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
 	// to tolerate tx nonce mismatch with PDA nonce or unknown RPC error
 	backOff := broadcastBackoff
@@ -303,8 +315,21 @@ func (signer *Signer) broadcastOutbound(
 				logger.Error().Err(err).Fields(lf).Msgf("unable to deserialize PDA info")
 			} else if pda.Nonce > nonce {
 				logger.Info().Err(err).Fields(lf).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
+				if nonce > signer.maxProcessedNonce.Load() {
+					signer.maxProcessedNonce.Store(nonce)
+				}
 				break
 			}
+			if signer.maxProcessedNonce.Load() == 0 {
+				signer.maxProcessedNonce.Store(pda.Nonce)
+			}
+		}
+
+		maxProcessedNonce := signer.maxProcessedNonce.Load()
+		if nonce > maxProcessedNonce+1 && maxProcessedNonce != 0 {
+			// not incrementing backoff is intentional
+			logger.Info().Fields(lf).Uint64("max_processed_nonce", maxProcessedNonce).Msg("nonce > maxProcessedNonce+1")
+			continue
 		}
 
 		// broadcast the signed tx to the Solana network with preflight check
@@ -318,6 +343,9 @@ func (signer *Signer) broadcastOutbound(
 			// This reduces the number of "failed" txs due to repeated broadcast attempts.
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed, SkipPreflight: signer.isLeadRelayer},
 		)
+		// allow next transactions to be processed even if there was an error
+		// but we should only increment this if it's actually the new max value
+		signer.maxProcessedNonce.CompareAndSwap(nonce-1, nonce)
 		if err != nil {
 			// in case it is not failure due to nonce mismatch, replace tx with fallback tx
 			// probably need a better way to do this, but currently this is the only error to tolerate like this
