@@ -63,12 +63,6 @@ func (s *Sui) Start(ctx context.Context) error {
 		return !app.IsOutboundObservationEnabled()
 	})
 
-	// todo
-	//   - [ ] ObserveInbound
-	//   - [ ] ProcessInboundTrackers
-	//   - [ ] ProcessOutboundTrackers
-	//   - [ ] ScheduleCCTX
-
 	register := func(exec scheduler.Executable, name string, opts ...scheduler.Opt) {
 		opts = append([]scheduler.Opt{
 			scheduler.GroupName(s.group()),
