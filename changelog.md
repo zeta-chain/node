@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## v29.0.4
+## v29.1.0
+
+### Features
+* [3662](https://github.com/zeta-chain/node/pull/3662) - use custom sui_executeTransactionBlock on Sui
+* [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for sui withdraw cost
 
 ### Fixes
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
