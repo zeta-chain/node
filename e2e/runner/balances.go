@@ -23,12 +23,14 @@ type AccountBalances struct {
 	ZetaBTC   *big.Int
 	ZetaSOL   *big.Int
 	ZetaSPL   *big.Int
+	ZetaSui   *big.Int
 	EvmETH    *big.Int
 	EvmZETA   *big.Int
 	EvmERC20  *big.Int
 	BtcBTC    string
 	SolSOL    *big.Int
 	SolSPL    *big.Int
+	SuiSUI    uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -72,6 +74,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaBtc := r.getERC20BalanceSafe(r.BTCZRC20, "btc zrc20")
 	zetaSol := r.getERC20BalanceSafe(r.SOLZRC20, "sol zrc20")
 	zetaSPL := r.getERC20BalanceSafe(r.SPLZRC20, "spl zrc20")
+	zetaSui := r.getERC20BalanceSafe(r.SUIZRC20, "sui zrc20")
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
@@ -127,6 +130,16 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		}
 	}
 
+	// sui
+	var suiSUI uint64
+	if r.Clients.Sui != nil {
+		signer, err := r.Account.SuiSigner()
+		if err != nil {
+			return AccountBalances{}, err
+		}
+		suiSUI = r.SuiGetFungibleTokenBalance(signer.Address())
+	}
+
 	return AccountBalances{
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
@@ -135,12 +148,14 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaBTC:   zetaBtc,
 		ZetaSOL:   zetaSol,
 		ZetaSPL:   zetaSPL,
+		ZetaSui:   zetaSui,
 		EvmETH:    evmEth,
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
 		BtcBTC:    BtcBTC,
 		SolSOL:    solSOL,
 		SolSPL:    solSPL,
+		SuiSUI:    suiSUI,
 	}, nil
 }
 
@@ -175,7 +190,17 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 // PrintAccountBalances shows the account balances of the accounts used in the E2E test
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
 func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
-	r.Logger.Print(" ---💰 Account info %s ---", r.EVMAddress().Hex())
+	r.Logger.Print(" ---💰 Account info ---")
+
+	r.Logger.Print("Addresses:")
+	r.Logger.Print("* EVM: %s", r.EVMAddress().Hex())
+	r.Logger.Print("* Solana: %s", r.SolanaDeployerAddress.String())
+	signer, err := r.Account.SuiSigner()
+	if err != nil {
+		r.Logger.Print("Error getting Sui address: %s", err.Error())
+	} else {
+		r.Logger.Print("* SUI: %s", signer.Address())
+	}
 
 	// zevm
 	r.Logger.Print("ZetaChain:")
@@ -205,6 +230,10 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	if balances.SolSPL != nil {
 		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
 	}
+
+	// sui
+	r.Logger.Print("Sui:")
+	r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
