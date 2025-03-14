@@ -42,6 +42,8 @@ const (
 	SolanaMaxComputeBudget = 1_400_000
 )
 
+type txGetterT func() (*solana.Transaction, error)
+
 // Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
 	*base.Signer
@@ -135,68 +137,68 @@ func (signer *Signer) TryProcessOutbound(
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
 
-	var tx *solana.Transaction
-	var fallbackTx *solana.Transaction
+	var txGetter txGetterT
+	var fallbackTxGetter txGetterT
 
 	switch coinType {
 	case coin.CoinType_Cmd:
-		whitelistTx, err := signer.prepareWhitelistTx(ctx, cctx, height)
+		whitelistTxGetter, err := signer.prepareWhitelistTx(ctx, cctx, height)
 		if err != nil {
 			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign whitelist outbound")
 			return
 		}
 
-		tx = whitelistTx
+		txGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
 		if cctx.IsWithdrawAndCall() {
-			executeTx, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
 				return
 			}
-			incrementNonceTx, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
 				return
 			}
 
-			tx = executeTx
-			fallbackTx = incrementNonceTx
+			txGetter = executeTxGetter
+			fallbackTxGetter = incrementNonceTxGetter
 		} else {
-			withdrawTx, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
+			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
 				return
 			}
 
-			tx = withdrawTx
+			txGetter = withdrawTxGetter
 		}
 
 	case coin.CoinType_ERC20:
 		if cctx.IsWithdrawAndCall() {
-			executeSPLTx, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
+			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
 				return
 			}
 
-			incrementNonceTx, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
 				return
 			}
 
-			tx = executeSPLTx
-			fallbackTx = incrementNonceTx
+			txGetter = executeSPLTxGetter
+			fallbackTxGetter = incrementNonceTxGetter
 		} else {
-			withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
 				return
 			}
 
-			tx = withdrawSPLTx
+			txGetter = withdrawSPLTxGetter
 		}
 	default:
 		logger.Error().
@@ -210,14 +212,25 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	// skip relaying the transaction if it not initialized (should not happen)
-	if tx == nil {
-		logger.Warn().Msgf("TryProcessOutbound: tx is not initialized")
+	// set relayer balance metrics
+	signer.SetRelayerBalanceMetrics(ctx)
+
+	// Get transactions from getters
+	// This is when the recent block hash timer starts
+	tx, err := txGetter()
+	if err != nil {
+		logger.Error().Err(err).Msgf("TryProcessOutbound: Failed to get transaction")
 		return
 	}
 
-	// set relayer balance metrics
-	signer.SetRelayerBalanceMetrics(ctx)
+	var fallbackTx *solana.Transaction
+	if fallbackTxGetter != nil {
+		fallbackTx, err = fallbackTxGetter()
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Failed to get fallback transaction")
+			return
+		}
+	}
 
 	// broadcast the signed tx to the Solana network
 	signer.broadcastOutbound(ctx, tx, fallbackTx, chainID, nonce, logger, zetacoreClient)
@@ -345,7 +358,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
@@ -368,18 +381,15 @@ func (signer *Signer) prepareIncrementNonceTx(
 		return nil, err
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the increment_nonce transaction by relayer key
+		inst, err := signer.createIncrementNonceInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating increment nonce instruction")
+		}
 
-	// sign the increment_nonce transaction by relayer key
-	inst, err := signer.createIncrementNonceInstruction(*msg)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating increment nonce instruction")
-	}
-
-	return signer.signTx(ctx, inst, 0)
+		return signer.signTx(ctx, inst, 0)
+	}, nil
 }
 
 func (signer *Signer) prepareWithdrawTx(
@@ -387,7 +397,7 @@ func (signer *Signer) prepareWithdrawTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
@@ -410,18 +420,15 @@ func (signer *Signer) prepareWithdrawTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWithdraw error")
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the withdraw transaction by relayer key
+		inst, err := signer.createWithdrawInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating withdraw instruction")
+		}
 
-	// sign the withdraw transaction by relayer key
-	inst, err := signer.createWithdrawInstruction(*msg)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating withdraw instruction")
-	}
-
-	return signer.signTx(ctx, inst, 0)
+		return signer.signTx(ctx, inst, 0)
+	}, nil
 }
 
 func (signer *Signer) prepareExecuteTx(
@@ -429,7 +436,7 @@ func (signer *Signer) prepareExecuteTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
@@ -478,18 +485,15 @@ func (signer *Signer) prepareExecuteTx(
 		return nil, errors.Wrap(err, "createAndSignMsgExecute error")
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the execute transaction by relayer key
+		inst, err := signer.createExecuteInstruction(*msgExecute)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute instruction")
+		}
 
-	// sign the execute transaction by relayer key
-	inst, err := signer.createExecuteInstruction(*msgExecute)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating execute instruction")
-	}
-
-	return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+		return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+	}, nil
 }
 
 func (signer *Signer) prepareWithdrawSPLTx(
@@ -497,7 +501,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
@@ -533,18 +537,15 @@ func (signer *Signer) prepareWithdrawSPLTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWithdrawSPL error")
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the withdraw transaction by relayer key
+		inst, err := signer.createWithdrawSPLInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
+		}
 
-	// sign the withdraw transaction by relayer key
-	inst, err := signer.createWithdrawSPLInstruction(*msg)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
-	}
-
-	return signer.signTx(ctx, inst, 0)
+		return signer.signTx(ctx, inst, 0)
+	}, nil
 }
 
 func (signer *Signer) prepareExecuteSPLTx(
@@ -552,7 +553,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
 	cancelTx := compliance.IsCctxRestricted(cctx)
@@ -610,25 +611,22 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, err
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the execute spl transaction by relayer key
+		inst, err := signer.createExecuteSPLInstruction(*msgExecuteSpl)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute SPL instruction")
+		}
 
-	// sign the execute spl transaction by relayer key
-	inst, err := signer.createExecuteSPLInstruction(*msgExecuteSpl)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating execute SPL instruction")
-	}
-
-	return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+		return signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+	}, nil
 }
 
 func (signer *Signer) prepareWhitelistTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	height uint64,
-) (*solana.Transaction, error) {
+) (txGetterT, error) {
 	params := cctx.GetCurrentOutboundParam()
 	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
 	if len(relayedMsg) != 2 {
@@ -652,18 +650,15 @@ func (signer *Signer) prepareWhitelistTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
 	}
 
-	// skip signing the transaction if this signer hasn't set the relayer key
-	if !signer.HasRelayerKey() {
-		return nil, nil
-	}
+	return func() (*solana.Transaction, error) {
+		// sign the whitelist transaction by relayer key
+		inst, err := signer.createWhitelistInstruction(msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating whitelist instruction")
+		}
 
-	// sign the whitelist transaction by relayer key
-	inst, err := signer.createWhitelistInstruction(msg)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating whitelist instruction")
-	}
-
-	return signer.signTx(ctx, inst, 0)
+		return signer.signTx(ctx, inst, 0)
+	}, nil
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
