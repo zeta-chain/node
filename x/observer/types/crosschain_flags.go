@@ -21,7 +21,7 @@ var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	MaxPendingCctxs: 500,
 
 	// RetryIntervalBTC is the time to wait before incrementing the gas price again for Bitcoin chain
-	// Bitcoin block time is 10 minutes, so the interval needs to be longer than confirmation time (10 min * 2 blocks).
+	// Bitcoin block time is 10 minutes, so the interval needs to be longer than confirmation time (10 min * 3 blocks).
 	// 40 minutes is chosen to be a mild interval to balance the finality and the sensitivity to fee marget changes.
 	RetryIntervalBTC: time.Minute * 40,
 }
