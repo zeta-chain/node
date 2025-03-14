@@ -210,6 +210,12 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
+	// skip relaying the transaction if it not initialized (should not happen)
+	if tx == nil {
+		logger.Warn().Msgf("TryProcessOutbound: tx is not initialized")
+		return
+	}
+
 	// set relayer balance metrics
 	signer.SetRelayerBalanceMetrics(ctx)
 
@@ -362,6 +368,11 @@ func (signer *Signer) prepareIncrementNonceTx(
 		return nil, err
 	}
 
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
+	}
+
 	// sign the increment_nonce transaction by relayer key
 	inst, err := signer.createIncrementNonceInstruction(*msg)
 	if err != nil {
@@ -397,6 +408,11 @@ func (signer *Signer) prepareWithdrawTx(
 	msg, err := signer.createAndSignMsgWithdraw(ctx, params, height, cancelTx)
 	if err != nil {
 		return nil, errors.Wrap(err, "createAndSignMsgWithdraw error")
+	}
+
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
 	}
 
 	// sign the withdraw transaction by relayer key
@@ -462,6 +478,11 @@ func (signer *Signer) prepareExecuteTx(
 		return nil, errors.Wrap(err, "createAndSignMsgExecute error")
 	}
 
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
+	}
+
 	// sign the execute transaction by relayer key
 	inst, err := signer.createExecuteInstruction(*msgExecute)
 	if err != nil {
@@ -510,6 +531,11 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "createAndSignMsgWithdrawSPL error")
+	}
+
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
 	}
 
 	// sign the withdraw transaction by relayer key
@@ -584,6 +610,11 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, err
 	}
 
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
+	}
+
 	// sign the execute spl transaction by relayer key
 	inst, err := signer.createExecuteSPLInstruction(*msgExecuteSpl)
 	if err != nil {
@@ -619,6 +650,11 @@ func (signer *Signer) prepareWhitelistTx(
 	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
 	if err != nil {
 		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
+	}
+
+	// skip signing the the transaction if this signer hasn't set the relayer key
+	if !signer.HasRelayerKey() {
+		return nil, nil
 	}
 
 	// sign the whitelist transaction by relayer key
