@@ -11,6 +11,10 @@
 ### Fixes
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 
+### Tests
+
+* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
+
 ## v29.0.0
 
 ### Breaking Changes

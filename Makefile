@@ -275,6 +275,11 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-staking-test: e2e-images
+	@echo "--> Starting e2e staking test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-staking" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
 start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \

@@ -119,6 +119,7 @@ jobs:
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
+      STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
       SUI_TESTS: ${{ steps.matrix-conditionals.outputs.SUI_TESTS }}
@@ -153,6 +154,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
+              core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
               core.setOutput('SUI_TESTS', labels.includes('SUI_TESTS'));
@@ -199,6 +201,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
+              core.setOutput('STAKING_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
               core.setOutput('SUI_TESTS', true);
@@ -214,6 +217,7 @@ jobs:
               core.setOutput('PERFORMANCE_TESTS', makeTargets.includes('performance-test'));
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
+              core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
               core.setOutput('SUI_TESTS', makeTargets.includes('sui-test'));
@@ -264,6 +268,9 @@ jobs:
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
             timeout-minutes: 40
+          - make-target: "start-staking-test"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.STAKING_TESTS == 'true' }}
           - make-target: "start-solana-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
