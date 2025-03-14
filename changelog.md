@@ -27,6 +27,8 @@
 
 * [3664](https://github.com/zeta-chain/node/pull/3664/) - add a check to stop posting inbound votes if the cctx has already been created
 
+## v29.0.0
+
 ### Breaking Changes
 
 * The CCTX List RPC (`/zeta-chain/crosschain/cctx`) will now return CCTXs ordered by creation time. CCTXs from before the upgrade will not be displayed. Use the `?unordered=true` parameter to revert to the old behavior.
