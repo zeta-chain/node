@@ -1,21 +1,16 @@
-# UNRELEASED
-
-### Features
-
-* [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
-
-### Refactor
-
-* [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errrors when creating outbound
-
 # CHANGELOG
 
 ## Unreleased
 
 ### Features
 
+* [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
+
+### Refactor
+
+* [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 
 ## v29.0.0
 
