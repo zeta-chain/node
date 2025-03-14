@@ -15,6 +15,7 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err, "get deployer signer")
 
 	balanceBefore := r.SuiGetSUIBalance(signer.Address())
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
 
 	amount := utils.ParseBigInt(r, args[0])
 
@@ -32,4 +33,9 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 	// check the balance after the withdraw
 	balanceAfter := r.SuiGetSUIBalance(signer.Address())
 	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
+
+	// check the TSS balance after transaction is higher or equal to the balance before
+	// reason is that the max budget is refunded to the TSS
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
 }
