@@ -105,6 +105,6 @@ func LiveTest_HealthCheck(t *testing.T) {
 
 	// check the RPC status
 	ctx := context.Background()
-	_, err := rpc.HealthCheck(ctx, client, false)
+	_, err := rpc.HealthCheck(ctx, client)
 	require.NoError(t, err)
 }

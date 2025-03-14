@@ -136,10 +136,7 @@ func reportPreflightMetricsSolana(ctx context.Context, app *zctx.AppContext, cha
 		return errors.New("unable to create solana rpc client")
 	}
 
-	// Solana privnet doesn't have RPC 'GetHealth', need to differentiate
-	privnet := chain.NetworkType == chains.NetworkType_privnet
-
-	blockTime, err := zetasolrpc.HealthCheck(ctx, rpcClient, privnet)
+	blockTime, err := zetasolrpc.HealthCheck(ctx, rpcClient)
 	if err != nil {
 		return errors.Wrap(err, "unable to get solana last block time")
 	}

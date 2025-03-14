@@ -147,26 +147,18 @@ func GetTransaction(
 	}
 }
 
-// HealthCheck checks the health of the RPC endpoint and returns the last block time
-func HealthCheck(ctx context.Context, client interfaces.SolanaRPCClient, privnet bool) (time.Time, error) {
-	// query solana health (always return "ok" unless --trusted-validator is provided)
-	if !privnet {
-		_, err := client.GetHealth(ctx)
-		if err != nil {
-			return time.Time{}, errors.Wrap(err, "RPC failed on GetHealth, RPC down?")
-		}
-	}
-
+// HealthCheck returns the last block time
+func HealthCheck(ctx context.Context, client interfaces.SolanaRPCClient) (time.Time, error) {
 	// query latest slot
 	slot, err := client.GetSlot(ctx, rpc.CommitmentFinalized)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on GetSlot, RPC down?")
+		return time.Time{}, errors.Wrap(err, "unable to get latest slot")
 	}
 
 	// query latest block time
 	blockTime, err := client.GetBlockTime(ctx, slot)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "RPC failed on GetBlockTime, RPC down?")
+		return time.Time{}, errors.Wrap(err, "unable to get latest block time")
 	}
 
 	return blockTime.Time(), nil
