@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+# UNRELEASED
 
 ### Features
 
@@ -11,6 +11,9 @@
 ### Refactor
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
+
+### Fixes
+* [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 
 ## v29.0.0
 

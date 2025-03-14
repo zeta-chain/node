@@ -1355,8 +1355,6 @@ github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0h
 github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=
 github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
-github.com/tonkeeper/tongo v1.9.3 h1:VNIZIuPeMw0+KZPvP57+EbgRwGZocN2v5CulRxba20A=
-github.com/tonkeeper/tongo v1.9.3/go.mod h1:MjgIgAytFarjCoVjMLjYEtpZNN1f2G/pnZhKjr28cWs=
 github.com/tonkeeper/tongo v1.14.8 h1:hIj3rGqAhhPxHBiFXAwDDELEw63hLcQlLdSztmEIyaA=
 github.com/tonkeeper/tongo v1.14.8/go.mod h1:MjgIgAytFarjCoVjMLjYEtpZNN1f2G/pnZhKjr28cWs=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
@@ -1404,8 +1402,8 @@ github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
 github.com/zeta-chain/go-tss v0.0.0-20241216161449-be92b20f8102 h1:jMb9ydfDFjgdlxpn8zClEPlUIJcz9ElahaAAXUPNFv0=
 github.com/zeta-chain/go-tss v0.0.0-20241216161449-be92b20f8102/go.mod h1:nqelgf4HKkqlXaVg8X38a61WfyYB+ivCt6nnjoTIgCc=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250225132027-d46f98d569a9 h1:rMTvyhs7NR8REZnVdhUr6h9PqfqRvZlu18R4Zv4GnBI=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250225132027-d46f98d569a9/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313183129-95f9ecc7b78e h1:rPm9kAEb2TCyhxEil87GiVnQPOR2Fy7NOguNabELA/M=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313183129-95f9ecc7b78e/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250212192042-34095b214e51 h1:r3cG+whGN8MFwfLG2Y2Irs2x1zyMznUDJHcOgV2X4UM=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250212192042-34095b214e51/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901 h1:9whtN5fjYHfk4yXIuAsYP2EHxImwDWDVUOnZJ2pfL3w=
