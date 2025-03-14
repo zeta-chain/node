@@ -368,7 +368,7 @@ func (signer *Signer) prepareIncrementNonceTx(
 		return nil, err
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
@@ -410,7 +410,7 @@ func (signer *Signer) prepareWithdrawTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWithdraw error")
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
@@ -478,7 +478,7 @@ func (signer *Signer) prepareExecuteTx(
 		return nil, errors.Wrap(err, "createAndSignMsgExecute error")
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
@@ -533,7 +533,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWithdrawSPL error")
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
@@ -610,7 +610,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, err
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
@@ -652,7 +652,7 @@ func (signer *Signer) prepareWhitelistTx(
 		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
 	}
 
-	// skip signing the the transaction if this signer hasn't set the relayer key
+	// skip signing the transaction if this signer hasn't set the relayer key
 	if !signer.HasRelayerKey() {
 		return nil, nil
 	}
