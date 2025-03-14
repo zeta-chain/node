@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v29.0.4
+
+### Fixes
+* [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
+
 ## v29.0.3
 
 ### Fixes
