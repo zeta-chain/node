@@ -140,10 +140,11 @@ func NewWithdrawalInbound(
 		gasLimit,
 		coinType,
 		asset,
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
 		InboundStatus_SUCCESS,
+		ConfirmationMode_SAFE,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(isCrossChainCall),
 	), nil
@@ -189,10 +190,11 @@ func NewCallInbound(
 		gasLimit,
 		coin.CoinType_NoAssetCall,
 		"",
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
 		InboundStatus_SUCCESS,
+		ConfirmationMode_SAFE,
 		WithZEVMRevertOptions(event.RevertOptions),
 	), nil
 }
@@ -239,10 +241,11 @@ func NewWithdrawAndCallInbound(
 		gasLimit,
 		coinType,
 		asset,
-		event.Raw.Index,
+		uint64(event.Raw.Index),
 		ProtocolContractVersion_V2,
 		event.CallOptions.IsArbitraryCall,
 		InboundStatus_SUCCESS,
+		ConfirmationMode_SAFE,
 		WithZEVMRevertOptions(event.RevertOptions),
 		WithCrossChainCall(true),
 	), nil

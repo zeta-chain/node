@@ -44,7 +44,7 @@ import (
 	crosschainmodule "github.com/zeta-chain/node/x/crosschain"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionsmodule "github.com/zeta-chain/node/x/emissions"
-	emissionsModuleTypes "github.com/zeta-chain/node/x/emissions/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungiblemodule "github.com/zeta-chain/node/x/fungible"
 	fungibleModuleTypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclientmodule "github.com/zeta-chain/node/x/lightclient"
@@ -117,7 +117,7 @@ func InitGenesisModuleList() []string {
 		crosschaintypes.ModuleName,
 		//ibccrosschaintypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
-		emissionsModuleTypes.ModuleName,
+		emissionstypes.ModuleName,
 		authz.ModuleName,
 		authoritytypes.ModuleName,
 		lightclienttypes.ModuleName,
@@ -182,5 +182,6 @@ func simulationModules(
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
 		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
+		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper, app.GetSubspace(emissionstypes.ModuleName)),
 	}
 }

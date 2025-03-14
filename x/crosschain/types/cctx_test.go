@@ -12,6 +12,70 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+func TestCrossChainTx_GetConnectedChainID(t *testing.T) {
+	t.Run("no inbound params", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = nil
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "inbound params cannot be nil")
+	})
+
+	t.Run("no outbound params", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{}
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "outbound params cannot be nil")
+	})
+
+	t.Run("no outbound params with nil", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{nil}
+		_, _, err := cctx.GetConnectedChainID()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "outbound params cannot be nil")
+	})
+
+	t.Run("outgoing cctx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.ZetaChainPrivnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{
+			{
+				ReceiverChainId: chains.BitcoinTestnet.GetChainId(),
+			},
+		}
+		chainID, outgoing, err := cctx.GetConnectedChainID()
+		require.NoError(t, err)
+		require.True(t, outgoing)
+		require.EqualValues(t, chains.BitcoinTestnet.GetChainId(), chainID)
+	})
+
+	t.Run("incoming cctx", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "sample")
+		cctx.InboundParams = &types.InboundParams{
+			SenderChainId: chains.BitcoinTestnet.GetChainId(),
+		}
+		cctx.OutboundParams = []*types.OutboundParams{
+			{
+				ReceiverChainId: chains.ZetaChainPrivnet.GetChainId(),
+			},
+		}
+		chainID, outgoing, err := cctx.GetConnectedChainID()
+		require.NoError(t, err)
+		require.False(t, outgoing)
+		require.EqualValues(t, chains.BitcoinTestnet.GetChainId(), chainID)
+	})
+}
+
 func TestCrossChainTx_GetEVMRevertAddress(t *testing.T) {
 	t.Run("use revert address if revert options", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "sample")
@@ -135,6 +199,7 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
 		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ConfirmationMode, cctx.InboundParams.ConfirmationMode)
 	})
 
 	t.Run("successfully set BTC revert address V1", func(t *testing.T) {
@@ -250,4 +315,41 @@ func TestCrossChainTx_SetReverted(t *testing.T) {
 	require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.Equal(t, cctx.CctxStatus.StatusMessage, "")
 	require.Equal(t, cctx.CctxStatus.ErrorMessageRevert, "")
+}
+
+func TestCrossChainTx_IsWithdrawAndCall(t *testing.T) {
+	t.Run("withdraw and call", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.True(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("not withdraw and call", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = false
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("not pending outbound status", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("nil inbound", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams = nil
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
+
+	t.Run("nil status", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.InboundParams.IsCrossChainCall = true
+		cctx.CctxStatus = nil
+		require.False(t, cctx.IsWithdrawAndCall())
+	})
 }

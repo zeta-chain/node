@@ -28,6 +28,11 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
+const (
+	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
+	BTCRegnetBlockTime = 6 * time.Second
+)
+
 // ListDeployerUTXOs list the deployer's UTXOs
 func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 	// query UTXOs from node
@@ -280,7 +285,9 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	txid, err := btcRPC.SendRawTransaction(r.Ctx, stx, true)
 	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
-	_, err = r.GenerateToAddressIfLocalBitcoin(6, btcDeployerAddress)
+
+	// mine 1 block to confirm the transaction
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, btcDeployerAddress)
 	require.NoError(r, err)
 	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
 	require.NoError(r, err)
@@ -351,6 +358,10 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	require.NoError(r, err)
 	r.Logger.Info("reveal txid: %s", txid.String())
 
+	// mine 1 block to confirm the reveal transaction
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
+	require.NoError(r, err)
+
 	return txid, revealTx.TxOut[0].Value
 }
 
@@ -414,7 +425,7 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 				require.NoError(r, err)
 
-				time.Sleep(6 * time.Second)
+				time.Sleep(BTCRegnetBlockTime)
 			}
 		}
 	}()

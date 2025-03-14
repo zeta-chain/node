@@ -90,22 +90,34 @@ func Coins() sdk.Coins {
 // Uint64InRange returns a sample uint64 in the given ranges
 func Uint64InRange(low, high uint64) uint64 {
 	r := newRandFromSeed(int64(low))
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Uint64()%(high-low) + low
 }
 
-// Uint64InRange returns a sample uint64 in the given ranges
+// Uint64InRangeFromRand returns a sample uint64 in the given ranges
 func Uint64InRangeFromRand(r *rand.Rand, low, high uint64) uint64 {
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Uint64()%(high-low) + low
 }
 
 // Int64InRange returns a sample int64 in the given ranges
 func Int64InRange(low, high int64) int64 {
 	r := newRandFromSeed(low)
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Int63()%(high-low) + low
 }
 
 // Int64InRangeFromRand returns a sample int64 in the given ranges
 func Int64InRangeFromRand(r *rand.Rand, low, high int64) int64 {
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Int63()%(high-low) + low
 }
 

@@ -81,6 +81,25 @@ export declare enum TxFinalizationStatus {
 }
 
 /**
+ * @generated from enum zetachain.zetacore.crosschain.ConfirmationMode
+ */
+export declare enum ConfirmationMode {
+  /**
+   * an inbound/outbound is confirmed using safe confirmation count
+   *
+   * @generated from enum value: SAFE = 0;
+   */
+  SAFE = 0,
+
+  /**
+   * an inbound/outbound is confirmed using fast confirmation count
+   *
+   * @generated from enum value: FAST = 1;
+   */
+  FAST = 1,
+}
+
+/**
  * InboundStatus represents the status of an observed inbound
  *
  * @generated from enum zetachain.zetacore.crosschain.InboundStatus
@@ -105,6 +124,13 @@ export declare enum InboundStatus {
    * @generated from enum value: INVALID_RECEIVER_ADDRESS = 2;
    */
   INVALID_RECEIVER_ADDRESS = 2,
+
+  /**
+   * parse memo is invalid
+   *
+   * @generated from enum value: INVALID_MEMO = 3;
+   */
+  INVALID_MEMO = 3,
 }
 
 /**
@@ -206,6 +232,13 @@ export declare class InboundParams extends Message<InboundParams> {
    * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
    */
   status: InboundStatus;
+
+  /**
+   * confirmation mode used for the inbound
+   *
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 21;
+   */
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<InboundParams>);
 
@@ -372,6 +405,13 @@ export declare class OutboundParams extends Message<OutboundParams> {
    */
   callOptions?: CallOptions;
 
+  /**
+   * confirmation mode used for the outbound
+   *
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 25;
+   */
+  confirmationMode: ConfirmationMode;
+
   constructor(data?: PartialMessage<OutboundParams>);
 
   static readonly runtime: typeof proto3;
@@ -436,6 +476,13 @@ export declare class Status extends Message<Status> {
    * @generated from field: string error_message_revert = 7;
    */
   errorMessageRevert: string;
+
+  /**
+   * error_message_abort carries information when aborting the CCTX fails
+   *
+   * @generated from field: string error_message_abort = 8;
+   */
+  errorMessageAbort: string;
 
   constructor(data?: PartialMessage<Status>);
 

@@ -52,7 +52,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 		chainParams2 := sample.ChainParams(chain2)
 
-		// a new chian params can be added
+		// a new chain params can be added
 		msg = types.MsgUpdateChainParams{
 			Creator:     admin,
 			ChainParams: chainParams2,

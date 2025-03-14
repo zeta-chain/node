@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -19,9 +20,9 @@ import (
 func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateTssAddress, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateTssAddress, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -31,7 +32,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgUpdateTssAddress,
+				TypeMsgUpdateTssAddress,
 				"no chains found which support tss migration",
 			), nil, nil
 		}
@@ -40,7 +41,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if len(cctxList) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgUpdateTssAddress,
+				TypeMsgUpdateTssAddress,
 				"no cross chain txs found",
 			), nil, nil
 		}
@@ -59,7 +60,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if !foundMined {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgUpdateTssAddress,
+				TypeMsgUpdateTssAddress,
 				"no mined cross chain txs found in mined state",
 			), nil, nil
 		}
@@ -77,7 +78,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgUpdateTssAddress,
+				TypeMsgUpdateTssAddress,
 				"no TSS found",
 			), nil, nil
 		}
@@ -89,7 +90,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 					types.ModuleName,
-					types.TypeMsgUpdateTssAddress,
+					TypeMsgUpdateTssAddress,
 					err.Error()),
 				nil, nil
 		}
@@ -104,7 +105,7 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgUpdateTssAddress,
 				"unable to validate MsgUpdateTssAddress msg",
 			), nil, err
 		}
@@ -123,6 +124,6 @@ func SimulateMsgUpdateTssAddress(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

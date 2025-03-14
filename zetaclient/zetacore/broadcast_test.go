@@ -32,7 +32,7 @@ func TestHandleBroadcastError(t *testing.T) {
 		errors.New(""):                                    {retry: true, report: false},
 	}
 	for input, output := range testCases {
-		retry, report := HandleBroadcastError(input, "", "", "")
+		retry, report := HandleBroadcastError(input, 100, 1, "")
 		require.Equal(t, output.report, report)
 		require.Equal(t, output.retry, retry)
 	}
@@ -80,7 +80,7 @@ func TestBroadcast(t *testing.T) {
 	t.Run("broadcast success", func(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
-			withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+			withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
@@ -94,7 +94,7 @@ func TestBroadcast(t *testing.T) {
 	t.Run("broadcast failed", func(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
-			withTendermint(
+			withCometBFT(
 				mocks.NewSDKClientWithErr(t, errors.New("account sequence mismatch, expected 5 got 4"), 32),
 			),
 		)

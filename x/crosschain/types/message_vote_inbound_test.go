@@ -39,6 +39,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 		)
 		require.EqualValues(t, types.NewEmptyRevertOptions(), msg.RevertOptions)
 	})
@@ -66,6 +67,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V2,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithRevertOptions(types.RevertOptions{
 				RevertAddress:  revertAddress.Hex(),
 				CallOnRevert:   true,
@@ -106,6 +108,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -141,6 +144,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithZEVMRevertOptions(gatewayzevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -180,6 +184,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress:    revertAddress,
 				CallOnRevert:     true,
@@ -214,6 +219,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithEVMRevertOptions(gatewayevm.RevertOptions{
 				RevertAddress: revertAddress,
 				CallOnRevert:  true,
@@ -250,6 +256,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 		)
 		require.False(t, msg.IsCrossChainCall)
 
@@ -271,6 +278,7 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithCrossChainCall(true),
 		)
 		require.True(t, msg.IsCrossChainCall)
@@ -293,9 +301,38 @@ func TestNewMsgVoteInbound(t *testing.T) {
 			types.ProtocolContractVersion_V1,
 			true,
 			types.InboundStatus_SUCCESS,
+			types.ConfirmationMode_SAFE,
 			types.WithCrossChainCall(false),
 		)
 		require.False(t, msg.IsCrossChainCall)
+	})
+
+	t.Run("can set inbound status and confirmation mode", func(t *testing.T) {
+		expectedInboundStatus := types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		expectedConfirmationMode := types.ConfirmationMode_FAST
+
+		msg := types.NewMsgVoteInbound(
+			sample.AccAddress(),
+			sample.AccAddress(),
+			42,
+			sample.String(),
+			sample.String(),
+			42,
+			math.NewUint(42),
+			sample.String(),
+			sample.String(),
+			42,
+			42,
+			coin.CoinType_Zeta,
+			sample.String(),
+			42,
+			types.ProtocolContractVersion_V1,
+			true,
+			expectedInboundStatus,
+			expectedConfirmationMode,
+		)
+		require.Equal(t, expectedInboundStatus, msg.Status)
+		require.Equal(t, expectedConfirmationMode, msg.ConfirmationMode)
 	})
 }
 
@@ -327,6 +364,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				types.ProtocolContractVersion_V1,
 				true,
 				types.InboundStatus_SUCCESS,
+				types.ConfirmationMode_SAFE,
 			),
 		},
 		{
@@ -349,6 +387,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				types.ProtocolContractVersion_V1,
 				true,
 				types.InboundStatus_SUCCESS,
+				types.ConfirmationMode_SAFE,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -372,6 +411,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				types.ProtocolContractVersion_V1,
 				true,
 				types.InboundStatus_SUCCESS,
+				types.ConfirmationMode_SAFE,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -395,6 +435,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				types.ProtocolContractVersion_V1,
 				true,
 				types.InboundStatus_SUCCESS,
+				types.ConfirmationMode_SAFE,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -418,6 +459,7 @@ func TestMsgVoteInbound_ValidateBasic(t *testing.T) {
 				types.ProtocolContractVersion_V1,
 				true,
 				types.InboundStatus_SUCCESS,
+				types.ConfirmationMode_SAFE,
 			),
 			err: sdkerrors.ErrInvalidRequest,
 		},
@@ -468,6 +510,7 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 			EventIndex:              42,
 			ProtocolContractVersion: types.ProtocolContractVersion_V1,
 			Status:                  types.InboundStatus_SUCCESS,
+			ConfirmationMode:        types.ConfirmationMode_SAFE,
 		}
 	}
 
@@ -571,6 +614,60 @@ func TestMsgVoteInbound_Digest(t *testing.T) {
 	msg.Status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
 	hash2 = msg.Digest()
 	require.NotEqual(t, hash, hash2, "inbound status should change hash")
+
+	// confirmation mode used
+	msg = getMsg()
+	msg.ConfirmationMode = types.ConfirmationMode_FAST
+	hash2 = msg.Digest()
+	require.NotEqual(t, hash, hash2, "confirmation mode should change hash")
+}
+
+func TestMsgVoteInbound_EligibleForFastConfirmation(t *testing.T) {
+	tests := []struct {
+		name     string
+		msg      types.MsgVoteInbound
+		eligible bool
+	}{
+		{
+			name: "eligible for fast confirmation",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion_V2
+				return msg
+			}(),
+			eligible: true,
+		},
+		{
+			name:     "not eligible for non-fungible coin type",
+			msg:      sample.InboundVote(coin.CoinType_NoAssetCall, 1, 7000),
+			eligible: false,
+		},
+		{
+			name: "not eligible for protocol contract version V1",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion_V1
+				return msg
+			}(),
+			eligible: false,
+		},
+		{
+			name: "not eligible for unknown protocol contract version",
+			msg: func() types.MsgVoteInbound {
+				msg := sample.InboundVote(coin.CoinType_Gas, 1, 7000)
+				msg.ProtocolContractVersion = types.ProtocolContractVersion(999)
+				return msg
+			}(),
+			eligible: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			eligible := tt.msg.EligibleForFastConfirmation()
+			require.Equal(t, tt.eligible, eligible)
+		})
+	}
 }
 
 func TestMsgVoteInbound_GetSigners(t *testing.T) {

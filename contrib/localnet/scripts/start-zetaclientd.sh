@@ -69,7 +69,10 @@ RELAYER_KEY_PATH="$HOME/.zetacored/relayer-keys"
 mkdir -p "${RELAYER_KEY_PATH}"
 
 mkdir -p "$HOME/.tss/"
-zetae2e local get-zetaclient-bootstrap > "$HOME/.tss/address_book.seed"
+address_book_path="$HOME/.tss/address_book.seed"
+if [[ ! -f "$address_book_path" ]]; then
+    zetae2e local get-zetaclient-bootstrap > $address_book_path
+fi
 
 MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
@@ -112,5 +115,8 @@ if [[ -f /root/zetaclient-config-overlay.json ]]; then
   jq -s '.[0] * .[1]' /root/.zetacored/config/zetaclient_config.json /root/zetaclient-config-overlay.json > /tmp/merged_config.json
   mv /tmp/merged_config.json /root/.zetacored/config/zetaclient_config.json
 fi
+
+# ensure restricted addresses config is initialized to avoid log spam
+echo "[]" > ~/.zetacored/config/zetaclient_restricted_addresses.json
 
 zetaclientd-supervisor start < /root/password.file

@@ -7,6 +7,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
+// UpdateTSSAddressForConnector updates the TSS address for the connector contract
 func (r *E2ERunner) UpdateTSSAddressForConnector() {
 	require.NoError(r, r.SetTSSAddresses())
 
@@ -21,6 +22,7 @@ func (r *E2ERunner) UpdateTSSAddressForConnector() {
 	require.Equal(r, r.TSSAddress, tssAddressOnConnector)
 }
 
+// UpdateTSSAddressForERC20custody updates the TSS address for the ERC20 custody contract
 func (r *E2ERunner) UpdateTSSAddressForERC20custody() {
 	require.NoError(r, r.SetTSSAddresses())
 
@@ -34,4 +36,19 @@ func (r *E2ERunner) UpdateTSSAddressForERC20custody() {
 	tssAddressOnCustody, err := r.ERC20Custody.TssAddress(&bind.CallOpts{Context: r.Ctx})
 	require.NoError(r, err)
 	require.Equal(r, r.TSSAddress, tssAddressOnCustody)
+}
+
+// UpdateTSSAddressForGateway updates the TSS address for the gateway contract
+func (r *E2ERunner) UpdateTSSAddressForGateway() {
+	require.NoError(r, r.SetTSSAddresses())
+
+	tx, err := r.GatewayEVM.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)
+	require.NoError(r, err)
+	r.Logger.Info("TSS Gateway Address Update Tx: %s", tx.Hash().String())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	tssAddressOnGateway, err := r.GatewayEVM.TssAddress(&bind.CallOpts{Context: r.Ctx})
+	require.NoError(r, err)
+	require.Equal(r, r.TSSAddress, tssAddressOnGateway)
 }

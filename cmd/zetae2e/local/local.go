@@ -7,12 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"syscall"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
+	"github.com/stretchr/testify/require"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -21,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -36,6 +38,7 @@ const (
 	flagTestPerformance   = "test-performance"
 	flagTestSolana        = "test-solana"
 	flagTestTON           = "test-ton"
+	flagTestSui           = "test-sui"
 	flagSkipRegular       = "skip-regular"
 	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
@@ -47,14 +50,14 @@ const (
 	flagSkipTrackerCheck  = "skip-tracker-check"
 	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
+	flagTestFilter        = "test-filter"
 )
 
 var (
 	TestTimeout        = 20 * time.Minute
 	ErrTopLevelTimeout = errors.New("top level test timeout")
+	noError            = testutil.NoError
 )
-
-var noError = testutil.NoError
 
 // NewLocalCmd returns the local command
 // which runs the E2E tests locally on the machine with localnet for each blockchain
@@ -72,6 +75,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
+	cmd.Flags().Bool(flagTestSui, false, "set to true to run Sui tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
@@ -82,9 +86,10 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
+	cmd.Flags().Bool(flagSkipPrecompiles, true, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
+	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -104,6 +109,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
+		testSui           = must(cmd.Flags().GetBool(flagTestSui))
 		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
 		light             = must(cmd.Flags().GetBool(flagLight))
 		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
@@ -116,7 +122,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		setupSolana       = testSolana || testPerformance
+		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
 	)
+
+	testFilter := regexp.MustCompile(testFilterStr)
 
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
@@ -137,11 +146,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
-
-	// temporary spaghetti to overcome e2e flags limitations
-	if !testTON {
-		conf.RPCs.TONSidecarURL = ""
-	}
 
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
@@ -179,6 +183,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 	noError(err)
 
+	// Drop this cond after TON e2e is included in the default suite
+	if !testTON {
+		conf.RPCs.TON = ""
+	}
+
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -188,6 +197,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		conf.DefaultAccount,
 		logger,
 		runner.WithZetaTxServer(zetaTxServer),
+		runner.WithTestFilter(testFilter),
 	)
 	noError(err)
 
@@ -226,8 +236,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
 
+		// setup TSS address and setup deployer wallet
+		deployerRunner.SetupBitcoinAccounts(true)
+
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -253,6 +266,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams()
+
+		if testTON {
+			deployerRunner.SetupTON(
+				conf.RPCs.TONFaucet,
+				conf.AdditionalAccounts.UserTON,
+			)
+		}
+
+		if testSui {
+			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
+		}
 
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
@@ -281,9 +305,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
 	}
-
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
+
+	// Run the proposals under the start sequence(proposals_e2e_start folder)
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.StartOfE2E))
+	}
 
 	// run tests
 	var eg errgroup.Group
@@ -291,55 +319,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-
-		// start the bitcoin tests
-		// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
-		bitcoinDepositTests := []string{
-			e2etests.TestBitcoinDonationName,
-			e2etests.TestBitcoinDepositName,
-			e2etests.TestBitcoinDepositAndCallName,
-			e2etests.TestBitcoinDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoDepositName,
-			e2etests.TestBitcoinStdMemoDepositAndCallName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
-			e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
-			e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
-			e2etests.TestCrosschainSwapName,
-		}
-		bitcoinDepositTestsAdvanced := []string{
-			e2etests.TestBitcoinDepositAndCallRevertWithDustName,
-			e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
-			e2etests.TestBitcoinDepositAndWithdrawWithDustName,
-		}
-		bitcoinWithdrawTests := []string{
-			e2etests.TestBitcoinWithdrawSegWitName,
-			e2etests.TestBitcoinWithdrawInvalidAddressName,
-			e2etests.TestLegacyZetaWithdrawBTCRevertName,
-		}
-		bitcoinWithdrawTestsAdvanced := []string{
-			e2etests.TestBitcoinWithdrawTaprootName,
-			e2etests.TestBitcoinWithdrawLegacyName,
-			e2etests.TestBitcoinWithdrawP2SHName,
-			e2etests.TestBitcoinWithdrawP2WSHName,
-			e2etests.TestBitcoinWithdrawMultipleName,
-			e2etests.TestBitcoinWithdrawRestrictedName,
-		}
-
-		if !light {
-			// if light is enabled, only the most basic tests are run and advanced are skipped
-			bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
-			bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
-		}
-		bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine := bitcoinTestRoutines(
-			conf,
-			deployerRunner,
-			verbose,
-			!skipBitcoinSetup,
-			bitcoinDepositTests,
-			bitcoinWithdrawTests,
-		)
-		eg.Go(bitcoinDepositTestRoutine)
-		eg.Go(bitcoinWithdrawTestRoutine)
+		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
 	if !skipPrecompiles {
@@ -371,6 +351,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestUpdateZRC20NameName,
 			e2etests.TestZetaclientSignerOffsetName,
 			e2etests.TestZetaclientRestartHeightName,
 			e2etests.TestWhitelistERC20Name,
@@ -381,6 +362,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestCriticalAdminTransactionsName,
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
+			e2etests.TestUpdateOperationalChainParamsName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
@@ -440,23 +422,50 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			logger.Print("❌ solana client is nil, maybe solana rpc is not set")
 			os.Exit(1)
 		}
+		// Run only basic solana tests if an upgrade is in progress
+		// This is done to avoid running the tests that take too long to complete
+		// Related : https://github.com/zeta-chain/node/issues/3666
 		solanaTests := []string{
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
-			e2etests.TestSolanaDepositAndCallName,
-			e2etests.TestSolanaDepositAndCallRevertName,
-			e2etests.TestSolanaDepositAndCallRevertWithDustName,
-			e2etests.TestSolanaDepositRestrictedName,
-			e2etests.TestSolanaWithdrawRestrictedName,
-			// TODO move under admin tests
-			// https://github.com/zeta-chain/node/issues/3085
 			e2etests.TestSPLDepositName,
-			e2etests.TestSPLDepositAndCallName,
-			e2etests.TestSPLWithdrawName,
-			e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
-			e2etests.TestSolanaWhitelistSPLName,
 		}
+
+		if !deployerRunner.IsRunningUpgrade() {
+			solanaTests = append(solanaTests, []string{
+				e2etests.TestSolanaDepositAndCallName,
+				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestSPLDepositAndCallName,
+				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertName,
+				e2etests.TestSolanaDepositAndCallRevertWithDustName,
+				e2etests.TestSolanaDepositRestrictedName,
+				e2etests.TestSolanaWithdrawRestrictedName,
+				// TODO move under admin tests
+				// https://github.com/zeta-chain/node/issues/3085
+				e2etests.TestSPLWithdrawName,
+				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallRevertName,
+				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+				e2etests.TestSolanaWhitelistSPLName,
+			}...)
+		}
+
 		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
+	}
+
+	if testSui {
+		suiTests := []string{
+			e2etests.TestSuiDepositName,
+			e2etests.TestSuiDepositAndCallRevertName,
+			e2etests.TestSuiDepositAndCallName,
+			e2etests.TestSuiTokenDepositName,
+			e2etests.TestSuiTokenDepositAndCallName,
+			e2etests.TestSuiTokenDepositAndCallRevertName,
+			e2etests.TestSuiWithdrawName,
+			e2etests.TestSuiTokenWithdrawName,
+		}
+		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 
 	if testTON {
@@ -517,6 +526,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+
+	// Default ballot maturity is set to 30 blocks.
+	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
+	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests for this check as we expect all observers to vote correctly.
+	if testPerformance {
+		deployerRunner.WaitForBlocks(31)
+	}
+
 	noError(deployerRunner.WithdrawEmissions())
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
@@ -527,8 +544,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
+	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	if testSolana {
+		require.True(
+			deployerRunner,
+			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
+		)
+	}
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
@@ -541,6 +568,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// Verify that the balance of restricted address is zero
 	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+
+	if !deployerRunner.IsRunningUpgrade() {
+		// Verify that there are no stale ballots left over after tests complete
+		deployerRunner.EnsureNoStaleBallots()
+	}
 
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()

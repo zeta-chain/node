@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -18,7 +20,6 @@ import (
 	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/ptr"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"

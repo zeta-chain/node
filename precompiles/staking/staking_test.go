@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+
 	"math/big"
 
 	"cosmossdk.io/log"
@@ -28,7 +30,6 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/precompiles/prototype"
 	"github.com/zeta-chain/node/testutil/keeper"

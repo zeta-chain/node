@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"encoding/hex"
@@ -39,9 +39,9 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -57,9 +57,9 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no ZetaSent event", func(t *testing.T) {
@@ -75,9 +75,9 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		receipt.Logs = receipt.Logs[:2] // remove ZetaSent event
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
+		ballot, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -95,10 +95,10 @@ func Test_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.CheckAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
+		_, err := ob.checkAndVoteInboundTokenZeta(ob.ctx, tx, receipt, true)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")
@@ -124,9 +124,9 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
@@ -142,9 +142,9 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount - 1)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe() - 2)
 
-		_, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no Deposit event", func(t *testing.T) {
@@ -160,9 +160,9 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		receipt.Logs = receipt.Logs[:1] // remove Deposit event
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
-		ballot, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
+		ballot, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -181,10 +181,10 @@ func Test_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
 
-		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+		ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 		// ACT
-		_, err := ob.CheckAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
+		_, err := ob.checkAndVoteInboundTokenERC20(ob.ctx, tx, receipt, true)
 
 		// ASSERT
 		require.ErrorContains(t, err, "emitter address mismatch")
@@ -213,19 +213,19 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.CheckAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundParams.BallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed inbound", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMInboundNReceiptNCctx(t, TestDataDir, chainID, inboundHash, coin.CoinType_Gas)
 		require.NoError(t, common.ValidateEvmTransaction(tx))
-		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
+		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 2
 
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		_, err := ob.CheckAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		_, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if receiver is not TSS", func(t *testing.T) {
@@ -237,7 +237,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.CheckAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not TSS address")
 		require.Equal(t, "", ballot)
 	})
@@ -250,7 +250,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.CheckAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
 		require.ErrorContains(t, err, "not a successful tx")
 		require.Equal(t, "", ballot)
 	})
@@ -263,7 +263,7 @@ func Test_CheckAndVoteInboundTokenGas(t *testing.T) {
 		ob := newTestSuite(t)
 		ob.WithLastBlock(lastBlock)
 
-		ballot, err := ob.CheckAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
+		ballot, err := ob.checkAndVoteInboundTokenGas(ob.ctx, tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
 	})
@@ -289,29 +289,29 @@ func Test_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	}
 
 	t.Run("should return vote msg for archived ZetaSent event", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
+		msg := ob.buildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
 		require.NotNil(t, msg)
 		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		sender := event.ZetaTxSenderAddress.Hex()
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		receiver := clienttypes.BytesToEthHex(event.DestinationAddress)
 		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if txOrigin is restricted", func(t *testing.T) {
 		txOrigin := event.SourceTxOriginAddress.Hex()
 		cfg.ComplianceConfig.RestrictedAddresses = []string{txOrigin}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForZetaSentEvent(ob.appContext, event)
 		require.Nil(t, msg)
 	})
 }
@@ -337,26 +337,26 @@ func Test_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	}
 
 	t.Run("should return vote msg for archived Deposited event", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
+		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		require.NotNil(t, msg)
 		require.Equal(t, cctx.InboundParams.BallotIndex, msg.Digest())
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{sender.Hex()}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		receiver := clienttypes.BytesToEthHex(event.Recipient)
 		cfg.ComplianceConfig.RestrictedAddresses = []string{receiver}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
 		event.Message = []byte(constant.DonationMessage)
-		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
+		msg := ob.buildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
 }
@@ -390,7 +390,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	}
 
 	t.Run("should return vote msg for archived gas token transfer to TSS", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+		msg := ob.buildInboundVoteMsgForTokenSentToTSS(
 			tx,
 			ethcommon.HexToAddress(tx.From),
 			receipt.BlockNumber.Uint64(),
@@ -400,8 +400,8 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	})
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
 		cfg.ComplianceConfig.RestrictedAddresses = []string{tx.From}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForTokenSentToTSS(
 			tx,
 			ethcommon.HexToAddress(tx.From),
 			receipt.BlockNumber.Uint64(),
@@ -414,8 +414,8 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		message := hex.EncodeToString(ethcommon.HexToAddress(testutils.OtherAddress1).Bytes())
 		txCopy.Input = message // use other address as receiver
 		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress1}
-		config.LoadComplianceConfig(cfg)
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(
+		config.SetRestrictedAddressesFromConfig(cfg)
+		msg := ob.buildInboundVoteMsgForTokenSentToTSS(
 			txCopy,
 			ethcommon.HexToAddress(txCopy.From),
 			receipt.BlockNumber.Uint64(),
@@ -423,7 +423,7 @@ func Test_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
-		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(txDonation,
+		msg := ob.buildInboundVoteMsgForTokenSentToTSS(txDonation,
 			ethcommon.HexToAddress(txDonation.From), receiptDonation.BlockNumber.Uint64())
 		require.Nil(t, msg)
 	})
@@ -446,9 +446,10 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name          string
-		mockEVMClient func(m *mocks.EVMRPCClient)
-		errMsg        string
+		name               string
+		mockEVMClient      func(m *mocks.EVMRPCClient)
+		mockZetacoreClient func(m *mocks.ZetacoreClient)
+		errMsg             string
 	}{
 		{
 			name: "should observe TSS receive in block",
@@ -457,6 +458,9 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				m.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(receipt, nil)
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
+			},
+			mockZetacoreClient: func(m *mocks.ZetacoreClient) {
+				m.On("GetCctxByHash", mock.Anything, mock.Anything).Return(nil, errors.New("not found"))
 			},
 			errMsg: "",
 		},
@@ -469,7 +473,8 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				m.On("BlockNumber", mock.Anything).Return(uint64(0), errors.New("RPC error"))
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
 			},
-			errMsg: "error getting block",
+			mockZetacoreClient: nil,
+			errMsg:             "error getting block",
 		},
 		{
 			name: "should not observe on error getting receipt",
@@ -479,20 +484,25 @@ func Test_ObserveTSSReceiveInBlock(t *testing.T) {
 				m.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, errors.New("RPC error"))
 				m.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(block, nil)
 			},
-			errMsg: "error getting receipt",
+			mockZetacoreClient: nil,
+			errMsg:             "error getting receipt",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ob := newTestSuite(t)
-			ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.ConfirmationCount)
+			ob.WithLastBlock(receipt.BlockNumber.Uint64() + ob.chainParams.InboundConfirmationSafe())
 
 			if tt.mockEVMClient != nil {
 				tt.mockEVMClient(ob.evmMock)
 			}
 
-			err := ob.ObserveTSSReceiveInBlock(ob.ctx, blockNumber)
+			if tt.mockZetacoreClient != nil {
+				tt.mockZetacoreClient(ob.zetacore)
+			}
+
+			err := ob.observeTSSReceiveInBlock(ob.ctx, blockNumber)
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
 				return

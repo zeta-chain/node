@@ -121,16 +121,18 @@ func (k msgServer) VoteOutbound(
 	// Fund the gas stability pool with the remaining funds.
 	k.FundStabilityPool(ctx, &cctx)
 
-	// We use the current TSS pubkey to finalize the outbound.
+	// Validate and process the observed outbound
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		// The validate function for the outbound returns an error, which means that the outbound is invalid and should instead be aborted directly
-		// Irrespective of what the Ballot status is
-		k.HandleInvalidOutbound(ctx, &cctx, err, tss.TssPubkey)
-		return &types.MsgVoteOutboundResponse{}, nil
+		// Should not happen
+		cctx.SetAbort(types.StatusMessages{
+			StatusMessage:        "outbound failed unable to process",
+			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("", err),
+		})
+		ctx.Logger().Error(err.Error())
 	}
-	// The outbound is valid, the HandleValidOutbound function would save the required status changes
-	k.HandleValidOutbound(ctx, &cctx, tss.TssPubkey)
+	k.SaveOutbound(ctx, &cctx, tss.TssPubkey)
+
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
@@ -188,41 +190,11 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 	return n
 }
 
-/*
-HandleInvalidOutbound saves an invalid outbound transaction. It does the following things in one function:
-
- 1. Change the status of the CCTX to Aborted
-
- 2. Save the outbound
-*/
-
-func (k Keeper) HandleInvalidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, err error, tssPubkey string) {
-	cctx.SetAbort(types.StatusMessages{
-		StatusMessage:        "outbound failed unable to process",
-		ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("", err),
-	})
-	ctx.Logger().Error(err.Error())
-	k.SaveOutbound(ctx, cctx, tssPubkey)
-}
-
-// HandleValidOutbound saves a successful outbound transaction.
-// This function does not set the CCTX status, therefore all successful outbound transactions need
-// to have their status set during processing
-func (k Keeper) HandleValidOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
-	k.SaveOutbound(ctx, cctx, tssPubkey)
-}
-
-/*
-SaveOutbound saves the outbound transaction.It does the following things in one function:
-
- 1. Set the ballot index for the outbound vote to the cctx
-
- 2. Remove the nonce from the pending nonces
-
- 3. Remove the outbound tx tracker
-
- 4. Set the cctx and nonce to cctx and inboundHash to cctx
-*/
+// SaveOutbound saves the outbound transaction.It does the following things in one function:
+// 1. Set the ballot index for the outbound vote to the cctx
+// 2. Remove the nonce from the pending nonces
+// 3. Remove the outbound tx tracker
+// 4. Set the cctx and nonce to cctx and inboundHash to cctx
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, tssPubkey string) {
 	// #nosec G115 always in range
 	for _, outboundParams := range cctx.OutboundParams {

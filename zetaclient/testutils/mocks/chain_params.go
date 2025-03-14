@@ -31,7 +31,7 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 
 	return observertypes.ChainParams{
 		ChainId:                     chainID,
-		ConfirmationCount:           confirmation,
+		ConfirmationCount:           confirmation, // it is deprecated still needed to by pass chain params validation
 		ZetaTokenContractAddress:    constant.EVMZeroAddress,
 		ConnectorContractAddress:    connectorAddr,
 		Erc20CustodyContractAddress: erc20CustodyAddr,
@@ -45,6 +45,10 @@ func MockChainParams(chainID int64, confirmation uint64) observertypes.ChainPara
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		GatewayAddress:              gwAddress,
 		IsSupported:                 true,
+		ConfirmationParams: &observertypes.ConfirmationParams{
+			SafeInboundCount:  confirmation,
+			SafeOutboundCount: confirmation,
+		},
 	}
 }
 

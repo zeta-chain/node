@@ -75,8 +75,8 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 		return c.crosschainKeeper.SetObserverOutboundInfo(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()
 	if err != nil {
-		// do not commit anything here as the CCTX should be aborted
-		config.CCTX.SetAbort(types.StatusMessages{
+		// do not commit anything here as the CCTX should be aborted, and use ctx for processing the abort
+		c.crosschainKeeper.ProcessAbort(ctx, config.CCTX, types.StatusMessages{
 			StatusMessage:        "outbound failed unable to process",
 			ErrorMessageOutbound: cctxerror.NewCCTXErrorJSONMessage("Unable to create outbound", err),
 		})

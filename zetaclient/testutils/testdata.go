@@ -117,6 +117,14 @@ func LoadBTCMsgTx(t *testing.T, dir string, chainID int64, txHash string) *wire.
 	return msgTx
 }
 
+// LoadBTCTransaction loads archived Bitcoin transaction from file
+func LoadBTCTransaction(t *testing.T, dir string, chainID int64, txHash string) *btcjson.GetTransactionResult {
+	name := path.Join(dir, TestDataPathBTC, FileNameBTCTransaction(chainID, txHash))
+	tx := &btcjson.GetTransactionResult{}
+	LoadObjectFromJSONFile(t, tx, name)
+	return tx
+}
+
 // LoadBTCTxRawResult loads archived Bitcoin tx raw result from file
 func LoadBTCTxRawResult(t *testing.T, dir string, chainID int64, txType string, txHash string) *btcjson.TxRawResult {
 	name := path.Join(dir, TestDataPathBTC, FileNameBTCTxByType(chainID, txType, txHash))

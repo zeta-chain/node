@@ -90,3 +90,9 @@ Arbitrary calls feature is an experimental and niche use case for now, these tes
 ```
 eth_withdraw_and_arbitrary_call:1000 erc20_withdraw_and_arbitrary_call:1000
 ```
+
+## Gov proposal
+
+Any governace proposals can be executed in the E2E tests. There are two options for the sequence of the proposal execution.
+1. Start of E2E tests: The proposal json needs to be placed in the `contrib/localnet/orchestrator/proposal_e2e_start` directory.All proposals in this directory will be executed before running the e2e tests
+2. End of E2E tests: The proposal json needs to be placed in the `contrib/localnet/orchestrator/proposal_e2e_end` directory.All proposals in this directory will be executed after running the e2e tests

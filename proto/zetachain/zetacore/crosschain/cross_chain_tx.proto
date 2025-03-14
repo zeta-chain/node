@@ -27,6 +27,12 @@ enum TxFinalizationStatus {
   Executed = 2;     // the corresponding tx is executed
 }
 
+enum ConfirmationMode {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SAFE = 0; // an inbound/outbound is confirmed using safe confirmation count
+  FAST = 1; // an inbound/outbound is confirmed using fast confirmation count
+}
+
 // InboundStatus represents the status of an observed inbound
 enum InboundStatus {
   option (gogoproto.goproto_enum_stringer) = true;
@@ -36,6 +42,8 @@ enum InboundStatus {
   INSUFFICIENT_DEPOSITOR_FEE = 1;
   // the receiver address parsed from the inbound is invalid
   INVALID_RECEIVER_ADDRESS = 2;
+  // parse memo is invalid
+  INVALID_MEMO = 3;
 }
 
 message InboundParams {
@@ -62,6 +70,12 @@ message InboundParams {
 
   // status of the inbound observation
   InboundStatus status = 20;
+
+  // confirmation mode used for the inbound
+  ConfirmationMode confirmation_mode = 21;
+
+  // not used. do not edit.
+  reserved 13 to 19;
 }
 
 message ZetaAccounting {
@@ -107,6 +121,9 @@ message OutboundParams {
 
   CallOptions call_options = 24;
 
+  // confirmation mode used for the outbound
+  ConfirmationMode confirmation_mode = 25;
+
   // not used. do not edit.
   reserved 13 to 19;
 }
@@ -126,6 +143,8 @@ message Status {
   // error_message_revert carries information about the revert outbound tx ,
   // which is created if the first outbound tx fails
   string error_message_revert = 7;
+  // error_message_abort carries information when aborting the CCTX fails
+  string error_message_abort = 8;
 }
 
 // ProtocolContractVersion represents the version of the protocol contract used

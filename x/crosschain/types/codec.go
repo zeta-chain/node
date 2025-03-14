@@ -19,6 +19,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateTssAddress{}, "crosschain/UpdateTssAddress", nil)
 	cdc.RegisterConcrete(&MsgAbortStuckCCTX{}, "crosschain/AbortStuckCCTX", nil)
 	cdc.RegisterConcrete(&MsgUpdateRateLimiterFlags{}, "crosschain/UpdateRateLimiterFlags", nil)
+	cdc.RegisterConcrete(&MsgRemoveInboundTracker{}, "crosschain/RemoveInboundTracker", nil)
 
 	// legacy messages defined for backward compatibility
 	cdc.RegisterConcrete(&MsgAddToInTxTracker{}, "crosschain/AddToInTxTracker", nil)
@@ -42,6 +43,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateTssAddress{},
 		&MsgAbortStuckCCTX{},
 		&MsgUpdateRateLimiterFlags{},
+		&MsgRemoveInboundTracker{},
 
 		// legacy messages defined for backward compatibility
 		&MsgAddToInTxTracker{},

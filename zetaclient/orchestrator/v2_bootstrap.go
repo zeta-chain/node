@@ -10,6 +10,7 @@ import (
 	tontools "github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	suigateway "github.com/zeta-chain/node/pkg/contracts/sui"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin"
@@ -23,6 +24,10 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/solana"
 	solbserver "github.com/zeta-chain/node/zetaclient/chains/solana/observer"
 	solanasigner "github.com/zeta-chain/node/zetaclient/chains/solana/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/sui"
+	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
+	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
@@ -177,6 +182,42 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 	}
 
 	return solana.New(oc.scheduler, observer, signer), nil
+}
+
+func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, error) {
+	// should not happen
+	if !chain.IsSui() {
+		return nil, errors.New("chain is not sui")
+	}
+
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, found := app.Config().GetSuiConfig()
+	if !found {
+		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
+	}
+
+	// note that gw address should be in format of `$packageID,$gatewayObjectID`
+	gateway, err := suigateway.NewGatewayFromPairID(chain.Params().GatewayAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create gateway")
+	}
+
+	suiClient := suiclient.NewFromEndpoint(cfg.Endpoint)
+
+	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create base observer")
+	}
+
+	observer := suiobserver.New(baseObserver, suiClient, gateway)
+
+	signer := suisigner.New(oc.newBaseSigner(chain), suiClient, gateway, oc.deps.Zetacore)
+
+	return sui.New(oc.scheduler, observer, signer), nil
 }
 
 func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {

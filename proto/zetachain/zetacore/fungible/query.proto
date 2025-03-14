@@ -25,6 +25,13 @@ service Query {
     option (google.api.http).get = "/zeta-chain/fungible/foreign_coins";
   }
 
+  // Queries a ForeignCoins by chain_id and asset.
+  rpc ForeignCoinsFromAsset(QueryGetForeignCoinsFromAssetRequest)
+      returns (QueryGetForeignCoinsFromAssetResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/fungible/foreign_coins/{chain_id}/{asset}";
+  }
+
   // Queries SystemContract
   rpc SystemContract(QueryGetSystemContractRequest)
       returns (QueryGetSystemContractResponse) {
@@ -71,6 +78,19 @@ message QueryAllForeignCoinsRequest {
 message QueryAllForeignCoinsResponse {
   repeated ForeignCoins foreignCoins = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGetForeignCoinsFromAssetRequest defines the request type for the
+// ForeignCoinsFromAsset RPC method.
+message QueryGetForeignCoinsFromAssetRequest {
+  int64 chain_id = 1;
+  string asset = 2;
+}
+
+// QueryGetForeignCoinsFromAssetResponse defines the response type for the
+// ForeignCoinsFromAsset RPC method.
+message QueryGetForeignCoinsFromAssetResponse {
+  ForeignCoins foreignCoins = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryGetSystemContractRequest {}

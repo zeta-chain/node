@@ -17,10 +17,10 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
 		"/zetachain.zetacore.fungible.MsgUnpauseZRC20",
 		"/zetachain.zetacore.observer.MsgResetChainNonces",
-		"/zetachain.zetacore.observer.MsgUpdateChainParams",
 		"/zetachain.zetacore.observer.MsgEnableCCTX",
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
 		"/zetachain.zetacore.observer.MsgUpdateOperationalFlags",
+		"/zetachain.zetacore.observer.MsgUpdateOperationalChainParams",
 	}
 	// AdminPolicyMessages keeps track of the message URLs that can, by default, only be executed by admin policy address
 	AdminPolicyMessages = []string{
@@ -34,6 +34,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateGatewayContract",
 		"/zetachain.zetacore.fungible.MsgRemoveForeignCoin",
 		"/zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20",
+		"/zetachain.zetacore.fungible.MsgUpdateZRC20Name",
 		"/zetachain.zetacore.observer.MsgUpdateObserver",
 		"/zetachain.zetacore.observer.MsgAddObserver",
 		"/zetachain.zetacore.observer.MsgRemoveChainParams",
@@ -42,15 +43,18 @@ var (
 		"/zetachain.zetacore.authority.MsgUpdateChainInfo",
 		"/zetachain.zetacore.authority.MsgRemoveChainInfo",
 		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
+		"/zetachain.zetacore.observer.MsgUpdateChainParams",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
 	EmergencyPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgAddInboundTracker",
 		"/zetachain.zetacore.crosschain.MsgAddOutboundTracker",
 		"/zetachain.zetacore.crosschain.MsgRemoveOutboundTracker",
+		"/zetachain.zetacore.crosschain.MsgRemoveInboundTracker",
 		"/zetachain.zetacore.fungible.MsgPauseZRC20",
 		"/zetachain.zetacore.observer.MsgUpdateKeygen",
 		"/zetachain.zetacore.observer.MsgDisableCCTX",
+		"/zetachain.zetacore.observer.MsgDisableFastConfirmation",
 		"/zetachain.zetacore.lightclient.MsgDisableHeaderVerification",
 	}
 )

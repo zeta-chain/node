@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -48,7 +47,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	t.Run("should post vote and return true if outbound is processed", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := newTestSuite(t)
-		ob.SetTxNReceipt(nonce, receipt, outbound)
+		ob.setTxNReceipt(nonce, receipt, outbound)
 
 		// post outbound vote
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
@@ -64,14 +63,14 @@ func Test_IsOutboundProcessed(t *testing.T) {
 
 		// create evm observer and set outbound and receipt
 		ob := newTestSuite(t)
-		ob.SetTxNReceipt(nonce, receipt, outbound)
+		ob.setTxNReceipt(nonce, receipt, outbound)
 
 		// modify compliance config to restrict sender address
 		cfg := config.Config{
 			ComplianceConfig: config.ComplianceConfig{},
 		}
 		cfg.ComplianceConfig.RestrictedAddresses = []string{cctx.InboundParams.Sender}
-		config.LoadComplianceConfig(cfg)
+		config.SetRestrictedAddressesFromConfig(cfg)
 
 		// post outbound vote
 		continueKeysign, err := ob.VoteOutboundIfConfirmed(ctx, cctx)
@@ -88,7 +87,7 @@ func Test_IsOutboundProcessed(t *testing.T) {
 	t.Run("should fail if unable to parse ZetaReceived event", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := newTestSuite(t)
-		ob.SetTxNReceipt(nonce, receipt, outbound)
+		ob.setTxNReceipt(nonce, receipt, outbound)
 
 		// set connector contract address to an arbitrary address to make event parsing fail
 		chainParamsNew := ob.ChainParams()
@@ -135,7 +134,7 @@ func Test_IsOutboundProcessed_ContractError(t *testing.T) {
 	t.Run("should fail if unable to get connector/custody contract", func(t *testing.T) {
 		// create evm observer and set outbound and receipt
 		ob := newTestSuite(t)
-		ob.SetTxNReceipt(nonce, receipt, outbound)
+		ob.setTxNReceipt(nonce, receipt, outbound)
 		abiConnector := zetaconnector.ZetaConnectorNonEthMetaData.ABI
 		abiCustody := erc20custody.ERC20CustodyMetaData.ABI
 
@@ -179,7 +178,7 @@ func Test_PostVoteOutbound(t *testing.T) {
 
 		// create evm client using mock zetacore client and post outbound vote
 		ob := newTestSuite(t)
-		ob.PostVoteOutbound(
+		ob.postVoteOutbound(
 			ctx,
 			cctx.Index,
 			receipt,
@@ -212,7 +211,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	)
 
 	t.Run("should parse ZetaReceived event from archived outbound receipt", func(t *testing.T) {
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.NoError(t, err)
 		require.NotNil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -220,7 +219,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 	t.Run("should fail on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
 		require.ErrorContains(t, err, "error validating ZetaReceived event")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -229,7 +228,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.GetCurrentOutboundParam().Receiver = sample.EthAddress().Hex()
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -239,14 +238,14 @@ func Test_ParseZetaReceived(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
 	})
 	t.Run("should fail on cctx index mismatch", func(t *testing.T) {
 		cctx.Index = sample.Hash().Hex() // use an arbitrary index
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "cctx index mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -262,7 +261,7 @@ func Test_ParseZetaReceived(t *testing.T) {
 			testutils.EventZetaReceived,
 		)
 		receipt.Logs = receipt.Logs[:1] // the 2nd log is ZetaReceived event
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "no ZetaReceived/ZetaReverted event")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -287,7 +286,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	)
 
 	t.Run("should parse ZetaReverted event from archived outbound receipt", func(t *testing.T) {
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.NoError(t, err)
 		require.Nil(t, receivedLog)
 		require.NotNil(t, revertedLog)
@@ -295,7 +294,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 	t.Run("should fail on connector address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeConnectorAddress := sample.EthAddress()
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, fakeConnectorAddress, connector)
 		require.ErrorContains(t, err, "error validating ZetaReverted event")
 		require.Nil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -304,7 +303,7 @@ func Test_ParseZetaReverted(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.InboundParams.Sender = sample.EthAddress().Hex() // the receiver is the sender for reverted ccxt
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
@@ -314,14 +313,14 @@ func Test_ParseZetaReverted(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(fakeCctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, revertedLog)
 		require.Nil(t, receivedLog)
 	})
 	t.Run("should fail on cctx index mismatch", func(t *testing.T) {
 		cctx.Index = sample.Hash().Hex() // use an arbitrary index to make validation fail
-		receivedLog, revertedLog, err := observer.ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+		receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 		require.ErrorContains(t, err, "cctx index mismatch")
 		require.Nil(t, receivedLog)
 		require.Nil(t, revertedLog)
@@ -346,14 +345,14 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 	)
 
 	t.Run("should parse ERC20 Withdrawn event from archived outbound receipt", func(t *testing.T) {
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.NoError(t, err)
 		require.NotNil(t, withdrawn)
 	})
 	t.Run("should fail on erc20 custody address mismatch", func(t *testing.T) {
 		// use an arbitrary address to make validation fail
 		fakeCustodyAddress := sample.EthAddress()
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, fakeCustodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(cctx, receipt, fakeCustodyAddress, custody)
 		require.ErrorContains(t, err, "error validating Withdrawn event")
 		require.Nil(t, withdrawn)
 	})
@@ -361,7 +360,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		// load cctx and set receiver address to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.GetCurrentOutboundParam().Receiver = sample.EthAddress().Hex()
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "receiver address mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -369,7 +368,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		// load cctx and set asset to an arbitrary address
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeCctx.InboundParams.Asset = sample.EthAddress().Hex()
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "asset mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -378,7 +377,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 		fakeCctx := testutils.LoadCctxByNonce(t, chainID, nonce)
 		fakeAmount := sample.UintInRange(0, fakeCctx.GetCurrentOutboundParam().Amount.Uint64()-1)
 		fakeCctx.GetCurrentOutboundParam().Amount = fakeAmount
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(fakeCctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "amount mismatch")
 		require.Nil(t, withdrawn)
 	})
@@ -393,7 +392,7 @@ func Test_ParseERC20WithdrawnEvent(t *testing.T) {
 			testutils.EventERC20Withdraw,
 		)
 		receipt.Logs = receipt.Logs[:1] // the 2nd log is Withdrawn event
-		withdrawn, err := observer.ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+		withdrawn, err := parseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 		require.ErrorContains(t, err, "no ERC20 Withdrawn event")
 		require.Nil(t, withdrawn)
 	})
@@ -421,25 +420,24 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		// create evm observer for testing
 		ob := newTestSuite(t)
 
-		confirmations := ob.chainParams.ConfirmationCount
+		confirmations := ob.chainParams.OutboundConfirmationSafe()
 
 		// create mock evm client with preloaded block, tx and receipt
-		ob.evmMock.On("BlockNumber", mock.Anything).Unset()
-		ob.evmMock.On("BlockNumber", mock.Anything).Return(blockNumber+confirmations, nil)
 		ob.evmMock.On("TransactionByHash", mock.Anything, outboundHash).Return(tx, false, nil)
 		ob.evmMock.On("TransactionReceipt", mock.Anything, outboundHash).Return(receipt, nil)
 
 		ob.BlockCache().Add(blockNumber, block)
+		ob.WithLastBlock(blockNumber + confirmations - 1)
 
 		// filter TSS outbound
-		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+		ob.filterTSSOutbound(ctx, blockNumber, blockNumber)
 
 		// tx should be confirmed after filtering
-		found := ob.IsTxConfirmed(outboundNonce)
+		found := ob.isTxConfirmed(outboundNonce)
 		require.True(t, found)
 
 		// retrieve tx and receipt
-		receipt, tx = ob.GetTxNReceipt(outboundNonce)
+		receipt, tx = ob.getTxNReceipt(outboundNonce)
 		require.NotNil(t, tx)
 		require.NotNil(t, receipt)
 		require.Equal(t, outboundHash, tx.Hash())
@@ -452,10 +450,10 @@ func Test_FilterTSSOutbound(t *testing.T) {
 		ob.evmMock.On("BlockByNumberCustom", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// filter TSS outbound
-		ob.FilterTSSOutbound(ctx, blockNumber, blockNumber)
+		ob.filterTSSOutbound(ctx, blockNumber, blockNumber)
 
 		// tx should be confirmed after filtering
-		found := ob.IsTxConfirmed(outboundNonce)
+		found := ob.isTxConfirmed(outboundNonce)
 		require.False(t, found)
 	})
 }
@@ -567,7 +565,7 @@ func Test_FilterTSSOutbound(t *testing.T) {
 //		// load archived outbound receipt that contains ZetaReceived event
 //		// https://etherscan.io/tx/0x81342051b8a85072d3e3771c1a57c7bdb5318e8caf37f5a687b7a91e50a7257f
 //		nonce := uint64(9718)
-//		coinType := coin.CoinType(5) // unknown coin type
+//		coinType := coin.FungibleTokenCoinType(5) // unknown coin type
 //		cctx, outbound, receipt := testutils.LoadEVMCctxNOutboundNReceipt(
 //			t,
 //			TestDataDir,

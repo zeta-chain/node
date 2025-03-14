@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -14,6 +13,8 @@ import (
 )
 
 type GlobalConfigurationFile = config.GlobalConfigurationFile
+
+var ErrDownload = errors.New("failed to download config file")
 
 // Getter represents LiteAPI config params getter.
 // Don't be confused because config param in this case represent on-chain params,
@@ -40,13 +41,13 @@ func FromURL(ctx context.Context, url string) (*GlobalConfigurationFile, error) 
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(ErrDownload, err.Error())
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to download config file: %s", res.Status)
+		return nil, errors.Wrap(ErrDownload, res.Status)
 	}
 
 	return config.ParseConfig(res.Body)
@@ -59,11 +60,16 @@ func FromPath(path string) (*GlobalConfigurationFile, error) {
 
 // FromSource returns a parsed configuration file from a URL or a file path.
 func FromSource(ctx context.Context, urlOrPath string) (*GlobalConfigurationFile, error) {
-	if u, err := url.Parse(urlOrPath); err == nil {
-		return FromURL(ctx, u.String())
+	if cfg, err := FromPath(urlOrPath); err == nil {
+		return cfg, nil
 	}
 
-	return FromPath(urlOrPath)
+	u, err := url.Parse(urlOrPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse URL")
+	}
+
+	return FromURL(ctx, u.String())
 }
 
 // FetchGasConfig fetches gas price from the config.

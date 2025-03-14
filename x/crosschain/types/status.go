@@ -9,9 +9,10 @@ type StatusMessages struct {
 	StatusMessage        string `json:"status_message"`
 	ErrorMessageOutbound string `json:"error_message_outbound"`
 	ErrorMessageRevert   string `json:"error_message_revert"`
+	ErrorMessageAbort    string `json:"error_message_abort"`
 }
 
-func (m *Status) AbortRefunded() {
+func (m *Status) SetAbortRefunded() {
 	m.IsAbortRefunded = true
 	m.StatusMessage = "CCTX aborted and Refunded"
 }
@@ -45,6 +46,9 @@ func (m *Status) UpdateErrorMessages(messages StatusMessages) {
 	}
 	if messages.ErrorMessageRevert != "" {
 		m.ErrorMessageRevert = messages.ErrorMessageRevert
+	}
+	if messages.ErrorMessageAbort != "" {
+		m.ErrorMessageAbort = messages.ErrorMessageAbort
 	}
 }
 

@@ -35,6 +35,11 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
 	}
 
+	// keep last block up-to-date
+	if err := ob.updateLastBlock(ctx); err != nil {
+		return err
+	}
+
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
 		Str(logs.FieldMethod, "ProcessOutboundTrackers").
@@ -45,7 +50,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		// go to next tracker if this one already has a confirmed tx
 		nonce := tracker.Nonce
-		if ob.IsTxConfirmed(nonce) {
+		if ob.isTxConfirmed(nonce) {
 			continue
 		}
 
@@ -68,7 +73,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 		// should be only one txHash confirmed for each nonce.
 		if txCount == 1 {
-			ob.SetTxNReceipt(nonce, outboundReceipt, outbound)
+			ob.setTxNReceipt(nonce, outboundReceipt, outbound)
 		} else if txCount > 1 {
 			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
 			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
@@ -82,8 +87,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	return nil
 }
 
-// PostVoteOutbound posts vote to zetacore for the confirmed outbound
-func (ob *Observer) PostVoteOutbound(
+// postVoteOutbound posts vote to zetacore for the confirmed outbound
+func (ob *Observer) postVoteOutbound(
 	ctx context.Context,
 	cctxIndex string,
 	receipt *ethtypes.Receipt,
@@ -111,6 +116,7 @@ func (ob *Observer) PostVoteOutbound(
 		chainID,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
@@ -150,27 +156,27 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 ) (bool, error) {
 	// skip if outbound is not confirmed
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
-	if !ob.IsTxConfirmed(nonce) {
+	if !ob.isTxConfirmed(nonce) {
 		return true, nil
 	}
-	receipt, transaction := ob.GetTxNReceipt(nonce)
+	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 
 	// get connector and erc20Custody contracts
-	connectorAddr, connector, err := ob.GetConnectorContract()
+	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
 	}
-	custodyAddr, custody, err := ob.GetERC20CustodyContract()
+	custodyAddr, custody, err := ob.getERC20CustodyContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
 	}
-	gatewayAddr, gateway, err := ob.GetGatewayContract()
+	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
 		return true, errors.Wrap(err, "error getting gateway for chain")
 	}
-	_, custodyV2, err := ob.GetERC20CustodyV2Contract()
+	_, custodyV2, err := ob.getERC20CustodyV2Contract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting erc20 custody v2 for chain %d", ob.Chain().ChainId)
 	}
@@ -188,7 +194,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
 			receiveStatus = chains.ReceiveStatus_success
 		}
-		ob.PostVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
+		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 		return false, nil
 	}
 
@@ -214,7 +220,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 
 	// post vote to zetacore
-	ob.PostVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
+	ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 	return false, nil
 }
 
@@ -254,7 +260,7 @@ func parseOutboundReceivedValue(
 	switch cointype {
 	case coin.CoinType_Zeta:
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receivedLog, revertedLog, err := ParseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
+			receivedLog, revertedLog, err := parseAndCheckZetaEvent(cctx, receipt, connectorAddress, connector)
 			if err != nil {
 				return nil, chains.ReceiveStatus_failed, err
 			}
@@ -267,7 +273,7 @@ func parseOutboundReceivedValue(
 		}
 	case coin.CoinType_ERC20:
 		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			withdrawn, err := ParseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
+			withdrawn, err := parseAndCheckWithdrawnEvent(cctx, receipt, custodyAddress, custody)
 			if err != nil {
 				return nil, chains.ReceiveStatus_failed, err
 			}
@@ -282,9 +288,9 @@ func parseOutboundReceivedValue(
 	return receiveValue, receiveStatus, nil
 }
 
-// ParseAndCheckZetaEvent parses and checks ZetaReceived/ZetaReverted event from the outbound receipt
+// parseAndCheckZetaEvent parses and checks ZetaReceived/ZetaReverted event from the outbound receipt
 // It either returns an ZetaReceived or an ZetaReverted event, or an error if no event found
-func ParseAndCheckZetaEvent(
+func parseAndCheckZetaEvent(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	connectorAddr ethcommon.Address,
@@ -341,8 +347,8 @@ func ParseAndCheckZetaEvent(
 	return nil, nil, errors.New("no ZetaReceived/ZetaReverted event found")
 }
 
-// ParseAndCheckWithdrawnEvent parses and checks erc20 Withdrawn event from the outbound receipt
-func ParseAndCheckWithdrawnEvent(
+// parseAndCheckWithdrawnEvent parses and checks erc20 Withdrawn event from the outbound receipt
+func parseAndCheckWithdrawnEvent(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
 	custodyAddr ethcommon.Address,
@@ -374,16 +380,16 @@ func ParseAndCheckWithdrawnEvent(
 	return nil, errors.New("no ERC20 Withdrawn event found")
 }
 
-// FilterTSSOutbound filters the outbounds from TSS address to supplement outbound trackers
-func (ob *Observer) FilterTSSOutbound(ctx context.Context, startBlock, toBlock uint64) {
+// filterTSSOutbound filters the outbounds from TSS address to supplement outbound trackers
+func (ob *Observer) filterTSSOutbound(ctx context.Context, startBlock, toBlock uint64) {
 	// filters the outbounds from TSS address block by block
 	for bn := startBlock; bn <= toBlock; bn++ {
-		ob.FilterTSSOutboundInBlock(ctx, bn)
+		ob.filterTSSOutboundInBlock(ctx, bn)
 	}
 }
 
-// FilterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
-func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
+// filterTSSOutboundInBlock filters the outbounds in a single block to supplement outbound trackers
+func (ob *Observer) filterTSSOutboundInBlock(ctx context.Context, blockNumber uint64) {
 	// query block and ignore error (we don't rescan as we are only supplementing outbound trackers)
 	block, err := ob.GetBlockByNumberCached(ctx, blockNumber)
 	if err != nil {
@@ -399,9 +405,9 @@ func (ob *Observer) FilterTSSOutboundInBlock(ctx context.Context, blockNumber ui
 		if ethcommon.HexToAddress(tx.From) == ob.TSS().PubKey().AddressEVM() {
 			// #nosec G115 nonce always positive
 			nonce := uint64(tx.Nonce)
-			if !ob.IsTxConfirmed(nonce) {
+			if !ob.isTxConfirmed(nonce) {
 				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
-					ob.SetTxNReceipt(nonce, receipt, txx)
+					ob.setTxNReceipt(nonce, receipt, txx)
 					ob.Logger().
 						Outbound.Info().
 						Msgf("TSS outbound detected on chain %d nonce %d tx %s", ob.Chain().ChainId, nonce, tx.Hash)
@@ -475,22 +481,17 @@ func (ob *Observer) checkConfirmedTx(
 		logger.Error().Msg("receipt is nil")
 		return nil, nil, false
 	}
-	ob.LastBlock()
+
 	// check confirmations
-	lastHeight, err := ob.evmClient.BlockNumber(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("BlockNumber error")
-		return nil, nil, false
-	}
-	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
-		logger.Debug().
-			Msgf("tx included but not confirmed, receipt block %d current block %d", receipt.BlockNumber.Uint64(), lastHeight)
+	txBlock := receipt.BlockNumber.Uint64()
+	if !ob.IsBlockConfirmedForOutboundSafe(txBlock) {
+		logger.Debug().Uint64("tx_block", txBlock).Uint64("last_block", ob.LastBlock()).Msg("tx not confirmed yet")
 		return nil, nil, false
 	}
 
 	// cross-check tx inclusion against the block
 	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
-	err = ob.CheckTxInclusion(ctx, transaction, receipt)
+	err = ob.checkTxInclusion(ctx, transaction, receipt)
 	if err != nil {
 		logger.Error().Err(err).Msg("CheckTxInclusion error")
 		return nil, nil, false

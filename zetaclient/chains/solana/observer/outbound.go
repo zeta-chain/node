@@ -109,6 +109,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
+	if inst.InstructionDiscriminator() == contracts.DiscriminatorIncrementNonce {
+		outboundStatus = chains.ReceiveStatus_failed
+	}
 
 	// compliance check, special handling the cancelled cctx
 	if compliance.IsCctxRestricted(cctx) {
@@ -145,9 +148,13 @@ func (ob *Observer) PostVoteOutbound(
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
 	// and the vote msg won't trigger ZEVM interaction
 	const (
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		retryGasLimit = 0
+		gasLimit = zetacore.PostVoteOutboundGasLimit
 	)
+
+	var retryGasLimit uint64
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
 
 	// post vote to zetacore
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
@@ -198,6 +205,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 }
 
@@ -283,13 +291,33 @@ func ParseGatewayInstruction(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
-	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token')
-	if len(tx.Message.Instructions) != 1 {
-		return nil, fmt.Errorf("want 1 instruction, got %d", len(tx.Message.Instructions))
+	// validate instruction count
+	// if there are 2 instructions, first one can only be optional compute budget instruction
+	instructionCount := len(tx.Message.Instructions)
+	if instructionCount < 1 || instructionCount > 2 {
+		return nil, fmt.Errorf("unexpected number of instructions: %d", instructionCount)
 	}
-	instruction := tx.Message.Instructions[0]
 
-	// get the program ID
+	// get gateway instruction
+	instruction := tx.Message.Instructions[instructionCount-1]
+
+	// if there are two instructions, validate the first one program is compute budget
+	if instructionCount == 2 {
+		budgetProgramID, err := tx.Message.Program(tx.Message.Instructions[0].ProgramIDIndex)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve program ID")
+		}
+
+		if !budgetProgramID.Equals(solana.ComputeBudget) {
+			return nil, fmt.Errorf(
+				"programID %s is not matching compute budget id %s",
+				budgetProgramID,
+				solana.ComputeBudget,
+			)
+		}
+	}
+
+	// validate gateway instruction program
 	programID, err := tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting program ID")
@@ -300,14 +328,30 @@ func ParseGatewayInstruction(
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
-	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	// first check if it was simple nonce increment instruction, which indicates that outbound failed
+	inst, err := contracts.ParseInstructionIncrementNonce(instruction)
+	if err == nil {
+		return inst, nil
+	}
+
+	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		return contracts.ParseInstructionWithdraw(instruction)
+		inst, err := contracts.ParseInstructionWithdraw(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecute(instruction)
+		}
+
+		return inst, err
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
 	case coin.CoinType_ERC20:
-		return contracts.ParseInstructionWithdrawSPL(instruction)
+		inst, err := contracts.ParseInstructionWithdrawSPL(instruction)
+		if err != nil {
+			return contracts.ParseInstructionExecuteSPL(instruction)
+		}
+
+		return inst, err
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

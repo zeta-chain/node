@@ -5,19 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/memo"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []string) {
-	// Start mining blocks
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send and fee rate
 	require.Len(r, args, 2)
 	amount := utils.ParseFloat(r, args[0])

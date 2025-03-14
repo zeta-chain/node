@@ -3,20 +3,20 @@ package keeper_test
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/ethereum/go-ethereum/core/vm"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
 	"math/big"
 	"testing"
 
 	cosmoserror "cosmossdk.io/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -61,7 +61,7 @@ func TestKeeper_ValidateSuccessfulOutbound(t *testing.T) {
 }
 
 func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
-	t.Run("fail if can't fetch ZetaChain chain ID", func(t *testing.T) {
+	t.Run("cctx aborted if can't fetch ZetaChain chain ID", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
@@ -79,11 +79,11 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to get ZetaChain chainID")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("fail if CCTX source chain is not ZetaChain", func(t *testing.T) {
+	t.Run("cctx aborted if CCTX source chain is not ZetaChain", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
@@ -100,11 +100,11 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "sender chain for withdraw cctx is not ZetaChain")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("fail if fail to add revert outbound", func(t *testing.T) {
+	t.Run("cctx aborted if fail to add revert outbound", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTxV2(t, "test")
@@ -126,11 +126,11 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed AddRevertOutbound")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("fail if the revert call get reverted", func(t *testing.T) {
+	t.Run("cctx aborted if the revert call get reverted", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -155,11 +155,11 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "revert transaction reverted")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("fail if the revert call can't be processed", func(t *testing.T) {
+	t.Run("cctx aborted if the revert call can't be processed", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -183,8 +183,8 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "revert transaction couldn't be processed")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
 	t.Run("process failed outbound with a revert", func(t *testing.T) {
@@ -239,7 +239,7 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		require.EqualValues(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("fail if cctx status is invalid", func(t *testing.T) {
+	t.Run("cctx aborted if cctx status is invalid", func(t *testing.T) {
 		// arrange
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -257,8 +257,8 @@ func TestKeeper_ValidateFailedOutboundV2(t *testing.T) {
 		)
 
 		// assert
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "unexpected cctx status")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 }
 
@@ -339,7 +339,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
-	t.Run("unable to validate failed outbound if GetCCTXIndexBytes fails", func(t *testing.T) {
+	t.Run("cctx aborted if GetCCTXIndexBytes fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		receiver := sample.EthAddress()
 		cctx := GetERC20Cctx(t, receiver, chains.Goerli, "", big.NewInt(42))
@@ -352,10 +352,11 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorContains(t, err, "failed reverting GetCCTXIndexBytes")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("unable to validate failed outbound if Adding Revert fails", func(t *testing.T) {
+	t.Run("cctx aborted if Adding Revert fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.InboundParams.SenderChainId = chains.ZetaChainMainnet.ChainId
@@ -366,10 +367,11 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorContains(t, err, "failed AddRevertOutbound")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("unable to validate failed outbound if ZETARevertAndCallContract fails", func(t *testing.T) {
+	t.Run("cctx aborted if ZETARevertAndCallContract fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 		})
@@ -393,7 +395,8 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorContains(t, err, "failed ZETARevertAndCallContract")
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
 	t.Run("successfully revert failed outbound if original sender is a contract", func(t *testing.T) {
@@ -405,7 +408,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		cctx.RelayedMessage = base64.StdEncoding.EncodeToString([]byte("sample message"))
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := zk.FungibleKeeper.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 		cctx.InboundParams.Sender = dAppContract.String()
@@ -421,7 +424,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := zk.FungibleKeeper.CallEVM(
 			ctx,
@@ -517,7 +520,7 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
 	})
 
-	t.Run("unable to validate revert when update nonce fails", func(t *testing.T) {
+	t.Run("aborted if update nonce fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 			UseObserverMock: true,
@@ -552,11 +555,11 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorIs(t, err, types.ErrCannotFindReceiverNonce)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("unable to validate revert when PayGasAndUpdateCctx fails", func(t *testing.T) {
+	t.Run("aborted if PayGasAndUpdateCctx fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 			UseObserverMock: true,
@@ -587,11 +590,11 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
-	t.Run("unable to validate revert when GetRevertGasLimit fails", func(t *testing.T) {
+	t.Run("aborted if GetRevertGasLimit fails", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 		})
@@ -617,8 +620,8 @@ func TestKeeper_ValidateFailedOutbound(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 }
 
@@ -679,7 +682,7 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("do not validate outbound on error, no new outbound created", func(t *testing.T) {
+	t.Run("no new outbound created when aborted ", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 		})
@@ -706,14 +709,15 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
-		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingOutbound)
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+
 		// New outbound not added and the old outbound is not finalized
 		require.Len(t, cctx.OutboundParams, oldOutboundParamsLen)
 		require.Equal(t, cctx.GetCurrentOutboundParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
 	})
 
-	t.Run("do not validate outbound if the cctx has already been reverted once", func(t *testing.T) {
+	t.Run("cctx aborted if the cctx has already been reverted once", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 		})
@@ -741,7 +745,8 @@ func TestKeeper_ValidateOutboundObservers(t *testing.T) {
 			observertypes.BallotStatus_BallotFinalized_FailureObservation,
 			sample.String(),
 		)
-		require.Error(t, err)
+		require.NoError(t, err)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 	})
 
 	t.Run("successfully revert a outbound and create a new revert tx", func(t *testing.T) {

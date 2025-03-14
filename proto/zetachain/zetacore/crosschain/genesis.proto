@@ -26,4 +26,5 @@ message GenesisState {
   ZetaAccounting zeta_accounting = 12 [ (gogoproto.nullable) = false ];
   repeated string FinalizedInbounds = 16;
   RateLimiterFlags rate_limiter_flags = 17 [ (gogoproto.nullable) = false ];
+  uint64 counter = 18;
 }

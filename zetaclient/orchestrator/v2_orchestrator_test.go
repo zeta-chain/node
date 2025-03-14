@@ -97,11 +97,13 @@ var defaultChainsWithParams = []any{
 	chains.Ethereum,
 	chains.BitcoinMainnet,
 	chains.SolanaMainnet,
+	chains.SuiMainnet,
 	chains.TONMainnet,
 
 	mocks.MockChainParams(chains.Ethereum.ChainId, 100),
 	mocks.MockChainParams(chains.BitcoinMainnet.ChainId, 3),
 	mocks.MockChainParams(chains.SolanaMainnet.ChainId, 10),
+	mocks.MockChainParams(chains.SuiMainnet.ChainId, 1),
 	mocks.MockChainParams(chains.TONMainnet.ChainId, 1),
 }
 
@@ -121,7 +123,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	// Services
 	var (
-		schedulerService = scheduler.New(logger.Logger)
+		schedulerService = scheduler.New(logger.Logger, time.Second)
 		zetacore         = mocks.NewZetacoreClient(t)
 		tss              = mocks.NewTSS(t)
 	)
@@ -278,6 +280,8 @@ func newAppContext(
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
 		case chains.IsTONChain(c.ChainId, nil):
 			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
+		case chains.IsSuiChain(c.ChainId, nil):
+			cfg.SuiConfig = config.SuiConfig{Endpoint: "localhost"}
 		default:
 			t.Fatalf("create app context: unsupported chain %d", c.ChainId)
 		}

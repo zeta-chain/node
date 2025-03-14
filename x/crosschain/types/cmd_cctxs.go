@@ -182,11 +182,11 @@ func MigrateFundCmdCCTX(
 	// set sender, receiver, gas limit, gas price and final amount based on the chain
 	switch {
 	case chains.IsEVMChain(chainID, additionalStaticChainInfo):
-		ethAddressOld, err := zetacrypto.GetTssAddrEVM(currentTSSPubKey)
+		ethAddressOld, err := zetacrypto.GetTSSAddrEVM(currentTSSPubKey)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		ethAddressNew, err := zetacrypto.GetTssAddrEVM(newTSSPubKey)
+		ethAddressNew, err := zetacrypto.GetTSSAddrEVM(newTSSPubKey)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
@@ -218,11 +218,11 @@ func MigrateFundCmdCCTX(
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		btcAddressOld, err := zetacrypto.GetTssAddrBTC(currentTSSPubKey, bitcoinNetParams)
+		btcAddressOld, err := zetacrypto.GetTSSAddrBTC(currentTSSPubKey, bitcoinNetParams)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
-		btcAddressNew, err := zetacrypto.GetTssAddrBTC(newTSSPubKey, bitcoinNetParams)
+		btcAddressNew, err := zetacrypto.GetTSSAddrBTC(newTSSPubKey, bitcoinNetParams)
 		if err != nil {
 			return CrossChainTx{}, err
 		}
@@ -291,6 +291,10 @@ func newCmdCCTX(
 			Sender:       sender,
 			CoinType:     coin.CoinType_Cmd,
 			ObservedHash: inboundHash,
+			// irrelevant to observer voting, set it to success by default
+			Status: InboundStatus_SUCCESS,
+			// any inbound initiated from ZetaChain is deemed safely confirmed
+			ConfirmationMode: ConfirmationMode_SAFE,
 		},
 		OutboundParams: []*OutboundParams{
 			{
@@ -304,6 +308,9 @@ func newCmdCCTX(
 				GasPrice:       medianGasPrice,
 				GasPriorityFee: priorityFee,
 				TssPubkey:      tssPubKey,
+				// use SAFE confirmation mode as default value.
+				// zetaclient should ALWAYS use SAFE confirmation mode to confirm a CMD tx.
+				ConfirmationMode: ConfirmationMode_SAFE,
 			},
 		},
 	}

@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -13,7 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 
-func TestGetTssAddrEVM(t *testing.T) {
+func TestGetTSSAddrEVM(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	pk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
@@ -40,7 +41,7 @@ func TestGetTssAddrEVM(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			addr, err := GetTssAddrEVM(tc.tssPubkey)
+			addr, err := GetTSSAddrEVM(tc.tssPubkey)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {
@@ -52,7 +53,46 @@ func TestGetTssAddrEVM(t *testing.T) {
 	}
 }
 
-func TestGetTssAddrBTC(t *testing.T) {
+func TestGetTSSAddrSui(t *testing.T) {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	pk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	require.NoError(t, err)
+	decompresspubkey, err := crypto.DecompressPubkey(pubKey.Bytes())
+	require.NoError(t, err)
+	testCases := []struct {
+		name      string
+		tssPubkey string
+		wantAddr  string
+		wantErr   bool
+	}{
+		{
+			name:      "Valid TSS pubkey",
+			tssPubkey: pk,
+			wantAddr:  zetasui.AddressFromPubKeyECDSA(decompresspubkey),
+			wantErr:   false,
+		},
+		{
+			name:      "Invalid TSS pubkey",
+			tssPubkey: "invalid",
+			wantErr:   true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			addr, err := GetTSSAddrSui(tc.tssPubkey)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Equal(t, tc.wantAddr, addr)
+				require.NoError(t, err)
+				require.NotEmpty(t, addr)
+			}
+		})
+	}
+}
+
+func TestGetTSSAddrBTC(t *testing.T) {
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	pk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
 	require.NoError(t, err)
@@ -96,7 +136,7 @@ func TestGetTssAddrBTC(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			addr, err := GetTssAddrBTC(tc.tssPubkey, tc.bitcoinParams)
+			addr, err := GetTSSAddrBTC(tc.tssPubkey, tc.bitcoinParams)
 			if tc.wantErr {
 				require.Error(t, err)
 			} else {

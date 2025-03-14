@@ -15,7 +15,7 @@ require (
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-sdk v0.50.11
+	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -44,13 +44,13 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/samber/lo v1.46.0
 	github.com/spf13/afero v1.11.0
-	github.com/spf13/cast v1.7.0
+	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/ethermint v0.0.0-20250124145234-b12523a2c64f
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250115133723-7232d7838789
+	github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313183129-95f9ecc7b78e
 	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
@@ -113,13 +113,13 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/dcrd/dcrec/edwards/v2 v2.0.0 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
@@ -131,7 +131,7 @@ require (
 	github.com/elastic/gosigar v0.14.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/flynn/noise v1.0.0 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gagliardetto/binary v0.8.0
 	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff // indirect
@@ -304,13 +304,15 @@ require (
 require (
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/tools/confix v0.1.2
+	github.com/block-vision/sui-go-sdk v1.0.6
 	github.com/bnb-chain/tss-lib v1.5.0
-	github.com/cosmos/cosmos-db v1.1.0
+	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
-	github.com/tonkeeper/tongo v1.9.3
-	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20241108171442-e48d82f94892
+	github.com/tonkeeper/tongo v1.14.8
+	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250212192042-34095b214e51
 )
 
 require (
@@ -333,17 +335,20 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/gballet/go-verkle v0.1.1-0.20231031103413-a67434b50f46 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.12.0 // indirect
 	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect

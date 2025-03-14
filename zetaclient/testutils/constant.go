@@ -42,6 +42,9 @@ var GatewayAddresses = map[int64]string{
 	// Solana gateway addresses
 	chains.SolanaDevnet.ChainId:  "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 	chains.SolanaMainnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+
+	// stub, will be replaced with real address later
+	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff,0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

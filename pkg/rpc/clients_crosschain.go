@@ -114,7 +114,7 @@ func (c *Clients) ListPendingCCTXWithinRateLimit(
 	return resp, nil
 }
 
-// ListPendingCCTX returns a list of pending cctxs for a given chainID
+// ListPendingCCTX returns a list of pending cctxs for a given chain
 //   - The max size of the list is crosschainkeeper.MaxPendingCctxs
 func (c *Clients) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	in := &types.QueryListPendingCctxRequest{ChainId: chainID}

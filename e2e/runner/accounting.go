@@ -95,7 +95,7 @@ func (r *E2ERunner) CheckBTCTSSBalance() error {
 	tssTotalBalance := float64(0)
 
 	for _, tssAddress := range allTssAddress.TssList {
-		btcTssAddress, err := zetacrypto.GetTssAddrBTC(tssAddress.TssPubkey, r.BitcoinParams)
+		btcTssAddress, err := zetacrypto.GetTSSAddrBTC(tssAddress.TssPubkey, r.BitcoinParams)
 		if err != nil {
 			continue
 		}
