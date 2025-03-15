@@ -4,7 +4,7 @@ import ethcommon "github.com/ethereum/go-ethereum/common"
 
 // DefaultLiquidityCap is the default value set for the liquidity cap of a new ZRC20 when deployed
 // for security reason, this value is low. An arbitrary value should be set during the process of deploying a new ZRC20
-// The value is represented in the base unit of the ZRC20, final value is calculated by multiplying this value by 10^decimals.
+// The value is represented in the base unit of the ZRC20, final value is calculated by multiplying this value by 10^decimals
 const DefaultLiquidityCap = uint64(1000)
 
 // ZRC20Data represents the ZRC4 token details used to map
