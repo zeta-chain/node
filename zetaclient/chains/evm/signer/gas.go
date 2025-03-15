@@ -80,6 +80,10 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
 		// some erc20 reverts currently use 21k, this check add a minimum gas limitm
 		limit = nonGasMinGasLimit
+		logger.Warn().
+			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
+			Uint64("cctx.gas_limit", limit).
+			Msgf("Gas limit is too low; Setting to the minimum (%d)", nonGasMinGasLimit)
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
