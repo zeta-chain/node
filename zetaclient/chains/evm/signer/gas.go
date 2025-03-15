@@ -2,12 +2,12 @@ package signer
 
 import (
 	"fmt"
-	"github.com/zeta-chain/node/pkg/coin"
 	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -78,6 +78,7 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
 	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
+		// some erc20 reverts currently use 21k, this check add a minimum gas limitm
 		limit = nonGasMinGasLimit
 	}
 
