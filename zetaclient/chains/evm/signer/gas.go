@@ -7,11 +7,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
 const maxGasLimit = 2_500_000
+
+const gasTransferGasLimit = 21_000
+const nonGasMinGasLimit = 100_000
 
 // Gas represents gas parameters for EVM transactions.
 //
@@ -73,6 +77,13 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
+	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
+		// some erc20 reverts currently use 21k, this check add a minimum gas limitm
+		limit = nonGasMinGasLimit
+		logger.Warn().
+			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
+			Uint64("cctx.gas_limit", limit).
+			Msgf("Gas limit is too low; Setting to the minimum (%d)", nonGasMinGasLimit)
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
