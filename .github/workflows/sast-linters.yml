@@ -67,22 +67,17 @@ jobs:
         id: changed-files
         run: |
           echo "Getting changed files between ${{ github.event.pull_request.base.sha }} and HEAD"
-
-          # Get changed files
           changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
-
-          # Replace newline with space
           changed_files="${changed_files//$'\n'/ }"
-
           echo "Changed files: $changed_files"
-
-          # Export for next steps
           echo "all_changed_files=$changed_files" >> $GITHUB_OUTPUT
 
       - name: List all changed files
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          echo "Changed files: \"$CHANGED_FILES\""
+          for file in $CHANGED_FILES; do
             echo "$file was changed"
           done
 
