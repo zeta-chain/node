@@ -2,6 +2,7 @@ package signer
 
 import (
 	"fmt"
+	"github.com/zeta-chain/node/pkg/coin"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -12,6 +13,9 @@ import (
 
 // maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
 const maxGasLimit = 2_500_000
+
+const gasTransferGasLimit = 21_000
+const nonGasMinGasLimit = 100_000
 
 // Gas represents gas parameters for EVM transactions.
 //
@@ -73,6 +77,8 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
+	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
+		limit = nonGasMinGasLimit
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
