@@ -24,16 +24,35 @@ jobs:
   changed-files:
     runs-on: ubuntu-22.04
     outputs:
-      x_changed: ${{ steps.x-changes.outputs.any_changed }}
+      x_changed: ${{ steps.x-changes.outputs.x_changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get changed files in x directory
         id: x-changes
-        uses: tj-actions/changed-files@v45
-        with:
-          files: x/**
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha || github.event.before }}"
+          HEAD_SHA="${{ github.sha }}"
+
+          echo "Base SHA: $BASE_SHA"
+          echo "Head SHA: $HEAD_SHA"
+
+          changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'x/**')
+
+          echo "Changed files in x/:"
+          echo "$changed_files"
+
+          if [ -n "$changed_files" ]; then
+            echo "Changes detected in x/"
+            echo "x_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected in x/"
+            echo "x_changed=false" >> $GITHUB_OUTPUT
+          fi
+
 
   matrix-conditionals:
     needs: changed-files

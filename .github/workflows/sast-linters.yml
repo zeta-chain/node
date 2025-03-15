@@ -63,14 +63,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Getting files updated in the PR
+      - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          base_sha: ${{ github.event.pull_request.base.sha }} 
+        run: |
+          echo "Getting changed files between ${{ github.event.pull_request.base.sha }} and HEAD"
+
+          # Get changed files
+          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
+
+          # Replace newline with space
+          changed_files="${changed_files//$'\n'/ }"
+
+          echo "Changed files: $changed_files"
+
+          # Export for next steps
+          echo "all_changed_files=$changed_files" >> $GITHUB_OUTPUT
 
       - name: List all changed files
         run: |
+          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
           done
@@ -80,16 +91,14 @@ jobs:
           nosec_list=()
           nosec_detected=0
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-                    
+
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            # Skip this workflow file
             if [ "$file" == ".github/workflows/sast-linters.yml" ] || [ "$file" == "changelog.md" ]; then
               echo "Skipping nosec check for $file"
               continue
             fi
-            
-            # Only consider additions of "nosec", marked by '+'
-            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q '^+.*nosec'; then
+
+            if git diff ${{ github.event.pull_request.base.sha }} HEAD -- "$file" | grep -q '^+.*nosec'; then
               echo "nosec detected in $file"
               nosec_list+=("$file,")
               nosec_detected=1
@@ -102,7 +111,6 @@ jobs:
           nosec_list_string="${nosec_list_string%,}"
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
-
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
@@ -117,7 +125,7 @@ jobs:
             Only suppress a single rule (or a specific set of rules) within a section of code, while continuing to scan for other problems. To do this, you can list the rule(s) to be suppressed within the #nosec annotation, e.g: /* #nosec G401 */ or //#nosec G201 G202 G203
             Broad `#nosec` annotations should be avoided, as they can hide other vulnerabilities. **The CI will block you from merging this PR until you remove `#nosec` annotations that do not target specific rules**.
 
-            Pay extra attention to the way `#nosec` is being used in the files listed above. 
+            Pay extra attention to the way `#nosec` is being used in the files listed above.
 
       - name: Add Label
         uses: actions/github-script@v6
