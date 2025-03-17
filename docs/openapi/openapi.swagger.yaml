@@ -58206,6 +58206,7 @@ definitions:
       gasLimit:
         type: string
         format: uint64
+        title: 'Deprecated: value stored in the zrc20 smart contract is used instead'
       paused:
         type: boolean
       liquidityCap:

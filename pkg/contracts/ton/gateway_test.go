@@ -160,7 +160,42 @@ func TestParsing(t *testing.T) {
 
 			assert.Equal(t, longCallData, depositAndCall2.CallData)
 		})
+	})
 
+	t.Run("Deposit and call ABI", func(t *testing.T) {
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "07-deposit-and-call-abi")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check tx props
+		assert.Equal(t, int(OpDepositAndCall), int(parsedTX.Operation))
+
+		// Check deposit and call
+		depositAndCall, err := parsedTX.DepositAndCall()
+		assert.NoError(t, err)
+
+		const (
+			expectedSender  = "0:74a36900b786949a60c95ee20a56e583f908f2e957f3ffcb1e9770cc9edd408d"
+			zevmRecipient   = "0x13ad4f89050E83e8F485BB8349b40d3b89833790"
+			expectedDeposit = 94_800_000 // 0.1 TON - tx fee
+
+			// cast abi-encode "fn(string)" "ZETA ON TON YEAH"
+			callData = "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000105a455441204f4e20544f4e205945414800000000000000000000000000000000"
+		)
+
+		assert.Equal(t, expectedSender, depositAndCall.Sender.ToRaw())
+		assert.Equal(t, expectedDeposit, int(depositAndCall.Amount.Uint64()))
+		assert.Equal(t, zevmRecipient, depositAndCall.Recipient.Hex())
+		assert.Equal(t, callData, "0x"+hex.EncodeToString(depositAndCall.CallData))
 	})
 
 	t.Run("Withdrawal", func(t *testing.T) {
@@ -363,23 +398,50 @@ func TestFixtures(t *testing.T) {
 }
 
 func TestSnakeData(t *testing.T) {
-	for _, tt := range []string{
-		"Hello world",
-		"123",
-		strings.Repeat(`ZetaChain `, 300),
-		string(readFixtureFile(t, "testdata/long-call-data.txt")),
+	h2b := func(raw string) []byte {
+		b, err := hex.DecodeString(strings.TrimPrefix(raw, "0x"))
+		require.NoError(t, err)
+
+		return b
+	}
+
+	for _, tt := range []struct {
+		name string
+		data []byte
+	}{
+		{name: "simple", data: []byte("123")},
+		{name: "hello world", data: []byte("Hello world")},
+		{name: "zeta repeated 10 times", data: []byte(strings.Trim(strings.Repeat("ZetaChain ", 10), " "))},
+		{name: "zeta repeated 50 times", data: []byte(strings.Trim(strings.Repeat("ZetaChain ", 50), " "))},
+		{name: "long call data text", data: readFixtureFile(t, "testdata/long-call-data.txt")},
+		{
+			// cast abi-encode "fn(string)" "ping-pong"
+			name: "abi call data 1",
+			data: h2b("0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000970696e672d706f6e670000000000000000000000000000000000000000000000"),
+		},
+		{
+			// cast abi-encode "swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)" 123 456 "[0x0E0E08C73CD5019d6CAc98311Fa18edf98b70428,0x0E0E08C73CD5019d6CAc98311Fa18edf98b70428]" 0x0E0E08C73CD5019d6CAc98311Fa18edf98b70428 999
+			name: "abi call data 2",
+			data: h2b("0x000000000000000000000000000000000000000000000000000000000000007b00000000000000000000000000000000000000000000000000000000000001c800000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000e0e08c73cd5019d6cac98311fa18edf98b7042800000000000000000000000000000000000000000000000000000000000003e700000000000000000000000000000000000000000000000000000000000000020000000000000000000000000e0e08c73cd5019d6cac98311fa18edf98b704280000000000000000000000000e0e08c73cd5019d6cac98311fa18edf98b70428"),
+		},
 	} {
-		a := []byte(tt)
+		t.Run(tt.name, func(t *testing.T) {
+			a := tt.data
 
-		cell, err := MarshalSnakeCell(a)
-		require.NoError(t, err)
+			cell, err := MarshalSnakeCell(a)
+			require.NoError(t, err)
 
-		b, err := UnmarshalSnakeCell(cell)
-		require.NoError(t, err)
+			b, err := UnmarshalSnakeCell(cell)
+			require.NoError(t, err)
 
-		t.Logf(string(b))
+			if len(a) != len(b) {
+				t.Logf("Lengths are not equal. Want %d, got %d.\nA:\n```%s```\n\nB:\n```%s```", len(a), len(b), a, b)
+				t.Logf("Last 8 bytes: A: %v; B: %v", a[len(a)-8:], b[len(b)-8:])
+				t.FailNow()
+			}
 
-		assert.Equal(t, a, b, tt)
+			require.Equal(t, a, b)
+		})
 	}
 }
 
