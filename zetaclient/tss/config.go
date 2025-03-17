@@ -10,13 +10,14 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
+	tsscommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/messages"
 )
 
 const (
 	// Port is the default port for go-tss server.
 	Port    = 6668
-	Version = "0.14.0"
+	Version = messages.NEWJOINPARTYVERSION
 	Algo    = tsscommon.ECDSA
 )
 

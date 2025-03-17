@@ -51,7 +51,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250313183129-95f9ecc7b78e
-	gitlab.com/thorchain/tss/go-tss v1.6.5
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
@@ -312,6 +311,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.14.8
+	github.com/zeta-chain/go-tss v0.2.0
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250212192042-34095b214e51
 )
 
@@ -384,5 +384,4 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 	github.com/ethereum/go-ethereum => github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
-	gitlab.com/thorchain/tss/go-tss => github.com/zeta-chain/go-tss v0.0.0-20241216161449-be92b20f8102
 )

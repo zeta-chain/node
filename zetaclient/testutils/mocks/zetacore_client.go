@@ -3,8 +3,8 @@
 package mocks
 
 import (
+	blame "github.com/zeta-chain/go-tss/blame"
 	chains "github.com/zeta-chain/node/pkg/chains"
-	blame "gitlab.com/thorchain/tss/go-tss/blame"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 
