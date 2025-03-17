@@ -497,6 +497,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 		medianGasPrice                         uint64
 		withdrawFromGasStabilityPoolReturn     error
 		expectWithdrawFromGasStabilityPoolCall bool
+		expectGasPriorityFeeUpdate             bool
 		expectedGasPriceIncrease               math.Uint
 		expectedAdditionalFees                 math.Uint
 		isError                                bool
@@ -509,6 +510,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 			medianGasPrice:                         12,
 			withdrawFromGasStabilityPoolReturn:     nil,
 			expectWithdrawFromGasStabilityPoolCall: true,
+			expectGasPriorityFeeUpdate:             true,
 			expectedGasPriceIncrease:               math.NewUint(2),   // medianGasPrice - gasPrice
 			expectedAdditionalFees:                 math.NewUint(400), // gasLimit * increase
 		},
@@ -539,6 +541,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         12,
 			expectWithdrawFromGasStabilityPoolCall: false,
+			expectGasPriorityFeeUpdate:             true,
 			expectedGasPriceIncrease:               math.NewUint(0),
 			expectedAdditionalFees:                 math.NewUint(0),
 			isError:                                true,
@@ -550,6 +553,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         10,
 			expectWithdrawFromGasStabilityPoolCall: false,
+			expectGasPriorityFeeUpdate:             true,
 			expectedGasPriceIncrease:               math.NewUint(0),
 			expectedAdditionalFees:                 math.NewUint(0),
 		},
@@ -560,6 +564,7 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         12,
 			expectWithdrawFromGasStabilityPoolCall: true,
+			expectGasPriorityFeeUpdate:             true,
 			expectedGasPriceIncrease:               math.NewUint(0),   // expect 0 on error
 			expectedAdditionalFees:                 math.NewUint(400), // gasLimit * increase
 			withdrawFromGasStabilityPoolReturn:     errors.New("withdraw error"),
@@ -623,13 +628,21 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 				feesPaid.String(),
 			)
 
-			// check cctx
+			// check gas priority fee update and last update timestamp
+			if tc.expectGasPriorityFeeUpdate {
+				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
+				require.True(t, found)
+				newPriorityFee, err := cctx.GetCurrentOutboundParam().GetGasPriorityFeeUInt64()
+				require.NoError(t, err)
+				require.Equal(t, tc.medianGasPrice, newPriorityFee)
+				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
+			}
+
+			// check gas price update and last update timestamp
 			if !tc.expectedGasPriceIncrease.IsZero() {
 				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
 				require.True(t, found)
 				newGasPrice, err := cctx.GetCurrentOutboundParam().GetGasPriceUInt64()
-				require.NoError(t, err)
-				newPriorityFee, err := cctx.GetCurrentOutboundParam().GetGasPriorityFeeUInt64()
 				require.NoError(t, err)
 				require.EqualValues(
 					t,
@@ -639,7 +652,6 @@ func Test_CheckAndUpdateCCTXGasPriceBTC(t *testing.T) {
 					tc.expectedGasPriceIncrease.Uint64(),
 					previousGasPrice,
 				)
-				require.EqualValues(t, newGasPrice, newPriorityFee)
 				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
 		})
