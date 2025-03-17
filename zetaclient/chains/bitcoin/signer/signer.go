@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"runtime/debug"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -83,7 +84,9 @@ func (signer *Signer) TryProcessOutbound(
 	defer func() {
 		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
-			signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().
+				Std.Error().
+				Msgf("BTC TryProcessOutbound: %s, caught panic error: %v, stack trace %s", cctx.Index, err, string(debug.Stack()))
 		}
 	}()
 

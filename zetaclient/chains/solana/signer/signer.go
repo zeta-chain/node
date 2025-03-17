@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -117,7 +118,9 @@ func (signer *Signer) TryProcessOutbound(
 	defer func() {
 		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
-			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().
+				Std.Error().
+				Msgf("TryProcessOutbound: %s, caught panic error: %v, stack trace %s", cctx.Index, err, string(debug.Stack()))
 		}
 	}()
 
