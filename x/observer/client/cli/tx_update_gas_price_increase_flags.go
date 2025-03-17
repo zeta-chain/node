@@ -43,10 +43,12 @@ func CmdUpdateGasPriceIncreaseFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			
 			retryIntervalBTC, err := strconv.ParseInt(args[5], 10, 64)
 			if err != nil {
 				return err
 			}
+			
 			gasPriceIncreaseFlags := types.GasPriceIncreaseFlags{
 				EpochLength:   epochLength,
 				RetryInterval: time.Duration(retryInterval),
