@@ -54,6 +54,9 @@ func (msg *MsgVoteGasPrice) ValidateBasic() error {
 	if msg.ChainId < 0 {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
+
+	// Bitcoin has no priority fee, we should block invalid priority fee explicitly.
+	// The priority fee can only set by gas stability pool when pumping up the price.
 	if chains.IsBitcoinChain(msg.ChainId, []chains.Chain{}) && msg.PriorityFee != 0 {
 		return cosmoserrors.Wrapf(ErrInvalidPriorityFee, "invalid bitcoin priority fee (%d)", msg.PriorityFee)
 	}
