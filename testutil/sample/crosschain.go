@@ -156,6 +156,12 @@ func GasPriceFromRand(r *rand.Rand, chainID int64) *types.GasPrice {
 	}
 	// Select priority fee between 0 and price
 	priorityFee := r.Uint64() % price
+
+	// Set priority fee to 0 for Bitcoin chain as it does not have priority fee
+	if chains.IsBitcoinChain(chainID, []chains.Chain{}) {
+		priorityFee = 0
+	}
+
 	return &types.GasPrice{
 		Creator:      "",
 		ChainId:      chainID,
