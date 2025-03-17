@@ -11,6 +11,7 @@
 
 ### Fixes
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
+* [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
 
 ### Tests
 
