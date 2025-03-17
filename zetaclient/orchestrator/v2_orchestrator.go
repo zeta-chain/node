@@ -265,11 +265,7 @@ func (oc *V2) reportPreflightMetrics(ctx context.Context) error {
 		return err
 	}
 
-	if err = ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger); err != nil {
-		return errors.Wrap(err, "unable to report preflight metrics")
-	}
-
-	return nil
+	return ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger)
 }
 
 func (oc *V2) hasChain(chainID int64) bool {

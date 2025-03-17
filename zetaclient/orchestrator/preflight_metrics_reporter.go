@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"time"
 
 	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
@@ -18,7 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// ReportPreflightMetrics performs a preflight check on preflight chains and updates metrics.
+// ReportPreflightMetrics performs a preflight check on preflight chains (where IsSuported=false) and updates metrics.
 // This helps to visualize the readiness of new chains to be enabled and observed by zetaclient.
 func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc Zetacore, logger zerolog.Logger) error {
 	additionalChains, err := zc.GetAdditionalChains(ctx)
@@ -31,7 +32,8 @@ func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc Zetaco
 		return errors.Wrap(err, "unable to fetch chain params")
 	}
 
-	preflightChains := make([]chains.Chain, 0)
+	// chains that exist in zetacore but are not enabled yet (e.g. in preflight mode)
+	unsupportedChains := make([]chains.Chain, 0)
 
 	// We treat chain params with IsSupported = false as preflight chains, because
 	// having a new flag 'IsPreflight' in the chain params incurs additional complexity.
@@ -52,11 +54,13 @@ func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc Zetaco
 		}
 
 		if !cp.IsSupported {
-			preflightChains = append(preflightChains, chain)
+			unsupportedChains = append(unsupportedChains, chain)
 		}
 	}
 
-	for _, chain := range preflightChains {
+	// perform preflight check
+	start := time.Now()
+	for _, chain := range unsupportedChains {
 		switch {
 		case chains.IsBitcoinChain(chain.ChainId, additionalChains):
 			err = reportPreflightMetricsBitcoin(ctx, app, chain, logger)
@@ -73,7 +77,11 @@ func ReportPreflightMetrics(ctx context.Context, app *zctx.AppContext, zc Zetaco
 		}
 
 		if err != nil {
-			logger.Error().Err(err).Int64(logs.FieldChain, chain.ChainId).Msg("unable to report preflight metrics")
+			logger.Error().
+				Err(err).
+				Int64(logs.FieldChain, chain.ChainId).
+				Float64("time_taken", time.Since(start).Seconds()).
+				Msg("unable to report preflight metrics")
 		}
 	}
 
