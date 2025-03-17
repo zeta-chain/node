@@ -15,7 +15,7 @@ import (
 const maxGasLimit = 2_500_000
 
 const gasTransferGasLimit = 21_000
-const nonGasMinGasLimit = 100_000
+const contractCallMinGasLimit = 100_000
 
 // Gas represents gas parameters for EVM transactions.
 //
@@ -77,13 +77,17 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
-	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
-		// some erc20 reverts currently use 21k, this check add a minimum gas limitm
-		limit = nonGasMinGasLimit
+	} else if limit == gasTransferGasLimit && (params.CoinType != coin.CoinType_Gas || (cctx.IsCurrentOutboundRevert() && cctx.RevertOptions.CallOnRevert)) {
+		// in some context, 21k might currently be used for an outbound that involves a contract call
+		// this includes erc20 withdraw and onRevert calls whe gas deposit revert
+		// we fix this minimum to ensure the transaction has the minimum required gas limit
+		// TODO: fix the gas limit used for these cctx outbound gas limit
+		// https://github.com/zeta-chain/node/issues/3723
+		limit = contractCallMinGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low; Setting to the minimum (%d)", nonGasMinGasLimit)
+			Msgf("Gas limit is too low for contract call; Setting to the minimum (%d)", contractCallMinGasLimit)
 	}
 
 	gasPrice, err := bigIntFromString(params.GasPrice)
