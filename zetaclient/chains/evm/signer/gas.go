@@ -79,7 +79,7 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
 	} else if limit == gasTransferGasLimit && (params.CoinType != coin.CoinType_Gas || (cctx.IsCurrentOutboundRevert() && cctx.RevertOptions.CallOnRevert)) {
 		// in some context, 21k might currently be used for an outbound that involves a contract call
-		// this includes erc20 withdraw and onRevert calls whe gas deposit revert
+		// this includes erc20 withdraw, and onRevert calls whe gas deposit revert
 		// we fix this minimum to ensure the transaction has the minimum required gas limit
 		// TODO: fix the gas limit used for these cctx outbound gas limit
 		// https://github.com/zeta-chain/node/issues/3723
