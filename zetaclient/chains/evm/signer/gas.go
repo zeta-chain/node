@@ -78,7 +78,9 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
 	} else if limit == gasTransferGasLimit && params.CoinType != coin.CoinType_Gas {
-		// some erc20 reverts currently use 21k, this check add a minimum gas limitm
+		// some erc20 reverts currently use 21k, this check add a minimum gas limit
+		// TODO: fix the gas limit used for gas revert outbounds
+		// https://github.com/zeta-chain/node/issues/3723
 		limit = nonGasMinGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
