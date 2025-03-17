@@ -31,7 +31,7 @@ jobs:
 
       - name: Get changed files in x directory
         id: x-changes
-        uses: tj-actions/changed-files@v45
+        uses: zeta-chain/gh-action-changed-files@9200e69727eb73eb060652b19946b8a2fdfb654b
         with:
           files: x/**
 
