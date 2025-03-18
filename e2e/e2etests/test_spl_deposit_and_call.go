@@ -52,7 +52,13 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContractWithMsg(r, contract, big.NewInt(int64(amount)), data)
+	utils.MustHaveCalledExampleContractWithMsg(
+		r,
+		contract,
+		big.NewInt(int64(amount)),
+		data,
+		[]byte(r.GetSolanaPrivKey().PublicKey().String()),
+	)
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)

@@ -11,10 +11,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keygen"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	tsscommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/keygen"
+	"github.com/zeta-chain/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/tss"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -30,7 +30,7 @@ const (
 )
 
 type keygenCeremony struct {
-	tss           *tss.TssServer
+	tss           *tss.Server
 	zetacore      Zetacore
 	lastSeenBlock int64
 	iterations    int
@@ -42,7 +42,7 @@ type keygenCeremony struct {
 // Returns the TSS key if generated, or error.
 func KeygenCeremony(
 	ctx context.Context,
-	server *tss.TssServer,
+	server *tss.Server,
 	zc Zetacore,
 	logger zerolog.Logger,
 ) (observertypes.TSS, error) {
