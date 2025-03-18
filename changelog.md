@@ -7,6 +7,7 @@
 * [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
+* [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 
 ### Refactor
 
