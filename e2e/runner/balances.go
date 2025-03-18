@@ -1,3 +1,4 @@
+
 package runner
 
 import (
@@ -137,7 +138,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		if err != nil {
 			return AccountBalances{}, err
 		}
-		suiSUI = r.SuiGetFungibleTokenBalance(signer.Address())
+		suiSUI = r.SuiGetSUIBalance(signer.Address())
 	}
 
 	return AccountBalances{
@@ -211,6 +212,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
 	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
 	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
+	r.Logger.Print("* SUI balance: %s", balances.ZetaSui.String())
 
 	// evm
 	r.Logger.Print("EVM:")
