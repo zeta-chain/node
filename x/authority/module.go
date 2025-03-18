@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
-const ConsensusVersion = 3
+const consensusVersion = 3
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -152,7 +152,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the authority module.
 func (am AppModule) BeginBlock(_ context.Context) error {

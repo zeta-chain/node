@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-const ConsensusVersion = 10
+const consensusVersion = 10
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -157,7 +157,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the observer module.
 func (am AppModule) BeginBlock(c context.Context) error {

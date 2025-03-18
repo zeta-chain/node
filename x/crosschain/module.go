@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const ConsensusVersion = 5
+const consensusVersion = 5
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -160,7 +160,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the crosschain module.
 func (am AppModule) BeginBlock(c context.Context) error {
