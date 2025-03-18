@@ -90,7 +90,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	// if failFast option is not specified, overwrite context cancellation function
 	// so that it is a no-op
 	if !failFast {
-		cancel = func(cause error) {}
+		cancel = func(_ error) {}
 	}
 
 	var runnerOpts []runner.E2ERunnerOption
