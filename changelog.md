@@ -20,6 +20,10 @@
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
 
+### Refactor
+
+* [3700](https://github.com/zeta-chain/node/pull/3700) - use sender and senderEVM in cross-chain call message context
+
 ## v29.0.0
 
 ### Breaking Changes

@@ -38,6 +38,15 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
 
+	// check sender passed in the call
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err)
+	sender := []byte(signer.Address())
+
+	actualSender, err := r.TestDAppV2ZEVM.GetSenderWithMessage(&bind.CallOpts{}, payload)
+	require.NoError(r, err)
+	require.EqualValues(r, sender, actualSender)
+
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)
 }
