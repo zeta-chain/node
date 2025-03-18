@@ -16,22 +16,23 @@ import (
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
 type AccountBalances struct {
-	ZetaETH   *big.Int
-	ZetaZETA  *big.Int
-	ZetaWZETA *big.Int
-	ZetaERC20 *big.Int
-	ZetaBTC   *big.Int
-	ZetaSOL   *big.Int
-	ZetaSPL   *big.Int
-	ZetaSui   *big.Int
-	EvmETH    *big.Int
-	EvmZETA   *big.Int
-	EvmERC20  *big.Int
-	BtcBTC    string
-	SolSOL    *big.Int
-	SolSPL    *big.Int
-	SuiSUI    uint64
-	SuiUSDC   uint64
+	ZetaETH       *big.Int
+	ZetaZETA      *big.Int
+	ZetaWZETA     *big.Int
+	ZetaERC20     *big.Int
+	ZetaBTC       *big.Int
+	ZetaSOL       *big.Int
+	ZetaSPL       *big.Int
+	ZetaSui       *big.Int
+	ZetaUSDCSui   *big.Int
+	EvmETH        *big.Int
+	EvmZETA       *big.Int
+	EvmERC20      *big.Int
+	BtcBTC        string
+	SolSOL        *big.Int
+	SolSPL        *big.Int
+	SuiSUI        uint64
+	SuiUSDC       uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -76,6 +77,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaSol := r.getERC20BalanceSafe(r.SOLZRC20, "sol zrc20")
 	zetaSPL := r.getERC20BalanceSafe(r.SPLZRC20, "spl zrc20")
 	zetaSui := r.getERC20BalanceSafe(r.SUIZRC20, "sui zrc20")
+	zetaUSDCSui := r.getERC20BalanceSafe(r.SuiTokenZRC20, "sui token zrc20")
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
@@ -144,22 +146,23 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	}
 
 	return AccountBalances{
-		ZetaETH:   zetaEth,
-		ZetaZETA:  zetaZeta,
-		ZetaWZETA: zetaWZeta,
-		ZetaERC20: zetaErc20,
-		ZetaBTC:   zetaBtc,
-		ZetaSOL:   zetaSol,
-		ZetaSPL:   zetaSPL,
-		ZetaSui:   zetaSui,
-		EvmETH:    evmEth,
-		EvmZETA:   evmZeta,
-		EvmERC20:  evmErc20,
-		BtcBTC:    BtcBTC,
-		SolSOL:    solSOL,
-		SolSPL:    solSPL,
-		SuiSUI:    suiSUI,
-		SuiUSDC:   suiUSDC,
+		ZetaETH:     zetaEth,
+		ZetaZETA:    zetaZeta,
+		ZetaWZETA:   zetaWZeta,
+		ZetaERC20:   zetaErc20,
+		ZetaBTC:     zetaBtc,
+		ZetaSOL:     zetaSol,
+		ZetaSPL:     zetaSPL,
+		ZetaSui:     zetaSui,
+		ZetaUSDCSui: zetaUSDCSui,
+		EvmETH:      evmEth,
+		EvmZETA:     evmZeta,
+		EvmERC20:    evmErc20,
+		BtcBTC:      BtcBTC,
+		SolSOL:      solSOL,
+		SolSPL:      solSPL,
+		SuiSUI:      suiSUI,
+		SuiUSDC:     suiUSDC,
 	}, nil
 }
 
@@ -216,6 +219,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
 	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
 	r.Logger.Print("* SUI balance: %s", balances.ZetaSui.String())
+	r.Logger.Print("* USDC.SUI balance: %s", balances.ZetaUSDCSui.String())
 
 	// evm
 	r.Logger.Print("EVM:")
