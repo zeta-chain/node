@@ -16,9 +16,9 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/conversion"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	tsscommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/conversion"
+	"github.com/zeta-chain/go-tss/tss"
 
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -194,7 +194,7 @@ func NewTSSServer(
 	cfg config.Config,
 	tssPassword string,
 	logger zerolog.Logger,
-) (*tss.TssServer, error) {
+) (*tss.Server, error) {
 	switch {
 	case len(whitelistPeers) == 0 && len(bootstrapPeers) == 0:
 		return nil, errors.New("no bootstrap peers and whitelist peers provided")
@@ -221,7 +221,7 @@ func NewTSSServer(
 		PreParamTimeout: 5 * time.Minute,
 	}
 
-	tssServer, err := tss.NewTss(
+	tssServer, err := tss.New(
 		bootstrapPeers,
 		Port,
 		privateKey,

@@ -51,6 +51,7 @@ const (
 	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
 	flagTestFilter        = "test-filter"
+	flagTestStaking       = "test-staking"
 )
 
 var (
@@ -90,6 +91,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
+	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -123,6 +125,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		setupSolana       = testSolana || testPerformance
 		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -574,6 +577,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.EnsureNoStaleBallots()
 	}
 
+	// This should only be run at the end to the test as it would remove the observer.
+	if testStaking {
+		e2etests.UndelegateToBelowMinimumObserverDelegation(deployerRunner, []string{})
+	}
 	// print and validate report
 	networkReport, err := deployerRunner.GenerateNetworkReport()
 	if err != nil {

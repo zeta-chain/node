@@ -8,7 +8,6 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/pkg/crypto"
@@ -57,7 +56,7 @@ func (k Keeper) CallUpdateGatewayAddress(
 //	)
 func (k Keeper) CallDepositAndCallZRC20(
 	ctx sdk.Context,
-	context systemcontract.ZContext,
+	context gatewayzevm.MessageContext,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,
@@ -110,7 +109,7 @@ func (k Keeper) CallDepositAndCallZRC20(
 // )
 func (k Keeper) CallExecute(
 	ctx sdk.Context,
-	context systemcontract.ZContext,
+	context gatewayzevm.MessageContext,
 	zrc20 common.Address,
 	amount *big.Int,
 	target common.Address,

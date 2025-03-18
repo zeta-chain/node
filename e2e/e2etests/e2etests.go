@@ -152,6 +152,12 @@ const (
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 
 	/*
+		Staking tests
+	*/
+
+	TestUndelegateToBelowMinimumObserverDelegation = "undelegate_to_below_minimum_observer_delegation"
+
+	/*
 	 Admin tests
 	 Test admin functionalities
 	*/
@@ -598,6 +604,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSPLWithdrawName,
@@ -674,6 +681,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	/*
 	 TON tests
@@ -693,6 +701,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestTONDepositAndCallRefundName,
@@ -735,7 +744,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiDepositAndCall,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositAndCallRevertName,
@@ -823,6 +832,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallRevertName,
@@ -859,6 +869,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.5"},
 		},
 		TestBitcoinStdMemoDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinStdMemoDepositAndCallRevertName,
@@ -891,6 +902,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,
@@ -1435,6 +1447,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		legacy.TestEtherDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyERC20WithdrawName,
@@ -1528,4 +1541,9 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		legacy.TestZetaWithdrawBTCRevert,
 	),
+	runner.NewE2ETest(
+		TestUndelegateToBelowMinimumObserverDelegation,
+		"test undelegating to below minimum observer delegation",
+		[]runner.ArgDefinition{},
+		UndelegateToBelowMinimumObserverDelegation),
 }

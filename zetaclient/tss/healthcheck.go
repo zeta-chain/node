@@ -14,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	"github.com/zeta-chain/go-tss/tss"
 
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/ticker"
@@ -30,7 +30,7 @@ type HealthcheckProps struct {
 }
 
 // HealthcheckWorker checks the health of the TSS server and its peers.
-func HealthcheckWorker(ctx context.Context, server *tss.TssServer, p HealthcheckProps, logger zerolog.Logger) error {
+func HealthcheckWorker(ctx context.Context, server *tss.Server, p HealthcheckProps, logger zerolog.Logger) error {
 	if p.NumConnectedPeersMetric == nil {
 		return errors.New("missing NumConnectedPeersMetric")
 	}

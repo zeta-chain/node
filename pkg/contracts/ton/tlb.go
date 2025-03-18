@@ -1,8 +1,6 @@
 package ton
 
 import (
-	"bytes"
-
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -34,22 +32,21 @@ func UnmarshalSnakeCell(cell *boc.Cell) ([]byte, error) {
 		return nil, err
 	}
 
-	cd := boc.BitString(sd)
+	bitString := boc.BitString(sd)
+	n := bitString.BitsAvailableForRead() / 8
 
-	// TLB operates with bits, so we (might) need to trim some "leftovers" (null chars)
-	return bytes.Trim(cd.Buffer(), "\x00"), nil
+	return bitString.ReadBytes(n)
 }
 
 // MarshalSnakeCell encodes []byte to TLB using snake-cell encoding
 func MarshalSnakeCell(data []byte) (*boc.Cell, error) {
-	b := boc.NewCell()
+	bs := boc.NewBitString(len(data) * 8)
 
-	wrapped := tlb.Bytes(data)
-	if err := wrapped.MarshalTLB(b, &tlb.Encoder{}); err != nil {
+	if err := bs.WriteBytes(data); err != nil {
 		return nil, err
 	}
 
-	return b, nil
+	return MarshalTLB(tlb.SnakeData(bs))
 }
 
 // UnmarshalEVMAddress decodes eth.Address from BOC
