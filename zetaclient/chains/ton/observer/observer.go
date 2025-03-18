@@ -14,6 +14,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer is a TON observer.
@@ -41,6 +42,7 @@ type LiteClient interface {
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
 	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
 	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
+	HealthCheck(ctx context.Context) (time.Time, error)
 }
 
 // New constructor for TON Observer.
@@ -103,22 +105,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 // CheckRPCStatus checks TON RPC status and alerts if necessary.
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	blockID, err := ob.getLatestMasterchainBlock(ctx)
+	blockTime, err := ob.client.HealthCheck(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get latest masterchain block")
+		return errors.Wrap(err, "unable to check rpc health")
 	}
 
-	block, err := ob.client.GetBlockHeader(ctx, blockID, 0)
-	switch {
-	case err != nil:
-		return errors.Wrap(err, "failed to get masterchain block header")
-	case block.NotMaster:
-		return errors.Errorf("block %q is not a master block", blockID.BlockID.String())
-	}
-
-	blockTime := time.Unix(int64(block.GenUtime), 0).UTC()
-
-	ob.ReportBlockLatency(blockTime)
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
 
 	return nil
 }
