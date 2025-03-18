@@ -52,7 +52,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
-		CompiledModules: []string{suicontract.GatewayBytecodeBase64()},
+		CompiledModules: []string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
 		Dependencies: []string{
 			"0x0000000000000000000000000000000000000000000000000000000000000001",
 			"0x0000000000000000000000000000000000000000000000000000000000000002",
