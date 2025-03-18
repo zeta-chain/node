@@ -64,7 +64,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 	net := &chaincfg.MainNetParams
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("decode OP_RETURN ok", func(t *testing.T) {

@@ -9,8 +9,6 @@ import (
 // IncreaseIntByPercent is a function that increases integer by a percentage.
 // Example1: IncreaseIntByPercent(10, 15) = 10 * 1.15 = 11
 // Example2: IncreaseIntByPercent(-10, 15) = -10 * 1.15 = -11
-//
-// Note: use with caution if passing negative values.
 func IncreaseIntByPercent(value int64, percent uint32) int64 {
 	if percent == 0 {
 		return value

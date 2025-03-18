@@ -173,7 +173,7 @@ func DepositorFee(satPerByte int64) float64 {
 //
 // TSS will make profit from the difference between fee charged from users and fee paid to Bitcoin network
 func OutboundFeeRateFromCCTXRate(cctxRate int64) int64 {
-	marketRate := float64(cctxRate) / common.BTCGasPriceMultiplierFeeCharge
+	marketRate := float64(cctxRate) / common.BTCOutboundGasPriceMultiplier
 	return int64(math.Round(marketRate * common.BTCGasPriceMultiplierSendTx))
 }
 
@@ -260,7 +260,7 @@ func CalcDepositorFee(
 
 	// apply gas price multiplier
 	// #nosec G115 always in range
-	feeRate = int64(float64(feeRate) * common.BTCGasPriceMultiplierFeeCharge)
+	feeRate = int64(float64(feeRate) * common.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate), nil
 }

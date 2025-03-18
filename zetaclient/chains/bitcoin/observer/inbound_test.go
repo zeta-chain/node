@@ -3,15 +3,16 @@ package observer_test
 import (
 	"bytes"
 	"context"
-	cosmosmath "cosmossdk.io/math"
 	"encoding/hex"
-	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/memo"
 	"math"
 	"math/big"
 	"path"
 	"strings"
 	"testing"
+
+	cosmosmath "cosmossdk.io/math"
+	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
@@ -299,7 +300,7 @@ func TestGetBtcEvent(t *testing.T) {
 	net := &chaincfg.MainNetParams
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	// expected result
@@ -657,7 +658,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	blockNumber := uint64(835640)
 
 	// fee rate of above tx is 28 sat/vB
-	depositorFee := common.DepositorFee(28 * clientcommon.BTCGasPriceMultiplierFeeCharge)
+	depositorFee := common.DepositorFee(28 * clientcommon.BTCOutboundGasPriceMultiplier)
 	feeCalculator := mockDepositFeeCalculator(depositorFee, nil)
 
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {

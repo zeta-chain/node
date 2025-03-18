@@ -58,15 +58,15 @@ func GetInboundVoteMessage(
 	return msg
 }
 
-// GasPriceMultiplierFeeCharge returns the fee-charging gas price multiplier for the given chain
-func GasPriceMultiplierFeeCharge(chain chains.Chain) float64 {
+// GasPriceMultiplier returns the gas price multiplier for the given chain
+func GasPriceMultiplier(chain chains.Chain) float64 {
 	switch chain.Consensus {
 	case chains.Consensus_ethereum:
-		return clientcommon.EVMGasPriceMultiplierFeeCharge
+		return clientcommon.EVMOutboundGasPriceMultiplier
 	case chains.Consensus_bitcoin:
-		return clientcommon.BTCGasPriceMultiplierFeeCharge
+		return clientcommon.BTCOutboundGasPriceMultiplier
 	default:
-		return clientcommon.DefaultGasPriceMultiplierFeeCharge
+		return clientcommon.DefaultGasPriceMultiplier
 	}
 }
 
