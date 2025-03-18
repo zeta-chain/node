@@ -86,7 +86,11 @@ func (signer *Signer) TryProcessOutbound(
 		if err := recover(); err != nil {
 			signer.Logger().
 				Std.Error().
-				Msgf("BTC TryProcessOutbound: %s, caught panic error: %v, stack trace %s", cctx.Index, err, string(debug.Stack()))
+				Str(logs.FieldMethod, "TryProcessOutbound").
+				Str(logs.FieldCctx, cctx.Index).
+				Interface("panic", err).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("caught panic error")
 		}
 	}()
 

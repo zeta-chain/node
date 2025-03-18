@@ -250,7 +250,11 @@ func (signer *Signer) TryProcessOutbound(
 		if r := recover(); r != nil {
 			signer.Logger().
 				Std.Error().
-				Msgf("TryProcessOutbound: %s, caught panic error: %v, stack trace %s", cctx.Index, r, string(debug.Stack()))
+				Str(logs.FieldMethod, "TryProcessOutbound").
+				Str(logs.FieldCctx, cctx.Index).
+				Interface("panic", r).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("caught panic error")
 		}
 	}()
 
