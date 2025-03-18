@@ -66,11 +66,11 @@ var (
 	})
 
 	// NumberOfUTXO is a gauge that contains the number of UTXOs
-	NumberOfUTXO = promauto.NewGauge(prometheus.GaugeOpts{
+	NumberOfUTXO = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "utxo_number",
 		Help:      "Number of UTXOs",
-	})
+	}, []string{"chain"})
 
 	// LastScannedBlockNumber is a gauge that contains the last scanned block number per chain
 	LastScannedBlockNumber = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -287,4 +287,11 @@ func GetInstrumentedHTTPClient(endpoint string) (*http.Client, error) {
 	return &http.Client{
 		Transport: transport,
 	}, nil
+}
+
+// ReportBlockLatency records the latency between the current time
+// an the latest block time for a chain as a metric
+func ReportBlockLatency(chainName string, latestBlockTime time.Time) {
+	elapsedTime := time.Since(latestBlockTime)
+	LatestBlockLatency.WithLabelValues(chainName).Set(elapsedTime.Seconds())
 }
