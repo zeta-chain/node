@@ -31,6 +31,7 @@ type AccountBalances struct {
 	SolSOL    *big.Int
 	SolSPL    *big.Int
 	SuiSUI    uint64
+	SuiUSDC   uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -132,12 +133,14 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 
 	// sui
 	var suiSUI uint64
+	var suiUSDC uint64
 	if r.Clients.Sui != nil {
 		signer, err := r.Account.SuiSigner()
 		if err != nil {
 			return AccountBalances{}, err
 		}
 		suiSUI = r.SuiGetSUIBalance(signer.Address())
+		suiUSDC = r.SuiGetFungibleTokenBalance(signer.Address())
 	}
 
 	return AccountBalances{
@@ -156,6 +159,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		SolSOL:    solSOL,
 		SolSPL:    solSPL,
 		SuiSUI:    suiSUI,
+		SuiUSDC:   suiUSDC,
 	}, nil
 }
 
@@ -235,6 +239,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	// sui
 	r.Logger.Print("Sui:")
 	r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
+	r.Logger.Print("* USDC balance: %d", balances.SuiUSDC)
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
