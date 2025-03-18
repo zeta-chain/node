@@ -31,7 +31,7 @@ const (
 	AddOutboundTrackerGasLimit = 200_000
 
 	// PostBlameDataGasLimit is the gas limit for voting on blames
-	PostBlameDataGasLimit = 200_000
+	PostBlameDataGasLimit = 400_000
 
 	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx (for zetachain itself)
 	PostVoteOutboundGasLimit = 500_000
