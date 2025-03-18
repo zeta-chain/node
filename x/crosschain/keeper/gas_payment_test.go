@@ -642,6 +642,6 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		// set input amount lower than total zeta fee
 		inputAmount := expectedFeeInZeta.Sub(math.NewUint(1))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
-		require.ErrorIs(t, err, types.ErrNotEnoughZetaBurnt)
+		require.ErrorIs(t, err, types.ErrNotEnoughGas)
 	})
 }

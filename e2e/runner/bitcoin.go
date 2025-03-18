@@ -321,7 +321,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	amount float64,
 	memo []byte,
 	feeRate int64,
-) (*chainhash.Hash, int64) {
+) (*chainhash.Hash, int64, string) {
 	// list deployer utxos
 	utxos := r.ListDeployerUTXOs()
 
@@ -362,7 +362,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
 	require.NoError(r, err)
 
-	return txid, revealTx.TxOut[0].Value
+	return txid, revealTx.TxOut[0].Value, receiver.EncodeAddress()
 }
 
 // GetBitcoinChainID gets the bitcoin chain ID from the network params

@@ -40,7 +40,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 
 	// ACT
 	// Send BTC to TSS address with memo
-	txHash, depositAmount := r.InscribeToTSSFromDeployerWithMemo(amount, memoBytes, int64(feeRate))
+	txHash, depositAmount, commitAddress := r.InscribeToTSSFromDeployerWithMemo(amount, memoBytes, int64(feeRate))
 
 	// ASSERT
 	// wait for the cctx to be mined
@@ -52,5 +52,10 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	depositFeeSats, err := common.GetSatoshis(common.DefaultDepositorFee)
 	require.NoError(r, err)
 	receiveAmount := depositAmount - depositFeeSats
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(receiveAmount))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(receiveAmount),
+		[]byte(commitAddress),
+	)
 }

@@ -82,21 +82,6 @@ func OutboundTrackerKey(
 	return key
 }
 
-func (m CrossChainTx) LogIdentifierForCCTX() string {
-	if len(m.OutboundParams) == 0 {
-		return fmt.Sprintf("%s-%d", m.InboundParams.Sender, m.InboundParams.SenderChainId)
-	}
-	i := len(m.OutboundParams) - 1
-	outTx := m.OutboundParams[i]
-	return fmt.Sprintf(
-		"%s-%d-%d-%d",
-		m.InboundParams.Sender,
-		m.InboundParams.SenderChainId,
-		outTx.ReceiverChainId,
-		outTx.TssNonce,
-	)
-}
-
 func FinalizedInboundKey(inboundHash string, chainID int64, eventIndex uint64) string {
 	return fmt.Sprintf("%d-%s-%d", chainID, inboundHash, eventIndex)
 }

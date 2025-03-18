@@ -222,6 +222,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      }
+    ],
+    "name": "getSenderWithMessage",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "isZetaChain",
     "outputs": [
@@ -240,12 +259,12 @@
         "components": [
           {
             "internalType": "bytes",
-            "name": "origin",
+            "name": "sender",
             "type": "bytes"
           },
           {
             "internalType": "address",
-            "name": "sender",
+            "name": "senderEVM",
             "type": "address"
           },
           {
@@ -255,7 +274,7 @@
           }
         ],
         "internalType": "struct TestDAppV2.zContext",
-        "name": "_context",
+        "name": "context",
         "type": "tuple"
       },
       {
@@ -359,6 +378,25 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "senderWithMessageZEVM",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
       }
     ],
     "stateMutability": "view",

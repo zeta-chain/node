@@ -60,8 +60,8 @@ contract TestDAppV2 {
     address immutable public gateway;
 
     struct zContext {
-        bytes origin;
-        address sender;
+        bytes sender;
+        address senderEVM;
         uint256 chainID;
     }
 
@@ -85,8 +85,9 @@ contract TestDAppV2 {
 
     // these structures allow to assess contract calls
     mapping(bytes32 => bool) public calledWithMessage;
-    mapping(bytes => address) public senderWithMessage;
     mapping(bytes32 => uint256) public amountWithMessage;
+    mapping(bytes32 => bytes) public senderWithMessageZEVM;
+    mapping(bytes => address) public senderWithMessage;
 
     // the constructor is used to determine if the chain is ZetaChain
     constructor(bool isZetaChain_, address gateway_) {
@@ -109,6 +110,10 @@ contract TestDAppV2 {
         amountWithMessage[keccak256(abi.encodePacked(message))] = amount;
     }
 
+    function setSenderWithMessage(string memory message, bytes memory sender) internal {
+        senderWithMessageZEVM[keccak256(abi.encodePacked(message))] = sender;
+    }
+
     function getCalledWithMessage(string memory message) public view returns (bool) {
         return calledWithMessage[keccak256(abi.encodePacked(message))];
     }
@@ -117,9 +122,13 @@ contract TestDAppV2 {
         return amountWithMessage[keccak256(abi.encodePacked(message))];
     }
 
+    function getSenderWithMessage(string memory message) public view returns (bytes memory) {
+        return senderWithMessageZEVM[keccak256(abi.encodePacked(message))];
+    }
+
     // Universal contract interface on ZEVM
     function onCall(
-        zContext calldata _context,
+        zContext calldata context,
         address _zrc20,
         uint256 amount,
         bytes calldata message
@@ -128,10 +137,11 @@ contract TestDAppV2 {
     {
         require(!isRevertMessage(string(message)));
 
-        string memory messageStr = message.length == 0 ? getNoMessageIndex(_context.sender) : string(message);
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(context.senderEVM) : string(message);
 
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
+        setSenderWithMessage(messageStr, context.sender);
     }
 
     // called with gas token
