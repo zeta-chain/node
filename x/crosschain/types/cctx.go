@@ -190,8 +190,8 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	return nil
 }
 
-// AddOutbound adds a new outbound tx to the CCTX.
-func (m *CrossChainTx) AddOutbound(
+// UpdateCurrentOutbound adds a new outbound tx to the CCTX.
+func (m *CrossChainTx) UpdateCurrentOutbound(
 	ctx sdk.Context,
 	msg MsgVoteOutbound,
 	ballotStatus observertypes.BallotStatus,

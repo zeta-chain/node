@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/node/pkg/chains"
 
 	cctxerror "github.com/zeta-chain/node/pkg/errors"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -113,7 +115,7 @@ func (k msgServer) VoteOutbound(
 	cctx.SetOutboundBallotIndex(ballotIndex)
 
 	// If ballot is successful, the value received should be the out tx amount.
-	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
+	err = cctx.UpdateCurrentOutbound(ctx, *msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(err, voteOutboundID)
 	}
@@ -140,9 +142,14 @@ func (k msgServer) VoteOutbound(
 // The funds are sent to the gas stability pool associated with the receiver chain
 // This wraps the FundGasStabilityPoolFromRemainingFees function and logs an error if it fails.We do not return an error here.
 // Event if the funding fails, the outbound tx is still processed.
+
 func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// Fund the gas stability pool with the remaining funds
-	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutboundParam(), cctx.GetCurrentOutboundParam().ReceiverChainId); err != nil {
+	if err := k.FundGasStabilityPoolFromRemainingFees(ctx,
+		*cctx.GetCurrentOutboundParam(),
+		cctx.GetCurrentOutboundParam().ReceiverChainId,
+		cctx.InboundParams.SenderChainId,
+		cctx.InboundParams.Sender); err != nil {
 		ctx.Logger().
 			Error("%s: CCTX: %s Can't fund the gas stability pool with remaining fees %s", voteOutboundID, cctx.Index, err.Error())
 	}
@@ -153,33 +160,58 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	ctx sdk.Context,
 	OutboundParams types.OutboundParams,
 	chainID int64,
+	senderChainID int64,
+	sender string,
 ) error {
-	gasUsed := OutboundParams.GasUsed
-	gasLimit := OutboundParams.EffectiveGasLimit
-	gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+	//gasUsed := OutboundParams.GasUsed
+	//gasLimit := OutboundParams.EffectiveGasLimit
+	//gasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
 
-	if gasLimit == gasUsed {
+	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
+	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
+	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
+
+	userGasFeePaid := OutboundParams.UserGasFeePaid
+
+	// The final fee paid is greater than what the user paid originally. The extra cost in this case would be covered by the stability pool.
+	if outboundTxFeePaid.GTE(userGasFeePaid) {
 		return nil
 	}
 
-	// We skip gas stability pool funding if one of the params is zero
-	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
-		if gasLimit > gasUsed {
-			remainingGas := gasLimit - gasUsed
-			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
+	remainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
+	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, chainID)
+	if !found {
+		return fmt.Errorf("chain params not found for chainID %d", chainID)
+	}
+	stabilityPoolPercentage := chainParams.StabilityPoolPercentage
+	stabilityPoolAmount := percentOf(remainingFees.BigInt(), stabilityPoolPercentage)
+	// Refund the remaining fees to the user
+	// For v2 withdraw: The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
+	// For v1 withdraw
+	//  - ZRC20 withdrawal: The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
+	//  - Zeta withdrawal: We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
+	// For v1 Msg Passing:
+	// - Zeta : We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
+	// - GAS : The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
+	// - ERC20 : We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
+	refundAmount := remainingFees.Sub(math.NewUintFromBigInt(stabilityPoolAmount))
+	refundAddress := ethcommon.HexToAddress(sender)
 
-			// We fund the stability pool with a portion of the remaining fees.
-			remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
-
-			// Fund the gas stability pool.
-			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {
-				return err
-			}
-		} else {
-			return fmt.Errorf("%s: The gas limit %d is less than the gas used %d", voteOutboundID, gasLimit, gasUsed)
-		}
+	if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, stabilityPoolAmount); err != nil {
+		return err
 	}
 
+	// Refund tokens to user if it's a withdrawal originating from zEVM.
+	// Refund to the sender irrespective of weather its EOA or contract address
+	// For v1 msg passing, we cannot refund the user on zEVM
+	if chains.IsZetaChain(
+		senderChainID,
+		k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
+	) {
+		if err := k.fungibleKeeper.RefundRemainGasFess(ctx, chainID, refundAmount.BigInt(), refundAddress); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

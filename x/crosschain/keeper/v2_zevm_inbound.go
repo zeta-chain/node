@@ -125,6 +125,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 
 		// validate inbound for processing
 		cctx, err := k.ValidateInbound(ctx, inbound, false)
+
 		if err != nil {
 			return err
 		}

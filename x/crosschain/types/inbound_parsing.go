@@ -212,6 +212,7 @@ func NewWithdrawAndCallInbound(
 	receiverChain chains.Chain,
 	gasLimitQueried *big.Int,
 ) (*MsgVoteInbound, error) {
+
 	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return nil, errors.Wrapf(err, "ProcessZEVMInboundV2: failed to convert chainID %s", ctx.ChainID())
@@ -222,9 +223,11 @@ func NewWithdrawAndCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
+	// TODO : verify if this is correct , we should probably return error here as this means
+	// that the user has not paid any gas fee.
 	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
-		gasLimit = gasLimitQueried.Uint64()
+		event.CallOptions.GasLimit = gasLimitQueried
 	}
 
 	return NewMsgVoteInbound(

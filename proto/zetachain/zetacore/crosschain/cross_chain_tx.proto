@@ -124,6 +124,11 @@ message OutboundParams {
   // confirmation mode used for the outbound
   ConfirmationMode confirmation_mode = 25;
 
+  string user_gas_fee_paid = 26 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
+  ];
+
   // not used. do not edit.
   reserved 13 to 19;
 }

@@ -100,6 +100,9 @@ func (k msgServer) VoteInbound(
 		return &types.MsgVoteInboundResponse{}, nil
 	}
 
+	// The gasFee is not paid by the user.
+	// For deposit there is no fee required
+	// If the deposit creates a withdraw on a connected chain, the fee should be processed when creating the withdraw.
 	cctx, err := k.ValidateInbound(ctx, msg, true)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to validate inbound")
