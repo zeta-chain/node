@@ -445,36 +445,6 @@ func (_m *BitcoinClient) GetNetworkInfo(ctx context.Context) (*btcjson.GetNetwor
 	return r0, r1
 }
 
-// GetRawMempool provides a mock function with given fields: ctx
-func (_m *BitcoinClient) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetRawMempool")
-	}
-
-	var r0 []*chainhash.Hash
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*chainhash.Hash, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*chainhash.Hash); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*chainhash.Hash)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetNewAddress provides a mock function with given fields: ctx, account
 func (_m *BitcoinClient) GetNewAddress(ctx context.Context, account string) (btcutil.Address, error) {
 	ret := _m.Called(ctx, account)
@@ -498,6 +468,36 @@ func (_m *BitcoinClient) GetNewAddress(ctx context.Context, account string) (btc
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, account)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetRawMempool provides a mock function with given fields: ctx
+func (_m *BitcoinClient) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRawMempool")
+	}
+
+	var r0 []*chainhash.Hash
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*chainhash.Hash, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*chainhash.Hash); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*chainhash.Hash)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -835,6 +835,24 @@ func (_m *BitcoinClient) ImportPrivKeyRescan(ctx context.Context, privKeyWIF *bt
 		r0 = rf(ctx, privKeyWIF, label, rescan)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// IsRegnet provides a mock function with given fields:
+func (_m *BitcoinClient) IsRegnet() bool {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsRegnet")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

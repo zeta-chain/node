@@ -26,6 +26,11 @@ const (
 	maxBTCSupply = 21000000.0
 )
 
+// IsRegnet returns true if the chain is regnet
+func (c *Client) IsRegnet() bool {
+	return c.isRegnet
+}
+
 // GetBlockVerboseByStr alias for GetBlockVerbose
 func (c *Client) GetBlockVerboseByStr(ctx context.Context, blockHash string) (*types.GetBlockVerboseTxResult, error) {
 	h, err := strToHash(blockHash)

@@ -2,16 +2,12 @@ package signer
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -20,35 +16,23 @@ import (
 // The key points:
 //   - It reuses the stuck tx's inputs and outputs but gives a higher fee to miners.
 //   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
-func (signer *Signer) SignRBFTx(
-	ctx context.Context,
-	height uint64,
-	nonce uint64,
-	lastTx *btcutil.Tx,
-	latestRateStr string,
-	minRelayFee float64,
-) (*wire.MsgTx, error) {
+func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastTx *btcutil.Tx) (*wire.MsgTx, error) {
 	var (
 		lf = map[string]any{
 			logs.FieldMethod: "SignRBFTx",
-			logs.FieldNonce:  nonce,
+			logs.FieldNonce:  txData.nonce,
 			logs.FieldTx:     lastTx.MsgTx().TxID(),
 		}
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
+
+		// use latest fee rate specified by zetacore
+		cctxRate = txData.feeRateLatest
 	)
 
-	var cctxRate int64
-	switch signer.Chain().ChainId {
-	case chains.BitcoinRegtest.ChainId:
-		// hardcode for regnet E2E test, zetacore won't feed it to CCTX
+	// use hardcoded value for regnet E2E test because it takes 40
+	// minutes for zetacore to bump gas rate and we should not wait that long
+	if signer.rpc.IsRegnet() {
 		cctxRate = client.FeeRateRegnetRBF
-	default:
-		// parse latest fee rate from CCTX
-		latestRate, err := strconv.ParseInt(latestRateStr, 10, 64)
-		if err != nil || latestRate <= 0 {
-			return nil, fmt.Errorf("invalid fee rate %s", latestRateStr)
-		}
-		cctxRate = common.OutboundFeeRateFromCCTXRate(latestRate)
 	}
 
 	// create fee bumper
@@ -58,7 +42,7 @@ func (signer *Signer) SignRBFTx(
 		signer.Chain(),
 		lastTx,
 		cctxRate,
-		minRelayFee,
+		txData.minRelayFee,
 		logger,
 	)
 	if err != nil {
@@ -71,7 +55,10 @@ func (signer *Signer) SignRBFTx(
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
 	logger.Info().
-		Msgf("BumpTxFee succeed, additional fees: %d sats, rate: %d => %d sat/vB", additionalFees, fb.AvgFeeRate, newRate)
+		Int64("old_fee_rate", fb.AvgFeeRate).
+		Int64("new_fee_rate", newRate).
+		Int64("additional_fees", additionalFees).
+		Msg("BumpTxFee succeed")
 
 	// collect input amounts for signing
 	inAmounts := make([]int64, len(newTx.TxIn))
@@ -85,7 +72,7 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// sign the RBF tx
-	err = signer.SignTx(ctx, newTx, inAmounts, height, nonce)
+	err = signer.SignTx(ctx, newTx, inAmounts, txData.height, txData.nonce)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}

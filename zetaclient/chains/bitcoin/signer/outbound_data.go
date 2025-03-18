@@ -2,7 +2,6 @@ package signer
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -31,18 +30,21 @@ type OutboundData struct {
 	// feeRate is the fee rate in satoshis/vByte
 	feeRate int64
 
+	// feeRateLatest is the latest median fee rate in satoshis/vByte
+	// this value is fed by the zetacore when it bumps the gas price with gas stability pool
+	feeRateLatest int64
+
 	// feeRateBumpped is a flag to indicate if the fee rate in CCTX is bumped by zetacore
 	feeRateBumped bool
 
-	// txSize is the average size of a BTC outbound transaction
-	// user is charged (in ZRC20 contract) at a static txSize on each withdrawal
-	txSize int64
-
-	// nonce is the nonce of the outbound
-	nonce uint64
+	// minRelayFee is the minimum relay fee in unit of BTC
+	minRelayFee float64
 
 	// height is the ZetaChain block height
 	height uint64
+
+	// nonce is the nonce of the outbound
+	nonce uint64
 
 	// cancelTx is a flag to indicate if this outbound should be cancelled
 	cancelTx bool
@@ -71,15 +73,18 @@ func NewOutboundData(
 		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
 	}
 
-	// check if the fee rate is bumped by zetacore
+	// check if zetacore has bumped the fee rate
 	// 'GasPriorityFee' is always empty for Bitcoin unless zetacore bumps the fee rate
-	feeRateBumped := params.GasPrice == params.GasPriorityFee
-	if feeRateBumped {
-		logger.Info().Msgf("fee rate is bumped by zetacore: %s", params.GasPriorityFee)
+	var (
+		feeRateBumped bool
+		feeRateLatest int64
+	)
+	gasPriorityFee, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+	if err == nil && gasPriorityFee > 0 {
+		feeRateBumped = true
+		feeRateLatest = gasPriorityFee
+		logger.Info().Str("latest_fee_rate", params.GasPriorityFee).Msg("fee rate is bumped by zetacore")
 	}
-
-	// apply outbound fee rate multiplier
-	feeRate = common.OutboundFeeRateFromCCTXRate(feeRate)
 
 	// to avoid minRelayTxFee error, please do not use the minimum rate (1 sat/vB by default).
 	// we simply add additional 1 sat/vB to 'minRate' to avoid tx rejection by Bitcoin core.
@@ -99,17 +104,9 @@ func NewOutboundData(
 	}
 
 	// amount in BTC and satoshis
+	// the float64 'amount' is used later to select UTXOs, precision does not matter
 	amount := float64(params.Amount.Uint64()) / 1e8
 	amountSats := params.Amount.BigInt().Int64()
-
-	// check gas limit
-	if params.CallOptions == nil {
-		// never happens, 'GetCurrentOutboundParam' will create it
-		return nil, errors.New("call options is nil")
-	}
-	if params.CallOptions.GasLimit > math.MaxInt64 {
-		return nil, fmt.Errorf("invalid gas limit %d", params.CallOptions.GasLimit)
-	}
 
 	// compliance check
 	restrictedCCTX := compliance.IsCctxRestricted(cctx)
@@ -119,9 +116,9 @@ func NewOutboundData(
 	}
 
 	// check dust amount
-	dustAmount := params.Amount.Uint64() < constant.BTCWithdrawalDustAmount
+	dustAmount := amountSats < constant.BTCWithdrawalDustAmount
 	if dustAmount {
-		logger.Warn().Msgf("dust amount %d sats, canceling tx", params.Amount.Uint64())
+		logger.Warn().Int64("amount", amountSats).Msg("outbound will be cancelled due to dust amount")
 	}
 
 	// set the amount to 0 when the tx should be cancelled
@@ -136,11 +133,11 @@ func NewOutboundData(
 		amount:        amount,
 		amountSats:    amountSats,
 		feeRate:       feeRate,
+		feeRateLatest: feeRateLatest,
 		feeRateBumped: feeRateBumped,
-		// #nosec G115 checked in range
-		txSize:   int64(params.CallOptions.GasLimit),
-		nonce:    params.TssNonce,
-		height:   height,
-		cancelTx: cancelTx,
+		minRelayFee:   minRelayFee,
+		height:        height,
+		nonce:         params.TssNonce,
+		cancelTx:      cancelTx,
 	}, nil
 }

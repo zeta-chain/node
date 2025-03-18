@@ -31,6 +31,7 @@ const (
 )
 
 type RPC interface {
+	IsRegnet() bool
 	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
@@ -118,30 +119,21 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
+	// setup outbound data
+	txData, err := NewOutboundData(cctx, height, minRelayFee, logger, signer.Logger().Compliance)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
+		return
+	}
+
 	var (
-		rbfTx    = false
 		signedTx *wire.MsgTx
 		stuckTx  = observer.GetLastStuckOutbound()
+		rbfTx    = stuckTx != nil && stuckTx.Nonce == txData.nonce && txData.feeRateBumped
 	)
 
 	// sign outbound
-	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
-		// sign RBF tx
-		rbfTx = true
-		signedTx, err = signer.SignRBFTx(ctx, height, params.TssNonce, stuckTx.Tx, params.GasPriorityFee, minRelayFee)
-		if err != nil {
-			logger.Error().Err(err).Msg("SignRBFTx failed")
-			return
-		}
-		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
-	} else {
-		// setup outbound data
-		txData, err := NewOutboundData(cctx, height, minRelayFee, logger, signer.Logger().Compliance)
-		if err != nil {
-			logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
-			return
-		}
-
+	if !rbfTx {
 		// sign withdraw tx
 		signedTx, err = signer.SignWithdrawTx(ctx, txData, observer)
 		if err != nil {
@@ -149,6 +141,14 @@ func (signer *Signer) TryProcessOutbound(
 			return
 		}
 		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignWithdrawTx succeed")
+	} else {
+		// sign RBF tx
+		signedTx, err = signer.SignRBFTx(ctx, txData, stuckTx.Tx)
+		if err != nil {
+			logger.Error().Err(err).Msg("SignRBFTx failed")
+			return
+		}
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
 	}
 
 	// broadcast signed outbound

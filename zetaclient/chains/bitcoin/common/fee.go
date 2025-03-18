@@ -167,16 +167,6 @@ func DepositorFee(satPerByte int64) float64 {
 	return float64(satPerByte) * float64(BtcOutboundBytesDepositor) / btcutil.SatoshiPerBitcoin
 }
 
-// OutboundFeeRateFromCCTXRate calculates the outbound fee rate from the median rate
-// Example: OutboundFeeRateFromCCTXRate(10) => 10 / 2.0 * 1.5 = 7.5 ≈ 8
-// Example: OutboundFeeRateFromCCTXRate(20) => 20 / 2.0 * 1.5 = 15
-//
-// TSS will make profit from the difference between fee charged from users and fee paid to Bitcoin network
-func OutboundFeeRateFromCCTXRate(cctxRate int64) int64 {
-	marketRate := float64(cctxRate) / common.BTCOutboundGasPriceMultiplier
-	return int64(math.Round(marketRate * common.BTCGasPriceMultiplierSendTx))
-}
-
 // CalcBlockAvgFeeRate calculates the average gas rate (in sat/vByte) for a given block
 func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *chaincfg.Params) (int64, error) {
 	// sanity check

@@ -18,6 +18,7 @@ import (
 //go:generate mockery --name client --structname BitcoinClient --filename bitcoin_client.go --output ../../../testutils/mocks
 type client interface {
 	Ping(ctx context.Context) error
+	IsRegnet() bool
 	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
 	GetNetworkInfo(ctx context.Context) (*types.GetNetworkInfoResult, error)
 

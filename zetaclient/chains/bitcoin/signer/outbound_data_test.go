@@ -1,7 +1,6 @@
 package signer
 
 import (
-	"math"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -45,21 +44,20 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
 				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().GasPrice = "8"                // 8 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				to:         receiver,
-				amount:     0.1,
-				amountSats: 10000000,
-				feeRate:    8, // Round(7.5)
-				txSize:     254,
-				nonce:      1,
-				height:     101,
-				cancelTx:   false,
+				to:          receiver,
+				amount:      0.1,
+				amountSats:  10000000,
+				feeRate:     8,
+				nonce:       1,
+				minRelayFee: 0.00001,
+				height:      101,
+				cancelTx:    false,
 			},
 			errMsg: "",
 		},
@@ -71,8 +69,7 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
 				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().GasPrice = "8"                // 8 sats/vByte
 				cctx.GetCurrentOutboundParam().GasPriorityFee = "10"         // 10 sats/vByte, bumped by zetacore
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
@@ -82,10 +79,11 @@ func Test_NewOutboundData(t *testing.T) {
 				to:            receiver,
 				amount:        0.1,
 				amountSats:    10000000,
-				feeRate:       8, // Round(7.5)
+				feeRate:       8,
+				feeRateLatest: 10,
 				feeRateBumped: true,
-				txSize:        254,
 				nonce:         1,
+				minRelayFee:   0.00001,
 				height:        101,
 				cancelTx:      false,
 			},
@@ -149,18 +147,6 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:   "unsupported receiver address",
 		},
 		{
-			name: "invalid gas limit",
-			cctx: sample.CrossChainTx(t, "0x123"),
-			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
-				cctx.InboundParams.CoinType = coin.CoinType_Gas
-				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
-				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = math.MaxInt64 + 1
-			},
-			expected: nil,
-			errMsg:   "invalid gas limit",
-		},
-		{
 			name: "should cancel restricted CCTX",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
@@ -169,21 +155,20 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
 				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254    // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"               // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().GasPrice = "8"                // 8 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				to:         receiver,
-				amount:     0, // should cancel the tx
-				amountSats: 0,
-				feeRate:    8, // Round(7.5)
-				txSize:     254,
-				nonce:      1,
-				height:     101,
-				cancelTx:   true,
+				to:          receiver,
+				amount:      0, // should cancel the tx
+				amountSats:  0,
+				feeRate:     8,
+				nonce:       1,
+				minRelayFee: 0.00001,
+				height:      101,
+				cancelTx:    true,
 			},
 		},
 		{
@@ -194,21 +179,20 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().Receiver = receiver.String()
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
 				cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(constant.BTCWithdrawalDustAmount - 1)
-				cctx.GetCurrentOutboundParam().CallOptions.GasLimit = 254 // 254 bytes
-				cctx.GetCurrentOutboundParam().GasPrice = "10"            // 10 sats/vByte
+				cctx.GetCurrentOutboundParam().GasPrice = "8" // 8 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
 			height:      101,
 			minRelayFee: 0.00001, // 1000 sat/KB
 			expected: &OutboundData{
-				to:         receiver,
-				amount:     0, // should cancel the tx
-				amountSats: 0,
-				feeRate:    8, // Round(7.5)
-				txSize:     254,
-				nonce:      1,
-				height:     101,
-				cancelTx:   true,
+				to:          receiver,
+				amount:      0, // should cancel the tx
+				amountSats:  0,
+				feeRate:     8,
+				nonce:       1,
+				minRelayFee: 0.00001,
+				height:      101,
+				cancelTx:    true,
 			},
 		},
 	}
