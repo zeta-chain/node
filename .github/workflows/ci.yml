@@ -70,7 +70,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
-          make install
+          make install install-zetae2e
           cp "$HOME"/go/bin/* ./
           chmod a+x ./zetacored
           ./zetacored version
@@ -88,6 +88,13 @@ jobs:
           name: zetaclientd
           path: ~/go/bin/zetaclientd
           retention-days: 30
+
+      - name: Upload zetae2e
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetae2e
+          path: ~/go/bin/zetae2e
+          retention-days: 90
       
       - name: Clean Up Workspace
         if: always()
