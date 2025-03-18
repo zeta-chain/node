@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	cosmossimutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	cosmossim "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -428,7 +427,7 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxSimApp.KVStore(skp.A)
 		storeB := ctxNewSimApp.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := sims.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
+		failedKVAs, failedKVBs := cosmossimutils.DiffKVStores(storeA, storeB, skp.SkipPrefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)

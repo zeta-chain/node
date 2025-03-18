@@ -360,7 +360,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
-	} else if IsSenderZetaChain(cctx, zetacoreClient) {
+	} else if IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
@@ -510,9 +510,9 @@ func (signer *Signer) BroadcastOutbound(
 	}
 }
 
-// IsSenderZetaChain checks if the sender chain is ZetaChain
+// IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
 // TODO(revamp): move to another package more general for cctx functions
-func IsSenderZetaChain(
+func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {

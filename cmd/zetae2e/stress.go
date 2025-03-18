@@ -129,7 +129,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	// setup TSS addresses
 	noError(e2eTest.SetTSSAddresses())
-	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed)
+	e2eTest.LegacySetupEVM(stressTestArgs.contractsDeployed, false)
 
 	// If stress test is running on local docker environment
 	switch stressTestArgs.network {
@@ -142,7 +142,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		})
 
 		// deposit on ZetaChain
-		e2eTest.LegacyDepositEther()
+		e2eTest.DepositEtherDeployer()
 		e2eTest.LegacyDepositZeta()
 	case "TESTNET":
 		ethZRC20Addr := must(e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5)))

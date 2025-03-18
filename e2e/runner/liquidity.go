@@ -24,10 +24,40 @@ func (r *E2ERunner) AddLiquidityERC20(amountZETA, amountERC20 *big.Int) {
 	r.addLiquidity(r.ERC20ZRC20Addr, amountZETA, amountERC20)
 }
 
+// AddLiquidityBTC adds liquidity token to the uniswap pool ZETA/BTC
+func (r *E2ERunner) AddLiquidityBTC(amountZETA, amountBTC *big.Int) {
+	r.ApproveBTCZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.BTCZRC20Addr, amountZETA, amountBTC)
+}
+
+// AddLiquiditySOL adds liquidity token to the uniswap pool ZETA/SOL
+func (r *E2ERunner) AddLiquiditySOL(amountZETA, amountSOL *big.Int) {
+	r.ApproveSOLZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.SOLZRC20Addr, amountZETA, amountSOL)
+}
+
 // AddLiquiditySPL adds liquidity token to the uniswap pool ZETA/SPL
 func (r *E2ERunner) AddLiquiditySPL(amountZETA, amountSPL *big.Int) {
 	r.ApproveSPLZRC20(r.UniswapV2RouterAddr)
 	r.addLiquidity(r.SPLZRC20Addr, amountZETA, amountSPL)
+}
+
+// AddLiquiditySUI adds liquidity token to the uniswap pool ZETA/SUI
+func (r *E2ERunner) AddLiquiditySUI(amountZETA, amountSUI *big.Int) {
+	r.ApproveSUIZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.SUIZRC20Addr, amountZETA, amountSUI)
+}
+
+// AddLiquiditySuiFungibleToken adds liquidity token to the uniswap pool ZETA/SuiFungibleToken
+func (r *E2ERunner) AddLiquiditySuiFungibleToken(amountZETA, amountToken *big.Int) {
+	r.ApproveFungibleTokenZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.SuiTokenZRC20Addr, amountZETA, amountToken)
+}
+
+// AddLiquidityTON adds liquidity token to the uniswap pool ZETA/TON
+func (r *E2ERunner) AddLiquidityTON(amountZETA, amountTON *big.Int) {
+	r.ApproveTONZRC20(r.UniswapV2RouterAddr)
+	r.addLiquidity(r.TONZRC20Addr, amountZETA, amountTON)
 }
 
 // addLiquidity adds liquidity token to the uniswap pool ZETA/token

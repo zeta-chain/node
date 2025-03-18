@@ -3,12 +3,16 @@
 package mocks
 
 import (
+	blame "github.com/zeta-chain/go-tss/blame"
 	chains "github.com/zeta-chain/node/pkg/chains"
-	blame "gitlab.com/thorchain/tss/go-tss/blame"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 
+	common "github.com/ethereum/go-ethereum/common"
+
 	context "context"
+
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	interfaces "github.com/zeta-chain/node/zetaclient/chains/interfaces"
 
@@ -136,6 +140,36 @@ func (_m *ZetacoreClient) GetBTCTSSAddress(ctx context.Context, chainID int64) (
 	return r0, r1
 }
 
+// GetBallotByID provides a mock function with given fields: ctx, id
+func (_m *ZetacoreClient) GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBallotByID")
+	}
+
+	var r0 *observertypes.QueryBallotByIdentifierResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*observertypes.QueryBallotByIdentifierResponse, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *observertypes.QueryBallotByIdentifierResponse); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*observertypes.QueryBallotByIdentifierResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBlockHeight provides a mock function with given fields: ctx
 func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 	ret := _m.Called(ctx)
@@ -157,6 +191,36 @@ func (_m *ZetacoreClient) GetBlockHeight(ctx context.Context) (int64, error) {
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCctxByHash provides a mock function with given fields: ctx, sendHash
+func (_m *ZetacoreClient) GetCctxByHash(ctx context.Context, sendHash string) (*types.CrossChainTx, error) {
+	ret := _m.Called(ctx, sendHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCctxByHash")
+	}
+
+	var r0 *types.CrossChainTx
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.CrossChainTx, error)); ok {
+		return rf(ctx, sendHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.CrossChainTx); ok {
+		r0 = rf(ctx, sendHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.CrossChainTx)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, sendHash)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -245,6 +309,34 @@ func (_m *ZetacoreClient) GetCrosschainFlags(ctx context.Context) (observertypes
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetForeignCoinsFromAsset provides a mock function with given fields: ctx, chainID, assetAddress
+func (_m *ZetacoreClient) GetForeignCoinsFromAsset(ctx context.Context, chainID int64, assetAddress common.Address) (fungibletypes.ForeignCoins, error) {
+	ret := _m.Called(ctx, chainID, assetAddress)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetForeignCoinsFromAsset")
+	}
+
+	var r0 fungibletypes.ForeignCoins
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) (fungibletypes.ForeignCoins, error)); ok {
+		return rf(ctx, chainID, assetAddress)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, common.Address) fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx, chainID, assetAddress)
+	} else {
+		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, common.Address) error); ok {
+		r1 = rf(ctx, chainID, assetAddress)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -650,9 +742,9 @@ func (_m *ZetacoreClient) GetZetaHotKeyBalance(ctx context.Context) (math.Int, e
 	return r0, r1
 }
 
-// ListPendingCCTX provides a mock function with given fields: ctx, chainID
-func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chainID int64) ([]*types.CrossChainTx, uint64, error) {
-	ret := _m.Called(ctx, chainID)
+// ListPendingCCTX provides a mock function with given fields: ctx, chain
+func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*types.CrossChainTx, uint64, error) {
+	ret := _m.Called(ctx, chain)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListPendingCCTX")
@@ -661,25 +753,25 @@ func (_m *ZetacoreClient) ListPendingCCTX(ctx context.Context, chainID int64) ([
 	var r0 []*types.CrossChainTx
 	var r1 uint64
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]*types.CrossChainTx, uint64, error)); ok {
-		return rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) ([]*types.CrossChainTx, uint64, error)); ok {
+		return rf(ctx, chain)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) []*types.CrossChainTx); ok {
-		r0 = rf(ctx, chainID)
+	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain) []*types.CrossChainTx); ok {
+		r0 = rf(ctx, chain)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*types.CrossChainTx)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64) uint64); ok {
-		r1 = rf(ctx, chainID)
+	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain) uint64); ok {
+		r1 = rf(ctx, chain)
 	} else {
 		r1 = ret.Get(1).(uint64)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, int64) error); ok {
-		r2 = rf(ctx, chainID)
+	if rf, ok := ret.Get(2).(func(context.Context, chains.Chain) error); ok {
+		r2 = rf(ctx, chain)
 	} else {
 		r2 = ret.Error(2)
 	}

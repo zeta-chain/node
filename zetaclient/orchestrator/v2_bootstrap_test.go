@@ -75,6 +75,12 @@ func TestBootstrap(t *testing.T) {
 			cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 				Endpoint: maticServer.Endpoint,
 			}
+
+			// disable other chains
+			cfg.BTCChainConfigs = nil
+			cfg.SolanaConfig.Endpoint = ""
+			cfg.SuiConfig.Endpoint = ""
+			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -154,6 +160,44 @@ func TestBootstrap(t *testing.T) {
 
 		tasksHaveGroup(t, ts.scheduler.Tasks(), "sol:900")
 		assert.Contains(t, ts.Log.String(), `"chain":900,"chain_network":"solana","message":"Added observer-signer"`)
+	})
+
+	t.Run("Sui", func(t *testing.T) {
+		t.Parallel()
+
+		// ARRANGE
+		// Given orchestrator
+		ts := newTestSuite(t)
+
+		suiServer, suiConfig := testrpc.NewSuiServer(t)
+		mockSuiCalls(ts, suiServer)
+
+		// Disable other chains
+		ts.UpdateConfig(func(cfg *config.Config) {
+			cfg.SuiConfig = suiConfig
+			cfg.BTCChainConfigs = nil
+			cfg.EVMChainConfigs = nil
+			cfg.SolanaConfig.Endpoint = ""
+			cfg.TONConfig.LiteClientConfigURL = ""
+		})
+
+		// Mock zetacore calls
+		mockZetacoreCalls(ts)
+
+		// ACT
+		// Start the orchestrator and wait for Sui observerSigner to bootstrap
+		require.NoError(t, ts.Start(ts.ctx))
+
+		// ASSERT
+		// Solana observerSigner is added
+		check := func() bool {
+			return ts.HasObserverSigner(chains.SuiMainnet.ChainId)
+		}
+
+		assert.Eventually(t, check, 5*time.Second, 100*time.Millisecond)
+
+		tasksHaveGroup(t, ts.scheduler.Tasks(), "sui:105")
+		assert.Contains(t, ts.Log.String(), `"chain":105,"chain_network":"sui","message":"Added observer-signer"`)
 	})
 
 	t.Run("TON", func(t *testing.T) {
@@ -266,7 +310,11 @@ func mockEthCalls(_ *testSuite, client *testrpc.EVMServer) {
 	client.SetChainID(1)
 }
 
-func mockSolanaCalls(_ *testSuite, client *testrpc.SolanaServer) {
+func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {
+	// todo
+}
+
+func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer) {
 	// todo
 }
 

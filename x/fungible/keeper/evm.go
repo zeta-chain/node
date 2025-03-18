@@ -40,8 +40,9 @@ import (
 
 var (
 	BigIntZero                 = big.NewInt(0)
-	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
-	ZEVMGasLimitConnectorCall  = big.NewInt(1_000_000)
+	DefaultGasLimit            = big.NewInt(200_000)
+	ZEVMGasLimitDepositAndCall = big.NewInt(1_500_000)
+	ZEVMGasLimitConnectorCall  = big.NewInt(1_500_000)
 )
 
 // DeployContract deploys a new contract in the ZEVM
@@ -258,7 +259,7 @@ func (k Keeper) DepositZRC20(
 		types.ModuleAddressEVM,
 		contract,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"deposit",
@@ -283,7 +284,7 @@ func (k Keeper) UpdateZRC20ProtocolFlatFee(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"updateProtocolFlatFee",
@@ -307,7 +308,7 @@ func (k Keeper) UpdateZRC20GasLimit(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"updateGasLimit",
@@ -315,10 +316,9 @@ func (k Keeper) UpdateZRC20GasLimit(
 	)
 }
 
-// DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
-// callable from fungible module
+// CallDepositAndCall calls the depositAndCall function of the system contract
 // Returns directly results from CallEVM
-func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
+func (k Keeper) CallDepositAndCall(ctx sdk.Context,
 	context systemcontract.ZContext,
 	zrc20Addr common.Address,
 	targetContract common.Address,

@@ -97,6 +97,8 @@ func ChainParams(chainID int64) *types.ChainParams {
 		return nil
 	}
 
+	confirmationParams := ConfirmationParams(r)
+
 	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
@@ -113,6 +115,8 @@ func ChainParams(chainID int64) *types.ChainParams {
 		BallotThreshold:             fiftyPercent,
 		MinObserverDelegation:       sdkmath.LegacyNewDec(r.Int63()),
 		IsSupported:                 false,
+		GatewayAddress:              EthAddress().String(),
+		ConfirmationParams:          &confirmationParams,
 	}
 }
 
@@ -335,5 +339,19 @@ func OperationalFlags() types.OperationalFlags {
 	return types.OperationalFlags{
 		RestartHeight:         1,
 		SignerBlockTimeOffset: ptr.Ptr(time.Second),
+	}
+}
+
+func ConfirmationParams(r *rand.Rand) types.ConfirmationParams {
+	randInboundCount := Uint64InRangeFromRand(r, 2, 200)
+	randOutboundCount := Uint64InRangeFromRand(r, 2, 200)
+
+	return types.ConfirmationParams{
+		SafeInboundCount: randInboundCount,
+		// enabled fast inbound confirmation count should be less than safe count
+		FastInboundCount:  Uint64InRange(1, randInboundCount-1),
+		SafeOutboundCount: randOutboundCount,
+		// enabled fast outbound confirmation count should be less than safe count
+		FastOutboundCount: Uint64InRange(1, randOutboundCount-1),
 	}
 }

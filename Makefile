@@ -46,6 +46,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -235,6 +236,10 @@ start-localnet-skip-build:
 stop-localnet:
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
 
+# delete any volume ending in persist
+clear-localnet-persistence:
+	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
+
 ###############################################################################
 ###                         E2E tests               						###
 ###############################################################################
@@ -270,14 +275,19 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-staking-test: e2e-images
+	@echo "--> Starting e2e staking test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-staking" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
 start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
-	export E2E_ARGS="--skip-regular --test-admin" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
 start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="--test-performance" && \
+	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
@@ -299,22 +309,27 @@ start-stress-test: e2e-images
 start-tss-migration-test: e2e-images
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="--test-tss-migration" && \
+	export E2E_ARGS="${E2E_ARGS} --test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
-	export E2E_ARGS="--skip-regular --test-solana" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
 start-ton-test: e2e-images
 	@echo "--> Starting TON test"
-	export E2E_ARGS="--skip-regular --test-ton" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
+
+start-sui-test: e2e-images
+	@echo "--> Starting sui test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-sui" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
-	export E2E_ARGS="--skip-regular --test-legacy" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -327,7 +342,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v25' \
+		--build-arg OLD_VERSION='release/v29' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,18 +351,19 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v25.0.0' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v29.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
 .PHONY: zetanode-upgrade
 endif
 
-start-upgrade-test: zetanode-upgrade
+start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
+	export E2E_ARGS="--test-solana" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
@@ -359,7 +375,7 @@ start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--skip-regular --test-admin" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade

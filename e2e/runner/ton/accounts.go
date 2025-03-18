@@ -1,7 +1,9 @@
 package ton
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -23,18 +25,35 @@ type AccountInit struct {
 	ID        ton.AccountID
 }
 
+func PrivateKeyFromHex(raw string) (ed25519.PrivateKey, error) {
+	b, err := hex.DecodeString(strings.TrimPrefix(raw, "0x"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode private key")
+	}
+
+	if len(b) != ed25519.SeedSize {
+		return nil, errors.New("invalid private key length")
+	}
+
+	return ed25519.NewKeyFromSeed(b), nil
+}
+
 // ConstructWalletFromSeed constructs wallet AccountInit from seed.
 // Used for wallets deployment.
-func ConstructWalletFromSeed(seed string, client blockchain) (*AccountInit, *wallet.Wallet, error) {
+func ConstructWalletFromSeed(seed string, client *Client) (*AccountInit, *wallet.Wallet, error) {
+	if seed == "" {
+		return nil, nil, errors.New("seed is empty")
+	}
+
 	pk, err := wallet.SeedToPrivateKey(seed)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "invalid mnemonic")
+		return nil, nil, errors.Wrapf(err, "invalid mnemonic")
 	}
 
 	return ConstructWalletFromPrivateKey(pk, client)
 }
 
-func ConstructWalletFromPrivateKey(pk ed25519.PrivateKey, client blockchain) (*AccountInit, *wallet.Wallet, error) {
+func ConstructWalletFromPrivateKey(pk ed25519.PrivateKey, client *Client) (*AccountInit, *wallet.Wallet, error) {
 	const version = wallet.V5R1
 
 	w, err := wallet.New(pk, version, client)

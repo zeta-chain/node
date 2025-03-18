@@ -4,6 +4,7 @@ package mocks
 
 import (
 	mock "github.com/stretchr/testify/mock"
+	chains "github.com/zeta-chain/node/pkg/chains"
 
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 
@@ -15,9 +16,29 @@ type EmissionObserverKeeper struct {
 	mock.Mock
 }
 
-// ClearMaturedBallotsAndBallotList provides a mock function with given fields: ctx, maturityBlocks
-func (_m *EmissionObserverKeeper) ClearMaturedBallotsAndBallotList(ctx types.Context, maturityBlocks int64) {
-	_m.Called(ctx, maturityBlocks)
+// ClearFinalizedMaturedBallots provides a mock function with given fields: ctx, maturityBlocks, deleteAllBallots
+func (_m *EmissionObserverKeeper) ClearFinalizedMaturedBallots(ctx types.Context, maturityBlocks int64, deleteAllBallots bool) {
+	_m.Called(ctx, maturityBlocks, deleteAllBallots)
+}
+
+// GetAllNodeAccount provides a mock function with given fields: ctx
+func (_m *EmissionObserverKeeper) GetAllNodeAccount(ctx types.Context) []observertypes.NodeAccount {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllNodeAccount")
+	}
+
+	var r0 []observertypes.NodeAccount
+	if rf, ok := ret.Get(0).(func(types.Context) []observertypes.NodeAccount); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.NodeAccount)
+		}
+	}
+
+	return r0
 }
 
 // GetBallot provides a mock function with given fields: ctx, index
@@ -74,6 +95,100 @@ func (_m *EmissionObserverKeeper) GetMaturedBallots(ctx types.Context, maturityB
 	}
 
 	return r0, r1
+}
+
+// GetNodeAccount provides a mock function with given fields: ctx, address
+func (_m *EmissionObserverKeeper) GetNodeAccount(ctx types.Context, address string) (observertypes.NodeAccount, bool) {
+	ret := _m.Called(ctx, address)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNodeAccount")
+	}
+
+	var r0 observertypes.NodeAccount
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string) (observertypes.NodeAccount, bool)); ok {
+		return rf(ctx, address)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string) observertypes.NodeAccount); ok {
+		r0 = rf(ctx, address)
+	} else {
+		r0 = ret.Get(0).(observertypes.NodeAccount)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string) bool); ok {
+		r1 = rf(ctx, address)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetObserverSet provides a mock function with given fields: ctx
+func (_m *EmissionObserverKeeper) GetObserverSet(ctx types.Context) (observertypes.ObserverSet, bool) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetObserverSet")
+	}
+
+	var r0 observertypes.ObserverSet
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.ObserverSet, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) observertypes.ObserverSet); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(observertypes.ObserverSet)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetSupportedChains provides a mock function with given fields: ctx
+func (_m *EmissionObserverKeeper) GetSupportedChains(ctx types.Context) []chains.Chain {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSupportedChains")
+	}
+
+	var r0 []chains.Chain
+	if rf, ok := ret.Get(0).(func(types.Context) []chains.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]chains.Chain)
+		}
+	}
+
+	return r0
+}
+
+// IsNonTombstonedObserver provides a mock function with given fields: ctx, address
+func (_m *EmissionObserverKeeper) IsNonTombstonedObserver(ctx types.Context, address string) bool {
+	ret := _m.Called(ctx, address)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsNonTombstonedObserver")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
+		r0 = rf(ctx, address)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // NewEmissionObserverKeeper creates a new instance of EmissionObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -23,7 +23,7 @@ const (
 	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 2000000000000000000
+	ProtocolFee = 250000000000000000
 
 	// CCTXIndexLength is the length of a crosschain transaction index
 	CCTXIndexLength          = 66
@@ -42,6 +42,12 @@ const (
 	// CCTXKey is the key for the cross chain transaction
 	// NOTE: Send is the previous name of CCTX and is kept for backward compatibility
 	CCTXKey = "Send-value-"
+
+	// CounterValueKey is a static key for storing the cctx counter key for ordering
+	CounterValueKey = "ctr-value"
+
+	// CounterIndexKey is the prefix to use for the counter index
+	CounterIndexKey = "ctr-idx-"
 
 	LastBlockHeightKey   = "LastBlockHeight-value-"
 	FinalizedInboundsKey = "FinalizedInbounds-value-"

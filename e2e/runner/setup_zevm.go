@@ -15,11 +15,11 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/txserver"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/erc1967proxy"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -32,8 +32,6 @@ var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
 func (r *E2ERunner) SetTSSAddresses() error {
-	r.Logger.Print("⚙️ setting up TSS address")
-
 	btcChainID, err := chains.GetBTCChainIDFromChainParams(r.BitcoinParams)
 	if err != nil {
 		return err
@@ -62,6 +60,7 @@ func (r *E2ERunner) SetTSSAddresses() error {
 
 	r.TSSAddress = tssAddress
 	r.BTCTSSAddress = btcTSSAddress
+	r.SuiTSSAddress = res.Sui
 
 	return nil
 }
@@ -168,6 +167,27 @@ func (r *E2ERunner) SetupTONZRC20() {
 	require.NoError(r, err)
 
 	r.TONZRC20 = TONZRC20
+}
+
+// SetupSUIZRC20 sets up the SUI ZRC20 in the runner from the values queried from the chain
+func (r *E2ERunner) SetupSUIZRC20() {
+	chainID := chains.SuiLocalnet.ChainId
+
+	// noop
+	if r.skipChainOperations(chainID) {
+		return
+	}
+
+	SUIZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainID))
+	require.NoError(r, err)
+
+	r.SUIZRC20Addr = SUIZRC20Addr
+	r.Logger.Info("SUI ZRC20 address: %s", SUIZRC20Addr.Hex())
+
+	SUIZRC20, err := zrc20.NewZRC20(SUIZRC20Addr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	r.SUIZRC20 = SUIZRC20
 }
 
 // EnableHeaderVerification enables the header verification for the given chain IDs
@@ -324,9 +344,6 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
 
 	// update the chain params
-	_, err = r.ZetaTxServer.BroadcastTx(e2eutils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(e2eutils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 }

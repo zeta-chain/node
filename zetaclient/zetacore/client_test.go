@@ -113,8 +113,8 @@ func withDefaultObserverKeys() clientTestOpt {
 	return withObserverKeys(keys.NewKeysWithKeybase(keyRing, address, testSigner, ""))
 }
 
-func withTendermint(client cometbftrpc.Client) clientTestOpt {
-	return func(cfg *clientTestConfig) { cfg.opts = append(cfg.opts, WithTendermintClient(client)) }
+func withCometBFT(client cometbftrpc.Client) clientTestOpt {
+	return func(cfg *clientTestConfig) { cfg.opts = append(cfg.opts, WithCometBFTClient(client)) }
 }
 
 func withAccountRetriever(t *testing.T, accNum uint64, accSeq uint64) clientTestOpt {
@@ -182,7 +182,7 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 	client := setupZetacoreClient(
 		t,
 		withDefaultObserverKeys(),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 	)
 
 	// should be able to get balance of signer
@@ -228,7 +228,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 	client := setupZetacoreClient(
 		t,
 		withDefaultObserverKeys(),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 	)
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
@@ -246,7 +246,7 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 	client := setupZetacoreClient(
 		t,
 		withDefaultObserverKeys(),
-		withTendermint(cometBFTClient),
+		withCometBFT(cometBFTClient),
 	)
 
 	newBlockChan, err := client.NewBlockSubscriber(ctx)

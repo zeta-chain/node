@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -16,7 +17,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"gitlab.com/thorchain/tss/go-tss/blame"
 )
 
 const (
@@ -99,7 +99,7 @@ func TestZetacore_PostGasPrice(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
 		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post gas price success", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestZetacore_AddOutboundTracker(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
 		withAccountRetriever(t, 100, 100),
-		withTendermint(tendermintMock),
+		withCometBFT(tendermintMock),
 	)
 
 	t.Run("add tx hash success", func(t *testing.T) {
@@ -173,7 +173,7 @@ func TestZetacore_SetTSS(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
 		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("set tss success", func(t *testing.T) {
@@ -197,7 +197,7 @@ func TestZetacore_PostBlameData(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
 		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post blame data success", func(t *testing.T) {
@@ -234,7 +234,7 @@ func TestZetacore_PostVoteInbound(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
 		withAccountRetriever(t, 100, 100),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 	)
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
@@ -275,7 +275,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 	)
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
@@ -312,7 +312,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 
 	client := setupZetacoreClient(t,
 		withDefaultObserverKeys(),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0).SetBroadcastTxHash(sampleHash)),
 		withAccountRetriever(t, accountNum, accountSeq),
 	)
 
@@ -329,6 +329,7 @@ func TestZetacore_PostVoteOutbound(t *testing.T) {
 		chains.Ethereum.ChainId,
 		10001,
 		coin.CoinType_Gas,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	hash, ballot, err := client.PostVoteOutbound(ctx, 100_000, 200_000, msg)
@@ -344,7 +345,7 @@ func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
 	address := sdktypes.AccAddress(mocks.TestKeyringPair.PubKey().Address().Bytes())
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
-		withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 	)
 
 	t.Run("monitor outbound vote", func(t *testing.T) {

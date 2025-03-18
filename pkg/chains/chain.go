@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -56,13 +57,14 @@ func (chain Chain) IsExternalChain() bool {
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
-	switch chain.Consensus {
-	case Consensus_ethereum:
+	if chain.Vm == Vm_evm {
 		addr := ethcommon.BytesToAddress(b)
 		if addr == (ethcommon.Address{}) {
 			return "", fmt.Errorf("invalid EVM address")
 		}
 		return addr.Hex(), nil
+	}
+	switch chain.Consensus {
 	case Consensus_bitcoin:
 		addrStr := string(b)
 		chainParams, err := GetBTCChainParams(chain.ChainId)
@@ -89,6 +91,8 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 			return "", err
 		}
 		return acc.ToRaw(), nil
+	case Consensus_sui_consensus:
+		return "0x" + hex.EncodeToString(b), nil
 	default:
 		return "", fmt.Errorf("chain id %d not supported", chain.ChainId)
 	}
@@ -134,8 +138,9 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		if err != nil {
 			return nil, fmt.Errorf("invalid TON address %q: %w", addr, err)
 		}
-
 		return []byte(acc.ToRaw()), nil
+	case IsSuiChain(chainID, additionalChains):
+		return []byte(addr), nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}
@@ -162,6 +167,11 @@ func IsBitcoinChain(chainID int64, additionalChains []Chain) bool {
 // IsSolanaChain returns true if the chain is a Solana chain
 func IsSolanaChain(chainID int64, additionalChains []Chain) bool {
 	return ChainIDInChainList(chainID, ChainListByNetwork(Network_solana, additionalChains))
+}
+
+// IsSuiChain returns true if the chain is Sui chain.
+func IsSuiChain(chainID int64, additionalChains []Chain) bool {
+	return ChainIDInChainList(chainID, ChainListByNetwork(Network_sui, additionalChains))
 }
 
 // IsTONChain returns true is the chain is TON chain

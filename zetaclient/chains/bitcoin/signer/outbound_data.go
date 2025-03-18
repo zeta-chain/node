@@ -60,8 +60,8 @@ func NewOutboundData(
 	}
 	params := cctx.GetCurrentOutboundParam()
 
-	// support gas token only for Bitcoin outbound
-	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
+	// support coin type GAS and CMD only
+	if cctx.InboundParams.CoinType != coin.CoinType_Gas && cctx.InboundParams.CoinType != coin.CoinType_Cmd {
 		return nil, fmt.Errorf("invalid coin type %s", cctx.InboundParams.CoinType.String())
 	}
 

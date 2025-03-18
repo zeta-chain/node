@@ -9,7 +9,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"golang.org/x/exp/rand"
 
@@ -42,17 +41,11 @@ func Test_SelectUTXOs(t *testing.T) {
 		// 		input: utxoCap = 5, amount = 0.5, nonce = 1
 		// 		output: error
 		ob, _ := newTestSuitWithUTXOs(t)
-
-		// mock missing outbound hash in CCTX 0
-		cctx := sample.CrossChainTx(t, "0x123")
-		cctx.GetCurrentOutboundParam().Hash = "" // not finalized yet
-		ob.zetacore.On("GetCctxByNonce", mock.Anything, mock.Anything, mock.Anything).Return(cctx, nil)
-
 		selected, err := ob.SelectUTXOs(ctx, 0.5, 5, 1, math.MaxUint16)
 		require.Error(t, err)
 		require.Nil(t, selected.UTXOs)
 		require.Zero(t, selected.Value)
-		require.ErrorContains(t, err, "cannot find outbound txid for nonce 0")
+		require.ErrorContains(t, err, "error getting cctx for nonce 0")
 	})
 
 	t.Run("nonce = 1, should pass when nonce mark 0 is set", func(t *testing.T) {

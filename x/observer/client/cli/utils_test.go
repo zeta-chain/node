@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gitlab.com/thorchain/tss/go-tss/blame"
+	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/x/observer/types"
 )

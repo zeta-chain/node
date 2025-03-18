@@ -1,0 +1,39 @@
+name: Publish Typescript to NPM
+on:
+  workflow_dispatch:
+  workflow_call:
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install buf
+        run: |
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.47.2/buf-Linux-x86_64 -o /usr/local/bin/buf
+          chmod +x /usr/local/bin/buf
+
+      - name: Generate
+        run: |
+          make typescript
+
+      - name: Set Version
+        working-directory: typescript
+        run: |
+          npm version from-git --no-git-tag-version
+
+      - name: Publish package on NPM 📦
+        run: npm publish
+        working-directory: typescript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -61,7 +61,7 @@ func (signer *Signer) SignWithdrawTx(
 	// 2. RBF requires a higher fee rate than the original tx, otherwise it will fail.
 	err := ob.FetchUTXOs(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "FetchUTXOs failed on nonce %d", txData.nonce)
+		return nil, errors.Wrapf(err, "FetchUTXOs failed for nonce %d", txData.nonce)
 	}
 
 	// select N UTXOs to cover the total expense

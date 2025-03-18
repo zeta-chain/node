@@ -5,18 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])

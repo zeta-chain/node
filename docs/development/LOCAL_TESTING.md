@@ -34,9 +34,24 @@ This uses `docker compose` to start the localnet and run standard e2e tests insi
 	- `upgrade`: run the upgrade tests
 	- unset: run the e2e tests
 - `E2E_ARGS`: arguments to provide to the `zetae2e local` command
+    - `--verbose` will give you verbose logs
+	- `--test-filter` allows you to filter which tests to run by regular expression
 - `UPGRADE_HEIGHT`: block height to upgrade at when `LOCALNET_MODE=upgrade`
 - `ZETACORED_IMPORT_GENESIS_DATA`: path to genesis data to import before starting zetacored
 - `ZETACORED_START_PERIOD`: duration to tolerate `zetacored` health check failures during startup
+
+Here is an example of using `E2E_ARGS`:
+
+```
+export E2E_ARGS='--verbose --test-filter eth_deposit|eth_withdraw'
+make start-e2e-test
+```
+
+This will execute `zetae2e local` as:
+
+```
+zetae2e local --verbose --test-filter eth_deposit|eth_withdraw --config config.yml
+```
 
 More options directly to `docker compose` via the `NODE_COMPOSE_ARGS` variable. This allows setting additional profiles or configuring an overlay. Example:
 

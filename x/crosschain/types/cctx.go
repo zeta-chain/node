@@ -14,6 +14,26 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// GetConnectedChainID returns the connected chain ID for the CCTX.
+// If the CCTX is outgoing, this is the receiver chain ID.
+// If the CCTX is incoming, this is the sender chain ID.
+// Second argument is boolean, true if the CCTX is outgoing, false if incoming.
+func (m CrossChainTx) GetConnectedChainID() (int64, bool, error) {
+	if m.InboundParams == nil {
+		return 0, false, fmt.Errorf("inbound params cannot be nil")
+	}
+
+	// If the sender chain ID is ZetaChain, this is an outgoing CCTX.
+	// Note: additional chains argument is empty, all ZetaChain IDs are hardcoded in the codebase.
+	if chains.IsZetaChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		if len(m.OutboundParams) < 1 || m.OutboundParams[0] == nil {
+			return 0, false, fmt.Errorf("outbound params cannot be nil")
+		}
+		return m.OutboundParams[0].ReceiverChainId, true, nil
+	}
+	return m.InboundParams.SenderChainId, false, nil
+}
+
 // GetEVMRevertAddress returns the EVM revert address
 // If a revert address is specified in the revert options, it returns the address
 // Otherwise returns sender address
@@ -155,9 +175,12 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 			GasLimit: gasLimit,
 		},
 		TssPubkey: m.GetCurrentOutboundParam().TssPubkey,
+		// Inherit same confirmation mode from original outbound as placeholder.
+		// It will be overwritten by actual confirmation mode in the outbound vote message
+		ConfirmationMode: m.GetCurrentOutboundParam().ConfirmationMode,
 	}
 
-	// TODO : Refactor to move CoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
+	// TODO : Refactor to move FungibleTokenCoinType field to the CCTX object directly : https://github.com/zeta-chain/node/issues/1943
 	if m.InboundParams != nil {
 		revertTxParams.CoinType = m.InboundParams.CoinType
 	}
@@ -194,6 +217,7 @@ func (m *CrossChainTx) AddOutbound(
 	m.GetCurrentOutboundParam().EffectiveGasPrice = msg.ObservedOutboundEffectiveGasPrice
 	m.GetCurrentOutboundParam().EffectiveGasLimit = msg.ObservedOutboundEffectiveGasLimit
 	m.GetCurrentOutboundParam().ObservedExternalHeight = msg.ObservedOutboundBlockHeight
+	m.GetCurrentOutboundParam().ConfirmationMode = msg.ConfirmationMode
 	return nil
 }
 
@@ -245,6 +269,26 @@ func GetCctxIndexFromBytes(sendHash [32]byte) string {
 	return fmt.Sprintf("0x%s", hex.EncodeToString(sendHash[:]))
 }
 
+// GetCctxIndexFromArbitraryBytes converts an arbitrary byte slice to a CCTX index string.
+// Returns an error if the input slice is less than 32 bytes.
+func GetCctxIndexFromArbitraryBytes(sendHash []byte) (string, error) {
+	if len(sendHash) < 32 {
+		return "", fmt.Errorf("input byte slice length %d is less than required 32 bytes", len(sendHash))
+	}
+
+	var indexBytes [32]byte
+	copy(indexBytes[:], sendHash[:32])
+	return GetCctxIndexFromBytes(indexBytes), nil
+}
+
+// IsWithdrawAndCall returns true if the CCTX is performing a withdraw and call operation.
+func (m CrossChainTx) IsWithdrawAndCall() bool {
+	if m.InboundParams == nil || m.CctxStatus == nil {
+		return false
+	}
+	return m.InboundParams.IsCrossChainCall && m.CctxStatus.Status == CctxStatus_PendingOutbound
+}
+
 // NewCCTX creates a new CCTX from a MsgVoteInbound message and a TSS pubkey.
 // It also validates the created cctx
 func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainTx, error) {
@@ -266,6 +310,7 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		CoinType:               msg.CoinType,
 		IsCrossChainCall:       msg.IsCrossChainCall,
 		Status:                 msg.Status,
+		ConfirmationMode:       msg.ConfirmationMode,
 	}
 
 	outboundParams := &OutboundParams{
@@ -284,6 +329,9 @@ func NewCCTX(ctx sdk.Context, msg MsgVoteInbound, tssPubkey string) (CrossChainT
 		Amount:                 sdkmath.ZeroUint(),
 		TssPubkey:              tssPubkey,
 		CoinType:               msg.CoinType,
+		// use SAFE confirmation mode as default value.
+		// it will be overwritten by actual confirmation mode in the outbound vote message.
+		ConfirmationMode: ConfirmationMode_SAFE,
 	}
 
 	status := &Status{

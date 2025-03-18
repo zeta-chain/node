@@ -180,13 +180,13 @@ func (ob *Observer) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	for i, utxo := range ob.utxos {
 		sats, err := common.GetSatoshis(utxo.Amount)
 		if err != nil {
-			ob.logger.Outbound.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
+			ob.logger.Outbound.Error().Err(err).Msgf("FindNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
 		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid && utxo.Vout == 0 {
 			ob.logger.Outbound.Info().
-				Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
+				Msgf("FindNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
 			return i, nil
 		}
 	}
-	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
+	return -1, fmt.Errorf("FindNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }

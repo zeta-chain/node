@@ -40,6 +40,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.AvalancheMainnet,
 				chains.ArbitrumMainnet,
 				chains.WorldMainnet,
+				chains.SuiMainnet,
 			},
 		},
 		{
@@ -62,6 +63,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.AvalancheTestnet,
 				chains.ArbitrumSepolia,
 				chains.WorldTestnet,
+				chains.SuiTestnet,
 			},
 		},
 		{
@@ -73,6 +75,7 @@ func TestChainListByNetworkType(t *testing.T) {
 				chains.GoerliLocalnet,
 				chains.SolanaLocalnet,
 				chains.TONLocalnet,
+				chains.SuiLocalnet,
 			},
 		},
 	}
@@ -146,6 +149,11 @@ func TestChainListByNetwork(t *testing.T) {
 			chains.Network_ton,
 			[]chains.Chain{chains.TONMainnet, chains.TONTestnet, chains.TONLocalnet},
 		},
+		{
+			"Sui",
+			chains.Network_sui,
+			[]chains.Chain{chains.SuiMainnet, chains.SuiTestnet, chains.SuiLocalnet},
+		},
 	}
 
 	for _, lt := range listTests {
@@ -191,6 +199,9 @@ func TestDefaultChainList(t *testing.T) {
 		chains.ArbitrumMainnet,
 		chains.WorldMainnet,
 		chains.WorldTestnet,
+		chains.SuiMainnet,
+		chains.SuiTestnet,
+		chains.SuiLocalnet,
 	}, chains.DefaultChainsList())
 }
 
@@ -233,7 +244,11 @@ func TestChainListByGateway(t *testing.T) {
 				chains.ArbitrumSepolia,
 				chains.ArbitrumMainnet,
 				chains.WorldMainnet,
-				chains.WorldTestnet},
+				chains.WorldTestnet,
+				chains.SuiMainnet,
+				chains.SuiTestnet,
+				chains.SuiLocalnet,
+			},
 		},
 		{
 			"zevm",
@@ -286,6 +301,9 @@ func TestExternalChainList(t *testing.T) {
 		chains.ArbitrumMainnet,
 		chains.WorldMainnet,
 		chains.WorldTestnet,
+		chains.SuiMainnet,
+		chains.SuiTestnet,
+		chains.SuiLocalnet,
 	}, chains.ExternalChainList([]chains.Chain{}))
 }
 

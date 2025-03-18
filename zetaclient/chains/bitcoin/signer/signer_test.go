@@ -136,7 +136,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 			if tt.failTracker {
 				s.zetacoreClient.WithPostOutboundTracker("")
 			} else {
-				s.zetacoreClient.WithPostOutboundTracker("abc")
+				s.zetacoreClient.WithPostOutboundTracker("ABC")
 			}
 
 			// mock the previous tx as included
@@ -148,7 +148,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 			// increment pending nonce to 'nonce+2' to simulate an outdated RBF tx nonce
 			// including tx 'nonce+1' will increment the pending nonce to 'nonce+2'
 			if tt.rbfTx && tt.skipRBFTx {
-				s.observer.SetIncludedTx(tt.nonce+1, &btcjson.GetTransactionResult{TxID: "def"})
+				s.observer.SetIncludedTx(tt.nonce+1, &btcjson.GetTransactionResult{TxID: "DEF"})
 			}
 
 			// ACT

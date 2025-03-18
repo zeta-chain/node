@@ -88,10 +88,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// check the cctx status
 	utils.RequireCCTXStatus(r, cctx1, types.CctxStatus_OutboundMined)
 
-	// mine 10 blocks to confirm the outbound tx
-	_, err = r.GenerateToAddressIfLocalBitcoin(10, r.BTCDeployerAddress)
-	require.NoError(r, err)
-
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
 

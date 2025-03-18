@@ -1,8 +1,10 @@
 package solana
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gagliardetto/solana-go"
@@ -86,6 +88,76 @@ type OutboundInstruction interface {
 
 	// TokenAmount returns the amount of the instruction
 	TokenAmount() uint64
+
+	// InstructionDiscriminator returns the discriminator of the instruction
+	InstructionDiscriminator() [8]byte
+}
+
+var _ OutboundInstruction = (*IncrementNonceInstructionParams)(nil)
+
+// IncrementNonceInstructionParams contains the parameters for a gateway increment_nonce instruction
+type IncrementNonceInstructionParams struct {
+	// Discriminator is the unique identifier for the increment_nonce instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the increment_nonce
+	Amount uint64
+
+	// Signature is the ECDSA signature (by TSS) for the increment_nonce
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the increment_nonce
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *IncrementNonceInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *IncrementNonceInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *IncrementNonceInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *IncrementNonceInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionIncrementNonce tries to parse the instruction as a 'increment_nonce'.
+// It returns nil if the instruction can't be parsed as a 'increment_nonce'.
+func ParseInstructionIncrementNonce(
+	instruction solana.CompiledInstruction,
+) (*IncrementNonceInstructionParams, error) {
+	// try deserializing instruction as a 'increment_nonce'
+	inst := &IncrementNonceInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'increment_nonce' instruction
+	if inst.Discriminator != DiscriminatorIncrementNonce {
+		return nil, fmt.Errorf("not an increment_nonce instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
 }
 
 var _ OutboundInstruction = (*WithdrawInstructionParams)(nil)
@@ -109,6 +181,11 @@ type WithdrawInstructionParams struct {
 
 	// Nonce is the nonce for the withdraw
 	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WithdrawInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -142,11 +219,84 @@ func ParseInstructionWithdraw(instruction solana.CompiledInstruction) (*Withdraw
 
 	// check the discriminator to ensure it's a 'withdraw' instruction
 	if inst.Discriminator != DiscriminatorWithdraw {
-		return nil, fmt.Errorf("not a withdraw instruction: %v", inst.Discriminator)
+		return nil, fmt.Errorf("not a withdraw instruction: %v %v", inst.Discriminator, DiscriminatorWithdraw)
 	}
 
 	return inst, nil
 }
+
+var _ OutboundInstruction = (*ExecuteInstructionParams)(nil)
+
+// ExecuteInstructionParams contains the parameters for a gateway execute instruction
+type ExecuteInstructionParams struct {
+	// Discriminator is the unique identifier for the execute instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the execute
+	Amount uint64
+
+	// Sender from zetachain
+	Sender [20]byte
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the execute
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the execute
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecute tries to parse the instruction as a 'execute'.
+// It returns nil if the instruction can't be parsed as a 'execute'.
+func ParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteInstructionParams, error) {
+	// try deserializing instruction as a 'execute'
+	inst := &ExecuteInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute' instruction
+	if inst.Discriminator != DiscriminatorExecute {
+		return nil, fmt.Errorf("not an execute instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
+var _ OutboundInstruction = (*WithdrawSPLInstructionParams)(nil)
 
 type WithdrawSPLInstructionParams struct {
 	// Discriminator is the unique identifier for the withdraw instruction
@@ -169,6 +319,11 @@ type WithdrawSPLInstructionParams struct {
 
 	// Nonce is the nonce for the withdraw
 	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WithdrawSPLInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -208,6 +363,79 @@ func ParseInstructionWithdrawSPL(instruction solana.CompiledInstruction) (*Withd
 	return inst, nil
 }
 
+var _ OutboundInstruction = (*ExecuteSPLInstructionParams)(nil)
+
+type ExecuteSPLInstructionParams struct {
+	// Discriminator is the unique identifier for the execute spl instruction
+	Discriminator [8]byte
+
+	// Decimals is decimals for spl token
+	Decimals uint8
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Sender from zetachain
+	Sender [20]byte
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteSPLInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteSPLInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteSPLInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteSPLInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecuteSPL tries to parse the instruction as a 'execute_spl_token'.
+// It returns nil if the instruction can't be parsed as a 'execute_spl_token'.
+func ParseInstructionExecuteSPL(instruction solana.CompiledInstruction) (*ExecuteSPLInstructionParams, error) {
+	// try deserializing instruction as a 'execute_spl_token'
+	inst := &ExecuteSPLInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_spl_token' instruction
+	if inst.Discriminator != DiscriminatorExecuteSPL {
+		return nil, fmt.Errorf("not an execute_spl_token instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
 // RecoverSigner recover the ECDSA signer from given message hash and signature
 func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err error) {
 	// recover the public key
@@ -237,6 +465,11 @@ type WhitelistInstructionParams struct {
 
 	// Nonce is the nonce for the whitelist
 	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *WhitelistInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
 }
 
 // Signer returns the signer of the signature contained
@@ -274,4 +507,66 @@ func ParseInstructionWhitelist(instruction solana.CompiledInstruction) (*Whiteli
 	}
 
 	return inst, nil
+}
+
+type AccountMeta struct {
+	PublicKey  [32]byte
+	IsWritable bool
+}
+
+// ExecuteMsg describes data and accounts passed to connected programs
+type ExecuteMsg struct {
+	Accounts []AccountMeta
+	Data     []byte
+}
+
+// GetExecuteMsgAbi used for abi encoding/decoding execute msg
+func GetExecuteMsgAbi() (abi.Arguments, error) {
+	MsgAbiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
+		{
+			Name: "accounts",
+			Type: "tuple[]",
+			Components: []abi.ArgumentMarshaling{
+				{Name: "publicKey", Type: "bytes32"},
+				{Name: "isWritable", Type: "bool"},
+			},
+		},
+		{Name: "data", Type: "bytes"},
+	})
+
+	if err != nil {
+		return abi.Arguments{}, err
+	}
+
+	MsgAbiArgs := abi.Arguments{
+		{Type: MsgAbiType, Name: "msg"},
+	}
+
+	return MsgAbiArgs, nil
+}
+
+// DecodeExecuteMsg decodes execute msg using abi decoding
+func DecodeExecuteMsg(msgbz []byte) (ExecuteMsg, error) {
+	args, err := GetExecuteMsgAbi()
+	if err != nil {
+		return ExecuteMsg{}, err
+	}
+
+	unpacked, err := args.Unpack(msgbz)
+	if err != nil {
+		return ExecuteMsg{}, err
+	}
+
+	jsonMsg, err := json.Marshal(unpacked[0])
+	if err != nil {
+		return ExecuteMsg{}, err
+	}
+
+	var msg ExecuteMsg
+	err = json.Unmarshal(jsonMsg, &msg)
+	if err != nil {
+		return ExecuteMsg{}, err
+	}
+
+	return msg, nil
 }

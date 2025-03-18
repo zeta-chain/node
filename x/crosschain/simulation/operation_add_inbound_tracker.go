@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/testutil/sample"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -20,7 +21,12 @@ func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
 		// Get a random account and observer
 		// If this returns an error, it is likely that the entire observer set has been removed
-		simAccount, randomObserver, err := GetRandomAccountAndObserver(r, ctx, k, accounts)
+		simAccount, randomObserver, _, err := zetasimulation.GetRandomAccountAndObserver(
+			r,
+			ctx,
+			k.GetObserverKeeper(),
+			accounts,
+		)
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
@@ -31,11 +37,11 @@ func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeMsgAddInboundTracker,
+				TypeMsgAddInboundTracker,
 				"no supported chains found",
 			), nil, nil
 		}
-		randomChainID := GetRandomChainID(r, supportedChains)
+		randomChainID := zetasimulation.GetRandomChainID(r, supportedChains)
 		txHash := sample.HashFromRand(r)
 		coinType := sample.CoinTypeFromRand(r)
 
@@ -49,7 +55,11 @@ func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to validate MsgAddInboundTracker"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgAddInboundTracker,
+				"unable to validate MsgAddInboundTracker",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -66,6 +76,6 @@ func SimulateMsgAddInboundTracker(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

@@ -5,11 +5,13 @@ import (
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -83,6 +85,8 @@ func WaitCctxsMinedByInboundHash(
 		timedOut := time.Since(startTime) > timeout
 		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
+		require.NoError(t, ctx.Err())
+
 		time.Sleep(500 * time.Millisecond)
 
 		// We use InTxHashToCctxData instead of InboundTrackerAllByChain to able to run these tests with the previous version
@@ -154,6 +158,7 @@ func WaitCCTXMinedByIndex(
 
 	for i := 0; ; i++ {
 		require.False(t, time.Since(startTime) > timeout, "waiting cctx timeout, cctx not mined, cctx: %s", cctxIndex)
+		require.NoError(t, ctx.Err())
 
 		if i > 0 {
 			time.Sleep(500 * time.Millisecond)
@@ -205,6 +210,15 @@ func MatchReverted() WaitOpts {
 	})
 }
 
+// HasOutboundTxHash returns true when the CCTX has been assigned an outbound hash.
+// This now happens when the first tracker is written.
+func HasOutboundTxHash() WaitOpts {
+	return Matches(func(tx crosschaintypes.CrossChainTx) bool {
+		return len(tx.OutboundParams) > 0 &&
+			tx.OutboundParams[0].Hash != ""
+	})
+}
+
 // Matches adds a filter to WaitCctxByInboundHash that checks cctxs match provided callback.
 // ALL cctxs should match this filter.
 func Matches(fn func(tx crosschaintypes.CrossChainTx) bool) WaitOpts {
@@ -223,10 +237,9 @@ func WaitCctxRevertedByInboundHash(
 	c CCTXClient,
 ) crosschaintypes.CrossChainTx {
 	// wait for cctx to be reverted
-	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
-	require.Len(t, cctxs, 1)
+	cctx := WaitCctxByInboundHash(ctx, t, hash, c, MatchReverted())
 
-	return cctxs[0]
+	return cctx
 }
 
 // WaitCctxAbortedByInboundHash waits until cctx is aborted by inbound hash.
@@ -237,10 +250,9 @@ func WaitCctxAbortedByInboundHash(
 	c CCTXClient,
 ) crosschaintypes.CrossChainTx {
 	// wait for cctx to be aborted
-	cctxs := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
-	require.Len(t, cctxs, 1)
+	cctx := WaitCctxByInboundHash(ctx, t, hash, c, MatchStatus(crosschaintypes.CctxStatus_Aborted))
 
-	return cctxs[0]
+	return cctx
 }
 
 // WaitCctxByInboundHash waits until cctx appears by inbound hash.
@@ -250,7 +262,7 @@ func WaitCctxByInboundHash(
 	hash string,
 	c CCTXClient,
 	opts ...WaitOpts,
-) []crosschaintypes.CrossChainTx {
+) crosschaintypes.CrossChainTx {
 	const tick = time.Millisecond * 200
 
 	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
@@ -290,7 +302,7 @@ func WaitCctxByInboundHash(
 		case err != nil:
 			require.NoError(t, err, "failed to get cctx by inbound hash: %s", hash)
 		case len(out.CrossChainTxs) > 0 && matches(out.CrossChainTxs):
-			return out.CrossChainTxs
+			return out.CrossChainTxs[0]
 		case ctx.Err() == nil:
 			require.NoError(t, err, "failed to get cctx by inbound hash (ctx error): %s", hash)
 		}
@@ -331,4 +343,37 @@ func WaitForBlockHeight(
 	}
 
 	return nil
+}
+
+// WaitForZetaBlocks waits for the given number of Zeta blocks
+func WaitForZetaBlocks(
+	ctx context.Context,
+	t require.TestingT,
+	zevmClient *ethclient.Client,
+	waitBlocks uint64,
+	timeout time.Duration,
+) {
+	oldHeight, err := zevmClient.BlockNumber(ctx)
+	require.NoError(t, err)
+
+	// wait for given number of Zeta blocks
+	newHeight := oldHeight
+	startTime := time.Now()
+	checkInterval := constant.ZetaBlockTime / 2
+	for {
+		time.Sleep(checkInterval)
+		require.False(
+			t,
+			time.Since(startTime) > timeout,
+			"timeout waiting for Zeta blocks, current height: %d",
+			newHeight,
+		)
+
+		// check how many blocks elapsed
+		newHeight, err = zevmClient.BlockNumber(ctx)
+		require.NoError(t, err)
+		if newHeight >= oldHeight+waitBlocks {
+			return
+		}
+	}
 }

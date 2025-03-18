@@ -54,7 +54,7 @@ func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 		i := i
 
 		// execute the withdraw SPL transaction
-		tx, err = r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSPLAmount)
+		tx, err := r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(privKey.PublicKey().String()), withdrawSPLAmount)
 		require.NoError(r, err)
 
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -63,7 +63,18 @@ func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("index %d: starting SPL withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
-			startTime := time.Now()
+			segmentStartTime := time.Now()
+			cctxFirstHash := utils.WaitCctxByInboundHash(
+				r.Ctx,
+				r,
+				tx.Hash().Hex(),
+				r.CctxClient,
+				utils.HasOutboundTxHash(),
+			)
+			r.Logger.Info("index %d: got first outbound hash: %s", i, cctxFirstHash.OutboundParams[0].Hash)
+			timeToOutboundHash := time.Since(segmentStartTime)
+
+			segmentStartTime = time.Now()
 			cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 				return fmt.Errorf(
@@ -74,11 +85,17 @@ func TestStressSPLWithdraw(r *runner.E2ERunner, args []string) {
 					cctx.Index,
 				)
 			}
-			timeToComplete := time.Since(startTime)
-			r.Logger.Print("index %d: withdraw SPL cctx success in %s", i, timeToComplete.String())
+			timeToFinalized := time.Since(segmentStartTime)
+			totalTime := timeToOutboundHash + timeToFinalized
+			r.Logger.Print("index %d: withdraw SPL cctx success in %s (outbound hash: %s + finalized: %s)",
+				i,
+				formatDuration(totalTime),
+				formatDuration(timeToOutboundHash),
+				formatDuration(timeToFinalized),
+			)
 
 			withdrawDurationsLock.Lock()
-			withdrawDurations = append(withdrawDurations, timeToComplete.Seconds())
+			withdrawDurations = append(withdrawDurations, totalTime.Seconds())
 			withdrawDurationsLock.Unlock()
 
 			return nil

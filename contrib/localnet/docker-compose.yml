@@ -230,6 +230,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.103
     entrypoint: ["/usr/bin/start-solana.sh"]
+    volumes:
+      - ssh:/root/.ssh
 
   ton:
     # figure out why E2E fail with MyLocalTon v124 @ deposit: deployer.CreateWallet(..)
@@ -249,6 +251,22 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.104
 
+  sui:
+    image: ghcr.io/zeta-chain/sui-docker:mainnet-v1.41.1
+    container_name: sui
+    hostname: sui
+    profiles:
+      - sui
+      - all
+    ports:
+      - "9000:9000" # RPC
+    environment:
+      DOCKER_IP: 172.20.0.105
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.105
+    entrypoint: ["sui", "start", "--with-faucet"]
+
   orchestrator:
     image: orchestrator:latest
     tty: true
@@ -267,6 +285,7 @@ services:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+      - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
 

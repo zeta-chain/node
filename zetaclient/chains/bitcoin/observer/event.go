@@ -4,14 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 
-	cosmosmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -176,70 +173,4 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 		ob.Logger().Inbound.Error().Fields(logFields).Msgf("unreachable code got InboundCategory: %v", category)
 		return false
 	}
-}
-
-// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteFromLegacyMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		hex.EncodeToString(event.MemoBytes),
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V2,
-		false, // no arbitrary call for deposit to ZetaChain
-		event.Status,
-		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
-	)
-}
-
-// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
-// TODO: upgrade to ProtocolContractVersion_V2 and enable more options
-// https://github.com/zeta-chain/node/issues/2711
-func (ob *Observer) NewInboundVoteFromStdMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
-	// inject the 'revertAddress' specified in the memo, so that
-	// zetacore will create a revert outbound that points to the custom revert address.
-	revertOptions := crosschaintypes.RevertOptions{
-		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
-	}
-
-	// check if the memo is a cross-chain call, or simple token deposit
-	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.MemoStd.Receiver.Hex(),
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		hex.EncodeToString(event.MemoStd.Payload),
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V2,
-		false, // no arbitrary call for deposit to ZetaChain
-		event.Status,
-		crosschaintypes.WithRevertOptions(revertOptions),
-		crosschaintypes.WithCrossChainCall(isCrosschainCall),
-	)
 }

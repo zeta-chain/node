@@ -2,7 +2,7 @@ package observer_test
 
 import (
 	"context"
-	"math/big"
+	"errors"
 	"os"
 	"strconv"
 	"testing"
@@ -19,6 +19,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -206,30 +207,6 @@ func Test_BlockCache(t *testing.T) {
 	})
 }
 
-func TestConfirmationThreshold(t *testing.T) {
-	chain := chains.BitcoinMainnet
-	ob := newTestSuite(t, chain)
-
-	t.Run("should return confirmations in chain param", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(t, int64(3), ob.ConfirmationsThreshold(big.NewInt(1000)))
-	})
-
-	t.Run("should return big value confirmations", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(
-			t,
-			int64(observer.BigValueConfirmationCount),
-			ob.ConfirmationsThreshold(big.NewInt(observer.BigValueSats)),
-		)
-	})
-
-	t.Run("big value confirmations is the upper cap", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: observer.BigValueConfirmationCount + 1})
-		require.Equal(t, int64(observer.BigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(1000)))
-	})
-}
-
 func Test_SetLastStuckOutbound(t *testing.T) {
 	// create observer and example stuck tx
 	ob := newTestSuite(t, chains.BitcoinMainnet)
@@ -353,11 +330,23 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	ob, err := observer.New(chain, baseObserver, client)
 	require.NoError(t, err)
 
-	return &testSuite{
+	ts := &testSuite{
 		ctx:      context.Background(),
 		client:   client,
 		zetacore: zetacore,
 		db:       database,
 		Observer: ob,
 	}
+
+	ts.zetacore.
+		On("GetCctxByNonce", mock.Anything, mock.Anything, mock.Anything).
+		Return(ts.mockGetCCTXByNonce).
+		Maybe()
+
+	return ts
+}
+
+func (ts *testSuite) mockGetCCTXByNonce(_ context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	// implement custom logic here if needed (e.g. mock)
+	return nil, errors.New("not implemented")
 }

@@ -152,3 +152,16 @@ message MsgUpdateGatewayContract {
 }
 ```
 
+## MsgUpdateZRC20Name
+
+UpdateZRC20Name updates the name and/or the symbol of a zrc20 token
+
+```proto
+message MsgUpdateZRC20Name {
+	string creator = 1;
+	string zrc20_address = 2;
+	string name = 3;
+	string symbol = 4;
+}
+```
+

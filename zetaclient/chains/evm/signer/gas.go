@@ -10,10 +10,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-const (
-	minGasLimit = 100_000
-	maxGasLimit = 1_000_000
-)
+// maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
+const maxGasLimit = 2_500_000
 
 // Gas represents gas parameters for EVM transactions.
 //
@@ -69,14 +67,7 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 		limit  = params.CallOptions.GasLimit
 	)
 
-	switch {
-	case limit < minGasLimit:
-		limit = minGasLimit
-		logger.Warn().
-			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
-			Uint64("cctx.gas_limit", limit).
-			Msgf("Gas limit is too low. Setting to the minimum (%d)", minGasLimit)
-	case limit > maxGasLimit:
+	if limit > maxGasLimit {
 		limit = maxGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).

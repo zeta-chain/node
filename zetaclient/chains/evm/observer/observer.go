@@ -13,14 +13,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/zeta.non-eth.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
 
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer is the observer for evm chains
@@ -62,79 +61,54 @@ func New(baseObserver *base.Observer, client interfaces.EVMRPCClient) (*Observer
 	}
 
 	// load last block scanned
-	if err := ob.LoadLastBlockScanned(context.Background()); err != nil {
+	if err := ob.loadLastBlockScanned(context.Background()); err != nil {
 		return nil, errors.Wrap(err, "unable to load last block scanned")
 	}
 
 	return ob, nil
 }
 
-// GetConnectorContract returns the non-Eth connector address and binder
-func (ob *Observer) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
+// getConnectorContract returns the non-Eth connector address and binder
+func (ob *Observer) getConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-// GetConnectorContractEth returns the Eth connector address and binder
-func (ob *Observer) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
-	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
-	contract, err := FetchConnectorContractEth(addr, ob.evmClient)
-	return addr, contract, err
-}
-
-// GetERC20CustodyContract returns ERC20Custody contract address and binder
-func (ob *Observer) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
+// getERC20CustodyContract returns ERC20Custody contract address and binder
+func (ob *Observer) getERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-// GetERC20CustodyV2Contract returns ERC20Custody contract address and binder
+// getERC20CustodyV2Contract returns ERC20Custody contract address and binder
 // NOTE: we use the same address as gateway v1
 // this simplify the migration process v1 will be completely removed in the future
 // currently the ABI for withdraw is identical, therefore both contract instances can be used
-func (ob *Observer) GetERC20CustodyV2Contract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
+func (ob *Observer) getERC20CustodyV2Contract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().Erc20CustodyContractAddress)
 	contract, err := erc20custody.NewERC20Custody(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-// GetGatewayContract returns the gateway contract address and binder
-func (ob *Observer) GetGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
+// getGatewayContract returns the gateway contract address and binder
+func (ob *Observer) getGatewayContract() (ethcommon.Address, *gatewayevm.GatewayEVM, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().GatewayAddress)
 	contract, err := gatewayevm.NewGatewayEVM(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-// FetchConnectorContractEth returns the Eth connector address and binder
-// TODO(revamp): move this to a contract package
-func FetchConnectorContractEth(
-	addr ethcommon.Address,
-	client interfaces.EVMRPCClient,
-) (*zetaconnectoreth.ZetaConnectorEth, error) {
-	return zetaconnectoreth.NewZetaConnectorEth(addr, client)
-}
-
-// FetchZetaTokenContract returns the non-Eth ZETA token binder
-// TODO(revamp): move this to a contract package
-func FetchZetaTokenContract(
-	addr ethcommon.Address,
-	client interfaces.EVMRPCClient,
-) (*zeta.ZetaNonEth, error) {
-	return zeta.NewZetaNonEth(addr, client)
-}
-
-// SetTxNReceipt sets the receipt and transaction in memory
-func (ob *Observer) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
+// setTxNReceipt sets the receipt and transaction in memory
+func (ob *Observer) setTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	ob.outboundConfirmedReceipts[ob.OutboundID(nonce)] = receipt
 	ob.outboundConfirmedTransactions[ob.OutboundID(nonce)] = transaction
 }
 
-// GetTxNReceipt gets the receipt and transaction from memory
-func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
+// getTxNReceipt gets the receipt and transaction from memory
+func (ob *Observer) getTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	receipt := ob.outboundConfirmedReceipts[ob.OutboundID(nonce)]
@@ -142,8 +116,8 @@ func (ob *Observer) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Tr
 	return receipt, transaction
 }
 
-// IsTxConfirmed returns true if there is a confirmed tx for 'nonce'
-func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
+// isTxConfirmed returns true if there is a confirmed tx for 'nonce'
+func (ob *Observer) isTxConfirmed(nonce uint64) bool {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	id := ob.OutboundID(nonce)
@@ -151,8 +125,8 @@ func (ob *Observer) IsTxConfirmed(nonce uint64) bool {
 	return ob.outboundConfirmedReceipts[id] != nil && ob.outboundConfirmedTransactions[id] != nil
 }
 
-// CheckTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
-func (ob *Observer) CheckTxInclusion(ctx context.Context, tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
+// checkTxInclusion returns nil only if tx is included at the position indicated by the receipt ([block, index])
+func (ob *Observer) checkTxInclusion(ctx context.Context, tx *ethtypes.Transaction, receipt *ethtypes.Receipt) error {
 	block, err := ob.GetBlockByNumberCached(ctx, receipt.BlockNumber.Uint64())
 	if err != nil {
 		return errors.Wrapf(err, "GetBlockByNumberCached error for block %d txHash %s nonce %d",
@@ -167,7 +141,7 @@ func (ob *Observer) CheckTxInclusion(ctx context.Context, tx *ethtypes.Transacti
 
 	txAtIndex := block.Transactions[receipt.TransactionIndex]
 	if !strings.EqualFold(txAtIndex.Hash, tx.Hash().Hex()) {
-		ob.RemoveCachedBlock(receipt.BlockNumber.Uint64()) // clean stale block from cache
+		ob.removeCachedBlock(receipt.BlockNumber.Uint64()) // clean stale block from cache
 		return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
 			receipt.TransactionIndex, txAtIndex.Hash, tx.Hash(), tx.Nonce(), receipt.BlockNumber.Uint64())
 	}
@@ -175,8 +149,8 @@ func (ob *Observer) CheckTxInclusion(ctx context.Context, tx *ethtypes.Transacti
 	return nil
 }
 
-// TransactionByHash query transaction by hash via JSON-RPC
-func (ob *Observer) TransactionByHash(ctx context.Context, txHash string) (*client.Transaction, bool, error) {
+// transactionByHash query transaction by hash via JSON-RPC
+func (ob *Observer) transactionByHash(ctx context.Context, txHash string) (*client.Transaction, bool, error) {
 	tx, err := ob.evmClient.TransactionByHashCustom(ctx, txHash)
 	if err != nil {
 		return nil, false, err
@@ -186,10 +160,6 @@ func (ob *Observer) TransactionByHash(ctx context.Context, txHash string) (*clie
 		return nil, false, err
 	}
 	return tx, tx.BlockNumber == nil, nil
-}
-
-func (ob *Observer) TransactionReceipt(ctx context.Context, hash ethcommon.Hash) (*ethtypes.Receipt, error) {
-	return ob.evmClient.TransactionReceipt(ctx, hash)
 }
 
 // GetBlockByNumberCached get block by number from cache
@@ -205,7 +175,7 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber uint
 		return nil, fmt.Errorf("block number %d is too large", blockNumber)
 	}
 	// #nosec G115 always in range, checked above
-	block, err := ob.BlockByNumber(ctx, int(blockNumber))
+	block, err := ob.blockByNumber(ctx, int(blockNumber))
 	if err != nil {
 		return nil, err
 	}
@@ -213,13 +183,13 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber uint
 	return block, nil
 }
 
-// RemoveCachedBlock remove block from cache
-func (ob *Observer) RemoveCachedBlock(blockNumber uint64) {
+// removeCachedBlock remove block from cache
+func (ob *Observer) removeCachedBlock(blockNumber uint64) {
 	ob.BlockCache().Remove(blockNumber)
 }
 
-// BlockByNumber query block by number via JSON-RPC
-func (ob *Observer) BlockByNumber(ctx context.Context, blockNumber int) (*client.Block, error) {
+// blockByNumber query block by number via JSON-RPC
+func (ob *Observer) blockByNumber(ctx context.Context, blockNumber int) (*client.Block, error) {
 	block, err := ob.evmClient.BlockByNumberCustom(ctx, big.NewInt(int64(blockNumber)))
 	if err != nil {
 		return nil, err
@@ -236,9 +206,9 @@ func (ob *Observer) BlockByNumber(ctx context.Context, blockNumber int) (*client
 	return block, nil
 }
 
-// LoadLastBlockScanned loads the last scanned block from the database
+// loadLastBlockScanned loads the last scanned block from the database
 // TODO(revamp): move to a db file
-func (ob *Observer) LoadLastBlockScanned(ctx context.Context) error {
+func (ob *Observer) loadLastBlockScanned(ctx context.Context) error {
 	err := ob.Observer.LoadLastBlockScanned(ob.Logger().Chain)
 	if err != nil {
 		return errors.Wrapf(err, "error LoadLastBlockScanned for chain %d", ob.Chain().ChainId)
@@ -266,6 +236,26 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	}
 
 	ob.ReportBlockLatency(blockTime)
+	ob.Logger().Chain.Info().Msg("CheckRPCStatus succeed")
+
+	return nil
+}
+
+// updateLastBlock is a helper function to update the last block number.
+// Note: keep last block up-to-date helps to avoid inaccurate confirmation.
+func (ob *Observer) updateLastBlock(ctx context.Context) error {
+	blockNumber, err := ob.evmClient.BlockNumber(ctx)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "error getting block number")
+	case blockNumber < ob.LastBlock():
+		return fmt.Errorf("block number should not decrease: current %d last %d", blockNumber, ob.LastBlock())
+	default:
+		ob.WithLastBlock(blockNumber)
+	}
+
+	// increment prom counter
+	metrics.GetBlockNumberPerChain.WithLabelValues(ob.Chain().Name).Inc()
 
 	return nil
 }

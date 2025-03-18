@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -20,9 +20,9 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -194,7 +194,7 @@ func Test_NewObserver(t *testing.T) {
 				tt.logger,
 			)
 			require.NoError(t, err)
-			ob, err := observer.New(baseObserver, tt.evmClient)
+			ob, err := New(baseObserver, tt.evmClient)
 
 			// check result
 			if tt.fail {
@@ -219,7 +219,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		ob.WriteLastBlockScannedToDB(123)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned(ctx)
+		err := ob.loadLastBlockScanned(ctx)
 		require.NoError(t, err)
 		require.EqualValues(t, 123, ob.LastBlockScanned())
 	})
@@ -230,7 +230,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		defer os.Unsetenv(envvar)
 
 		// load last block scanned
-		err := ob.LoadLastBlockScanned(ctx)
+		err := ob.loadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error LoadLastBlockScanned")
 	})
 	t.Run("should fail on RPC error", func(t *testing.T) {
@@ -245,7 +245,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		obOther.evmMock.On("BlockNumber", mock.Anything).Return(uint64(0), fmt.Errorf("error RPC"))
 
 		// load last block scanned
-		err := obOther.LoadLastBlockScanned(ctx)
+		err := obOther.loadLastBlockScanned(ctx)
 		require.ErrorContains(t, err, "error RPC")
 	})
 }
@@ -288,7 +288,7 @@ func Test_BlockCache(t *testing.T) {
 
 		// delete non-existing block should not panic
 		blockNumber := uint64(123)
-		ts.RemoveCachedBlock(blockNumber)
+		ts.removeCachedBlock(blockNumber)
 
 		// add a block
 		block := &client.Block{Number: 123}
@@ -300,7 +300,7 @@ func Test_BlockCache(t *testing.T) {
 		require.EqualValues(t, block, result)
 
 		// delete the block should not panic
-		ts.RemoveCachedBlock(blockNumber)
+		ts.removeCachedBlock(blockNumber)
 	})
 }
 
@@ -324,7 +324,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 	ts.BlockCache().Add(blockNumber, block)
 
 	t.Run("should pass for archived outbound", func(t *testing.T) {
-		err := ts.CheckTxInclusion(ts.ctx, tx, receipt)
+		err := ts.checkTxInclusion(ts.ctx, tx, receipt)
 		require.NoError(t, err)
 	})
 	t.Run("should fail on tx index out of range", func(t *testing.T) {
@@ -332,7 +332,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 		copyReceipt := *receipt
 		// #nosec G115 non negative value
 		copyReceipt.TransactionIndex = uint(len(block.Transactions))
-		err := ts.CheckTxInclusion(ts.ctx, tx, &copyReceipt)
+		err := ts.checkTxInclusion(ts.ctx, tx, &copyReceipt)
 		require.ErrorContains(t, err, "out of range")
 	})
 	t.Run("should fail on tx hash mismatch", func(t *testing.T) {
@@ -342,7 +342,7 @@ func Test_CheckTxInclusion(t *testing.T) {
 		ts.BlockCache().Add(blockNumber, block)
 
 		// check inclusion should fail
-		err := ts.CheckTxInclusion(ts.ctx, tx, receipt)
+		err := ts.checkTxInclusion(ts.ctx, tx, receipt)
 		require.ErrorContains(t, err, "has different hash")
 
 		// wrong block should be removed from cache
@@ -375,6 +375,7 @@ func Test_VoteOutboundBallot(t *testing.T) {
 			chainID,
 			tx.Nonce(),
 			coinType,
+			crosschaintypes.ConfirmationMode_SAFE,
 		)
 		ballotExpected := cctx.GetCurrentOutboundParam().BallotIndex
 		require.Equal(t, ballotExpected, msg.Digest())
@@ -382,7 +383,7 @@ func Test_VoteOutboundBallot(t *testing.T) {
 }
 
 type testSuite struct {
-	*observer.Observer
+	*Observer
 	ctx         context.Context
 	appContext  *zctx.AppContext
 	chainParams *observertypes.ChainParams
@@ -431,7 +432,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	baseObserver, err := base.NewObserver(chain, chainParams, zetacore, tss, 1000, nil, database, logger)
 	require.NoError(t, err)
 
-	ob, err := observer.New(baseObserver, evmMock)
+	ob, err := New(baseObserver, evmMock)
 	require.NoError(t, err)
 	ob.WithLastBlock(1)
 

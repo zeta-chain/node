@@ -3,6 +3,7 @@ package context
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -10,7 +11,6 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -212,7 +212,7 @@ func (a *AppContext) updateChainRegistry(
 		}
 
 		if !isZeta(chainID) {
-			if err := observertypes.ValidateChainParams(params); err != nil {
+			if err := params.Validate(); err != nil {
 				return errors.Wrapf(err, "invalid chain params for chain %d", chainID)
 			}
 		}

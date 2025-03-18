@@ -2,7 +2,6 @@ package observer
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -142,6 +141,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -163,7 +163,9 @@ func TestInbound(t *testing.T) {
 
 		assert.Equal(t, "", cctx.Asset)
 		assert.Equal(t, deposit.Amount.Uint64(), cctx.Amount.Uint64())
-		assert.Equal(t, hex.EncodeToString(deposit.Recipient.Bytes()), cctx.Message)
+		assert.Equal(t, "", cctx.Message)
+		assert.Equal(t, deposit.Recipient.Hex(), cctx.Receiver)
+		assert.False(t, cctx.IsCrossChainCall)
 
 		// Check hash & block height
 		expectedHash := liteapi.TransactionHashToString(depositTX.Lt, txHash(depositTX))
@@ -204,6 +206,7 @@ func TestInbound(t *testing.T) {
 			Once()
 
 		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -225,13 +228,9 @@ func TestInbound(t *testing.T) {
 
 		assert.Equal(t, "", cctx.Asset)
 		assert.Equal(t, depositAndCall.Amount.Uint64(), cctx.Amount.Uint64())
-
-		expectedMessage := hex.EncodeToString(append(
-			depositAndCall.Recipient.Bytes(),
-			[]byte(callData)...,
-		))
-
-		assert.Equal(t, expectedMessage, cctx.Message)
+		assert.Equal(t, hex.EncodeToString([]byte(callData)), cctx.Message)
+		assert.Equal(t, depositAndCall.Recipient.Hex(), cctx.Receiver)
+		assert.True(t, cctx.IsCrossChainCall)
 
 		// Check hash & block height
 		expectedHash := liteapi.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))
@@ -350,6 +349,7 @@ func TestInbound(t *testing.T) {
 		for _, tx := range txs {
 			ts.MockGetBlockHeader(tx.BlockID)
 		}
+		ts.MockGetCctxByHash()
 
 		// ACT
 		// Observe inbounds once
@@ -423,6 +423,7 @@ func TestInboundTracker(t *testing.T) {
 		ts.TxToInboundTracker(txDeposit),
 		ts.TxToInboundTracker(txWithdrawal),
 	}
+	ts.MockGetCctxByHash()
 
 	ts.OnGetInboundTrackersForChain(trackers).Once()
 
@@ -436,9 +437,8 @@ func TestInboundTracker(t *testing.T) {
 	vote := ts.votesBag[0]
 	assert.Equal(t, deposit.Amount, vote.Amount)
 	assert.Equal(t, deposit.Sender.ToRaw(), vote.Sender)
-
-	// zevm recipient bytes == memo bytes
-	assert.Equal(t, fmt.Sprintf("%x", deposit.Recipient), vote.Message)
+	assert.Equal(t, "", vote.Message)
+	assert.Equal(t, deposit.Recipient.Hex(), vote.Receiver)
 }
 
 func txHash(tx ton.Transaction) ton.Bits256 {

@@ -417,7 +417,7 @@ func EVMKeeper(
 	return k
 }
 
-// NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
+// NewSDKKeepersWithKeys instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
 func NewSDKKeepersWithKeys(
 	cdc codec.Codec,
 	keys map[string]*storetypes.KVStoreKey,

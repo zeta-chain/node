@@ -16,7 +16,7 @@ func CmdGetTssAddress() *cobra.Command {
 		Short: "Query current tss address",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func CmdGetTssAddressByFinalizedZetaHeight() *cobra.Command {
 		Short: "Query tss address by finalized zeta height (for historical tss addresses)",
 		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

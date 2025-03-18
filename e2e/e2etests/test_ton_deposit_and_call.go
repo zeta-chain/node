@@ -4,39 +4,41 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 )
 
 func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	// Given deployer
-	ctx, deployer := r.Ctx, r.TONDeployer
+	ctx := r.Ctx
+
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
 
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
 	// Given approx depositAndCall fee
-	depositFee, err := r.TONGateway.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)
+	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDepositAndCall)
 	require.NoError(r, err)
 
-	// Given sample wallet with a balance of 50 TON
-	sender, err := deployer.CreateWallet(ctx, toncontracts.Coins(50))
+	// Given a sender
+	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Given sample zEVM contract
+	// Given sample zEVM contract deployed by userTON account
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
-	require.NoError(r, err)
+	require.NoError(r, err, "unable to deploy example contract")
 	r.Logger.Info("Example zevm contract deployed at: %s", contractAddr.String())
 
 	// Given call data
 	callData := []byte("hello from TON!")
 
 	// ACT
-	_, err = r.TONDepositAndCall(sender, amount, contractAddr, callData)
+	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)

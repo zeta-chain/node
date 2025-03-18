@@ -17,10 +17,10 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	// ARRANGE
 	require.Len(r, args, 1)
 
-	// Given a deployer
-	_, deployer := r.Ctx, r.TONDeployer
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
 
-	// And zEVM sender
+	// Given zEVM sender
 	zevmSender := r.ZEVMAuth.From
 
 	// Given his ZRC-20 balance
@@ -28,21 +28,21 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("zEVM sender's ZRC20 TON balance before withdraw: %d", senderZRC20BalanceBefore)
 
-	// Given another TON wallet
-	tonRecipient, err := deployer.CreateWallet(r.Ctx, toncontracts.Coins(1))
+	// Given a receiver
+	_, receiver, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	tonRecipientBalanceBefore, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress(), true)
+	receiverBalanceBefore, err := r.Clients.TON.GetBalanceOf(r.Ctx, receiver.GetAddress(), true)
 	require.NoError(r, err)
 
-	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(tonRecipientBalanceBefore))
+	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(receiverBalanceBefore))
 
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
 	amount := utils.ParseUint(r, args[0])
 	approvedAmount := amount.Add(toncontracts.Coins(1))
 
 	// ACT
-	cctx := r.WithdrawTONZRC20(tonRecipient.GetAddress(), amount.BigInt(), approvedAmount.BigInt())
+	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), approvedAmount.BigInt())
 
 	// ASSERT
 	r.Logger.Info(
@@ -50,7 +50,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 		toncontracts.FormatCoins(amount),
 		map[string]any{
 			"zevm_sender":   zevmSender.Hex(),
-			"ton_recipient": tonRecipient.GetAddress().ToRaw(),
+			"ton_recipient": receiver.GetAddress().ToRaw(),
 			"ton_amount":    toncontracts.FormatCoins(amount),
 			"cctx_index":    cctx.Index,
 			"ton_hash":      cctx.GetCurrentOutboundParam().Hash,
@@ -59,10 +59,10 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// Make sure that recipient's TON balance has increased
-	tonRecipientBalanceAfter, err := deployer.GetBalanceOf(r.Ctx, tonRecipient.GetAddress(), true)
+	receiverBalanceAfter, err := r.Clients.TON.GetBalanceOf(r.Ctx, receiver.GetAddress(), true)
 	require.NoError(r, err)
 
-	r.Logger.Info("Recipient's balance after withdrawal: %s", toncontracts.FormatCoins(tonRecipientBalanceAfter))
+	r.Logger.Info("Recipient's balance after withdrawal: %s", toncontracts.FormatCoins(receiverBalanceAfter))
 
 	// Make sure that sender's ZRC20 balance has decreased
 	senderZRC20BalanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, zevmSender)
@@ -77,7 +77,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	lt, hash, err := liteapi.TransactionHashFromString(cctx.GetCurrentOutboundParam().Hash)
 	require.NoError(r, err)
 
-	txs, err := r.Clients.TON.GetTransactions(r.Ctx, 1, r.TONGateway.AccountID(), lt, hash)
+	txs, err := r.Clients.TON.GetTransactions(r.Ctx, 1, gw.AccountID(), lt, hash)
 	require.NoError(r, err)
 	require.Len(r, txs, 1)
 
