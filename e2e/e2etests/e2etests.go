@@ -152,6 +152,12 @@ const (
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
 
 	/*
+		Staking tests
+	*/
+
+	TestUndelegateToBelowMinimumObserverDelegation = "undelegate_to_below_minimum_observer_delegation"
+
+	/*
 	 Admin tests
 	 Test admin functionalities
 	*/
@@ -1535,4 +1541,9 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		legacy.TestZetaWithdrawBTCRevert,
 	),
+	runner.NewE2ETest(
+		TestUndelegateToBelowMinimumObserverDelegation,
+		"test undelegating to below minimum observer delegation",
+		[]runner.ArgDefinition{},
+		UndelegateToBelowMinimumObserverDelegation),
 }

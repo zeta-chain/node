@@ -6,7 +6,7 @@ solana-keygen new -o /root/.config/solana/id.json --no-bip39-passphrase
 
 solana config set --url localhost
 echo "starting solana test validator..."
-solana-test-validator &
+solana-test-validator --limit-ledger-size 50000000 &
 
 sleep 5
 # airdrop to e2e sol account

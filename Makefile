@@ -238,7 +238,7 @@ stop-localnet:
 
 # delete any volume ending in persist
 clear-localnet-persistence:
-	docker volume rm $(docker volume ls -qf "label=localnet=true")
+	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
 
 ###############################################################################
 ###                         E2E tests               						###
@@ -273,6 +273,11 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
+start-staking-test: e2e-images
+	@echo "--> Starting e2e staking test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-staking" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-e2e-admin-test: e2e-images

@@ -46,6 +46,10 @@ services:
     volumes:
       - eth-data-persist:/root/data
 
+  bitcoin:
+    volumes:
+      - btc-data-persist:/root/.bitcoin
+
   solana:
     volumes:
       - solana-ledger-persist:/data/test-ledger
@@ -107,6 +111,9 @@ volumes:
     labels:
       - "localnet=true"
   eth-data-persist:
+    labels:
+      - "localnet=true"
+  btc-data-persist:
     labels:
       - "localnet=true"
   orchestrator-state-persist:

@@ -10,11 +10,16 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	cc "github.com/zeta-chain/node/x/crosschain/types"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
-	gasconst "github.com/zeta-chain/node/zetaclient/zetacore"
+	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
+
+// https://tonscan.com/config-parameters (N21: "Computation costs")
+// This might changes in the future by TON's gov proposal (very unlikely though)
+const maxGasLimit = 1_000_000
 
 type outbound struct {
 	tx            *toncontracts.Transaction
@@ -23,7 +28,7 @@ type outbound struct {
 }
 
 // VoteOutboundIfConfirmed checks outbound status and returns (continueKeysign, error)
-func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cc.CrossChainTx) (bool, error) {
+func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cctypes.CrossChainTx) (bool, error) {
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
 	outboundRes, exists := ob.getOutboundByNonce(nonce)
@@ -39,8 +44,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cc.CrossC
 	// TODO: Add compliance check
 	// https://github.com/zeta-chain/node/issues/2916
 
-	txHash := liteapi.TransactionToHashString(outboundRes.tx.Transaction)
-	if err = ob.postVoteOutbound(ctx, cctx, withdrawal, txHash, outboundRes.receiveStatus); err != nil {
+	if err = ob.postVoteOutbound(ctx, cctx, outboundRes, withdrawal); err != nil {
 		return false, errors.Wrap(err, "unable to post vote")
 	}
 
@@ -95,7 +99,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 // processOutboundTracker checks TON tx and stores it in memory for further processing
 // by VoteOutboundIfConfirmed.
-func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cc.CrossChainTx, txHash string) error {
+func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.CrossChainTx, txHash string) error {
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
 		return errors.New("only gas cctxs are supported")
 	}
@@ -204,73 +208,67 @@ func (ob *Observer) setOutboundByNonce(o outbound) {
 
 func (ob *Observer) postVoteOutbound(
 	ctx context.Context,
-	cctx *cc.CrossChainTx,
+	cctx *cctypes.CrossChainTx,
+	outboundRes outbound,
 	w toncontracts.Withdrawal,
-	txHash string,
-	status chains.ReceiveStatus,
 ) error {
-	// I. Gas
-	// TON implements a different tx fee model. Basically, each operation in our Gateway has a
-	// tx_fee(operation) which is based on hard-coded gas values per operation
-	// multiplied by the current gas fees on-chain. Each withdrawal tx takes gas directly
-	// from the Gateway i.e. gw pays tx fees for itself.
-	//
-	// - Gas price is stores in zetacore thanks to Observer.postGasPrice()
-	// - Gas limit should be hardcoded in TON ZRC-20
-	//
-	// II. Block height
-	// TON doesn't sequential block height because different txs might end up in different shard chains
-	// tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height. Thus let's use 0.
-	// Note that for the sake of gas tracking, we use masterchain block height (not applicable here).
-	const (
-		outboundGasUsed     = 0
-		outboundGasPrice    = 0
-		outboundGasLimit    = 0
-		outboundBlockHeight = 0
-	)
+	// There's no sequential block height. Also, different txs might end up in different shards.
+	// tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height, thus zero.
+	const tonBlockHeight = 0
 
 	var (
 		chainID       = ob.Chain().ChainId
+		txHash        = liteapi.TransactionToHashString(outboundRes.tx.Transaction)
 		nonce         = cctx.GetCurrentOutboundParam().TssNonce
 		signerAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 		coinType      = cctx.InboundParams.CoinType
 	)
 
-	msg := cc.NewMsgVoteOutbound(
+	gasPrice, ok := ob.getLatestGasPrice()
+
+	// should not happen
+	if !ok {
+		return errors.New("gas price is not set (call PostGasPrice first)")
+	}
+
+	// #nosec G115 len always in range
+	gasPriceInt := math.NewInt(int64(gasPrice))
+
+	msg := cctypes.NewMsgVoteOutbound(
 		signerAddress.String(),
 		cctx.Index,
 		txHash,
-		outboundBlockHeight,
-		outboundGasUsed,
-		math.NewInt(outboundGasPrice),
-		outboundGasLimit,
+		tonBlockHeight,
+		outboundRes.tx.GasUsed().Uint64(),
+		gasPriceInt,
+		maxGasLimit,
 		w.Amount,
-		status,
+		outboundRes.receiveStatus,
 		chainID,
 		nonce,
 		coinType,
-		cc.ConfirmationMode_SAFE,
+		cctypes.ConfirmationMode_SAFE,
 	)
 
-	const gasLimit = gasconst.PostVoteOutboundGasLimit
+	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
 	var retryGasLimit uint64
 	if msg.Status == chains.ReceiveStatus_failed {
-		retryGasLimit = gasconst.PostVoteOutboundRevertGasLimit
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
 	log := ob.Logger().Outbound.With().
-		Uint64("outbound.nonce", nonce).
-		Str("outbound.outbound_tx_hash", txHash).
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txHash).
 		Logger()
 
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
-	if err != nil {
-		log.Error().Err(err).Msg("PostVoteOutbound: error posting vote")
-		return err
-	}
 
-	if zetaTxHash != "" {
+	switch {
+	case err != nil:
+		log.Error().Err(err).Msg("PostVoteOutbound: failed to post vote")
+		return err
+	case zetaTxHash != "":
 		log.Info().
 			Str("outbound.vote_tx_hash", zetaTxHash).
 			Str("outbound.ballot_id", ballot).

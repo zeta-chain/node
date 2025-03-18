@@ -254,7 +254,7 @@ func (ob *Observer) voteDeposit(
 		eventIndex    = 0 // not a smart contract call
 		coinType      = coin.CoinType_Gas
 		asset         = "" // empty for gas coin
-		gasLimit      = 0
+		gasLimit      = maxGasLimit
 		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
 	)
 
