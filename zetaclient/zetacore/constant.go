@@ -28,7 +28,7 @@ const (
 	PostVoteInboundCallOptionsGasLimit uint64 = 1_500_000
 
 	// AddOutboundTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
-	AddOutboundTrackerGasLimit = 200_000
+	AddOutboundTrackerGasLimit = 400_000
 
 	// PostBlameDataGasLimit is the gas limit for voting on blames
 	PostBlameDataGasLimit = 200_000
