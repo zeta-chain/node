@@ -122,7 +122,7 @@ func (k msgServer) VoteOutbound(
 	}
 
 	// Fund the gas stability pool with the remaining funds.
-	k.FundStabilityPool(ctx, &cctx)
+	k.ManageUnusedGasFee(ctx, &cctx)
 
 	// Validate and process the observed outbound
 	err = k.ValidateOutboundObservers(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
@@ -139,14 +139,14 @@ func (k msgServer) VoteOutbound(
 	return &types.MsgVoteOutboundResponse{}, nil
 }
 
-// FundStabilityPool funds the stability pool with the remaining fees of an outbound tx
+// ManageUnusedGasFee funds the stability pool with the remaining fees of an outbound tx
 // The funds are sent to the gas stability pool associated with the receiver chain
-// This wraps the FundGasStabilityPoolFromRemainingFees function and logs an error if it fails.We do not return an error here.
+// This wraps the UseRemaingGasFee function and logs an error if it fails.We do not return an error here.
 // Event if the funding fails, the outbound tx is still processed.
 
-func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
+func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// Fund the gas stability pool with the remaining funds
-	if err := k.FundGasStabilityPoolFromRemainingFees(ctx,
+	if err := k.UseRemaingGasFee(ctx,
 		*cctx.GetCurrentOutboundParam(),
 		cctx.GetCurrentOutboundParam().ReceiverChainId,
 		cctx.InboundParams.SenderChainId,
@@ -156,8 +156,8 @@ func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
 	}
 }
 
-// FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
-func (k Keeper) FundGasStabilityPoolFromRemainingFees(
+// UseRemaingGasFee funds the gas stability pool with the remaining fees of an outbound tx
+func (k Keeper) UseRemaingGasFee(
 	ctx sdk.Context,
 	OutboundParams types.OutboundParams,
 	receiverChainID int64,
@@ -168,7 +168,10 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
 	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
 
-	userGasFeePaid := OutboundParams.UserGasFeePaid
+	userGasFeePaid := math.ZeroUint()
+	if !OutboundParams.UserGasFeePaid.IsNil() {
+		userGasFeePaid = OutboundParams.UserGasFeePaid
+	}
 
 	// The final fee paid is greater than what the user paid originally.The stability pool would cover the extra cost in this case.
 	if outboundTxFeePaid.GTE(userGasFeePaid) {

@@ -120,6 +120,19 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         false,
 		},
 		{
+			name:                          "no calls if user fee paid is nil (old cctx)",
+			receiverChainID:               42,
+			senderChainID:                 1, // non-zEVM chain
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			outboundTxActualGasUsed:       100,
+			outboundTxActualGasPrice:      math.NewInt(10),
+			userGasFeePaid:                math.NewUint(900), // Less than 100*10=1000
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+			expectIsZetaChainCall:         false,
+		},
+		{
 			name:                     "chain params not found returns error",
 			receiverChainID:          42,
 			senderChainID:            1, // non-zEVM chain
@@ -371,7 +384,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			}
 
 			// Call the function
-			err := k.FundGasStabilityPoolFromRemainingFees(
+			err := k.UseRemaingGasFee(
 				ctx,
 				outbound,
 				tc.receiverChainID,
