@@ -119,9 +119,13 @@ func Test_SignRBFTx(t *testing.T) {
 			errMsg:       "NewCPFPFeeBumper failed",
 		},
 		{
-			name:     "should return error if live rate is too high",
-			chain:    chains.BitcoinMainnet,
-			lastTx:   btcutil.NewTx(msgTx.Copy()),
+			name:  "should return error if unable to bump tx fee",
+			chain: chains.BitcoinMainnet,
+			lastTx: func() *btcutil.Tx {
+				txCopy := msgTx.Copy()
+				txCopy.TxOut = txCopy.TxOut[:2] // remove reserved bump fees to cause error
+				return btcutil.NewTx(txCopy)
+			}(),
 			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
 			liveRate: 99,                         // 99 sat/vB is much higher than ccxt rate
 			memplTxsInfo: newMempoolTxsInfo(

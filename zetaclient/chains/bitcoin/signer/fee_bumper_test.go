@@ -72,6 +72,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				TotalFees:   10000,
 				TotalVSize:  1000,
 				AvgFeeRate:  10,
+				Logger:      log.Logger,
 			},
 		},
 		{
@@ -143,18 +144,19 @@ func Test_BumpTxFee(t *testing.T) {
 			feeBumper: &signer.CPFPFeeBumper{
 				Tx:          btcutil.NewTx(msgTx),
 				MinRelayFee: 0.00001,
-				CCTXRate:    57,
-				LiveRate:    60,
+				CCTXRate:    55,
+				LiveRate:    67,
 				TotalFees:   27213,
 				TotalVSize:  579,
 				AvgFeeRate:  47,
+				Logger:      log.Logger,
 			},
-			additionalFees:  5790,
-			expectedNewRate: 57,
+			additionalFees:  4632, // 579*55 - 27213
+			expectedNewRate: 55,
 			expectedNewTx: func() *wire.MsgTx {
 				// deduct additional fees
 				newTx := signer.CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut[2].Value -= 5790
+				newTx.TxOut[2].Value -= 4632
 				return newTx
 			}(),
 		},
@@ -164,18 +166,19 @@ func Test_BumpTxFee(t *testing.T) {
 				Tx: func() *btcutil.Tx {
 					// modify reserved bump fees to barely cover bump fees
 					newTx := msgTx.Copy()
-					newTx.TxOut[2].Value = 5790 + constant.BTCWithdrawalDustAmount - 1
+					newTx.TxOut[2].Value = 57*579 - 27213 + constant.BTCWithdrawalDustAmount - 1 // 6789
 					return btcutil.NewTx(newTx)
 				}(),
 				MinRelayFee: 0.00001,
 				CCTXRate:    57,
-				LiveRate:    60,
+				LiveRate:    67,
 				TotalFees:   27213,
 				TotalVSize:  579,
 				AvgFeeRate:  47,
+				Logger:      log.Logger,
 			},
-			additionalFees:  5790 + constant.BTCWithdrawalDustAmount - 1, // 6789
-			expectedNewRate: 59,                                          // (27213 + 6789) / 579 ≈ 59
+			additionalFees:  6789, // same as the reserved value in 2nd output
+			expectedNewRate: 59,   // (27213 + 6789) / 579 ≈ 59
 			expectedNewTx: func() *wire.MsgTx {
 				// give up all reserved bump fees
 				newTx := signer.CopyMsgTxNoWitness(msgTx)
@@ -184,7 +187,7 @@ func Test_BumpTxFee(t *testing.T) {
 			}(),
 		},
 		{
-			name: "should cap new gas rate to 'gasRateCap'",
+			name: "should set new gas rate to 'gasRateCap'",
 			feeBumper: &signer.CPFPFeeBumper{
 				Tx:          btcutil.NewTx(msgTx),
 				MinRelayFee: 0.00001,
@@ -193,6 +196,7 @@ func Test_BumpTxFee(t *testing.T) {
 				TotalFees:   27213,
 				TotalVSize:  579,
 				AvgFeeRate:  47,
+				Logger:      log.Logger,
 			},
 			additionalFees:  30687, // (100-47)*579
 			expectedNewRate: 100,
@@ -216,25 +220,6 @@ func Test_BumpTxFee(t *testing.T) {
 			errMsg: "original tx has no reserved bump fees",
 		},
 		{
-			name: "should hold on RBF if CCTX rate is lower than minimum bumpeed rate",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:         btcutil.NewTx(msgTx),
-				CCTXRate:   55, // 56 < 47 * 120%
-				AvgFeeRate: 47,
-			},
-			errMsg: "lower than the min bumped rate",
-		},
-		{
-			name: "should hold on RBF if live rate is much higher than CCTX rate",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:         btcutil.NewTx(msgTx),
-				CCTXRate:   57,
-				LiveRate:   70, // 70 > 57 * 120%
-				AvgFeeRate: 47,
-			},
-			errMsg: "much higher than the cctx rate",
-		},
-		{
 			name: "should hold on RBF if additional fees is lower than min relay fees",
 			feeBumper: &signer.CPFPFeeBumper{
 				Tx:          btcutil.NewTx(msgTx),
@@ -244,6 +229,7 @@ func Test_BumpTxFee(t *testing.T) {
 				TotalFees:   2895,
 				TotalVSize:  579,
 				AvgFeeRate:  5,
+				Logger:      log.Logger,
 			},
 			errMsg: "lower than min relay fees",
 		},
@@ -294,6 +280,7 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 				TotalFees:  10000,
 				TotalVSize: 1000,
 				AvgFeeRate: 10,
+				Logger:     log.Logger,
 			},
 		},
 		{
@@ -339,10 +326,11 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 
 			// ACT
 			bumper := &signer.CPFPFeeBumper{
-				RPC: client,
-				Tx:  tt.tx,
+				RPC:    client,
+				Tx:     tt.tx,
+				Logger: log.Logger,
 			}
-			err := bumper.FetchFeeBumpInfo(log.Logger)
+			err := bumper.FetchFeeBumpInfo()
 
 			// ASSERT
 			if tt.errMsg != "" {

@@ -24,10 +24,10 @@ const (
 	// see: https://mempool.space/graphs/mempool#3y
 	feeRateCap = 100
 
-	// minCPFPFeeBumpPercent is the minimum percentage by which the CPFP average fee rate should be bumped.
-	// This value 20% is a heuristic, not mandated by the Bitcoin protocol, designed to balance effectiveness
-	// in replacing stuck transactions while avoiding excessive sensitivity to fee market fluctuations.
-	minCPFPFeeBumpPercent = 20
+	// decentFeeBumpPercent is a decent percentage for a fee rate bump.
+	// The value20% is a heuristic, not mandated by the Bitcoin protocol. It is used to measure the gap between
+	// the old fee rate, new fee rate and live fee rate to emit warning messages during RBF fee bumping.
+	decentFeeBumpPercent = 20
 )
 
 // CPFPFeeBumper is a helper struct to contain CPFP (child-pays-for-parent) fee bumping logic
@@ -62,6 +62,8 @@ type CPFPFeeBumper struct {
 
 	// AvgFeeRate is the average fee rate of all stuck TSS txs
 	AvgFeeRate int64
+
+	Logger zerolog.Logger
 }
 
 // NewCPFPFeeBumper creates a new CPFPFeeBumper
@@ -81,9 +83,10 @@ func NewCPFPFeeBumper(
 		Tx:          tx,
 		MinRelayFee: minRelayFee,
 		CCTXRate:    cctxRate,
+		Logger:      logger,
 	}
 
-	err := fb.FetchFeeBumpInfo(logger)
+	err := fb.FetchFeeBumpInfo()
 	if err != nil {
 		return nil, err
 	}
@@ -98,34 +101,28 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 		return nil, 0, 0, errors.New("original tx has no reserved bump fees")
 	}
 
-	// tx replacement is triggered only when market fee rate goes 20% higher than current paid rate.
-	// zetacore updates the cctx fee rate evey 10 minutes, we could hold on and retry later.
-	minBumpRate := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, minCPFPFeeBumpPercent)
-	if b.CCTXRate < minBumpRate {
-		return nil, 0, 0, fmt.Errorf(
-			"hold on RBF: cctx rate %d is lower than the min bumped rate %d",
-			b.CCTXRate,
-			minBumpRate,
-		)
+	// the new fee rate is supposed to be much higher than current paid rate (old rate).
+	// we print a warning message if it's not the case for monitoring purposes.
+	oldRateBumped := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, decentFeeBumpPercent)
+	if b.CCTXRate < oldRateBumped {
+		b.Logger.Warn().
+			Int64("old_fee_rate", b.AvgFeeRate).
+			Int64("new_fee_rate", b.CCTXRate).
+			Msg("new fee rate is not much higher than the old fee rate")
 	}
 
-	// the live rate may continue increasing during network congestion, we should wait until it stabilizes a bit.
-	// this is to ensure the live rate is not 20%+ higher than the cctx rate, otherwise, the replacement tx may
-	// also get stuck and need another replacement.
-	bumpedRate := mathpkg.IncreaseIntByPercent(b.CCTXRate, minCPFPFeeBumpPercent)
-	if b.LiveRate > bumpedRate {
-		return nil, 0, 0, fmt.Errorf(
-			"hold on RBF: live rate %d is much higher than the cctx rate %d",
-			b.LiveRate,
-			b.CCTXRate,
-		)
+	// the live rate may continue increasing during network congestion, and the new fee rate is still not high enough.
+	// but we should still continue with the tx replacement because zetacore had already bumped the fee rate.
+	newRateBumped := mathpkg.IncreaseIntByPercent(b.CCTXRate, decentFeeBumpPercent)
+	if b.LiveRate > newRateBumped {
+		b.Logger.Warn().
+			Int64("new_fee_rate", b.CCTXRate).
+			Int64("live_fee_rate", b.LiveRate).
+			Msg("live fee rate is still much higher than the new fee rate")
 	}
 
 	// cap the fee rate to avoid excessive fees
-	feeRateNew := b.CCTXRate
-	if b.CCTXRate > feeRateCap {
-		feeRateNew = feeRateCap
-	}
+	feeRateNew := min(b.CCTXRate, feeRateCap)
 
 	// calculate minmimum relay fees of the new replacement tx
 	// the new tx will have almost same size as the old one because the tx body stays the same
@@ -165,7 +162,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
-func (b *CPFPFeeBumper) FetchFeeBumpInfo(logger zerolog.Logger) error {
+func (b *CPFPFeeBumper) FetchFeeBumpInfo() error {
 	// query live fee rate
 	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1)
 	if err != nil {
@@ -191,8 +188,13 @@ func (b *CPFPFeeBumper) FetchFeeBumpInfo(logger zerolog.Logger) error {
 	b.TotalFees = totalFeesSats
 	b.TotalVSize = totalVSize
 	b.AvgFeeRate = avgFeeRate
-	logger.Info().
-		Msgf("totalTxs %d, totalFees %f, totalVSize %d, avgFeeRate %d", totalTxs, totalFees, totalVSize, avgFeeRate)
+
+	b.Logger.Info().
+		Int64("total_txs", totalTxs).
+		Int64("total_fees", totalFeesSats).
+		Int64("total_vsize", totalVSize).
+		Int64("avg_fee_rate", avgFeeRate).
+		Msg("fetched fee bump information")
 
 	return nil
 }
