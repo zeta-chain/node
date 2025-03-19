@@ -7,7 +7,12 @@
 * [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
+* [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
+
+### Refactor
+
+* [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 
 ### Fixes
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
@@ -16,6 +21,10 @@
 ### Tests
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
+
+### Refactor
+
+* [3700](https://github.com/zeta-chain/node/pull/3700) - use sender and senderEVM in cross-chain call message context
 
 ## v29.0.0
 

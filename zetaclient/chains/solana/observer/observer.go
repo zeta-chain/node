@@ -7,11 +7,11 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	zetasolrpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer is the observer for the Solana chain
@@ -85,16 +85,12 @@ func (ob *Observer) IsTxFinalized(nonce uint64) bool {
 
 // CheckRPCStatus checks the RPC status of the Solana chain
 func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
-	// Solana privnet doesn't have RPC 'GetHealth', need to differentiate
-	privnet := ob.Chain().NetworkType == chains.NetworkType_privnet
-
-	// check the RPC status
-	blockTime, err := zetasolrpc.CheckRPCStatus(ctx, ob.solClient, privnet)
+	blockTime, err := zetasolrpc.HealthCheck(ctx, ob.solClient)
 	if err != nil {
 		return errors.Wrap(err, "unable to check rpc status")
 	}
 
-	ob.ReportBlockLatency(blockTime)
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
 
 	return nil
 }
