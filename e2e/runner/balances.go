@@ -209,6 +209,13 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 		r.Logger.Print("* SUI: %s", signer.Address())
 	}
 
+	tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+	if err != nil {
+		r.Logger.Print("Error getting TON address: %s", err.Error())
+	} else {
+		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToRaw())
+	}
+
 	// zevm
 	r.Logger.Print("ZetaChain:")
 	r.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
