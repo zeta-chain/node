@@ -135,10 +135,12 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	if outTxGasFee.GT(inputAmount) {
 		return cosmoserrors.Wrap(
 			types.ErrNotEnoughGas,
-			fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
+			fmt.Sprintf(
+				"unable to pay for outbound tx using gas token, outbound chain: %d, required: %s, available: %s",
+				chainID,
 				outTxGasFee,
 				inputAmount,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
 	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", inputAmount.String(), "fee", outTxGasFee.String())
@@ -228,10 +230,12 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if sdkmath.NewUintFromBigInt(feeInZRC20).GT(inputAmount) {
 		return cosmoserrors.Wrap(
 			types.ErrNotEnoughGas,
-			fmt.Sprintf("feeInZRC20(%s) more than available gas for tx (%s) | Identifiers : %s ",
-				feeInZRC20,
+			fmt.Sprintf(
+				"unable to pay for outbound tx using zrc20 token, outbound chain: %d, required: %s, available: %s",
+				chainID,
+				outTxGasFee,
 				inputAmount,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
 	newAmount := inputAmount.Sub(sdkmath.NewUintFromBigInt(feeInZRC20))
@@ -355,9 +359,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	gasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return cosmoserrors.Wrapf(types.ErrUnableToGetGasPrice,
-			"chain %d; identifiers %q",
+			"chain %d",
 			chainID,
-			cctx.LogIdentifierForCCTX(),
 		)
 	}
 	// overpays gas price
@@ -386,14 +389,17 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapV2RouterGetZetaAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(sdkmath.NewUintFromBigInt(outTxGasFeeInZeta))
+
 	// reduce the amount of the outbound tx
 	if feeInZeta.GT(zetaBurnt) {
 		return cosmoserrors.Wrap(
-			types.ErrNotEnoughZetaBurnt,
-			fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
-				feeInZeta,
+			types.ErrNotEnoughGas,
+			fmt.Sprintf(
+				"unable to pay for outbound tx using zeta token, outbound chain: %d, required: %s, available: %s",
+				chainID,
+				outTxGasFee,
 				zetaBurnt,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
 	ctx.Logger().Info("Subtracting amount from inbound tx",

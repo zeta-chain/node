@@ -14,9 +14,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
-	"gitlab.com/thorchain/tss/go-tss/blame"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/blame"
+	thorcommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/keysign"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observertypes "github.com/zeta-chain/node/x/observer/types"

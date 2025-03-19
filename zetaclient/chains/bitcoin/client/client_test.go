@@ -53,11 +53,8 @@ func TestClientLive(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t, mainnetConfig)
 
-		tssAddress, err := chains.DecodeBtcAddress(testutils.TSSAddressBTCMainnet, ts.chain.ChainId)
-		require.NoError(t, err)
-
 		// ACT
-		_, err = ts.Healthcheck(ts.ctx, tssAddress)
+		_, err := ts.Healthcheck(ts.ctx)
 
 		// ASSERT
 		require.NoError(t, err)

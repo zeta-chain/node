@@ -90,7 +90,7 @@ func (c *Client) IsTxConfirmed(ctx context.Context, txHash string, confirmations
 	return blocksConfirmed >= confirmations, nil
 }
 
-// HealthCheck asserts RPC health. Returns the latest block time in UTC.
+// HealthCheck returns the latest block time in UTC.
 func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
 	// query latest block header
 	header, err := c.HeaderByNumber(ctx, nil)

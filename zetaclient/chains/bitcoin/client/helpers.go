@@ -189,9 +189,8 @@ func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *types.
 	return fee, feeRate, nil
 }
 
-// Healthcheck / checks the RPC status of the bitcoin chain. Returns the latest block timestamp
-func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error) {
-	// 1. Query latest block header
+// Healthcheck returns the latest block timestamp
+func (c *Client) Healthcheck(ctx context.Context) (time.Time, error) {
 	bn, err := c.GetBlockCount(ctx)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "unable to get block count")
@@ -205,15 +204,6 @@ func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (t
 	header, err := c.GetBlockHeader(ctx, hash)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "unable to get block header")
-	}
-
-	// 2. Query utxos owned by TSS address
-	res, err := c.ListUnspentMinMaxAddresses(ctx, 0, 1000000, []btcutil.Address{tssAddress})
-	switch {
-	case err != nil:
-		return time.Time{}, errors.Wrap(err, "unable to list TSS UTXOs")
-	case len(res) == 0:
-		return time.Time{}, errors.New("no UTXOs found for TSS")
 	}
 
 	return header.Timestamp, nil

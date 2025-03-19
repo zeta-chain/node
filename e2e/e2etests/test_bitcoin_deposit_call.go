@@ -41,5 +41,10 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check if example contract has been called, 'bar' value should be set to amount
 	amountSats, err := common.GetSatoshis(amount)
 	require.NoError(r, err)
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amountSats))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(amountSats),
+		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+	)
 }
