@@ -16,23 +16,23 @@ import (
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
 type AccountBalances struct {
-	ZetaETH       *big.Int
-	ZetaZETA      *big.Int
-	ZetaWZETA     *big.Int
-	ZetaERC20     *big.Int
-	ZetaBTC       *big.Int
-	ZetaSOL       *big.Int
-	ZetaSPL       *big.Int
-	ZetaSui       *big.Int
-	ZetaSuiToken  *big.Int
-	EvmETH        *big.Int
-	EvmZETA       *big.Int
-	EvmERC20      *big.Int
-	BtcBTC        string
-	SolSOL        *big.Int
-	SolSPL        *big.Int
-	SuiSUI        uint64
-	SuiToken      uint64
+	ZetaETH      *big.Int
+	ZetaZETA     *big.Int
+	ZetaWZETA    *big.Int
+	ZetaERC20    *big.Int
+	ZetaBTC      *big.Int
+	ZetaSOL      *big.Int
+	ZetaSPL      *big.Int
+	ZetaSui      *big.Int
+	ZetaSuiToken *big.Int
+	EvmETH       *big.Int
+	EvmZETA      *big.Int
+	EvmERC20     *big.Int
+	BtcBTC       string
+	SolSOL       *big.Int
+	SolSPL       *big.Int
+	SuiSUI       uint64
+	SuiToken     uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
