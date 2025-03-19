@@ -170,7 +170,7 @@ func (am AppModule) BeginBlock(c context.Context) error {
 
 	// iterate and update gas price for cctx that are pending for too long
 	// error is logged in the function
-	am.keeper.IterateAndUpdateCctxGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCctxGasPrice)
+	am.keeper.IterateAndUpdateCCTXGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCCTXGasPrice)
 
 	return nil
 }

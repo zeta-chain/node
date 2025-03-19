@@ -8,6 +8,7 @@
 * [3671](https://github.com/zeta-chain/node/pull/3671) - use gas budget argument to refund TSS for Sui withdraw cost
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
+* [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 
 ### Refactor

@@ -60,4 +60,5 @@ var (
 	ErrUnableToSetOutboundInfo     = errorsmod.Register(ModuleName, 1159, "unable to set outbound info")
 	ErrCCTXAlreadyFinalized        = errorsmod.Register(ModuleName, 1160, "cctx already finalized")
 	ErrUnableToParseCCTXIndexBytes = errorsmod.Register(ModuleName, 1161, "unable to parse cctx index bytes")
+	ErrInvalidPriorityFee          = errorsmod.Register(ModuleName, 1162, "invalid priority fee")
 )
