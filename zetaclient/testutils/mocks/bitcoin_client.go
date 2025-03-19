@@ -776,9 +776,9 @@ func (_m *BitcoinClient) GetTransactionFeeAndRate(ctx context.Context, tx *btcjs
 	return r0, r1, r2
 }
 
-// Healthcheck provides a mock function with given fields: ctx, tssAddress
-func (_m *BitcoinClient) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error) {
-	ret := _m.Called(ctx, tssAddress)
+// Healthcheck provides a mock function with given fields: ctx
+func (_m *BitcoinClient) Healthcheck(ctx context.Context) (time.Time, error) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Healthcheck")
@@ -786,17 +786,17 @@ func (_m *BitcoinClient) Healthcheck(ctx context.Context, tssAddress btcutil.Add
 
 	var r0 time.Time
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, btcutil.Address) (time.Time, error)); ok {
-		return rf(ctx, tssAddress)
+	if rf, ok := ret.Get(0).(func(context.Context) (time.Time, error)); ok {
+		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, btcutil.Address) time.Time); ok {
-		r0 = rf(ctx, tssAddress)
+	if rf, ok := ret.Get(0).(func(context.Context) time.Time); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(time.Time)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, btcutil.Address) error); ok {
-		r1 = rf(ctx, tssAddress)
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

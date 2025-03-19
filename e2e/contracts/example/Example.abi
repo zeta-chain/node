@@ -64,17 +64,30 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "lastSender",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
           {
             "internalType": "bytes",
-            "name": "origin",
+            "name": "sender",
             "type": "bytes"
           },
           {
             "internalType": "address",
-            "name": "sender",
+            "name": "senderEVM",
             "type": "address"
           },
           {
@@ -114,12 +127,12 @@
         "components": [
           {
             "internalType": "bytes",
-            "name": "origin",
+            "name": "sender",
             "type": "bytes"
           },
           {
             "internalType": "address",
-            "name": "sender",
+            "name": "senderEVM",
             "type": "address"
           },
           {

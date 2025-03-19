@@ -18,10 +18,11 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 type RPC interface {
-	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+	Healthcheck(ctx context.Context) (time.Time, error)
 
 	GetBlockCount(ctx context.Context) (int64, error)
 	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)
@@ -257,6 +258,22 @@ func (ob *Observer) GetBroadcastedTx(nonce uint64) (string, bool) {
 	outboundID := ob.OutboundID(nonce)
 	txHash, found := ob.broadcastedTx[outboundID]
 	return txHash, found
+}
+
+// CheckRPCStatus checks the RPC status of the Bitcoin chain
+func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
+	if !ob.isNodeEnabled() {
+		return nil
+	}
+
+	blockTime, err := ob.rpc.Healthcheck(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to check rpc health")
+	}
+
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
+
+	return nil
 }
 
 func (ob *Observer) isNodeEnabled() bool {

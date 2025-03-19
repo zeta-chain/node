@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // Observer Sui observer
@@ -64,7 +65,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	}
 
 	// It's not a "real" block latency as Sui uses concept of "checkpoints"
-	ob.ReportBlockLatency(blockTime)
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
 
 	return nil
 }

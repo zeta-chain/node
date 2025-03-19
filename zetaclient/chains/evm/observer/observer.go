@@ -235,8 +235,7 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 		return errors.Wrap(err, "unable to check rpc health")
 	}
 
-	ob.ReportBlockLatency(blockTime)
-	ob.Logger().Chain.Info().Msg("CheckRPCStatus succeed")
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
 
 	return nil
 }

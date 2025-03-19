@@ -6,13 +6,14 @@ contract Example {
     error Foo();
 
     struct zContext {
-        bytes origin;
-        address sender;
+        bytes sender;
+        address senderEVM;
         uint256 chainID;
     }
 
     uint256 public bar;
     bytes public lastMessage;
+    bytes public lastSender;
 
     constructor() {
         bar = 0;
@@ -51,5 +52,6 @@ contract Example {
     ) public {
         bar = amount;
         lastMessage = message;
+        lastSender = context.sender;
     }
 }
