@@ -116,6 +116,17 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:   "invalid fee rate",
 		},
 		{
+			name: "invalid gas priority fee",
+			cctx: sample.CrossChainTx(t, "0x123"),
+			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
+				cctx.InboundParams.CoinType = coin.CoinType_Gas
+				cctx.GetCurrentOutboundParam().GasPrice = "8"
+				cctx.GetCurrentOutboundParam().GasPriorityFee = "0" // invalid value
+			},
+			expected: nil,
+			errMsg:   "invalid gas priority fee",
+		},
+		{
 			name: "zero fee rate",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {

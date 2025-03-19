@@ -79,8 +79,12 @@ func NewOutboundData(
 		feeRateBumped bool
 		feeRateLatest int64
 	)
-	gasPriorityFee, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-	if err == nil && gasPriorityFee > 0 {
+	if params.GasPriorityFee != "" {
+		gasPriorityFee, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+		if err != nil || gasPriorityFee <= 0 {
+			return nil, fmt.Errorf("invalid gas priority fee %s", params.GasPriorityFee)
+		}
+
 		feeRateBumped = true
 		feeRateLatest = gasPriorityFee
 		logger.Info().Str("latest_fee_rate", params.GasPriorityFee).Msg("fee rate is bumped by zetacore")
