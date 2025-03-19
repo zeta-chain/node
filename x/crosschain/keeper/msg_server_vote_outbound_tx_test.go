@@ -137,7 +137,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			isError:                       true,
 		},
 		{
-			name:                     "non-zEVM chain sends all remaining fees to stability pool",
+			name:                     "non-zEVM chain sends 100% of 95% remaining fees to stability pool",
 			receiverChainID:          42,
 			senderChainID:            1, // non-zEVM chain
 			senderZEVMAddress:        "0x1234567890123456789012345678901234567890",
@@ -146,14 +146,16 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
-			stabilityPoolPercentage:         40, // Ignored for non-zEVM, uses 100% instead
-			chainParamsFound:                true,
-			fundStabilityPoolReturn:         nil,
-			expectGetChainParamsCall:        true,
-			expectFundStabilityPoolCall:     true,
-			expectRefundRemainingFeesCall:   false,
-			expectIsZetaChainCall:           true,
-			fundStabilityPoolExpectedAmount: big.NewInt(950), // 100% of 950
+			stabilityPoolPercentage:       40, // For non-zEVM, fixed at 100% regardless of this value
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: false,
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				902,
+			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
 		},
 		{
 			name:                     "fund stability pool error returns error",
@@ -165,15 +167,17 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
-			stabilityPoolPercentage:         40, // Ignored for non-zEVM, uses 100% instead
-			chainParamsFound:                true,
-			fundStabilityPoolReturn:         errors.New("fund stability pool error"),
-			expectGetChainParamsCall:        true,
-			expectFundStabilityPoolCall:     true,
-			expectRefundRemainingFeesCall:   false,
-			expectIsZetaChainCall:           true,
-			fundStabilityPoolExpectedAmount: big.NewInt(950), // 100% of 950
-			isError:                         true,
+			stabilityPoolPercentage:       40, // For non-zEVM, fixed at 100% regardless of this value
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       errors.New("fund stability pool error"),
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: false,
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				902,
+			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
+			isError: true,
 		},
 		{
 			name:                     "refund error returns error for zEVM sender",
@@ -185,16 +189,18 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
-			stabilityPoolPercentage:            40, // Used for zEVM chains
-			chainParamsFound:                   true,
-			fundStabilityPoolReturn:            nil,
-			refundRemainingFeesReturn:          errors.New("refund error"),
-			expectGetChainParamsCall:           true,
-			expectFundStabilityPoolCall:        true,
-			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
-			fundStabilityPoolExpectedAmount:    big.NewInt(380), // 40% of 950 = 380
-			refundRemainingFeesExpectedAmount:  big.NewInt(570), // 950 - 380 = 570
+			stabilityPoolPercentage:       40, // Used for zEVM chains
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			refundRemainingFeesReturn:     errors.New("refund error"),
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: true,
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				360,
+			), // First take 95% of 950 = 902, then 40% of that = 360 (integer division)
+			refundRemainingFeesExpectedAmount:  big.NewInt(542), // 902 - 360 = 542
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 			isError:                            true,
 		},
@@ -208,20 +214,22 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
-			stabilityPoolPercentage:            40, // Used for zEVM chains
-			chainParamsFound:                   true,
-			fundStabilityPoolReturn:            nil,
-			refundRemainingFeesReturn:          nil,
-			expectGetChainParamsCall:           true,
-			expectFundStabilityPoolCall:        true,
-			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
-			fundStabilityPoolExpectedAmount:    big.NewInt(380), // 40% of 950 = 380
-			refundRemainingFeesExpectedAmount:  big.NewInt(570), // 950 - 380 = 570
+			stabilityPoolPercentage:       40, // Used for zEVM chains
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			refundRemainingFeesReturn:     nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: true,
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				360,
+			), // First take 95% of 950 = 902, then 40% of that = 360 (integer division)
+			refundRemainingFeesExpectedAmount:  big.NewInt(542), // 902 - 360 = 542
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
 		{
-			name:                     "no refund for invalid hex address - send all to stability pool",
+			name:                     "no refund for invalid hex address - send 100% of 95% to stability pool",
 			receiverChainID:          42,
 			senderZEVMAddress:        "not-a-hex-address",
 			senderChainID:            7000, // zEVM chain
@@ -230,14 +238,16 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
-			stabilityPoolPercentage:         40, // Ignored because address is invalid, uses 100% instead
-			chainParamsFound:                true,
-			fundStabilityPoolReturn:         nil,
-			expectGetChainParamsCall:        true,
-			expectFundStabilityPoolCall:     true,
-			expectRefundRemainingFeesCall:   false, // No refund for invalid hex address
-			expectIsZetaChainCall:           true,
-			fundStabilityPoolExpectedAmount: big.NewInt(950), // 100% of 950 goes to stability pool
+			stabilityPoolPercentage:       40, // Ignored because address is invalid, uses 100% instead
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: false, // No refund for invalid hex address
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				902,
+			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
 		},
 		{
 			name:                     "zero stability pool percentage sends 0% to pool, 100% to refund",
@@ -249,15 +259,17 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 50*10=500, remainingFees = 1000-500=500
-			stabilityPoolPercentage:            0,
-			chainParamsFound:                   true,
-			fundStabilityPoolReturn:            nil,
-			refundRemainingFeesReturn:          nil,
-			expectGetChainParamsCall:           true,
-			expectFundStabilityPoolCall:        false, // No call when amount is zero
-			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
-			refundRemainingFeesExpectedAmount:  big.NewInt(500), // 500 - 0 = 500
+			stabilityPoolPercentage:       0,
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			refundRemainingFeesReturn:     nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   false, // No call when amount is zero
+			expectRefundRemainingFeesCall: true,
+			expectIsZetaChainCall:         true,
+			refundRemainingFeesExpectedAmount: big.NewInt(
+				475,
+			), // First take 95% of 500 = 475 (integer division), then 0% to pool, 100% to refund
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
 		{
@@ -270,14 +282,16 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				1000,
 			), // gasUsed*effectiveGasPrice = 50*10=500, remainingFees = 1000-500=500
-			stabilityPoolPercentage:         100,
-			chainParamsFound:                true,
-			fundStabilityPoolReturn:         nil,
-			expectGetChainParamsCall:        true,
-			expectFundStabilityPoolCall:     true,
-			expectRefundRemainingFeesCall:   false, // No refund because refundAmount is 0
-			expectIsZetaChainCall:           true,
-			fundStabilityPoolExpectedAmount: big.NewInt(500), // 100% of 500 = 500
+			stabilityPoolPercentage:       100,
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: false, // No refund because refundAmount is 0
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				475,
+			), // First take 95% of 500 = 475 (integer division), then 100% of that to pool
 		},
 		{
 			name:                     "exact fees calculation with different values",
@@ -289,16 +303,18 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			userGasFeePaid: math.NewUint(
 				2000,
 			), // gasUsed*effectiveGasPrice = 200*5=1000, remainingFees = 2000-1000=1000
-			stabilityPoolPercentage:            30,
-			chainParamsFound:                   true,
-			fundStabilityPoolReturn:            nil,
-			refundRemainingFeesReturn:          nil,
-			expectGetChainParamsCall:           true,
-			expectFundStabilityPoolCall:        true,
-			expectRefundRemainingFeesCall:      true,
-			expectIsZetaChainCall:              true,
-			fundStabilityPoolExpectedAmount:    big.NewInt(300), // 30% of 1000 = 300
-			refundRemainingFeesExpectedAmount:  big.NewInt(700), // 1000 - 300 = 700
+			stabilityPoolPercentage:       30,
+			chainParamsFound:              true,
+			fundStabilityPoolReturn:       nil,
+			refundRemainingFeesReturn:     nil,
+			expectGetChainParamsCall:      true,
+			expectFundStabilityPoolCall:   true,
+			expectRefundRemainingFeesCall: true,
+			expectIsZetaChainCall:         true,
+			fundStabilityPoolExpectedAmount: big.NewInt(
+				285,
+			), // First take 95% of 1000 = 950 (integer division), then 30% of that = 285
+			refundRemainingFeesExpectedAmount:  big.NewInt(665), // 950 - 285 = 665
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0xabcdef0123456789abcdef0123456789abcdef01"),
 		},
 	}

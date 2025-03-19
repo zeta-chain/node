@@ -438,7 +438,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 				// process logs to process cctx events initiated during the contract call
 				if err = k.ProcessLogs(tmpCtx, logs, to, txOrigin); err != nil {
 					// this happens if the cctx events are not processed correctly with invalid withdrawals
-					// in this situation we want the CCTX to be reverted, we don't commit the state so the contract call is not persisted
+					// in this situation we want the CCTX to be reverted, we don't commit the state, so the contract call is not persisted
 					// the contract call is considered as reverted
 					return errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
 				}

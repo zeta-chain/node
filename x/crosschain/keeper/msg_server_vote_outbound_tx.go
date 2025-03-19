@@ -175,7 +175,12 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 		return nil
 	}
 
-	remainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
+	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
+	remainingFees := PercentOf(totalRemainingFees, types.RemainingFeesToStabilityPoolPercentage)
+
+	if !remainingFees.GT(math.ZeroUint()) {
+		return nil
+	}
 
 	chainParams, found := k.GetObserverKeeper().GetChainParamsByChainID(ctx, receiverChainID)
 	if !found {
