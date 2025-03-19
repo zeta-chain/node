@@ -184,7 +184,7 @@ func (k Keeper) UseRemainingGasFee(
 	}
 
 	totalRemainingFees := userGasFeePaid.Sub(outboundTxFeePaid)
-	remainingFees := PercentOf(totalRemainingFees, types.RemainingFeesToStabilityPoolPercentage)
+	remainingFees := PercentOf(totalRemainingFees, types.UsableRemainingFeesPercentage)
 
 	if !remainingFees.GT(math.ZeroUint()) {
 		return nil

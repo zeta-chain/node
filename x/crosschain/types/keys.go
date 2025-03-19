@@ -29,7 +29,7 @@ const (
 	CCTXIndexLength          = 66
 	MaxOutboundTrackerHashes = 5
 
-	RemainingFeesToStabilityPoolPercentage = uint64(95)
+	UsableRemainingFeesPercentage = uint64(95)
 )
 
 func GetProtocolFee() math.Uint {

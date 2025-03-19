@@ -43,7 +43,7 @@ func TestPercentOf(t *testing.T) {
 				new(
 					big.Int,
 				).Div(new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(20), nil), big.NewInt(40)), big.NewInt(100)),
-			), // 40% of 10^20
+			),
 		},
 		{
 			name: "fraction that rounds down",
@@ -55,7 +55,7 @@ func TestPercentOf(t *testing.T) {
 				new(
 					big.Int,
 				).Div(new(big.Int).Mul(new(big.Int).Add(new(big.Int).Exp(big.NewInt(10), big.NewInt(16), nil), big.NewInt(9)), big.NewInt(10)), big.NewInt(100)),
-			), // 10% of (10^16 + 9)
+			),
 		},
 		{
 			name:    "large percentage",
@@ -65,7 +65,7 @@ func TestPercentOf(t *testing.T) {
 				new(
 					big.Int,
 				).Div(new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(19), nil), big.NewInt(200)), big.NewInt(100)),
-			), // 200% of 10^19
+			),
 		},
 	}
 
@@ -229,7 +229,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
+			),
 			chainParamsFound:              false,
 			expectGetChainParamsCall:      true,
 			expectFundStabilityPoolCall:   false,
@@ -277,7 +277,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				902,
-			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
+			), //95% of 950 = 902 then 100% of that goes to stability pool
 			isError: true,
 		},
 		{
@@ -289,7 +289,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
+			),
 			stabilityPoolPercentage:       40, // Used for zEVM chains
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -300,7 +300,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				360,
-			), // First take 95% of 950 = 902, then 40% of that = 360 (integer division)
+			), // 95% of 950 = 902, then 40% of that
 			refundRemainingFeesExpectedAmount:  big.NewInt(542), // 902 - 360 = 542
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 			isError:                            true,
@@ -314,7 +314,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
+			),
 			stabilityPoolPercentage:       40, // Used for zEVM chains
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -325,7 +325,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				360,
-			), // First take 95% of 950 = 902, then 40% of that = 360 (integer division)
+			), // 95% of 950 = 902, then 40% of that
 			refundRemainingFeesExpectedAmount:  big.NewInt(542), // 902 - 360 = 542
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
@@ -338,7 +338,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 5*10=50, remainingFees = 1000-50=950
+			),
 			stabilityPoolPercentage:       40, // Ignored because address is invalid, uses 100% instead
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -348,7 +348,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				902,
-			), // First take 95% of 950 = 902 (integer division), then 100% of that goes to stability pool
+			), // 95% of 950 = 902, then 100% of that goes to stability pool
 		},
 		{
 			name:                     "zero stability pool percentage sends 0% to pool, 100% to refund",
@@ -359,7 +359,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 50*10=500, remainingFees = 1000-500=500
+			),
 			stabilityPoolPercentage:       0,
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -370,7 +370,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			refundRemainingFeesExpectedAmount: big.NewInt(
 				475,
-			), // First take 95% of 500 = 475 (integer division), then 0% to pool, 100% to refund
+			), // 95% of 500 = 475, then 0% to pool, 100% to refund
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0x1234567890123456789012345678901234567890"),
 		},
 		{
@@ -382,7 +382,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(10),
 			userGasFeePaid: math.NewUint(
 				1000,
-			), // gasUsed*effectiveGasPrice = 50*10=500, remainingFees = 1000-500=500
+			),
 			stabilityPoolPercentage:       100,
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -392,7 +392,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				475,
-			), // First take 95% of 500 = 475 (integer division), then 100% of that to pool
+			), // 95% of 500 = 475, then 100% of tha
 		},
 		{
 			name:                     "exact fees calculation with different values",
@@ -403,7 +403,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			outboundTxActualGasPrice: math.NewInt(5),
 			userGasFeePaid: math.NewUint(
 				2000,
-			), // gasUsed*effectiveGasPrice = 200*5=1000, remainingFees = 2000-1000=1000
+			),
 			stabilityPoolPercentage:       30,
 			chainParamsFound:              true,
 			fundStabilityPoolReturn:       nil,
@@ -414,7 +414,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         true,
 			fundStabilityPoolExpectedAmount: big.NewInt(
 				285,
-			), // First take 95% of 1000 = 950 (integer division), then 30% of that = 285
+			), // 95% of 1000 = 950, then 30% of that = 285
 			refundRemainingFeesExpectedAmount:  big.NewInt(665), // 950 - 285 = 665
 			refundRemainingFeesExpectedAddress: ethcommon.HexToAddress("0xabcdef0123456789abcdef0123456789abcdef01"),
 		},
@@ -423,19 +423,18 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
 			k, ctx := keepertest.CrosschainKeeperAllMocks(t)
 			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 			observerMock := keepertest.GetCrosschainObserverMock(t, k)
 			authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
 
-			// OutboundParams
 			outbound := types.OutboundParams{
 				GasUsed:           tc.outboundTxActualGasUsed,
 				EffectiveGasPrice: tc.outboundTxActualGasPrice,
 				UserGasFeePaid:    tc.userGasFeePaid,
 			}
 
-			// Set up chain params mock
 			if tc.expectGetChainParamsCall {
 				chainParams := &observertypes.ChainParams{
 					StabilityPoolPercentage: tc.stabilityPoolPercentage,
@@ -445,7 +444,6 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 				).Return(chainParams, tc.chainParamsFound)
 			}
 
-			// Set up IsZetaChain dependencies only if we expect to call it
 			if tc.expectIsZetaChainCall {
 				additionalChainList := []chains.Chain{}
 				authorityMock.On(
@@ -453,14 +451,12 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 				).Return(additionalChainList)
 			}
 
-			// Set up FundGasStabilityPool mock
 			if tc.expectFundStabilityPoolCall {
 				fungibleMock.On(
 					"FundGasStabilityPool", mock.Anything, tc.receiverChainID, tc.fundStabilityPoolExpectedAmount,
 				).Return(tc.fundStabilityPoolReturn)
 			}
 
-			// Set up RefundRemainGasFess mock
 			if tc.expectRefundRemainingFeesCall {
 				fungibleMock.On(
 					"RefundRemainGasFess",
@@ -471,7 +467,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 				).Return(tc.refundRemainingFeesReturn)
 			}
 
-			// Call the function
+			// Act
 			err := k.UseRemainingGasFee(
 				ctx,
 				outbound,
@@ -486,7 +482,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Assert expectations
+			// Assert
 			fungibleMock.AssertExpectations(t)
 			observerMock.AssertExpectations(t)
 			authorityMock.AssertExpectations(t)
