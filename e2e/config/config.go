@@ -437,7 +437,7 @@ func (a Account) PrivateKey() (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(a.RawPrivateKey.String())
 }
 
-// SuiAddress derives the blake2b hash from the private key
+// SuiSigner derives the blake2b hash from the private key
 func (a Account) SuiSigner() (*sui.SignerSecp256k1, error) {
 	privateKeyBytes, err := hex.DecodeString(a.RawPrivateKey.String())
 	if err != nil {
