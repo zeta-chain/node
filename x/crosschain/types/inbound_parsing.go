@@ -212,7 +212,6 @@ func NewWithdrawAndCallInbound(
 	receiverChain chains.Chain,
 	gasLimitQueried *big.Int,
 ) (*MsgVoteInbound, error) {
-
 	senderChain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return nil, errors.Wrapf(err, "ProcessZEVMInboundV2: failed to convert chainID %s", ctx.ChainID())

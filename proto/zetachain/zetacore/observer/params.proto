@@ -41,7 +41,7 @@ message ChainParams {
 
   // Percentage of unused tokens for outbounds that are are sent to the
   // stability pool
-  int64 stability_pool_percentage = 20;
+  uint64 stability_pool_percentage = 20;
 }
 
 // Deprecated(v17)

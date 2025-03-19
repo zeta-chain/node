@@ -128,6 +128,14 @@ export declare class ChainParams extends Message<ChainParams> {
    */
   disableTssBlockScan: boolean;
 
+  /**
+   * Percentage of unused tokens for outbounds that are are sent to the
+   * stability pool
+   *
+   * @generated from field: uint64 stability_pool_percentage = 20;
+   */
+  stabilityPoolPercentage: bigint;
+
   constructor(data?: PartialMessage<ChainParams>);
 
   static readonly runtime: typeof proto3;

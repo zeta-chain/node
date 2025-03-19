@@ -412,6 +412,11 @@ export declare class OutboundParams extends Message<OutboundParams> {
    */
   confirmationMode: ConfirmationMode;
 
+  /**
+   * @generated from field: string user_gas_fee_paid = 26;
+   */
+  userGasFeePaid: string;
+
   constructor(data?: PartialMessage<OutboundParams>);
 
   static readonly runtime: typeof proto3;

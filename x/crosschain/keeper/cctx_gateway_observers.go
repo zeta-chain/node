@@ -51,7 +51,7 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	}
 
 	err = func() error {
-		// If GasFee flag is set during ValidateInbound PayGasAndUpdateCctx should be called
+		// If ShouldPayGas flag is set during ValidateInbound PayGasAndUpdateCctx should be called
 		// which will set GasPrice and Amount. Otherwise, use median gas price and InboundParams amount.
 		if config.ShouldPayGas {
 			err := c.crosschainKeeper.PayGasAndUpdateCctx(
@@ -71,16 +71,15 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 			}
 
 			gasLimit := sdkmath.NewUint(config.CCTX.GetCurrentOutboundParam().CallOptions.GasLimit)
-
 			config.CCTX.GetCurrentOutboundParam().GasPrice = gasPrice.String()
 			config.CCTX.GetCurrentOutboundParam().GasPriorityFee = priorityFee.String()
 			config.CCTX.GetCurrentOutboundParam().Amount = config.CCTX.InboundParams.Amount
 
-			// Calculate the gas fee paid by the user and this to the CCTX
-			// This value does not include the protocol fee paid by the USER, as that should not be included in any calculations for stability pool or refund
+			// Calculate the gas fee paid by the user and add this to the CCTX
+			// This value does not include the protocol fee paid by the user,
+			// as that should not be included in any calculations for stability pool or refund
 			gasFeePaidByUser := gasLimit.Mul(gasPrice)
 			config.CCTX.GetCurrentOutboundParam().UserGasFeePaid = gasFeePaidByUser
-
 		}
 		return c.crosschainKeeper.SetObserverOutboundInfo(tmpCtx, outboundReceiverChainID, config.CCTX)
 	}()
