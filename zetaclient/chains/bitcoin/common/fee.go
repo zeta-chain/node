@@ -14,7 +14,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/zetaclient/common"
+	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 )
 
 const (
@@ -250,7 +250,7 @@ func CalcDepositorFee(
 
 	// apply gas price multiplier
 	// #nosec G115 always in range
-	feeRate = int64(float64(feeRate) * common.BTCOutboundGasPriceMultiplier)
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate), nil
 }

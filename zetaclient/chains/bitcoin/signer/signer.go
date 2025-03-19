@@ -175,7 +175,9 @@ func (signer *Signer) BroadcastOutbound(
 		Str(logs.FieldCctx, cctx.Index).
 		Logger()
 
-	// double check to ensure the tx being replaced is still the last outbound
+	// double check to ensure the tx being replaced is still the last outbound.
+	// when CCTX gets stuck at nonce 'N', the pending nonce will stop incrementing
+	// and stay at 'N' or 'N+1' (at most).
 	if rbfTx && ob.GetPendingNonce() > nonce+1 {
 		logger.Warn().Msgf("RBF tx nonce is outdated, skipping broadcasting")
 		return

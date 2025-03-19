@@ -214,6 +214,7 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 func (ob *Observer) GetLastStuckOutbound() *LastStuckOutbound {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
+
 	return ob.lastStuckTx
 }
 

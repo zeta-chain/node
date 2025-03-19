@@ -12,9 +12,6 @@ const (
 	// BTCOutboundGasPriceMultiplier is the default gas price multiplier for BTC outbond txs
 	BTCOutboundGasPriceMultiplier = 2.0
 
-	// BTCGasPriceMultiplierSendTx is the default gas price multiplier to send out BTC TSS txs
-	BTCGasPriceMultiplierSendTx = 1.5
-
 	// RPCStatusCheckInterval is the interval to check RPC status, 1 minute
 	RPCStatusCheckInterval = time.Minute
 
