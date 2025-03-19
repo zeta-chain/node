@@ -111,6 +111,13 @@ func Test_SignRBFTx(t *testing.T) {
 			}(),
 		},
 		{
+			name:   "should return error if fee rate is not bumped by zetacore yet",
+			chain:  chains.BitcoinMainnet,
+			lastTx: btcutil.NewTx(msgTx.Copy()),
+			txData: mkTxData(t, 0.00001, ""), // empty gas priority fee, not bumped yet
+			errMsg: "fee rate is not bumped by zetacore yet",
+		},
+		{
 			name:         "should return error if unable to create fee bumper",
 			chain:        chains.BitcoinMainnet,
 			lastTx:       btcutil.NewTx(msgTx.Copy()),

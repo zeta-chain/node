@@ -129,7 +129,7 @@ func (signer *Signer) TryProcessOutbound(
 	var (
 		signedTx *wire.MsgTx
 		stuckTx  = observer.GetLastStuckOutbound()
-		rbfTx    = stuckTx != nil && stuckTx.Nonce == txData.nonce && txData.feeRateBumped
+		rbfTx    = stuckTx != nil && stuckTx.Nonce == txData.nonce
 	)
 
 	// sign outbound

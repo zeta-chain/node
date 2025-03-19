@@ -25,14 +25,16 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 		}
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
 
-		// use latest fee rate specified by zetacore
+		isRegnet = signer.rpc.IsRegnet()
 		cctxRate = txData.feeRateLatest
 	)
 
-	// use hardcoded value for regnet E2E test because it takes 40
-	// minutes for zetacore to bump gas rate and we should not wait that long
-	if signer.rpc.IsRegnet() {
+	// 1. for E2E test in regnet, hardcoded fee rate is used as we can't wait 40 minutes for zetacore to bump the fee rate
+	// 2. for testnet and mainnet, we must wait for zetacore to bump the fee rate before signing the RBF tx
+	if isRegnet {
 		cctxRate = client.FeeRateRegnetRBF
+	} else if !txData.feeRateBumped {
+		return nil, errors.New("fee rate is not bumped by zetacore yet, please hold on")
 	}
 
 	// create fee bumper
