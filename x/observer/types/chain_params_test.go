@@ -101,6 +101,13 @@ func TestChainParamsList_Validate(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorContains(t, err, "duplicated chain id")
 	})
+
+	t.Run("should return error if stability pool percentage is greater than 100", func(t *testing.T) {
+		list := types.GetDefaultChainParams()
+		list.ChainParams[0].StabilityPoolPercentage = 101
+		err := list.Validate()
+		require.ErrorIs(t, err, types.ErrParamsStabilityPoolPercentage)
+	})
 }
 
 type UpdateChainParamsSuite struct {

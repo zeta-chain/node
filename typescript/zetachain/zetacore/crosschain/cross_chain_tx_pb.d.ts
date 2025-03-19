@@ -413,6 +413,8 @@ export declare class OutboundParams extends Message<OutboundParams> {
   confirmationMode: ConfirmationMode;
 
   /**
+   * This field tracks the original gas fee paid by the user.
+   *
    * @generated from field: string user_gas_fee_paid = 26;
    */
   userGasFeePaid: string;

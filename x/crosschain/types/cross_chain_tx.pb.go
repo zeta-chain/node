@@ -437,8 +437,9 @@ type OutboundParams struct {
 	TxFinalizationStatus   TxFinalizationStatus  `protobuf:"varint,12,opt,name=tx_finalization_status,json=txFinalizationStatus,proto3,enum=zetachain.zetacore.crosschain.TxFinalizationStatus" json:"tx_finalization_status,omitempty"`
 	CallOptions            *CallOptions          `protobuf:"bytes,24,opt,name=call_options,json=callOptions,proto3" json:"call_options,omitempty"`
 	// confirmation mode used for the outbound
-	ConfirmationMode ConfirmationMode       `protobuf:"varint,25,opt,name=confirmation_mode,json=confirmationMode,proto3,enum=zetachain.zetacore.crosschain.ConfirmationMode" json:"confirmation_mode,omitempty"`
-	UserGasFeePaid   cosmossdk_io_math.Uint `protobuf:"bytes,26,opt,name=user_gas_fee_paid,json=userGasFeePaid,proto3,customtype=cosmossdk.io/math.Uint" json:"user_gas_fee_paid"`
+	ConfirmationMode ConfirmationMode `protobuf:"varint,25,opt,name=confirmation_mode,json=confirmationMode,proto3,enum=zetachain.zetacore.crosschain.ConfirmationMode" json:"confirmation_mode,omitempty"`
+	// This field tracks the original gas fee paid by the user.
+	UserGasFeePaid cosmossdk_io_math.Uint `protobuf:"bytes,26,opt,name=user_gas_fee_paid,json=userGasFeePaid,proto3,customtype=cosmossdk.io/math.Uint" json:"user_gas_fee_paid"`
 }
 
 func (m *OutboundParams) Reset()         { *m = OutboundParams{} }

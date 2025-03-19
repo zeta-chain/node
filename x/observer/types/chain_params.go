@@ -68,7 +68,6 @@ func (cp ChainParams) Validate() error {
 	if chains.IsZetaChain(cp.ChainId, nil) {
 		return nil
 	}
-
 	// validate confirmation counts
 	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
 	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
@@ -148,6 +147,9 @@ func (cp ChainParams) Validate() error {
 		return ErrParamsMinObserverDelegation
 	}
 
+	if cp.StabilityPoolPercentage > 100 {
+		return ErrParamsStabilityPoolPercentage
+	}
 	return nil
 }
 

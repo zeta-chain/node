@@ -76,4 +76,8 @@ var (
 		1141,
 		"minimum version is not a valid semver string",
 	)
+	ErrParamsStabilityPoolPercentage = errorsmod.Register(
+		ModuleName,
+		1142,
+		"stability pool percentage cannot be more than 100")
 )

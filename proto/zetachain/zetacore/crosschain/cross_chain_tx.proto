@@ -124,6 +124,7 @@ message OutboundParams {
   // confirmation mode used for the outbound
   ConfirmationMode confirmation_mode = 25;
 
+  // This field tracks the original gas fee paid by the user.
   string user_gas_fee_paid = 26 [
     (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false

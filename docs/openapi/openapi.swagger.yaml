@@ -57815,6 +57815,7 @@ definitions:
         title: confirmation mode used for the outbound
       userGasFeePaid:
         type: string
+        description: This field tracks the original gas fee paid by the user.
   zetachain.zetacore.crosschain.OutboundTracker:
     type: object
     properties:

@@ -203,14 +203,6 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 
 	stabilityPoolAmount := PercentOf(remainingFees, stabilityPoolPercentage)
 	// Refund the remaining fees to the user
-	// For v2 withdraw: The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
-	// For v1 withdraw
-	//  - ZRC20 withdrawal: The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
-	//  - Zeta withdrawal: We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
-	// For v1 Msg Passing:
-	// - Zeta : We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
-	// - GAS : The fees are paid by burning GASZRC20 tokens of a receiver chain. So we can directly refund the calculated amount to user in the same tokens.
-	// - ERC20 : We use a portion of the amount to buy gas tokens and burn it. We can still refund the user the remaining amount in GAS ZRC20 instead of ZETA.
 	refundAmount := remainingFees.Sub(stabilityPoolAmount)
 	refundAddress := ethcommon.HexToAddress(sender)
 

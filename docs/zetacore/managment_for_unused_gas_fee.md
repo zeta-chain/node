@@ -3,7 +3,7 @@
 ## Overview
 
 This document explains how gas fees are managed when processing outbound transactions on connected chains, particularly focusing on how differences between estimated and actual gas usage are handled.
-THe Gas fee is always paid in the Gas ZRC20 token of the connected chain ,irrespective of coin type.
+The Gas fee is always paid in the Gas ZRC20 token of the connected chain ,irrespective of coin type.
 
 ## Gas Fee Scenarios
 
@@ -25,7 +25,7 @@ For overpayment scenarios, we implement the following refund logic:
 
 ### Fee Tracking
 
-- We track the initial gas fee paid by the user when initiating the transaction
+- We track the initial gas fee paid by the user when initiating the transaction.This does not include the Protocol Fee.
 - When an outbound transaction completes (regardless of status), we calculate the actual fee used:
   ```
   actualFee = receipt.GasUsed * transaction.GasPrice()
