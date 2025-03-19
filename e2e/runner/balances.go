@@ -219,7 +219,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* SOL balance: %s", balances.ZetaSOL.String())
 	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
 	r.Logger.Print("* SUI balance: %s", balances.ZetaSui.String())
-	r.Logger.Print("* SUI token balance: %s", balances.ZetaSuiToken.String())
+	r.Logger.Print("* SUI Token balance: %s", balances.ZetaSuiToken.String())
 
 	// evm
 	r.Logger.Print("EVM:")
