@@ -14810,7 +14810,7 @@ zetacored tx observer update-chain-params [chain-id] [client-params.json] [flags
 Update the gas price increase flags
 
 ```
-zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs] [flags]
+zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterval] [gasPriceIncreasePercent] [gasPriceIncreaseMax] [maxPendingCctxs] [retryIntervalBTC] [flags]
 ```
 
 ### Options
