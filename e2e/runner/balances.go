@@ -23,6 +23,7 @@ type AccountBalances struct {
 	ZetaBTC   *big.Int
 	ZetaSOL   *big.Int
 	ZetaSPL   *big.Int
+	ZetaTON   *big.Int
 	EvmETH    *big.Int
 	EvmZETA   *big.Int
 	EvmERC20  *big.Int
@@ -127,6 +128,9 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		}
 	}
 
+	// TON
+	zetaTON := r.getERC20BalanceSafe(r.TONZRC20, "ton zrc20")
+
 	return AccountBalances{
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
@@ -135,6 +139,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaBTC:   zetaBtc,
 		ZetaSOL:   zetaSol,
 		ZetaSPL:   zetaSPL,
+		ZetaTON:   zetaTON,
 		EvmETH:    evmEth,
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
@@ -205,6 +210,10 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	if balances.SolSPL != nil {
 		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
 	}
+
+	// TON
+	r.Logger.Print("TON:")
+	r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
