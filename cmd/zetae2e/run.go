@@ -21,6 +21,7 @@ import (
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
+const flagFailFast = "fail-fast"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -32,8 +33,9 @@ func NewRunCmd() *cobra.Command {
 		Short: "Run one or more E2E tests with optional arguments",
 		Long: `Run one or more E2E tests specified by their names and optional arguments.
 For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
-		RunE: runE2ETest,
-		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
+		RunE:         runE2ETest,
+		Args:         cobra.MinimumNArgs(1), // Ensures at least one test is provided
+		SilenceUsage: true,
 	}
 
 	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
@@ -46,6 +48,8 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 
 	// Retain the verbose flag
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
+
+	cmd.Flags().Bool(flagFailFast, false, "should a failure in one test cause an immediate halt")
 
 	return cmd
 }
@@ -67,6 +71,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	failFast, err := cmd.Flags().GetBool(flagFailFast)
+	if err != nil {
+		return err
+	}
+
 	// initialize logger
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
@@ -78,6 +87,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	// initialize context
 	ctx, cancel := context.WithCancelCause(context.Background())
 	defer cancel(nil)
+	// if failFast option is not specified, overwrite context cancellation function
+	// so that it is a no-op
+	if !failFast {
+		cancel = func(_ error) {}
+	}
 
 	var runnerOpts []runner.E2ERunnerOption
 
