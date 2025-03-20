@@ -27,7 +27,10 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Given a sender
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
-	require.NoError(r, err)
+	if err != nil {
+		r.Logger.Error("Failed to retrieve TON Wallet: %v", err)
+		require.NoError(r, err)
+	}
 
 	// Given sample EVM address
 	recipient := sample.EthAddress()
