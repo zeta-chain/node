@@ -24,22 +24,22 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
-		r.Logger.Error("Failed to retrieve deposit fee: %v", err)
+		r.Logger.Print("Failed to retrieve deposit fee: %v", err)
 		require.NoError(r, err)
 	}
 
 	// Debugging: Log TON gateway account ID
 	tonAddress := r.TONGateway.String()
 	if tonAddress == "" {
-		r.Logger.Error("TON Gateway Account ID is not set")
+		r.Logger.Print("TON Gateway Account ID is not set")
 	} else {
-		r.Logger.Info("TON Gateway Account ID: %s", tonAddress)
+		r.Logger.Print("TON Gateway Account ID: %s", tonAddress)
 	}
 
 	// Given a sender
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	if err != nil {
-		r.Logger.Error("Failed to retrieve TON Wallet: %v", err)
+		r.Logger.Print("Failed to retrieve TON Wallet: %v", err)
 		require.NoError(r, err)
 	}
 
