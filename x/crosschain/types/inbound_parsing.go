@@ -224,7 +224,7 @@ func NewWithdrawAndCallInbound(
 
 	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
-		event.CallOptions.GasLimit = gasLimitQueried
+		gasLimit = gasLimitQueried.Uint64()
 	}
 
 	return NewMsgVoteInbound(

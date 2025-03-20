@@ -18,6 +18,7 @@ func NewMigrator(keeper Keeper) Migrator {
 	}
 }
 
+// Migrate10to11 migrates from store v10 to v11.
 func (m Migrator) Migrate10to11(ctx sdk.Context) error {
 	return v11.MigrateStore(ctx, m.observerKeeper)
 }

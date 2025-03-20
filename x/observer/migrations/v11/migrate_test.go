@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
-	v10 "github.com/zeta-chain/node/x/observer/migrations/v10"
 	v11 "github.com/zeta-chain/node/x/observer/migrations/v11"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -58,7 +57,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Empty(t, allChainParams.ChainParams)
 
 		// Act
-		err := v10.MigrateStore(ctx, *k)
+		err := v11.MigrateStore(ctx, *k)
 
 		// Assert
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
@@ -86,7 +85,7 @@ func TestMigrateStore(t *testing.T) {
 		require.Equal(t, testChainParams, oldChainParams)
 
 		// Act
-		err := v10.MigrateStore(ctx, *k)
+		err := v11.MigrateStore(ctx, *k)
 
 		// Assert
 		require.ErrorIs(t, err, types.ErrInvalidChainParams)
