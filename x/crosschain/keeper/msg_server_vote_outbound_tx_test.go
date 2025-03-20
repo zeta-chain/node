@@ -221,6 +221,19 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			expectIsZetaChainCall:         false,
 		},
 		{
+			name:                          "no calls if remaining fee rounds down to zero",
+			receiverChainID:               42,
+			senderChainID:                 1, // non-zEVM chain
+			senderZEVMAddress:             "0x1234567890123456789012345678901234567890",
+			outboundTxActualGasUsed:       100,
+			outboundTxActualGasPrice:      math.NewInt(10),
+			userGasFeePaid:                math.NewUint(1001),
+			expectFundStabilityPoolCall:   false,
+			expectRefundRemainingFeesCall: false,
+			expectGetChainParamsCall:      false,
+			expectIsZetaChainCall:         false,
+		},
+		{
 			name:                     "chain params not found returns error",
 			receiverChainID:          42,
 			senderChainID:            1, // non-zEVM chain
