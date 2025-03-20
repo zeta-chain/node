@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -158,10 +159,15 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print tests completion info
-	logger.Print("tests finished successfully in %s", time.Since(testStartTime).String())
+	logger.Print("tests finished in %s", time.Since(testStartTime).String())
 	testRunner.Logger.SetColor(color.FgHiRed)
 	testRunner.Logger.SetColor(color.FgHiGreen)
 	testRunner.PrintTestReports(reports)
+
+	anyTestFailed := lo.ContainsBy(reports, func(r runner.TestReport) bool { return !r.Success })
+	if anyTestFailed {
+		return errors.New("tests failed")
+	}
 
 	return nil
 }

@@ -60,5 +60,8 @@ func (gpf GasPriceIncreaseFlags) Validate() error {
 	if gpf.RetryInterval <= 0 {
 		return errors.New("retry interval must be positive")
 	}
+	if gpf.RetryIntervalBTC <= 0 {
+		return errors.New("retry interval btc must be positive")
+	}
 	return nil
 }

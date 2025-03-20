@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/authz"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -39,6 +40,17 @@ func TestMsgVoteGasPrice_ValidateBasic(t *testing.T) {
 				1,
 			),
 			err: sdkerrors.ErrInvalidChainID,
+		},
+		{
+			name: "invalid priority fee for bitcoin chain",
+			msg: types.NewMsgVoteGasPrice(
+				sample.AccAddress(),
+				chains.BitcoinMainnet.ChainId,
+				1,
+				1,
+				1,
+			),
+			err: types.ErrInvalidPriorityFee,
 		},
 		{
 			name: "valid address",
