@@ -30,6 +30,7 @@ type AccountBalances struct {
 	BtcBTC    string
 	SolSOL    *big.Int
 	SolSPL    *big.Int
+	TonTON    uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -182,6 +183,13 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print(" ---💰 Account info %s ---", r.EVMAddress().Hex())
 
+	_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+	if err != nil {
+		r.Logger.Print("Error getting TON address: %s", err.Error())
+	} else {
+		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToHuman(false, true))
+	}
+
 	// zevm
 	r.Logger.Print("ZetaChain:")
 	r.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
@@ -211,17 +219,14 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 		r.Logger.Print("* SPL balance: %s", balances.SolSPL.String())
 	}
 
-	// TON
-	_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+	// ton
+	r.Logger.Print("TON:")
+	tonBalance, err := tonWallet.GetBalance(r.Ctx)
 	if err != nil {
-		r.Logger.Print("Error getting TON address: %s", err.Error())
-	} else {
-		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToRaw())
+		r.Logger.Print("Error getting TON balance: %s", err.Error())
+		return
 	}
-
-	if balances.ZetaTON != nil {
-		r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
-	}
+	r.Logger.Print("* TON balance: %d", tonBalance)
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
