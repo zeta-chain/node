@@ -15,19 +15,6 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	ctx := r.Ctx
 
-	// Given gateway
-	gw := toncontracts.NewGateway(r.TONGateway)
-
-	// Given amount
-	amount := utils.ParseUint(r, args[0])
-
-	// Given approx deposit fee
-	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
-	if err != nil {
-		r.Logger.Print("Failed to retrieve deposit fee: %v", err)
-		require.NoError(r, err)
-	}
-
 	// Debugging: Log TON gateway account ID
 	tonAddress := r.TONGateway.String()
 	if tonAddress == "" {
@@ -36,12 +23,35 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("TON Gateway Account ID: %s", tonAddress)
 	}
 
+	// Given gateway
+	gw := toncontracts.NewGateway(r.TONGateway)
+
+	// Given amount
+	amount := utils.ParseUint(r, args[0])
+
+	// Debugging: Log amount
+	r.Logger.Print("Deposit amount: %s", amount.String())
+
+	// Given approx deposit fee
+	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
+	if err != nil {
+		r.Logger.Print("Failed to retrieve deposit fee: %v", err)
+		require.NoError(r, err)
+	}
+
+	// Debugging: Log deposit fee
+	r.Logger.Print("Deposit fee: %s", depositFee.String())
+
 	// Given a sender
+	r.Logger.Print("Preparing to call AsTONWallet...")
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	if err != nil {
 		r.Logger.Print("Failed to retrieve TON Wallet: %v", err)
-		require.NoError(r, err)
 	}
+	require.NoError(r, err)
+
+	// Debugging: Log sender address
+	r.Logger.Print("Sender TON address: %s", sender.GetAddress().ToRaw())
 
 	// Given sample EVM address
 	recipient := sample.EthAddress()
