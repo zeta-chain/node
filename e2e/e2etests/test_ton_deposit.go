@@ -23,7 +23,10 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
-	require.NoError(r, err)
+	if err != nil {
+		r.Logger.Error("Failed to retrieve deposit fee: %v", err)
+		require.NoError(r, err)
+	}
 
 	// Given a sender
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
