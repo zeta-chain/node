@@ -510,7 +510,6 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	require.NoError(r, err)
 
 	// withdraw
-	// TODO: gas limit?
 	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(to.String()),
@@ -602,7 +601,6 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	require.NoError(r, err)
 
 	// withdraw
-	// TODO: gas limit?
 	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(to.String()),
