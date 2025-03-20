@@ -58590,6 +58590,9 @@ definitions:
         title: |-
           Maximum number of pending crosschain transactions to check for gas price
           increase
+      retryIntervalBTC:
+        type: string
+        title: Retry interval for Bitcoin chain pending cctx gas price increase
   zetachain.zetacore.observer.Keygen:
     type: object
     properties:

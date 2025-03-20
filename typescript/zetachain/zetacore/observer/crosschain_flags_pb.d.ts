@@ -41,6 +41,13 @@ export declare class GasPriceIncreaseFlags extends Message<GasPriceIncreaseFlags
    */
   maxPendingCctxs: number;
 
+  /**
+   * Retry interval for Bitcoin chain pending cctx gas price increase
+   *
+   * @generated from field: google.protobuf.Duration retryIntervalBTC = 6;
+   */
+  retryIntervalBTC?: Duration;
+
   constructor(data?: PartialMessage<GasPriceIncreaseFlags>);
 
   static readonly runtime: typeof proto3;
