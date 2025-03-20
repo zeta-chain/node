@@ -23,6 +23,7 @@ import (
 const flagVerbose = "verbose"
 const flagConfig = "config"
 const flagFailFast = "fail-fast"
+const flagOpTimeout = "op-timeout"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -51,6 +52,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	cmd.Flags().Bool(flagFailFast, false, "should a failure in one test cause an immediate halt")
+	cmd.Flags().Duration(flagOpTimeout, time.Minute*60, "timeout for single operation (CCTX or get receipt)")
 
 	return cmd
 }
@@ -73,6 +75,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	failFast, err := cmd.Flags().GetBool(flagFailFast)
+	if err != nil {
+		return err
+	}
+
+	timeout, err := cmd.Flags().GetDuration(flagOpTimeout)
 	if err != nil {
 		return err
 	}
@@ -139,9 +146,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	testRunner.BTCDeployerAddress, _ = testRunner.GetBtcAddress()
+
 	// set timeout
-	testRunner.CctxTimeout = 60 * time.Minute
-	testRunner.ReceiptTimeout = 60 * time.Minute
+	testRunner.CctxTimeout = timeout
+	testRunner.ReceiptTimeout = timeout
 
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
