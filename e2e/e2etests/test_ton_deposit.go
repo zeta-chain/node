@@ -28,11 +28,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 		require.NoError(r, err)
 	}
 
-	// Debugging: Log TON account details
-	if r.Account.TONAddress == nil {
-		r.Logger.Error("TON address is nil")
+	// Debugging: Log TON gateway account ID
+	tonAddress := r.TONGateway.String()
+	if tonAddress == "" {
+		r.Logger.Error("TON Gateway Account ID is not set")
 	} else {
-		r.Logger.Info("TON address: %s", r.Account.TONAddress.String())
+		r.Logger.Info("TON Gateway Account ID: %s", tonAddress)
 	}
 
 	// Given a sender
