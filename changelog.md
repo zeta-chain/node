@@ -12,6 +12,7 @@
 ### Refactor
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
+* [3734](https://github.com/zeta-chain/node/pull/3734) - refund a portion of remaining unused tokens to user when a outbound is finalized
 
 ### Fixes
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing

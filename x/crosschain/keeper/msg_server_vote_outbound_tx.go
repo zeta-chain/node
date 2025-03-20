@@ -115,7 +115,6 @@ func (k msgServer) VoteOutbound(
 	// Set the finalized ballot to the current outbound params.
 	cctx.SetOutboundBallotIndex(ballotIndex)
 
-	// If ballot is successful, the value received should be the out tx amount.
 	err = cctx.UpdateCurrentOutbound(ctx, *msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(err, voteOutboundID)

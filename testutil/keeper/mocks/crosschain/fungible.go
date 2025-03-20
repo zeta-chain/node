@@ -630,7 +630,7 @@ func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx typ
 	return r0, r1
 }
 
-// RefundRemainGasFess provides a mock function with given fields: ctx, chainID, amount, receiver
+// RefundRemainingGasFees provides a mock function with given fields: ctx, chainID, amount, receiver
 func (_m *CrosschainFungibleKeeper) RefundRemainingGasFees(ctx types.Context, chainID int64, amount *big.Int, receiver common.Address) error {
 	ret := _m.Called(ctx, chainID, amount, receiver)
 
