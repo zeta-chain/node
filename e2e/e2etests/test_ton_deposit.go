@@ -28,6 +28,13 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 		require.NoError(r, err)
 	}
 
+	// Debugging: Log TON account details
+	if r.Account.TONAddress == nil {
+		r.Logger.Error("TON address is nil")
+	} else {
+		r.Logger.Info("TON address: %s", r.Account.TONAddress.String())
+	}
+
 	// Given a sender
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	if err != nil {
