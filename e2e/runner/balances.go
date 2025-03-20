@@ -216,7 +216,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	if err != nil {
 		r.Logger.Print("Error getting TON address: %s", err.Error())
 	} else {
-		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToAddress().String())
+		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToRaw())
 	}
 }
 
