@@ -145,7 +145,11 @@ func (k msgServer) VoteOutbound(
 func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// If the userGasFeePaid is nil, it means that this cctx was created before the userGasFeePaid was added.
 	if cctx.GetCurrentOutboundParam().UserGasFeePaid.IsNil() {
-		err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutboundParam(), cctx.GetCurrentOutboundParam().ReceiverChainId)
+		err := k.FundGasStabilityPoolFromRemainingFees(
+			ctx,
+			*cctx.GetCurrentOutboundParam(),
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+		)
 		if err != nil {
 			ctx.Logger().
 				Error("%s: CCTX: %s Can't fund the gas stability pool with remaining fees %s", voteOutboundID, cctx.Index, err.Error())
