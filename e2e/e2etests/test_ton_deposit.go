@@ -15,14 +15,6 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	ctx := r.Ctx
 
-	// Debugging: Log TON gateway account ID
-	tonAddress := r.TONGateway.String()
-	if tonAddress == "" {
-		r.Logger.Print("TON Gateway Account ID is not set")
-	} else {
-		r.Logger.Print("TON Gateway Account ID: %s", tonAddress)
-	}
-
 	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
 
