@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -214,6 +215,25 @@ func (c *Client) GetTransaction(
 	}
 
 	return txs[0], nil
+}
+
+// HealthCheck returns the last block time of the TON chain.
+func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
+	mc, err := c.GetMasterchainInfo(ctx)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "failed to get masterchain info")
+	}
+
+	blockID := mc.Last.ToBlockIdExt()
+	block, err := c.GetBlockHeader(ctx, blockID, 0)
+	switch {
+	case err != nil:
+		return time.Time{}, errors.Wrap(err, "failed to get masterchain block header")
+	case block.NotMaster:
+		return time.Time{}, errors.Errorf("block %q is not a master block", blockID.BlockID.String())
+	}
+
+	return time.Unix(int64(block.GenUtime), 0).UTC(), nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction

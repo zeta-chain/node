@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -443,14 +442,6 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	return ballot, nil
-}
-
-// ReportBlockLatency records the latency between the current time
-// an the latest block time for a chain as a metric
-func (ob *Observer) ReportBlockLatency(latestBlockTime time.Time) {
-	elapsedTime := time.Since(latestBlockTime)
-
-	metrics.LatestBlockLatency.WithLabelValues(ob.chain.Name).Set(elapsedTime.Seconds())
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.
