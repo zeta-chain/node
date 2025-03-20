@@ -459,7 +459,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 
 			if tc.expectRefundRemainingFeesCall {
 				fungibleMock.On(
-					"RefundRemainGasFess",
+					"RefundRemainingGasFees",
 					mock.Anything,
 					tc.receiverChainID,
 					tc.refundRemainingFeesExpectedAmount,

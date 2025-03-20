@@ -222,8 +222,6 @@ func NewWithdrawAndCallInbound(
 		return nil, errors.Wrapf(err, "cannot encode address %v", event.Receiver)
 	}
 
-	// TODO : verify if this is correct , we should probably return error here as this means
-	// that the user has not paid any gas fee.
 	gasLimit := event.CallOptions.GasLimit.Uint64()
 	if gasLimit == 0 {
 		event.CallOptions.GasLimit = gasLimitQueried

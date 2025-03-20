@@ -631,11 +631,11 @@ func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx typ
 }
 
 // RefundRemainGasFess provides a mock function with given fields: ctx, chainID, amount, receiver
-func (_m *CrosschainFungibleKeeper) RefundRemainGasFess(ctx types.Context, chainID int64, amount *big.Int, receiver common.Address) error {
+func (_m *CrosschainFungibleKeeper) RefundRemainingGasFees(ctx types.Context, chainID int64, amount *big.Int, receiver common.Address) error {
 	ret := _m.Called(ctx, chainID, amount, receiver)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RefundRemainGasFess")
+		panic("no return value specified for RefundRemainingGasFees")
 	}
 
 	var r0 error

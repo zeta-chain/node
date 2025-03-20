@@ -221,7 +221,7 @@ func (k Keeper) UseRemainingGasFee(
 	}
 
 	if refundAmount.GT(math.ZeroUint()) && refundToUser {
-		if err := k.fungibleKeeper.RefundRemainGasFess(ctx, receiverChainID, refundAmount.BigInt(), refundAddress); err != nil {
+		if err := k.fungibleKeeper.RefundRemainingGasFees(ctx, receiverChainID, refundAmount.BigInt(), refundAddress); err != nil {
 			return err
 		}
 	}
