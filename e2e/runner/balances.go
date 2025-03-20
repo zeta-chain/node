@@ -222,6 +222,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	if balances.ZetaTON != nil {
 		r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 	}
+}
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
 func (r *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
