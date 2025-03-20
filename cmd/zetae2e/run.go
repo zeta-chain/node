@@ -146,6 +146,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	testRunner.BTCDeployerAddress, _ = testRunner.GetBtcAddress()
+
 	// set timeout
 	testRunner.CctxTimeout = timeout
 	testRunner.ReceiptTimeout = timeout
