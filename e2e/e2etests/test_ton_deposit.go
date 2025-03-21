@@ -21,9 +21,6 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
-	// Debugging: Log amount
-	r.Logger.Print("Deposit amount: %s", amount.String())
-
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
