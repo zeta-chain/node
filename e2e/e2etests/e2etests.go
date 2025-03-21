@@ -84,6 +84,7 @@ const (
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
 	TestTONWithdrawName             = "ton_withdraw"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
+	TestWIP                         = "ton_wip"
 
 	/*
 	 Sui tests
