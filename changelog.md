@@ -9,6 +9,7 @@
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
+* [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
 
 ### Refactor
 

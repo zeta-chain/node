@@ -20,7 +20,7 @@ func TestSolanaCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("Example contract deployed at: %s", contractAddr.String())
 
-	// execute the deposit transaction
+	// execute call transaction
 	data := []byte("hello")
 	sig := r.Call(nil, contractAddr, data)
 
