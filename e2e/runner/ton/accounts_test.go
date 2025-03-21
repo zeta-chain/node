@@ -3,7 +3,6 @@ package ton
 import (
 	"context"
 	"encoding/hex"
-	"os"
 	"testing"
 	"time"
 
@@ -13,6 +12,8 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
 	"golang.org/x/crypto/ed25519"
+
+	"github.com/zeta-chain/node/e2e/config"
 )
 
 func TestWalletConstruction(t *testing.T) {
@@ -33,14 +34,14 @@ func TestWalletConstruction(t *testing.T) {
 	require.NotNil(t, w)
 }
 
-func TestWIP(t *testing.T) {
+func TestWIP(t *testing.T, account config.Account) {
 	// ARRANGE
 	// secret from GH (solana_private_key: "${solana_private_key}")
-	b58 := os.Getenv("SOLA_PRIVATE_KEY")
-	require.NotEmpty(t, b58, "SOLA_PRIVATE_KEY env var not set")
+	b58 := account.SolanaPrivateKey
+	require.NotEmpty(t, b58, "SolanaPrivateKey not set/found")
 
 	// Convert to ed25519 private key
-	decoded := base58.Decode(b58)
+	decoded := base58.Decode(string(b58)) // explicity conversion to string
 	pk := ed25519.PrivateKey(decoded)
 
 	// Create a client
