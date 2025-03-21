@@ -67,6 +67,7 @@ const (
 	TestSolanaDepositAndCallName                = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRevertName          = "solana_deposit_and_call_revert"
 	TestSolanaDepositAndCallRevertWithDustName  = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaCallName                          = "solana_call"
 	TestSolanaDepositRestrictedName             = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName            = "solana_withdraw_restricted"
 	TestSPLDepositName                          = "spl_deposit"
@@ -604,6 +605,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1200000"},
 		},
 		TestSolanaDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaCallName,
+		"call a contract",
+		[]runner.ArgDefinition{},
+		TestSolanaCall,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(

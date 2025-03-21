@@ -160,6 +160,7 @@ func FilterInboundEvents(
 	// create event array to collect all events in the transaction
 	seenDeposit := false
 	seenDepositSPL := false
+	seenCall := false
 	events := make([]*clienttypes.InboundEvent, 0)
 
 	// loop through instruction list to filter the 1st valid event
@@ -229,6 +230,33 @@ func FilterInboundEvents(
 			}
 		} else {
 			logger.Warn().Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+		}
+
+		// try parsing the instruction as a 'call' if not seen yet
+		if !seenCall {
+			call, err := solanacontracts.ParseInboundAsCall(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsCall")
+			} else if call != nil {
+				seenCall = true
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID:    senderChainID,
+					Sender:           call.Sender,
+					Receiver:         call.Receiver,
+					TxOrigin:         call.Sender,
+					Amount:           call.Amount,
+					Memo:             call.Memo,
+					BlockNumber:      call.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_NoAssetCall,
+					Asset:            call.Asset,
+					IsCrossChainCall: call.IsCrossChainCall,
+				})
+				logger.Info().Msgf("FilterInboundEvents: call detected in sig %s instruction %d", tx.Signatures[0], i)
+			}
+		} else {
+			logger.Warn().Msgf("FilterInboundEvents: multiple calls detected in sig %s instruction %d", tx.Signatures[0], i)
 		}
 	}
 

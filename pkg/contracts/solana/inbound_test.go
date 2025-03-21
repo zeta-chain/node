@@ -55,7 +55,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// solana e2e user evm account
 	require.NoError(t, err)
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -160,7 +160,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	expectedMsg := []byte("hello lamports")
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
 		Amount:           1200000,
@@ -264,7 +264,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	require.NoError(t, err)
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -369,7 +369,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// example contract deployed during e2e test, read from tx result
 	expectedMsg := []byte("hello spl tokens")
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0xd5Fef042019aFAEe2783092d0502bEc0141f67D1",
 		Amount:           12000000,
