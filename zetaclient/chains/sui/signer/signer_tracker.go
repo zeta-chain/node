@@ -29,7 +29,13 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 	start := time.Now()
 	attempts := 0
 
-	req := models.SuiGetTransactionBlockRequest{Digest: digest}
+	// request tx with effects as we want to see its status
+	req := models.SuiGetTransactionBlockRequest{
+		Digest: digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+		},
+	}
 
 	defer s.ClearBeingReportedFlag(digest)
 
@@ -52,12 +58,17 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 		case err != nil:
 			logger.Error().Err(err).Msg("Failed to get transaction block")
 			continue
-		case res.Checkpoint == "":
-			// should not happen
-			logger.Error().Msg("Checkpoint is empty")
-			continue
-		default:
+		case res.Effects.Status.Status == "failure":
+			// failed outbound should be ignored as it cannot increment the gateway nonce.
+			// Sui transaction status is one of ["success", "failure"]
+			// see: https://github.com/MystenLabs/sui/blob/615516edb0ed55e45d599f042f9570b493ce9643/crates/sui-json-rpc-types/src/sui_transaction.rs#L1345
+			return errors.Errorf("tx failed with error: %s", res.Effects.Status.Error)
+		case res.Effects.Status.Status == "success" && res.Checkpoint != "":
 			return s.postTrackerVote(ctx, nonce, digest)
+		default:
+			// otherwise, hold on until the tx status can be clearly determined.
+			// we prefer missed tracker hash over potentially invalid hash.
+			continue
 		}
 	}
 }

@@ -116,6 +116,38 @@ func TestClientLive(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "0x89c1a321291d15ddae5a086c9abc533dff697fde3d89e0ca836c41af73e36a75", objectID)
 	})
+
+	t.Run("GetTransactionBlock successful tx", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RpcMainnet)
+
+		// ACT
+		res, err := ts.SuiGetTransactionBlock(ts.ctx, models.SuiGetTransactionBlockRequest{
+			Digest:  "4PDngZHNfN79AvgB2VxNZcchDVdhNxNampVjFTFQUmzq",
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		})
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, "success", res.Effects.Status.Status)
+	})
+
+	t.Run("GetTransactionBlock failed tx", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RpcMainnet)
+
+		// ACT
+		res, err := ts.SuiGetTransactionBlock(ts.ctx, models.SuiGetTransactionBlockRequest{
+			Digest:  "DUtYBP2UX4tFkXH1p4TWCCW2wkAbR6qPfvWsK55v5puq",
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		})
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, "failure", res.Effects.Status.Status)
+	})
 }
 
 func TestParseRPCResponse(t *testing.T) {

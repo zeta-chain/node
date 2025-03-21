@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 )
@@ -28,6 +29,15 @@ type Gateway struct {
 	mu sync.RWMutex
 }
 
+// OutboundEventContent is the interface of gateway outbound event content
+type OutboundEventContent interface {
+	// TokenAmount returns the amount of the outbound
+	TokenAmount() math.Uint
+
+	// GatewayNonce returns the nonce of the outbound
+	GatewayNonce() uint64
+}
+
 // SUI is the coin type for SUI, native gas token
 const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
 
@@ -36,6 +46,7 @@ const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
+	NonceIncreaseEvent  EventType = "NonceIncreaseEvent"
 )
 
 const moduleName = "gateway"
@@ -86,11 +97,25 @@ func (e *Event) IsWithdraw() bool {
 	return e.EventType == WithdrawEvent
 }
 
-// Withdrawal extract WithdrawData.
+// Withdrawal extract Withdraw data.
 func (e *Event) Withdrawal() (Withdrawal, error) {
 	v, ok := e.content.(Withdrawal)
 	if !ok {
 		return Withdrawal{}, errors.Errorf("invalid content type %T", e.content)
+	}
+
+	return v, nil
+}
+
+func (e *Event) IsNonceIncrease() bool {
+	return e.EventType == NonceIncreaseEvent
+}
+
+// NonceIncrease extract NonceIncrease data.
+func (e *Event) NonceIncrease() (NonceIncrease, error) {
+	v, ok := e.content.(NonceIncrease)
+	if !ok {
+		return NonceIncrease{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -182,6 +207,8 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		content, err = parseDeposit(event, eventType)
 	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
+	case NonceIncreaseEvent:
+		content, err = parseNonceIncrease(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
@@ -196,6 +223,38 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		EventType:  eventType,
 		content:    content,
 	}, nil
+}
+
+// ParseOutboundEvent parses outbound event from transaction block response.
+func (gw *Gateway) ParseOutboundEvent(
+	res models.SuiTransactionBlockResponse,
+) (event Event, content OutboundEventContent, err error) {
+	if len(res.Events) == 0 {
+		return event, nil, errors.New("missing events")
+	}
+
+	event, err = gw.ParseEvent(res.Events[0])
+	if err != nil {
+		return event, nil, err
+	}
+
+	// filter outbound events
+	switch {
+	case event.IsWithdraw():
+		withdrawal, err := event.Withdrawal()
+		if err != nil {
+			return event, nil, errors.Wrap(err, "unable to extract withdraw event")
+		}
+		return event, withdrawal, nil
+	case event.IsNonceIncrease():
+		nonceIncrease, err := event.NonceIncrease()
+		if err != nil {
+			return event, nil, errors.Wrap(err, "unable to extract nonce increase event")
+		}
+		return event, nonceIncrease, nil
+	default:
+		return event, nil, errors.Errorf("unsupported outbound event type %s", event.EventType)
+	}
 }
 
 // ParseTxWithdrawal a syntax sugar around ParseEvent and Withdrawal.
