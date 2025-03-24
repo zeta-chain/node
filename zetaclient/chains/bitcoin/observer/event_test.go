@@ -169,6 +169,14 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			expectedReceiver: common.HexToAddress("0x5A0110032d07A9cbd57dcCa3e2Cf966c88bC8744"),
 		},
 		{
+			name:    "should return error if no memo is found",
+			chainID: chains.BitcoinTestnet.ChainId,
+			event: &observer.BTCInboundEvent{
+				MemoBytes: []byte("no memo found"),
+			},
+			errMsg: "no memo found in inbound",
+		},
+		{
 			name:    "should do nothing for donation message",
 			chainID: chains.BitcoinTestnet.ChainId,
 			event: &observer.BTCInboundEvent{
