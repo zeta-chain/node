@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/zeta-chain/node/e2e/utils"
@@ -39,8 +40,15 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	errChan := make(chan error)
 	go func() {
 		defer func() {
-			if r := recover(); r != nil {
-				errChan <- fmt.Errorf("panic: %v", r)
+			if recoverVal := recover(); r != nil {
+				switch recoverVal.(type) {
+				case runtime.Error:
+					// this is a probably a nil dereference or divide by zero which we would want to log
+					buf := make([]byte, 4096)
+					n := runtime.Stack(buf, false)
+					r.Logger.Info(string(buf[:n]))
+				}
+				errChan <- fmt.Errorf("panic: %v", recoverVal)
 			}
 			close(errChan)
 		}()
