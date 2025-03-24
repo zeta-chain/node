@@ -11,8 +11,8 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSolanaCall tests calling an example contract
-func TestSolanaCall(r *runner.E2ERunner, args []string) {
+// TestSolanaToZEVMCall tests calling an example contract
+func TestSolanaToZEVMCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	// deploy an example contract in ZEVM
@@ -22,7 +22,7 @@ func TestSolanaCall(r *runner.E2ERunner, args []string) {
 
 	// execute call transaction
 	data := []byte("hello")
-	sig := r.Call(nil, contractAddr, data)
+	sig := r.SOLCall(nil, contractAddr, data)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

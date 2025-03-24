@@ -72,8 +72,8 @@ func (r *E2ERunner) CreateDepositInstruction(
 	}
 }
 
-// CreateCallInstruction creates a 'call' instruction
-func (r *E2ERunner) CreateCallInstruction(
+// CreateSOLCallInstruction creates a 'call' instruction
+func (r *E2ERunner) CreateSOLCallInstruction(
 	signer solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
@@ -467,8 +467,8 @@ func (r *E2ERunner) SOLDepositAndCall(
 	return sig
 }
 
-// Call calls a contract on zevm
-func (r *E2ERunner) Call(
+// SOLCall calls a contract on zevm
+func (r *E2ERunner) SOLCall(
 	signerPrivKey *solana.PrivateKey,
 	receiver ethcommon.Address,
 	data []byte,
@@ -480,7 +480,7 @@ func (r *E2ERunner) Call(
 	}
 
 	// create 'call' instruction
-	instruction := r.CreateCallInstruction(signerPrivKey.PublicKey(), receiver, data)
+	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data)
 
 	// create and sign the transaction
 	limit := computebudget.NewSetComputeUnitLimitInstruction(70000).Build() // 70k compute unit limit

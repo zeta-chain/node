@@ -60,7 +60,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			ob.WithLastBlockScanned(lastSlot)
 		}
 	} else {
-		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
+		ob.Logger().Inbound.Info().
+			Str(logs.FieldMethod, "ObserveInbound").
+			Int("signatures", len(signatures)).
+			Int64(logs.FieldChain, chainID).
+			Msg("got wrong amount of signatures")
 	}
 
 	// loop signature from oldest to latest to filter inbound events
@@ -169,7 +173,10 @@ func FilterInboundEvents(
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
 			logger.Err(err).
-				Msgf("no program found at index %d for sig %s", instruction.ProgramIDIndex, tx.Signatures[0])
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Uint16("index", instruction.ProgramIDIndex).
+				Msg("no program found")
 			continue
 		}
 
@@ -199,10 +206,18 @@ func FilterInboundEvents(
 					Asset:            deposit.Asset,
 					IsCrossChainCall: deposit.IsCrossChainCall,
 				})
-				logger.Info().Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("deposit detected")
 			}
 		} else {
-			logger.Warn().Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple deposits detected")
 		}
 
 		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
@@ -226,10 +241,17 @@ func FilterInboundEvents(
 					Asset:            deposit.Asset,
 					IsCrossChainCall: deposit.IsCrossChainCall,
 				})
-				logger.Info().Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("SPL deposit detected")
 			}
 		} else {
-			logger.Warn().Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple SPL deposits detected")
 		}
 
 		// try parsing the instruction as a 'call' if not seen yet
@@ -253,10 +275,18 @@ func FilterInboundEvents(
 					Asset:            call.Asset,
 					IsCrossChainCall: call.IsCrossChainCall,
 				})
-				logger.Info().Msgf("FilterInboundEvents: call detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("call detected")
 			}
 		} else {
-			logger.Warn().Msgf("FilterInboundEvents: multiple calls detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple calls detected")
 		}
 	}
 
@@ -302,14 +332,14 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
-		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
+		ob.Logger().Inbound.Info().Fields(logFields).Msg("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundCategory: %v", category)
+		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")
 		return false
 	}
 }
