@@ -326,64 +326,8 @@ func (c *Client) CreateRawTransaction(
 	return &msgTx, nil
 }
 
-func (c *Client) SignRawTransactionWithWallet2(
-	ctx context.Context,
-	tx *wire.MsgTx,
-	inputs []types.RawTxWitnessInput,
-) (*wire.MsgTx, bool, error) {
-	if tx == nil {
-		return nil, false, errors.New("tx is nil")
-	}
-
-	// Serialize the transaction and convert to hex string.
-	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
-	if err := tx.Serialize(buf); err != nil {
-		return nil, false, errors.Wrap(err, "unable to serialize tx")
-	}
-
-	txHex := hex.EncodeToString(buf.Bytes())
-
-	cmd := types.NewSignRawTransactionWithWalletCmd(txHex, &inputs, nil)
-
-	out, err := c.sendCommand(ctx, cmd)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "unable to sign raw tx")
-	}
-
-	result, err := unmarshalPtr[types.SignRawTransactionWithWalletResult](out)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "unable to unmarshal sign raw tx result")
-	}
-
-	// Decode the serialized transaction hex to raw bytes.
-	serializedTx, err := hex.DecodeString(result.Hex)
-	if err != nil {
-		return nil, false, err
-	}
-
-	// Deserialize the transaction and return it.
-	var msgTx wire.MsgTx
-	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
-		return nil, false, err
-	}
-
-	return &msgTx, result.Complete, nil
-}
-
 func (c *Client) ImportAddress(ctx context.Context, address string) error {
 	cmd := types.NewImportAddressCmd(address, "", nil)
-
-	_, err := c.sendCommand(ctx, cmd)
-	return err
-}
-
-func (c *Client) ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error {
-	wif := ""
-	if privKeyWIF != nil {
-		wif = privKeyWIF.String()
-	}
-
-	cmd := types.NewImportPrivKeyCmd(wif, &label, &rescan)
 
 	_, err := c.sendCommand(ctx, cmd)
 	return err

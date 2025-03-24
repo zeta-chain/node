@@ -33,14 +33,16 @@ const (
 	BTCRegnetBlockTime = 6 * time.Second
 )
 
-// ListDeployerUTXOs list the deployer's UTXOs
-func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
+// ListUTXOs list the deployer's UTXOs
+func (r *E2ERunner) ListUTXOs() []btcjson.ListUnspentResult {
+	address, _ := r.GetBtcKeypair()
+
 	// query UTXOs from node
 	utxos, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(
 		r.Ctx,
 		1,
 		9999999,
-		[]btcutil.Address{r.BTCDeployerAddress},
+		[]btcutil.Address{address},
 	)
 	require.NoError(r, err)
 
@@ -49,18 +51,16 @@ func (r *E2ERunner) ListDeployerUTXOs() []btcjson.ListUnspentResult {
 		spendableAmount := 0.0
 		spendableUTXOs := []btcjson.ListUnspentResult{}
 		for _, utxo := range utxos {
-			// 'Spendable' indicates whether we have the private keys to spend this output
-			if utxo.Spendable && utxo.Amount >= 1.0 {
+			if utxo.Amount >= 1.0 {
 				spendableAmount += utxo.Amount
 				spendableUTXOs = append(spendableUTXOs, utxo)
 			}
 		}
-		r.Logger.Info("ListUnspent:")
+		r.Logger.Info("ListUnspent(%s):", address.EncodeAddress())
 		r.Logger.Info("  spendableUTXOs: %d", len(spendableUTXOs))
 		r.Logger.Info("  spendableAmount: %f", spendableAmount)
 
 		require.GreaterOrEqual(r, spendableAmount, 1.5, "not enough spendable BTC to run E2E test")
-		require.GreaterOrEqual(r, len(spendableUTXOs), 5, "not enough spendable BTC UTXOs to run E2E test")
 
 		return spendableUTXOs
 	}
@@ -103,8 +103,7 @@ func (r *E2ERunner) DepositBTCWithExactAmount(amount float64, memo *memo.Inbound
 
 // DepositBTCWithAmount deposits 'amount' of BTC to TSS address with the given memo
 func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo) *chainhash.Hash {
-	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 
 	var (
 		err    error
@@ -119,7 +118,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 		memoBytes, err := memo.EncodeToBytes()
 		require.NoError(r, err)
 
-		txHash, err = r.SendToTSSFromDeployerWithMemo(amount, utxos[:1], memoBytes)
+		txHash, err = r.SendToTSSFromWithMemo(amount, utxos[:1], memoBytes)
 		require.NoError(r, err)
 	} else {
 		// the legacy memo layout: [20-byte receiver] + [payload]
@@ -128,7 +127,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 		// encode 20-byte receiver, no payload
 		memoBytes := r.EVMAddress().Bytes()
 
-		txHash, err = r.SendToTSSFromDeployerWithMemo(amount, utxos[:1], memoBytes)
+		txHash, err = r.SendToTSSFromWithMemo(amount, utxos[:1], memoBytes)
 		require.NoError(r, err)
 	}
 	r.Logger.Info("deposited BTC to TSS txHash: %s", txHash.String())
@@ -145,19 +144,18 @@ func (r *E2ERunner) DonateBTC() {
 	}()
 
 	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 
 	r.Logger.Info("Now donating BTC to TSS address...")
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
 	// it also serves as gas fee for the TSS to send BTC to other addresses
-	_, err := r.SendToTSSFromDeployerWithMemo(0.11, utxos[:2], []byte(constant.DonationMessage))
+	_, err := r.SendToTSSFromWithMemo(0.11, utxos, []byte(constant.DonationMessage))
 	require.NoError(r, err)
 }
 
 // DepositBTC deposits BTC from the Bitcoin node wallet into ZEVM address.
-// Note: This function only works for node wallet based deployer account.
 func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	r.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
@@ -165,13 +163,12 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 		r.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
 	}()
 
-	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 	r.Logger.Info("Now depositing BTC to ZEVM address...")
 
 	// send initial BTC to the tester ZEVM address
 	amount := 1.15 + zetabtc.DefaultDepositorFee
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[:1], receiver.Bytes())
+	txHash, err := r.SendToTSSFromWithMemo(amount, utxos[:1], receiver.Bytes())
 	require.NoError(r, err)
 
 	r.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
@@ -190,23 +187,22 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
 }
 
-func (r *E2ERunner) SendToTSSFromDeployerWithMemo(
+func (r *E2ERunner) SendToTSSFromWithMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
-	return r.sendToAddrFromDeployerWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
+	return r.sendToAddrFromWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
 }
 
-func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
+func (r *E2ERunner) sendToAddrFromWithMemo(
 	amount float64,
 	to btcutil.Address,
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
 	btcRPC := r.BtcRPCClient
-	btcDeployerAddress := r.BTCDeployerAddress
-	require.NotNil(r, r.BTCDeployerAddress, "btcDeployerAddress is nil")
+	address, wifKey := r.GetBtcKeypair()
 
 	// prepare inputs
 	inputs := make([]btcjson.TransactionInput, len(inputUTXOs))
@@ -235,12 +231,12 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
 	}
 	amountMap := map[btcutil.Address]btcutil.Amount{
-		to:                 amountSats,
-		btcDeployerAddress: change,
+		to:      amountSats,
+		address: change,
 	}
 
 	// create raw
-	r.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
+	r.Logger.Info("ADDRESS: %s, %s", address.EncodeAddress(), to.EncodeAddress())
 	tx, err := btcRPC.CreateRawTransaction(r.Ctx, inputs, amountMap, nil)
 	require.NoError(r, err)
 
@@ -276,26 +272,38 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 		r.Logger.Info("  PkScript: %x", txout.PkScript)
 	}
 
-	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
-	for i, input := range inputs {
-		inputsForSign[i] = btcjson.RawTxWitnessInput{
-			Txid:         input.Txid,
-			Vout:         input.Vout,
-			Amount:       &amounts[i],
-			ScriptPubKey: scriptPubkeys[i],
-		}
+	// Sign each input
+	for i, utxo := range inputUTXOs {
+		pkScript, err := hex.DecodeString(utxo.ScriptPubKey)
+		require.NoError(r, err)
+
+		satoshis := int64(utxo.Amount * btcutil.SatoshiPerBitcoin)
+		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(pkScript, satoshis)
+
+		// Create witness
+		witnessScript, err := txscript.WitnessSignature(
+			tx,
+			txscript.NewTxSigHashes(tx, prevOutputFetcher),
+			i,
+			int64(utxo.Amount*btcutil.SatoshiPerBitcoin),
+			pkScript,
+			txscript.SigHashAll,
+			wifKey.PrivKey,
+			true,
+		)
+		require.NoError(r, err)
+
+		// For P2WPKH, scriptSig must be empty and signature goes in witness
+		tx.TxIn[i].SignatureScript = nil
+		tx.TxIn[i].Witness = witnessScript
 	}
 
-	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(r.Ctx, tx, inputsForSign)
-	require.NoError(r, err)
-	require.True(r, signed, "btc transaction is not signed")
-
-	txid, err := btcRPC.SendRawTransaction(r.Ctx, stx, true)
+	txid, err := btcRPC.SendRawTransaction(r.Ctx, tx, true)
 	require.NoError(r, err)
 	r.Logger.Info("txid: %+v", txid)
 
 	// mine 1 block to confirm the transaction
-	_, err = r.GenerateToAddressIfLocalBitcoin(1, btcDeployerAddress)
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
 	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
 	require.NoError(r, err)
@@ -324,14 +332,15 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	return txid, nil
 }
 
-// InscribeToTSSFromDeployerWithMemo creates an inscription that is sent to the tss address with the corresponding memo
-func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
+// InscribeToTSSWithMemo creates an inscription that is sent to the tss address with the corresponding memo
+func (r *E2ERunner) InscribeToTSSWithMemo(
 	amount float64,
 	memo []byte,
 	feeRate int64,
 ) (*chainhash.Hash, int64, string) {
-	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
+
+	address, _ := r.GetBtcKeypair()
 
 	// generate commit address
 	builder := NewTapscriptSpender(r.BitcoinParams)
@@ -340,7 +349,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	r.Logger.Info("received inscription commit address: %s", receiver)
 
 	// send funds to the commit address
-	commitTxHash, err := r.sendToAddrFromDeployerWithMemo(amount, receiver, utxos[:1], nil)
+	commitTxHash, err := r.sendToAddrFromWithMemo(amount, receiver, utxos[:1], nil)
 	require.NoError(r, err)
 	r.Logger.Info("obtained inscription commit txn hash: %s", commitTxHash.String())
 
@@ -367,7 +376,7 @@ func (r *E2ERunner) InscribeToTSSFromDeployerWithMemo(
 	r.Logger.Info("reveal txid: %s", txid.String())
 
 	// mine 1 block to confirm the reveal transaction
-	_, err = r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
+	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
 
 	return txid, revealTx.TxOut[0].Value, receiver.EncodeAddress()
@@ -421,7 +430,7 @@ func (r *E2ERunner) QueryOutboundReceiverAndAmount(txid string) (string, int64) 
 // and returns a channel that can be used to stop the mining
 // If the chain is not local, the function does nothing
 func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
-	require.NotNil(r, r.BTCDeployerAddress, "E2ERunner.BTCDeployerAddress is nil")
+	address, _ := r.GetBtcKeypair()
 
 	stopChan := make(chan struct{})
 	go func() {
@@ -430,7 +439,7 @@ func (r *E2ERunner) MineBlocksIfLocalBitcoin() func() {
 			case <-stopChan:
 				return
 			default:
-				_, err := r.GenerateToAddressIfLocalBitcoin(1, r.BTCDeployerAddress)
+				_, err := r.GenerateToAddressIfLocalBitcoin(1, address)
 				require.NoError(r, err)
 
 				time.Sleep(BTCRegnetBlockTime)
