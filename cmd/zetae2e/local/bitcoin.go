@@ -45,6 +45,8 @@ func startBitcoinTests(
 		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 	}
 	bitcoinWithdrawTests := []string{
+		// need initial deposit to fund the withdraws
+		e2etests.TestBitcoinDepositName,
 		e2etests.TestBitcoinWithdrawSegWitName,
 		e2etests.TestBitcoinWithdrawInvalidAddressName,
 		e2etests.TestLegacyZetaWithdrawBTCRevertName,
