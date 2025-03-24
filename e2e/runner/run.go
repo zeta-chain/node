@@ -40,7 +40,7 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	errChan := make(chan error)
 	go func() {
 		defer func() {
-			if recoverVal := recover(); r != nil {
+			if recoverVal := recover(); recoverVal != nil {
 				switch recoverVal.(type) {
 				case runtime.Error:
 					// this is a probably a nil dereference or divide by zero which we would want to log
