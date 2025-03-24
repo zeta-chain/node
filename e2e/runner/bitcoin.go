@@ -244,21 +244,29 @@ func (r *E2ERunner) sendToAddrFromDeployerWithMemo(
 	tx, err := btcRPC.CreateRawTransaction(r.Ctx, inputs, amountMap, nil)
 	require.NoError(r, err)
 
-	// this adds a OP_RETURN + single BYTE len prefix to the data
-	nullData, err := txscript.NullDataScript(memo)
-	require.NoError(r, err)
-	r.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
-	require.NoError(r, err)
-	memoOutput := wire.TxOut{Value: 0, PkScript: nullData}
-	tx.TxOut = append(tx.TxOut, &memoOutput)
-	tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
+	// memo is optional as we also want to test no-memo edge case for revert
+	// this adds an OP_RETURN output with single byte length-delimited data
+	if memo != nil {
+		nullData, err := txscript.NullDataScript(memo)
+		require.NoError(r, err)
+		r.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
+		require.NoError(r, err)
+		memoOutput := wire.TxOut{Value: 0, PkScript: nullData}
+
+		// append the memo as the second output
+		tx.TxOut = append(tx.TxOut, &memoOutput)
+		tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
+	}
 
 	// make sure that TxOut[0] is sent to "to" address; TxOut[2] is change to oneself. TxOut[1] is memo.
 	if !bytes.Equal(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) {
 		r.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
 		r.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
 		r.Logger.Info("swapping txout[0] with txout[2]")
-		tx.TxOut[0], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[0]
+
+		// swap the TxOut[0] and the last output (change)
+		idxChange := len(tx.TxOut) - 1
+		tx.TxOut[0], tx.TxOut[idxChange] = tx.TxOut[idxChange], tx.TxOut[0]
 	}
 
 	r.Logger.Info("raw transaction: \n")
