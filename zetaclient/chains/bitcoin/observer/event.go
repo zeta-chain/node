@@ -85,6 +85,12 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		receiver       ethcommon.Address
 	)
 
+	// skip decoding if no memo is found, returning error to revert the inbound
+	if bytes.Equal(event.MemoBytes, []byte(noMemoFound)) {
+		event.MemoBytes = []byte{}
+		return errors.New("no memo found in inbound")
+	}
+
 	// skip decoding donation tx as it won't go through zetacore
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
 		return nil
