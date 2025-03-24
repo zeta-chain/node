@@ -46,7 +46,7 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 					// this is a probably a nil dereference or divide by zero which we would want to log
 					buf := make([]byte, 4096)
 					n := runtime.Stack(buf, false)
-					r.Logger.Info(string(buf[:n]))
+					r.Logger.Info("panic: %s", string(buf[:n]))
 				}
 				errChan <- fmt.Errorf("panic: %v", recoverVal)
 			}
