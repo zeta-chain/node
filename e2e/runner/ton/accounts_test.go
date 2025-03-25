@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/wallet"
-	"github.com/zeta-chain/node/e2e/config"
 )
 
 func TestWalletConstruction(t *testing.T) {
@@ -26,4 +25,3 @@ func TestWalletConstruction(t *testing.T) {
 	require.NotNil(t, accInit)
 	require.NotNil(t, w)
 }
-
