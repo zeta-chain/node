@@ -229,6 +229,9 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 		return
 	}
 	r.Logger.Print("* TON balance: %d", tonBalance)
+	r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToHuman(false, true))
+	r.Logger.Print("* TON ZRC20: %s", balances.ZetaTON.String())
+	r.Logger.Print("* tonWallet: %s", tonWallet.GetAddress().ToRaw())
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
