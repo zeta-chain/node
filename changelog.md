@@ -72,6 +72,7 @@
 * [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
 * [3622](https://github.com/zeta-chain/node/pull/3622) - allow object for tracerConfig in `debug_traceTransaction` RPC
 * [3634](https://github.com/zeta-chain/node/pull/3634) - return proper synthetic tx in `eth_getBlockByNumber` RPC
+* [3754](https://github.com/zeta-chain/node/pull/3754) - make the Bitcoin deposit to revert when the memo output is missing
 
 ### Tests
 
