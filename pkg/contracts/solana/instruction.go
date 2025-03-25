@@ -109,10 +109,13 @@ type CallInstructionParams struct {
 type RevertOptions struct {
 	// RevertAddress is address to receive revert
 	RevertAddress solana.PublicKey
+
 	// CallOnRevert is flag marking if on_revert hook should be called
 	CallOnRevert bool
+
 	// RevertMessage is arbitrary data sent back in on_revert
 	RevertMessage []byte
+
 	// OnRevertGasLimit is gas limit for revert tx
 	OnRevertGasLimit uint64
 }

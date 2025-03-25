@@ -10,6 +10,7 @@
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
 * [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
+* [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds 
 
 ### Refactor
 
