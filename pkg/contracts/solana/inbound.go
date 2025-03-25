@@ -287,6 +287,59 @@ func ParseInboundAsCall(
 	}, nil
 }
 
+// ParseInboundAsCall tries to parse an instruction as a call.
+// It returns nil if the instruction can't be parsed as a call.
+func ParseInboundAsCall(
+	tx *solana.Transaction,
+	instructionIndex int,
+	slot uint64,
+) (*Inbound, error) {
+	// get instruction by index
+	instruction := tx.Message.Instructions[instructionIndex]
+
+	// try deserializing instruction as a call
+	inst := CallInstructionParams{}
+	err := borsh.Deserialize(&inst, instruction.Data)
+	if err != nil {
+		return nil, nil
+	}
+
+	// check if the instruction is a call or not, if not, skip parsing
+	if inst.Discriminator != DiscriminatorCall {
+		return nil, nil
+	}
+
+	// get the sender address (skip if unable to parse signer address)
+	instructionAccounts, err := instruction.ResolveInstructionAccounts(&tx.Message)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instructionAccounts) != 1 {
+		return nil, fmt.Errorf("want only 1 signer account, got %d", len(instructionAccounts))
+	}
+
+	if !instructionAccounts[0].IsSigner {
+		return nil, fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
+	}
+
+	// parse receiver
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Inbound{
+		Sender:           instructionAccounts[0].PublicKey.String(),
+		Receiver:         receiver,
+		Amount:           0,
+		Memo:             inst.Memo,
+		Slot:             slot,
+		Asset:            "", // no asset for call
+		IsCrossChainCall: true,
+	}, nil
+}
+
 // getSignerDeposit returns the signer address of the deposit instruction
 func getSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) (string, error) {
 	instructionAccounts, err := inst.ResolveInstructionAccounts(&tx.Message)
