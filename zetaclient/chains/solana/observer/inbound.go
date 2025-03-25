@@ -205,6 +205,7 @@ func FilterInboundEvents(
 					CoinType:         coin.CoinType_Gas,
 					Asset:            deposit.Asset,
 					IsCrossChainCall: deposit.IsCrossChainCall,
+					RevertOptions:    deposit.RevertOptions,
 				})
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
@@ -240,6 +241,7 @@ func FilterInboundEvents(
 					CoinType:         coin.CoinType_ERC20,
 					Asset:            deposit.Asset,
 					IsCrossChainCall: deposit.IsCrossChainCall,
+					RevertOptions:    deposit.RevertOptions,
 				})
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
@@ -274,6 +276,7 @@ func FilterInboundEvents(
 					CoinType:         coin.CoinType_NoAssetCall,
 					Asset:            call.Asset,
 					IsCrossChainCall: call.IsCrossChainCall,
+					RevertOptions:    call.RevertOptions,
 				})
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
@@ -300,6 +303,11 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		return nil
 	}
 
+	options := []crosschaintypes.InboundVoteOption{crosschaintypes.WithCrossChainCall(event.IsCrossChainCall)}
+	if event.RevertOptions != nil {
+		options = append(options, crosschaintypes.WithSOLRevertOptions(*event.RevertOptions))
+	}
+
 	// create inbound vote message
 	return crosschaintypes.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -320,7 +328,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		false, // not used
 		crosschaintypes.InboundStatus_SUCCESS,
 		crosschaintypes.ConfirmationMode_SAFE,
-		crosschaintypes.WithCrossChainCall(event.IsCrossChainCall),
+		options...,
 	)
 }
 

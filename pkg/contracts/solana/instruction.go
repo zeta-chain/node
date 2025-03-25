@@ -34,6 +34,9 @@ type DepositInstructionParams struct {
 
 	// Receiver is the receiver for the deposit
 	Receiver [20]byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositAndCallInstructionParams contains the parameters for a gateway deposit_and_call instruction
@@ -49,6 +52,9 @@ type DepositAndCallInstructionParams struct {
 
 	// Memo is the memo for the deposit_and_call
 	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositSPLInstructionParams contains the parameters for a gateway deposit_spl instruction
@@ -61,6 +67,9 @@ type DepositSPLInstructionParams struct {
 
 	// Receiver is the receiver for the deposit_spl
 	Receiver [20]byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositSPLAndCallInstructionParams contains the parameters for a gateway deposit_spl_and_call instruction
@@ -76,6 +85,9 @@ type DepositSPLAndCallInstructionParams struct {
 
 	// Memo is the memo for the deposit_spl_and_call
 	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // CallInstructionParams contains the parameters for a gateway call instruction
@@ -88,6 +100,21 @@ type CallInstructionParams struct {
 
 	// Memo is the memo for the call
 	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
+}
+
+// RevertOptions contains options for reverted txs
+type RevertOptions struct {
+	// RevertAddress is address to receive revert
+	RevertAddress solana.PublicKey
+	// CallOnRevert is flag marking if on_revert hook should be called
+	CallOnRevert bool
+	// RevertMessage is arbitrary data sent back in on_revert
+	RevertMessage []byte
+	// OnRevertGasLimit is gas limit for revert tx
+	OnRevertGasLimit uint64
 }
 
 // OutboundInstruction is the interface for all gateway outbound instructions

@@ -7,6 +7,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/pkg/crypto"
 )
 
@@ -44,6 +45,21 @@ func NewRevertOptionsFromEVM(revertOptions gatewayevm.RevertOptions) RevertOptio
 		RevertAddress:  revertOptions.RevertAddress.Hex(),
 		CallOnRevert:   revertOptions.CallOnRevert,
 		AbortAddress:   revertOptions.AbortAddress.Hex(),
+		RevertMessage:  revertOptions.RevertMessage,
+		RevertGasLimit: revertGasLimit,
+	}
+}
+
+// NewRevertOptionsFromSOL initializes a new RevertOptions from a solana.RevertOptions
+func NewRevertOptionsFromSOL(revertOptions solana.RevertOptions) RevertOptions {
+	revertGasLimit := sdkmath.ZeroUint()
+	if revertOptions.OnRevertGasLimit != 0 {
+		revertGasLimit = sdkmath.Uint(sdkmath.NewIntFromUint64(revertOptions.OnRevertGasLimit))
+	}
+
+	return RevertOptions{
+		RevertAddress:  revertOptions.RevertAddress.String(),
+		CallOnRevert:   revertOptions.CallOnRevert,
 		RevertMessage:  revertOptions.RevertMessage,
 		RevertGasLimit: revertGasLimit,
 	}

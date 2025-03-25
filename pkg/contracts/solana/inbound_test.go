@@ -1,4 +1,4 @@
-package solana
+package solana_test
 
 import (
 	"encoding/json"
@@ -12,6 +12,7 @@ import (
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
+	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
@@ -55,7 +56,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// solana e2e user evm account
 	require.NoError(t, err)
-	expectedDeposit := &Inbound{
+	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -67,7 +68,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -83,14 +84,14 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// try deserializing instruction as a 'deposit'
-		var inst DepositInstructionParams
+		var inst contracts.DepositInstructionParams
 		err = borsh.Deserialize(&inst, instruction.Data)
 		require.NoError(t, err)
 
 		// serialize it back with wrong discriminator
-		data, err := borsh.Serialize(DepositInstructionParams{
+		data, err := borsh.Serialize(contracts.DepositInstructionParams{
 			Amount:        inst.Amount,
-			Discriminator: DiscriminatorDepositSPL,
+			Discriminator: contracts.DiscriminatorDepositSPL,
 			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
@@ -98,7 +99,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		tx.Message.Instructions[0].Data = data
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -116,7 +117,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -134,7 +135,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[1] = 0
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -160,7 +161,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	expectedMsg := []byte("hello lamports")
-	expectedDeposit := &Inbound{
+	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
 		Amount:           1200000,
@@ -172,7 +173,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SOL and call", func(t *testing.T) {
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -188,14 +189,14 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// try deserializing instruction as a 'deposit'
-		var inst DepositInstructionParams
+		var inst contracts.DepositInstructionParams
 		err = borsh.Deserialize(&inst, instruction.Data)
 		require.NoError(t, err)
 
 		// serialize it back with wrong discriminator
-		data, err := borsh.Serialize(DepositInstructionParams{
+		data, err := borsh.Serialize(contracts.DepositInstructionParams{
 			Amount:        inst.Amount,
-			Discriminator: DiscriminatorDepositSPL,
+			Discriminator: contracts.DiscriminatorDepositSPL,
 			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
@@ -203,7 +204,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		tx.Message.Instructions[0].Data = data
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -221,7 +222,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -239,7 +240,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[1] = 0
 
 		// ACT
-		deposit, err := ParseInboundAsDeposit(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -264,7 +265,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	require.NoError(t, err)
-	expectedDeposit := &Inbound{
+	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -276,7 +277,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -292,14 +293,14 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// try deserializing instruction as a 'deposit_spl'
-		var inst DepositSPLInstructionParams
+		var inst contracts.DepositSPLInstructionParams
 		err = borsh.Deserialize(&inst, instruction.Data)
 		require.NoError(t, err)
 
 		// serialize it back with wrong discriminator
-		data, err := borsh.Serialize(DepositInstructionParams{
+		data, err := borsh.Serialize(contracts.DepositInstructionParams{
 			Amount:        inst.Amount,
-			Discriminator: DiscriminatorDeposit,
+			Discriminator: contracts.DiscriminatorDeposit,
 			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
@@ -307,7 +308,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.Instructions[0].Data = data
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -325,7 +326,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -343,7 +344,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[1] = 0
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -369,7 +370,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// example contract deployed during e2e test, read from tx result
 	expectedMsg := []byte("hello spl tokens")
-	expectedDeposit := &Inbound{
+	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0xd5Fef042019aFAEe2783092d0502bEc0141f67D1",
 		Amount:           12000000,
@@ -381,7 +382,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -397,14 +398,14 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		instruction := tx.Message.Instructions[0]
 
 		// try deserializing instruction as a 'deposit_spl'
-		var inst DepositSPLInstructionParams
+		var inst contracts.DepositSPLInstructionParams
 		err = borsh.Deserialize(&inst, instruction.Data)
 		require.NoError(t, err)
 
 		// serialize it back with wrong discriminator
-		data, err := borsh.Serialize(DepositInstructionParams{
+		data, err := borsh.Serialize(contracts.DepositInstructionParams{
 			Amount:        inst.Amount,
-			Discriminator: DiscriminatorDeposit,
+			Discriminator: contracts.DiscriminatorDeposit,
 			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
@@ -412,7 +413,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		tx.Message.Instructions[0].Data = data
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -430,7 +431,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		tx.Message.Instructions[0].Accounts = tx.Message.Instructions[0].Accounts[:len(tx.Message.Instructions[0].Accounts)-1]
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -448,7 +449,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		tx.Message.Instructions[0].Accounts[1] = 0
 
 		// ACT
-		deposit, err := ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -475,7 +476,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	expectedMsg := []byte("hello")
-	expectedCall := &Inbound{
+	expectedCall := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
 		Amount:           0,
@@ -487,7 +488,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 
 	t.Run("should parse inbound event call", func(t *testing.T) {
 		// ACT
-		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -503,13 +504,13 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'call'
-		var inst CallInstructionParams
+		var inst contracts.CallInstructionParams
 		err = borsh.Deserialize(&inst, instruction.Data)
 		require.NoError(t, err)
 
 		// serialize it back with wrong discriminator
-		data, err := borsh.Serialize(CallInstructionParams{
-			Discriminator: DiscriminatorDepositSPL,
+		data, err := borsh.Serialize(contracts.CallInstructionParams{
+			Discriminator: contracts.DiscriminatorDepositSPL,
 			Receiver:      inst.Receiver,
 		})
 		require.NoError(t, err)
@@ -517,7 +518,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		tx.Message.Instructions[instructionIndex].Data = data
 
 		// ACT
-		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -538,7 +539,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		)
 
 		// ACT
-		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
