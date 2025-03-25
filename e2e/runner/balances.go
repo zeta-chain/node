@@ -188,6 +188,8 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 		r.Logger.Print("Error getting TON address: %s", err.Error())
 	} else {
 		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToHuman(false, true))
+		r.Logger.Print("* TON ZRC20: %s", balances.ZetaTON.String())
+		r.Logger.Print("* tonWallet: %s", tonWallet.GetAddress().ToRaw())
 	}
 
 	// zevm
