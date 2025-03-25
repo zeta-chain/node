@@ -262,8 +262,6 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 		return
 	}
 	r.Logger.Print("* TON balance: %d", tonBalance)
-	r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToHuman(false, true))
-	r.Logger.Print("* tonWallet: %s", tonWallet.GetAddress().ToRaw())
 
 }
 
