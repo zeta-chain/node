@@ -119,8 +119,9 @@ func TestGasPriceIncreaseFlags_Validate(t *testing.T) {
 		{
 			name: "invalid epoch length",
 			gpf: types.GasPriceIncreaseFlags{
-				EpochLength:             -1,
+				EpochLength:             0,
 				RetryInterval:           1,
+				RetryIntervalBTC:        1,
 				GasPriceIncreasePercent: 1,
 			},
 			errContains: "epoch length must be positive",
@@ -129,24 +130,28 @@ func TestGasPriceIncreaseFlags_Validate(t *testing.T) {
 			name: "invalid retry interval",
 			gpf: types.GasPriceIncreaseFlags{
 				EpochLength:             1,
-				RetryInterval:           -1,
+				RetryInterval:           0,
+				RetryIntervalBTC:        1,
 				GasPriceIncreasePercent: 1,
 			},
 			errContains: "retry interval must be positive",
+		},
+		{
+			name: "invalid retry interval btc",
+			gpf: types.GasPriceIncreaseFlags{
+				EpochLength:             1,
+				RetryInterval:           1,
+				RetryIntervalBTC:        0,
+				GasPriceIncreasePercent: 1,
+			},
+			errContains: "retry interval btc must be positive",
 		},
 		{
 			name: "valid",
 			gpf: types.GasPriceIncreaseFlags{
 				EpochLength:             1,
 				RetryInterval:           1,
-				GasPriceIncreasePercent: 1,
-			},
-		},
-		{
-			name: "percent can be 0",
-			gpf: types.GasPriceIncreaseFlags{
-				EpochLength:             1,
-				RetryInterval:           1,
+				RetryIntervalBTC:        1,
 				GasPriceIncreasePercent: 0,
 			},
 		},

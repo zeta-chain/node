@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -21,6 +22,8 @@ import (
 
 const flagVerbose = "verbose"
 const flagConfig = "config"
+const flagFailFast = "fail-fast"
+const flagOpTimeout = "op-timeout"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -32,8 +35,9 @@ func NewRunCmd() *cobra.Command {
 		Short: "Run one or more E2E tests with optional arguments",
 		Long: `Run one or more E2E tests specified by their names and optional arguments.
 For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
-		RunE: runE2ETest,
-		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
+		RunE:         runE2ETest,
+		Args:         cobra.MinimumNArgs(1), // Ensures at least one test is provided
+		SilenceUsage: true,
 	}
 
 	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
@@ -46,6 +50,9 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 
 	// Retain the verbose flag
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
+
+	cmd.Flags().Bool(flagFailFast, false, "should a failure in one test cause an immediate halt")
+	cmd.Flags().Duration(flagOpTimeout, time.Minute*60, "timeout for single operation (CCTX or get receipt)")
 
 	return cmd
 }
@@ -67,6 +74,16 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	failFast, err := cmd.Flags().GetBool(flagFailFast)
+	if err != nil {
+		return err
+	}
+
+	timeout, err := cmd.Flags().GetDuration(flagOpTimeout)
+	if err != nil {
+		return err
+	}
+
 	// initialize logger
 	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
@@ -78,6 +95,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	// initialize context
 	ctx, cancel := context.WithCancelCause(context.Background())
 	defer cancel(nil)
+	// if failFast option is not specified, overwrite context cancellation function
+	// so that it is a no-op
+	if !failFast {
+		cancel = func(_ error) {}
+	}
 
 	var runnerOpts []runner.E2ERunnerOption
 
@@ -124,9 +146,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	testRunner.BTCDeployerAddress, _ = testRunner.GetBtcAddress()
+
 	// set timeout
-	testRunner.CctxTimeout = 60 * time.Minute
-	testRunner.ReceiptTimeout = 60 * time.Minute
+	testRunner.CctxTimeout = timeout
+	testRunner.ReceiptTimeout = timeout
 
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
@@ -144,10 +168,15 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print tests completion info
-	logger.Print("tests finished successfully in %s", time.Since(testStartTime).String())
+	logger.Print("tests finished in %s", time.Since(testStartTime).String())
 	testRunner.Logger.SetColor(color.FgHiRed)
 	testRunner.Logger.SetColor(color.FgHiGreen)
 	testRunner.PrintTestReports(reports)
+
+	anyTestFailed := lo.ContainsBy(reports, func(r runner.TestReport) bool { return !r.Success })
+	if anyTestFailed {
+		return errors.New("tests failed")
+	}
 
 	return nil
 }
