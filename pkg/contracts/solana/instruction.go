@@ -117,18 +117,6 @@ type RevertOptions struct {
 	OnRevertGasLimit uint64
 }
 
-// CallInstructionParams contains the parameters for a gateway call instruction
-type CallInstructionParams struct {
-	// Discriminator is the unique identifier for the call instruction
-	Discriminator [8]byte
-
-	// Receiver is the receiver for the call
-	Receiver [20]byte
-
-	// Memo is the memo for the call
-	Memo []byte
-}
-
 // OutboundInstruction is the interface for all gateway outbound instructions
 type OutboundInstruction interface {
 	// Signer returns the signer of the instruction
