@@ -110,6 +110,9 @@ type RevertOptions struct {
 	// RevertAddress is address to receive revert
 	RevertAddress solana.PublicKey
 
+	// AbortAddress is address to receive funds if aborted
+	AbortAddress solana.PublicKey
+
 	// CallOnRevert is flag marking if on_revert hook should be called
 	CallOnRevert bool
 

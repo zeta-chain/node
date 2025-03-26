@@ -1771,6 +1771,7 @@
         "Struct containing revert options",
         "# Arguments",
         "* `revert_address` Address to receive revert.",
+        "* `abort_address` Address to receive funds if aborted.",
         "* `call_on_revert` Flag if on_revert hook should be called.",
         "* `revert_message` Arbitrary data sent back in on_revert.",
         "* `on_revert_gas_limit` Gas limit for revert tx."
@@ -1780,6 +1781,10 @@
         "fields": [
           {
             "name": "revert_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "abort_address",
             "type": "pubkey"
           },
           {

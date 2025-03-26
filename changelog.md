@@ -2,6 +2,10 @@
 
 # UNRELEASED
 
+### Breaking Changes
+
+* All Solana inbounds have new optional param `revert_options`. Solana Gateway program must be upgraded after node upgrade.
+
 ### Features
 
 * [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
@@ -10,7 +14,7 @@
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
 * [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
-* [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds 
+* [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
 
 ### Refactor
 

@@ -59,6 +59,7 @@ func NewRevertOptionsFromSOL(revertOptions solana.RevertOptions) RevertOptions {
 
 	return RevertOptions{
 		RevertAddress:  revertOptions.RevertAddress.String(),
+		AbortAddress:   revertOptions.RevertAddress.String(),
 		CallOnRevert:   revertOptions.CallOnRevert,
 		RevertMessage:  revertOptions.RevertMessage,
 		RevertGasLimit: revertGasLimit,
