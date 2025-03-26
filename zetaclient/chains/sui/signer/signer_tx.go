@@ -71,7 +71,7 @@ func (s *Signer) buildWithdrawTx(
 	coinType,
 	gasBudget,
 	withdrawCapID string,
-) (tx models.TxnMetaData, err error) {
+) (models.TxnMetaData, error) {
 	var (
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
@@ -100,15 +100,15 @@ func (s *Signer) buildWithdrawAndCallTx(
 	gasBudget,
 	withdrawCapID,
 	payload string,
-) (tx models.TxnMetaData, err error) {
+) (models.TxnMetaData, error) {
 	// decode and parse the payload to object the on_call arguments
 	payloadBytes, err := hex.DecodeString(payload)
 	if err != nil {
-		return tx, errors.Wrap(err, "unable to decode payload hex bytes")
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
 	typeArguments, objectIDs, message, err := sui.ParseWithdrawAndCallPayload(payloadBytes)
 	if err != nil {
-		return tx, errors.Wrap(err, "unable to parse withdrawAndCall payload")
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
 
 	// Note: logs not formatted in standard, it's a temporary log
@@ -132,7 +132,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	// TODO: build PTB here
 	// https://github.com/zeta-chain/node/issues/3741
 
-	return tx, errors.New("not implemented")
+	return models.TxnMetaData{}, errors.New("not implemented")
 }
 
 // broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
