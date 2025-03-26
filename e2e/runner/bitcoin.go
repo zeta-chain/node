@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -204,20 +203,18 @@ func (r *E2ERunner) sendToAddrFromWithMemo(
 	btcRPC := r.BtcRPCClient
 	address, wifKey := r.GetBtcKeypair()
 
-	// prepare inputs
-	inputs := make([]btcjson.TransactionInput, len(inputUTXOs))
-	inputSats := btcutil.Amount(0)
-	amounts := make([]float64, len(inputUTXOs))
-	scriptPubkeys := make([]string, len(inputUTXOs))
+	// Create a new transaction
+	tx := wire.NewMsgTx(wire.TxVersion)
 
-	for i, utxo := range inputUTXOs {
-		inputs[i] = btcjson.TransactionInput{
-			Txid: utxo.TxID,
-			Vout: utxo.Vout,
-		}
+	// Add inputs
+	inputSats := btcutil.Amount(0)
+	for _, utxo := range inputUTXOs {
+		txHash, err := chainhash.NewHashFromStr(utxo.TxID)
+		require.NoError(r, err)
+		outPoint := wire.NewOutPoint(txHash, utxo.Vout)
+		txIn := wire.NewTxIn(outPoint, nil, nil)
+		tx.AddTxIn(txIn)
 		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
-		amounts[i] = utxo.Amount
-		scriptPubkeys[i] = utxo.ScriptPubKey
 	}
 
 	// use static fee 0.0005 BTC to calculate change
@@ -230,39 +227,27 @@ func (r *E2ERunner) sendToAddrFromWithMemo(
 	if change < 0 {
 		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
 	}
-	amountMap := map[btcutil.Address]btcutil.Amount{
-		to:      amountSats,
-		address: change,
-	}
 
-	// create raw
-	r.Logger.Info("ADDRESS: %s, %s", address.EncodeAddress(), to.EncodeAddress())
-	tx, err := btcRPC.CreateRawTransaction(r.Ctx, inputs, amountMap, nil)
+	// Create output to recipient
+	pkScript, err := txscript.PayToAddrScript(to)
 	require.NoError(r, err)
+	tx.AddTxOut(wire.NewTxOut(int64(amountSats), pkScript))
 
-	// memo is optional as we also want to test no-memo edge case for revert
-	// this adds an OP_RETURN output with single byte length-delimited data
+	// Add change output
+	changePkScript, err := txscript.PayToAddrScript(address)
+	require.NoError(r, err)
+	tx.AddTxOut(wire.NewTxOut(int64(change), changePkScript))
+
+	// Add memo output if provided
 	if memo != nil {
 		nullData, err := txscript.NullDataScript(memo)
 		require.NoError(r, err)
 		r.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
-		require.NoError(r, err)
-		memoOutput := wire.TxOut{Value: 0, PkScript: nullData}
+		memoOutput := wire.NewTxOut(0, nullData)
+		tx.AddTxOut(memoOutput)
 
-		// append the memo as the second output
-		tx.TxOut = append(tx.TxOut, &memoOutput)
+		// Move memo output to second position
 		tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
-	}
-
-	// make sure that TxOut[0] is sent to "to" address; last output is change to oneself.
-	if !bytes.Equal(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) {
-		r.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
-		r.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
-		r.Logger.Info("swapping txout[0] with txout[2]")
-
-		// swap the TxOut[0] and the last output (change)
-		idxChange := len(tx.TxOut) - 1
-		tx.TxOut[0], tx.TxOut[idxChange] = tx.TxOut[idxChange], tx.TxOut[0]
 	}
 
 	r.Logger.Info("raw transaction: \n")
@@ -285,7 +270,7 @@ func (r *E2ERunner) sendToAddrFromWithMemo(
 			tx,
 			txscript.NewTxSigHashes(tx, prevOutputFetcher),
 			i,
-			int64(utxo.Amount*btcutil.SatoshiPerBitcoin),
+			satoshis,
 			pkScript,
 			txscript.SigHashAll,
 			wifKey.PrivKey,
@@ -331,8 +316,6 @@ func (r *E2ERunner) sendToAddrFromWithMemo(
 	}
 	return txid, nil
 }
-
-// InscribeToTSSWithMemo creates an inscription that is sent to the tss address with the corresponding memo
 func (r *E2ERunner) InscribeToTSSWithMemo(
 	amount float64,
 	memo []byte,

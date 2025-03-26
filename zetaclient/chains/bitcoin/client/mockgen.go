@@ -36,13 +36,6 @@ type client interface {
 		res *types.GetTransactionResult,
 	) (types.TxRawResult, error)
 
-	CreateRawTransaction(
-		ctx context.Context,
-		inputs []types.TransactionInput,
-		amounts map[btcutil.Address]btcutil.Amount,
-		lockTime *int64,
-	) (*wire.MsgTx, error)
-
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)

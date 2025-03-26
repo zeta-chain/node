@@ -292,40 +292,6 @@ func (c *Client) GenerateToAddress(
 	return convertedResult, nil
 }
 
-func (c *Client) CreateRawTransaction(
-	ctx context.Context,
-	inputs []types.TransactionInput,
-	amounts map[btcutil.Address]btcutil.Amount,
-	lockTime *int64,
-) (*wire.MsgTx, error) {
-	convertedAmounts := make(map[string]float64, len(amounts))
-	for addr, amount := range amounts {
-		convertedAmounts[addr.String()] = amount.ToBTC()
-	}
-
-	cmd := types.NewCreateRawTransactionCmd(inputs, convertedAmounts, lockTime)
-
-	out, err := c.sendCommand(ctx, cmd)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create raw tx")
-	}
-
-	// Decode the serialized transaction hex to raw bytes.
-	serializedTx, err := unmarshalHex(out)
-	if err != nil {
-		return nil, err
-	}
-
-	// Deserialize the transaction and return it.
-	var msgTx wire.MsgTx
-
-	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
-		return nil, err
-	}
-
-	return &msgTx, nil
-}
-
 func (c *Client) ImportAddress(ctx context.Context, address string) error {
 	cmd := types.NewImportAddressCmd(address, "", nil)
 
