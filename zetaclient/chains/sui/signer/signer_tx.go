@@ -72,7 +72,7 @@ func (s *Signer) buildExecute(
 ) (tx models.TxnMetaData, err error) {
 	var (
 		params    = cctx.GetCurrentOutboundParam()
-		nonce     = strconv.FormatUint(params.TssNonce+1, 10)
+		nonce     = strconv.FormatUint(params.TssNonce, 10)
 		recipient = params.Receiver
 		amount    = params.Amount.String()
 	)
@@ -90,7 +90,6 @@ func (s *Signer) buildExecute(
 	} else {
 		coinType = coinType[0:66] + "::fake::FAKE"
 	}
-	fmt.Printf("fake coinType: %v\n", coinType)
 
 	// get gas budget from CCTX
 	gasBudget, err := gasBudgetFromCCTX(cctx)
@@ -189,6 +188,24 @@ func (s *Signer) broadcastWithCancel(
 	sigCancel *string,
 ) (string, error) {
 	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancel").Logger()
+
+	// sysState, err := s.client.SuiXGetLatestSuiSystemState(ctx)
+	// if err != nil {
+	// 	return "", errors.Wrap(err, "unable to get current epoch")
+	// }
+
+	// reqSim := models.SuiDevInspectTransactionBlockRequest{
+	// 	Sender:   s.TSS().PubKey().AddressSui(),
+	// 	TxBytes:  tx.TxBytes,
+	// 	GasPrice: "1000",
+	// 	Epoch:    sysState.Epoch,
+	// }
+
+	// resSim, err := s.client.SuiDevInspectTransactionBlock(ctx, reqSim)
+	// if err != nil {
+	// 	return "", errors.Wrap(err, "unable to inspect tx")
+	// }
+	// fmt.Printf("simulation result: %v\n", resSim)
 
 	req := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   tx.TxBytes,
