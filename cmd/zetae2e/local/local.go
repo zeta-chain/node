@@ -443,13 +443,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSolanaDepositAndCallRevertName,
 				e2etests.TestSolanaDepositAndCallRevertWithDustName,
 				e2etests.TestSolanaDepositRestrictedName,
+				e2etests.TestSolanaToZEVMCallName,
 				e2etests.TestSolanaWithdrawRestrictedName,
-				// TODO move under admin tests
-				// https://github.com/zeta-chain/node/issues/3085
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
 				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+				// TODO move under admin tests
+				// https://github.com/zeta-chain/node/issues/3085
 				e2etests.TestSolanaWhitelistSPLName,
 			}...)
 		}

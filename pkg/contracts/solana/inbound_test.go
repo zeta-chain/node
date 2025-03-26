@@ -55,7 +55,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// solana e2e user evm account
 	require.NoError(t, err)
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -160,7 +160,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	expectedMsg := []byte("hello lamports")
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
 		Amount:           1200000,
@@ -264,7 +264,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	require.NoError(t, err)
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		Amount:           12000000,
@@ -369,7 +369,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	// example contract deployed during e2e test, read from tx result
 	expectedMsg := []byte("hello spl tokens")
-	expectedDeposit := &Deposit{
+	expectedDeposit := &Inbound{
 		Sender:           sender,
 		Receiver:         "0xd5Fef042019aFAEe2783092d0502bEc0141f67D1",
 		Amount:           12000000,
@@ -453,5 +453,95 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		// ASSERT
 		require.Error(t, err)
 		require.Nil(t, deposit)
+	})
+}
+
+func Test_ParseInboundAsCall(t *testing.T) {
+	// ARRANGE
+	txHash := "25aZyuJnn4vMPYsCyvuGtcWkcV8rVsvH89jkfa8EdGR5ZhDNsWBNimuLnNj8MJwXtdxa43eUdYwqi62PV4RunuHD"
+	chain := chains.SolanaDevnet
+	instructionIndex := 2 // first 2 are compute budget instructions
+
+	txResult := LoadSolanaInboundTxResult(t, txHash)
+	tx, err := txResult.Transaction.GetTransaction()
+	require.NoError(t, err)
+
+	// create observer
+	chainParams := sample.ChainParams(chain.ChainId)
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
+	require.NoError(t, err)
+
+	// expected result
+	// solana e2e deployer account
+	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+	expectedMsg := []byte("hello")
+	expectedCall := &Inbound{
+		Sender:           sender,
+		Receiver:         "0x75A06a8C258739dADfe2352D57973deF9ee7A2ba",
+		Amount:           0,
+		Memo:             expectedMsg,
+		Slot:             txResult.Slot,
+		Asset:            "",
+		IsCrossChainCall: true,
+	}
+
+	t.Run("should parse inbound event call", func(t *testing.T) {
+		// ACT
+		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		require.NoError(t, err)
+
+		// ASSERT
+		require.EqualValues(t, expectedCall, call)
+	})
+
+	t.Run("should skip parsing if wrong discriminator", func(t *testing.T) {
+		// ARRANGE
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[instructionIndex]
+
+		// try deserializing instruction as a 'call'
+		var inst CallInstructionParams
+		err = borsh.Deserialize(&inst, instruction.Data)
+		require.NoError(t, err)
+
+		// serialize it back with wrong discriminator
+		data, err := borsh.Serialize(CallInstructionParams{
+			Discriminator: DiscriminatorDepositSPL,
+			Receiver:      inst.Receiver,
+		})
+		require.NoError(t, err)
+
+		tx.Message.Instructions[instructionIndex].Data = data
+
+		// ACT
+		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Nil(t, call)
+	})
+
+	t.Run("should fail if wrong accounts count", func(t *testing.T) {
+		// ARRANGE
+		txResult := LoadSolanaInboundTxResult(t, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// append one more account to instruction
+		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		tx.Message.Instructions[instructionIndex].Accounts = append(
+			tx.Message.Instructions[instructionIndex].Accounts,
+			1,
+		)
+
+		// ACT
+		call, err := ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Nil(t, call)
 	})
 }
