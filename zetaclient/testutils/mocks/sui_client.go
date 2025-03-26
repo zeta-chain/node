@@ -168,6 +168,34 @@ func (_m *SuiClient) QueryModuleEvents(ctx context.Context, q client.EventQuery)
 	return r0, r1, r2
 }
 
+// SuiDevInspectTransactionBlock provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiDevInspectTransactionBlock(ctx context.Context, req models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiDevInspectTransactionBlock")
+	}
+
+	var r0 models.SuiTransactionBlockResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) models.SuiTransactionBlockResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(models.SuiTransactionBlockResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SuiExecuteTransactionBlock provides a mock function with given fields: ctx, req
 func (_m *SuiClient) SuiExecuteTransactionBlock(ctx context.Context, req models.SuiExecuteTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
 	ret := _m.Called(ctx, req)
@@ -245,6 +273,34 @@ func (_m *SuiClient) SuiGetTransactionBlock(ctx context.Context, req models.SuiG
 
 	if rf, ok := ret.Get(1).(func(context.Context, models.SuiGetTransactionBlockRequest) error); ok {
 		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SuiXGetLatestSuiSystemState provides a mock function with given fields: ctx
+func (_m *SuiClient) SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiXGetLatestSuiSystemState")
+	}
+
+	var r0 models.SuiSystemStateSummary
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (models.SuiSystemStateSummary, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) models.SuiSystemStateSummary); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(models.SuiSystemStateSummary)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -157,7 +157,7 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 }
 
 // SuiDevInspectTransactionBlock manual implementation of ISuiAPI.SuiDevInspectTransactionBlock
-// That uses proper parameters signature (original has a bug in marshaling)
+// Don't use this function at this moment because Sui SDK currently returns deserialization error.
 //
 // @see sui.(*suiReadTransactionImpl).SuiDevInspectTransactionBlock
 // @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock
@@ -170,9 +170,9 @@ func (c *Client) SuiDevInspectTransactionBlock(
 	params := []any{
 		req.Sender,
 		req.TxBytes,
-		any(nil),
-		any(nil),
-		any(nil),
+		any(nil), // gas_price
+		any(nil), // epoch
+		any(nil), // additional_args
 	}
 
 	resRaw, err := c.SuiCall(ctx, method, params...)

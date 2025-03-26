@@ -36,8 +36,8 @@ type OutboundEventContent interface {
 	// TokenAmount returns the amount of the outbound
 	TokenAmount() math.Uint
 
-	// GatewayNonce returns the nonce of the outbound
-	GatewayNonce() uint64
+	// TxNonce returns the nonce of the outbound
+	TxNonce() uint64
 }
 
 // SUI is the coin type for SUI, native gas token

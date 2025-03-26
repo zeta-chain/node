@@ -20,9 +20,11 @@ func (n NonceIncrease) TokenAmount() math.Uint {
 	return math.NewUint(0)
 }
 
-// GatewayNonce returns the nonce of the nonce increase
-func (n NonceIncrease) GatewayNonce() uint64 {
-	return n.Nonce
+// TxNonce returns the nonce of the tx
+// Nonce is the incremented nonce value (CCTX.nonce + 1)
+// see: https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L140
+func (n NonceIncrease) TxNonce() uint64 {
+	return n.Nonce - 1
 }
 
 func parseNonceIncrease(event models.SuiEventResponse, eventType EventType) (NonceIncrease, error) {
@@ -45,6 +47,9 @@ func parseNonceIncrease(event models.SuiEventResponse, eventType EventType) (Non
 	nonce, err := strconv.ParseUint(nonceRaw, 10, 64)
 	if err != nil {
 		return NonceIncrease{}, errors.Wrap(err, "unable to parse nonce")
+	}
+	if nonce <= 0 {
+		return NonceIncrease{}, errors.New("nonce must be positive")
 	}
 
 	return NonceIncrease{

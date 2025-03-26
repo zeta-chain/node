@@ -125,8 +125,33 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	return nil
 }
 
+// signTx signs a tx with TSS and returns a base64 encoded signature.
+func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, nonce uint64) (string, error) {
+	digest, err := sui.Digest(tx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get digest")
+	}
+
+	// send TSS signature request.
+	sig65B, err := s.TSS().Sign(ctx, wrapDigest(digest), zetaHeight, nonce, s.Chain().ChainId)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to sign tx")
+	}
+
+	// serialize signature
+	sig, err := sui.SerializeSignatureECDSA(sig65B, s.TSS().PubKey().AsECDSA())
+	if err != nil {
+		return "", errors.Wrap(err, "unable to serialize tx signature")
+	}
+
+	return sig, nil
+}
+
 // signTxWithCancel signs original tx with an optional cancel tx.
 // Pointers type is used to be flexible and indicate optional cancel tx.
+//
+// Note: this function is not used due to tx simulation issue in Sui SDK,
+// but we can sign both tx and cancel tx in one go once Sui SDK is updated.
 func (s *Signer) signTxWithCancel(
 	ctx context.Context,
 	tx models.TxnMetaData,

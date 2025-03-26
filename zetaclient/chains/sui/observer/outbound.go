@@ -200,7 +200,7 @@ func (ob *Observer) validateOutbound(cctx *cctypes.CrossChainTx, tx models.SuiTr
 	}
 
 	// tx nonce should match CCTX nonce
-	txNonce := content.GatewayNonce()
+	txNonce := content.TxNonce()
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 	if txNonce != nonce {
 		return errors.Errorf("nonce mismatch (tx nonce %d, cctx nonce %d)", txNonce, nonce)

@@ -22,8 +22,8 @@ func (d Withdrawal) TokenAmount() math.Uint {
 	return d.Amount
 }
 
-// GatewayNonce returns the nonce of the withdrawal
-func (d Withdrawal) GatewayNonce() uint64 {
+// TxNonce returns the nonce of the withdrawal
+func (d Withdrawal) TxNonce() uint64 {
 	return d.Nonce
 }
 

@@ -165,12 +165,12 @@ func (s *Signer) buildExecuteWithCancel(
 		txCancel models.TxnMetaData
 	)
 
-	tx, err = s.buildExecute(ctx, cctx)
+	tx, err = s.buildIncreaseNonce(ctx, cctx)
 	if err != nil {
 		return tx, nil, errors.Wrap(err, "unable to build execute tx")
 	}
 
-	txCancel, err = s.buildIncreaseNonce(ctx, cctx)
+	txCancel, err = s.buildWithdraw(ctx, cctx)
 	if err != nil {
 		return tx, nil, errors.Wrap(err, "unable to build increase nonce tx")
 	}
