@@ -91,7 +91,7 @@ type ChainParams struct {
 	// The main thing this disables is transfers directly to the TSS address.
 	DisableTssBlockScan bool `protobuf:"varint,19,opt,name=disable_tss_block_scan,json=disableTssBlockScan,proto3" json:"disable_tss_block_scan,omitempty"`
 	// Percentage of unused tokens for outbounds that are are sent to the
-	// stability pool
+	// stability pool. The value should be between 0 and 100.
 	StabilityPoolPercentage uint64 `protobuf:"varint,20,opt,name=stability_pool_percentage,json=stabilityPoolPercentage,proto3" json:"stability_pool_percentage,omitempty"`
 }
 

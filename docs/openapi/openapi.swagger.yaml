@@ -58520,9 +58520,9 @@ definitions:
       stabilityPoolPercentage:
         type: string
         format: uint64
-        title: |-
+        description: |-
           Percentage of unused tokens for outbounds that are are sent to the
-          stability pool
+          stability pool. The value should be between 0 and 100.
   zetachain.zetacore.observer.ChainParamsList:
     type: object
     properties:

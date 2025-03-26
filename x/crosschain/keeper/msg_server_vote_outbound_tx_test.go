@@ -31,41 +31,27 @@ func TestPercentOf(t *testing.T) {
 	}{
 		{
 			name:           "zero percent",
-			input:          math.NewUintFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)), // 10^18
+			input:          math.NewUintFromString("1000000000000000000"), // 10^18
 			percent:        0,
 			expectedOutput: math.NewUint(0),
 		},
 		{
-			name:    "40 percent",
-			input:   math.NewUintFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(20), nil)), // 10^20
-			percent: 40,
-			expectedOutput: math.NewUintFromBigInt(
-				new(
-					big.Int,
-				).Div(new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(20), nil), big.NewInt(40)), big.NewInt(100)),
-			),
+			name:           "40 percent",
+			input:          math.NewUintFromString("100000000000000000000"), // 10^20
+			percent:        40,
+			expectedOutput: math.NewUintFromString("40000000000000000000"), // 4*10^19
 		},
 		{
-			name: "fraction that rounds down",
-			input: math.NewUintFromBigInt(
-				new(big.Int).Add(new(big.Int).Exp(big.NewInt(10), big.NewInt(16), nil), big.NewInt(9)),
-			), // 10^16 + 9
-			percent: 10,
-			expectedOutput: math.NewUintFromBigInt(
-				new(
-					big.Int,
-				).Div(new(big.Int).Mul(new(big.Int).Add(new(big.Int).Exp(big.NewInt(10), big.NewInt(16), nil), big.NewInt(9)), big.NewInt(10)), big.NewInt(100)),
-			),
+			name:           "fraction that rounds down",
+			input:          math.NewUintFromString("10000000000000009"), // 10^16 + 9
+			percent:        10,
+			expectedOutput: math.NewUintFromString("1000000000000000"), // 10^15
 		},
 		{
-			name:    "large percentage",
-			input:   math.NewUintFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(19), nil)), // 10^19
-			percent: 200,
-			expectedOutput: math.NewUintFromBigInt(
-				new(
-					big.Int,
-				).Div(new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(19), nil), big.NewInt(200)), big.NewInt(100)),
-			),
+			name:           "large percentage",
+			input:          math.NewUintFromString("10000000000000000000"), // 10^19
+			percent:        200,
+			expectedOutput: math.NewUintFromString("20000000000000000000"), // 2*10^19
 		},
 	}
 
@@ -446,6 +432,14 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 				GasUsed:           tc.outboundTxActualGasUsed,
 				EffectiveGasPrice: tc.outboundTxActualGasPrice,
 				UserGasFeePaid:    tc.userGasFeePaid,
+				ReceiverChainId:   tc.receiverChainID,
+			}
+			cctx := &types.CrossChainTx{
+				OutboundParams: []*types.OutboundParams{&outbound},
+				InboundParams: &types.InboundParams{
+					Sender:        tc.senderZEVMAddress,
+					SenderChainId: tc.senderChainID,
+				},
 			}
 
 			if tc.expectGetChainParamsCall {
@@ -483,10 +477,7 @@ func TestKeeper_UseRemainingFees(t *testing.T) {
 			// Act
 			err := k.UseRemainingGasFee(
 				ctx,
-				outbound,
-				tc.receiverChainID,
-				tc.senderChainID,
-				tc.senderZEVMAddress,
+				cctx,
 			)
 
 			if tc.isError {

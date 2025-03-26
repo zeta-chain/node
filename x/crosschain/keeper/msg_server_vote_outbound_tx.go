@@ -143,38 +143,43 @@ func (k msgServer) VoteOutbound(
 // This wraps the UseRemainingGasFee function and logs an error if it fails.We do not return an error here.
 // Event if the funding fails, the outbound tx is still processed.
 func (k Keeper) ManageUnusedGasFee(ctx sdk.Context, cctx *types.CrossChainTx) {
+	outboundParams := cctx.GetCurrentOutboundParam()
 	// If the userGasFeePaid is nil, it means that this cctx was created before the userGasFeePaid was added.
-	if cctx.GetCurrentOutboundParam().UserGasFeePaid.IsNil() {
+	if outboundParams.UserGasFeePaid.IsNil() {
 		err := k.FundGasStabilityPoolFromRemainingFees(
 			ctx,
-			*cctx.GetCurrentOutboundParam(),
-			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			*outboundParams,
+			outboundParams.ReceiverChainId,
 		)
 		if err != nil {
-			ctx.Logger().
-				Error("%s: CCTX: %s Can't fund the gas stability pool with remaining fees %s", voteOutboundID, cctx.Index, err.Error())
+			ctx.Logger().Error("Failed to fund gas stability pool (Legacy) with remaining fees",
+				"voteOutboundID", voteOutboundID,
+				"cctxIndex", cctx.Index,
+				"error", err,
+			)
 		}
 		return
 	}
 
-	if err := k.UseRemainingGasFee(ctx,
-		*cctx.GetCurrentOutboundParam(),
-		cctx.GetCurrentOutboundParam().ReceiverChainId,
-		cctx.InboundParams.SenderChainId,
-		cctx.InboundParams.Sender); err != nil {
-		ctx.Logger().
-			Error("%s: CCTX: %s Can't fund the gas stability pool with remaining fees %s", voteOutboundID, cctx.Index, err.Error())
+	if err := k.useRemainingGasFee(ctx, cctx); err != nil {
+		ctx.Logger().Error("Failed to fund gas stability pool with remaining fees",
+			"voteOutboundID", voteOutboundID,
+			"cctxIndex", cctx.Index,
+			"error", err,
+		)
 	}
 }
 
 // UseRemainingGasFee uses the remaining fees of an outbound tx to fund the gas stability pool and refund the user if possible
-func (k Keeper) UseRemainingGasFee(
+func (k Keeper) useRemainingGasFee(
 	ctx sdk.Context,
-	OutboundParams types.OutboundParams,
-	receiverChainID int64,
-	senderChainID int64,
-	sender string,
+	cctx *types.CrossChainTx,
 ) error {
+	OutboundParams := cctx.GetCurrentOutboundParam()
+
+	receiverChainID := OutboundParams.ReceiverChainId
+	senderChainID := cctx.InboundParams.SenderChainId
+	sender := cctx.InboundParams.Sender
 	outboundTxGasUsed := math.NewUint(OutboundParams.GasUsed)
 	outboundTxFinalGasPrice := math.NewUintFromBigInt(OutboundParams.EffectiveGasPrice.BigInt())
 	outboundTxFeePaid := outboundTxGasUsed.Mul(outboundTxFinalGasPrice)
@@ -231,6 +236,8 @@ func (k Keeper) UseRemainingGasFee(
 	return nil
 }
 
+// TODO : Remove this function
+// https://github.com/zeta-chain/node/issues/3768
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
 func (k Keeper) FundGasStabilityPoolFromRemainingFees(
 	ctx sdk.Context,

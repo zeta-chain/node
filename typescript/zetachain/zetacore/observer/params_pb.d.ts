@@ -130,7 +130,7 @@ export declare class ChainParams extends Message<ChainParams> {
 
   /**
    * Percentage of unused tokens for outbounds that are are sent to the
-   * stability pool
+   * stability pool. The value should be between 0 and 100.
    *
    * @generated from field: uint64 stability_pool_percentage = 20;
    */

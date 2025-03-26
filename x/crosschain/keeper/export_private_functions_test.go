@@ -22,3 +22,7 @@ func (k Keeper) SetNonceToCCTX(ctx sdk.Context, cctx types.CrossChainTx, tssPubk
 func (k Keeper) GetNextCctxCounter(ctx sdk.Context) uint64 {
 	return k.getNextCctxCounter(ctx)
 }
+
+func (k Keeper) UseRemainingGasFee(ctx sdk.Context, cctx *types.CrossChainTx) error {
+	return k.useRemainingGasFee(ctx, cctx)
+}
