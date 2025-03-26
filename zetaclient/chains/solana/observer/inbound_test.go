@@ -28,9 +28,8 @@ var (
 )
 
 func Test_FilterInboundEventAndVote(t *testing.T) {
-	// load archived inbound vote tx result
-	// https://explorer.solana.com/tx/24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr?cluster=devnet
-	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
+	// load archived inbound vote tx result from localnet
+	txHash := "QSoSLxcJAFAzxWnHVJ4s2d5k2LyjC83YaLwbMUHYcEvVnCfERsowNb6Nj55GiTXNTbNF9fzF5F8JHUEpAGMrV5k"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -65,9 +64,8 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 }
 
 func Test_FilterInboundEvents(t *testing.T) {
-	// load archived inbound deposit tx result
-	// https://explorer.solana.com/tx/MS3MPLN7hkbyCZFwKqXcg8fmEvQMD74fN6Ps2LSWXJoRxPW5ehaxBorK9q1JFVbqnAvu9jXm6ertj7kT7HpYw1j?cluster=devnet
-	txHash := "24GzWsxYCFcwwJ2rzAsWwWC85aYKot6Rz3jWnBP1GvoAg5A9f1WinYyvyKseYM52q6i3EkotZdJuQomGGq5oxRYr"
+	// load archived inbound vote tx result from localnet
+	txHash := "QSoSLxcJAFAzxWnHVJ4s2d5k2LyjC83YaLwbMUHYcEvVnCfERsowNb6Nj55GiTXNTbNF9fzF5F8JHUEpAGMrV5k"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
@@ -76,13 +74,13 @@ func Test_FilterInboundEvents(t *testing.T) {
 	require.NoError(t, err)
 
 	// expected result
-	sender := "HgTpiVRvjUPUcWLzdmCgdadu1GceJNgBWLoN9r66p8o3"
+	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
 	eventExpected := &clienttypes.InboundEvent{
 		SenderChainID:    chain.ChainId,
 		Sender:           sender,
-		Receiver:         "0x6dA30bFA65E85a16b05bCE3846339ed2BC746316",
+		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
 		TxOrigin:         sender,
-		Amount:           100000000,
+		Amount:           24000000,
 		Memo:             []byte{},
 		BlockNumber:      txResult.Slot,
 		TxHash:           txHash,
