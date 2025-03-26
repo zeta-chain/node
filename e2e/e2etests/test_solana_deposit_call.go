@@ -23,7 +23,7 @@ func TestSolanaDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// execute the deposit transaction
 	data := []byte("hello lamports")
-	sig := r.SOLDepositAndCall(nil, contractAddr, depositAmount, data)
+	sig := r.SOLDepositAndCall(nil, contractAddr, depositAmount, data, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

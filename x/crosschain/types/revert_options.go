@@ -3,11 +3,12 @@ package types
 import (
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/gagliardetto/solana-go"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/contracts/solana"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/pkg/crypto"
 )
 
@@ -51,7 +52,7 @@ func NewRevertOptionsFromEVM(revertOptions gatewayevm.RevertOptions) RevertOptio
 }
 
 // NewRevertOptionsFromSOL initializes a new RevertOptions from a solana.RevertOptions
-func NewRevertOptionsFromSOL(revertOptions solana.RevertOptions) RevertOptions {
+func NewRevertOptionsFromSOL(revertOptions solanacontracts.RevertOptions) RevertOptions {
 	revertGasLimit := sdkmath.ZeroUint()
 	if revertOptions.OnRevertGasLimit != 0 {
 		revertGasLimit = sdkmath.Uint(sdkmath.NewIntFromUint64(revertOptions.OnRevertGasLimit))
@@ -91,6 +92,13 @@ func (r RevertOptions) ToEVMRevertOptions() gatewayevm.RevertOptions {
 func (r RevertOptions) GetEVMRevertAddress() (ethcommon.Address, bool) {
 	addr := ethcommon.HexToAddress(r.RevertAddress)
 	return addr, !crypto.IsEmptyAddress(addr)
+}
+
+// GetSOLRevertAddress returns the SOL revert address
+// if the revert address is not a valid address, it returns false
+func (r RevertOptions) GetSOLRevertAddress() (solana.PublicKey, bool) {
+	addr, err := solana.PublicKeyFromBase58(r.RevertAddress)
+	return addr, err == nil
 }
 
 // GetBTCRevertAddress validates and returns the BTC revert address

@@ -1,11 +1,14 @@
 package e2etests
 
 import (
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -24,7 +27,12 @@ func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	// execute the deposit transaction
 	data := []byte("hello reverter")
-	sig := r.SOLDepositAndCall(nil, reverterAddr, depositAmount, data)
+	revertAddressPrivateKey, err := solana.NewRandomPrivateKey()
+	require.NoError(r, err)
+
+	sig := r.SOLDepositAndCall(nil, reverterAddr, depositAmount, data, &solanacontracts.RevertOptions{
+		RevertAddress: revertAddressPrivateKey.PublicKey(),
+	})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -32,4 +40,9 @@ func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
+
+	// verify that revert address balance is increased
+	revertAddressBalance, err := r.SolanaClient.GetBalance(r.Ctx, revertAddressPrivateKey.PublicKey(), rpc.CommitmentConfirmed)
+	require.NoError(r, err)
+	require.Greater(r, revertAddressBalance.Value, 0)
 }
