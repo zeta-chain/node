@@ -74,6 +74,8 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
 	// sample withdrawAndCall payload
+	// TODO: use real contract
+	// https://github.com/zeta-chain/node/issues/3742
 	argumentTypes := []string{
 		"0xb112f370bc8e3ba6e45ad1a954660099fc3e6de2a203df9d26e11aa0d870f635::token::TOKEN",
 	}
