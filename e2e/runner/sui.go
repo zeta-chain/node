@@ -82,7 +82,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	objects := []string{
 		"0x57dd7b5841300199ac87b420ddeb48229523e76af423b4fce37da0cb78604408",
 		"0xbab1a2d90ea585eab574932e1b3467ff1d5d3f2aee55fed304f963ca2b9209eb",
-		"0xee6f1f44d24a8bf7268d82425d6e7bd8b9c48d11b2119b20756ee150c8e24a",
+		"0xee6f1f44d24a8bf7268d82425d6e7bd8b9c48d11b2119b20756ee150c8e24ac3",
 		"0x039ce62b538a0d0fca21c3c3a5b99adf519d55e534c536568fbcca40ee61fb7e",
 	}
 	message, err := hex.DecodeString("3573924024f4a7ff8e6755cb2d9fdeef69bdb65329f081d21b0b6ab37a265d06")
@@ -90,6 +90,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 
 	// ACT
 	payload, err := sui.FormatWithdrawAndCallPayload(argumentTypes, objects, message)
+	require.NoError(r, err)
 
 	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
@@ -99,7 +100,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		payload,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(0),
+			GasLimit:        big.NewInt(20000),
 		},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
