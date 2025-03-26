@@ -7,6 +7,8 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // reportOutboundTracker queries the tx and sends its digest to the outbound tracker
@@ -18,7 +20,7 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 	// some sanity timeout
 	const maxTimeout = time.Minute
 
-	logger := zerolog.Ctx(ctx)
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "reportOutboundTracker").Logger()
 
 	alreadySet := s.SetBeingReportedFlag(digest)
 	if alreadySet {

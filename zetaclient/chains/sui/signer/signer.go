@@ -28,12 +28,17 @@ type Signer struct {
 
 // RPC represents Sui rpc.
 type RPC interface {
+	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(
 		ctx context.Context,
 		req models.SuiExecuteTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
+	SuiDevInspectTransactionBlock(
+		ctx context.Context,
+		req models.SuiDevInspectTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 	SuiGetTransactionBlock(
 		ctx context.Context,
@@ -65,17 +70,17 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
 	var (
-		err         error
-		tx          models.TxnMetaData
-		txFallback  *models.TxnMetaData
-		sig         string
-		sigFallback *string
-		nonce       = cctx.GetCurrentOutboundParam().TssNonce
+		err       error
+		tx        models.TxnMetaData
+		txCancel  *models.TxnMetaData
+		sig       string
+		sigCancel *string
+		nonce     = cctx.GetCurrentOutboundParam().TssNonce
 	)
 
 	// build outbound txs
 	if cctx.IsWithdrawAndCall() {
-		tx, txFallback, err = s.buildExecute(ctx, cctx)
+		tx, txCancel, err = s.buildExecuteWithCancel(ctx, cctx)
 		if err != nil {
 			return errors.Wrap(err, "unable to build execute tx")
 		}
@@ -87,13 +92,20 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	// sign outbound txs
-	sig, sigFallback, err = s.signTxWithFallback(ctx, tx, txFallback, zetaHeight, nonce)
+	sig, sigCancel, err = s.signTxWithCancel(ctx, tx, txCancel, zetaHeight, nonce)
 	if err != nil {
-		return errors.Wrap(err, "unable to sign tx with fallback")
+		return errors.Wrap(err, "unable to sign tx with cancel tx")
 	}
 
+	// prepare logger
+	logger := s.Logger().Std.With().
+		Int64(logs.FieldChain, s.Chain().ChainId).
+		Uint64(logs.FieldNonce, nonce).
+		Logger()
+	ctx = logger.WithContext(ctx)
+
 	// broadcast outbound txs
-	txDigest, err := s.broadcastWithFallback(ctx, tx, txFallback, sig, sigFallback)
+	txDigest, err := s.broadcastWithCancel(ctx, tx, txCancel, sig, sigCancel)
 	if err != nil {
 		// todo we might need additional error handling
 		// for the case when the tx is already broadcasted by another zetaclient
@@ -101,13 +113,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		return errors.Wrap(err, "unable to broadcast tx")
 	}
 
-	logger := s.Logger().Std.With().
-		Str(logs.FieldMethod, "reportToOutboundTracker").
-		Int64(logs.FieldChain, s.Chain().ChainId).
-		Uint64(logs.FieldNonce, nonce).
-		Str(logs.FieldTx, txDigest).
-		Logger()
-
+	logger = logger.With().Str(logs.FieldTx, txDigest).Logger()
 	ctx = logger.WithContext(ctx)
 
 	bg.Work(ctx,
@@ -119,14 +125,14 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	return nil
 }
 
-// signTxWithFallback signs original tx with an optional fallback tx.
-// Pointers types are used to be flexible and indicate optional fallback tx.
-func (s *Signer) signTxWithFallback(
+// signTxWithCancel signs original tx with an optional cancel tx.
+// Pointers type is used to be flexible and indicate optional cancel tx.
+func (s *Signer) signTxWithCancel(
 	ctx context.Context,
 	tx models.TxnMetaData,
-	txFallback *models.TxnMetaData,
+	txCancel *models.TxnMetaData,
 	zetaHeight, nonce uint64,
-) (sig string, sigFallback *string, err error) {
+) (sig string, sigCancel *string, err error) {
 	digests := [][]byte{}
 
 	// collect digests
@@ -136,10 +142,10 @@ func (s *Signer) signTxWithFallback(
 	}
 	digests = append(digests, wrapDigest(digest))
 
-	if txFallback != nil {
-		digest, err := sui.Digest(*txFallback)
+	if txCancel != nil {
+		digest, err = sui.Digest(*txCancel)
 		if err != nil {
-			return "", nil, errors.Wrap(err, "unable to get fallback digest")
+			return "", nil, errors.Wrap(err, "unable to get cancel tx digest")
 		}
 		digests = append(digests, wrapDigest(digest))
 	}
@@ -161,21 +167,21 @@ func (s *Signer) signTxWithFallback(
 		return "", nil, errors.Wrap(err, "unable to serialize tx signature")
 	}
 
-	if txFallback != nil {
+	if txCancel != nil {
 		sigBase64, err := sui.SerializeSignatureECDSA(sig65Bs[1], s.TSS().PubKey().AsECDSA())
 		if err != nil {
-			return "", nil, errors.Wrap(err, "unable to serialize tx fallback signature")
+			return "", nil, errors.Wrap(err, "unable to serialize tx cancel signature")
 		}
-		sigFallback = &sigBase64
+		sigCancel = &sigBase64
 	}
 
-	return sig, sigFallback, nil
+	return sig, sigCancel, nil
 }
 
 // wrapDigest wraps the digest with sha256.
-// another hashing is required for ECDSA.
-// see: https://docs.sui.io/concepts/cryptography/transaction-auth/signatures#signature-requirements
 func wrapDigest(digest [32]byte) []byte {
+	// another hashing is required for ECDSA.
+	// see: https://docs.sui.io/concepts/cryptography/transaction-auth/signatures#signature-requirements
 	digestWrapped := sha256.Sum256(digest[:])
 	return digestWrapped[:]
 }

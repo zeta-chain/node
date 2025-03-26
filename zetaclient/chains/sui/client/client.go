@@ -156,6 +156,38 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 	return res.Data[0].Data.ObjectId, nil
 }
 
+// SuiDevInspectTransactionBlock manual implementation of ISuiAPI.SuiDevInspectTransactionBlock
+// That uses proper parameters signature (original has a bug in marshaling)
+//
+// @see sui.(*suiReadTransactionImpl).SuiDevInspectTransactionBlock
+// @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock
+func (c *Client) SuiDevInspectTransactionBlock(
+	ctx context.Context,
+	req models.SuiDevInspectTransactionBlockRequest,
+) (models.SuiTransactionBlockResponse, error) {
+	const method = "sui_devInspectTransactionBlock"
+
+	params := []any{
+		req.Sender,
+		req.TxBytes,
+		any(nil),
+		any(nil),
+		any(nil),
+	}
+
+	resRaw, err := c.SuiCall(ctx, method, params...)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, errors.Wrap(err, method)
+	}
+
+	resString, ok := resRaw.(string)
+	if !ok {
+		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
+	}
+
+	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
 // SuiExecuteTransactionBlock manual implementation of ISuiAPI.SuiExecuteTransactionBlock
 // That uses proper parameters signature (original has a bug in marshaling)
 //

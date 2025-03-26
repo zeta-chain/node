@@ -2,11 +2,12 @@ package signer
 
 import (
 	"context"
+	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
@@ -63,30 +64,57 @@ func (s *Signer) buildWithdraw(ctx context.Context, cctx *cctypes.CrossChainTx) 
 
 // buildExecute builds unsigned 'execute' transaction using CCTX and Sui RPC
 //
-// Note: this function is a fake implementation for testing the fallback mechanism
 // TODO: replace it with a real implementation
+// this function is a fake implementation for testing the tx cancellation
 func (s *Signer) buildExecute(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-) (models.TxnMetaData, *models.TxnMetaData, error) {
+) (tx models.TxnMetaData, err error) {
 	var (
-		err        error
-		tx         models.TxnMetaData
-		txFallback models.TxnMetaData
+		params    = cctx.GetCurrentOutboundParam()
+		nonce     = strconv.FormatUint(params.TssNonce+1, 10)
+		recipient = params.Receiver
+		amount    = params.Amount.String()
 	)
 
-	// fake out the execute tx with a withdrawal
-	tx, err = s.buildWithdraw(ctx, cctx)
+	// perform basic validation on CCTX
+	coinType, err := validateCCTX(s.Chain().ChainId, cctx)
 	if err != nil {
-		return tx, nil, errors.Wrap(err, "unable to build withdraw tx")
+		return tx, errors.Wrap(err, "CCTX validation failed")
 	}
 
-	txFallback, err = s.buildIncreaseNonce(ctx, cctx)
+	// use a fake coin type to fail the withdraw tx
+	// this will force the withdraw to be cancelled
+	if cctx.InboundParams.CoinType == coin.CoinType_Gas {
+		coinType = coinType[0:64] + "::fake::FAKE"
+	} else {
+		coinType = coinType[0:66] + "::fake::FAKE"
+	}
+	fmt.Printf("fake coinType: %v\n", coinType)
+
+	// get gas budget from CCTX
+	gasBudget, err := gasBudgetFromCCTX(cctx)
 	if err != nil {
-		return tx, nil, errors.Wrap(err, "unable to build withdraw tx")
+		return tx, errors.Wrap(err, "unable to get gas budget")
 	}
 
-	return tx, &txFallback, nil
+	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
+	}
+
+	// build a withdraw tx as a fake 'execute' because we don't have a real one yet
+	req := models.MoveCallRequest{
+		Signer:          s.TSS().PubKey().AddressSui(),
+		PackageObjectId: s.gateway.PackageID(),
+		Module:          s.gateway.Module(),
+		Function:        funcWithdraw, // TODO: change to funcExecute
+		TypeArguments:   []any{coinType},
+		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudget, withdrawCapID},
+		GasBudget:       gasBudget,
+	}
+
+	return s.client.MoveCall(ctx, req)
 }
 
 // buildIncreaseNonce builds unsigned 'increase_nonce' transaction using CCTX and Sui RPC
@@ -127,47 +155,95 @@ func (s *Signer) buildIncreaseNonce(
 	return s.client.MoveCall(ctx, req)
 }
 
-// broadcastWithFallback attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
-// If the tx execution fails, the fallback tx will be used and broadcasted if provided.
-func (s *Signer) broadcastWithFallback(
+// buildExecuteWithCancel builds both unsigned 'execute' and a cancel tx
+func (s *Signer) buildExecuteWithCancel(
+	ctx context.Context,
+	cctx *cctypes.CrossChainTx,
+) (models.TxnMetaData, *models.TxnMetaData, error) {
+	var (
+		err      error
+		tx       models.TxnMetaData
+		txCancel models.TxnMetaData
+	)
+
+	tx, err = s.buildExecute(ctx, cctx)
+	if err != nil {
+		return tx, nil, errors.Wrap(err, "unable to build execute tx")
+	}
+
+	txCancel, err = s.buildIncreaseNonce(ctx, cctx)
+	if err != nil {
+		return tx, nil, errors.Wrap(err, "unable to build increase nonce tx")
+	}
+
+	return tx, &txCancel, nil
+}
+
+// broadcastWithCancel attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
+// If the tx execution is rejected, the cancel tx will be used and broadcasted if provided.
+func (s *Signer) broadcastWithCancel(
 	ctx context.Context,
 	tx models.TxnMetaData,
-	txFallback *models.TxnMetaData,
+	txCancel *models.TxnMetaData,
 	sig string,
-	sigFallback *string,
+	sigCancel *string,
 ) (string, error) {
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancel").Logger()
+
 	req := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   tx.TxBytes,
 		Signature: []string{sig},
+		// we need to wait for the effects to be available and then look into
+		// the error code to decide whether to cancel the tx or not
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+		},
+		RequestType: "WaitForEffectsCert",
 	}
 
-	var reqFallback *models.SuiExecuteTransactionBlockRequest
-	if txFallback != nil && sigFallback != nil {
-		reqFallback = &models.SuiExecuteTransactionBlockRequest{
-			TxBytes:   txFallback.TxBytes,
-			Signature: []string{*sigFallback},
+	var reqCancel *models.SuiExecuteTransactionBlockRequest
+	if txCancel != nil && sigCancel != nil {
+		reqCancel = &models.SuiExecuteTransactionBlockRequest{
+			TxBytes:   txCancel.TxBytes,
+			Signature: []string{*sigCancel},
 		}
 	}
 
-	// broadcast original tx
+	// broadcast tx
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
-	if err == nil {
-		s.Logger().Std.Info().Str(logs.FieldTx, res.Digest).Msg("Broadcasted Sui tx successfully")
-		return res.Digest, nil
-	}
-
-	// decide whether to broadcast fallback tx
-	shouldFallback := reqFallback != nil && strings.Contains(err.Error(), "some specific error")
-	if !shouldFallback {
+	if err != nil {
 		return "", errors.Wrap(err, "unable to execute tx block")
 	}
 
-	// broadcast fallback tx
-	res, err = s.client.SuiExecuteTransactionBlock(ctx, *reqFallback)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to execute fallback tx block")
+	// tx succeeded, return the digest
+	if res.Effects.Status.Status == "success" {
+		logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui tx block successfully")
+		return res.Digest, nil
 	}
-	s.Logger().Std.Info().Str(logs.FieldTx, res.Digest).Msg("Broadcasted Sui fallback tx successfully")
+
+	// tx failed, return error if no cancel tx provided
+	if reqCancel == nil {
+		return "", fmt.Errorf("unable to execute tx block, no cancel tx: %s", res.Effects.Status.Error)
+	}
+
+	// check if the error is a retryable MoveAbort
+	// if it is, skip the cancel tx and let the scheduler retry the outbound
+	isRetryableAbort, err := sui.IsRetryableMoveAbort(res.Effects.Status.Error)
+	switch {
+	case err != nil:
+		return "", errors.Wrapf(err, "unable to check tx error code: %s", res.Effects.Status.Error)
+	case isRetryableAbort:
+		return "", fmt.Errorf("unable to execute tx block, retry later: %s", res.Effects.Status.Error)
+	default:
+		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancel tx due to non-retryable error")
+	}
+
+	// broadcast cancel tx if the tx execution failed for other reasons
+	res, err = s.client.SuiExecuteTransactionBlock(ctx, *reqCancel)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to execute cancel tx block")
+	}
+	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block successfully")
 
 	return res.Digest, nil
 }
