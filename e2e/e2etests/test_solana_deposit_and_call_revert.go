@@ -42,7 +42,11 @@ func TestSolanaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 
 	// verify that revert address balance is increased
-	revertAddressBalance, err := r.SolanaClient.GetBalance(r.Ctx, revertAddressPrivateKey.PublicKey(), rpc.CommitmentConfirmed)
+	revertAddressBalance, err := r.SolanaClient.GetBalance(
+		r.Ctx,
+		revertAddressPrivateKey.PublicKey(),
+		rpc.CommitmentConfirmed,
+	)
 	require.NoError(r, err)
-	require.Greater(r, revertAddressBalance.Value, 0)
+	require.Greater(r, revertAddressBalance.Value, uint64(0))
 }

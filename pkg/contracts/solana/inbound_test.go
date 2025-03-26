@@ -313,7 +313,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		tx.Message.Instructions[instructionIndex].Data = data
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, 0, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
