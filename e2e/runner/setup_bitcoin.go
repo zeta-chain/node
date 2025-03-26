@@ -66,7 +66,7 @@ func (r *E2ERunner) GetBtcKeypair() (*btcutil.AddressWitnessPubKeyHash, *btcutil
 	return address, privkeyWIF
 }
 
-// GetBtcKeypair returns the BTC address of the runner account
+// GetBtcAddress returns the BTC address of the runner account
 func (r *E2ERunner) GetBtcAddress() *btcutil.AddressWitnessPubKeyHash {
 	address, _ := r.GetBtcKeypair()
 	return address
