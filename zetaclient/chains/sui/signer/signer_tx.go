@@ -106,7 +106,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
-	typeArguments, objectIDs, message, err := parseWithdrawAndCallPayload(payloadBytes)
+	typeArguments, objectIDs, message, err := sui.ParseWithdrawAndCallPayload(payloadBytes)
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}

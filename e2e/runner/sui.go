@@ -73,7 +73,21 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	payload := []byte{}
+	// sample withdrawAndCall payload
+	argumentTypes := []string{
+		"0xb112f370bc8e3ba6e45ad1a954660099fc3e6de2a203df9d26e11aa0d870f635::token::TOKEN",
+	}
+	objects := []string{
+		"0x57dd7b5841300199ac87b420ddeb48229523e76af423b4fce37da0cb78604408",
+		"0xbab1a2d90ea585eab574932e1b3467ff1d5d3f2aee55fed304f963ca2b9209eb",
+		"0xee6f1f44d24a8bf7268d82425d6e7bd8b9c48d11b2119b20756ee150c8e24a",
+		"0x039ce62b538a0d0fca21c3c3a5b99adf519d55e534c536568fbcca40ee61fb7e",
+	}
+	message, err := hex.DecodeString("3573924024f4a7ff8e6755cb2d9fdeef69bdb65329f081d21b0b6ab37a265d06")
+	require.NoError(r, err)
+
+	// ACT
+	payload, err := sui.FormatWithdrawAndCallPayload(argumentTypes, objects, message)
 
 	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
