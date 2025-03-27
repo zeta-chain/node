@@ -341,16 +341,8 @@ func (signer *Signer) broadcastOutbound(
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 		)
 		if err != nil {
-			// in case it is not failure due to nonce mismatch, replace tx with fallback tx
-			// probably need a better way to do this, but currently this is the only error to tolerate like this
-			errStr := err.Error()
-			if strings.Contains(errStr, "Error processing Instruction") && fallbackTx != nil {
-				// if some program is invoked after gateway, fallback tx is used no matter the error
-				// otherwise, ignore NonceMismatch errors since multiple relayers can try to relay same tx
-				if contracts.ProgramInvokedAfterTargetInErrStr(errStr, signer.GetGatewayAddress()) ||
-					!strings.Contains(errStr, "NonceMismatch") {
-					tx = fallbackTx
-				}
+			if fallbackTx != nil && shouldUseFallbackTx(err, signer.GetGatewayAddress()) {
+				tx = fallbackTx
 			}
 			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
 			backOff *= 2
