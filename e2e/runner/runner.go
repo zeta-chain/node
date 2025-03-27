@@ -83,7 +83,6 @@ type E2ERunner struct {
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
 	SuiTSSAddress         string
-	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	FeeCollectorAddress   types.AccAddress
 

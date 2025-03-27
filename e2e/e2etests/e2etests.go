@@ -67,6 +67,7 @@ const (
 	TestSolanaDepositAndCallName                = "solana_deposit_and_call"
 	TestSolanaDepositAndCallRevertName          = "solana_deposit_and_call_revert"
 	TestSolanaDepositAndCallRevertWithDustName  = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaToZEVMCallName                    = "solana_to_zevm_call"
 	TestSolanaDepositRestrictedName             = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName            = "solana_withdraw_restricted"
 	TestSPLDepositName                          = "spl_deposit"
@@ -607,6 +608,13 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSolanaToZEVMCallName,
+		"call a zevm contract",
+		[]runner.ArgDefinition{},
+		TestSolanaToZEVMCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
 		TestSPLWithdrawName,
 		"withdraw SPL from ZEVM",
 		[]runner.ArgDefinition{
@@ -814,7 +822,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositName,
 		"deposit Bitcoin into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "amount in btc", DefaultValue: "1.0"},
 		},
 		TestBitcoinDeposit,
 	),

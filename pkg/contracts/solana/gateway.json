@@ -8,6 +8,52 @@
   },
   "instructions": [
     {
+      "name": "call",
+      "docs": [
+        "Calls a contract on ZetaChain zEVM.",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `message` - The message passed to the contract."
+      ],
+      "discriminator": [
+        181,
+        94,
+        56,
+        161,
+        194,
+        221,
+        200,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the call."
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "message",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "deposit",
       "docs": [
         "Deposits SOL into the program and credits the `receiver` on ZetaChain zEVM.",
@@ -480,7 +526,29 @@
           ]
         },
         {
-          "name": "destination_program_pda"
+          "name": "destination_program_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
         }
       ],
       "args": [
@@ -604,7 +672,29 @@
           ]
         },
         {
-          "name": "destination_program_pda"
+          "name": "destination_program_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
         },
         {
           "name": "destination_program_pda_ata",

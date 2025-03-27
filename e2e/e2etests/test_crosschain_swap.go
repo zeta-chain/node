@@ -73,7 +73,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
 		&bind.CallOpts{},
 		r.BTCZRC20Addr,
-		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
 	)
 	require.NoError(r, err)
 
@@ -98,7 +98,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
@@ -109,7 +109,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[0:1], memo)
+	txID, err := r.SendToTSSWithMemo(0.01, utxos[0:1], memo)
 	require.NoError(r, err)
 
 	cctx3 := utils.WaitCctxMinedByInboundHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -138,8 +138,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		utxos = r.ListDeployerUTXOs()
-		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
+		utxos = r.ListUTXOs()
+		txid, err := r.SendToTSSWithMemo(amount, utxos[0:1], memo)
 		require.NoError(r, err)
 
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)

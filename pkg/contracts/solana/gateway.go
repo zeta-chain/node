@@ -36,6 +36,9 @@ var (
 	// DiscriminatorDepositSPLAndCall returns the discriminator for Solana gateway 'deposit_spl_token_and_call' instruction
 	DiscriminatorDepositSPLAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token_and_call")
 
+	// DiscriminatorCall returns the discriminator for Solana gateway 'call' instruction
+	DiscriminatorCall = idlgateway.IDLGateway.GetDiscriminator("call")
+
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
