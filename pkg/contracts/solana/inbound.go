@@ -13,8 +13,8 @@ const (
 	MaxSignaturesPerTicker = 100
 )
 
-// Deposit represents a deposit instruction from a Solana transaction to ZetaChain
-type Deposit struct {
+// Inbound represents an inbound instruction from a Solana transaction to ZetaChain
+type Inbound struct {
 	Sender           string
 	Receiver         string
 	Amount           uint64
@@ -30,22 +30,22 @@ func ParseInboundAsDeposit(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// first try to parse as deposit, then as deposit_and_call
-	deposit, err := tryParseAsDeposit(tx, instructionIndex, slot)
+	deposit, err := parseAsDeposit(tx, instructionIndex, slot)
 	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
-	return tryParseAsDepositAndCall(tx, instructionIndex, slot)
+	return parseAsDepositAndCall(tx, instructionIndex, slot)
 }
 
-// tryParseAsDeposit tries to parse instruction as deposit
-func tryParseAsDeposit(
+// parseAsDeposit tries to parse instruction as deposit
+func parseAsDeposit(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
@@ -72,7 +72,7 @@ func tryParseAsDeposit(
 		return nil, err
 	}
 
-	return &Deposit{
+	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
 		Amount:           inst.Amount,
@@ -83,12 +83,12 @@ func tryParseAsDeposit(
 	}, nil
 }
 
-// tryParseAsDepositAndCall tries to parse instruction as deposit_and_call
-func tryParseAsDepositAndCall(
+// parseAsDepositAndCall tries to parse instruction as deposit_and_call
+func parseAsDepositAndCall(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
@@ -114,7 +114,7 @@ func tryParseAsDepositAndCall(
 	if err != nil {
 		return nil, err
 	}
-	return &Deposit{
+	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
 		Amount:           instDepositAndCall.Amount,
@@ -131,22 +131,22 @@ func ParseInboundAsDepositSPL(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// first try to parse as deposit_spl, then as deposit_spl_and_call
-	deposit, err := tryParseAsDepositSPL(tx, instructionIndex, slot)
+	deposit, err := parseAsDepositSPL(tx, instructionIndex, slot)
 	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
-	return tryParseAsDepositSPLAndCall(tx, instructionIndex, slot)
+	return parseAsDepositSPLAndCall(tx, instructionIndex, slot)
 }
 
-// tryParseAsDepositSPL tries to parse instruction as deposit_spl
-func tryParseAsDepositSPL(
+// parseAsDepositSPL tries to parse instruction as deposit_spl
+func parseAsDepositSPL(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
@@ -173,7 +173,7 @@ func tryParseAsDepositSPL(
 		return nil, err
 	}
 
-	return &Deposit{
+	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
 		Amount:           inst.Amount,
@@ -184,12 +184,12 @@ func tryParseAsDepositSPL(
 	}, nil
 }
 
-// tryParseAsDepositSPLAndCall tries to parse instruction as deposit_spl_and_call
-func tryParseAsDepositSPLAndCall(
+// parseAsDepositSPLAndCall tries to parse instruction as deposit_spl_and_call
+func parseAsDepositSPLAndCall(
 	tx *solana.Transaction,
 	instructionIndex int,
 	slot uint64,
-) (*Deposit, error) {
+) (*Inbound, error) {
 	// get instruction by index
 	instruction := tx.Message.Instructions[instructionIndex]
 
@@ -215,13 +215,66 @@ func tryParseAsDepositSPLAndCall(
 	if err != nil {
 		return nil, err
 	}
-	return &Deposit{
+	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
 		Amount:           instDepositAndCall.Amount,
 		Memo:             instDepositAndCall.Memo,
 		Slot:             slot,
 		Asset:            spl,
+		IsCrossChainCall: true,
+	}, nil
+}
+
+// ParseInboundAsCall tries to parse an instruction as a call.
+// It returns nil if the instruction can't be parsed as a call.
+func ParseInboundAsCall(
+	tx *solana.Transaction,
+	instructionIndex int,
+	slot uint64,
+) (*Inbound, error) {
+	// get instruction by index
+	instruction := tx.Message.Instructions[instructionIndex]
+
+	// try deserializing instruction as a call
+	inst := CallInstructionParams{}
+	err := borsh.Deserialize(&inst, instruction.Data)
+	if err != nil {
+		return nil, nil
+	}
+
+	// check if the instruction is a call or not, if not, skip parsing
+	if inst.Discriminator != DiscriminatorCall {
+		return nil, nil
+	}
+
+	// get the sender address (skip if unable to parse signer address)
+	instructionAccounts, err := instruction.ResolveInstructionAccounts(&tx.Message)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(instructionAccounts) != 1 {
+		return nil, fmt.Errorf("want only 1 signer account, got %d", len(instructionAccounts))
+	}
+
+	if !instructionAccounts[0].IsSigner {
+		return nil, fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
+	}
+
+	// parse receiver
+	receiver, err := parseReceiver(inst.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Inbound{
+		Sender:           instructionAccounts[0].PublicKey.String(),
+		Receiver:         receiver,
+		Amount:           0,
+		Memo:             inst.Memo,
+		Slot:             slot,
+		Asset:            "", // no asset for call
 		IsCrossChainCall: true,
 	}, nil
 }

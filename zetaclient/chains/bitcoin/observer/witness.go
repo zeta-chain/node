@@ -16,6 +16,11 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
+const (
+	// noMemoFound is a placeholder to indicates no memo is found in Bitcoin inbound
+	noMemoFound = "no memo found"
+)
+
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
 // This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
 // It will first prioritize OP_RETURN over tapscript.
@@ -66,8 +71,8 @@ func GetBtcEventWithWitness(
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
-	// if not found then try to extract from inscription. Return nil if the above two
-	// cannot find the memo.
+	// if not found then try to extract from inscription. If no memo is provided,
+	// set the 'noMemoFound' placeholder to indicate the inbound requires a revert.
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
@@ -76,7 +81,7 @@ func GetBtcEventWithWitness(
 		memo = candidate
 		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
 	} else {
-		return nil, nil
+		memo = []byte(noMemoFound)
 	}
 
 	// event found, get sender address

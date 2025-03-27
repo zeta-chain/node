@@ -50,6 +50,6 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 		r,
 		contract,
 		big.NewInt(amountSats),
-		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
 	)
 }

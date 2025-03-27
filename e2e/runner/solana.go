@@ -72,6 +72,28 @@ func (r *E2ERunner) CreateDepositInstruction(
 	}
 }
 
+// CreateSOLCallInstruction creates a 'call' instruction
+func (r *E2ERunner) CreateSOLCallInstruction(
+	signer solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Instruction {
+	callData, err := borsh.Serialize(solanacontract.CallInstructionParams{
+		Discriminator: solanacontract.DiscriminatorCall,
+		Receiver:      receiver,
+		Memo:          data,
+	})
+	require.NoError(r, err)
+
+	return &solana.GenericInstruction{
+		ProgID:    r.GatewayProgram,
+		DataBytes: callData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+		},
+	}
+}
+
 // CreateWhitelistSPLMintInstruction creates a 'whitelist_spl_mint' instruction
 func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
 	signer, whitelistEntry, whitelistCandidate solana.PublicKey,
@@ -445,6 +467,38 @@ func (r *E2ERunner) SOLDepositAndCall(
 	return sig
 }
 
+// SOLCall calls a contract on zevm
+func (r *E2ERunner) SOLCall(
+	signerPrivKey *solana.PrivateKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Signature {
+	// if signer is not provided, use the runner account as default
+	if signerPrivKey == nil {
+		privkey := r.GetSolanaPrivKey()
+		signerPrivKey = &privkey
+	}
+
+	// create 'call' instruction
+	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data)
+
+	// create and sign the transaction
+	limit := computebudget.NewSetComputeUnitLimitInstruction(70000).Build() // 70k compute unit limit
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{limit, feesInit, instruction},
+		*signerPrivKey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("call logs: %v", out.Meta.LogMessages)
+
+	return sig
+}
+
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
 func (r *E2ERunner) WithdrawSOLZRC20(
 	to solana.PublicKey,
@@ -510,7 +564,6 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	require.NoError(r, err)
 
 	// withdraw
-	// TODO: gas limit?
 	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(to.String()),
@@ -602,7 +655,6 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	require.NoError(r, err)
 
 	// withdraw
-	// TODO: gas limit?
 	tx, err = r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,
 		[]byte(to.String()),

@@ -71,11 +71,7 @@ func NewPubKeyFromECDSA(pk ecdsa.PublicKey) (PubKey, error) {
 
 // NewPubKeyFromECDSAHexString creates PubKey from 0xABC12...
 func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
-	if strings.HasPrefix(raw, "0x") {
-		raw = raw[2:]
-	}
-
-	b, err := hex.DecodeString(raw)
+	b, err := hex.DecodeString(strings.TrimPrefix(raw, "0x"))
 	if err != nil {
 		return PubKey{}, errors.Wrap(err, "unable to decode hex string")
 	}

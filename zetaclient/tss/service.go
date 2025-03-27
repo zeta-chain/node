@@ -271,7 +271,7 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 		"tss.nonce":        nonce,
 	}
 
-	s.logger.Info().Fields(lf).Msg("TSS keysign request")
+	req.SetLogFields(lf)
 
 	// metrics finish
 	defer func() {

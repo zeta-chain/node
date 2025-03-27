@@ -36,7 +36,7 @@ func (k msgServer) UpdateZRC20Name(
 	}
 
 	// check the zrc20 exists
-	_, found := k.GetForeignCoins(ctx, msg.Zrc20Address)
+	fc, found := k.GetForeignCoins(ctx, msg.Zrc20Address)
 	if !found {
 		return nil, cosmoserrors.Wrapf(
 			types.ErrForeignCoinNotFound,
@@ -45,18 +45,23 @@ func (k msgServer) UpdateZRC20Name(
 		)
 	}
 
-	// call the contract methods
+	// call the contract methods and update the object
 	if msg.Name != "" {
 		if err := k.ZRC20SetName(ctx, zrc20Addr, msg.Name); err != nil {
 			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to update zrc20 name (%s)", err.Error())
 		}
+		fc.Name = msg.Name
 	}
 
 	if msg.Symbol != "" {
 		if err = k.ZRC20SetSymbol(ctx, zrc20Addr, msg.Symbol); err != nil {
 			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to update zrc20 symbol (%s)", err.Error())
 		}
+		fc.Symbol = msg.Symbol
 	}
+
+	// save the object
+	k.SetForeignCoins(ctx, fc)
 
 	return &types.MsgUpdateZRC20NameResponse{}, nil
 }
