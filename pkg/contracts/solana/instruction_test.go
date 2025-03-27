@@ -155,4 +155,43 @@ func Test_ProgramInvokedAfterTargetInErrStr(t *testing.T) {
 		invoked := contracts.ProgramInvokedAfterTargetInErrStr(errStr, "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
 		require.True(t, invoked)
 	})
+
+	t.Run("gateway invoked after gateway", func(t *testing.T) {
+		errStr := `(*jsonrpc.RPCError)(0x40019dc210)({
+			Code: (int) -32002,
+			Message: (string) (len=91) "Transaction simulation failed: Error processing Instruction 1: custom program error: 0x1772",
+			Data: (map[string]interface {}) (len=7) {
+			 (string) (len=8) "accounts": (interface {}) <nil>,
+			 (string) (len=3) "err": (map[string]interface {}) (len=1) {
+			  (string) (len=16) "InstructionError": ([]interface {}) (len=2 cap=2) {
+			   (json.Number) (len=1) "1",
+			   (map[string]interface {}) (len=1) {
+				(string) (len=6) "Custom": (json.Number) (len=4) "6002"
+			   }
+			  }
+			 },
+			 (string) (len=17) "innerInstructions": (interface {}) <nil>,
+			 (string) (len=4) "logs": ([]interface {}) (len=14 cap=16) {
+			  (string) (len=62) "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+			  (string) (len=59) "Program ComputeBudget111111111111111111111111111111 success",
+			  (string) (len=63) "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d invoke [1]",
+			  (string) (len=33) "Program log: Instruction: Execute",
+			  (string) (len=183) "Program log: Computed message hash: [25, 163, 172, 233, 104, 70, 114, 159, 122, 93, 100, 65, 228, 131, 220, 31, 197, 246, 205, 217, 9, 124, 4, 248, 192, 63, 222, 8, 48, 251, 127, 235]",
+			  (string) (len=122) "Program log: Recovered address [6, 226, 120, 236, 206, 103, 78, 58, 237, 209, 114, 41, 41, 192, 140, 188, 7, 98, 102, 119]",
+			  (string) (len=63) "Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc invoke [2]",
+			  (string) (len=32) "Program log: Instruction: OnCall",
+			  (string) (len=63) "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d invoke [3]",
+			  (string) (len=33) "Program log: Instruction: Execute",
+			  (string) (len=66) "Program log: Reverting transaction due to 'NonceMismatch' message.",
+			  (string) (len=111) "Program log: AnchorError occurred. Error Code: NonceMismatch. Error Number: 6002. Error Message: NonceMismatch."
+			 },
+			 (string) (len=20) "replacementBlockhash": (interface {}) <nil>,
+			 (string) (len=10) "returnData": (interface {}) <nil>,
+			 (string) (len=13) "unitsConsumed": (json.Number) (len=5) "61129"
+			}
+		   })`
+
+		invoked := contracts.ProgramInvokedAfterTargetInErrStr(errStr, "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+		require.True(t, invoked)
+	})
 }
