@@ -3,8 +3,6 @@ package sui
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,37 +46,11 @@ const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
-	NonceIncreaseEvent  EventType = "NonceIncreaseEvent"
-)
-
-// Error codes
-// https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L14-L21
-const (
-	ErrCodeAlreadyWhitelisted     uint64 = 0
-	ErrCodeInvalidReceiverAddress uint64 = 1
-	ErrCodeNotWhitelisted         uint64 = 2
-	ErrCodeNonceMismatch          uint64 = 3
-	ErrCodePayloadTooLong         uint64 = 4
-	ErrCodeInactiveWithdrawCap    uint64 = 5
-	ErrCodeInactiveWhitelistCap   uint64 = 6
-	ErrCodeDepositPaused          uint64 = 7
+	// the gateway.move still uses name "NonceIncreaseEvent", but here uses a more descriptive name
+	CancelTxNonceEvent EventType = "NonceIncreaseEvent"
 )
 
 const moduleName = "gateway"
-
-var (
-	// ErrParseEvent event parse error
-	ErrParseEvent = errors.New("event parse error")
-
-	// retryableOutboundErrCodes are the outbound execution (if failed) error codes that are retryable.
-	// The list is used to determine if a withdraw_and_call should fallback if rejected by the network.
-	// Note: keep this list in sync with the actual implementation in `gateway.move`
-	retryableOutboundErrCodes = []uint64{
-		ErrCodeNotWhitelisted,
-		ErrCodeNonceMismatch,
-		ErrCodeInactiveWithdrawCap,
-	}
-)
 
 // NewGatewayFromPairID creates a new Sui Gateway
 // from pair of `$packageID,$gatewayObjectID`
@@ -133,15 +105,15 @@ func (e *Event) Withdrawal() (Withdrawal, error) {
 	return v, nil
 }
 
-func (e *Event) IsNonceIncrease() bool {
-	return e.EventType == NonceIncreaseEvent
+func (e *Event) IsCancelTxNonce() bool {
+	return e.EventType == CancelTxNonceEvent
 }
 
 // NonceIncrease extract NonceIncrease data.
-func (e *Event) NonceIncrease() (NonceIncrease, error) {
-	v, ok := e.content.(NonceIncrease)
+func (e *Event) NonceIncrease() (CanceTxNonceEvent, error) {
+	v, ok := e.content.(CanceTxNonceEvent)
 	if !ok {
-		return NonceIncrease{}, errors.Errorf("invalid content type %T", e.content)
+		return CanceTxNonceEvent{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -233,7 +205,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		content, err = parseDeposit(event, eventType)
 	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
-	case NonceIncreaseEvent:
+	case CancelTxNonceEvent:
 		content, err = parseNonceIncrease(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
@@ -272,7 +244,7 @@ func (gw *Gateway) ParseOutboundEvent(
 			return event, nil, errors.Wrap(err, "unable to extract withdraw event")
 		}
 		return event, withdrawal, nil
-	case event.IsNonceIncrease():
+	case event.IsCancelTxNonce():
 		nonceIncrease, err := event.NonceIncrease()
 		if err != nil {
 			return event, nil, errors.Wrap(err, "unable to extract nonce increase event")
@@ -306,45 +278,6 @@ func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (eve
 	}
 
 	return event, w, err
-}
-
-// IsRetryableMoveAbort checks if the error message is a retryable 'MoveAbort' error.
-func IsRetryableMoveAbort(errorMsg string) (bool, error) {
-	if !strings.HasPrefix(errorMsg, "MoveAbort") {
-		return false, nil // not MoveAbort error
-	}
-
-	code, err := parseExecutionErrorMoveAbortCode(errorMsg)
-	if err != nil {
-		return false, errors.Wrap(err, "unable to extract move abort code")
-	}
-
-	if slices.Contains(retryableOutboundErrCodes, code) {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// parseExecutionErrorMoveAbortCode parses the error code from Sui 'ExecutionError::MoveAbort' execution error.
-// see: https://github.com/MystenLabs/sui-rust-sdk/blob/65eb9f3ad63b98f5b04465963d340e53b301a149/crates/sui-sdk-types/src/execution_status.rs#L173
-//
-// Example error message:
-// "MoveAbort(MoveLocation { module: ModuleId { address: a5f027339b7e04e5d55c2ac90ea71d616870aa21d9f16fd0237a2a42e67c9f3e, name: Identifier("gateway") }, function: 11, instruction: 37, function_name: Some("withdraw_impl") }, 3) in command 0"
-func parseExecutionErrorMoveAbortCode(errorMsg string) (uint64, error) {
-	// build regex to match pattern: MoveAbort(..., <code>) ...
-	re := regexp.MustCompile(`MoveAbort\(.+?,\s*(\d+)\)`)
-	matches := re.FindStringSubmatch(errorMsg)
-	if len(matches) != 2 {
-		return 0, errors.Errorf("unable to extract code from error string: %s", errorMsg)
-	}
-
-	codeStr := matches[1]
-	code, err := strconv.ParseUint(codeStr, 10, 64)
-	if err != nil {
-		return 0, errors.Wrapf(err, "unable to convert code to uint64: %s", codeStr)
-	}
-	return code, nil
 }
 
 type eventDescriptor struct {

@@ -168,12 +168,12 @@ func (_m *SuiClient) QueryModuleEvents(ctx context.Context, q client.EventQuery)
 	return r0, r1, r2
 }
 
-// SuiDevInspectTransactionBlock provides a mock function with given fields: ctx, req
-func (_m *SuiClient) SuiDevInspectTransactionBlock(ctx context.Context, req models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
+// InspectTransactionBlock provides a mock function with given fields: ctx, req
+func (_m *SuiClient) InspectTransactionBlock(ctx context.Context, req models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
 	ret := _m.Called(ctx, req)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SuiDevInspectTransactionBlock")
+		panic("no return value specified for InspectTransactionBlock")
 	}
 
 	var r0 models.SuiTransactionBlockResponse

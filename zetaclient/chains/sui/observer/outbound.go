@@ -110,10 +110,10 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		coinType = cctx.InboundParams.CoinType
 	)
 
-	// nonce increase transaction means the outbound is failed
+	// cancelled transaction means the outbound is failed
 	// - set amount to CCTX's amount to bypass amount check in zetacore
 	// - set status to failed because outbound is failed and cancelled
-	if event.IsNonceIncrease() {
+	if event.IsCancelTxNonce() {
 		amount = params.Amount
 		status = chains.ReceiveStatus_failed
 	}

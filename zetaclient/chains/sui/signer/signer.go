@@ -36,7 +36,7 @@ type RPC interface {
 		ctx context.Context,
 		req models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
-	SuiDevInspectTransactionBlock(
+	InspectTransactionBlock(
 		ctx context.Context,
 		req models.SuiDevInspectTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)

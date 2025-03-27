@@ -8,51 +8,51 @@ import (
 	"github.com/pkg/errors"
 )
 
-// NonceIncrease represents data for a Sui nonce increase event
-type NonceIncrease struct {
+// CanceTxNonceEvent represents data for a Sui cancelled tx nonce increase event
+type CanceTxNonceEvent struct {
 	Sender string
 	Nonce  uint64
 }
 
 // TokenAmount returns hardcoded zero amount
 // because nonce increase does not involve any token transfer
-func (n NonceIncrease) TokenAmount() math.Uint {
+func (n CanceTxNonceEvent) TokenAmount() math.Uint {
 	return math.NewUint(0)
 }
 
 // TxNonce returns the nonce of the tx
 // Nonce is the incremented nonce value (CCTX.nonce + 1)
 // see: https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L140
-func (n NonceIncrease) TxNonce() uint64 {
+func (n CanceTxNonceEvent) TxNonce() uint64 {
 	return n.Nonce - 1
 }
 
-func parseNonceIncrease(event models.SuiEventResponse, eventType EventType) (NonceIncrease, error) {
-	if eventType != NonceIncreaseEvent {
-		return NonceIncrease{}, errors.Errorf("invalid event type %q", eventType)
+func parseNonceIncrease(event models.SuiEventResponse, eventType EventType) (CanceTxNonceEvent, error) {
+	if eventType != CancelTxNonceEvent {
+		return CanceTxNonceEvent{}, errors.Errorf("invalid event type %q", eventType)
 	}
 
 	parsedJSON := event.ParsedJson
 
 	sender, err := extractStr(parsedJSON, "sender")
 	if err != nil {
-		return NonceIncrease{}, err
+		return CanceTxNonceEvent{}, err
 	}
 
 	nonceRaw, err := extractStr(parsedJSON, "nonce")
 	if err != nil {
-		return NonceIncrease{}, err
+		return CanceTxNonceEvent{}, err
 	}
 
 	nonce, err := strconv.ParseUint(nonceRaw, 10, 64)
 	if err != nil {
-		return NonceIncrease{}, errors.Wrap(err, "unable to parse nonce")
+		return CanceTxNonceEvent{}, errors.Wrap(err, "unable to parse nonce")
 	}
 	if nonce <= 0 {
-		return NonceIncrease{}, errors.New("nonce must be positive")
+		return CanceTxNonceEvent{}, errors.New("nonce must be positive")
 	}
 
-	return NonceIncrease{
+	return CanceTxNonceEvent{
 		Sender: sender,
 		Nonce:  nonce,
 	}, nil

@@ -29,7 +29,7 @@ type suiClient interface {
 		req models.SuiGetTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
-	SuiDevInspectTransactionBlock(
+	InspectTransactionBlock(
 		ctx context.Context,
 		req models.SuiDevInspectTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)

@@ -229,11 +229,11 @@ func (s *Signer) broadcastWithCancelTx(
 
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
-	isRetryableAbort, err := sui.IsRetryableMoveAbort(res.Effects.Status.Error)
+	isRetryable, err := sui.IsRetryableExecutionError(res.Effects.Status.Error)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "unable to check tx execution status error code: %s", res.Effects.Status.Error)
-	case isRetryableAbort:
+	case isRetryable:
 		return "", fmt.Errorf("tx execution status failed, retry later: %s", res.Effects.Status.Error)
 	default:
 		// cancel tx if the tx execution failed for all other reasons
