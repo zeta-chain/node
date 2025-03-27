@@ -21,6 +21,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
+	// Debug messages
+	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
+	require.NoError(r, err)
+	r.Logger.Print("Amount: %s", amount.String())
+	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
+
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
