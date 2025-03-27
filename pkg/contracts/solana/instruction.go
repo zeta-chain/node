@@ -3,6 +3,7 @@ package solana
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -581,4 +582,31 @@ func DecodeExecuteMsg(msgbz []byte) (ExecuteMsg, error) {
 	}
 
 	return msg, nil
+}
+
+// ProgramInvokedAfterTargetInErrStr checks if any program (other than the specified one)
+// was invoked after the given program in the error string logs.
+func ProgramInvokedAfterTargetInErrStr(errStr, targetProgram string) bool {
+	programInvokeRe := regexp.MustCompile(`Program ([A-Za-z0-9]+) invoke`)
+	matches := programInvokeRe.FindAllStringSubmatch(errStr, -1)
+
+	foundTarget := false
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+		programID := match[1]
+
+		if programID == targetProgram {
+			foundTarget = true
+			continue
+		}
+
+		if foundTarget {
+			// Found some other program after the target
+			return true
+		}
+	}
+
+	return false
 }
