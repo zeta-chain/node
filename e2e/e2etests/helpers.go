@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -27,6 +28,18 @@ func randomPayload(r *runner.E2ERunner) string {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
+	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
+	require.NoError(r, err)
+	minimumAmount := new(big.Int).Add(amount, gasFee)
+	currentBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	require.Greater(
+		r,
+		currentBalance.Int64(),
+		minimumAmount.Int64(),
+		"current balance must be greater than amount + gasFee",
+	)
+
 	tx, err := r.BTCZRC20.Approve(
 		r.ZEVMAuth,
 		r.BTCZRC20Addr,

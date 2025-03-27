@@ -36,13 +36,6 @@ type client interface {
 		res *types.GetTransactionResult,
 	) (types.TxRawResult, error)
 
-	CreateRawTransaction(
-		ctx context.Context,
-		inputs []types.TransactionInput,
-		amounts map[btcutil.Address]btcutil.Amount,
-		lockTime *int64,
-	) (*wire.MsgTx, error)
-
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
@@ -68,7 +61,6 @@ type client interface {
 	CreateWallet(ctx context.Context, name string, opts ...rpcclient.CreateWalletOpt) (*types.CreateWalletResult, error)
 	GetNewAddress(ctx context.Context, account string) (btcutil.Address, error)
 	ImportAddress(ctx context.Context, address string) error
-	ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error
 	GetBalance(ctx context.Context, account string) (btcutil.Amount, error)
 	GenerateToAddress(
 		ctx context.Context,
@@ -76,12 +68,6 @@ type client interface {
 		address btcutil.Address,
 		maxTries *int64,
 	) ([]*hash.Hash, error)
-
-	SignRawTransactionWithWallet2(
-		ctx context.Context,
-		tx *wire.MsgTx,
-		inputs []types.RawTxWitnessInput,
-	) (*wire.MsgTx, bool, error)
 
 	RawRequest(ctx context.Context, method string, params []json.RawMessage) (json.RawMessage, error)
 }

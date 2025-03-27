@@ -19,12 +19,12 @@ func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
 	// Given a list of UTXOs
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 
 	// ACT
 	// Send BTC to TSS address with donation message
 	memo := []byte(constant.DonationMessage)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos[:1], memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, utxos[:1], memo)
 	require.NoError(r, err)
 
 	// ASSERT after 4 Zeta blocks

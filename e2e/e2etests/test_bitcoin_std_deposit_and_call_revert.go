@@ -41,7 +41,7 @@ func TestBitcoinStdMemoDepositAndCallRevert(r *runner.E2ERunner, args []string) 
 
 	// Check revert tx receiver address and amount
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
-	require.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
+	require.Equal(r, r.GetBtcAddress().EncodeAddress(), receiver)
 	require.True(r, value > 0)
 
 	r.Logger.Info("Sent %f BTC to TSS to call non-existing contract, got refund of %d satoshis", amount, value)
