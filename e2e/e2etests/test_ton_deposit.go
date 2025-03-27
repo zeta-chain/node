@@ -31,6 +31,8 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
 		r.Logger.Print("Failed to retrieve deposit fee: %v", err)
+		r.Logger.Print("Deposit fee: %s", depositFee.String())
+		r.Logger.Print("Client: %v", r.Clients.TON)
 		require.NoError(r, err)
 	}
 
