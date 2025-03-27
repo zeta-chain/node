@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +15,7 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 
 	depositAmount := utils.ParseFloat(r, args[0])
 	// ZRC20 BTC amounts have 8 decimals
-	depositAmountZRC20 := uint64(depositAmount * 1e8)
+	depositAmountZRC20 := uint64(depositAmount * btcutil.SatoshiPerBitcoin)
 
 	startingBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
 	require.NoError(r, err)

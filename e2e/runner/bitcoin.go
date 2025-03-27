@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
+	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
@@ -109,7 +110,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 
 	// deposit BTC into ZEVM
 	if memo != nil {
-		r.Logger.Info("⏳ depositing BTC into ZEVM with standard memo")
+		r.Logger.Info("⏳ depositing BTC into ZEVM with standard memo (amount: %.4f)", amount)
 
 		// encode memo to bytes
 		memoBytes, err := memo.EncodeToBytes()
@@ -119,7 +120,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 		require.NoError(r, err)
 	} else {
 		// the legacy memo layout: [20-byte receiver] + [payload]
-		r.Logger.Info("⏳ depositing BTC into ZEVM with legacy memo")
+		r.Logger.Info("⏳ depositing BTC into ZEVM with legacy memo (amount: %.4f)", amount)
 
 		// encode 20-byte receiver, no payload
 		memoBytes := r.EVMAddress().Bytes()
@@ -205,7 +206,7 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	requiredSats := amountSats + feeSats
 
 	// Select UTXOs until we have enough funds
-	var inputUTXOs []btcjson.ListUnspentResult
+	inputUTXOs := make([]btcjson.ListUnspentResult, 0, len(allUTXOs))
 	inputSats := btcutil.Amount(0)
 	for _, utxo := range allUTXOs {
 		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
@@ -295,10 +296,15 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	// mine 1 block to confirm the transaction
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
+	// gettransaction should return the transaction immediately so long the RPC is served
+	// by the same backend
 	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
 	require.NoError(r, err)
 	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	rawtx, err := btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
+	// on live networks it may take some time for the transaction to appear in the mempool
+	rawtx, err := retry.DoTypedWithRetry(func() (*btcjson.TxRawResult, error) {
+		return btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
+	})
 	require.NoError(r, err)
 
 	events, err := btcobserver.FilterAndParseIncomingTx(
