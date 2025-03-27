@@ -198,8 +198,25 @@ func (r *E2ERunner) sendToAddrWithMemo(
 
 	allUTXOs := r.ListUTXOs()
 
-	// Calculate required amount including fee
-	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
+	// Estimate fee using bitcoind's fee estimation
+	// This gets fee rate in BTC/KB for targeting confirmation within 6 blocks
+	feeRate, err := btcRPC.GetEstimatedFeeRate(r.Ctx, 6)
+	require.NoError(r, err)
+
+	// very rough estimate of transaction size
+	estimatedTxSizeBytes := 200 + int64(len(memo))
+
+	// Calculate fee based on estimated size
+	feeSats := btcutil.Amount(feeRate * estimatedTxSizeBytes)
+
+	// Minimum fee threshold
+	minFeeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
+	if feeSats < minFeeSats {
+		feeSats = minFeeSats
+	}
+
+	r.Logger.Info("Using fee of %d satoshis (rate: %d)", feeSats, feeRate)
+
 	amountInt, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 	amountSats := btcutil.Amount(amountInt)
