@@ -109,7 +109,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSWithMemo(0.01, utxos[0:1], memo)
+	txID, err := r.SendToTSSWithMemo(0.01, memo)
 	require.NoError(r, err)
 
 	cctx3 := utils.WaitCctxMinedByInboundHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -139,7 +139,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 		amount := 0.1
 		utxos = r.ListUTXOs()
-		txid, err := r.SendToTSSWithMemo(amount, utxos[0:1], memo)
+		txid, err := r.SendToTSSWithMemo(amount, memo)
 		require.NoError(r, err)
 
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
