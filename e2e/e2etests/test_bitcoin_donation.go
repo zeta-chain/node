@@ -24,7 +24,7 @@ func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
 	// ACT
 	// Send BTC to TSS address with donation message
 	memo := []byte(constant.DonationMessage)
-	txHash, err := r.SendToTSSFromWithMemo(amountTotal, utxos[:1], memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, utxos[:1], memo)
 	require.NoError(r, err)
 
 	// ASSERT after 4 Zeta blocks

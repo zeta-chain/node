@@ -30,7 +30,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Send BTC to TSS address with a dummy memo
 	data := []byte("hello satoshi")
 	memo := append(contractAddr.Bytes(), data...)
-	txHash, err := r.SendToTSSFromWithMemo(amountTotal, utxos[:1], memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, utxos[:1], memo)
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined

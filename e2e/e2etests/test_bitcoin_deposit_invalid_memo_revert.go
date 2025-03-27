@@ -18,7 +18,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	// CASE 1
 	// make a deposit without memo output
 	utxos := r.ListUTXOs()
-	txHash, err := r.SendToTSSFromWithMemo(0.1, utxos[:1], nil)
+	txHash, err := r.SendToTSSWithMemo(0.1, utxos[:1], nil)
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined
@@ -30,7 +30,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	// CASE 2
 	// make a deposit with a empty memo
 	utxos = r.ListUTXOs()
-	txHash, err = r.SendToTSSFromWithMemo(0.1, utxos[:1], []byte{})
+	txHash, err = r.SendToTSSWithMemo(0.1, utxos[:1], []byte{})
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined
@@ -42,7 +42,7 @@ func TestBitcoinDepositInvalidMemoRevert(r *runner.E2ERunner, args []string) {
 	// CASE 3
 	// make a deposit with an invalid memo
 	utxos = r.ListUTXOs()
-	txHash, err = r.SendToTSSFromWithMemo(0.1, utxos[:1], []byte("invalid memo"))
+	txHash, err = r.SendToTSSWithMemo(0.1, utxos[:1], []byte("invalid memo"))
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined

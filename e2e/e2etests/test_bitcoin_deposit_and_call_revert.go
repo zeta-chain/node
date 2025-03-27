@@ -27,7 +27,7 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// zetacore should revert cctx if call is made on a non-existing address
 	nonExistReceiver := sample.EthAddress()
 	badMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
-	txHash, err := r.SendToTSSFromWithMemo(amount, utxos[:1], badMemo)
+	txHash, err := r.SendToTSSWithMemo(amount, utxos[:1], badMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 

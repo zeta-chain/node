@@ -117,7 +117,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 		memoBytes, err := memo.EncodeToBytes()
 		require.NoError(r, err)
 
-		txHash, err = r.SendToTSSFromWithMemo(amount, utxos[:1], memoBytes)
+		txHash, err = r.SendToTSSWithMemo(amount, utxos[:1], memoBytes)
 		require.NoError(r, err)
 	} else {
 		// the legacy memo layout: [20-byte receiver] + [payload]
@@ -126,7 +126,7 @@ func (r *E2ERunner) DepositBTCWithAmount(amount float64, memo *memo.InboundMemo)
 		// encode 20-byte receiver, no payload
 		memoBytes := r.EVMAddress().Bytes()
 
-		txHash, err = r.SendToTSSFromWithMemo(amount, utxos[:1], memoBytes)
+		txHash, err = r.SendToTSSWithMemo(amount, utxos[:1], memoBytes)
 		require.NoError(r, err)
 	}
 	r.Logger.Info("deposited BTC to TSS txHash: %s", txHash.String())
@@ -150,7 +150,7 @@ func (r *E2ERunner) DonateBTC() {
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
 	// it also serves as gas fee for the TSS to send BTC to other addresses
-	_, err := r.SendToTSSFromWithMemo(0.11, utxos, []byte(constant.DonationMessage))
+	_, err := r.SendToTSSWithMemo(0.11, utxos, []byte(constant.DonationMessage))
 	require.NoError(r, err)
 }
 
@@ -167,7 +167,7 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 
 	// send initial BTC to the tester ZEVM address
 	amount := 1.15 + zetabtc.DefaultDepositorFee
-	txHash, err := r.SendToTSSFromWithMemo(amount, utxos[:1], receiver.Bytes())
+	txHash, err := r.SendToTSSWithMemo(amount, utxos[:1], receiver.Bytes())
 	require.NoError(r, err)
 
 	r.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
@@ -186,15 +186,15 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
 }
 
-func (r *E2ERunner) SendToTSSFromWithMemo(
+func (r *E2ERunner) SendToTSSWithMemo(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
 	memo []byte,
 ) (*chainhash.Hash, error) {
-	return r.sendToAddrFromWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
+	return r.sendToAddrWithMemo(amount, r.BTCTSSAddress, inputUTXOs, memo)
 }
 
-func (r *E2ERunner) sendToAddrFromWithMemo(
+func (r *E2ERunner) sendToAddrWithMemo(
 	amount float64,
 	to btcutil.Address,
 	inputUTXOs []btcjson.ListUnspentResult,
@@ -332,7 +332,7 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	r.Logger.Info("received inscription commit address: %s", receiver)
 
 	// send funds to the commit address
-	commitTxHash, err := r.sendToAddrFromWithMemo(amount, receiver, utxos[:1], nil)
+	commitTxHash, err := r.sendToAddrWithMemo(amount, receiver, utxos[:1], nil)
 	require.NoError(r, err)
 	r.Logger.Info("obtained inscription commit txn hash: %s", commitTxHash.String())
 

@@ -37,7 +37,7 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	anyMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
 
 	// One UTXO is enough to cover the deposit amount
-	txHash, err := r.SendToTSSFromWithMemo(amount, utxos[:1], anyMemo)
+	txHash, err := r.SendToTSSWithMemo(amount, utxos[:1], anyMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
