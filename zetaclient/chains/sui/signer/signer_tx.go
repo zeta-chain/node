@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -14,6 +15,9 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
+
+// txBuilder is a function that returns the tx and the signature
+type txBuilder func() (models.TxnMetaData, string, error)
 
 const (
 	funcWithdraw      = "withdraw"
@@ -154,58 +158,46 @@ func (s *Signer) buildIncreaseNonce(
 	return s.client.MoveCall(ctx, req)
 }
 
-// buildExecuteWithCancel builds both unsigned 'execute' and a cancel tx
-func (s *Signer) buildExecuteWithCancel(
+// buildExecuteWithCancelTxBuilder builds both unsigned 'execute' and a cancel tx
+func (s *Signer) buildExecuteWithCancelTxBuilder(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
-) (models.TxnMetaData, *models.TxnMetaData, error) {
-	var (
-		err      error
-		tx       models.TxnMetaData
-		txCancel models.TxnMetaData
-	)
+	zetaHeight uint64,
+) (models.TxnMetaData, txBuilder, error) {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
-	tx, err = s.buildIncreaseNonce(ctx, cctx)
+	tx, err := s.buildExecute(ctx, cctx)
 	if err != nil {
 		return tx, nil, errors.Wrap(err, "unable to build execute tx")
 	}
 
-	txCancel, err = s.buildWithdraw(ctx, cctx)
-	if err != nil {
-		return tx, nil, errors.Wrap(err, "unable to build increase nonce tx")
+	// tx builder for cancel tx
+	cancelTxBuilder := func() (models.TxnMetaData, string, error) {
+		txCancel, err := s.buildIncreaseNonce(ctx, cctx)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build cancel tx")
+		}
+
+		sigCancel, err := s.signTx(ctx, txCancel, zetaHeight, nonce)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign cancel tx")
+		}
+
+		return txCancel, sigCancel, nil
 	}
 
-	return tx, &txCancel, nil
+	return tx, cancelTxBuilder, nil
 }
 
-// broadcastWithCancel attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
+// broadcastWithCancelTx attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
 // If the tx execution is rejected, the cancel tx will be used and broadcasted if provided.
-func (s *Signer) broadcastWithCancel(
+func (s *Signer) broadcastWithCancelTx(
 	ctx context.Context,
-	tx models.TxnMetaData,
-	txCancel *models.TxnMetaData,
 	sig string,
-	sigCancel *string,
+	tx models.TxnMetaData,
+	cancelTxBuilder txBuilder,
 ) (string, error) {
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancel").Logger()
-
-	// sysState, err := s.client.SuiXGetLatestSuiSystemState(ctx)
-	// if err != nil {
-	// 	return "", errors.Wrap(err, "unable to get current epoch")
-	// }
-
-	// reqSim := models.SuiDevInspectTransactionBlockRequest{
-	// 	Sender:   s.TSS().PubKey().AddressSui(),
-	// 	TxBytes:  tx.TxBytes,
-	// 	GasPrice: "1000",
-	// 	Epoch:    sysState.Epoch,
-	// }
-
-	// resSim, err := s.client.SuiDevInspectTransactionBlock(ctx, reqSim)
-	// if err != nil {
-	// 	return "", errors.Wrap(err, "unable to inspect tx")
-	// }
-	// fmt.Printf("simulation result: %v\n", resSim)
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
 
 	req := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   tx.TxBytes,
@@ -216,14 +208,6 @@ func (s *Signer) broadcastWithCancel(
 			ShowEffects: true,
 		},
 		RequestType: "WaitForEffectsCert",
-	}
-
-	var reqCancel *models.SuiExecuteTransactionBlockRequest
-	if txCancel != nil && sigCancel != nil {
-		reqCancel = &models.SuiExecuteTransactionBlockRequest{
-			TxBytes:   txCancel.TxBytes,
-			Signature: []string{*sigCancel},
-		}
 	}
 
 	// broadcast tx
@@ -239,8 +223,8 @@ func (s *Signer) broadcastWithCancel(
 	}
 
 	// tx failed, return error if no cancel tx provided
-	if reqCancel == nil {
-		return "", fmt.Errorf("unable to execute tx block, no cancel tx: %s", res.Effects.Status.Error)
+	if cancelTxBuilder == nil {
+		return "", fmt.Errorf("tx execution status failed: %s", res.Effects.Status.Error)
 	}
 
 	// check if the error is a retryable MoveAbort
@@ -248,19 +232,32 @@ func (s *Signer) broadcastWithCancel(
 	isRetryableAbort, err := sui.IsRetryableMoveAbort(res.Effects.Status.Error)
 	switch {
 	case err != nil:
-		return "", errors.Wrapf(err, "unable to check tx error code: %s", res.Effects.Status.Error)
+		return "", errors.Wrapf(err, "unable to check tx execution status error code: %s", res.Effects.Status.Error)
 	case isRetryableAbort:
-		return "", fmt.Errorf("unable to execute tx block, retry later: %s", res.Effects.Status.Error)
+		return "", fmt.Errorf("tx execution status failed, retry later: %s", res.Effects.Status.Error)
 	default:
-		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancel tx due to non-retryable error")
+		// cancel tx if the tx execution failed for all other reasons
+		// wait for gateway object version bump to avoid version mismatch
+		time.Sleep(2 * time.Second)
+		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancelling tx")
 	}
 
-	// broadcast cancel tx if the tx execution failed for other reasons
-	res, err = s.client.SuiExecuteTransactionBlock(ctx, *reqCancel)
+	// build cancel tx
+	txCancel, sigCancel, err := cancelTxBuilder()
+	if err != nil {
+		return "", errors.Wrap(err, "unable to build cancel tx")
+	}
+	reqCancel := models.SuiExecuteTransactionBlockRequest{
+		TxBytes:   txCancel.TxBytes,
+		Signature: []string{sigCancel},
+	}
+
+	// broadcast cancel tx
+	res, err = s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}
-	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block successfully")
+	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block")
 
 	return res.Digest, nil
 }

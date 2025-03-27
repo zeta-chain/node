@@ -70,17 +70,16 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
 	var (
-		err       error
-		tx        models.TxnMetaData
-		txCancel  *models.TxnMetaData
-		sig       string
-		sigCancel *string
-		nonce     = cctx.GetCurrentOutboundParam().TssNonce
+		err             error
+		sig             string
+		tx              models.TxnMetaData
+		cancelTxBuilder txBuilder
+		nonce           = cctx.GetCurrentOutboundParam().TssNonce
 	)
 
 	// build outbound txs
 	if cctx.IsWithdrawAndCall() {
-		tx, txCancel, err = s.buildExecuteWithCancel(ctx, cctx)
+		tx, cancelTxBuilder, err = s.buildExecuteWithCancelTxBuilder(ctx, cctx, zetaHeight)
 		if err != nil {
 			return errors.Wrap(err, "unable to build execute tx")
 		}
@@ -91,10 +90,10 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		}
 	}
 
-	// sign outbound txs
-	sig, sigCancel, err = s.signTxWithCancel(ctx, tx, txCancel, zetaHeight, nonce)
+	// sign tx
+	sig, err = s.signTx(ctx, tx, zetaHeight, nonce)
 	if err != nil {
-		return errors.Wrap(err, "unable to sign tx with cancel tx")
+		return errors.Wrap(err, "unable to sign tx")
 	}
 
 	// prepare logger
@@ -104,8 +103,8 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		Logger()
 	ctx = logger.WithContext(ctx)
 
-	// broadcast outbound txs
-	txDigest, err := s.broadcastWithCancel(ctx, tx, txCancel, sig, sigCancel)
+	// broadcast tx with cancel tx
+	txDigest, err := s.broadcastWithCancelTx(ctx, sig, tx, cancelTxBuilder)
 	if err != nil {
 		// todo we might need additional error handling
 		// for the case when the tx is already broadcasted by another zetaclient
@@ -147,12 +146,12 @@ func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, 
 	return sig, nil
 }
 
-// signTxWithCancel signs original tx with an optional cancel tx.
+// SignTxWithCancel signs original tx with an optional cancel tx.
 // Pointers type is used to be flexible and indicate optional cancel tx.
 //
 // Note: this function is not used due to tx simulation issue in Sui SDK,
 // but we can sign both tx and cancel tx in one go once Sui SDK is updated.
-func (s *Signer) signTxWithCancel(
+func (s *Signer) SignTxWithCancel(
 	ctx context.Context,
 	tx models.TxnMetaData,
 	txCancel *models.TxnMetaData,
