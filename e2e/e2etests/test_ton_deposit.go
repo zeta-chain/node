@@ -23,6 +23,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Debug messages
 	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
+	require.NoError(r, err)
 	recipient := sample.EthAddress()
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
