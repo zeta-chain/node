@@ -195,32 +195,43 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	btcRPC := r.BtcRPCClient
 	address, wifKey := r.GetBtcKeypair()
 
-	inputUTXOs := r.ListUTXOs()
+	allUTXOs := r.ListUTXOs()
+
+	// Calculate required amount including fee
+	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
+	amountInt, err := zetabtc.GetSatoshis(amount)
+	require.NoError(r, err)
+	amountSats := btcutil.Amount(amountInt)
+	requiredSats := amountSats + feeSats
+
+	// Select UTXOs until we have enough funds
+	var inputUTXOs []btcjson.ListUnspentResult
+	inputSats := btcutil.Amount(0)
+	for _, utxo := range allUTXOs {
+		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
+		inputUTXOs = append(inputUTXOs, utxo)
+		if inputSats >= requiredSats {
+			break
+		}
+	}
+
+	if inputSats < requiredSats {
+		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", requiredSats, inputSats)
+	}
 
 	// Create a new transaction
 	tx := wire.NewMsgTx(wire.TxVersion)
 
 	// Add inputs
-	inputSats := btcutil.Amount(0)
 	for _, utxo := range inputUTXOs {
 		txHash, err := chainhash.NewHashFromStr(utxo.TxID)
 		require.NoError(r, err)
 		outPoint := wire.NewOutPoint(txHash, utxo.Vout)
 		txIn := wire.NewTxIn(outPoint, nil, nil)
 		tx.AddTxIn(txIn)
-		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
 	}
 
-	// use static fee 0.0005 BTC to calculate change
-	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
-	amountInt, err := zetabtc.GetSatoshis(amount)
-	require.NoError(r, err)
-	amountSats := btcutil.Amount(amountInt)
 	change := inputSats - feeSats - amountSats
-
-	if change < 0 {
-		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", amountSats+feeSats, inputSats)
-	}
 
 	// Create output to recipient
 	pkScript, err := txscript.PayToAddrScript(to)
@@ -310,6 +321,7 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	}
 	return txid, nil
 }
+
 func (r *E2ERunner) InscribeToTSSWithMemo(
 	amount float64,
 	memo []byte,
