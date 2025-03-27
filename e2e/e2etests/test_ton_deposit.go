@@ -23,16 +23,17 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Debug messages
 	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
+	recipient := sample.EthAddress()
+	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
 	r.Logger.Print("Amount: %s", amount.String())
 	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
+	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
 
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
 		r.Logger.Print("Failed to retrieve deposit fee: %v", err)
-		r.Logger.Print("Deposit fee: %s", depositFee.String())
-		r.Logger.Print("Client: %v", r.Clients.TON)
 		require.NoError(r, err)
 	}
 
@@ -51,7 +52,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("Sender TON address: %s", sender.GetAddress().ToRaw())
 
 	// Given sample EVM address
-	recipient := sample.EthAddress()
+	//recipient := sample.EthAddress()
 
 	// ACT
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
@@ -66,7 +67,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
 
 	// Check receiver's balance
-	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
+	//balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
