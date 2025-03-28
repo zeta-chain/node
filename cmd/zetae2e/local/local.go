@@ -468,6 +468,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
 			e2etests.TestSuiTokenWithdrawName,
+
+			// TODO: enable withdraw and call test
+			// https://github.com/zeta-chain/node/issues/3742
+			//e2etests.TestSuiWithdrawAndCallName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}

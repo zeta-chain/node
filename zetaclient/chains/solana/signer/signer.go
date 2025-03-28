@@ -323,11 +323,7 @@ func (signer *Signer) broadcastOutbound(
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 		)
 		if err != nil {
-			// in case it is not failure due to nonce mismatch, replace tx with fallback tx
-			// probably need a better way to do this, but currently this is the only error to tolerate like this
-			errStr := err.Error()
-			if strings.Contains(errStr, "Error processing Instruction") && !strings.Contains(errStr, "NonceMismatch") &&
-				outbound.FallbackTx != nil {
+			if outbound.FallbackTx != nil && shouldUseFallbackTx(err, signer.GetGatewayAddress()) {
 				tx = outbound.FallbackTx
 			}
 			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
