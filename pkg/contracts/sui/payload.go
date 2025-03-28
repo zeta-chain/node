@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// rawPayload is the raw payload format parsed from ABI
 type rawPayload struct {
 	TypeArguments []string `json:"typeArguments"`
 	Objects       [][]byte `json:"objects"`
@@ -27,21 +28,42 @@ var abiType, _ = abi.NewType("tuple", "", []abi.ArgumentMarshaling{
 
 var abiArgs = abi.Arguments{{Type: abiType}}
 
-// ParseWithdrawAndCallPayload parses the ABI encoded payload for withdraw and call
-func ParseWithdrawAndCallPayload(payload []byte) ([]string, []string, []byte, error) {
+// CallPayload represents the payload provided for a custom contract call in the Sui blockchain
+// it contains data allowing to build a Sui PTB transaction to call on_call on a target contract
+type CallPayload struct {
+	// TypeArgs are custom type arguments provided for on_call
+	TypeArgs []string
+
+	// ObjectIDs are the object IDs to be used in the on_call
+	ObjectIDs []string
+
+	// Message is a generic byte array passed as last argument to on_call
+	Message []byte
+}
+
+func NewCallPayload(typeArgs []string, objectIDs []string, message []byte) CallPayload {
+	return CallPayload{
+		TypeArgs:  typeArgs,
+		ObjectIDs: objectIDs,
+		Message:   message,
+	}
+}
+
+// UnpackABI parses the ABI encoded payload for calls
+func (c *CallPayload) UnpackABI(payload []byte) error {
 	unpacked, err := abiArgs.Unpack(payload)
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to unpack ABI arguments")
+		return errors.Wrap(err, "unable to unpack ABI arguments")
 	}
 
 	jsonData, err := json.Marshal(unpacked[0])
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to marshal ABI arguments")
+		return errors.Wrap(err, "unable to marshal ABI arguments")
 	}
 
 	var rawPayload rawPayload
 	if err := json.Unmarshal(jsonData, &rawPayload); err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to unmarshal formatted JSON")
+		return errors.Wrap(err, "unable to unmarshal formatted JSON")
 	}
 
 	// Convert object [][]byte to []string (hex-encoded)
@@ -53,14 +75,21 @@ func ParseWithdrawAndCallPayload(payload []byte) ([]string, []string, []byte, er
 	// Decode base64 message
 	messageBytes, err := base64.StdEncoding.DecodeString(rawPayload.Message)
 	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to decode base64 message")
+		return errors.Wrap(err, "unable to decode base64 message")
 	}
 
-	return rawPayload.TypeArguments, objects, messageBytes, nil
+	// Set the fields
+	c.TypeArgs = rawPayload.TypeArguments
+	c.ObjectIDs = objects
+	c.Message = messageBytes
+
+	return nil
 }
 
-// FormatWithdrawAndCallPayload formats the withdraw and call payload using ABI encoding
-func FormatWithdrawAndCallPayload(typeArguments []string, objects []string, message []byte) ([]byte, error) {
+// PackABI formats the call payload using ABI encoding
+func (c *CallPayload) PackABI() ([]byte, error) {
+	objects := c.ObjectIDs
+
 	// build fixed [32]byte array
 	objectsBytes := make([][32]byte, len(objects))
 	for i, obj := range objects {
@@ -80,9 +109,9 @@ func FormatWithdrawAndCallPayload(typeArguments []string, objects []string, mess
 		Objects       [][32]byte
 		Message       []byte
 	}{
-		TypeArguments: typeArguments,
+		TypeArguments: c.TypeArgs,
 		Objects:       objectsBytes,
-		Message:       message,
+		Message:       c.Message,
 	}
 	return abiArgs.Pack(payload)
 }

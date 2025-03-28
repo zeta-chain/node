@@ -88,8 +88,10 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	message, err := hex.DecodeString("3573924024f4a7ff8e6755cb2d9fdeef69bdb65329f081d21b0b6ab37a265d06")
 	require.NoError(r, err)
 
+	payload := sui.NewCallPayload(argumentTypes, objects, message)
+
 	// ACT
-	payload, err := sui.FormatWithdrawAndCallPayload(argumentTypes, objects, message)
+	payloadBytes, err := payload.PackABI()
 	require.NoError(r, err)
 
 	tx, err := r.GatewayZEVM.WithdrawAndCall0(
@@ -97,7 +99,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		receiverBytes,
 		amount,
 		r.SUIZRC20Addr,
-		payload,
+		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
 			GasLimit:        big.NewInt(20000),

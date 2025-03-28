@@ -106,17 +106,18 @@ func (s *Signer) buildWithdrawAndCallTx(
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
-	typeArguments, objectIDs, message, err := sui.ParseWithdrawAndCallPayload(payloadBytes)
-	if err != nil {
+
+	var cp sui.CallPayload
+	if err := cp.UnpackABI(payloadBytes); err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
 
 	// Note: logs not formatted in standard, it's a temporary log
 	s.Logger().Std.Info().Msgf(
 		"WithdrawAndCall called with type arguments %v, object IDs %v, message %v",
-		typeArguments,
-		objectIDs,
-		message,
+		cp.TypeArgs,
+		cp.ObjectIDs,
+		cp.Message,
 	)
 
 	// keep lint quiet without using _ in params
