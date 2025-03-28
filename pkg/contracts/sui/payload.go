@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/errors"
+	"github.com/pkg/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
