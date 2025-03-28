@@ -25,12 +25,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
 	r.Logger.Print("Amount: %s", amount.String())
 	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
-	r.Logger.Print("Account: %s", gw.AccountID().ToHuman(false, true))
+	r.Logger.Print("Account: %s", gw.AccountID().ToRaw())
 
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
 	if err != nil {
-		r.Logger.Print("Failed to retrieve deposit fee: %v (fee: %s, address: %s, account: %s)", err, depositFee.String(), s.GetAddress().ToHuman(false, true), gw.AccountID().ToHuman(false, true))
+		r.Logger.Print("Failed to retrieve deposit fee: %v (fee: %s, address: %s, account: %s)", err, depositFee.String(), s.GetAddress().ToHuman(false, true), gw.AccountID().ToRaw())
 		require.NoError(r, err)
 	}
 
