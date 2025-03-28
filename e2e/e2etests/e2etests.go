@@ -832,7 +832,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinDepositName,
 		"deposit Bitcoin into ZEVM",
 		[]runner.ArgDefinition{
-			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "amount in btc", DefaultValue: "1.0"},
 		},
 		TestBitcoinDeposit,
 	),

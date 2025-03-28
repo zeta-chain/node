@@ -168,7 +168,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
 func (r *E2ERunner) GetBitcoinBalance() (string, error) {
-	address, _ := r.GetBtcAddress()
+	address, _ := r.GetBtcKeypair()
 	total, err := r.GetBitcoinBalanceByAddress(address)
 	if err != nil {
 		return "", err
@@ -186,9 +186,7 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 
 	var total btcutil.Amount
 	for _, unspent := range unspentList {
-		if unspent.Spendable {
-			total += btcutil.Amount(unspent.Amount * 1e8)
-		}
+		total += btcutil.Amount(unspent.Amount * 1e8)
 	}
 
 	return total, nil
