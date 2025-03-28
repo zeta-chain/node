@@ -25,7 +25,15 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
 	r.Logger.Print("Amount: %s", amount.String())
 	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
-	r.Logger.Print("Account: %s", gw.AccountID().ToRaw())
+	r.Logger.Print("Gateway Account: %s", gw.AccountID().ToRaw())
+
+	// Check Gateway contract state
+	state, err := r.Clients.TON.GetAccountState(ctx, gw.AccountID())
+	if err != nil {
+		r.Logger.Print("Failed to get Gateway state: %v", err)
+	} else {
+		r.Logger.Print("Gateway state: %+v", state)
+	}
 
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
