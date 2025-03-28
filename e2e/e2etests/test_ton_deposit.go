@@ -25,6 +25,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
 	r.Logger.Print("Amount: %s", amount.String())
 	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
+	r.Logger.Print("Account: %s", gw.AccountID().ToHuman(false, true))
 
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
