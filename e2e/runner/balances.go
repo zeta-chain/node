@@ -25,7 +25,6 @@ type AccountBalances struct {
 	ZetaSPL      *big.Int
 	ZetaSui      *big.Int
 	ZetaSuiToken *big.Int
-	ZetaTon      *big.Int
 	EvmETH       *big.Int
 	EvmZETA      *big.Int
 	EvmERC20     *big.Int
@@ -147,20 +146,6 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		suiToken = r.SuiGetFungibleTokenBalance(signer.Address())
 	}
 
-	// ton
-	var tonTON uint64
-	if r.Clients.TON != nil {
-		_, wallet, err := r.Account.AsTONWallet(r.Clients.TON)
-		if err != nil {
-			return AccountBalances{}, fmt.Errorf("failed to get TON wallet: %w", err)
-		}
-		balance, err := r.Clients.TON.GetBalanceOf(r.Ctx, wallet.GetAddress(), false)
-		if err != nil {
-			return AccountBalances{}, fmt.Errorf("failed to get TON balance: %w", err)
-		}
-		tonTON = balance.Uint64()
-	}
-
 	return AccountBalances{
 		ZetaETH:      zetaEth,
 		ZetaZETA:     zetaZeta,
@@ -171,7 +156,6 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaSPL:      zetaSPL,
 		ZetaSui:      zetaSui,
 		ZetaSuiToken: zetaSuiToken,
-		ZetaTon:      big.NewInt(int64(tonTON)),
 		EvmETH:       evmEth,
 		EvmZETA:      evmZeta,
 		EvmERC20:     evmErc20,
@@ -180,7 +164,6 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		SolSPL:       solSPL,
 		SuiSUI:       suiSUI,
 		SuiToken:     suiToken,
-		TonTON:       tonTON,
 	}, nil
 }
 
