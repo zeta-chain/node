@@ -10,7 +10,7 @@ import (
 )
 
 // Gateway error codes
-// https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L14-L21
+// see: https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L14-L21
 const (
 	ErrCodeAlreadyWhitelisted     uint64 = 0
 	ErrCodeInvalidReceiverAddress uint64 = 1

@@ -66,16 +66,12 @@ func (r *E2ERunner) SuiWithdrawSUI(
 }
 
 // SUIWithdrawAndCall calls WithdrawAndCall of Gateway with SUI ZRC20 on ZEVM
-// Note: this function is faked as we don't support SUI withdraw and call yet. Simple withdraw is used instead.
 func (r *E2ERunner) SUIWithdrawAndCall(
 	receiver string,
 	amount *big.Int,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	// TODO: remove this and uncomment below code after SUI withdraw and call is supported
-	//return r.SuiWithdrawSUI(receiver, amount)
-
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 

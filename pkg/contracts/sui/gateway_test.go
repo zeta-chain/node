@@ -322,3 +322,137 @@ func TestParseEvent(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseOutboundEvent(t *testing.T) {
+	// stubs
+	const (
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		sender    = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
+		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
+		receiver  = "0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7"
+	)
+
+	gw := NewGateway(packageID, gatewayID)
+
+	eventType := func(t string) string {
+		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+	}
+
+	for _, tt := range []struct {
+		name      string
+		response  models.SuiTransactionBlockResponse
+		wantEvent Event
+		errMsg    string
+	}{
+		{
+			name: "withdraw",
+			response: models.SuiTransactionBlockResponse{
+				Events: []models.SuiEventResponse{
+					{
+						Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+						PackageId: packageID,
+						Sender:    sender,
+						Type:      eventType("WithdrawEvent"),
+						ParsedJson: map[string]any{
+							"coin_type": string(SUI),
+							"amount":    "200",
+							"sender":    sender,
+							"receiver":  receiver,
+							"nonce":     "123",
+						},
+					},
+				},
+			},
+			wantEvent: Event{
+				TxHash:     txHash,
+				EventIndex: 1,
+				EventType:  WithdrawEvent,
+				content: Withdrawal{
+					CoinType: SUI,
+					Amount:   math.NewUint(200),
+					Sender:   sender,
+					Receiver: receiver,
+					Nonce:    123,
+				},
+			},
+		},
+		{
+			name: "cancelTx",
+			response: models.SuiTransactionBlockResponse{
+				Events: []models.SuiEventResponse{
+					{
+						Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+						PackageId: packageID,
+						Sender:    sender,
+						Type:      eventType("NonceIncreaseEvent"),
+						ParsedJson: map[string]any{
+							"nonce":  "123",
+							"sender": sender,
+						},
+					},
+				},
+			},
+			wantEvent: Event{
+				TxHash:     txHash,
+				EventIndex: 1,
+				EventType:  CancelTxEvent,
+				content: CanceTxEvent{
+					Nonce:  123,
+					Sender: sender,
+				},
+			},
+		},
+		{
+			name: "no event",
+			response: models.SuiTransactionBlockResponse{
+				Events: []models.SuiEventResponse{},
+			},
+			errMsg: "missing events",
+		},
+		{
+			name: "unable to parse event",
+			response: models.SuiTransactionBlockResponse{
+				Events: []models.SuiEventResponse{
+					{
+						Id: models.EventId{TxDigest: "", EventSeq: ""}, // invalid EventId
+					},
+				},
+			},
+			errMsg: "unable to parse event",
+		},
+		{
+			name: "not an outbound event",
+			response: models.SuiTransactionBlockResponse{
+				Events: []models.SuiEventResponse{
+					{
+						Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
+						PackageId: packageID,
+						Sender:    sender,
+						Type:      eventType("DepositEvent"),
+						ParsedJson: map[string]any{
+							"coin_type": string(SUI),
+							"amount":    "100",
+							"sender":    sender,
+							"receiver":  receiver,
+						},
+					},
+				},
+			},
+			errMsg: "unsupported outbound event type",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			event, content, err := gw.ParseOutboundEvent(tt.response)
+
+			if tt.errMsg != "" {
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.wantEvent, event)
+			require.Equal(t, tt.wantEvent.content, content)
+		})
+	}
+}

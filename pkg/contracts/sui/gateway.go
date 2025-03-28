@@ -46,8 +46,8 @@ const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
-	// the gateway.move still uses name "NonceIncreaseEvent", but here uses a more descriptive name
-	CancelTxNonceEvent EventType = "NonceIncreaseEvent"
+	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
+	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
 
 const moduleName = "gateway"
@@ -105,15 +105,15 @@ func (e *Event) Withdrawal() (Withdrawal, error) {
 	return v, nil
 }
 
-func (e *Event) IsCancelTxNonce() bool {
-	return e.EventType == CancelTxNonceEvent
+func (e *Event) IsCancelTx() bool {
+	return e.EventType == CancelTxEvent
 }
 
-// NonceIncrease extract NonceIncrease data.
-func (e *Event) NonceIncrease() (CanceTxNonceEvent, error) {
-	v, ok := e.content.(CanceTxNonceEvent)
+// CanceTxNonceEvent extract CanceTxNonceEvent data.
+func (e *Event) CanceTxNonceEvent() (CanceTxEvent, error) {
+	v, ok := e.content.(CanceTxEvent)
 	if !ok {
-		return CanceTxNonceEvent{}, errors.Errorf("invalid content type %T", e.content)
+		return CanceTxEvent{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -205,8 +205,8 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		content, err = parseDeposit(event, eventType)
 	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
-	case CancelTxNonceEvent:
-		content, err = parseNonceIncrease(event, eventType)
+	case CancelTxEvent:
+		content, err = parseCancelTxEvent(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
@@ -233,7 +233,7 @@ func (gw *Gateway) ParseOutboundEvent(
 
 	event, err = gw.ParseEvent(res.Events[0])
 	if err != nil {
-		return event, nil, err
+		return event, nil, errors.Wrap(err, "unable to parse event")
 	}
 
 	// filter outbound events
@@ -244,12 +244,12 @@ func (gw *Gateway) ParseOutboundEvent(
 			return event, nil, errors.Wrap(err, "unable to extract withdraw event")
 		}
 		return event, withdrawal, nil
-	case event.IsCancelTxNonce():
-		nonceIncrease, err := event.NonceIncrease()
+	case event.IsCancelTx():
+		cancelTxEvent, err := event.CanceTxNonceEvent()
 		if err != nil {
-			return event, nil, errors.Wrap(err, "unable to extract nonce increase event")
+			return event, nil, errors.Wrap(err, "unable to extract cancel tx event")
 		}
-		return event, nonceIncrease, nil
+		return event, cancelTxEvent, nil
 	default:
 		return event, nil, errors.Errorf("unsupported outbound event type %s", event.EventType)
 	}
