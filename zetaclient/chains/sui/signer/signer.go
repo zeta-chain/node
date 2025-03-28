@@ -65,33 +65,25 @@ func New(
 // ProcessCCTX schedules outbound cross-chain transaction.
 // Build --> Sign --> Broadcast --(async)--> Wait for execution --> PostOutboundTracker
 func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
-	outboundID := base.OutboundIDFromCCTX(cctx)
+	var (
+		outboundID = base.OutboundIDFromCCTX(cctx)
+		nonce      = cctx.GetCurrentOutboundParam().TssNonce
+	)
+
 	s.MarkOutbound(outboundID, true)
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
-	var (
-		err             error
-		sig             string
-		tx              models.TxnMetaData
-		cancelTxBuilder txBuilder
-		nonce           = cctx.GetCurrentOutboundParam().TssNonce
-	)
-
-	// build outbound txs
-	if cctx.IsWithdrawAndCall() {
-		tx, cancelTxBuilder, err = s.buildExecuteWithCancelTxBuilder(ctx, cctx, zetaHeight)
-		if err != nil {
-			return errors.Wrap(err, "unable to build execute tx")
-		}
-	} else {
-		tx, err = s.buildWithdraw(ctx, cctx)
-		if err != nil {
-			return errors.Wrap(err, "unable to build withdraw tx")
-		}
+	tx, err := s.buildWithdrawal(ctx, cctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to build withdrawal tx")
 	}
 
-	// sign tx
-	sig, err = s.signTx(ctx, tx, zetaHeight, nonce)
+	cancelTxBuilder, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
+	if err != nil {
+		return errors.Wrap(err, "unable to create cancel tx builder")
+	}
+
+	sig, err := s.signTx(ctx, tx, zetaHeight, nonce)
 	if err != nil {
 		return errors.Wrap(err, "unable to sign tx")
 	}

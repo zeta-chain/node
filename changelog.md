@@ -10,7 +10,8 @@
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
 * [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
-* [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdraw and call
+* [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
+* [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdrawal
 
 ### Refactor
 

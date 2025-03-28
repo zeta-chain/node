@@ -5,14 +5,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls a smart contract on Sui.
+// TestSuiWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm and calls a smart contract on Sui.
 // The execution is rejected in Sui smart contract 'on_call' function, and 'nonce_increase' is called instead.
 //
 // Note: this test is faked as we don't have the support for cross-chain call support for Sui yet
@@ -41,18 +40,8 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call
-	tx := r.SUIWithdrawAndCall(
-		signer.Address(), // replace this with a Sui contract address
-		amount,
-		[]byte(payload),
-		gatewayzevm.RevertOptions{
-			CallOnRevert:     true,
-			RevertAddress:    dAppAddress,
-			RevertMessage:    []byte(payload),
-			OnRevertGasLimit: big.NewInt(0),
-		},
-	)
-	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+	tx := r.SuiWithdrawSUI(signer.Address(), amount)
+	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	// ASSERT
 	// wait for the CCTX to be mined
