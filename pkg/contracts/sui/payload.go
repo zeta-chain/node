@@ -11,13 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// rawPayload is the raw payload format parsed from ABI
-type rawPayload struct {
-	TypeArguments []string `json:"typeArguments"`
-	Objects       [][]byte `json:"objects"`
-	Message       string   `json:"message"` // base64-encoded
-}
-
 // abiType is the ABI type for the withdraw and call payload
 // error is ignored as it is a constant
 var abiType, _ = abi.NewType("tuple", "", []abi.ArgumentMarshaling{
@@ -61,7 +54,12 @@ func (c *CallPayload) UnpackABI(payload []byte) error {
 		return errors.Wrap(err, "unable to marshal ABI arguments")
 	}
 
-	var rawPayload rawPayload
+	// raw payload format parsed from ABI
+	var rawPayload struct {
+		TypeArguments []string `json:"typeArguments"`
+		Objects       [][]byte `json:"objects"`
+		Message       string   `json:"message"` // base64-encoded
+	}
 	if err := json.Unmarshal(jsonData, &rawPayload); err != nil {
 		return errors.Wrap(err, "unable to unmarshal formatted JSON")
 	}
