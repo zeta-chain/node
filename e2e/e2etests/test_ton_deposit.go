@@ -26,6 +26,8 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("Amount: %s", amount.String())
 	r.Logger.Print("Address: %s", s.GetAddress().ToHuman(false, true))
 	r.Logger.Print("Gateway Account: %s", gw.AccountID().ToRaw())
+	r.Logger.Print("TSS Address: %s", r.TSSAddress.Hex())
+	r.Logger.Print("Authority Address: %s", r.Account.EVMAddress().Hex())
 
 	// Check Gateway contract state
 	state, err := r.Clients.TON.GetAccountState(ctx, gw.AccountID())
