@@ -17,20 +17,18 @@ type rawPayload struct {
 	Message       string   `json:"message"` // base64-encoded
 }
 
+// abiType is the ABI type for the withdraw and call payload
+// error is ignored as it is a constant
+var abiType, _ = abi.NewType("tuple", "", []abi.ArgumentMarshaling{
+	{Name: "typeArguments", Type: "string[]"},
+	{Name: "objects", Type: "bytes32[]"},
+	{Name: "message", Type: "bytes"},
+})
+
+var abiArgs = abi.Arguments{{Type: abiType}}
+
 // ParseWithdrawAndCallPayload parses the ABI encoded payload for withdraw and call
 func ParseWithdrawAndCallPayload(payload []byte) ([]string, []string, []byte, error) {
-	abiType, err := abi.NewType("tuple", "struct Payload", []abi.ArgumentMarshaling{
-		{Name: "typeArguments", Type: "string[]"},
-		{Name: "objects", Type: "bytes32[]"},
-		{Name: "message", Type: "bytes"},
-	})
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, "unable to create ABI type")
-	}
-	abiArgs := abi.Arguments{
-		{Type: abiType, Name: "payload"},
-	}
-
 	unpacked, err := abiArgs.Unpack(payload)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "unable to unpack ABI arguments")
@@ -63,17 +61,6 @@ func ParseWithdrawAndCallPayload(payload []byte) ([]string, []string, []byte, er
 
 // FormatWithdrawAndCallPayload formats the withdraw and call payload using ABI encoding
 func FormatWithdrawAndCallPayload(typeArguments []string, objects []string, message []byte) ([]byte, error) {
-	// prepare type
-	abiType, err := abi.NewType("tuple", "", []abi.ArgumentMarshaling{
-		{Name: "typeArguments", Type: "string[]"},
-		{Name: "objects", Type: "bytes32[]"},
-		{Name: "message", Type: "bytes"},
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create ABI type")
-	}
-	abiArgs := abi.Arguments{{Type: abiType}}
-
 	// build fixed [32]byte array
 	objectsBytes := make([][32]byte, len(objects))
 	for i, obj := range objects {
