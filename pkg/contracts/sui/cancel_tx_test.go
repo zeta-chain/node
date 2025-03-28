@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_parseCancelTxEvent(t *testing.T) {
+func Test_parseCancelTx(t *testing.T) {
 	tests := []struct {
 		name      string
 		eventType EventType
 		event     models.SuiEventResponse
-		want      CanceTxEvent
+		want      CanceTx
 		errMsg    string
 	}{
 		{
@@ -25,7 +25,7 @@ func Test_parseCancelTxEvent(t *testing.T) {
 					"sender": "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 				},
 			},
-			want: CanceTxEvent{
+			want: CanceTx{
 				Nonce:  1,
 				Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 			},
@@ -87,7 +87,7 @@ func Test_parseCancelTxEvent(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := parseCancelTxEvent(test.event, test.eventType)
+			got, err := parseCancelTx(test.event, test.eventType)
 			if test.errMsg != "" {
 				require.ErrorContains(t, err, test.errMsg)
 				require.Empty(t, got)
@@ -101,7 +101,7 @@ func Test_parseCancelTxEvent(t *testing.T) {
 }
 
 func Test_TokenAmount(t *testing.T) {
-	event := CanceTxEvent{
+	event := CanceTx{
 		Nonce:  1,
 		Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 	}
@@ -109,7 +109,7 @@ func Test_TokenAmount(t *testing.T) {
 }
 
 func Test_TxNonce(t *testing.T) {
-	event := CanceTxEvent{
+	event := CanceTx{
 		Nonce:  1,
 		Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 	}

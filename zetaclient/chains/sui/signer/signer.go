@@ -146,57 +146,52 @@ func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, 
 	return sig, nil
 }
 
-// SignTxWithCancel signs original tx with an optional cancel tx.
-// Pointers type is used to be flexible and indicate optional cancel tx.
+// SignTxWithCancel signs original tx and cancel tx in one go to save TSS keysign time.
 //
 // Note: this function is not used due to tx simulation issue in Sui SDK,
 // but we can sign both tx and cancel tx in one go once Sui SDK is updated.
 func (s *Signer) SignTxWithCancel(
 	ctx context.Context,
 	tx models.TxnMetaData,
-	txCancel *models.TxnMetaData,
+	txCancel models.TxnMetaData,
 	zetaHeight, nonce uint64,
-) (sig string, sigCancel *string, err error) {
-	digests := [][]byte{}
+) (sig string, sigCancel string, err error) {
+	digests := make([][]byte, 2)
 
-	// collect digests
+	// tx digest
 	digest, err := sui.Digest(tx)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "unable to get digest")
+		return "", "", errors.Wrap(err, "unable to get digest")
 	}
-	digests = append(digests, wrapDigest(digest))
+	digests[0] = wrapDigest(digest)
 
-	if txCancel != nil {
-		digest, err = sui.Digest(*txCancel)
-		if err != nil {
-			return "", nil, errors.Wrap(err, "unable to get cancel tx digest")
-		}
-		digests = append(digests, wrapDigest(digest))
+	// cancel tx digest
+	digestCancel, err := sui.Digest(txCancel)
+	if err != nil {
+		return "", "", errors.Wrap(err, "unable to get cancel tx digest")
 	}
+	digests[1] = wrapDigest(digestCancel)
 
-	// sign digests with TSS
+	// sign both digests with TSS
 	sig65Bs, err := s.TSS().SignBatch(ctx, digests, zetaHeight, nonce, s.Chain().ChainId)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unable to sign %d tx(s) with TSS", len(digests))
+		return "", "", errors.Wrapf(err, "unable to sign %d tx(s) with TSS", len(digests))
 	}
 
 	// should never mismatch
 	if len(sig65Bs) != len(digests) {
-		return "", nil, fmt.Errorf("expected %d signatures, got %d", len(digests), len(sig65Bs))
+		return "", "", fmt.Errorf("expected %d signatures, got %d", len(digests), len(sig65Bs))
 	}
 
 	// serialize signatures
 	sig, err = sui.SerializeSignatureECDSA(sig65Bs[0], s.TSS().PubKey().AsECDSA())
 	if err != nil {
-		return "", nil, errors.Wrap(err, "unable to serialize tx signature")
+		return "", "", errors.Wrap(err, "unable to serialize tx signature")
 	}
 
-	if txCancel != nil {
-		sigBase64, err := sui.SerializeSignatureECDSA(sig65Bs[1], s.TSS().PubKey().AsECDSA())
-		if err != nil {
-			return "", nil, errors.Wrap(err, "unable to serialize tx cancel signature")
-		}
-		sigCancel = &sigBase64
+	sigCancel, err = sui.SerializeSignatureECDSA(sig65Bs[1], s.TSS().PubKey().AsECDSA())
+	if err != nil {
+		return "", "", errors.Wrap(err, "unable to serialize tx cancel signature")
 	}
 
 	return sig, sigCancel, nil

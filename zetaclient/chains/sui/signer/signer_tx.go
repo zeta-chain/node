@@ -21,7 +21,6 @@ type txBuilder func() (models.TxnMetaData, string, error)
 
 const (
 	funcWithdraw      = "withdraw"
-	funcExecute       = "execute"
 	funcIncreaseNonce = "increase_nonce"
 )
 

@@ -133,7 +133,6 @@ func (p *EventQuery) asRequest() (models.SuiXQueryEventsRequest, error) {
 
 // GetOwnedObjectID returns the first owned object ID by owner address and struct type.
 // If no objects found or multiple objects found, returns error.
-// TODO: https://github.com/zeta-chain/node/issues/3775
 func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error) {
 	res, err := c.SuiXGetOwnedObjects(ctx, models.SuiXGetOwnedObjectsRequest{
 		Address: ownerAddress,
@@ -159,6 +158,7 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 
 // InspectTransactionBlock manual implementation of ISuiAPI.InspectTransactionBlock
 // Don't use this function at this moment because Sui SDK currently returns deserialization error.
+// TODO: https://github.com/zeta-chain/node/issues/3775
 //
 // @see sui.(*suiReadTransactionImpl).InspectTransactionBlock
 // @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock

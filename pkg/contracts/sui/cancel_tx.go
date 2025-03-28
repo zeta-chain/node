@@ -8,51 +8,51 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CanceTxEvent represents data for a Sui cancelled tx nonce increase event
-type CanceTxEvent struct {
+// CanceTx represents data for a Sui cancelled tx nonce increase event
+type CanceTx struct {
 	Sender string
 	Nonce  uint64
 }
 
 // TokenAmount returns hardcoded zero amount
 // because nonce increase does not involve any token transfer
-func (n CanceTxEvent) TokenAmount() math.Uint {
+func (n CanceTx) TokenAmount() math.Uint {
 	return math.NewUint(0)
 }
 
 // TxNonce returns the nonce of the cancelled tx
 // Nonce in the event is the incremented value, so we need to subtract 1
 // see: https://github.com/zeta-chain/protocol-contracts-sui/blob/e5a756e473da884dcbc59b574b387a7a365ac823/sources/gateway.move#L140
-func (n CanceTxEvent) TxNonce() uint64 {
+func (n CanceTx) TxNonce() uint64 {
 	return n.Nonce - 1
 }
 
-func parseCancelTxEvent(event models.SuiEventResponse, eventType EventType) (CanceTxEvent, error) {
+func parseCancelTx(event models.SuiEventResponse, eventType EventType) (CanceTx, error) {
 	if eventType != CancelTxEvent {
-		return CanceTxEvent{}, errors.Errorf("invalid event type %q", eventType)
+		return CanceTx{}, errors.Errorf("invalid event type %q", eventType)
 	}
 
 	parsedJSON := event.ParsedJson
 
 	sender, err := extractStr(parsedJSON, "sender")
 	if err != nil {
-		return CanceTxEvent{}, errors.Wrap(err, "unable to extract sender")
+		return CanceTx{}, errors.Wrap(err, "unable to extract sender")
 	}
 
 	nonceRaw, err := extractStr(parsedJSON, "nonce")
 	if err != nil {
-		return CanceTxEvent{}, errors.Wrap(err, "unable to extract nonce")
+		return CanceTx{}, errors.Wrap(err, "unable to extract nonce")
 	}
 
 	nonce, err := strconv.ParseUint(nonceRaw, 10, 64)
 	if err != nil {
-		return CanceTxEvent{}, errors.Wrap(err, "unable to parse nonce")
+		return CanceTx{}, errors.Wrap(err, "unable to parse nonce")
 	}
 	if nonce <= 0 {
-		return CanceTxEvent{}, errors.New("nonce must be positive")
+		return CanceTx{}, errors.New("nonce must be positive")
 	}
 
-	return CanceTxEvent{
+	return CanceTx{
 		Sender: sender,
 		Nonce:  nonce,
 	}, nil

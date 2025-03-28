@@ -268,27 +268,6 @@ func (ob *Observer) unsetTx(nonce uint64) {
 	delete(ob.txMap, nonce)
 }
 
-// func parseNonceFromWithdrawInputs(inputs []models.SuiCallArg) (uint64, error) {
-// 	if len(inputs) != expectedWithdrawArgs {
-// 		return 0, errors.New("invalid number of input arguments")
-// 	}
-
-// 	const nonceIdx = 2
-
-// 	// {
-// 	//   "type": "pure",
-// 	//   "valueType": "u64",
-// 	//   "value": "12345"
-// 	// }
-// 	raw := inputs[nonceIdx]
-
-// 	if raw["type"] != "pure" || raw["valueType"] != "u64" {
-// 		return 0, errors.Errorf("invalid nonce object %+v", raw)
-// 	}
-
-// 	return strconv.ParseUint(raw["value"].(string), 10, 64)
-// }
-
 func parseGasUsed(tx models.SuiTransactionBlockResponse) (uint64, error) {
 	gas := tx.Effects.GasUsed
 

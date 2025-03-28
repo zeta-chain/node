@@ -95,7 +95,7 @@ func (e *Event) IsWithdraw() bool {
 	return e.EventType == WithdrawEvent
 }
 
-// Withdrawal extract Withdraw data.
+// Withdrawal extract withdraw data.
 func (e *Event) Withdrawal() (Withdrawal, error) {
 	v, ok := e.content.(Withdrawal)
 	if !ok {
@@ -109,11 +109,11 @@ func (e *Event) IsCancelTx() bool {
 	return e.EventType == CancelTxEvent
 }
 
-// CanceTxNonceEvent extract CanceTxNonceEvent data.
-func (e *Event) CanceTxNonceEvent() (CanceTxEvent, error) {
-	v, ok := e.content.(CanceTxEvent)
+// CanceTx extract CanceTx data.
+func (e *Event) CanceTx() (CanceTx, error) {
+	v, ok := e.content.(CanceTx)
 	if !ok {
-		return CanceTxEvent{}, errors.Errorf("invalid content type %T", e.content)
+		return CanceTx{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -206,7 +206,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
 	case CancelTxEvent:
-		content, err = parseCancelTxEvent(event, eventType)
+		content, err = parseCancelTx(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
@@ -245,11 +245,11 @@ func (gw *Gateway) ParseOutboundEvent(
 		}
 		return event, withdrawal, nil
 	case event.IsCancelTx():
-		cancelTxEvent, err := event.CanceTxNonceEvent()
+		cancelTx, err := event.CanceTx()
 		if err != nil {
 			return event, nil, errors.Wrap(err, "unable to extract cancel tx event")
 		}
-		return event, cancelTxEvent, nil
+		return event, cancelTx, nil
 	default:
 		return event, nil, errors.Errorf("unsupported outbound event type %s", event.EventType)
 	}
