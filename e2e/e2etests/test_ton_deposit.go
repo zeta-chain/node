@@ -29,6 +29,14 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("TSS Address: %s", r.TSSAddress.Hex())
 	r.Logger.Print("Authority Address: %s", r.Account.EVMAddress().Hex())
 
+	// Verify TSS and authority addresses
+	expectedTSS := r.TSSAddress
+	expectedAuthority := r.Account.EVMAddress()
+	r.Logger.Print("Expected TSS Address: %s", expectedTSS.Hex())
+	r.Logger.Print("Expected Authority Address: %s", expectedAuthority.Hex())
+	r.Logger.Print("TSS Address Match: %v", r.TSSAddress.Hex() == expectedTSS.Hex())
+	r.Logger.Print("Authority Address Match: %v", r.Account.EVMAddress().Hex() == expectedAuthority.Hex())
+
 	// Check Gateway contract state
 	state, err := r.Clients.TON.GetAccountState(ctx, gw.AccountID())
 	if err != nil {
