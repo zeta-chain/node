@@ -2,21 +2,21 @@ package e2etests
 
 import (
 	"math/big"
+	"time"
 
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSuiWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm and calls a smart contract on Sui.
-// The execution is rejected in Sui smart contract 'on_call' function, and 'nonce_increase' is called instead.
-//
-// Note: this test is faked as we don't have the support for cross-chain call support for Sui yet
-// and it uses simple Gas coin withdrawal as a workaround to test the failed (rejected) outbound.
-func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
+// TestSuiWithdrawRevertWithCall executes withdraw on zevm gateway.
+// The outbound is rejected by Sui network, and 'nonce_increase' is called instead to cancel the tx.
+func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := utils.ParseBigInt(r, args[0])
 
@@ -35,12 +35,35 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	payload := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
+	// retrieve current zrc20 gas limit
+	oldGasLimit, err := r.SUIZRC20.GASLIMIT(&bind.CallOpts{})
+	require.NoError(r, err)
+	r.Logger.Print("current gas limit: %s", oldGasLimit.String())
+
+	// set a low ZRC20 gas limit so gasBudget will be low: "1000000"
+	// withdraw tx will be rejected due to execution error "InsufficientGas"
+	lowGasLimit := math.NewUintFromBigInt(big.NewInt(1000))
+	_, err = r.ZetaTxServer.UpdateZRC20GasLimit(r.SUIZRC20Addr, lowGasLimit)
+	require.NoError(r, err)
+
+	// wait for the new gas limit to take effect
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 1, 10*time.Second)
+
 	// ACT
 	// approve the ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call
-	tx := r.SuiWithdrawSUI(signer.Address(), amount)
+	// perform the withdraw with revert options
+	tx := r.SuiWithdrawSUI(
+		signer.Address(),
+		amount,
+		gatewayzevm.RevertOptions{
+			CallOnRevert:     true,
+			RevertAddress:    dAppAddress,
+			RevertMessage:    []byte(payload),
+			OnRevertGasLimit: big.NewInt(0),
+		},
+	)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	// ASSERT
@@ -67,4 +90,9 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	dAppBalanceAfter, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
 	require.NoError(r, err)
 	require.Equal(r, amount.Int64(), dAppBalanceAfter.Int64()-dAppBalanceBefore.Int64())
+
+	// TEARDOWN
+	// restore old gas limit
+	_, err = r.ZetaTxServer.UpdateZRC20GasLimit(r.SUIZRC20Addr, math.NewUintFromBigInt(oldGasLimit))
+	require.NoError(r, err, "failed to restore gas limit")
 }

@@ -112,7 +112,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 
 	// cancelled transaction means the outbound is failed
 	// - set amount to CCTX's amount to bypass amount check in zetacore
-	// - set status to failed because outbound is failed and cancelled
+	// - set status to failed to revert the CCTX in zetacore
 	if event.IsCancelTx() {
 		amount = params.Amount
 		status = chains.ReceiveStatus_failed

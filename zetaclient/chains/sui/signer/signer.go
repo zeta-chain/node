@@ -153,7 +153,7 @@ func (s *Signer) SignTxWithCancel(
 	// tx digest
 	digest, err := sui.Digest(tx)
 	if err != nil {
-		return "", "", errors.Wrap(err, "unable to get digest")
+		return "", "", errors.Wrap(err, "unable to get tx digest")
 	}
 	digests[0] = wrapDigest(digest)
 

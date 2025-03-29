@@ -23,9 +23,10 @@ type txBuilder func() (models.TxnMetaData, string, error)
 const (
 	funcWithdraw      = "withdraw"
 	funcIncreaseNonce = "increase_nonce"
-)
 
-// outboundDataFromCCTX
+	// minGasBudgetCancelTx is the minimum gas budget for the cancel tx
+	minGasBudgetCancelTx = 2_000_000
+)
 
 // TODO: use these functions in PTB building
 // https://github.com/zeta-chain/node/issues/3741
@@ -161,7 +162,7 @@ func (s *Signer) createCancelTxBuilder(
 	)
 
 	// get gas budget from CCTX
-	gasBudget, err := gasBudgetFromCCTX(cctx)
+	gasBudget, err := getCancelTxGasBudget(params)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get gas budget")
 	}
@@ -196,26 +197,6 @@ func (s *Signer) createCancelTxBuilder(
 		}
 		return txCancel, sigCancel, nil
 	}, nil
-}
-
-// broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
-func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]byte) (string, error) {
-	sigBase64, err := sui.SerializeSignatureECDSA(sig, s.TSS().PubKey().AsECDSA())
-	if err != nil {
-		return "", errors.Wrap(err, "unable to serialize signature")
-	}
-
-	req := models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   tx.TxBytes,
-		Signature: []string{sigBase64},
-	}
-
-	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to execute tx block")
-	}
-
-	return res.Digest, nil
 }
 
 // broadcastWithCancelTx attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
@@ -291,15 +272,16 @@ func (s *Signer) broadcastWithCancelTx(
 	return res.Digest, nil
 }
 
-// gasBudgetFromCCTX returns gas budget from CCTX
-func gasBudgetFromCCTX(cctx *cctypes.CrossChainTx) (string, error) {
-	params := cctx.GetCurrentOutboundParam()
-
-	// Gas budget is gas limit * gas price
+// getCancelTxGasBudget returns gas budget for a cancel tx
+func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
 	gasPrice, err := strconv.ParseUint(params.GasPrice, 10, 64)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to parse gas price")
 	}
 
-	return strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10), nil
+	// If it is a cancel tx, we need to use the bigger one
+	// because the cancelled tx may be caused by insufficient gas
+	gasBudget := max(gasPrice*params.CallOptions.GasLimit, minGasBudgetCancelTx)
+
+	return strconv.FormatUint(gasBudget, 10), nil
 }
