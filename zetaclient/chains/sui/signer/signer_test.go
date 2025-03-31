@@ -82,7 +82,12 @@ func TestSigner(t *testing.T) {
 		ts.SuiMock.
 			On("SuiGetTransactionBlock", mock.Anything, mock.Anything).
 			Return(models.SuiTransactionBlockResponse{
-				Digest:     digest,
+				Digest: digest,
+				Effects: models.SuiEffects{
+					Status: models.ExecutionStatus{
+						Status: "success",
+					},
+				},
 				Checkpoint: "1000000",
 			}, nil)
 
@@ -183,7 +188,14 @@ func (ts *testSuite) MockExec(assert func(req models.SuiExecuteTransactionBlockR
 		req models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error) {
 		assert(req)
-		return models.SuiTransactionBlockResponse{Digest: digest}, nil
+		return models.SuiTransactionBlockResponse{
+			Effects: models.SuiEffects{
+				Status: models.ExecutionStatus{
+					Status: "success",
+				},
+			},
+			Digest: digest,
+		}, nil
 	}
 
 	ts.SuiMock.On("SuiExecuteTransactionBlock", mock.Anything, mock.Anything).Return(call)
