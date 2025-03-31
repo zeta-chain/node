@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v29.2.0
+
+* [3780](https://github.com/zeta-chain/node/pull/3780) - patch maxValidator param decrease bug
+
 ## v29.1.0
 
 ### Features

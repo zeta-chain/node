@@ -20,6 +20,8 @@ import (
 
 type StakingKeeper interface {
 	GetAllValidators(ctx context.Context) (validators []stakingtypes.Validator, err error)
+	GetParams(ctx context.Context) (params stakingtypes.Params, err error)
+	SetParams(ctx context.Context, params stakingtypes.Params) error
 }
 
 // AccountKeeper defines the expected account keeper (noalias)

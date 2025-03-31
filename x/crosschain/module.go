@@ -179,6 +179,24 @@ func (am AppModule) BeginBlock(c context.Context) error {
 	// error is logged in the function
 	am.keeper.IterateAndUpdateCctxGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCctxGasPrice)
 
+	// PATCH - v29
+	// check the staking param and force 100 for maxValidator
+	stakingParams, err := am.keeper.GetStakingKeeper().GetParams(ctx)
+	if err != nil {
+		// avoid returning error here to halt the chain
+		am.keeper.Logger(ctx).Error("failed to get staking params", "error", err)
+	} else {
+		if stakingParams.MaxValidators != 100 {
+			am.keeper.Logger(ctx).Info("max validator different than 100", "maxValidators", stakingParams.MaxValidators)
+			stakingParams.MaxValidators = 100
+			if err := am.keeper.GetStakingKeeper().SetParams(ctx, stakingParams); err != nil {
+				am.keeper.Logger(ctx).Error("failed to set staking params", "error", err)
+			} else {
+				am.keeper.Logger(ctx).Info("staking params updated", "maxValidators", stakingParams.MaxValidators)
+			}
+		}
+	}
+
 	return nil
 }
 
