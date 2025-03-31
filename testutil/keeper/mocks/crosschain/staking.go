@@ -45,6 +45,52 @@ func (_m *CrosschainStakingKeeper) GetAllValidators(ctx context.Context) ([]type
 	return r0, r1
 }
 
+// GetParams provides a mock function with given fields: ctx
+func (_m *CrosschainStakingKeeper) GetParams(ctx context.Context) (types.Params, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetParams")
+	}
+
+	var r0 types.Params
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (types.Params, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) types.Params); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(types.Params)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SetParams provides a mock function with given fields: ctx, params
+func (_m *CrosschainStakingKeeper) SetParams(ctx context.Context, params types.Params) error {
+	ret := _m.Called(ctx, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetParams")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.Params) error); ok {
+		r0 = rf(ctx, params)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewCrosschainStakingKeeper creates a new instance of CrosschainStakingKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewCrosschainStakingKeeper(t interface {
