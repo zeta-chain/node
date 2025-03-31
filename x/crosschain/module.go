@@ -191,8 +191,9 @@ func (am AppModule) BeginBlock(c context.Context) error {
 			stakingParams.MaxValidators = 100
 			if err := am.keeper.GetStakingKeeper().SetParams(ctx, stakingParams); err != nil {
 				am.keeper.Logger(ctx).Error("failed to set staking params", "error", err)
+			} else {
+				am.keeper.Logger(ctx).Info("staking params updated", "maxValidators", stakingParams.MaxValidators)
 			}
-			am.keeper.Logger(ctx).Info("staking params updated", "maxValidators", stakingParams.MaxValidators)
 		}
 	}
 
