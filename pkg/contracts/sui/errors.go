@@ -66,6 +66,9 @@ func NewMoveAbortFromExecutionError(errorMsg string) (abort MoveAbort, err error
 }
 
 // IsRetryable returns true if the MoveAbort error code is in the retryable error list.
+//
+// The error handling needs to be more accurate:
+// TODO: https://github.com/zeta-chain/node/issues/3778
 func (m MoveAbort) IsRetryable() bool {
 	return slices.Contains(retryableOutboundErrCodes, m.Code)
 }
