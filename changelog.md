@@ -11,6 +11,7 @@
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
 * [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
 * [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
+* [3784](https://github.com/zeta-chain/node/pull/3784) - support 0x prefix in keys parse command
 
 ### Refactor
 
