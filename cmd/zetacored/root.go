@@ -212,7 +212,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
-		ethermintclient.KeyCommands(app.DefaultNodeHome),
+		customKeyCommands(app.DefaultNodeHome),
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
@@ -223,6 +223,20 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+}
+
+func customKeyCommands(defaultNodeHome string) *cobra.Command {
+	keyCmd := ethermintclient.KeyCommands(defaultNodeHome)
+	
+	for _, cmd := range keyCmd.Commands() {
+		if cmd.Use == "parse <hex-or-bech32-address>" {
+			keyCmd.RemoveCommand(cmd)
+			keyCmd.AddCommand(ParseKeyCommand())
+			break
+		}
+	}
+	
+	return keyCmd
 }
 
 func queryCommand() *cobra.Command {
