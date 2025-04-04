@@ -3,9 +3,8 @@ package main
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
-	
 	sdkkeys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/spf13/cobra"
 )
 
 func ParseKeyCommand() *cobra.Command {
@@ -16,7 +15,6 @@ func ParseKeyCommand() *cobra.Command {
 		if len(args) > 0 && strings.HasPrefix(args[0], "0x") {
 			args[0] = args[0][2:]
 		}
-		
 		return origRunE(cmd, args)
 	}
 	
