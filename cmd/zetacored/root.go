@@ -227,7 +227,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 
 func customKeyCommands(defaultNodeHome string) *cobra.Command {
 	keyCmd := ethermintclient.KeyCommands(defaultNodeHome)
-	
+
 	for _, cmd := range keyCmd.Commands() {
 		if cmd.Use == "parse <hex-or-bech32-address>" {
 			keyCmd.RemoveCommand(cmd)
@@ -235,7 +235,7 @@ func customKeyCommands(defaultNodeHome string) *cobra.Command {
 			break
 		}
 	}
-	
+
 	return keyCmd
 }
 
