@@ -31,6 +31,13 @@ func TestUpdateZRC20Name(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 	require.Equal(r, "ETH.NEW", newSymbol)
 
+	qRes, err := r.FungibleClient.ForeignCoins(r.Ctx, &fungibletypes.QueryGetForeignCoinsRequest{
+		Index: r.ETHZRC20Addr.Hex(),
+	})
+	require.NoError(r, err)
+	require.EqualValues(r, "New ETH", qRes.ForeignCoins.Name)
+	require.EqualValues(r, "ETH.NEW", qRes.ForeignCoins.Symbol)
+
 	// try another zrc20
 	msg = fungibletypes.NewMsgUpdateZRC20Name(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
@@ -51,4 +58,11 @@ func TestUpdateZRC20Name(r *runner.E2ERunner, _ []string) {
 	newSymbol, err = r.ERC20ZRC20.Symbol(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.Equal(r, "USDT.NEW", newSymbol)
+
+	qRes, err = r.FungibleClient.ForeignCoins(r.Ctx, &fungibletypes.QueryGetForeignCoinsRequest{
+		Index: r.ERC20ZRC20Addr.Hex(),
+	})
+	require.NoError(r, err)
+	require.EqualValues(r, "New USDT", qRes.ForeignCoins.Name)
+	require.EqualValues(r, "USDT.NEW", qRes.ForeignCoins.Symbol)
 }

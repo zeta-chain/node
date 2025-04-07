@@ -51,7 +51,7 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
-		[]byte("revert"),
+		[]byte("revert NonceMismatch"),
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    revertAddress,
