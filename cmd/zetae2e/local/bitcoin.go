@@ -45,6 +45,8 @@ func startBitcoinTests(
 		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 	}
 	bitcoinWithdrawTests := []string{
+		// need initial deposit to fund the withdraws
+		e2etests.TestBitcoinDepositName,
 		e2etests.TestBitcoinWithdrawSegWitName,
 		e2etests.TestBitcoinWithdrawInvalidAddressName,
 		e2etests.TestLegacyZetaWithdrawBTCRevertName,
@@ -85,7 +87,6 @@ func bitcoinTestRoutines(
 	withdrawTests []string,
 ) (func() error, func() error) {
 	// initialize runner for deposit tests
-	// deposit tests need Bitcoin node wallet to handle UTXOs
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
 		"btc_deposit",
@@ -98,7 +99,6 @@ func bitcoinTestRoutines(
 	)
 
 	// initialize runner for withdraw tests
-	// withdraw tests DON'T use Bitcoin node wallet
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
 		"btc_withdraw",
@@ -115,13 +115,11 @@ func bitcoinTestRoutines(
 	if initNetwork {
 		// mine 101 blocks to ensure the BTC rewards are spendable
 		// Note: the block rewards can be sent to any address in here
-		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
+		_, err := deployerRunner.GenerateToAddressIfLocalBitcoin(101, deployerRunner.GetBtcAddress())
 		require.NoError(runnerDeposit, err)
 
 		// donate BTC to TSS and send BTC to ZEVM addresses
-		runnerDeposit.DonateBTC()
-		runnerDeposit.DepositBTC(runnerDeposit.EVMAddress())
-		runnerDeposit.DepositBTC(runnerWithdraw.EVMAddress())
+		deployerRunner.DonateBTC()
 	}
 
 	// create test routines
@@ -151,12 +149,16 @@ func initBitcoinRunner(
 	)
 	testutil.NoError(err)
 
-	runner.BTCDeployerAddress, _ = deployerRunner.GetBtcAddress()
-
 	// initialize funds
 	if initNetwork {
-		// send some BTC block rewards to the deployer address
-		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		address, _ := runner.GetBtcKeypair()
+
+		// ensure address is imported
+		err := runner.BtcRPCClient.ImportAddress(runner.Ctx, address.EncodeAddress())
+		require.NoError(runner, err)
+
+		// send some BTC block rewards
+		_, err = runner.GenerateToAddressIfLocalBitcoin(101, address)
 		require.NoError(runner, err)
 
 		// send ERC20 token on EVM
