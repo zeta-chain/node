@@ -415,7 +415,7 @@ $(BINDIR)/runsim:
 define run-sim-test
 	@echo "Running $(1)"
 	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
-		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
+		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5) -Seed 10
 endef
 
 test-sim-nondeterminism:

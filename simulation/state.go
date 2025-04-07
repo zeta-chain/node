@@ -484,7 +484,7 @@ func AppStateRandomizedFn(
 	)
 	appParams.GetOrGenerate(
 		InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
+		func(r *rand.Rand) { numInitiallyBonded = 120 },
 	)
 
 	if numInitiallyBonded > numAccs {
