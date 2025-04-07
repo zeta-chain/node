@@ -83,6 +83,7 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 			// we have to re-scan this block next time
 			return blockNumber - 1, errors.Wrapf(err, "error getting bitcoin block %d", blockNumber)
 		}
+		ob.logger.Inbound.Info().Uint64("block", blockNumber).Msgf("block has %d txs", len(res.Block.Tx))
 
 		if len(res.Block.Tx) <= 1 {
 			continue
@@ -105,6 +106,11 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 			// we have to re-scan this block next time
 			return blockNumber - 1, errors.Wrapf(err, "error filtering incoming txs for block %d", blockNumber)
 		}
+
+		ob.logger.Inbound.Info().
+			Uint64("block", blockNumber).
+			Str("tss_address", tssAddress).
+			Msgf("block has %d inbound events", len(events))
 
 		// post inbound vote message to zetacore
 		for _, event := range events {
@@ -130,6 +136,8 @@ func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, 
 					// we have to re-scan this block next time
 					return blockNumber - 1, errors.Wrapf(err, "error posting inbound vote for tx %s", event.TxHash)
 				}
+			} else {
+				ob.logger.Inbound.Info().Uint64("block", blockNumber).Fields(map[string]any{logs.FieldTx: event.TxHash}).Msg("no vote built for tx")
 			}
 		}
 	}
@@ -196,6 +204,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// check if the event is processable
 	if !ob.IsEventProcessable(*event) {
+		ob.logger.Inbound.Info().Uint64("block", event.BlockNumber).Fields(lf).Msg("event not processable")
 		return nil
 	}
 
