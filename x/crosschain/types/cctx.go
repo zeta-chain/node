@@ -154,16 +154,17 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
 	// in protocol contract V2, developers can specify a specific address to receive the revert
 	// if not specified, the sender address is used
 	if m.ProtocolContractVersion == ProtocolContractVersion_V2 {
-		if chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		switch {
+		case chains.IsBitcoinChain(m.InboundParams.SenderChainId, []chains.Chain{}):
 			if m.RevertOptions.RevertAddress != "" {
 				revertReceiver = m.RevertOptions.RevertAddress
 			}
-		} else if chains.IsSolanaChain(m.InboundParams.SenderChainId, []chains.Chain{}) {
+		case chains.IsSolanaChain(m.InboundParams.SenderChainId, []chains.Chain{}):
 			revertAddress, valid := m.RevertOptions.GetSOLRevertAddress()
 			if valid {
 				revertReceiver = revertAddress.String()
 			}
-		} else {
+		default:
 			revertAddress, valid := m.RevertOptions.GetEVMRevertAddress()
 			if valid {
 				revertReceiver = revertAddress.Hex()
