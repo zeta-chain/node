@@ -92,9 +92,9 @@ func (r *E2ERunner) TONDeposit(
 		return match
 	}
 
-	// Wait for cctx with longer timeout (3 minutes instead of 1)
+	// Wait for cctx with standard timeout (1 minute)
 	r.Logger.Info("⏳ Waiting for CCTX to be processed...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 3*time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	return cctx, nil

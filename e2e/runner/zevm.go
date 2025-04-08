@@ -412,14 +412,7 @@ func (r *E2ERunner) waitForMinedCCTXFromIndex(index string, status types.CctxSta
 		r.Logger.Print("✅ Chain params for TON (ID: %d) are set", chainID)
 	}
 
-	// Increase timeout for CCTX processing
-	originalTimeout := r.CctxTimeout
-	r.CctxTimeout = 2 * time.Minute
-
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
-
-	// Restore original timeout
-	r.CctxTimeout = originalTimeout
 
 	r.Logger.Info("✅ CCTX with index %s found with status %s", index, cctx.CctxStatus.Status)
 

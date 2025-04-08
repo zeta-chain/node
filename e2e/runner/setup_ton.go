@@ -71,12 +71,30 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 	r.tonProvisionUser(ctx, userTON, deployer, amount)
 
 	// 5. Set chain params & chain nonce
+	r.Logger.Print("🔍 Setting up TON chain parameters")
+
 	err = r.ensureTONChainParams(gwAccount)
 	require.NoError(r, err, "unable to ensure TON chain params")
 
+	// Verify the parameters were set correctly
+	chainID := chains.TONLocalnet.ChainId
+	params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
+		ChainId: chainID,
+	})
+
+	if err != nil {
+		r.Logger.Print("⚠️ Chain params verification failed: %v", err)
+	} else {
+		r.Logger.Print("✅ TON chain parameters set. Gateway address: %s", params.ChainParams.GatewayAddress)
+		if params.ChainParams.GatewayAddress != gwAccount.ID.ToRaw() {
+			r.Logger.Print("⚠️ WARNING: Gateway address mismatch: expected %s, got %s",
+				gwAccount.ID.ToRaw(), params.ChainParams.GatewayAddress)
+		}
+	}
+
 	gw := toncontracts.NewGateway(gwAccount.ID)
 
-	// 5. Deposit TON to userTON
+	// 6. Deposit TON to userTON
 	zevmRecipient := userTON.EVMAddress()
 
 	cctx, err := r.TONDeposit(gw, &deployer.Wallet, amount, zevmRecipient)
@@ -94,9 +112,9 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 	}
 
 	creator := r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName)
-
 	chainID := chains.TONLocalnet.ChainId
 
+	// Set up the chain parameters
 	chainParams := &observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           1,
@@ -137,25 +155,27 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 	}
 	r.Logger.Print("✅ Successfully broadcast TON chain nonce reset: %s", resp.TxHash)
 
-	r.Logger.Print("💎 Voted for adding TON chain params (localnet). Waiting for confirmation")
+	// Allow some time for the transactions to be included in blocks
+	r.Logger.Print("⏳ Waiting for transactions to be included in blocks...")
+	time.Sleep(5 * time.Second)
 
+	// Wait for params to be queryable
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chainID}
+	const checkDuration = 5 * time.Second
+	const maxChecks = 10
 
-	// Increase duration between checks, and number of retries
-	const duration = 5 * time.Second
-	const maxAttempts = 20
-
-	for i := 0; i < maxAttempts; i++ {
+	for i := 0; i < maxChecks; i++ {
 		params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
 		if err == nil {
 			r.Logger.Print("💎 TON chain params are set")
 			r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", params.ChainParams.GatewayAddress)
 			r.Logger.Print("🔍 Gateway address match: %v", params.ChainParams.GatewayAddress == gw.ID.ToRaw())
+
 			return nil
 		}
 
-		r.Logger.Print("⏳ Waiting for TON chain params to be set (attempt %d/%d): %v", i+1, maxAttempts, err)
-		time.Sleep(duration)
+		r.Logger.Print("⏳ Waiting for TON chain params to be set (check %d/%d): %v", i+1, maxChecks, err)
+		time.Sleep(checkDuration)
 	}
 
 	return errors.New("unable to set TON chain params after maximum attempts")
