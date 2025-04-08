@@ -15,7 +15,7 @@
   ],
   "metadata": "",
   "deposit": "1000000000000000000000azeta",
-  "title": "Reduce max_validators to 25",
-  "summary": "This proposal will reduce the active set size to 25, to test what impact this will have on the network.",
+  "title": "Reduce max_validators to 1",
+  "summary": "This proposal will reduce the active set size to 1, to test what impact this will have on the network.",
   "expedited": false
 }
