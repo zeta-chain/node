@@ -15,7 +15,8 @@
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
-        "* `message` - The message passed to the contract."
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - Revert options."
       ],
       "discriminator": [
         181,
@@ -50,6 +51,16 @@
         {
           "name": "message",
           "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -61,7 +72,8 @@
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of lamports to deposit.",
-        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM."
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `revert_options` - Revert options."
       ],
       "discriminator": [
         242,
@@ -123,6 +135,16 @@
               20
             ]
           }
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -135,7 +157,8 @@
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of lamports to deposit.",
         "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
-        "* `message` - The message passed to the contract."
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - Revert options."
       ],
       "discriminator": [
         65,
@@ -201,6 +224,16 @@
         {
           "name": "message",
           "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -212,7 +245,8 @@
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of SPL tokens to deposit.",
-        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM."
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `revert_options` - Revert options."
       ],
       "discriminator": [
         86,
@@ -329,6 +363,16 @@
               20
             ]
           }
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -341,7 +385,8 @@
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of SPL tokens to deposit.",
         "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
-        "* `message` - The message passed to the contract."
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - Revert options."
       ],
       "discriminator": [
         14,
@@ -462,6 +507,16 @@
         {
           "name": "message",
           "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -1706,6 +1761,43 @@
               "Flag to indicate whether deposits are paused."
             ],
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RevertOptions",
+      "docs": [
+        "Struct containing revert options",
+        "# Arguments",
+        "* `revert_address` Address to receive revert.",
+        "* `abort_address` Address to receive funds if aborted.",
+        "* `call_on_revert` Flag if on_revert hook should be called.",
+        "* `revert_message` Arbitrary data sent back in on_revert.",
+        "* `on_revert_gas_limit` Gas limit for revert tx."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "revert_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "abort_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "call_on_revert",
+            "type": "bool"
+          },
+          {
+            "name": "revert_message",
+            "type": "bytes"
+          },
+          {
+            "name": "on_revert_gas_limit",
+            "type": "u64"
           }
         ]
       }
