@@ -13,7 +13,7 @@ func Test_parseCancelTx(t *testing.T) {
 		name      string
 		eventType EventType
 		event     models.SuiEventResponse
-		want      CanceTx
+		want      CancelTx
 		errMsg    string
 	}{
 		{
@@ -25,7 +25,7 @@ func Test_parseCancelTx(t *testing.T) {
 					"sender": "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 				},
 			},
-			want: CanceTx{
+			want: CancelTx{
 				Nonce:  1,
 				Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 			},
@@ -101,7 +101,7 @@ func Test_parseCancelTx(t *testing.T) {
 }
 
 func Test_TokenAmount(t *testing.T) {
-	event := CanceTx{
+	event := CancelTx{
 		Nonce:  1,
 		Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 	}
@@ -109,7 +109,7 @@ func Test_TokenAmount(t *testing.T) {
 }
 
 func Test_TxNonce(t *testing.T) {
-	event := CanceTx{
+	event := CancelTx{
 		Nonce:  1,
 		Sender: "0x8e5016551584818c2fbd10ba63a359e816f31d576ac1ec06a8b9efd1c4768a26",
 	}

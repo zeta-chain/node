@@ -109,11 +109,11 @@ func (e *Event) IsCancelTx() bool {
 	return e.EventType == CancelTxEvent
 }
 
-// CanceTx extract CanceTx data.
-func (e *Event) CanceTx() (CanceTx, error) {
-	v, ok := e.content.(CanceTx)
+// CancelTx extract CancelTx data.
+func (e *Event) CancelTx() (CancelTx, error) {
+	v, ok := e.content.(CancelTx)
 	if !ok {
-		return CanceTx{}, errors.Errorf("invalid content type %T", e.content)
+		return CancelTx{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -237,15 +237,15 @@ func (gw *Gateway) ParseOutboundEvent(
 	}
 
 	// filter outbound events
-	switch {
-	case event.IsWithdraw():
+	switch event.EventType {
+	case WithdrawEvent:
 		withdrawal, err := event.Withdrawal()
 		if err != nil {
 			return event, nil, errors.Wrap(err, "unable to extract withdraw event")
 		}
 		return event, withdrawal, nil
-	case event.IsCancelTx():
-		cancelTx, err := event.CanceTx()
+	case CancelTxEvent:
+		cancelTx, err := event.CancelTx()
 		if err != nil {
 			return event, nil, errors.Wrap(err, "unable to extract cancel tx event")
 		}

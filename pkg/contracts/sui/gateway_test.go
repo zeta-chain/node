@@ -397,7 +397,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 				TxHash:     txHash,
 				EventIndex: 1,
 				EventType:  CancelTxEvent,
-				content: CanceTx{
+				content: CancelTx{
 					Nonce:  123,
 					Sender: sender,
 				},
