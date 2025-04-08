@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -221,13 +222,14 @@ func (s *Signer) broadcastWithCancelTx(
 	}
 
 	// broadcast tx
+	// Note: this is the place where the gateway object version mismatch error happens
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute tx block")
 	}
 
 	// tx succeeded, return the digest
-	if res.Effects.Status.Status == "success" {
+	if res.Effects.Status.Status == client.TxStatusSuccess {
 		logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui tx block successfully")
 		return res.Digest, nil
 	}

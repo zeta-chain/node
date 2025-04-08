@@ -35,8 +35,8 @@ var (
 		ErrCodeInactiveWithdrawCap,
 	}
 
-	// reMoveAbort is the MoveAbort error regex pattern: "MoveAbort(..., <code>) ..."
-	reMoveAbort = regexp.MustCompile(`MoveAbort\(.+?,\s*(\d+)\)`)
+	// moveAbortRegex is the MoveAbort error regex pattern: "MoveAbort(..., <code>) ..."
+	moveAbortRegex = regexp.MustCompile(`MoveAbort\(.+?,\s*(\d+)\)`)
 )
 
 // MoveAbort represents a MoveAbort execution error.
@@ -49,7 +49,7 @@ type MoveAbort struct {
 // NewMoveAbortFromExecutionError creates a MoveAbort struct from Sui 'ExecutionError::MoveAbort' execution error message.
 // Example: "MoveAbort(MoveLocation { module: ModuleId { address: a5f027339b7e04e5d55c2ac90ea71d616870aa21d9f16fd0237a2a42e67c9f3e, name: Identifier("gateway") }, function: 11, instruction: 37, function_name: Some("withdraw_impl") }, 3) in command 0"
 func NewMoveAbortFromExecutionError(errorMsg string) (abort MoveAbort, err error) {
-	matches := reMoveAbort.FindStringSubmatch(errorMsg)
+	matches := moveAbortRegex.FindStringSubmatch(errorMsg)
 	if len(matches) != 2 {
 		return abort, errors.Errorf("unable to extract code from error string: %s", errorMsg)
 	}
@@ -73,8 +73,16 @@ func (m MoveAbort) IsRetryable() bool {
 	return slices.Contains(retryableOutboundErrCodes, m.Code)
 }
 
-// IsRetryableExecutionError checks if the error message is a retryable error.
-// Add more execution errors as needed.
+// IsRetryableExecutionError checks if the error message is a retryable error. If it is,
+// we let the scheduler retry the outbound until it succeeds.
+//
+// Currently, the Sui gateway 'withdraw' may fail on three types of execution errors:
+// - MoveAbort (ErrCodeNotWhitelisted)
+// - MoveAbort (ErrCodeNonceMismatch)
+// - MoveAbort (ErrCodeInactiveWithdrawCap)
+//
+// If the execution of 'withdraw' returns one of the above errors, we let the scheduler retry the outbound
+// until it succeeds; for any other unknown execution errors, we just cancel the outbound because retry won't help.
 func IsRetryableExecutionError(errorMsg string) (bool, error) {
 	switch {
 	case strings.HasPrefix(errorMsg, "MoveAbort"):

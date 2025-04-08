@@ -242,7 +242,7 @@ func TestObserver(t *testing.T) {
 			Digest:     digest,
 			Checkpoint: "123",
 			Effects: models.SuiEffects{
-				Status: models.ExecutionStatus{Status: "success"},
+				Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
 			},
 			Transaction: models.SuiTransactionBlock{
 				Data: models.SuiTransactionBlockData{
@@ -312,7 +312,7 @@ func TestObserver(t *testing.T) {
 			Digest:     digest,
 			Checkpoint: "999",
 			Effects: models.SuiEffects{
-				Status: models.ExecutionStatus{Status: "success"},
+				Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
 				GasUsed: models.GasCostSummary{
 					ComputationCost: "200",
 					StorageCost:     "300",
@@ -392,7 +392,7 @@ func TestObserver(t *testing.T) {
 			Digest:     digest,
 			Checkpoint: "999",
 			Effects: models.SuiEffects{
-				Status: models.ExecutionStatus{Status: "success"},
+				Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
 				GasUsed: models.GasCostSummary{
 					ComputationCost: "200",
 					StorageCost:     "300",

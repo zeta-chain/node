@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -189,7 +190,7 @@ func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cctypes.CrossChain
 // validateOutbound validates the authenticity of the outbound transaction.
 func (ob *Observer) validateOutbound(cctx *cctypes.CrossChainTx, tx models.SuiTransactionBlockResponse) error {
 	// a valid outbound should be successful
-	if tx.Effects.Status.Status != "success" {
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
 		return errors.Errorf("tx failed with error: %s", tx.Effects.Status.Error)
 	}
 

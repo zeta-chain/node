@@ -130,7 +130,7 @@ func TestClientLive(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		require.NotNil(t, res)
-		require.Equal(t, "success", res.Effects.Status.Status)
+		require.Equal(t, TxStatusSuccess, res.Effects.Status.Status)
 	})
 
 	t.Run("GetTransactionBlock failed tx", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestClientLive(t *testing.T) {
 		// ASSERT
 		require.NoError(t, err)
 		require.NotNil(t, res)
-		require.Equal(t, "failure", res.Effects.Status.Status)
+		require.Equal(t, TxStatusFailure, res.Effects.Status.Status)
 	})
 }
 

@@ -18,9 +18,20 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 50
+const (
+	// DefaultEventsLimit is the default limit for querying gateway module events.
+	DefaultEventsLimit = 50
 
-const filterMoveEventModule = "MoveEventModule"
+	// TxStatusSuccess is the success status for a transaction.
+	TxStatusSuccess = "success"
+
+	// TxStatusFailure is the failure status for a transaction.
+	TxStatusFailure = "failure"
+
+	// filterMoveEventModule is the event filter for querying events for specified move module.
+	// @see https://docs.sui.io/guides/developer/sui-101/using-events#filtering-event-queries
+	filterMoveEventModule = "MoveEventModule"
+)
 
 // NewFromEndpoint Client constructor based on endpoint string.
 func NewFromEndpoint(endpoint string) *Client {
