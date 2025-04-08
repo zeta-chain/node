@@ -1,0 +1,10 @@
+{
+  "athens": {
+    "max_blocks": 10,
+    "max_transactions": 10
+  },
+  "mainnet": {
+    "max_blocks": 10,
+    "max_transactions": 10
+  }
+}
