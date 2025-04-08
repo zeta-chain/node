@@ -109,7 +109,7 @@ func (e *Event) IsCancelTx() bool {
 	return e.EventType == CancelTxEvent
 }
 
-// CancelTx extract CancelTx data.
+// CancelTx extract cancel tx data.
 func (e *Event) CancelTx() (CancelTx, error) {
 	v, ok := e.content.(CancelTx)
 	if !ok {

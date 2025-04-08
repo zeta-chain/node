@@ -103,6 +103,34 @@ func (_m *SuiClient) HealthCheck(ctx context.Context) (time.Time, error) {
 	return r0, r1
 }
 
+// InspectTransactionBlock provides a mock function with given fields: ctx, req
+func (_m *SuiClient) InspectTransactionBlock(ctx context.Context, req models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for InspectTransactionBlock")
+	}
+
+	var r0 models.SuiTransactionBlockResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) models.SuiTransactionBlockResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(models.SuiTransactionBlockResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MoveCall provides a mock function with given fields: ctx, req
 func (_m *SuiClient) MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error) {
 	ret := _m.Called(ctx, req)
@@ -166,34 +194,6 @@ func (_m *SuiClient) QueryModuleEvents(ctx context.Context, q client.EventQuery)
 	}
 
 	return r0, r1, r2
-}
-
-// InspectTransactionBlock provides a mock function with given fields: ctx, req
-func (_m *SuiClient) InspectTransactionBlock(ctx context.Context, req models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
-	ret := _m.Called(ctx, req)
-
-	if len(ret) == 0 {
-		panic("no return value specified for InspectTransactionBlock")
-	}
-
-	var r0 models.SuiTransactionBlockResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) (models.SuiTransactionBlockResponse, error)); ok {
-		return rf(ctx, req)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) models.SuiTransactionBlockResponse); ok {
-		r0 = rf(ctx, req)
-	} else {
-		r0 = ret.Get(0).(models.SuiTransactionBlockResponse)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, models.SuiDevInspectTransactionBlockRequest) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // SuiExecuteTransactionBlock provides a mock function with given fields: ctx, req
