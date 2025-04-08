@@ -153,6 +153,7 @@ func simulationModules(
 // TODO: enable back IBC
 // all commented lines in this function are modules related to IBC
 // https://github.com/zeta-chain/node/issues/2573
+
 func OrderInitGenesis() []string {
 	return []string{
 		authtypes.ModuleName,
@@ -161,31 +162,24 @@ func OrderInitGenesis() []string {
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
 		evmtypes.ModuleName,
-		group.ModuleName,
-		// The feemarket module should ideally be initialized before the genutil module in theory:
-		// The feemarket antehandler performs checks in DeliverTx, which is called by gentx.
-		// When the fee > 0, gentx needs to pay the fee. However, this is not expected.
-		// To resolve this issue, we should initialize the feemarket module after genutil, ensuring that the
-		// min fee is empty when gentx is called.
-		// A similar issue existed for the 'globalfee' module, which was previously used instead of 'feemarket'.
-		// For more details, please refer to the following link: https://github.com/cosmos/gaia/issues/2489
 		feemarkettypes.ModuleName,
+		paramstypes.ModuleName,
+		group.ModuleName,
+		genutiltypes.ModuleName,
+		upgradetypes.ModuleName,
+		evidencetypes.ModuleName,
+		vestingtypes.ModuleName,
 		observertypes.ModuleName,
 		crosschaintypes.ModuleName,
+		//ibccrosschaintypes.ModuleName,
 		fungibletypes.ModuleName,
 		emissionstypes.ModuleName,
+		authz.ModuleName,
 		authoritytypes.ModuleName,
 		lightclienttypes.ModuleName,
 		consensusparamtypes.ModuleName,
-		// crisis needs to be last so that the genesis state is consistent
-		// when it checks invariants
+		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}
 }
