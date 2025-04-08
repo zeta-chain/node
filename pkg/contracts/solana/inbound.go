@@ -22,6 +22,7 @@ type Inbound struct {
 	Slot             uint64
 	Asset            string
 	IsCrossChainCall bool
+	RevertOptions    *RevertOptions
 }
 
 // ParseInboundAsDeposit tries to parse an instruction as a 'deposit' or 'deposit_and_call'.
@@ -80,6 +81,7 @@ func parseAsDeposit(
 		Slot:             slot,
 		Asset:            "", // no asset for gas token SOL
 		IsCrossChainCall: false,
+		RevertOptions:    inst.RevertOptions,
 	}, nil
 }
 
@@ -114,6 +116,7 @@ func parseAsDepositAndCall(
 	if err != nil {
 		return nil, err
 	}
+
 	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
@@ -122,6 +125,7 @@ func parseAsDepositAndCall(
 		Slot:             slot,
 		Asset:            "", // no asset for gas token SOL
 		IsCrossChainCall: true,
+		RevertOptions:    instDepositAndCall.RevertOptions,
 	}, nil
 }
 
@@ -181,6 +185,7 @@ func parseAsDepositSPL(
 		Slot:             slot,
 		Asset:            spl,
 		IsCrossChainCall: false,
+		RevertOptions:    inst.RevertOptions,
 	}, nil
 }
 
@@ -215,6 +220,7 @@ func parseAsDepositSPLAndCall(
 	if err != nil {
 		return nil, err
 	}
+
 	return &Inbound{
 		Sender:           sender,
 		Receiver:         receiver,
@@ -223,6 +229,7 @@ func parseAsDepositSPLAndCall(
 		Slot:             slot,
 		Asset:            spl,
 		IsCrossChainCall: true,
+		RevertOptions:    instDepositAndCall.RevertOptions,
 	}, nil
 }
 
@@ -276,6 +283,7 @@ func ParseInboundAsCall(
 		Slot:             slot,
 		Asset:            "", // no asset for call
 		IsCrossChainCall: true,
+		RevertOptions:    inst.RevertOptions,
 	}, nil
 }
 

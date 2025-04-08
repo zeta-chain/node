@@ -62,7 +62,7 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	addr, privKey := r.GetBtcAddress()
+	addr, privKey := r.GetBtcKeypair()
 
 	logger.Print("* BTC address: %s", addr.EncodeAddress())
 	if showPrivKey {
