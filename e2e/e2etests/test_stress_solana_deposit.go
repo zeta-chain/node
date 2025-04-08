@@ -30,7 +30,7 @@ func TestStressSolanaDeposit(r *runner.E2ERunner, args []string) {
 		i := i
 
 		// execute the deposit SOL transaction
-		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositSOLAmount, nil)
+		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositSOLAmount, nil, nil)
 		r.Logger.Print("index %d: starting SOL deposit, sig: %s", i, sig.String())
 
 		eg.Go(func() error { return monitorDeposit(r, sig, i, time.Now()) })
