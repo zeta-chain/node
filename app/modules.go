@@ -38,7 +38,6 @@ import (
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/ethermint/x/feemarket"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -47,6 +46,7 @@ import (
 	emissionsmodule "github.com/zeta-chain/node/x/emissions"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungiblemodule "github.com/zeta-chain/node/x/fungible"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	lightclientmodule "github.com/zeta-chain/node/x/lightclient"
 	lightclienttypes "github.com/zeta-chain/node/x/lightclient/types"
 	observermodule "github.com/zeta-chain/node/x/observer"
