@@ -6,8 +6,10 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 func TestTONDeposit(r *runner.E2ERunner, args []string) {
@@ -17,6 +19,21 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
+
+	// Log important gateway information
+	r.Logger.Print("🔍 Test using TON Gateway address: %s", gw.AccountID().ToRaw())
+	r.Logger.Print("🔍 Runner's TON Gateway address: %s", r.TONGateway.ToRaw())
+
+	// Verify chain parameters have the correct gateway
+	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &types.QueryGetChainParamsForChainRequest{
+		ChainId: chains.TONLocalnet.ChainId,
+	})
+	if err != nil {
+		r.Logger.Print("🔍 Failed to get chain params: %v", err)
+	} else {
+		r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", chainParams.ChainParams.GatewayAddress)
+		r.Logger.Print("🔍 Gateway matches test gateway: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
+	}
 
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
@@ -70,6 +87,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	recipient := sample.EthAddress()
 
 	// ACT
+	r.Logger.Print("🔍 Sending TON deposit to gateway: %s", gw.AccountID().ToRaw())
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
 
 	// ASSERT

@@ -48,6 +48,9 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 	gwAccount, err := ton.ConstructGatewayAccount(deployerID, r.TSSAddress)
 	require.NoError(r, err, "unable to initialize TON gateway")
 
+	r.Logger.Print("🔍 TON Gateway being deployed to address: %s", gwAccount.ID.ToRaw())
+	r.Logger.Print("🔍 TON Gateway derived from TSS address: %s", r.TSSAddress.Hex())
+
 	err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1))
 	require.NoError(r, err, "unable to deploy TON gateway")
 
@@ -82,6 +85,7 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 
 	// Set runner field
 	r.TONGateway = gw.AccountID()
+	r.Logger.Print("🔍 TON Gateway address saved in runner: %s", r.TONGateway.ToRaw())
 }
 
 func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
@@ -114,6 +118,8 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 		},
 	}
 
+	r.Logger.Print("🔍 Updating TON chain params with Gateway: %s", gw.ID.ToRaw())
+
 	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
 	}
@@ -130,9 +136,11 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 	const duration = 2 * time.Second
 
 	for i := 0; i < 10; i++ {
-		_, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
+		params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
 		if err == nil {
 			r.Logger.Print("💎 TON chain params are set")
+			r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", params.ChainParams.GatewayAddress)
+			r.Logger.Print("🔍 Gateway address match: %v", params.ChainParams.GatewayAddress == gw.ID.ToRaw())
 			return nil
 		}
 
