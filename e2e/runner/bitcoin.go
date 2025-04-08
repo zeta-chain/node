@@ -296,9 +296,10 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	// mine 1 block to confirm the transaction
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
-	// gettransaction should return the transaction immediately so long the RPC is served
-	// by the same backend
-	gtx, err := btcRPC.GetTransaction(r.Ctx, txid)
+	// gettransaction may fail if RPC lands on a different RPC node
+	gtx, err := retry.DoTypedWithRetry(func() (*btcjson.GetTransactionResult, error) {
+		return btcRPC.GetTransaction(r.Ctx, txid)
+	})
 	require.NoError(r, err)
 	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
 	// on live networks it may take some time for the transaction to appear in the mempool
