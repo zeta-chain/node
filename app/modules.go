@@ -161,14 +161,8 @@ func OrderInitGenesis() []string {
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
 		evmtypes.ModuleName,
-		group.ModuleName,
+		// Comments from cosmos
 		// The feemarket module should ideally be initialized before the genutil module in theory:
 		// The feemarket antehandler performs checks in DeliverTx, which is called by gentx.
 		// When the fee > 0, gentx needs to pay the fee. However, this is not expected.
@@ -176,7 +170,16 @@ func OrderInitGenesis() []string {
 		// min fee is empty when gentx is called.
 		// A similar issue existed for the 'globalfee' module, which was previously used instead of 'feemarket'.
 		// For more details, please refer to the following link: https://github.com/cosmos/gaia/issues/2489
+
+		// https://github.com/zeta-chain/node/issues/3791
 		feemarkettypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		authz.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		group.ModuleName,
 		observertypes.ModuleName,
 		crosschaintypes.ModuleName,
 		fungibletypes.ModuleName,
