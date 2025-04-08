@@ -24,15 +24,24 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("🔍 Test using TON Gateway address: %s", gw.AccountID().ToRaw())
 	r.Logger.Print("🔍 Runner's TON Gateway address: %s", r.TONGateway.ToRaw())
 
-	// Verify chain parameters have the correct gateway
+	// Try to verify chain parameters
+	r.Logger.Print("🔍 Checking chain parameters...")
+	chainID := chains.TONLocalnet.ChainId
+
 	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &types.QueryGetChainParamsForChainRequest{
-		ChainId: chains.TONLocalnet.ChainId,
+		ChainId: chainID,
 	})
+
 	if err != nil {
 		r.Logger.Print("🔍 Failed to get chain params: %v", err)
 	} else {
+		r.Logger.Print("✅ Successfully retrieved chain parameters")
 		r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", chainParams.ChainParams.GatewayAddress)
 		r.Logger.Print("🔍 Gateway matches test gateway: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
+
+		if chainParams.ChainParams.GatewayAddress != gw.AccountID().ToRaw() {
+			r.Logger.Print("⚠️ Gateway address mismatch, this may cause test failure!")
+		}
 	}
 
 	// Given amount
@@ -85,6 +94,16 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Given sample EVM address
 	recipient := sample.EthAddress()
+
+	// Verify chain parameters one more time before deposit
+	chainParams, err = r.ObserverClient.GetChainParamsForChain(r.Ctx, &types.QueryGetChainParamsForChainRequest{
+		ChainId: chainID,
+	})
+	if err != nil {
+		r.Logger.Print("⚠️ Final check: Chain parameters still not set, test will likely fail")
+	} else {
+		r.Logger.Print("✅ Final check: Chain parameters are set with gateway: %s", chainParams.ChainParams.GatewayAddress)
+	}
 
 	// ACT
 	r.Logger.Print("🔍 Sending TON deposit to gateway: %s", gw.AccountID().ToRaw())
