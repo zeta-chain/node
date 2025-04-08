@@ -20,7 +20,11 @@ type Client struct {
 
 const DefaultEventsLimit = 50
 
-const filterMoveEventModule = "MoveEventModule"
+const (
+	filterMoveEventModule = "MoveEventModule"
+	immutableOwner        = "Immutable"
+	sharedOwner           = "Shared"
+)
 
 // NewFromEndpoint Client constructor based on endpoint string.
 func NewFromEndpoint(endpoint string) *Client {
@@ -244,4 +248,53 @@ func parseRPCResponse[T any](raw []byte) (T, error) {
 	}
 
 	return tt, nil
+}
+
+// CheckObjectIDsShared checks if the provided object ID list represents Sui shared or immmutable objects
+func (c *Client) CheckObjectIDsShared(ctx context.Context, objectIDs []string) error {
+	if len(objectIDs) == 0 {
+		return nil
+	}
+
+	res, err := c.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+		ObjectIds: objectIDs,
+		Options: models.SuiObjectDataOptions{
+			ShowOwner: true,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "unable to get objects")
+	}
+
+	// should always be the case, we add this check as a extra safety measure to ensure an object is not skipped
+	if len(res) != len(objectIDs) {
+		return fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(res))
+	}
+
+	return containsOwnedObject(res)
+}
+
+func containsOwnedObject(res []*models.SuiObjectResponse) error {
+	for i, obj := range res {
+		if obj.Data == nil {
+			return fmt.Errorf("object %d is missing data", i)
+		}
+
+		switch owner := obj.Data.Owner.(type) {
+		case string:
+			if owner != immutableOwner {
+				return fmt.Errorf("object %d has unexpected string owner: %s", i, owner)
+			}
+			// Immutable is valid, continue
+		case map[string]interface{}:
+			if _, isShared := owner[sharedOwner]; !isShared {
+				return fmt.Errorf("object %d is not shared or immutable: owner = %+v", i, owner)
+			}
+			// Shared is valid, continue
+		default:
+			return fmt.Errorf("object %d has unknown owner type: %+v", i, obj.Data.Owner)
+		}
+	}
+
+	return nil
 }

@@ -28,8 +28,6 @@ type Signer struct {
 // RPC represents Sui rpc.
 type RPC interface {
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
-	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(
 		ctx context.Context,

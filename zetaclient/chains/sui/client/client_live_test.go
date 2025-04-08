@@ -2,12 +2,12 @@ package client
 
 import (
 	"context"
+	"github.com/zeta-chain/node/zetaclient/common"
 	"testing"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 const (
@@ -115,6 +115,41 @@ func TestClientLive(t *testing.T) {
 		// https://suiscan.xyz/mainnet/object/0x89c1a321291d15ddae5a086c9abc533dff697fde3d89e0ca836c41af73e36a75
 		require.NoError(t, err)
 		require.Equal(t, "0x89c1a321291d15ddae5a086c9abc533dff697fde3d89e0ca836c41af73e36a75", objectID)
+	})
+
+	// examples taken from Cetus docs: https://cetus-1.gitbook.io/cetus-developer-docs/developer/via-contract/getting-started
+	t.Run("CheckSharedObjects", func(t *testing.T) {
+		ts := newTestSuite(t, RpcMainnet)
+
+		// no object
+		// all these objects are shared
+		require.NoError(t, ts.CheckObjectIDsShared(ts.ctx, []string{}))
+
+		// all these objects are shared
+		objectIds := []string{
+			"0xdaa46292632c3c4d8f31f23ea0f9b36a28ff3677e9684980e4438403a67a3d8f", // Cetus global config
+			"0x0000000000000000000000000000000000000000000000000000000000000006", // Sui universal clock object
+			"0xf699e7f2276f5c9a75944b37a0c5b5d9ddfd2471bf6242483b03ab2887d198d0", // Cetus pool factory
+		}
+		require.NoError(t, ts.CheckObjectIDsShared(ts.ctx, objectIds))
+
+		// contains a owned object
+		objectIds = []string{
+			"0xdaa46292632c3c4d8f31f23ea0f9b36a28ff3677e9684980e4438403a67a3d8f",
+			"0x6c31859275c1962b3e32bef11d9d60e7082eee86afe517e994685c62bc968082", // An owned NFT
+			"0x0000000000000000000000000000000000000000000000000000000000000006",
+			"0xf699e7f2276f5c9a75944b37a0c5b5d9ddfd2471bf6242483b03ab2887d198d0",
+		}
+		require.Error(t, ts.CheckObjectIDsShared(ts.ctx, objectIds))
+
+		// contains a non existing object
+		objectIds = []string{
+			"0xdaa46292632c3c4d8f31f23ea0f9b36a28ff3677e9684980e4438403a67a3d8f",
+			"0x000000000000000000000000000000000000000000000000000000000000aaaa", // doesn't exist
+			"0x0000000000000000000000000000000000000000000000000000000000000006",
+			"0xf699e7f2276f5c9a75944b37a0c5b5d9ddfd2471bf6242483b03ab2887d198d0",
+		}
+		require.Error(t, ts.CheckObjectIDsShared(ts.ctx, objectIds))
 	})
 }
 
