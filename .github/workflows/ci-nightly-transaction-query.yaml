@@ -44,11 +44,13 @@ jobs:
 
       - name: Create Custom Config (if provided)
         if: inputs.CONFIG_OVERRIDE != ''
+        env:
+          CONFIG_OVERRIDE_ENV: ${{ inputs.CONFIG_OVERRIDE }}
         run: |
           mkdir -p tx_query_results
           echo '{ 
-            "athens": ${{ inputs.CONFIG_OVERRIDE || '{"max_blocks":10,"max_transactions":10}' }},
-            "mainnet": ${{ inputs.CONFIG_OVERRIDE || '{"max_blocks":10,"max_transactions":10}' }}
+            "athens": '"${CONFIG_OVERRIDE_ENV:-"{\"max_blocks\":10,\"max_transactions\":10}"}"',
+            "mainnet": '"${CONFIG_OVERRIDE_ENV:-"{\"max_blocks\":10,\"max_transactions\":10}"}"'
           }' > tx_query_results/custom_config.json
           
           echo "Custom configuration:"
@@ -57,6 +59,9 @@ jobs:
       - name: Run Transaction Validation
         env:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT || env.ENVIRONMENT }}
+          MAX_BLOCKS: ${{ inputs.MAX_BLOCKS }}
+          MAX_TRANSACTIONS: ${{ inputs.MAX_TRANSACTIONS }}
+          API_KEY: ${{ secrets.ZETACHAIN_API_KEY }}
         run: |
           mkdir -p tx_query_results
           chmod +x .github/actions/transaction-query/validate-transactions.sh
@@ -66,13 +71,21 @@ jobs:
             CONFIG_PATH="tx_query_results/custom_config.json"
           fi
           
+          ARGS=""
+          if [[ -n "$MAX_BLOCKS" ]]; then
+            ARGS="$ARGS --max-blocks \"$MAX_BLOCKS\""
+          fi
+          
+          if [[ -n "$MAX_TRANSACTIONS" ]]; then
+            ARGS="$ARGS --max-txs \"$MAX_TRANSACTIONS\""
+          fi
+          
           .github/actions/transaction-query/validate-transactions.sh \
             --environment "$ENVIRONMENT" \
             --config "$CONFIG_PATH" \
-            --api-key "${{ secrets.ZETACHAIN_API_KEY }}" \
+            --api-key "$API_KEY" \
             --output-dir "./tx_query_results" \
-            ${{ inputs.MAX_BLOCKS != '' && format('--max-blocks {0}', inputs.MAX_BLOCKS) || '' }} \
-            ${{ inputs.MAX_TRANSACTIONS != '' && format('--max-txs {0}', inputs.MAX_TRANSACTIONS) || '' }}
+            $ARGS
           
           FAILED_COUNT=$(jq 'length' tx_query_results/failed_transactions.json)
           if [[ "$FAILED_COUNT" -gt 0 ]]; then
@@ -94,12 +107,14 @@ jobs:
 
       - name: Alert on Failed Transactions
         if: ${{ success() }}
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           FAILED_COUNT=$(jq 'length' tx_query_results/failed_transactions.json)
           if [[ "$FAILED_COUNT" -gt 0 ]]; then
             echo "::warning::$FAILED_COUNT transactions failed to be queried. This indicates a potential bug in the transaction indexing or retrieval system."
             
-            if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            if [[ "$EVENT_NAME" == "schedule" ]]; then
               echo "Exiting with error to trigger notifications since this is a scheduled run"
               exit 1
             fi
