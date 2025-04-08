@@ -31,6 +31,10 @@
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
 
+### CI
+
+* [3789](https://github.com/zeta-chain/node/pull/3789) - add configurable nightly transaction query validation workflow
+
 ### Refactor
 
 * [3700](https://github.com/zeta-chain/node/pull/3700) - use sender and senderEVM in cross-chain call message context
