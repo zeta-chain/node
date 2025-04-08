@@ -47,6 +47,34 @@ func TestRevertOptions_GetEVMRevertAddress(t *testing.T) {
 	})
 }
 
+func TestRevertOptions_GetSOLRevertAddress(t *testing.T) {
+	t.Run("valid revert address", func(t *testing.T) {
+		addr := sample.SolanaAddress(t)
+		actualAddr, valid := types.RevertOptions{
+			RevertAddress: addr,
+		}.GetSOLRevertAddress()
+
+		require.True(t, valid)
+		require.Equal(t, addr, actualAddr.String())
+	})
+
+	t.Run("invalid revert address", func(t *testing.T) {
+		_, valid := types.RevertOptions{
+			RevertAddress: "invalid",
+		}.GetSOLRevertAddress()
+
+		require.False(t, valid)
+	})
+
+	t.Run("empty revert address", func(t *testing.T) {
+		_, valid := types.RevertOptions{
+			RevertAddress: "",
+		}.GetSOLRevertAddress()
+
+		require.False(t, valid)
+	})
+}
+
 func TestRevertOptions_GetBTCRevertAddress(t *testing.T) {
 	t.Run("valid Bitcoin revert address", func(t *testing.T) {
 		r := sample.Rand()
