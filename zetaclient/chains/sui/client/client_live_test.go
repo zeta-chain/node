@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	RpcMainnet = "https://sui-mainnet.public.blastapi.io"
+	RPCMainnet = "https://sui-mainnet.public.blastapi.io"
 )
 
 func TestClientLive(t *testing.T) {
@@ -22,7 +22,7 @@ func TestClientLive(t *testing.T) {
 
 	t.Run("HealthCheck", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, RpcMainnet)
+		ts := newTestSuite(t, RPCMainnet)
 
 		// ACT
 		timestamp, err := ts.HealthCheck(ts.ctx)
@@ -36,7 +36,7 @@ func TestClientLive(t *testing.T) {
 
 	t.Run("QueryEvents", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, RpcMainnet)
+		ts := newTestSuite(t, RPCMainnet)
 
 		// Sleep for a while to avoid rate limiting
 		sleep := func() { time.Sleep(time.Second) }
@@ -96,7 +96,7 @@ func TestClientLive(t *testing.T) {
 
 	t.Run("GetOwnedObjectID", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, RpcMainnet)
+		ts := newTestSuite(t, RPCMainnet)
 
 		// Given admin wallet us Cetus DEX team
 		// (yeah, it took some time to find it)
@@ -119,7 +119,7 @@ func TestClientLive(t *testing.T) {
 
 	// examples taken from Cetus docs: https://cetus-1.gitbook.io/cetus-developer-docs/developer/via-contract/getting-started
 	t.Run("CheckSharedObjects", func(t *testing.T) {
-		ts := newTestSuite(t, RpcMainnet)
+		ts := newTestSuite(t, RPCMainnet)
 
 		// no object
 		// all these objects are shared
