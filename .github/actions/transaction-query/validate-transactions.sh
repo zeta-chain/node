@@ -1,4 +1,5 @@
-set -e
+#!/bin/bash
+set -euo pipefail
 
 ENVIRONMENT=${ENVIRONMENT:-"athens"}
 CONFIG_FILE=${CONFIG_FILE:-"$(dirname "$0")/config/default.json"}
@@ -76,6 +77,10 @@ if [[ -n "$MAX_TXS_OVERRIDE" ]]; then
   echo "Overriding max_transactions from command line: $MAX_TXS"
 fi
 
+if [[ "$ENVIRONMENT" != "athens" && "$ENVIRONMENT" != "mainnet" ]]; then
+  echo "ERROR: Invalid environment: $ENVIRONMENT. Must be 'athens' or 'mainnet'."
+  exit 1
+fi
 NODE_URL="https://${ENVIRONMENT}.rpc.zetachain.com:443/${API_KEY}/rpc"
 
 echo "Environment: $ENVIRONMENT"
