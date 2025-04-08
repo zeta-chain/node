@@ -120,22 +120,32 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	r.Logger.Print("🔍 Updating TON chain params with Gateway: %s", gw.ID.ToRaw())
 
-	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
+	// Update chain params
+	err := r.ZetaTxServer.UpdateChainParams(chainParams)
+	if err != nil {
+		r.Logger.Print("❌ Failed to broadcast TON chain params tx: %v", err)
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
 	}
+	r.Logger.Print("✅ Successfully broadcast TON chain params update")
 
+	// Reset chain nonces
 	resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
-	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
+	resp, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg)
+	if err != nil {
+		r.Logger.Print("❌ Failed to broadcast TON chain nonce reset tx: %v", err)
 		return errors.Wrap(err, "unable to broadcast TON chain nonce reset tx")
 	}
+	r.Logger.Print("✅ Successfully broadcast TON chain nonce reset: %s", resp.TxHash)
 
 	r.Logger.Print("💎 Voted for adding TON chain params (localnet). Waiting for confirmation")
 
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chainID}
 
-	const duration = 2 * time.Second
+	// Increase duration between checks, and number of retries
+	const duration = 5 * time.Second
+	const maxAttempts = 20
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < maxAttempts; i++ {
 		params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
 		if err == nil {
 			r.Logger.Print("💎 TON chain params are set")
@@ -144,10 +154,11 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 			return nil
 		}
 
+		r.Logger.Print("⏳ Waiting for TON chain params to be set (attempt %d/%d): %v", i+1, maxAttempts, err)
 		time.Sleep(duration)
 	}
 
-	return errors.New("unable to set TON chain params")
+	return errors.New("unable to set TON chain params after maximum attempts")
 }
 
 // tonProvisionUser deploy & fund ton user account

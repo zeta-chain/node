@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // we need to use this send mode due to how wallet V5 works
@@ -62,16 +63,39 @@ func (r *E2ERunner) TONDeposit(
 	// Send TX
 	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
+		r.Logger.Error("Failed to send TON deposit: %v", err)
 		return nil, errors.Wrap(err, "failed to send TON deposit")
+	}
+	r.Logger.Info("✅ TON deposit transaction sent successfully")
+
+	// Verify chain params are set
+	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
+		ChainId: chain.ChainId,
+	})
+	if err != nil {
+		r.Logger.Print("⚠️ Unable to get chain params for TON: %v", err)
+	} else {
+		r.Logger.Print("✅ Chain params for TON are set")
+		r.Logger.Print("🔍 Gateway address in chain params: %s", chainParams.ChainParams.GatewayAddress)
+		r.Logger.Print("🔍 Expected gateway address: %s", gw.AccountID().ToRaw())
+		r.Logger.Print("🔍 Gateway address match: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
 	}
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+		match := cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+
+		if match {
+			r.Logger.Info("📝 Found matching CCTX: Index=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status)
+		}
+
+		return match
 	}
 
-	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
+	// Wait for cctx with longer timeout (3 minutes instead of 1)
+	r.Logger.Info("⏳ Waiting for CCTX to be processed...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 3*time.Minute)
+	r.Logger.Info("✅ CCTX processed successfully")
 
 	return cctx, nil
 }

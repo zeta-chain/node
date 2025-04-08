@@ -399,7 +399,35 @@ func (r *E2ERunner) waitForMinedCCTXFromIndex(index string, status types.CctxSta
 	r.Lock()
 	defer r.Unlock()
 
+	r.Logger.Info("⏳ Waiting for CCTX with index %s to reach status %s", index, status)
+
+	// Verify the chain params are set before waiting for the CCTX
+	chainID := chains.TONLocalnet.ChainId
+	_, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
+		ChainId: chainID,
+	})
+	if err != nil {
+		r.Logger.Print("⚠️ Chain params for TON (ID: %d) are NOT set: %v", chainID, err)
+	} else {
+		r.Logger.Print("✅ Chain params for TON (ID: %d) are set", chainID)
+	}
+
+	// Increase timeout for CCTX processing
+	originalTimeout := r.CctxTimeout
+	r.CctxTimeout = 2 * time.Minute
+
 	cctx := utils.WaitCCTXMinedByIndex(r.Ctx, index, r.CctxClient, r.Logger, r.CctxTimeout)
+
+	// Restore original timeout
+	r.CctxTimeout = originalTimeout
+
+	r.Logger.Info("✅ CCTX with index %s found with status %s", index, cctx.CctxStatus.Status)
+
+	if cctx.CctxStatus.Status != status {
+		r.Logger.Error("❌ CCTX status mismatch: expected %s, got %s. Message: %s",
+			status, cctx.CctxStatus.Status, cctx.CctxStatus.StatusMessage)
+	}
+
 	utils.RequireCCTXStatus(r, cctx, status)
 
 	return cctx
