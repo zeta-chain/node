@@ -44,7 +44,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -725,67 +724,10 @@ func New(
 	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
 	)
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
-		//capabilitytypes.ModuleName,
-		evmtypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		paramstypes.ModuleName,
-		group.ModuleName,
-		vestingtypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
-	)
-	app.mm.SetOrderEndBlockers(
-		//capabilitytypes.ModuleName,
-		banktypes.ModuleName,
-		authtypes.ModuleName,
-		upgradetypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		govtypes.ModuleName,
-		stakingtypes.ModuleName,
-		vestingtypes.ModuleName,
-		paramstypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		genutiltypes.ModuleName,
-		group.ModuleName,
-		crisistypes.ModuleName,
-		evmtypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
-	)
+
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+
+	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -793,7 +735,7 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	// NOTE: Cross-chain module must be initialized after observer module, as pending nonces in crosschain needs the tss pubkey from observer module
-	app.mm.SetOrderInitGenesis(InitGenesisModuleList()...)
+	app.mm.SetOrderInitGenesis(OrderInitGenesis()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
