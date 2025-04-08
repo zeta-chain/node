@@ -653,6 +653,133 @@
       ]
     },
     {
+      "name": "execute_revert",
+      "docs": [
+        "Withdraws amount to destination program pda, and calls on_revert on destination program",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `amount` - The amount of SOL to withdraw.",
+        "* `sender` - Sender from ZEVM.",
+        "* `data` - Data to pass to destination program.",
+        "* `signature` - The TSS signature.",
+        "* `recovery_id` - The recovery ID for signature verification.",
+        "* `message_hash` - Message hash for signature verification.",
+        "* `nonce` - The current nonce value."
+      ],
+      "discriminator": [
+        68,
+        87,
+        162,
+        3,
+        218,
+        222,
+        236,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the deposit."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination_program",
+          "docs": [
+            "The destination program."
+          ]
+        },
+        {
+          "name": "destination_program_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "sender",
+          "type": "pubkey"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "execute_spl_token",
       "docs": [
         "Execute with SPL tokens. Caller is TSS.",

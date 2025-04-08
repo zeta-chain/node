@@ -113,7 +113,7 @@ func Test_MsgExecuteHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, []byte("hello"), []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), false, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT

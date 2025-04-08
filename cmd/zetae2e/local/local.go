@@ -441,6 +441,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSPLDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
 				e2etests.TestSolanaDepositAndCallRevertName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSolanaDepositAndCallRevertWithDustName,
 				e2etests.TestSolanaDepositRestrictedName,
 				e2etests.TestSolanaToZEVMCallName,

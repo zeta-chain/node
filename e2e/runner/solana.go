@@ -455,7 +455,7 @@ func (r *E2ERunner) SOLDepositAndCall(
 	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64(), revertOptions)
 
 	// create and sign the transaction
-	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(500000).Build() // 500k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(

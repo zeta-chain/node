@@ -341,6 +341,77 @@ func ParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteIn
 	return inst, nil
 }
 
+var _ OutboundInstruction = (*ExecuteInstructionParams)(nil)
+
+// ExecuteRevertInstructionParams contains the parameters for a gateway execute_revert instruction
+type ExecuteRevertInstructionParams struct {
+	// Discriminator is the unique identifier for the execute_revert instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the execute_revert
+	Amount uint64
+
+	// Sender that initiated cctx
+	Sender solana.PublicKey
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the execute_revert
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the execute_revert
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteRevertInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteRevertInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteRevertInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteRevertInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecute tries to parse the instruction as a 'execute_revert'.
+// It returns nil if the instruction can't be parsed as a 'execute_revert'.
+func ParseInstructionExecuteRevert(instruction solana.CompiledInstruction) (*ExecuteRevertInstructionParams, error) {
+	// try deserializing instruction as a 'execute_revert'
+	inst := &ExecuteRevertInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_revert' instruction
+	if inst.Discriminator != DiscriminatorExecuteRevert {
+		return nil, fmt.Errorf("not an execute_revert instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
 var _ OutboundInstruction = (*WithdrawSPLInstructionParams)(nil)
 
 type WithdrawSPLInstructionParams struct {

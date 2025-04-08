@@ -162,7 +162,8 @@ func (signer *Signer) TryProcessOutbound(
 		outboundGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
-		if cctx.IsWithdrawAndCall() {
+		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
+		if cctx.IsWithdrawAndCall() || isRevert {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
@@ -403,9 +404,16 @@ func (signer *Signer) prepareExecuteTx(
 		)
 	}
 
-	message, err := hex.DecodeString(cctx.RelayedMessage)
-	if err != nil {
-		return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+	isRevert := cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert
+	var message []byte
+	if isRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
 	}
 	msg, err := contracts.DecodeExecuteMsg(message)
 	if err != nil {
@@ -421,14 +429,14 @@ func (signer *Signer) prepareExecuteTx(
 	}
 
 	// sign gateway execute message by TSS
-	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	msgExecute, msgIn, err := signer.createAndSignMsgExecute(
 		ctx,
 		params,
 		height,
-		sender,
+		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
+		isRevert,
 		cancelTx,
 	)
 	if err != nil {
