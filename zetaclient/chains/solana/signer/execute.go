@@ -66,7 +66,7 @@ func (signer *Signer) createAndSignMsgExecute(
 func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solana.GenericInstruction, error) {
 	// create execute instruction with program call data
 	discriminator := contracts.DiscriminatorExecute
-	dataBytes := []byte{}
+	var dataBytes []byte
 	if msg.Revert() {
 		discriminator = contracts.DiscriminatorExecuteRevert
 		serializedInst, err := borsh.Serialize(contracts.ExecuteRevertInstructionParams{
