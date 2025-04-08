@@ -1,9 +1,10 @@
 package client
 
 import (
+	"testing"
+
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestContainsOwnedObject(t *testing.T) {
