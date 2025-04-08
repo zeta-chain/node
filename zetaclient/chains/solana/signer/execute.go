@@ -12,7 +12,8 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgExecute creates and signs a execute message for gateway execute instruction with TSS.
+// createAndSignMsgExecute creates and batch signs execute and increment nonce messages
+// for gateway execute instruction with TSS.
 func (signer *Signer) createAndSignMsgExecute(
 	ctx context.Context,
 	params *types.OutboundParams,
@@ -21,7 +22,7 @@ func (signer *Signer) createAndSignMsgExecute(
 	data []byte,
 	remainingAccounts []*solana.AccountMeta,
 	cancelTx bool,
-) (*contracts.MsgExecute, error) {
+) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
@@ -36,22 +37,27 @@ func (signer *Signer) createAndSignMsgExecute(
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
+		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
 	// prepare execute msg and compute hash
 	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, remainingAccounts)
 	msgHash := msg.Hash()
 
+	// prepare increment_nonce msg and compute hash, it will be used as fallback tx in case execute fails
+	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
+	msgHashIncrementNonce := msgIncrementNonce.Hash()
+
 	// sign the message with TSS to get an ECDSA signature.
 	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
+	signature, err := signer.TSS().
+		SignBatch(ctx, [][]byte{msgHash[:], msgHashIncrementNonce[:]}, height, nonce, chain.ChainId)
 	if err != nil {
-		return nil, errors.Wrap(err, "key-sign failed")
+		return nil, nil, errors.Wrap(err, "key-sign failed")
 	}
 
 	// attach the signature and return
-	return msg.SetSignature(signature), nil
+	return msg.SetSignature(signature[0]), msgIncrementNonce.SetSignature(signature[1]), nil
 }
 
 // createExecuteInstruction wraps the execute 'msg' into a Solana instruction.
