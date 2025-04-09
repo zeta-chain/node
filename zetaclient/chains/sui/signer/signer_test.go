@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
@@ -82,7 +83,12 @@ func TestSigner(t *testing.T) {
 		ts.SuiMock.
 			On("SuiGetTransactionBlock", mock.Anything, mock.Anything).
 			Return(models.SuiTransactionBlockResponse{
-				Digest:     digest,
+				Digest: digest,
+				Effects: models.SuiEffects{
+					Status: models.ExecutionStatus{
+						Status: client.TxStatusSuccess,
+					},
+				},
 				Checkpoint: "1000000",
 			}, nil)
 
@@ -183,7 +189,14 @@ func (ts *testSuite) MockExec(assert func(req models.SuiExecuteTransactionBlockR
 		req models.SuiExecuteTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error) {
 		assert(req)
-		return models.SuiTransactionBlockResponse{Digest: digest}, nil
+		return models.SuiTransactionBlockResponse{
+			Effects: models.SuiEffects{
+				Status: models.ExecutionStatus{
+					Status: client.TxStatusSuccess,
+				},
+			},
+			Digest: digest,
+		}, nil
 	}
 
 	ts.SuiMock.On("SuiExecuteTransactionBlock", mock.Anything, mock.Anything).Return(call)

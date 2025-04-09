@@ -98,6 +98,7 @@ const (
 	TestSuiWithdrawName                  = "sui_withdraw"
 	TestSuiTokenWithdrawName             = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallName           = "sui_withdraw_and_call"
+	TestSuiWithdrawRevertWithCallName    = "sui_withdraw_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 
 	/*
 	 Bitcoin tests
@@ -807,6 +808,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawRevertWithCallName,
+		"withdraw SUI from ZEVM that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
