@@ -27,7 +27,8 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Try to verify chain parameters
 	r.Logger.Print("🔍 Checking chain parameters...")
-	chainID := chains.TONLocalnet.ChainId
+	chainID := chains.TONTestnet.ChainId
+	r.Logger.Print("🔍 Using TON testnet chain ID: %d", chainID)
 
 	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &types.QueryGetChainParamsForChainRequest{
 		ChainId: chainID,

@@ -45,7 +45,7 @@ func (r *E2ERunner) TONDeposit(
 	amount math.Uint,
 	zevmRecipient eth.Address,
 ) (*cctypes.CrossChainTx, error) {
-	chain := chains.TONLocalnet
+	chain := chains.TONTestnet
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 

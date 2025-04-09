@@ -402,7 +402,7 @@ func (r *E2ERunner) waitForMinedCCTXFromIndex(index string, status types.CctxSta
 	r.Logger.Info("⏳ Waiting for CCTX with index %s to reach status %s", index, status)
 
 	// Verify the chain params are set before waiting for the CCTX
-	chainID := chains.TONLocalnet.ChainId
+	chainID := chains.TONTestnet.ChainId // Use testnet instead of localnet
 	_, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
 		ChainId: chainID,
 	})

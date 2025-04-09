@@ -87,7 +87,7 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 	require.NoError(r, err, "unable to ensure TON chain params")
 
 	// Verify the parameters were set correctly
-	chainID := chains.TONLocalnet.ChainId
+	chainID := chains.TONTestnet.ChainId
 	params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
 		ChainId: chainID,
 	})
@@ -118,7 +118,10 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 	}
 
 	creator := r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName)
-	chainID := chains.TONLocalnet.ChainId
+
+	// Use TON testnet (Athens3) chain ID instead of localnet
+	chainID := chains.TONTestnet.ChainId
+	r.Logger.Print("🔍 Using TON testnet (Athens3) chain ID: %d", chainID)
 
 	r.Logger.Print("🔍 Setting TON chain params for gateway address: %s", gw.ID.ToRaw())
 	r.Logger.Print("🔍 Chain ID: %d, TSS address: %s", chainID, r.TSSAddress.Hex())
