@@ -65,6 +65,9 @@ func withdrawAndCallPTB(
 			Mutable:              true,
 		},
 	})
+	if err != nil {
+		return models.TxnMetaData{}, fmt.Errorf("failed to create object argument: %w", err)
+	}
 
 	amountUint64, err := strconv.ParseUint(amountStr, 10, 64)
 	if err != nil {
