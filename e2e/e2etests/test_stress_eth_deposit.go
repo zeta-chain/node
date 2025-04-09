@@ -28,13 +28,15 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// create a wait group to wait for all the deposits to complete
 	var eg errgroup.Group
 
+	revertOptions := gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
+
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
 		tx := r.ETHDeposit(
 			r.EVMAddress(),
 			depositAmount,
-			gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+			revertOptions,
 			false,
 		)
 		hash := tx.Hash()
