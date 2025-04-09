@@ -137,18 +137,19 @@ jobs:
           CONFIG_PATH: ".github/actions/transaction-query/config/default.json"
           API_KEY: ${{ secrets.ZETACHAIN_API_KEY }}
         run: |
+          # Create output directory with explicit permissions
           mkdir -p tx_query_results
+          chmod 755 tx_query_results
           chmod +x .github/actions/transaction-query/validate-transactions.sh
           
-          COMMAND=(.github/actions/transaction-query/validate-transactions.sh 
-            --environment "$ENVIRONMENT" 
-            --config "$CONFIG_PATH" 
-            --api-key "$API_KEY" 
-            --output-dir "./tx_query_results"
-            --max-blocks "$MAX_BLOCKS"
-            --max-txs "$MAX_TXS")
-          
-          "${COMMAND[@]}"
+          # Run the validation script
+          .github/actions/transaction-query/validate-transactions.sh \
+            --environment "$ENVIRONMENT" \
+            --config "$CONFIG_PATH" \
+            --api-key "$API_KEY" \
+            --output-dir "$(pwd)/tx_query_results" \
+            --max-blocks "$MAX_BLOCKS" \
+            --max-txs "$MAX_TXS"
           
           FAILED_COUNT=$(jq 'length' tx_query_results/failed_transactions.json)
           if [[ "$FAILED_COUNT" -gt 0 ]]; then
