@@ -45,60 +45,35 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 		toncontracts.FormatCoins(deployerBalance),
 	)
 
-	// Check if we already have a gateway address from environment variables
-	var gwAccount *ton.AccountInit
-	var useExistingGateway bool
-
+	// Always deploy a new gateway, even if one exists in the env vars
 	if r.TONGateway != (tongo.AccountID{}) {
-		r.Logger.Print("🔍 Using existing TON Gateway from environment: %s", r.TONGateway.ToRaw())
-		useExistingGateway = true
-
-		// We need to construct the account init object for the existing gateway
-		// Create a dummy gateway account for chain params
-		tempGwAccount, err := ton.ConstructGatewayAccount(deployerID, r.TSSAddress)
-		if err != nil {
-			r.Logger.Print("⚠️ Failed to construct gateway account from TSS: %v", err)
-			require.NoError(r, err, "unable to initialize TON gateway from TSS")
-		}
-
-		// Sanity check - if TSS is misconfigured, warn but continue
-		if tempGwAccount.ID.ToRaw() != r.TONGateway.ToRaw() {
-			r.Logger.Print("⚠️ Warning: Expected gateway ID from TSS %s doesn't match env: %s",
-				tempGwAccount.ID.ToRaw(), r.TONGateway.ToRaw())
-		}
-
-		// Manually construct gateway account object based on existing address
-		gwAccount = &ton.AccountInit{
-			ID: r.TONGateway,
-		}
-	} else {
-		// 2. Deploy Gateway (original flow)
-		var err error
-		gwAccount, err = ton.ConstructGatewayAccount(deployerID, r.TSSAddress)
-		require.NoError(r, err, "unable to initialize TON gateway")
-
-		r.Logger.Print("🔍 TON Gateway being deployed to address: %s", gwAccount.ID.ToRaw())
-		r.Logger.Print("🔍 TON Gateway derived from TSS address: %s", r.TSSAddress.Hex())
-
-		err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1))
-		require.NoError(r, err, "unable to deploy TON gateway")
-
-		// Set runner field so we use this gateway for tests
-		r.TONGateway = gwAccount.ID
-		r.Logger.Print("🔍 TON Gateway address saved in runner: %s", r.TONGateway.ToRaw())
+		r.Logger.Print("🔍 Ignoring existing TON Gateway from environment: %s", r.TONGateway.ToRaw())
 	}
+
+	// 2. Deploy Gateway
+	gwAccount, err := ton.ConstructGatewayAccount(deployerID, r.TSSAddress)
+	require.NoError(r, err, "unable to initialize TON gateway")
+
+	r.Logger.Print("🔍 TON Gateway being deployed to address: %s", gwAccount.ID.ToRaw())
+	r.Logger.Print("🔍 TON Gateway derived from TSS address: %s", r.TSSAddress.Hex())
+
+	err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1))
+	require.NoError(r, err, "unable to deploy TON gateway")
+
+	// Set runner field so we use this gateway for tests, overriding any env var
+	r.TONGateway = gwAccount.ID
+	r.Logger.Print("🔍 TON Gateway address saved in runner: %s", r.TONGateway.ToRaw())
 
 	// 3. Check that the gateway indeed was deployed and has TON balance.
 	gwBalance, err := r.Clients.TON.GetBalanceOf(ctx, gwAccount.ID, true)
-	if err != nil {
-		r.Logger.Print("⚠️ Failed to get gateway balance: %v (this is expected if using an external gateway)", err)
-	} else {
-		require.False(r, gwBalance.IsZero(), "TON gateway balance is zero")
-		r.Logger.Print(
-			"💎 TON Gateway balance: %s",
-			toncontracts.FormatCoins(gwBalance),
-		)
-	}
+	require.NoError(r, err, "unable to get balance of TON gateway")
+	require.False(r, gwBalance.IsZero(), "TON gateway balance is zero")
+
+	r.Logger.Print(
+		"💎 TON Gateway deployed %s; balance: %s",
+		gwAccount.ID.ToRaw(),
+		toncontracts.FormatCoins(gwBalance),
+	)
 
 	amount := toncontracts.Coins(1000)
 
@@ -129,16 +104,12 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 
 	gw := toncontracts.NewGateway(gwAccount.ID)
 
-	// 6. Deposit TON to userTON (skip if using existing gateway)
-	if !useExistingGateway {
-		zevmRecipient := userTON.EVMAddress()
+	// 6. Deposit TON to userTON
+	zevmRecipient := userTON.EVMAddress()
 
-		cctx, err := r.TONDeposit(gw, &deployer.Wallet, amount, zevmRecipient)
-		require.NoError(r, err, "unable to deposit TON to userTON (additional account)")
-		require.Equal(r, cctxtypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-	} else {
-		r.Logger.Print("🔍 Skipping initial TON deposit since we're using an existing gateway")
-	}
+	cctx, err := r.TONDeposit(gw, &deployer.Wallet, amount, zevmRecipient)
+	require.NoError(r, err, "unable to deposit TON to userTON (additional account)")
+	require.Equal(r, cctxtypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 }
 
 func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
