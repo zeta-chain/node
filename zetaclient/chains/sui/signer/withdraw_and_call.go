@@ -61,8 +61,8 @@ func withdrawAndCallPTB(
 	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
 			Id:                   gatewayObjectID,
-			InitialSharedVersion: 0,
-			Mutable:              true,
+			InitialSharedVersion: 0,    // TODO: get coin object for gas payment
+			Mutable:              true, // TODO: get coin object for gas payment
 		},
 	})
 	if err != nil {
@@ -103,8 +103,8 @@ func withdrawAndCallPTB(
 	withdrawCap, err := ptb.Obj(suiptb.ObjectArg{
 		ImmOrOwnedObject: &sui.ObjectRef{
 			ObjectId: withdrawCapID,
-			Version:  0,
-			Digest:   nil,
+			Version:  0,   // TODO: get coin object for gas payment
+			Digest:   nil, // TODO: get coin object for gas payment
 		},
 	})
 	if err != nil {
@@ -192,8 +192,8 @@ func withdrawAndCallPTB(
 		objectArg, err := ptb.Obj(suiptb.ObjectArg{
 			SharedObject: &suiptb.SharedObjectArg{
 				Id:                   objectIDParsed,
-				InitialSharedVersion: 0,
-				Mutable:              true,
+				InitialSharedVersion: 0,    // TODO: get the correct value by querying the object
+				Mutable:              true, // TODO: get coin object for gas payment
 			},
 		})
 		if err != nil {
@@ -229,12 +229,10 @@ func withdrawAndCallPTB(
 		return models.TxnMetaData{}, fmt.Errorf("failed to parse signer address: %w", err)
 	}
 
-	// TODO: get coin object for gas payment
-
 	txData := suiptb.NewTransactionData(
 		signerAddr,
 		pt,
-		[]*sui.ObjectRef{},
+		[]*sui.ObjectRef{}, // TODO: get coin object for gas payment - retrieve a coin object owned by the signer
 		suiclient.DefaultGasBudget,
 		suiclient.DefaultGasPrice,
 	)
