@@ -239,11 +239,6 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	require.NoError(r, err)
 	tx.AddTxOut(wire.NewTxOut(int64(amountSats), pkScript))
 
-	// Add change output
-	changePkScript, err := txscript.PayToAddrScript(address)
-	require.NoError(r, err)
-	tx.AddTxOut(wire.NewTxOut(int64(change), changePkScript))
-
 	// Add memo output if provided
 	if memo != nil {
 		nullData, err := txscript.NullDataScript(memo)
@@ -251,10 +246,12 @@ func (r *E2ERunner) sendToAddrWithMemo(
 		r.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
 		memoOutput := wire.NewTxOut(0, nullData)
 		tx.AddTxOut(memoOutput)
-
-		// Move memo output to second position
-		tx.TxOut[1], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[1]
 	}
+
+	// Add change output
+	changePkScript, err := txscript.PayToAddrScript(address)
+	require.NoError(r, err)
+	tx.AddTxOut(wire.NewTxOut(int64(change), changePkScript))
 
 	r.Logger.Info("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
