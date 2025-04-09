@@ -111,11 +111,71 @@ jobs:
       - name: go test
         working-directory: contrib/rpcimportable
         run: go test ./...
+  transaction-query:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    # do not run this on forks as they do not have secret access
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'zeta-chain/node'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      
+      - name: Build zetacored
+        run: |
+          make install-zetacore
+          zetacored version
+      
+      - name: Run Transaction Validation
+        env:
+          ENVIRONMENT: "athens"
+          MAX_BLOCKS: "5"
+          MAX_TXS: "10"
+          CONFIG_PATH: ".github/actions/transaction-query/config/default.json"
+          API_KEY: ${{ secrets.ZETACHAIN_API_KEY }}
+        run: |
+          mkdir -p tx_query_results
+          chmod +x .github/actions/transaction-query/validate-transactions.sh
+          
+          COMMAND=(.github/actions/transaction-query/validate-transactions.sh 
+            --environment "$ENVIRONMENT" 
+            --config "$CONFIG_PATH" 
+            --api-key "$API_KEY" 
+            --output-dir "./tx_query_results"
+            --max-blocks "$MAX_BLOCKS"
+            --max-txs "$MAX_TXS")
+          
+          "${COMMAND[@]}"
+          
+          FAILED_COUNT=$(jq 'length' tx_query_results/failed_transactions.json)
+          if [[ "$FAILED_COUNT" -gt 0 ]]; then
+            echo "::warning::Found $FAILED_COUNT failed transaction queries!"
+            echo "First 5 failed transactions:"
+            jq 'limit(5; .[])' tx_query_results/failed_transactions.json
+            exit 1
+          else
+            echo "All transactions were successfully queried!"
+          fi
+          
+          cat tx_query_results/summary.md
+      
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transaction-query-results
+          path: tx_query_results
+          retention-days: 7
+
   ci-ok:
     runs-on: ubuntu-22.04
     needs:
       - build-and-test
       - rpcimportable
+      - transaction-query
     if: always()
     steps:
       - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
