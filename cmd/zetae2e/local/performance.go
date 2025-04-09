@@ -199,7 +199,7 @@ func solanaWithdrawPerformanceRoutine(
 
 		// execute the deposit sol transaction
 		amount := big.NewInt(0).Mul(big.NewInt(1e9), big.NewInt(100)) // 100 sol in lamports
-		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), amount, nil)
+		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), amount, nil, nil)
 
 		// wait for the cctx to be mined
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

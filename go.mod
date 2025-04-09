@@ -36,7 +36,7 @@ require (
 	github.com/libp2p/go-libp2p v0.27.8
 	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/multiformats/go-multiaddr v0.9.0
-	github.com/near/borsh-go v0.3.1
+	github.com/near/borsh-go v0.3.1-0.20240503120250-847ff6f195e8
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rakyll/statik v0.1.7
