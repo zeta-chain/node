@@ -23,6 +23,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Log important gateway information
 	r.Logger.Print("🔍 Test using TON Gateway address: %s", gw.AccountID().ToRaw())
 	r.Logger.Print("🔍 Runner's TON Gateway address: %s", r.TONGateway.ToRaw())
+	r.Logger.Print("🔍 Gateway address match: %v", gw.AccountID().ToRaw() == r.TONGateway.ToRaw())
 
 	// Try to verify chain parameters
 	r.Logger.Print("🔍 Checking chain parameters...")
@@ -34,6 +35,18 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	if err != nil {
 		r.Logger.Print("🔍 Failed to get chain params: %v", err)
+
+		// Force getting the chain parameters from the observer module
+		r.Logger.Print("🔍 Trying to get all chain params...")
+		allParams, paramErr := r.ObserverClient.GetChainParams(r.Ctx, &types.QueryGetChainParamsRequest{})
+		if paramErr != nil {
+			r.Logger.Print("❌ Failed to get any chain params: %v", paramErr)
+		} else if allParams != nil && allParams.ChainParams != nil {
+			r.Logger.Print("✅ Found chain params")
+			r.Logger.Print("🔍 Chain params: %+v", allParams.ChainParams)
+		} else {
+			r.Logger.Print("⚠️ No chain params found")
+		}
 	} else {
 		r.Logger.Print("✅ Successfully retrieved chain parameters")
 		r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", chainParams.ChainParams.GatewayAddress)
@@ -41,6 +54,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 		if chainParams.ChainParams.GatewayAddress != gw.AccountID().ToRaw() {
 			r.Logger.Print("⚠️ Gateway address mismatch, this may cause test failure!")
+			r.Logger.Print("🔍 Expected: %s, Got: %s", gw.AccountID().ToRaw(), chainParams.ChainParams.GatewayAddress)
 		}
 	}
 
@@ -103,6 +117,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 		r.Logger.Print("⚠️ Final check: Chain parameters still not set, test will likely fail")
 	} else {
 		r.Logger.Print("✅ Final check: Chain parameters are set with gateway: %s", chainParams.ChainParams.GatewayAddress)
+		r.Logger.Print("🔍 Final check: Gateway match: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
 	}
 
 	// ACT
