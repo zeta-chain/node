@@ -469,6 +469,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
+			e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
 
 			// TODO: enable withdraw and call test
