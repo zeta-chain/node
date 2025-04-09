@@ -13,6 +13,7 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -73,6 +74,11 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	s.MarkOutbound(outboundID, true)
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
+	// compliance check
+	if compliance.IsCCTXRestricted(cctx) {
+		return s.processRestrictedCCTX(ctx, cctx, zetaHeight)
+	}
+
 	tx, err := s.buildWithdrawal(ctx, cctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to build withdrawal tx")
@@ -105,6 +111,51 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	logger = logger.With().Str(logs.FieldTx, txDigest).Logger()
+	ctx = logger.WithContext(ctx)
+
+	bg.Work(ctx,
+		func(ctx context.Context) error { return s.reportOutboundTracker(ctx, nonce, txDigest) },
+		bg.WithLogger(logger),
+		bg.WithName("report_outbound_tracker"),
+	)
+
+	return nil
+}
+
+// processRestrictedCCTX processes a restricted CCTX by broadcasting a cancel tx.
+func (s *Signer) processRestrictedCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
+	var (
+		params = cctx.GetCurrentOutboundParam()
+		nonce  = params.TssNonce
+	)
+
+	compliance.PrintComplianceLog(
+		s.Logger().Std,
+		s.Logger().Compliance,
+		true,
+		s.Chain().ChainId,
+		cctx.Index,
+		cctx.InboundParams.Sender,
+		params.Receiver,
+		params.CoinType.String(),
+	)
+
+	cancelTxBuilder, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
+	if err != nil {
+		return errors.Wrap(err, "unable to create cancel tx builder")
+	}
+
+	txDigest, err := s.broadcastCancelTx(ctx, cancelTxBuilder)
+	if err != nil {
+		return errors.Wrap(err, "unable to broadcast cancel tx")
+	}
+
+	// prepare logger
+	logger := s.Logger().Std.With().
+		Int64(logs.FieldChain, s.Chain().ChainId).
+		Uint64(logs.FieldNonce, params.TssNonce).
+		Str(logs.FieldTx, txDigest).
+		Logger()
 	ctx = logger.WithContext(ctx)
 
 	bg.Work(ctx,

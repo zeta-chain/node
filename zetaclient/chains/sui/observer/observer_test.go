@@ -19,6 +19,7 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -157,6 +158,58 @@ func TestObserver(t *testing.T) {
 			ts.log.String(),
 			`cannot convert \"hello\" to big.Int: event parse error","message":"Unable to parse event. Skipping"`,
 		)
+	})
+
+	t.Run("ObserveInbound restricted address", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		evmBob := sample.EthAddress()
+
+		// Given compliance config
+		cfg := config.Config{
+			ComplianceConfig: config.ComplianceConfig{
+				RestrictedAddresses: []string{evmBob.String()},
+			},
+		}
+		config.SetRestrictedAddressesFromConfig(cfg)
+
+		// Given a deposit containing restricted address
+		expectedQuery := client.EventQuery{
+			PackageID: ts.gateway.PackageID(),
+			Module:    ts.gateway.Module(),
+			Cursor:    "",
+			Limit:     client.DefaultEventsLimit,
+		}
+
+		events := []models.SuiEventResponse{
+			ts.SampleEvent("TX_restricted", string(sui.DepositEvent), map[string]any{
+				"coin_type": string(sui.SUI),
+				"amount":    "200",
+				"sender":    "SUI_BOB",
+				"receiver":  evmBob.String(),
+			}),
+		}
+
+		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
+
+		// Given transaction block
+		ts.OnGetTx("TX_restricted", "10000", false, nil)
+
+		// Given inbound votes catches so we can assert them later
+		ts.CatchInboundVotes()
+
+		// ACT
+		err := ts.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check that final cursor is expected on restricted tx
+		assert.Equal(t, "TX_restricted,0", ts.LastTxScanned())
+
+		// No inbound votes should be created
+		require.Empty(t, ts.inboundVotesBag)
 	})
 
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {

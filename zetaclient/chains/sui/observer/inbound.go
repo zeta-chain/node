@@ -11,6 +11,8 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -130,9 +132,11 @@ func (ob *Observer) processInboundEvent(
 		return errors.Wrap(err, "unable to construct inbound vote")
 	}
 
-	_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
-	if err != nil {
-		return errors.Wrap(err, "unable to post vote inbound")
+	if msg != nil {
+		_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+		if err != nil {
+			return errors.Wrap(err, "unable to post vote inbound")
+		}
 	}
 
 	return nil
@@ -174,6 +178,21 @@ func (ob *Observer) constructInboundVote(
 	if !deposit.IsGas() {
 		coinType = coin.CoinType_ERC20
 		asset = string(deposit.CoinType)
+	}
+
+	// compliance check, skip restricted tx by returning nil msg
+	if config.ContainRestrictedAddress(deposit.Sender, deposit.Receiver.String()) {
+		compliance.PrintComplianceLog(
+			ob.Logger().Inbound,
+			ob.Logger().Compliance,
+			false,
+			ob.Chain().ChainId,
+			event.TxHash,
+			deposit.Sender,
+			deposit.Receiver.String(),
+			asset,
+		)
+		return nil, nil
 	}
 
 	// Sui uses checkpoint seq num instead of block height

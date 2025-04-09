@@ -254,18 +254,27 @@ func (s *Signer) broadcastWithCancelTx(
 		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancelling tx")
 	}
 
+	return s.broadcastCancelTx(ctx, cancelTxBuilder)
+}
+
+// broadcastCancelTx broadcasts a cancel tx and returns the tx digest
+func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
+	logger := zerolog.Ctx(ctx)
+
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder()
 	if err != nil {
 		return "", errors.Wrap(err, "unable to build cancel tx")
 	}
+
+	// create tx request
 	reqCancel := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   txCancel.TxBytes,
 		Signature: []string{sigCancel},
 	}
 
 	// broadcast cancel tx
-	res, err = s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
+	res, err := s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}
