@@ -148,6 +148,9 @@ func simulationModules(
 	}
 }
 
+// Order user by cosmos/gaia
+// https://github.com/cosmos/gaia/blob/main/app/modules.go
+
 // OrderInitGenesis returns the module list for genesis initialization
 // NOTE: Capability module must occur first so that it can initialize any capabilities
 // TODO: enable back IBC
