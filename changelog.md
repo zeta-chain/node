@@ -16,6 +16,7 @@
 * [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
 * [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
 * [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
+* [3793](https://github.com/zeta-chain/node/pull/3793) - add Sui PTB transaction building for withdrawAndCall
 
 ### Refactor
 
