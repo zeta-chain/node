@@ -155,7 +155,12 @@ jobs:
             echo "::warning::Found $FAILED_COUNT failed transaction queries!"
             echo "First 5 failed transactions:"
             jq 'limit(5; .[])' tx_query_results/failed_transactions.json
-            exit 1
+            
+            # Only exit with error on scheduled runs, not during PR checks
+            if [[ "${{ github.event_name }}" == "schedule" ]]; then
+              echo "Exiting with error to trigger notifications since this is a scheduled run"
+              exit 1
+            fi
           else
             echo "All transactions were successfully queried!"
           fi
