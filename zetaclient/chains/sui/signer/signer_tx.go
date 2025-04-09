@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -156,22 +157,37 @@ func (s *Signer) createCancelTxBuilder(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
 	zetaHeight uint64,
-) (txBuilder, error) {
+) (txBuilder, bool, error) {
 	var (
 		params = cctx.GetCurrentOutboundParam()
 		nonce  = strconv.FormatUint(params.TssNonce, 10)
 	)
 
+	// compliance check and print log
+	isRestricted := compliance.IsCCTXRestricted(cctx)
+	if isRestricted {
+		compliance.PrintComplianceLog(
+			s.Logger().Std,
+			s.Logger().Compliance,
+			true,
+			s.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			params.CoinType.String(),
+		)
+	}
+
 	// get gas budget from CCTX
 	gasBudget, err := getCancelTxGasBudget(params)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get gas budget")
+		return nil, isRestricted, errors.Wrap(err, "unable to get gas budget")
 	}
 
 	// retrieve withdraw cap ID
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get withdraw cap ID")
+		return nil, isRestricted, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
 	req := models.MoveCallRequest{
@@ -197,12 +213,12 @@ func (s *Signer) createCancelTxBuilder(
 			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign cancel tx")
 		}
 		return txCancel, sigCancel, nil
-	}, nil
+	}, isRestricted, nil
 }
 
-// broadcastWithCancelTx attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
+// broadcastTxWithCancelTx attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
 // If the tx execution is rejected, the cancel tx will be used and broadcasted if provided.
-func (s *Signer) broadcastWithCancelTx(
+func (s *Signer) broadcastTxWithCancelTx(
 	ctx context.Context,
 	sig string,
 	tx models.TxnMetaData,

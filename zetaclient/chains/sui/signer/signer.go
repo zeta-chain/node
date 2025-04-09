@@ -13,8 +13,6 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/compliance"
-	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Signer Sui outbound transaction signer.
@@ -67,6 +65,11 @@ func New(
 // Build --> Sign --> Broadcast --(async)--> Wait for execution --> PostOutboundTracker
 func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
 	var (
+		err      error
+		sig      string
+		tx       models.TxnMetaData
+		txDigest string
+
 		outboundID = base.OutboundIDFromCCTX(cctx)
 		nonce      = cctx.GetCurrentOutboundParam().TssNonce
 	)
@@ -74,35 +77,28 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	s.MarkOutbound(outboundID, true)
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
-	// compliance check
-	if compliance.IsCCTXRestricted(cctx) {
-		return s.processRestrictedCCTX(ctx, cctx, zetaHeight)
-	}
-
-	tx, err := s.buildWithdrawal(ctx, cctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to build withdrawal tx")
-	}
-
-	cancelTxBuilder, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
+	// always need a cancel tx as fallback
+	cancelTxBuilder, isRestricted, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
 	if err != nil {
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
 
-	sig, err := s.signTx(ctx, tx, zetaHeight, nonce)
-	if err != nil {
-		return errors.Wrap(err, "unable to sign tx")
+	// broadcast tx according to compliance check result
+	if isRestricted {
+		txDigest, err = s.broadcastCancelTx(ctx, cancelTxBuilder)
+	} else {
+		tx, err = s.buildWithdrawal(ctx, cctx)
+		if err != nil {
+			return errors.Wrap(err, "unable to build withdrawal tx")
+		}
+
+		sig, err = s.signTx(ctx, tx, zetaHeight, nonce)
+		if err != nil {
+			return errors.Wrap(err, "unable to sign tx")
+		}
+		txDigest, err = s.broadcastTxWithCancelTx(ctx, sig, tx, cancelTxBuilder)
 	}
 
-	// prepare logger
-	logger := s.Logger().Std.With().
-		Int64(logs.FieldChain, s.Chain().ChainId).
-		Uint64(logs.FieldNonce, nonce).
-		Logger()
-	ctx = logger.WithContext(ctx)
-
-	// broadcast tx with cancel tx
-	txDigest, err := s.broadcastWithCancelTx(ctx, sig, tx, cancelTxBuilder)
 	if err != nil {
 		// todo we might need additional error handling
 		// for the case when the tx is already broadcasted by another zetaclient
@@ -110,57 +106,10 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		return errors.Wrap(err, "unable to broadcast tx")
 	}
 
-	logger = logger.With().Str(logs.FieldTx, txDigest).Logger()
-	ctx = logger.WithContext(ctx)
-
-	bg.Work(ctx,
+	// report outbound tracker
+	bg.Work(
+		ctx,
 		func(ctx context.Context) error { return s.reportOutboundTracker(ctx, nonce, txDigest) },
-		bg.WithLogger(logger),
-		bg.WithName("report_outbound_tracker"),
-	)
-
-	return nil
-}
-
-// processRestrictedCCTX processes a restricted CCTX by broadcasting a cancel tx.
-func (s *Signer) processRestrictedCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, zetaHeight uint64) error {
-	var (
-		params = cctx.GetCurrentOutboundParam()
-		nonce  = params.TssNonce
-	)
-
-	compliance.PrintComplianceLog(
-		s.Logger().Std,
-		s.Logger().Compliance,
-		true,
-		s.Chain().ChainId,
-		cctx.Index,
-		cctx.InboundParams.Sender,
-		params.Receiver,
-		params.CoinType.String(),
-	)
-
-	cancelTxBuilder, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
-	if err != nil {
-		return errors.Wrap(err, "unable to create cancel tx builder")
-	}
-
-	txDigest, err := s.broadcastCancelTx(ctx, cancelTxBuilder)
-	if err != nil {
-		return errors.Wrap(err, "unable to broadcast cancel tx")
-	}
-
-	// prepare logger
-	logger := s.Logger().Std.With().
-		Int64(logs.FieldChain, s.Chain().ChainId).
-		Uint64(logs.FieldNonce, params.TssNonce).
-		Str(logs.FieldTx, txDigest).
-		Logger()
-	ctx = logger.WithContext(ctx)
-
-	bg.Work(ctx,
-		func(ctx context.Context) error { return s.reportOutboundTracker(ctx, nonce, txDigest) },
-		bg.WithLogger(logger),
 		bg.WithName("report_outbound_tracker"),
 	)
 

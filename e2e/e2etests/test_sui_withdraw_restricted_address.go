@@ -56,5 +56,5 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 	// revert address should receive the amount
 	revertBalanceAfter, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
-	require.EqualValues(r, revertBalanceBefore.Add(revertBalanceBefore, amount), revertBalanceAfter)
+	require.EqualValues(r, new(big.Int).Add(revertBalanceBefore, amount), revertBalanceAfter)
 }
