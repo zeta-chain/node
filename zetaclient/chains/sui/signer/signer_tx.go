@@ -59,7 +59,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
 	}
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
 }
@@ -94,7 +94,6 @@ func (s *Signer) buildWithdrawTx(
 // buildWithdrawAndCallTx builds unsigned withdrawAndCall
 // a withdrawAndCall is a PTB transaction that contains a withdraw_impl call and a on_call call
 func (s *Signer) buildWithdrawAndCallTx(
-	ctx context.Context,
 	params *cctypes.OutboundParams,
 	coinType,
 	gasBudget,
@@ -120,20 +119,23 @@ func (s *Signer) buildWithdrawAndCallTx(
 		cp.Message,
 	)
 
-	// keep lint quiet without using _ in params
-	_ = ctx
-	_ = params
-	_ = coinType
-	_ = gasBudget
-	_ = withdrawCapID
-
 	// TODO: check all object IDs are share object here
 	// https://github.com/zeta-chain/node/issues/3755
 
-	// TODO: build PTB here
-	// https://github.com/zeta-chain/node/issues/3741
-
-	return models.TxnMetaData{}, errors.New("not implemented")
+	// build the PTB transaction
+	return withdrawAndCallPTB(
+		s.TSS().PubKey().AddressSui(),
+		s.gateway.PackageID(),
+		s.gateway.Module(),
+		s.gateway.ObjectID(),
+		withdrawCapID,
+		coinType,
+		params.Amount.String(),
+		strconv.FormatUint(params.TssNonce, 10),
+		gasBudget,
+		params.Receiver,
+		cp,
+	)
 }
 
 // broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
