@@ -23,7 +23,7 @@ func TestSolanaDeposit(r *runner.E2ERunner, args []string) {
 	depositAmount := utils.ParseBigInt(r, args[0])
 
 	// execute the deposit transaction
-	sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositAmount, nil)
+	sig := r.SOLDepositAndCall(nil, r.EVMAddress(), depositAmount, nil, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
