@@ -59,6 +59,12 @@ func (r *E2ERunner) TONDeposit(
 		zevmRecipient.Hex(),
 	)
 
+	// Debug information about addresses
+	r.Logger.Info("🔍 Debug Information:")
+	r.Logger.Info("  - TON address: %s", sender.GetAddress().ToRaw())
+	r.Logger.Info("  - ZETA address: %s", zevmRecipient.Hex())
+	r.Logger.Info("  - Gateway address: %s", gw.AccountID().ToRaw())
+
 	// Send TX
 	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
@@ -121,6 +127,13 @@ func (r *E2ERunner) TONDepositAndCall(
 	require.False(r, amount.IsZero())
 	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String())
 	require.NotEmpty(r, callData)
+
+	// Debug information about addresses
+	r.Logger.Info("🔍 Debug Information:")
+	r.Logger.Info("  - TON address: %s", sender.GetAddress().ToRaw())
+	r.Logger.Info("  - ZETA address: %s", zevmRecipient.Hex())
+	r.Logger.Info("  - Gateway address: %s", gw.AccountID().ToRaw())
+	r.Logger.Info("  - Call data: %q", string(callData))
 
 	r.Logger.Info(
 		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
