@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -265,15 +266,16 @@ func (r *E2ERunner) sendToAddrWithMemo(
 		pkScript, err := hex.DecodeString(utxo.ScriptPubKey)
 		require.NoError(r, err)
 
-		satoshis := int64(utxo.Amount * btcutil.SatoshiPerBitcoin)
-		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(pkScript, satoshis)
+		satoshis, err := btcutil.NewAmount(utxo.Amount)
+		require.NoError(r, err)
+		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(pkScript, int64(satoshis))
 
 		// Create witness
 		witnessScript, err := txscript.WitnessSignature(
 			tx,
 			txscript.NewTxSigHashes(tx, prevOutputFetcher),
 			i,
-			satoshis,
+			int64(satoshis),
 			pkScript,
 			txscript.SigHashAll,
 			wifKey.PrivKey,
@@ -285,6 +287,11 @@ func (r *E2ERunner) sendToAddrWithMemo(
 		tx.TxIn[i].SignatureScript = nil
 		tx.TxIn[i].Witness = witnessScript
 	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+	err = tx.Serialize(buf)
+	require.NoError(r, err)
+	r.Logger.Info("raw tx hex: %s", hex.EncodeToString(buf.Bytes()))
 
 	txid, err := btcRPC.SendRawTransaction(r.Ctx, tx, true)
 	require.NoError(r, err)
