@@ -139,7 +139,7 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender, []byte("hello"), []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), false, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/token"
@@ -148,6 +147,7 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
+	isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 
 	var outboundGetter outboundGetter
 
@@ -162,7 +162,6 @@ func (signer *Signer) TryProcessOutbound(
 		outboundGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
-		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 		if cctx.IsWithdrawAndCall() || isRevert {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
@@ -182,7 +181,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 	case coin.CoinType_ERC20:
-		if cctx.IsWithdrawAndCall() {
+		if cctx.IsWithdrawAndCall() || isRevert {
 			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
@@ -555,10 +554,16 @@ func (signer *Signer) prepareExecuteSPLTx(
 	if err != nil {
 		return nil, err
 	}
-
-	message, err := hex.DecodeString(cctx.RelayedMessage)
-	if err != nil {
-		return nil, err
+	isRevert := cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert
+	var message []byte
+	if isRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
 	}
 	msg, err := contracts.DecodeExecuteMsg(message)
 	if err != nil {
@@ -573,18 +578,17 @@ func (signer *Signer) prepareExecuteSPLTx(
 		})
 	}
 
-	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
-
-	// sign gateway withdraw spl message by TSS
+	// sign gateway execute spl revert message by TSS
 	msgExecuteSpl, msgIn, err := signer.createAndSignMsgExecuteSPL(
 		ctx,
 		params,
 		height,
 		cctx.InboundParams.Asset,
 		mint.Decimals,
-		sender,
+		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
+		isRevert,
 		cancelTx,
 	)
 	if err != nil {

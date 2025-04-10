@@ -18,6 +18,7 @@ const (
 	InstructionExecuteSPL        byte = 6
 	InstructionIncrementNonce    byte = 7
 	InstructionExecuteRevert     byte = 8
+	InstructionExecuteSPLRevert  byte = 9
 )
 
 // InstructionIdentifier is used at beginning of message hash to make it project specific.
@@ -523,10 +524,13 @@ type MsgExecuteSPL struct {
 	signature [65]byte
 
 	// Sender is the sender address for the execute spl
-	sender [20]byte
+	sender string
 
 	// Data for execute
 	data []byte
+
+	// revert marks if it's execute on execute_revert
+	revert bool
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
@@ -537,8 +541,9 @@ func NewMsgExecuteSPL(
 	chainID, nonce, amount uint64,
 	decimals uint8,
 	mintAccount, to, toAta solana.PublicKey,
-	sender [20]byte,
+	sender string,
 	data []byte,
+	revert bool,
 	remainingAccounts []*solana.AccountMeta,
 ) *MsgExecuteSPL {
 	return &MsgExecuteSPL{
@@ -551,6 +556,7 @@ func NewMsgExecuteSPL(
 		decimals:          decimals,
 		sender:            sender,
 		data:              data,
+		revert:            revert,
 		remainingAccounts: remainingAccounts,
 	}
 }
@@ -588,7 +594,7 @@ func (msg *MsgExecuteSPL) Decimals() uint8 {
 }
 
 // Sender returns the sender address of the message
-func (msg *MsgExecuteSPL) Sender() [20]byte {
+func (msg *MsgExecuteSPL) Sender() string {
 	return msg.sender
 }
 
@@ -602,13 +608,23 @@ func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
 }
 
+// Revert returns if it's execute_revert or execute
+func (msg *MsgExecuteSPL) Revert() bool {
+	return msg.revert
+}
+
 // Hash packs the execute spl message and computes the hash
 func (msg *MsgExecuteSPL) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
 	message = append(message, InstructionIdentifier...)
-	message = append(message, InstructionExecuteSPL)
+
+	if !msg.revert {
+		message = append(message, InstructionExecuteSPL)
+	} else {
+		message = append(message, InstructionExecuteSPLRevert)
+	}
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)

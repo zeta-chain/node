@@ -552,6 +552,81 @@ func ParseInstructionExecuteSPL(instruction solana.CompiledInstruction) (*Execut
 	return inst, nil
 }
 
+var _ OutboundInstruction = (*ExecuteSPLRevertInstructionParams)(nil)
+
+type ExecuteSPLRevertInstructionParams struct {
+	// Discriminator is the unique identifier for the execute spl revert instruction
+	Discriminator [8]byte
+
+	// Decimals is decimals for spl token
+	Decimals uint8
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Sender that initated cctx
+	Sender solana.PublicKey
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteSPLRevertInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecuteSPL tries to parse the instruction as a 'execute_spl_token_revert'.
+// It returns nil if the instruction can't be parsed as a 'execute_spl_token_revert'.
+func ParseInstructionExecuteSPLRevert(
+	instruction solana.CompiledInstruction,
+) (*ExecuteSPLRevertInstructionParams, error) {
+	// try deserializing instruction as a 'execute_spl_token_revert'
+	inst := &ExecuteSPLRevertInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_spl_token_revert' instruction
+	if inst.Discriminator != DiscriminatorExecuteSPLRevert {
+		return nil, fmt.Errorf("not an execute_spl_token_revert instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
 // RecoverSigner recover the ECDSA signer from given message hash and signature
 func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err error) {
 	// recover the public key

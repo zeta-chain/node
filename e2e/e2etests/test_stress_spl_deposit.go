@@ -30,7 +30,7 @@ func TestStressSPLDeposit(r *runner.E2ERunner, args []string) {
 		i := i
 
 		// execute the deposit SPL transaction
-		sig := r.SPLDepositAndCall(&privKey, depositSPLAmount.Uint64(), r.SPLAddr, r.EVMAddress(), nil)
+		sig := r.SPLDepositAndCall(&privKey, depositSPLAmount.Uint64(), r.SPLAddr, r.EVMAddress(), nil, nil)
 		r.Logger.Print("index %d: starting SPL deposit, sig: %s", i, sig.String())
 
 		eg.Go(func() error { return monitorDeposit(r, sig, i, time.Now()) })
