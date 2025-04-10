@@ -453,22 +453,6 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 			r.Logger.Info("🔍 Checking %d CCTXs for a match (%s elapsed)",
 				len(res.CrossChainTx), time.Since(start).Round(time.Second))
 
-			// Print a summary of all CCTXs
-			if len(res.CrossChainTx) > 0 {
-				r.Logger.Info("📊 CCTX Summary:")
-				for i, tx := range res.CrossChainTx {
-					// Limit to first 10 to avoid log spam
-					if i >= 10 {
-						r.Logger.Info("... and %d more CCTXs", len(res.CrossChainTx)-10)
-						break
-					}
-					r.Logger.Info("  [%d] Index: %s, ChainID: %d, Sender: %s, Status: %s",
-						i, tx.Index, tx.InboundParams.SenderChainId, tx.InboundParams.Sender, tx.CctxStatus.Status)
-				}
-			} else {
-				r.Logger.Info("📊 No CCTXs found in the system yet")
-			}
-
 			lastLog = time.Now()
 		}
 
