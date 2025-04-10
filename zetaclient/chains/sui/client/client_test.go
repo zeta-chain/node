@@ -68,7 +68,7 @@ func TestContainsOwnedObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := containsOwnedObject(tt.input)
+			err := checkContainOwnedObject(tt.input)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

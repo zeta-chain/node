@@ -317,10 +317,10 @@ func (c *Client) CheckObjectIDsShared(ctx context.Context, objectIDs []string) e
 		return fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(res))
 	}
 
-	return containsOwnedObject(res)
+	return checkContainOwnedObject(res)
 }
 
-func containsOwnedObject(res []*models.SuiObjectResponse) error {
+func checkContainOwnedObject(res []*models.SuiObjectResponse) error {
 	for i, obj := range res {
 		if obj.Data == nil {
 			return fmt.Errorf("object %d is missing data", i)
