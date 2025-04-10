@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/hex"
 	"math/big"
+	"time"
 
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -122,9 +123,9 @@ func (r *E2ERunner) TONDeposit(
 		return match
 	}
 
-	// Wait for cctx with the runner's configured timeout
-	r.Logger.Info("⏳ Waiting for CCTX to be processed...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, r.CctxTimeout)
+	// Wait for cctx with a 1-minute timeout
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (1 minute timeout)...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	return cctx, nil
@@ -179,8 +180,9 @@ func (r *E2ERunner) TONDepositAndCall(
 			cctx.RelayedMessage == hex.EncodeToString(callData)
 	}
 
-	// Wait for cctx with the runner's configured timeout
-	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, r.CctxTimeout)
+	// Wait for cctx with a 1-minute timeout
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (1 minute timeout)...")
+	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
 
 	return cctx, nil
 }
