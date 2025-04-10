@@ -49,6 +49,7 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 func (r *E2ERunner) SuiWithdrawSUI(
 	receiver string,
 	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
@@ -58,7 +59,7 @@ func (r *E2ERunner) SuiWithdrawSUI(
 		receiverBytes,
 		amount,
 		r.SUIZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
 	)
 	require.NoError(r, err)
 

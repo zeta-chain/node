@@ -18,12 +18,25 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 50
-
 const (
+	// DefaultEventsLimit is the default limit for querying gateway module events.
+	DefaultEventsLimit = 50
+
+	// TxStatusSuccess is the success status for a transaction.
+	TxStatusSuccess = "success"
+
+	// TxStatusFailure is the failure status for a transaction.
+	TxStatusFailure = "failure"
+
+	// filterMoveEventModule is the event filter for querying events for specified move module.
+	// @see https://docs.sui.io/guides/developer/sui-101/using-events#filtering-event-queries
 	filterMoveEventModule = "MoveEventModule"
-	immutableOwner        = "Immutable"
-	sharedOwner           = "Shared"
+
+	// immutableOwner is the owner type for immutable objects.
+	immutableOwner = "Immutable"
+
+	// sharedOwner is the owner type for shared objects.
+	sharedOwner = "Shared"
 )
 
 // NewFromEndpoint Client constructor based on endpoint string.
@@ -158,6 +171,39 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 	}
 
 	return res.Data[0].Data.ObjectId, nil
+}
+
+// InspectTransactionBlock manual implementation of ISuiAPI.InspectTransactionBlock
+// Don't use this function at this moment because Sui SDK currently returns deserialization error.
+// TODO: https://github.com/zeta-chain/node/issues/3775
+//
+// @see sui.(*suiReadTransactionImpl).InspectTransactionBlock
+// @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock
+func (c *Client) InspectTransactionBlock(
+	ctx context.Context,
+	req models.SuiDevInspectTransactionBlockRequest,
+) (models.SuiTransactionBlockResponse, error) {
+	const method = "sui_devInspectTransactionBlock"
+
+	params := []any{
+		req.Sender,
+		req.TxBytes,
+		any(nil), // gas_price
+		any(nil), // epoch
+		any(nil), // additional_args
+	}
+
+	resRaw, err := c.SuiCall(ctx, method, params...)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, errors.Wrap(err, method)
+	}
+
+	resString, ok := resRaw.(string)
+	if !ok {
+		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
+	}
+
+	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
 }
 
 // SuiExecuteTransactionBlock manual implementation of ISuiAPI.SuiExecuteTransactionBlock
