@@ -438,15 +438,27 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 		reqQuery = &types.QueryAllCctxRequest{
 			Pagination: &query.PageRequest{Reverse: true},
 		}
+		pollInterval = 10 * time.Second // log status every 10 seconds
+		lastLog      = time.Now()
 	)
+
+	r.Logger.Info("⏳ Starting search for matching CCTX (timeout: %s)", timeout)
 
 	for time.Since(start) < timeout {
 		res, err := r.CctxClient.CctxAll(ctx, reqQuery)
 		require.NoError(r, err)
 
+		// Log status periodically
+		if time.Since(lastLog) > pollInterval {
+			r.Logger.Info("🔍 Checking %d CCTXs for a match (%s elapsed)",
+				len(res.CrossChainTx), time.Since(start).Round(time.Second))
+			lastLog = time.Now()
+		}
+
 		for i := range res.CrossChainTx {
 			tx := res.CrossChainTx[i]
 			if filter(tx) {
+				r.Logger.Info("✅ Found matching CCTX after %s", time.Since(start).Round(time.Second))
 				return r.waitForMinedCCTXFromIndex(tx.Index, status)
 			}
 		}
@@ -454,7 +466,8 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 		time.Sleep(time.Second)
 	}
 
-	r.Logger.Error("WaitForSpecificCCTX: No CCTX found. Timed out")
+	r.Logger.Error("❌ WaitForSpecificCCTX: No CCTX found after %s. Timed out",
+		timeout.Round(time.Second))
 	r.FailNow()
 
 	return nil
