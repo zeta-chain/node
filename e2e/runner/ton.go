@@ -145,7 +145,7 @@ func (r *E2ERunner) TONDepositAndCall(
 		opt(cfg)
 	}
 
-	chain := chains.TONLocalnet
+	chain := chains.TONTestnet
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 
@@ -174,10 +174,33 @@ func (r *E2ERunner) TONDepositAndCall(
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
 	}
 
+	// Create a filter function to find matching CCTX
+	r.Logger.Info("🔍 Creating CCTX filter with parameters:")
+	r.Logger.Info("  - Expected chain ID: %d", chain.ChainId)
+	r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
+	r.Logger.Info("  - Expected relayed message: %s", hex.EncodeToString(callData))
+
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+		// Extract info about this CCTX for debugging
+		if cctx != nil {
+			r.Logger.Info("🔄 Evaluating CCTX: Index=%s", cctx.Index)
+			r.Logger.Info("  - CCTX sender chain ID: %d (expected: %d)",
+				cctx.InboundParams.SenderChainId, chain.ChainId)
+			r.Logger.Info("  - CCTX sender: %s", cctx.InboundParams.Sender)
+			r.Logger.Info("  - CCTX relayed message: %s", cctx.RelayedMessage)
+			r.Logger.Info("  - CCTX status: %s", cctx.CctxStatus.Status)
+		}
+
+		match := cctx != nil &&
+			cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
 			cctx.RelayedMessage == hex.EncodeToString(callData)
+
+		if match {
+			r.Logger.Info("📝 Found matching CCTX: Index=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status)
+		}
+
+		return match
 	}
 
 	// Wait for cctx with a 1-minute timeout
