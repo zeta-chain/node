@@ -8,8 +8,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-// IsCctxRestricted returns true if the cctx involves restricted addresses
-func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
+// IsCCTXRestricted returns true if the cctx involves restricted addresses
+func IsCCTXRestricted(cctx *crosschaintypes.CrossChainTx) bool {
 	sender := cctx.InboundParams.Sender
 	receiver := cctx.GetCurrentOutboundParam().Receiver
 

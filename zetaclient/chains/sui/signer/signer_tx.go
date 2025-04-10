@@ -18,8 +18,12 @@ import (
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-// txBuilder is a function that returns the tx and the signature
-type txBuilder func() (models.TxnMetaData, string, error)
+// txBuilder represents a wrapper that returns Sui tx with TSS signature (base64)
+//
+// We use a "builder" pattern to delay RPC 'MoveCallRequest'.
+// This simplifies downstream usage of tx broadcasting & signing.
+// It also help to avoid Gateway's object version mismatch error.
+type txBuilder func(ctx context.Context) (models.TxnMetaData, string, error)
 
 const (
 	funcWithdraw      = "withdraw"
@@ -33,6 +37,24 @@ const (
 // https://github.com/zeta-chain/node/issues/3741
 //const funcWithdrawImpl = "withdraw_impl"
 //const funcOnCall = "on_call"
+
+func (s *Signer) createWithdrawTxBuilder(cctx *cctypes.CrossChainTx, zetaHeight uint64) (txBuilder, error) {
+	return func(ctx context.Context) (models.TxnMetaData, string, error) {
+		tx, err := s.buildWithdrawal(ctx, cctx)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build withdrawal tx")
+		}
+
+		nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+		sigBase64, err := s.signTx(ctx, tx, zetaHeight, nonce)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign tx")
+		}
+
+		return tx, sigBase64, nil
+	}, nil
+}
 
 // buildWithdrawal builds unsigned withdrawal transaction using CCTX and Sui RPC
 // https://github.com/zeta-chain/protocol-contracts-sui/blob/0245ad3a2eb4001381625070fd76c87c165589b2/sources/gateway.move#L117
@@ -75,6 +97,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	if cctx.IsWithdrawAndCall() {
 		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
 	}
+
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
 }
 
@@ -82,9 +105,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 func (s *Signer) buildWithdrawTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType,
-	gasBudget,
-	withdrawCapID string,
+	coinType, gasBudget, withdrawCapID string,
 ) (models.TxnMetaData, error) {
 	var (
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
@@ -152,6 +173,8 @@ func (s *Signer) buildWithdrawAndCallTx(
 
 // createCancelTxBuilder creates a cancel tx builder for given CCTX
 // The tx cancellation is done by calling the 'increase_nonce' function on the gateway
+// The goal or a "builder" instead of regular TxMetaData is to
+// delay the 'MoveCall' to the last moment to avoid gateway object version mismatch
 func (s *Signer) createCancelTxBuilder(
 	ctx context.Context,
 	cctx *cctypes.CrossChainTx,
@@ -184,31 +207,38 @@ func (s *Signer) createCancelTxBuilder(
 		GasBudget:       gasBudget,
 	}
 
-	// tx builder for cancel tx
-	// delay the 'MoveCall' to the last moment helps to avoid gateway object version mismatch
-	return func() (models.TxnMetaData, string, error) {
-		txCancel, err := s.client.MoveCall(ctx, req)
+	return func(ctx context.Context) (models.TxnMetaData, string, error) {
+		tx, err := s.client.MoveCall(ctx, req)
 		if err != nil {
 			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build cancel tx")
 		}
 
-		sigCancel, err := s.signTx(ctx, txCancel, zetaHeight, params.TssNonce)
+		sigBase64, err := s.signTx(ctx, tx, zetaHeight, params.TssNonce)
 		if err != nil {
 			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign cancel tx")
 		}
-		return txCancel, sigCancel, nil
+
+		return tx, sigBase64, nil
 	}, nil
 }
 
-// broadcastWithCancelTx attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
-// If the tx execution is rejected, the cancel tx will be used and broadcasted if provided.
-func (s *Signer) broadcastWithCancelTx(
+// broadcastWithdrawalWithFallback broadcasts withdrawal tx to Sui network.
+// If the tx execution is rejected, the cancel tx will be used and broadcasted (if provided).
+func (s *Signer) broadcastWithdrawalWithFallback(
 	ctx context.Context,
-	sig string,
-	tx models.TxnMetaData,
-	cancelTxBuilder txBuilder,
+	withdrawTxBuilder, cancelTxBuilder txBuilder,
 ) (string, error) {
 	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
+
+	// should not happen
+	if withdrawTxBuilder == nil || cancelTxBuilder == nil {
+		return "", errors.New("withdrawal tx builder or cancel tx builder is nil")
+	}
+
+	tx, sig, err := withdrawTxBuilder(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to build withdraw tx")
+	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   tx.TxBytes,
@@ -234,11 +264,6 @@ func (s *Signer) broadcastWithCancelTx(
 		return res.Digest, nil
 	}
 
-	// tx failed, return error if no cancel tx provided
-	if cancelTxBuilder == nil {
-		return "", fmt.Errorf("tx execution status failed: %s", res.Effects.Status.Error)
-	}
-
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
 	isRetryable, err := sui.IsRetryableExecutionError(res.Effects.Status.Error)
@@ -254,18 +279,27 @@ func (s *Signer) broadcastWithCancelTx(
 		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancelling tx")
 	}
 
+	return s.broadcastCancelTx(ctx, cancelTxBuilder)
+}
+
+// broadcastCancelTx broadcasts a cancel tx and returns the tx digest
+func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
+	logger := zerolog.Ctx(ctx)
+
 	// build cancel tx
-	txCancel, sigCancel, err := cancelTxBuilder()
+	txCancel, sigCancel, err := cancelTxBuilder(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to build cancel tx")
 	}
+
+	// create tx request
 	reqCancel := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   txCancel.TxBytes,
 		Signature: []string{sigCancel},
 	}
 
 	// broadcast cancel tx
-	res, err = s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
+	res, err := s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute cancel tx block")
 	}

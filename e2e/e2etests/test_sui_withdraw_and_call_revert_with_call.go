@@ -38,7 +38,7 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	// retrieve current zrc20 gas limit
 	oldGasLimit, err := r.SUIZRC20.GASLIMIT(&bind.CallOpts{})
 	require.NoError(r, err)
-	r.Logger.Print("current gas limit: %s", oldGasLimit.String())
+	r.Logger.Info("current gas limit: %s", oldGasLimit.String())
 
 	// set a low ZRC20 gas limit so gasBudget will be low: "1000000"
 	// withdraw tx will be rejected due to execution error "InsufficientGas"
