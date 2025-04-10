@@ -66,12 +66,22 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("  - Gateway address: %s", gw.AccountID().ToRaw())
 
 	// Send TX
+	r.Logger.Info("📤 Sending TON transaction to blockchain...")
 	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
 		r.Logger.Error("Failed to send TON deposit: %v", err)
 		return nil, errors.Wrap(err, "failed to send TON deposit")
 	}
 	r.Logger.Info("✅ TON deposit transaction sent successfully")
+
+	// Get sender account details for reference
+	senderAddr := sender.GetAddress()
+	r.Logger.Info("📋 TON Transaction Details:")
+	r.Logger.Info("  - Sender Address: %s", senderAddr.ToRaw())
+	r.Logger.Info("  - Sender Address (human): %s", senderAddr.ToHuman(false, true))
+	r.Logger.Info("  - Gateway: %s", gw.AccountID().ToRaw())
+	r.Logger.Info("  - Amount: %s TON", amount.String())
+	r.Logger.Info("  - Chain ID: %d", chain.ChainId)
 
 	// Verify chain params are set
 	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
@@ -86,8 +96,23 @@ func (r *E2ERunner) TONDeposit(
 		r.Logger.Print("🔍 Gateway address match: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
 	}
 
+	// Create a filter function to find matching CCTX
+	r.Logger.Info("🔍 Creating CCTX filter with parameters:")
+	r.Logger.Info("  - Expected chain ID: %d", chain.ChainId)
+	r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
+
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		match := cctx.InboundParams.SenderChainId == chain.ChainId &&
+		// Extract info about this CCTX for debugging
+		if cctx != nil {
+			r.Logger.Info("🔄 Evaluating CCTX: Index=%s", cctx.Index)
+			r.Logger.Info("  - CCTX sender chain ID: %d (expected: %d)",
+				cctx.InboundParams.SenderChainId, chain.ChainId)
+			r.Logger.Info("  - CCTX sender: %s", cctx.InboundParams.Sender)
+			r.Logger.Info("  - CCTX status: %s", cctx.CctxStatus.Status)
+		}
+
+		match := cctx != nil &&
+			cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
 
 		if match {
