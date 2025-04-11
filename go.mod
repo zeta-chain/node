@@ -311,7 +311,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.14.8
-	github.com/zeta-chain/go-tss v0.4.0
+	github.com/zeta-chain/go-tss v0.5.0
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250320221859-9eabc2d8eba8
 )
 
