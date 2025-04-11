@@ -554,22 +554,17 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
 	require.NoError(r, err)
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
+
+	accounts := []solanacontract.AccountMeta{
+		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := solanacontract.EncodeExecuteMessage(accounts, data)
 	require.NoError(r, err)
 
 	// withdraw
@@ -644,23 +639,18 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
 	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
 
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
-			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
+	accounts := []solanacontract.AccountMeta{
+		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+		{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := solanacontract.EncodeExecuteMessage(accounts, data)
 	require.NoError(r, err)
 
 	// withdraw

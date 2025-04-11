@@ -24,7 +24,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	sender string,
 	data []byte,
 	remainingAccounts []*solana.AccountMeta,
-	revert bool,
+	executeType contracts.ExecuteType,
 	cancelTx bool,
 ) (*contracts.MsgExecuteSPL, *contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
@@ -77,7 +77,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 		destinationProgramPdaAta,
 		sender,
 		data,
-		revert,
+		executeType,
 		remainingAccounts,
 	)
 	msgHash := msg.Hash()
@@ -102,7 +102,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (*solana.GenericInstruction, error) {
 	// create execute spl instruction with program call data
 	var dataBytes []byte
-	if msg.Revert() {
+	if msg.ExecuteType() == contracts.ExecuteTypeRevert {
 		serializedInst, err := borsh.Serialize(contracts.ExecuteSPLRevertInstructionParams{
 			Discriminator: contracts.DiscriminatorExecuteSPLRevert,
 			Decimals:      msg.Decimals(),

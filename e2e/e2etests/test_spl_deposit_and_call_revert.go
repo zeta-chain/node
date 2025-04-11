@@ -14,6 +14,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TestSPLDepositAndCallRevert tests deposit of SPL tokens calling a example contract that reverts.
 func TestSPLDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := utils.ParseInt(r, args[0])

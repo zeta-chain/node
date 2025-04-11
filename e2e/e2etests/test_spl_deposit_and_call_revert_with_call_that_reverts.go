@@ -8,10 +8,12 @@ import (
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
+	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TestSPLDepositAndCallRevertWithCallThatReverts tests deposit of SPL tokens
+// with revert options when call on revert program reverts, and cctx is aborted
 func TestSPLDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := utils.ParseInt(r, args[0])
@@ -27,13 +29,10 @@ func TestSPLDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args []
 
 	// create encoded msg
 	data := []byte("hello spl deposit and call revert")
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedSPLProgramID)
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(runner.ConnectedSPLProgramID)
 	require.NoError(r, err)
 
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
-
 	connectedPdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(
 		r.Ctx,
 		connectedPdaAta,
@@ -42,23 +41,20 @@ func TestSPLDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args []
 	require.NoError(r, err)
 	r.Logger.Info("connected pda balance of SPL before revert: %s", connectedPdaBalanceBefore.Value.Amount)
 
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
+	accounts := []solanacontracts.AccountMeta{
+		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := solanacontracts.EncodeExecuteMessage(accounts, data)
 	require.NoError(r, err)
 
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, reverterAddr, data, &solanacontract.RevertOptions{
+	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, reverterAddr, data, &solanacontracts.RevertOptions{
 		RevertAddress:    runner.ConnectedSPLProgramID,
 		CallOnRevert:     true,
 		RevertMessage:    msgEncoded,

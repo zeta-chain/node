@@ -537,8 +537,8 @@ type MsgExecuteSPL struct {
 	// Data for execute
 	data []byte
 
-	// revert marks if it's execute on execute_revert
-	revert bool
+	// executeType indicates if it's a call or revert operation
+	executeType ExecuteType
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
@@ -551,7 +551,7 @@ func NewMsgExecuteSPL(
 	mintAccount, to, toAta solana.PublicKey,
 	sender string,
 	data []byte,
-	revert bool,
+	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
 ) *MsgExecuteSPL {
 	return &MsgExecuteSPL{
@@ -564,7 +564,7 @@ func NewMsgExecuteSPL(
 		decimals:          decimals,
 		sender:            sender,
 		data:              data,
-		revert:            revert,
+		executeType:       executeType,
 		remainingAccounts: remainingAccounts,
 	}
 }
@@ -616,9 +616,9 @@ func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
 }
 
-// Revert returns if it's execute_revert or execute
-func (msg *MsgExecuteSPL) Revert() bool {
-	return msg.revert
+// ExecuteType returns the type of execute operation
+func (msg *MsgExecuteSPL) ExecuteType() ExecuteType {
+	return msg.executeType
 }
 
 // Hash packs the execute spl message and computes the hash
@@ -628,7 +628,7 @@ func (msg *MsgExecuteSPL) Hash() [32]byte {
 
 	message = append(message, InstructionIdentifier...)
 
-	if !msg.revert {
+	if msg.executeType == ExecuteTypeCall {
 		message = append(message, InstructionExecuteSPL)
 	} else {
 		message = append(message, InstructionExecuteSPLRevert)

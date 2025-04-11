@@ -560,9 +560,16 @@ func (signer *Signer) prepareExecuteSPLTx(
 	if err != nil {
 		return nil, err
 	}
-	isRevert := cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert
+
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
 	var message []byte
-	if isRevert {
+	if executeType == contracts.ExecuteTypeRevert {
 		message = cctx.RevertOptions.RevertMessage
 	} else {
 		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
@@ -594,7 +601,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
-		isRevert,
+		executeType,
 		cancelTx,
 	)
 	if err != nil {
