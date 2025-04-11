@@ -519,6 +519,7 @@
       "docs": [
         "Withdraws amount to destination program pda, and calls on_call on destination program",
         "# Arguments",
+        "* `ctx` - The instruction context.",
         "* `amount` - Amount of SOL to transfer.",
         "* `sender` - Sender's address.",
         "* `data` - Arbitrary data to pass to the destination program.",
@@ -776,7 +777,7 @@
     {
       "name": "execute_spl_token",
       "docs": [
-        "Execute with SPL tokens. Caller is TSS.",
+        "Withdraws amount of SPL tokens to destination program pda, and calls on_call on destination program",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `decimals` - Token decimals for precision.",
