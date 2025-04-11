@@ -18,9 +18,26 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 50
+const (
+	// DefaultEventsLimit is the default limit for querying gateway module events.
+	DefaultEventsLimit = 50
 
-const filterMoveEventModule = "MoveEventModule"
+	// TxStatusSuccess is the success status for a transaction.
+	TxStatusSuccess = "success"
+
+	// TxStatusFailure is the failure status for a transaction.
+	TxStatusFailure = "failure"
+
+	// filterMoveEventModule is the event filter for querying events for specified move module.
+	// @see https://docs.sui.io/guides/developer/sui-101/using-events#filtering-event-queries
+	filterMoveEventModule = "MoveEventModule"
+
+	// immutableOwner is the owner type for immutable objects.
+	immutableOwner = "Immutable"
+
+	// sharedOwner is the owner type for shared objects.
+	sharedOwner = "Shared"
+)
 
 // NewFromEndpoint Client constructor based on endpoint string.
 func NewFromEndpoint(endpoint string) *Client {
@@ -156,6 +173,39 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 	return res.Data[0].Data.ObjectId, nil
 }
 
+// InspectTransactionBlock manual implementation of ISuiAPI.InspectTransactionBlock
+// Don't use this function at this moment because Sui SDK currently returns deserialization error.
+// TODO: https://github.com/zeta-chain/node/issues/3775
+//
+// @see sui.(*suiReadTransactionImpl).InspectTransactionBlock
+// @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock
+func (c *Client) InspectTransactionBlock(
+	ctx context.Context,
+	req models.SuiDevInspectTransactionBlockRequest,
+) (models.SuiTransactionBlockResponse, error) {
+	const method = "sui_devInspectTransactionBlock"
+
+	params := []any{
+		req.Sender,
+		req.TxBytes,
+		any(nil), // gas_price
+		any(nil), // epoch
+		any(nil), // additional_args
+	}
+
+	resRaw, err := c.SuiCall(ctx, method, params...)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, errors.Wrap(err, method)
+	}
+
+	resString, ok := resRaw.(string)
+	if !ok {
+		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
+	}
+
+	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
 // SuiExecuteTransactionBlock manual implementation of ISuiAPI.SuiExecuteTransactionBlock
 // That uses proper parameters signature (original has a bug in marshaling)
 //
@@ -244,4 +294,53 @@ func parseRPCResponse[T any](raw []byte) (T, error) {
 	}
 
 	return tt, nil
+}
+
+// CheckObjectIDsShared checks if the provided object ID list represents Sui shared or immmutable objects
+func (c *Client) CheckObjectIDsShared(ctx context.Context, objectIDs []string) error {
+	if len(objectIDs) == 0 {
+		return nil
+	}
+
+	res, err := c.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+		ObjectIds: objectIDs,
+		Options: models.SuiObjectDataOptions{
+			ShowOwner: true,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "unable to get objects")
+	}
+
+	// should always be the case, we add this check as a extra safety measure to ensure an object is not skipped
+	if len(res) != len(objectIDs) {
+		return fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(res))
+	}
+
+	return checkContainOwnedObject(res)
+}
+
+func checkContainOwnedObject(res []*models.SuiObjectResponse) error {
+	for i, obj := range res {
+		if obj.Data == nil {
+			return fmt.Errorf("object %d is missing data", i)
+		}
+
+		switch owner := obj.Data.Owner.(type) {
+		case string:
+			if owner != immutableOwner {
+				return fmt.Errorf("object %d has unexpected string owner: %s", i, owner)
+			}
+			// Immutable is valid, continue
+		case map[string]interface{}:
+			if _, isShared := owner[sharedOwner]; !isShared {
+				return fmt.Errorf("object %d is not shared or immutable: owner = %+v", i, owner)
+			}
+			// Shared is valid, continue
+		default:
+			return fmt.Errorf("object %d has unknown owner type: %+v", i, obj.Data.Owner)
+		}
+	}
+
+	return nil
 }

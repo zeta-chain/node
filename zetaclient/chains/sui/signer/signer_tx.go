@@ -3,22 +3,58 @@ package signer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-const funcWithdraw = "withdraw"
+// txBuilder represents a wrapper that returns Sui tx with TSS signature (base64)
+//
+// We use a "builder" pattern to delay RPC 'MoveCallRequest'.
+// This simplifies downstream usage of tx broadcasting & signing.
+// It also help to avoid Gateway's object version mismatch error.
+type txBuilder func(ctx context.Context) (models.TxnMetaData, string, error)
+
+const (
+	funcWithdraw      = "withdraw"
+	funcIncreaseNonce = "increase_nonce"
+
+	// minGasBudgetCancelTx is the minimum gas budget for the cancel tx
+	minGasBudgetCancelTx = 2_000_000
+)
 
 // TODO: use these functions in PTB building
 // https://github.com/zeta-chain/node/issues/3741
 //const funcWithdrawImpl = "withdraw_impl"
 //const funcOnCall = "on_call"
+
+func (s *Signer) createWithdrawTxBuilder(cctx *cctypes.CrossChainTx, zetaHeight uint64) (txBuilder, error) {
+	return func(ctx context.Context) (models.TxnMetaData, string, error) {
+		tx, err := s.buildWithdrawal(ctx, cctx)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build withdrawal tx")
+		}
+
+		nonce := cctx.GetCurrentOutboundParam().TssNonce
+
+		sigBase64, err := s.signTx(ctx, tx, zetaHeight, nonce)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign tx")
+		}
+
+		return tx, sigBase64, nil
+	}, nil
+}
 
 // buildWithdrawal builds unsigned withdrawal transaction using CCTX and Sui RPC
 // https://github.com/zeta-chain/protocol-contracts-sui/blob/0245ad3a2eb4001381625070fd76c87c165589b2/sources/gateway.move#L117
@@ -61,6 +97,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	if cctx.IsWithdrawAndCall() {
 		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
 	}
+
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
 }
 
@@ -68,9 +105,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 func (s *Signer) buildWithdrawTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType,
-	gasBudget,
-	withdrawCapID string,
+	coinType, gasBudget, withdrawCapID string,
 ) (models.TxnMetaData, error) {
 	var (
 		nonce     = strconv.FormatUint(params.TssNonce, 10)
@@ -136,22 +171,153 @@ func (s *Signer) buildWithdrawAndCallTx(
 	return models.TxnMetaData{}, errors.New("not implemented")
 }
 
-// broadcast attaches signature to tx and broadcasts it to Sui network. Returns tx digest.
-func (s *Signer) broadcast(ctx context.Context, tx models.TxnMetaData, sig [65]byte) (string, error) {
-	sigBase64, err := sui.SerializeSignatureECDSA(sig, s.TSS().PubKey().AsECDSA())
+// createCancelTxBuilder creates a cancel tx builder for given CCTX
+// The tx cancellation is done by calling the 'increase_nonce' function on the gateway
+// The goal or a "builder" instead of regular TxMetaData is to
+// delay the 'MoveCall' to the last moment to avoid gateway object version mismatch
+func (s *Signer) createCancelTxBuilder(
+	ctx context.Context,
+	cctx *cctypes.CrossChainTx,
+	zetaHeight uint64,
+) (txBuilder, error) {
+	var (
+		params = cctx.GetCurrentOutboundParam()
+		nonce  = strconv.FormatUint(params.TssNonce, 10)
+	)
+
+	// get gas budget from CCTX
+	gasBudget, err := getCancelTxGasBudget(params)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to serialize signature")
+		return nil, errors.Wrap(err, "unable to get gas budget")
+	}
+
+	// retrieve withdraw cap ID
+	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get withdraw cap ID")
+	}
+
+	req := models.MoveCallRequest{
+		Signer:          s.TSS().PubKey().AddressSui(),
+		PackageObjectId: s.gateway.PackageID(),
+		Module:          s.gateway.Module(),
+		Function:        funcIncreaseNonce,
+		TypeArguments:   []any{},
+		Arguments:       []any{s.gateway.ObjectID(), nonce, withdrawCapID},
+		GasBudget:       gasBudget,
+	}
+
+	return func(ctx context.Context) (models.TxnMetaData, string, error) {
+		tx, err := s.client.MoveCall(ctx, req)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to build cancel tx")
+		}
+
+		sigBase64, err := s.signTx(ctx, tx, zetaHeight, params.TssNonce)
+		if err != nil {
+			return models.TxnMetaData{}, "", errors.Wrap(err, "unable to sign cancel tx")
+		}
+
+		return tx, sigBase64, nil
+	}, nil
+}
+
+// broadcastWithdrawalWithFallback broadcasts withdrawal tx to Sui network.
+// If the tx execution is rejected, the cancel tx will be used and broadcasted (if provided).
+func (s *Signer) broadcastWithdrawalWithFallback(
+	ctx context.Context,
+	withdrawTxBuilder, cancelTxBuilder txBuilder,
+) (string, error) {
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastWithCancelTx").Logger()
+
+	// should not happen
+	if withdrawTxBuilder == nil || cancelTxBuilder == nil {
+		return "", errors.New("withdrawal tx builder or cancel tx builder is nil")
+	}
+
+	tx, sig, err := withdrawTxBuilder(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to build withdraw tx")
 	}
 
 	req := models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   tx.TxBytes,
-		Signature: []string{sigBase64},
+		Signature: []string{sig},
+		// we need to wait for the effects to be available and then look into
+		// the error code to decide whether to cancel the tx or not
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+		},
+		RequestType: "WaitForEffectsCert",
 	}
 
+	// broadcast tx
+	// Note: this is the place where the gateway object version mismatch error happens
 	res, err := s.client.SuiExecuteTransactionBlock(ctx, req)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to execute tx block")
 	}
 
+	// tx succeeded, return the digest
+	if res.Effects.Status.Status == client.TxStatusSuccess {
+		logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui tx block successfully")
+		return res.Digest, nil
+	}
+
+	// check if the error is a retryable MoveAbort
+	// if it is, skip the cancel tx and let the scheduler retry the outbound
+	isRetryable, err := sui.IsRetryableExecutionError(res.Effects.Status.Error)
+	switch {
+	case err != nil:
+		return "", errors.Wrapf(err, "unable to check tx execution status error code: %s", res.Effects.Status.Error)
+	case isRetryable:
+		return "", fmt.Errorf("tx execution status failed, retry later: %s", res.Effects.Status.Error)
+	default:
+		// cancel tx if the tx execution failed for all other reasons
+		// wait for gateway object version bump to avoid version mismatch
+		time.Sleep(2 * time.Second)
+		logger.Info().Any("Err", res.Effects.Status.Error).Msg("cancelling tx")
+	}
+
+	return s.broadcastCancelTx(ctx, cancelTxBuilder)
+}
+
+// broadcastCancelTx broadcasts a cancel tx and returns the tx digest
+func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
+	logger := zerolog.Ctx(ctx)
+
+	// build cancel tx
+	txCancel, sigCancel, err := cancelTxBuilder(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to build cancel tx")
+	}
+
+	// create tx request
+	reqCancel := models.SuiExecuteTransactionBlockRequest{
+		TxBytes:   txCancel.TxBytes,
+		Signature: []string{sigCancel},
+	}
+
+	// broadcast cancel tx
+	res, err := s.client.SuiExecuteTransactionBlock(ctx, reqCancel)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to execute cancel tx block")
+	}
+	logger.Info().Str(logs.FieldTx, res.Digest).Msg("Executed sui cancel tx block")
+
 	return res.Digest, nil
+}
+
+// getCancelTxGasBudget returns gas budget for a cancel tx
+func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
+	gasPrice, err := strconv.ParseUint(params.GasPrice, 10, 64)
+	if err != nil {
+		return "", errors.Wrap(err, "unable to parse gas price")
+	}
+
+	// If it is a cancel tx, we need to use the bigger one
+	// because the cancelled tx may be caused by insufficient gas
+	gasBudget := max(gasPrice*params.CallOptions.GasLimit, minGasBudgetCancelTx)
+
+	return strconv.FormatUint(gasBudget, 10), nil
 }
