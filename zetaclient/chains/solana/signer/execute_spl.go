@@ -154,7 +154,7 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 		solana.Meta(pdaAta).WRITE(),
 		solana.Meta(msg.MintAccount()),
 		solana.Meta(msg.To()),
-		solana.Meta(destinationProgramPda),
+		solana.Meta(destinationProgramPda).WRITE(),
 		solana.Meta(msg.RecipientAta()).WRITE(),
 		solana.Meta(solana.TokenProgramID),
 		solana.Meta(solana.SPLAssociatedTokenAccountProgramID),
