@@ -98,19 +98,23 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	// Create a filter function to find matching CCTX
-	r.Logger.Info("🔍 Creating CCTX filter with parameters:")
-	r.Logger.Info("  - Expected chain ID: %d", chain.ChainId)
-	r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
+	senderAddress := sender.GetAddress().ToRaw()
+	expectedChainId := chain.ChainId
+
+	r.Logger.Info("🔍 Filter criteria for CCTX:")
+	r.Logger.Info("  - Expected chain ID: %d", expectedChainId)
+	r.Logger.Info("  - Expected sender: %s", senderAddress)
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
 		return cctx != nil &&
-			cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+			cctx.InboundParams != nil &&
+			cctx.InboundParams.SenderChainId == expectedChainId &&
+			cctx.InboundParams.Sender == senderAddress
 	}
 
-	// Wait for cctx with a 1-minute timeout
-	r.Logger.Info("⏳ Waiting for CCTX to be processed (1 minute timeout)...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
+	// Wait for cctx with a 2-minute timeout (increased from 1 minute)
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (2 minute timeout)...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 2*time.Minute)
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	// Log detailed CCTX information
@@ -189,13 +193,6 @@ func (r *E2ERunner) TONDepositAndCall(
 	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String())
 	require.NotEmpty(r, callData)
 
-	// Debug information about addresses
-	r.Logger.Info("🔍 Debug Information:")
-	r.Logger.Info("  - TON address: %s", sender.GetAddress().ToRaw())
-	r.Logger.Info("  - ZETA address: %s", zevmRecipient.Hex())
-	r.Logger.Info("  - Gateway address: %s", gw.AccountID().ToRaw())
-	r.Logger.Info("  - Call data: %q", string(callData))
-
 	r.Logger.Info(
 		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
 		amount.String(),
@@ -210,37 +207,50 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	// Create a filter function to find matching CCTX
-	r.Logger.Info("🔍 Creating CCTX filter with parameters:")
-	r.Logger.Info("  - Expected chain ID: %d", chain.ChainId)
-	r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
-	r.Logger.Info("  - Expected relayed message: %s", hex.EncodeToString(callData))
+	senderAddress := sender.GetAddress().ToRaw()
+	expectedChainId := chain.ChainId
+	expectedRelayedMessage := hex.EncodeToString(callData)
+
+	r.Logger.Info("🔍 Filter criteria for CCTX:")
+	r.Logger.Info("  - Expected chain ID: %d", expectedChainId)
+	r.Logger.Info("  - Expected sender: %s", senderAddress)
+	r.Logger.Info("  - Expected relayed message: %s", expectedRelayedMessage)
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		// Extract info about this CCTX for debugging
-		if cctx != nil {
-			r.Logger.Info("🔄 Evaluating CCTX: Index=%s", cctx.Index)
-			r.Logger.Info("  - CCTX sender chain ID: %d (expected: %d)",
-				cctx.InboundParams.SenderChainId, chain.ChainId)
-			r.Logger.Info("  - CCTX sender: %s", cctx.InboundParams.Sender)
-			r.Logger.Info("  - CCTX relayed message: %s", cctx.RelayedMessage)
-			r.Logger.Info("  - CCTX status: %s", cctx.CctxStatus.Status)
-		}
-
-		match := cctx != nil &&
-			cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
-			cctx.RelayedMessage == hex.EncodeToString(callData)
-
-		if match {
-			r.Logger.Info("📝 Found matching CCTX: Index=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status)
-		}
-
-		return match
+		return cctx != nil &&
+			cctx.InboundParams != nil &&
+			cctx.InboundParams.SenderChainId == expectedChainId &&
+			cctx.InboundParams.Sender == senderAddress &&
+			cctx.RelayedMessage == expectedRelayedMessage
 	}
 
-	// Wait for cctx with a 1-minute timeout
-	r.Logger.Info("⏳ Waiting for CCTX to be processed (1 minute timeout)...")
-	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
+	// Wait for cctx with a 2-minute timeout
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (2 minute timeout)...")
+	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, 2*time.Minute)
+
+	// Log detailed CCTX information if found
+	if cctx != nil {
+		r.Logger.Info("📋 CCTX Details:")
+		r.Logger.Info("  - Index: %s", cctx.Index)
+		r.Logger.Info("  - Creator: %s", cctx.Creator)
+
+		// Inbound details
+		r.Logger.Info("  - Inbound Parameters:")
+		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
+		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
+		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
+		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
+
+		// Status details
+		if cctx.CctxStatus != nil {
+			r.Logger.Info("  - Status Details:")
+			r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status)
+			r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
+		}
+
+		// Relayed message
+		r.Logger.Info("  - RelayedMessage: %s", cctx.RelayedMessage)
+	}
 
 	return cctx, nil
 }

@@ -453,13 +453,62 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 			r.Logger.Info("🔍 Checking %d CCTXs for a match (%s elapsed)",
 				len(res.CrossChainTx), time.Since(start).Round(time.Second))
 
+			// Log details about any TON-related CCTXs for debugging
+			tonCctxCount := 0
+			for i := range res.CrossChainTx {
+				tx := res.CrossChainTx[i]
+				if tx.InboundParams != nil && tx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
+					tonCctxCount++
+					r.Logger.Info("🔍 Found TON CCTX: Index=%s, Sender=%s, Status=%s",
+						tx.Index, tx.InboundParams.Sender, tx.CctxStatus.Status)
+
+					// Display more detailed info for debugging purposes
+					if tonCctxCount <= 3 { // Limit to the first 3 to avoid log spam
+						r.Logger.Info("  - Details: Amount=%s, ObservedHash=%s",
+							tx.InboundParams.Amount.String(),
+							tx.InboundParams.ObservedHash)
+					}
+				}
+			}
+
+			if tonCctxCount > 0 {
+				r.Logger.Info("🔍 Found %d TON-related CCTXs", tonCctxCount)
+			} else {
+				r.Logger.Info("🔍 No TON-related CCTXs found in this batch")
+			}
+
 			lastLog = time.Now()
 		}
 
 		for i := range res.CrossChainTx {
 			tx := res.CrossChainTx[i]
-			if filter(tx) {
+
+			// Check if this CCTX matches our filter
+			filterResult := filter(tx)
+
+			// Add extra logging for TON CCTXs
+			if tx.InboundParams != nil && tx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
+				// Only log this once every few seconds to avoid spam
+				if time.Since(lastLog) < time.Second*2 {
+					r.Logger.Info("🔍 Evaluating TON CCTX: Index=%s, Match=%v",
+						tx.Index, filterResult)
+					r.Logger.Info("  - CCTX details: Sender=%s, Amount=%s",
+						tx.InboundParams.Sender, tx.InboundParams.Amount.String())
+				}
+			}
+
+			if filterResult {
 				r.Logger.Info("✅ Found matching CCTX after %s", time.Since(start).Round(time.Second))
+
+				// Add more detailed logging for the matched CCTX
+				if tx.InboundParams != nil {
+					r.Logger.Info("📋 CCTX matched: Index=%s, ChainId=%d, Sender=%s, Amount=%s",
+						tx.Index,
+						tx.InboundParams.SenderChainId,
+						tx.InboundParams.Sender,
+						tx.InboundParams.Amount.String())
+				}
+
 				return r.waitForMinedCCTXFromIndex(tx.Index, status)
 			}
 		}
