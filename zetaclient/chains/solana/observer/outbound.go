@@ -114,7 +114,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	}
 
 	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
+	if compliance.IsCCTXRestricted(cctx) {
 		// use cctx's amount to bypass the amount check in zetacore
 		outboundAmount = cctx.GetCurrentOutboundParam().Amount.BigInt()
 	}

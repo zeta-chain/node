@@ -333,7 +333,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	zetacoreClient interfaces.ZetacoreClient,
 	toChain zctx.Chain,
 ) (*ethtypes.Transaction, error) {
-	if compliance.IsCctxRestricted(cctx) {
+	if compliance.IsCCTXRestricted(cctx) {
 		// restricted cctx
 		compliance.PrintComplianceLog(
 			logger,

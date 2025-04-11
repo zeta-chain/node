@@ -347,7 +347,7 @@ func (signer *Signer) prepareWithdrawTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -390,7 +390,7 @@ func (signer *Signer) prepareExecuteTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -485,7 +485,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -542,7 +542,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
