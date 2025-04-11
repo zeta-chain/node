@@ -103,30 +103,65 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		// Extract info about this CCTX for debugging
-		if cctx != nil {
-			r.Logger.Info("🔄 Evaluating CCTX: Index=%s", cctx.Index)
-			r.Logger.Info("  - CCTX sender chain ID: %d (expected: %d)",
-				cctx.InboundParams.SenderChainId, chain.ChainId)
-			r.Logger.Info("  - CCTX sender: %s", cctx.InboundParams.Sender)
-			r.Logger.Info("  - CCTX status: %s", cctx.CctxStatus.Status)
-		}
-
-		match := cctx != nil &&
+		return cctx != nil &&
 			cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
-
-		if match {
-			r.Logger.Info("📝 Found matching CCTX: Index=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status)
-		}
-
-		return match
 	}
 
 	// Wait for cctx with a 1-minute timeout
 	r.Logger.Info("⏳ Waiting for CCTX to be processed (1 minute timeout)...")
 	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
 	r.Logger.Info("✅ CCTX processed successfully")
+
+	// Log detailed CCTX information
+	if cctx != nil {
+		r.Logger.Info("📋 CCTX Details:")
+		r.Logger.Info("  - Index: %s", cctx.Index)
+		r.Logger.Info("  - Creator: %s", cctx.Creator)
+
+		// Inbound details
+		r.Logger.Info("  - Inbound Parameters:")
+		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
+		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
+		r.Logger.Info("    - TxOrigin: %s", cctx.InboundParams.TxOrigin)
+		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
+		r.Logger.Info("    - Asset: %s", cctx.InboundParams.Asset)
+		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
+		r.Logger.Info("    - ObservedHash: %s", cctx.InboundParams.ObservedHash)
+
+		// Outbound details if available
+		if len(cctx.OutboundParams) > 0 {
+			r.Logger.Info("  - Outbound Parameters:")
+			for i, outbound := range cctx.OutboundParams {
+				r.Logger.Info("    - Outbound #%d:", i+1)
+				r.Logger.Info("      - Receiver: %s", outbound.Receiver)
+				r.Logger.Info("      - ReceiverChainId: %d", outbound.ReceiverChainId)
+				r.Logger.Info("      - Amount: %s", outbound.Amount.String())
+				r.Logger.Info("      - CoinType: %s", outbound.CoinType.String())
+				if outbound.Hash != "" {
+					r.Logger.Info("      - Hash: %s", outbound.Hash)
+				}
+			}
+		}
+
+		// Status details
+		if cctx.CctxStatus != nil {
+			r.Logger.Info("  - Status Details:")
+			r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status)
+			r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
+			if cctx.CctxStatus.ErrorMessage != "" {
+				r.Logger.Info("    - ErrorMessage: %s", cctx.CctxStatus.ErrorMessage)
+			}
+		}
+
+		// Additional metadata
+		r.Logger.Info("  - ZetaChain-specific:")
+		r.Logger.Info("    - ZetaFees: %s", cctx.ZetaFees.String())
+		if cctx.RelayedMessage != "" {
+			r.Logger.Info("    - RelayedMessage: %s", cctx.RelayedMessage)
+		}
+		r.Logger.Info("    - ProtocolContractVersion: %s", cctx.ProtocolContractVersion)
+	}
 
 	return cctx, nil
 }
