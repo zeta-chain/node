@@ -20,6 +20,14 @@ const (
 	InstructionExecuteRevert     byte = 8
 )
 
+// ExecuteType represents the type of execute operation
+type ExecuteType uint8
+
+const (
+	ExecuteTypeCall ExecuteType = iota
+	ExecuteTypeRevert
+)
+
 // InstructionIdentifier is used at beginning of message hash to make it project specific.
 var InstructionIdentifier = []byte("ZETACHAIN")
 
@@ -237,8 +245,8 @@ type MsgExecute struct {
 	// Data for execute
 	data []byte
 
-	// revert marks if it's execute on execute_revert
-	revert bool
+	// executeType indicates if it's a call or revert operation
+	executeType ExecuteType
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
@@ -250,7 +258,7 @@ func NewMsgExecute(
 	to solana.PublicKey,
 	sender string,
 	data []byte,
-	revert bool,
+	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
 ) *MsgExecute {
 	return &MsgExecute{
@@ -260,7 +268,7 @@ func NewMsgExecute(
 		to:                to,
 		sender:            sender,
 		data:              data,
-		revert:            revert,
+		executeType:       executeType,
 		remainingAccounts: remainingAccounts,
 	}
 }
@@ -300,9 +308,9 @@ func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
 }
 
-// Revert returns if it's execute_revert or execute
-func (msg *MsgExecute) Revert() bool {
-	return msg.revert
+// ExecuteType returns the type of execute operation
+func (msg *MsgExecute) ExecuteType() ExecuteType {
+	return msg.executeType
 }
 
 // Hash packs the execute message and computes the hash
@@ -312,7 +320,7 @@ func (msg *MsgExecute) Hash() [32]byte {
 
 	message = append(message, InstructionIdentifier...)
 
-	if !msg.revert {
+	if msg.executeType == ExecuteTypeCall {
 		message = append(message, InstructionExecute)
 	} else {
 		message = append(message, InstructionExecuteRevert)
@@ -758,4 +766,22 @@ func (msg *MsgWhitelist) Signer() (common.Address, error) {
 	msgSig := msg.SigRSV()
 
 	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// EncodeExecuteMessage encodes an execute message with the given parameters
+func EncodeExecuteMessage(
+	accounts []AccountMeta,
+	data []byte,
+) ([]byte, error) {
+	abiArgs, err := GetExecuteMsgAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	msg := ExecuteMsg{
+		Accounts: accounts,
+		Data:     data,
+	}
+
+	return abiArgs.Pack(msg)
 }

@@ -13,7 +13,7 @@ import (
 )
 
 // TestSolanaDepositAndCallRevertWithCallThatReverts tests deposit of lamports
-// with revert options when call on revert program revets
+// with revert options when call on revert program reverts, and cctx is aborted
 func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -36,18 +36,13 @@ func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args
 	require.NoError(r, err)
 
 	// create encoded msg
-	abiArgs, err := solanacontracts.GetExecuteMsgAbi()
-	require.NoError(r, err)
-	msg := solanacontracts.ExecuteMsg{
-		Accounts: []solanacontracts.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
+	accounts := []solanacontracts.AccountMeta{
+		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := solanacontracts.EncodeExecuteMessage(accounts, data)
 	require.NoError(r, err)
 
 	sig := r.SOLDepositAndCall(nil, reverterAddr, depositAmount, data, &solanacontracts.RevertOptions{
