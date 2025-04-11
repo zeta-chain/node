@@ -6,7 +6,6 @@ import (
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -21,7 +20,13 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 	// some sanity timeout
 	const maxTimeout = time.Minute
 
-	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "reportOutboundTracker").Logger()
+	// prepare logger
+	logger := s.Logger().Std.With().
+		Str(logs.FieldMethod, "reportOutboundTracker").
+		Int64(logs.FieldChain, s.Chain().ChainId).
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, digest).
+		Logger()
 
 	alreadySet := s.SetBeingReportedFlag(digest)
 	if alreadySet {

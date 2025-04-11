@@ -17,6 +17,7 @@
 * [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
 * [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
 * [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdrawal
+* [3792](https://github.com/zeta-chain/node/pull/3792) - add compliance check for Sui inbound and outbound
 * [3790](https://github.com/zeta-chain/node/pull/3790) - integrate execute revert
 
 ### Refactor

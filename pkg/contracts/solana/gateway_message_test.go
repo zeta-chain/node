@@ -113,7 +113,7 @@ func Test_MsgExecuteHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), false, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT
@@ -162,7 +162,7 @@ func Test_MsgExecuteRevertHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), true, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT

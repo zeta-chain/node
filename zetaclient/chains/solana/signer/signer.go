@@ -346,7 +346,7 @@ func (signer *Signer) prepareWithdrawTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -389,7 +389,7 @@ func (signer *Signer) prepareExecuteTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -403,9 +403,15 @@ func (signer *Signer) prepareExecuteTx(
 		)
 	}
 
-	isRevert := cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
 	var message []byte
-	if isRevert {
+	if executeType == contracts.ExecuteTypeRevert {
 		message = cctx.RevertOptions.RevertMessage
 	} else {
 		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
@@ -435,7 +441,7 @@ func (signer *Signer) prepareExecuteTx(
 		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
-		isRevert,
+		executeType,
 		cancelTx,
 	)
 	if err != nil {
@@ -478,7 +484,7 @@ func (signer *Signer) prepareWithdrawSPLTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -535,7 +541,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,

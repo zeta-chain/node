@@ -22,7 +22,7 @@ func (signer *Signer) createAndSignMsgExecute(
 	sender string,
 	data []byte,
 	remainingAccounts []*solana.AccountMeta,
-	revert bool,
+	executeType contracts.ExecuteType,
 	cancelTx bool,
 ) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
@@ -43,7 +43,7 @@ func (signer *Signer) createAndSignMsgExecute(
 	}
 
 	// prepare execute msg and compute hash
-	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, revert, remainingAccounts)
+	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, executeType, remainingAccounts)
 	msgHash := msg.Hash()
 
 	// prepare increment_nonce msg and compute hash, it will be used as fallback tx in case execute fails
@@ -67,7 +67,7 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 	// create execute instruction with program call data
 	discriminator := contracts.DiscriminatorExecute
 	var dataBytes []byte
-	if msg.Revert() {
+	if msg.ExecuteType() == contracts.ExecuteTypeRevert {
 		discriminator = contracts.DiscriminatorExecuteRevert
 		serializedInst, err := borsh.Serialize(contracts.ExecuteRevertInstructionParams{
 			Discriminator: discriminator,
