@@ -57,6 +57,17 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
+	// PATCH V29: there is currently no validation of the withdraw address, if the address is not valid then ZetaClient will continuously try to broadcast the tx, blocking outbound
+	// This patch will redirect the funds to the TSS to make the withdraw succeeding
+	// invalid recipient are considered like a donation to the TSS
+	// TODO: add validation of the withdraw address to prevent this issue
+	// https://github.com/zeta-chain/node/issues/3798
+	// https://github.com/zeta-chain/node/issues/3799
+	if sui.CheckValidSuiAddress(recipient) != nil {
+		s.Logger().Std.Warn().Str("recipient", recipient).Msg("Invalid recipient address, redirecting to TSS")
+		recipient = s.TSS().PubKey().AddressSui()
+	}
+
 	req := models.MoveCallRequest{
 		Signer:          s.TSS().PubKey().AddressSui(),
 		PackageObjectId: s.gateway.PackageID(),
