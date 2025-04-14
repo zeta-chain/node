@@ -13,10 +13,13 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSuiWithdrawRestrictedAddress tests a withdrawal to a restricted address that reverts to a revert address
+// TestSuiWithdrawRestrictedAddress tests that a withdrawal to a restricted address reverts to a revert address
+// the test also add a case to check withdrawal to Sui invalid address immediately fail, we don't add a dedicated test as this is a small logic
 func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := utils.ParseBigInt(r, args[0])
+
+	// Restricted address
 
 	// ARRANGE
 	// Given receiver, revert address
@@ -57,4 +60,14 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 	revertBalanceAfter, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 	require.EqualValues(r, new(big.Int).Add(revertBalanceBefore, amount), revertBalanceAfter)
+
+	// Invalid address format
+	_, err = r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte("invalid"),
+		amount,
+		r.SUIZRC20Addr,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	require.Error(r, err)
 }
