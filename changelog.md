@@ -25,9 +25,11 @@
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 
 ### Fixes
+
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 * [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
+* [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
 
 ### Tests
 
