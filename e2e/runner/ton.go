@@ -151,6 +151,12 @@ func (r *E2ERunner) TONDeposit(
 	amount math.Uint,
 	zevmRecipient eth.Address,
 ) (*cctypes.CrossChainTx, error) {
+	// Log all existing CCTXs before starting
+	r.Logger.Info("📋 Logging all existing CCTXs before deposit...")
+	if err := r.TONDumpCCTXs(); err != nil {
+		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
+	}
+
 	chain := chains.TONTestnet
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
@@ -238,6 +244,12 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
+	// Log all existing CCTXs before starting
+	r.Logger.Info("📋 Logging all existing CCTXs before deposit-and-call...")
+	if err := r.TONDumpCCTXs(); err != nil {
+		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
+	}
+
 	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
 	for _, opt := range opts {
 		opt(cfg)
@@ -320,6 +332,12 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 
 // WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens and waits for the cctx to be mined
 func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
+	// Log all existing CCTXs before starting
+	r.Logger.Info("📋 Logging all existing CCTXs before withdrawal...")
+	if err := r.TONDumpCCTXs(); err != nil {
+		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
+	}
+
 	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
 
 	// wait for the cctx to be mined
