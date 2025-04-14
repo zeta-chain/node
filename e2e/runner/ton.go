@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -36,6 +37,111 @@ type TONOpt func(t *tonOpts)
 
 func TONExpectStatus(status cctypes.CctxStatus) TONOpt {
 	return func(t *tonOpts) { t.expectedStatus = status }
+}
+
+// LogCCTXDetails logs all details of a cross-chain transaction
+func (r *E2ERunner) LogCCTXDetails(cctx *cctypes.CrossChainTx) {
+	if cctx == nil {
+		r.Logger.Info("❌ CCTX is nil, cannot log details")
+		return
+	}
+
+	r.Logger.Info("📋 CCTX Detailed Information:")
+	r.Logger.Info("  - ID: %s", cctx.Index)
+	r.Logger.Info("  - Creator: %s", cctx.Creator)
+
+	// Inbound parameters
+	if cctx.InboundParams != nil {
+		r.Logger.Info("  - Inbound Parameters:")
+		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
+		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
+		r.Logger.Info("    - TxOrigin: %s", cctx.InboundParams.TxOrigin)
+		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
+		r.Logger.Info("    - Asset: %s", cctx.InboundParams.Asset)
+		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
+		r.Logger.Info("    - ObservedHash: %s", cctx.InboundParams.ObservedHash)
+		r.Logger.Info("    - ObservedExternalHeight: %d", cctx.InboundParams.ObservedExternalHeight)
+		r.Logger.Info("    - BallotIndex: %s", cctx.InboundParams.BallotIndex)
+		r.Logger.Info("    - FinalizedZetaHeight: %d", cctx.InboundParams.FinalizedZetaHeight)
+		r.Logger.Info("    - TxFinalizationStatus: %s", cctx.InboundParams.TxFinalizationStatus.String())
+		r.Logger.Info("    - IsCrossChainCall: %t", cctx.InboundParams.IsCrossChainCall)
+		r.Logger.Info("    - InboundStatus: %s", cctx.InboundParams.Status.String())
+		r.Logger.Info("    - ConfirmationMode: %s", cctx.InboundParams.ConfirmationMode.String())
+	} else {
+		r.Logger.Info("  - Inbound Parameters: None")
+	}
+
+	// Outbound parameters
+	if len(cctx.OutboundParams) > 0 {
+		r.Logger.Info("  - Outbound Parameters (%d):", len(cctx.OutboundParams))
+		for i, outbound := range cctx.OutboundParams {
+			r.Logger.Info("    - Outbound #%d:", i+1)
+			r.Logger.Info("      - Receiver: %s", outbound.Receiver)
+			r.Logger.Info("      - ReceiverChainId: %d", outbound.ReceiverChainId)
+			r.Logger.Info("      - CoinType: %s", outbound.CoinType.String())
+			r.Logger.Info("      - Amount: %s", outbound.Amount.String())
+			r.Logger.Info("      - TssNonce: %d", outbound.TssNonce)
+			r.Logger.Info("      - Hash: %s", outbound.Hash)
+			r.Logger.Info("      - BallotIndex: %s", outbound.BallotIndex)
+			r.Logger.Info("      - ObservedExternalHeight: %d", outbound.ObservedExternalHeight)
+			r.Logger.Info("      - GasUsed: %d", outbound.GasUsed)
+			r.Logger.Info("      - EffectiveGasPrice: %s", outbound.EffectiveGasPrice.String())
+			r.Logger.Info("      - EffectiveGasLimit: %d", outbound.EffectiveGasLimit)
+			r.Logger.Info("      - TssPubkey: %s", outbound.TssPubkey)
+			r.Logger.Info("      - TxFinalizationStatus: %s", outbound.TxFinalizationStatus.String())
+
+			// Log call options if available
+			if outbound.CallOptions != nil {
+				r.Logger.Info("      - CallOptions:")
+				r.Logger.Info("        - GasLimit: %d", outbound.CallOptions.GasLimit)
+				r.Logger.Info("        - IsArbitraryCall: %t", outbound.CallOptions.IsArbitraryCall)
+			}
+
+			r.Logger.Info("      - ConfirmationMode: %s", outbound.ConfirmationMode.String())
+		}
+	} else {
+		r.Logger.Info("  - Outbound Parameters: None")
+	}
+
+	// CCTX Status
+	if cctx.CctxStatus != nil {
+		r.Logger.Info("  - Status:")
+		r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status.String())
+		r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
+		if cctx.CctxStatus.ErrorMessage != "" {
+			r.Logger.Info("    - ErrorMessage: %s", cctx.CctxStatus.ErrorMessage)
+		}
+		r.Logger.Info("    - LastUpdateTimestamp: %d", cctx.CctxStatus.LastUpdateTimestamp)
+		r.Logger.Info("    - CreatedTimestamp: %d", cctx.CctxStatus.CreatedTimestamp)
+		r.Logger.Info("    - IsAbortRefunded: %t", cctx.CctxStatus.IsAbortRefunded)
+
+		if cctx.CctxStatus.ErrorMessageRevert != "" {
+			r.Logger.Info("    - ErrorMessageRevert: %s", cctx.CctxStatus.ErrorMessageRevert)
+		}
+		if cctx.CctxStatus.ErrorMessageAbort != "" {
+			r.Logger.Info("    - ErrorMessageAbort: %s", cctx.CctxStatus.ErrorMessageAbort)
+		}
+	} else {
+		r.Logger.Info("  - Status: None")
+	}
+
+	// Additional metadata
+	r.Logger.Info("  - ZetaFees: %s", cctx.ZetaFees.String())
+	r.Logger.Info("  - ProtocolContractVersion: %s", cctx.ProtocolContractVersion)
+
+	if cctx.RelayedMessage != "" {
+		r.Logger.Info("  - RelayedMessage: %s", cctx.RelayedMessage)
+	}
+
+	// Revert Options
+	r.Logger.Info("  - Revert Options:")
+	r.Logger.Info("    - RevertAddress: %s", cctx.RevertOptions.RevertAddress)
+	r.Logger.Info("    - AbortAddress: %s", cctx.RevertOptions.AbortAddress)
+	r.Logger.Info("    - CallOnRevert: %t", cctx.RevertOptions.CallOnRevert)
+	if len(cctx.RevertOptions.RevertMessage) > 0 {
+		r.Logger.Info("    - RevertMessage: %s", hex.EncodeToString(cctx.RevertOptions.RevertMessage))
+	}
+	r.Logger.Info("    - RevertGasLimit: %s", cctx.RevertOptions.RevertGasLimit.String())
 }
 
 // TONDeposit deposit TON to Gateway contract
@@ -118,54 +224,7 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	// Log detailed CCTX information
-	if cctx != nil {
-		r.Logger.Info("📋 CCTX Details:")
-		r.Logger.Info("  - Index: %s", cctx.Index)
-		r.Logger.Info("  - Creator: %s", cctx.Creator)
-
-		// Inbound details
-		r.Logger.Info("  - Inbound Parameters:")
-		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
-		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
-		r.Logger.Info("    - TxOrigin: %s", cctx.InboundParams.TxOrigin)
-		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
-		r.Logger.Info("    - Asset: %s", cctx.InboundParams.Asset)
-		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
-		r.Logger.Info("    - ObservedHash: %s", cctx.InboundParams.ObservedHash)
-
-		// Outbound details if available
-		if len(cctx.OutboundParams) > 0 {
-			r.Logger.Info("  - Outbound Parameters:")
-			for i, outbound := range cctx.OutboundParams {
-				r.Logger.Info("    - Outbound #%d:", i+1)
-				r.Logger.Info("      - Receiver: %s", outbound.Receiver)
-				r.Logger.Info("      - ReceiverChainId: %d", outbound.ReceiverChainId)
-				r.Logger.Info("      - Amount: %s", outbound.Amount.String())
-				r.Logger.Info("      - CoinType: %s", outbound.CoinType.String())
-				if outbound.Hash != "" {
-					r.Logger.Info("      - Hash: %s", outbound.Hash)
-				}
-			}
-		}
-
-		// Status details
-		if cctx.CctxStatus != nil {
-			r.Logger.Info("  - Status Details:")
-			r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status)
-			r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
-			if cctx.CctxStatus.ErrorMessage != "" {
-				r.Logger.Info("    - ErrorMessage: %s", cctx.CctxStatus.ErrorMessage)
-			}
-		}
-
-		// Additional metadata
-		r.Logger.Info("  - ZetaChain-specific:")
-		r.Logger.Info("    - ZetaFees: %s", cctx.ZetaFees.String())
-		if cctx.RelayedMessage != "" {
-			r.Logger.Info("    - RelayedMessage: %s", cctx.RelayedMessage)
-		}
-		r.Logger.Info("    - ProtocolContractVersion: %s", cctx.ProtocolContractVersion)
-	}
+	r.LogCCTXDetails(cctx)
 
 	return cctx, nil
 }
@@ -228,29 +287,8 @@ func (r *E2ERunner) TONDepositAndCall(
 	r.Logger.Info("⏳ Waiting for CCTX to be processed (2 minute timeout)...")
 	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, 2*time.Minute)
 
-	// Log detailed CCTX information if found
-	if cctx != nil {
-		r.Logger.Info("📋 CCTX Details:")
-		r.Logger.Info("  - Index: %s", cctx.Index)
-		r.Logger.Info("  - Creator: %s", cctx.Creator)
-
-		// Inbound details
-		r.Logger.Info("  - Inbound Parameters:")
-		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
-		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
-		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
-		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
-
-		// Status details
-		if cctx.CctxStatus != nil {
-			r.Logger.Info("  - Status Details:")
-			r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status)
-			r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
-		}
-
-		// Relayed message
-		r.Logger.Info("  - RelayedMessage: %s", cctx.RelayedMessage)
-	}
+	// Log detailed CCTX information
+	r.LogCCTXDetails(cctx)
 
 	return cctx, nil
 }
@@ -288,5 +326,119 @@ func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveA
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
 
+	// Log detailed CCTX information
+	r.LogCCTXDetails(cctx)
+
 	return cctx
+}
+
+// TONDumpCCTXs dumps all cross-chain transactions in the system
+func (r *E2ERunner) TONDumpCCTXs() error {
+	r.Logger.Info("📋 Dumping TON-related cross-chain transactions...")
+
+	// Get all CCTXs with pagination
+	var allCctxs []*cctypes.CrossChainTx
+	nextKey := []byte{}
+	pageSize := uint64(50)
+
+	for {
+		resp, err := r.CctxClient.CctxAll(
+			r.Ctx,
+			&cctypes.QueryAllCctxRequest{
+				Pagination: &query.PageRequest{
+					Key:        nextKey,
+					Limit:      pageSize,
+					CountTotal: true,
+				},
+			},
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to get CCTXs")
+		}
+
+		// Filter to TON-related transactions
+		for _, cctx := range resp.CrossChainTx {
+			isTonRelated := false
+
+			// Check inbound
+			if cctx.InboundParams != nil && cctx.InboundParams.SenderChainId == chains.TONChain().ChainId {
+				isTonRelated = true
+			}
+
+			// Check outbound
+			if !isTonRelated && len(cctx.OutboundParams) > 0 {
+				for _, outbound := range cctx.OutboundParams {
+					if outbound.ReceiverChainId == chains.TONChain().ChainId {
+						isTonRelated = true
+						break
+					}
+				}
+			}
+
+			if isTonRelated {
+				allCctxs = append(allCctxs, cctx)
+			}
+		}
+
+		r.Logger.Info("Processed %d CCTXs (page of %d)", len(resp.CrossChainTx), pageSize)
+
+		if resp.Pagination.NextKey == nil || len(resp.Pagination.NextKey) == 0 {
+			r.Logger.Info("Total CCTXs found: %d, TON-related: %d", resp.Pagination.Total, len(allCctxs))
+			break
+		}
+
+		nextKey = resp.Pagination.NextKey
+	}
+
+	if len(allCctxs) == 0 {
+		r.Logger.Info("No TON-related CCTXs found in the system")
+		return nil
+	}
+
+	// Log a summary of all CCTXs
+	r.Logger.Info("📊 TON CCTX Summary (%d transactions):", len(allCctxs))
+	for i, cctx := range allCctxs {
+		statusStr := "Unknown"
+		if cctx.CctxStatus != nil {
+			statusStr = cctx.CctxStatus.Status.String()
+		}
+
+		// Basic info
+		r.Logger.Info("[%d] ID: %s", i+1, cctx.Index)
+		r.Logger.Info("  - Status: %s", statusStr)
+
+		// Inbound info
+		if cctx.InboundParams != nil {
+			r.Logger.Info("  - From: Chain %d, Sender %s",
+				cctx.InboundParams.SenderChainId,
+				cctx.InboundParams.Sender)
+			r.Logger.Info("  - Amount: %s (CoinType: %s)",
+				cctx.InboundParams.Amount.String(),
+				cctx.InboundParams.CoinType.String())
+			r.Logger.Info("  - Hash: %s", cctx.InboundParams.ObservedHash)
+		}
+
+		// Outbound info (all outbounds)
+		if len(cctx.OutboundParams) > 0 {
+			r.Logger.Info("  - Outbounds (%d):", len(cctx.OutboundParams))
+			for j, outbound := range cctx.OutboundParams {
+				r.Logger.Info("    [%d] To: Chain %d, Receiver %s",
+					j+1,
+					outbound.ReceiverChainId,
+					outbound.Receiver)
+				r.Logger.Info("      - Hash: %s", outbound.Hash)
+				r.Logger.Info("      - Status: %s", outbound.TxFinalizationStatus.String())
+				r.Logger.Info("      - Amount: %s", outbound.Amount.String())
+			}
+		}
+
+		r.Logger.Info("  -----------------")
+	}
+
+	// Get detailed information for each TON-related CCTX
+	for _, cctx := range allCctxs {
+		r.LogCCTXDetails(cctx)
+	}
+
+	return nil
 }
