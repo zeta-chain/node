@@ -38,4 +38,22 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 	// reason is that the max budget is refunded to the TSS
 	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
 	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
+
+	// PATCH: v29
+
+	tssBalanceBefore = tssBalanceAfter
+
+	// Check that an invalid withdraw doesn't block the outbound
+	// Use the same address as in the current incident
+	tx = r.SuiWithdrawSUI("0x307832356462313663336361353535663637303263303738363035303331303762623733636365396636633164366466303034363435323964623135643561356162", amount)
+	r.Logger.EVMTransaction(*tx, "invalid_withdraw")
+
+	// wait for the cctx to be mined
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "withdraw")
+	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// check the TSS receive the amount
+	tssBalanceAfter = r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore+amount.Uint64())
 }
