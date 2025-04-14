@@ -28,6 +28,7 @@
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 * [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
+* [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 
 ### Tests
 
