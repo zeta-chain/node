@@ -125,7 +125,8 @@ type E2ERunner struct {
 	TONGateway ton.AccountID
 
 	// contract Sui
-	SuiGateway *sui.Gateway
+	SuiGateway          *sui.Gateway
+	SuiExamplePackageID string
 
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
