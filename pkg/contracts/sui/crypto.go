@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
+	"strings"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -162,4 +164,23 @@ func (s *SignerSecp256k1) SignTxBlock(tx models.TxnMetaData) (string, error) {
 	sigReordered[64] = sig[0]             // Move V[1] to the end
 
 	return SerializeSignatureECDSA(sigReordered, &s.pk.ToECDSA().PublicKey)
+}
+
+// ValidAddress checks whether the input string is a valid Sui address.
+func ValidAddress(addr string) error {
+	if !strings.HasPrefix(addr, "0x") {
+		return errors.New("address must start with 0x")
+	}
+	hexPart := addr[2:]
+
+	if len(hexPart) == 0 {
+		return errors.New("address must not be empty")
+	}
+
+	if len(hexPart) > 64 {
+		return errors.New("address must be 64 characters or less")
+	}
+
+	_, err := hex.DecodeString(fmt.Sprintf("%064s", hexPart))
+	return errors.Wrapf(err, "address %s is not valid hex", addr)
 }
