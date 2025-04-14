@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## v29.2.0
+## v29.1.6
+
+* [3801](https://github.com/zeta-chain/node/pull/3801) - prevent invalid Sui withdraw address from blocking the outbound
+
+## v29.1.5
+
+* [3785](https://github.com/zeta-chain/node/pull/3785) - add btc inbound logs to find root cause of Testnet4 missed txs
+
+## v29.1.4
 
 * [3780](https://github.com/zeta-chain/node/pull/3780) - patch maxValidator param decrease bug
 
