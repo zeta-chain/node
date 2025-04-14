@@ -63,7 +63,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	// TODO: add validation of the withdraw address to prevent this issue
 	// https://github.com/zeta-chain/node/issues/3798
 	// https://github.com/zeta-chain/node/issues/3799
-	if sui.CheckValidSuiAddress(recipient) != nil {
+	if sui.ValidAddress(recipient) != nil {
 		s.Logger().Std.Warn().Str("recipient", recipient).Msg("Invalid recipient address, redirecting to TSS")
 		recipient = s.TSS().PubKey().AddressSui()
 	}

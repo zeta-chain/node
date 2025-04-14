@@ -166,8 +166,8 @@ func (s *SignerSecp256k1) SignTxBlock(tx models.TxnMetaData) (string, error) {
 	return SerializeSignatureECDSA(sigReordered, &s.pk.ToECDSA().PublicKey)
 }
 
-// CheckValidSuiAddress checks whether the input string is a valid Sui address.
-func CheckValidSuiAddress(addr string) error {
+// ValidAddress checks whether the input string is a valid Sui address.
+func ValidAddress(addr string) error {
 	if !strings.HasPrefix(addr, "0x") {
 		return errors.New("address must start with 0x")
 	}

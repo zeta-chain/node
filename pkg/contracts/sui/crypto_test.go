@@ -209,7 +209,7 @@ func TestCheckValidSuiAddress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := CheckValidSuiAddress(tt.address)
+			err := ValidAddress(tt.address)
 			if tt.wantErr {
 				require.Error(t, err, "expected error for address: %s", tt.address)
 			} else {
