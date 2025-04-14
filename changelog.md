@@ -17,6 +17,7 @@
 * [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
 * [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
 * [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdrawal
+* [3792](https://github.com/zeta-chain/node/pull/3792) - add compliance check for Sui inbound and outbound
 * [3793](https://github.com/zeta-chain/node/pull/3793) - add Sui PTB transaction building for withdrawAndCall
 
 ### Refactor
@@ -28,6 +29,7 @@
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 * [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
+* [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 
 ### Tests
 

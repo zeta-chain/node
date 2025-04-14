@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestAdditionalAccountsSlicesSynced ensures than if any new accounts are added the
+// TestConfigAdditionalAccountsSliceSynced ensures than if any new accounts are added the
 // AccountsSlice() function is updated
 func TestConfigAdditionalAccountsSliceSynced(t *testing.T) {
 	additionalAccountsType := reflect.TypeOf(AdditionalAccounts{})

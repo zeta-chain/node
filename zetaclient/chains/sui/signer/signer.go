@@ -13,7 +13,7 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
 // Signer Sui outbound transaction signer.
@@ -73,30 +73,26 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	s.MarkOutbound(outboundID, true)
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
-	tx, err := s.buildWithdrawal(ctx, cctx)
+	withdrawTxBuilder, err := s.createWithdrawTxBuilder(cctx, zetaHeight)
 	if err != nil {
-		return errors.Wrap(err, "unable to build withdrawal tx")
+		return errors.Wrap(err, "unable to create withdrawal tx builder")
 	}
 
+	// always need a cancel tx as fallback
 	cancelTxBuilder, err := s.createCancelTxBuilder(ctx, cctx, zetaHeight)
 	if err != nil {
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
 
-	sig, err := s.signTx(ctx, tx, zetaHeight, nonce)
-	if err != nil {
-		return errors.Wrap(err, "unable to sign tx")
+	var txDigest string
+
+	// broadcast tx according to compliance check result
+	if s.passesCompliance(cctx) {
+		txDigest, err = s.broadcastWithdrawalWithFallback(ctx, withdrawTxBuilder, cancelTxBuilder)
+	} else {
+		txDigest, err = s.broadcastCancelTx(ctx, cancelTxBuilder)
 	}
 
-	// prepare logger
-	logger := s.Logger().Std.With().
-		Int64(logs.FieldChain, s.Chain().ChainId).
-		Uint64(logs.FieldNonce, nonce).
-		Logger()
-	ctx = logger.WithContext(ctx)
-
-	// broadcast tx with cancel tx
-	txDigest, err := s.broadcastWithCancelTx(ctx, sig, tx, cancelTxBuilder)
 	if err != nil {
 		// todo we might need additional error handling
 		// for the case when the tx is already broadcasted by another zetaclient
@@ -104,14 +100,9 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		return errors.Wrap(err, "unable to broadcast tx")
 	}
 
-	logger = logger.With().Str(logs.FieldTx, txDigest).Logger()
-	ctx = logger.WithContext(ctx)
-
-	bg.Work(ctx,
-		func(ctx context.Context) error { return s.reportOutboundTracker(ctx, nonce, txDigest) },
-		bg.WithLogger(logger),
-		bg.WithName("report_outbound_tracker"),
-	)
+	// report outbound tracker
+	task := func(ctx context.Context) error { return s.reportOutboundTracker(ctx, nonce, txDigest) }
+	bg.Work(ctx, task, bg.WithName("report_outbound_tracker"))
 
 	return nil
 }
@@ -130,12 +121,12 @@ func (s *Signer) signTx(ctx context.Context, tx models.TxnMetaData, zetaHeight, 
 	}
 
 	// serialize signature
-	sig, err := sui.SerializeSignatureECDSA(sig65B, s.TSS().PubKey().AsECDSA())
+	sigBase64, err := sui.SerializeSignatureECDSA(sig65B, s.TSS().PubKey().AsECDSA())
 	if err != nil {
 		return "", errors.Wrap(err, "unable to serialize tx signature")
 	}
 
-	return sig, nil
+	return sigBase64, nil
 }
 
 // SignTxWithCancel signs original tx and cancel tx in one go to save TSS keysign time.
@@ -187,6 +178,28 @@ func (s *Signer) SignTxWithCancel(
 	}
 
 	return sig, sigCancel, nil
+}
+
+func (s *Signer) passesCompliance(cctx *cctypes.CrossChainTx) bool {
+	restricted := compliance.IsCCTXRestricted(cctx)
+	if !restricted {
+		return true
+	}
+
+	params := cctx.GetCurrentOutboundParam()
+
+	compliance.PrintComplianceLog(
+		s.Logger().Std,
+		s.Logger().Compliance,
+		true,
+		s.Chain().ChainId,
+		cctx.Index,
+		cctx.InboundParams.Sender,
+		params.Receiver,
+		params.CoinType.String(),
+	)
+
+	return false
 }
 
 // wrapDigest wraps the digest with sha256.
