@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -340,10 +341,10 @@ func (k Keeper) validateZRC20Withdrawal(
 		}
 		addr, err := chains.DecodeBtcAddress(string(to), chainID)
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Bitcoin address %s", string(to))
 		}
 		if !chains.IsBtcAddressSupported(addr) {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported Bitcoin address %s", string(to))
 		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
 		// The rent exempt check is not needed for ZRC20 (SPL) tokens because withdrawing SPL token
@@ -358,7 +359,12 @@ func (k Keeper) validateZRC20Withdrawal(
 		}
 		_, err := chains.DecodeSolanaWalletAddress(string(to))
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Solana address %s", string(to))
+		}
+	} else if chains.IsSuiChain(chainID, additionalChains) {
+		// check the string format of the address is valid
+		if err := sui.ValidAddress("0x" + hex.EncodeToString(to)); err != nil {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
 		}
 	}
 
