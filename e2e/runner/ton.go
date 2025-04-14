@@ -361,14 +361,14 @@ func (r *E2ERunner) TONDumpCCTXs() error {
 			isTonRelated := false
 
 			// Check inbound
-			if cctx.InboundParams != nil && cctx.InboundParams.SenderChainId == chains.TONChain().ChainId {
+			if cctx.InboundParams != nil && cctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
 				isTonRelated = true
 			}
 
 			// Check outbound
 			if !isTonRelated && len(cctx.OutboundParams) > 0 {
 				for _, outbound := range cctx.OutboundParams {
-					if outbound.ReceiverChainId == chains.TONChain().ChainId {
+					if outbound.ReceiverChainId == chains.TONTestnet.ChainId {
 						isTonRelated = true
 						break
 					}
