@@ -59,19 +59,54 @@ func (r *E2ERunner) TONDeposit(
 		zevmRecipient.Hex(),
 	)
 
+	// Log TON Gateway and chain information for debugging
+	r.Logger.Info("TON Chain Information - Chain ID: %d, Gateway Address: %s",
+		chain.ChainId,
+		r.TONGateway.String())
+
 	// Send TX
 	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
+		r.Logger.Error("Failed to send TON deposit: %v", err)
 		return nil, errors.Wrap(err, "failed to send TON deposit")
 	}
 
+	r.Logger.Info("TON deposit transaction sent successfully, waiting for CCTX...")
+
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+		match := cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+
+		if match {
+			r.Logger.Info("Found matching CCTX: ID=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status.String())
+			r.Logger.Info("CCTX details - Inbound hash: %s", cctx.InboundParams.ObservedHash)
+			if len(cctx.OutboundParams) > 0 {
+				r.Logger.Info("CCTX outbound details - Chain: %d, Status: %s",
+					cctx.OutboundParams[0].ReceiverChainId,
+					cctx.OutboundParams[0].TxFinalizationStatus.String())
+			}
+		} else {
+			r.Logger.Info("CCTX doesn't match filter - CCTX Chain ID: %d, Sender: %s",
+				cctx.InboundParams.SenderChainId,
+				cctx.InboundParams.Sender)
+		}
+
+		return match
 	}
 
 	// Wait for cctx
+	r.Logger.Info("Waiting for CCTX with expected status: %s", cctypes.CctxStatus_OutboundMined.String())
 	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
+
+	// Log detailed CCTX information
+	r.Logger.Info("CCTX Processing Complete: ID=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status.String())
+	r.Logger.Info("CCTX Details: InboundTxHash=%s", cctx.InboundParams.ObservedHash)
+	if len(cctx.OutboundParams) > 0 && cctx.OutboundParams[0] != nil {
+		r.Logger.Info("CCTX Outbound Details: Hash=%s, Receiver=%s, Amount=%s",
+			cctx.OutboundParams[0].Hash,
+			cctx.OutboundParams[0].Receiver,
+			cctx.OutboundParams[0].Amount.String())
+	}
 
 	return cctx, nil
 }
@@ -107,19 +142,57 @@ func (r *E2ERunner) TONDepositAndCall(
 		string(callData),
 	)
 
+	// Log TON Gateway and chain information for debugging
+	r.Logger.Info("TON Chain Information - Chain ID: %d, Gateway Address: %s, Expected Status: %s",
+		chain.ChainId,
+		r.TONGateway.String(),
+		cfg.expectedStatus.String())
+
 	err := gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
 	if err != nil {
+		r.Logger.Error("Failed to send TON deposit and call: %v", err)
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
 	}
 
+	r.Logger.Info("TON deposit and call transaction sent successfully, waiting for CCTX...")
+
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
+		match := cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
 			cctx.RelayedMessage == hex.EncodeToString(callData)
+
+		if match {
+			r.Logger.Info("Found matching CCTX: ID=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status.String())
+			r.Logger.Info("CCTX details - Inbound hash: %s", cctx.InboundParams.ObservedHash)
+			if len(cctx.OutboundParams) > 0 {
+				r.Logger.Info("CCTX outbound details - Chain: %d, Status: %s",
+					cctx.OutboundParams[0].ReceiverChainId,
+					cctx.OutboundParams[0].TxFinalizationStatus.String())
+			}
+		} else {
+			r.Logger.Info("CCTX doesn't match filter - CCTX Chain ID: %d, Sender: %s, Message: %s",
+				cctx.InboundParams.SenderChainId,
+				cctx.InboundParams.Sender,
+				cctx.RelayedMessage)
+		}
+
+		return match
 	}
 
 	// Wait for cctx
+	r.Logger.Info("Waiting for CCTX with expected status: %s", cfg.expectedStatus.String())
 	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
+
+	// Log detailed CCTX information
+	r.Logger.Info("CCTX Processing Complete: ID=%s, Status=%s", cctx.Index, cctx.CctxStatus.Status.String())
+	r.Logger.Info("CCTX Details: InboundTxHash=%s", cctx.InboundParams.ObservedHash)
+	if len(cctx.OutboundParams) > 0 && cctx.OutboundParams[0] != nil {
+		r.Logger.Info("CCTX Outbound Details: Hash=%s, Receiver=%s, Amount=%s, Message=%s",
+			cctx.OutboundParams[0].Hash,
+			cctx.OutboundParams[0].Receiver,
+			cctx.OutboundParams[0].Amount.String(),
+			cctx.RelayedMessage)
+	}
 
 	return cctx, nil
 }
