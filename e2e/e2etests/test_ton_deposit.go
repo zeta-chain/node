@@ -146,13 +146,13 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("	- Sender: %s", sender.GetAddress().ToRaw())
 	r.Logger.Print("	- Amount: %s", amount.String())
 	r.Logger.Print("	- Recipient: %s", recipient.Hex())
+	r.Logger.Print("	- Deposit Fee: %s", amount.Sub(depositFee))
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
 
 	// ASSERT
 	require.NoError(r, err)
 
 	// Check CCTX
-	r.Logger.Print("🔍 Deposit Fee: %s", depositFee.String())
 	expectedDeposit := amount.Sub(depositFee)
 
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
