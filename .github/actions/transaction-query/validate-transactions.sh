@@ -108,7 +108,10 @@ FAILED_TXS=0
 FIRST_JSON_ENTRY=true
 
 echo "Getting current block height..."
-CURRENT_HEIGHT=$(zetacored query block --node="$NODE_URL" --output=json latest | jq -r '.block.header.height')
+if ! CURRENT_HEIGHT=$(zetacored query block --node="$NODE_URL" --output=json latest | jq -r '.block.header.height' 2>/dev/null); then
+  echo "ERROR: Failed to query current block height. Check your API key and network connection."
+  exit 1
+fi
 echo "Current block height: $CURRENT_HEIGHT"
 
 START_HEIGHT=$((CURRENT_HEIGHT - MAX_BLOCKS + 1))
