@@ -415,7 +415,7 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 		ctx      = r.Ctx
 		start    = time.Now()
 		reqQuery = &types.QueryAllCctxRequest{
-			Pagination: &query.PageRequest{Reverse: true},
+			Pagination: &query.PageRequest{Reverse: false},
 		}
 	)
 
