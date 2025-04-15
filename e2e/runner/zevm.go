@@ -436,7 +436,7 @@ func (r *E2ERunner) WaitForSpecificCCTX(
 		ctx      = r.Ctx
 		start    = time.Now()
 		reqQuery = &types.QueryAllCctxRequest{
-			Pagination: &query.PageRequest{Reverse: false},
+			Pagination: &query.PageRequest{Reverse: true},
 		}
 		pollInterval = 10 * time.Second // log status every 10 seconds
 		lastLog      = time.Now()
