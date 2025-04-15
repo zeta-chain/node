@@ -338,13 +338,6 @@ func (k Keeper) validateZRC20Withdrawal(
 				constant.BTCWithdrawalDustAmount,
 			)
 		}
-		addr, err := chains.DecodeBtcAddress(string(to), chainID)
-		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
-		}
-		if !chains.IsBtcAddressSupported(addr) {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
-		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
 		// The rent exempt check is not needed for ZRC20 (SPL) tokens because withdrawing SPL token
 		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check.
@@ -356,12 +349,43 @@ func (k Keeper) validateZRC20Withdrawal(
 				constant.SolanaWalletRentExempt,
 			)
 		}
+	}
+
+	// Validate the destination address
+	return k.validateDestinationAddress(chainID, to, additionalChains)
+}
+
+// validateCall validates the data of a gateway Call event
+// it checks that destination address is supported depending on the chain
+func (k Keeper) validateCall(
+	ctx sdk.Context,
+	chainID int64,
+	to []byte,
+) error {
+	additionalChains := k.GetAuthorityKeeper().GetAdditionalChainList(ctx)
+	return k.validateDestinationAddress(chainID, to, additionalChains)
+}
+
+// validateDestinationAddress validates the destination address based on the chain type
+func (k Keeper) validateDestinationAddress(
+	chainID int64,
+	to []byte,
+	additionalChains []chains.Chain,
+) error {
+	if chains.IsBitcoinChain(chainID, additionalChains) {
+		addr, err := chains.DecodeBtcAddress(string(to), chainID)
+		if err != nil {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
+		}
+		if !chains.IsBtcAddressSupported(addr) {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
+		}
+	} else if chains.IsSolanaChain(chainID, additionalChains) {
 		_, err := chains.DecodeSolanaWalletAddress(string(to))
 		if err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
 		}
 	}
-
 	return nil
 }
 

@@ -198,6 +198,14 @@ func (signer *Signer) TryProcessOutbound(
 
 			outboundGetter = withdrawSPLTxGetter
 		}
+	case coin.CoinType_NoAssetCall:
+		executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+		if err != nil {
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
+			return
+		}
+
+		outboundGetter = executeTxGetter
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")

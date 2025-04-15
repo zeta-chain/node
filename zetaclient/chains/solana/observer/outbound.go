@@ -360,6 +360,11 @@ func ParseGatewayInstruction(
 			return inst, nil
 		}
 		return nil, errors.New("failed to parse instruction")
+	case coin.CoinType_NoAssetCall:
+		if inst, err := contracts.ParseInstructionExecute(instruction); err == nil {
+			return inst, nil
+		}
+		return nil, errors.New("failed to parse instruction")
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

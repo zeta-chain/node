@@ -49,7 +49,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 			contractAddress = withdrawalAndCallEvent.Raw.Address
 		}
 
-		k.Logger(ctx).Error(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
+		k.Logger(ctx).Info(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
 
 		// get several information necessary for processing the inbound
 		foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
@@ -75,8 +75,16 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, foreignCoin.CoinType, value, receiver); err != nil {
-			return err
+		if withdrawalEvent != nil || withdrawalAndCallEvent != nil {
+			err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, foreignCoin.CoinType, value, receiver)
+			if err != nil {
+				return err
+			}
+		} else { // validate data of the call event
+			err := k.validateCall(ctx, foreignCoin.ForeignChainId, receiver)
+			if err != nil {
+				return err
+			}
 		}
 
 		// create inbound object depending on the event type
