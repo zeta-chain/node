@@ -943,4 +943,17 @@ func Test_ParseInstructionCall(t *testing.T) {
 		require.EqualValues(t, inst.GatewayNonce(), 0)
 		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
+
+	t.Run("should fail to parse instruction call if its asset instruction", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, executeSPLTxTest)
+
+		// ACT
+		_, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall)
+		require.Error(t, err)
+
+		// ASSERT
+		require.ErrorContains(t, err, "failed to parse instruction")
+	})
 }
