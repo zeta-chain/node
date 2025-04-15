@@ -41,6 +41,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 	receiver ethcommon.Address,
 	data []byte,
 	amount uint64,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Instruction {
 	var err error
 	var depositData []byte
@@ -49,6 +50,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 			Discriminator: solanacontract.DiscriminatorDeposit,
 			Amount:        amount,
 			Receiver:      receiver,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	} else {
@@ -57,6 +59,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 			Amount:        amount,
 			Receiver:      receiver,
 			Memo:          data,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	}
@@ -263,7 +266,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 		data,
 	)
 
-	limit := computebudget.NewSetComputeUnitLimitInstruction(70000).Build() // 70k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
@@ -440,6 +443,7 @@ func (r *E2ERunner) SOLDepositAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Signature {
 	// if signer is not provided, use the runner account as default
 	if signerPrivKey == nil {
@@ -448,10 +452,10 @@ func (r *E2ERunner) SOLDepositAndCall(
 	}
 
 	// create 'deposit' instruction
-	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
+	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64(), revertOptions)
 
 	// create and sign the transaction
-	limit := computebudget.NewSetComputeUnitLimitInstruction(70000).Build() // 70k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
@@ -483,7 +487,7 @@ func (r *E2ERunner) SOLCall(
 	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data)
 
 	// create and sign the transaction
-	limit := computebudget.NewSetComputeUnitLimitInstruction(70000).Build() // 70k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(

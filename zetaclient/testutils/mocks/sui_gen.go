@@ -20,6 +20,7 @@ type suiClient interface {
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 
+	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
 	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
@@ -28,6 +29,10 @@ type suiClient interface {
 		req models.SuiGetTransactionBlockRequest,
 	) (models.SuiTransactionBlockResponse, error)
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
+	InspectTransactionBlock(
+		ctx context.Context,
+		req models.SuiDevInspectTransactionBlockRequest,
+	) (models.SuiTransactionBlockResponse, error)
 	SuiExecuteTransactionBlock(
 		ctx context.Context,
 		req models.SuiExecuteTransactionBlockRequest,

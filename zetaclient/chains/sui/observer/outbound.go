@@ -9,17 +9,13 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
-
-// https://github.com/zeta-chain/protocol-contracts-sui/blob/9d08a70817d8cc7cf799b9ae12c59b6e0b8aaab9/sources/gateway.move#L125
-// (excluding last arg of `ctx`)
-const expectedWithdrawArgs = 6
 
 // 50 SUI
 // https://docs.sui.io/concepts/tokenomics/gas-in-sui#gas-budgets
@@ -86,7 +82,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 // and votes the ballot to zetacore.
 func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx) error {
 	chainID := ob.Chain().ChainId
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	params := cctx.GetCurrentOutboundParam()
+	nonce := params.TssNonce
 
 	// should be fetched by ProcessOutboundTrackers routine
 	// if exists, we can safely assume it's authentic and nonce is valid
@@ -95,33 +92,31 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		return errors.Errorf("missing tx for nonce %d", nonce)
 	}
 
-	// used instead of block height
+	// used checkpoint instead of block height
 	checkpoint, err := strconv.ParseUint(tx.Checkpoint, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse checkpoint")
 	}
 
-	// parse status, coinType, and amount
+	// parse outbound event
+	event, content, err := ob.gateway.ParseOutboundEvent(tx)
+	if err != nil {
+		return errors.Wrap(err, "unable to parse outbound event")
+	}
+
+	// determine amount, status and coinType
 	var (
-		status    = chains.ReceiveStatus_failed
-		coinType  = coin.CoinType_Gas
-		amount    = math.NewUint(0)
-		isSuccess = tx.Effects.Status.Status == "success"
+		amount   = content.TokenAmount()
+		status   = chains.ReceiveStatus_success
+		coinType = cctx.InboundParams.CoinType
 	)
 
-	if isSuccess {
-		status = chains.ReceiveStatus_success
-
-		_, w, err := ob.gateway.ParseTxWithdrawal(tx)
-		if err != nil {
-			return errors.Wrap(err, "unable to parse tx withdrawal")
-		}
-
-		if !w.IsGas() {
-			coinType = coin.CoinType_ERC20
-		}
-
-		amount = w.Amount
+	// cancelled transaction means the outbound is failed
+	// - set amount to CCTX's amount to bypass amount check in zetacore
+	// - set status to failed to revert the CCTX in zetacore
+	if event.IsCancelTx() {
+		amount = params.Amount
+		status = chains.ReceiveStatus_failed
 	}
 
 	// Gas parameters
@@ -193,26 +188,26 @@ func (ob *Observer) loadOutboundTx(ctx context.Context, cctx *cctypes.CrossChain
 }
 
 // validateOutbound validates the authenticity of the outbound transaction.
-// Note that it doesn't care about successful execution (e.g. something failed).
 func (ob *Observer) validateOutbound(cctx *cctypes.CrossChainTx, tx models.SuiTransactionBlockResponse) error {
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
-
-	inputs := tx.Transaction.Data.Transaction.Inputs
-
-	// Check args length
-	if len(inputs) != expectedWithdrawArgs {
-		return errors.Errorf("invalid number of input arguments (got %d, want %d)", len(inputs), expectedWithdrawArgs)
+	// a valid outbound should be successful
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return errors.Errorf("tx failed with error: %s", tx.Effects.Status.Error)
 	}
 
-	txNonce, err := parseNonceFromWithdrawInputs(inputs)
+	// parse outbound event
+	_, content, err := ob.gateway.ParseOutboundEvent(tx)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse nonce from inputs")
+		return errors.Wrap(err, "unable to parse outbound event")
 	}
 
+	// tx nonce should match CCTX nonce
+	txNonce := content.TxNonce()
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 	if txNonce != nonce {
 		return errors.Errorf("nonce mismatch (tx nonce %d, cctx nonce %d)", txNonce, nonce)
 	}
 
+	// check tx signature
 	if len(tx.Transaction.TxSignatures) == 0 {
 		return errors.New("missing tx signature")
 	}
@@ -272,27 +267,6 @@ func (ob *Observer) unsetTx(nonce uint64) {
 	defer ob.txMu.Unlock()
 
 	delete(ob.txMap, nonce)
-}
-
-func parseNonceFromWithdrawInputs(inputs []models.SuiCallArg) (uint64, error) {
-	if len(inputs) != expectedWithdrawArgs {
-		return 0, errors.New("invalid number of input arguments")
-	}
-
-	const nonceIdx = 2
-
-	// {
-	//   "type": "pure",
-	//   "valueType": "u64",
-	//   "value": "12345"
-	// }
-	raw := inputs[nonceIdx]
-
-	if raw["type"] != "pure" || raw["valueType"] != "u64" {
-		return 0, errors.Errorf("invalid nonce object %+v", raw)
-	}
-
-	return strconv.ParseUint(raw["value"].(string), 10, 64)
 }
 
 func parseGasUsed(tx models.SuiTransactionBlockResponse) (uint64, error) {

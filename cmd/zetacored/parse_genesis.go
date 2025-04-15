@@ -137,7 +137,7 @@ func ImportDataIntoFile(
 		return err
 	}
 
-	moduleList := app.InitGenesisModuleList()
+	moduleList := app.OrderInitGenesis()
 	for _, m := range moduleList {
 		if Skip[m] {
 			continue

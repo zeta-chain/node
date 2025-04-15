@@ -45,10 +45,11 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 	return balance
 }
 
-// SuiWithdrawSUI calls Withdraw of Gateway with SUI Zrc20 on ZEVM
+// SuiWithdrawSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
 func (r *E2ERunner) SuiWithdrawSUI(
 	receiver string,
 	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
@@ -58,6 +59,36 @@ func (r *E2ERunner) SuiWithdrawSUI(
 		receiverBytes,
 		amount,
 		r.SUIZRC20Addr,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// SuiWithdrawAndCallSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
+func (r *E2ERunner) SuiWithdrawAndCallSUI(
+	receiver string,
+	amount *big.Int,
+	payload sui.CallPayload,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	// ACT
+	payloadBytes, err := payload.PackABI()
+	require.NoError(r, err)
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SUIZRC20Addr,
+		payloadBytes,
+		gatewayzevm.CallOptions{
+			IsArbitraryCall: false,
+			GasLimit:        big.NewInt(20000),
+		},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	require.NoError(r, err)

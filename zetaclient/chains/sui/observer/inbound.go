@@ -11,11 +11,16 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var errTxNotFound = errors.New("no tx found")
+var (
+	errTxNotFound = errors.New("no tx found")
+	errCompliance = errors.New("compliance check failed")
+)
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
@@ -53,6 +58,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				Str(logs.FieldTx, event.Id.TxDigest).
 				Msg("TX not found or not finalized. Pausing")
 			return nil
+		case errors.Is(err, errCompliance):
+			// skip restricted tx and update the cursor
+			ob.Logger().Inbound.Warn().Err(err).
+				Str(logs.FieldTx, event.Id.TxDigest).
+				Msg("Tx contains restricted address. Skipping")
 		case err != nil:
 			// failed processing also updates the cursor
 			ob.Logger().Inbound.Err(err).
@@ -174,6 +184,21 @@ func (ob *Observer) constructInboundVote(
 	if !deposit.IsGas() {
 		coinType = coin.CoinType_ERC20
 		asset = string(deposit.CoinType)
+	}
+
+	// compliance check, skip restricted tx by returning nil msg
+	if config.ContainRestrictedAddress(deposit.Sender, deposit.Receiver.String()) {
+		compliance.PrintComplianceLog(
+			ob.Logger().Inbound,
+			ob.Logger().Compliance,
+			false,
+			ob.Chain().ChainId,
+			event.TxHash,
+			deposit.Sender,
+			deposit.Receiver.String(),
+			asset,
+		)
+		return nil, errCompliance
 	}
 
 	// Sui uses checkpoint seq num instead of block height

@@ -36,7 +36,7 @@ require (
 	github.com/libp2p/go-libp2p v0.27.8
 	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/multiformats/go-multiaddr v0.9.0
-	github.com/near/borsh-go v0.3.1
+	github.com/near/borsh-go v0.3.1-0.20240503120250-847ff6f195e8
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rakyll/statik v0.1.7
@@ -311,7 +311,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.14.8
-	github.com/zeta-chain/go-tss v0.4.0
+	github.com/zeta-chain/go-tss v0.5.0
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250320221859-9eabc2d8eba8
 )
 
