@@ -108,8 +108,25 @@ FAILED_TXS=0
 FIRST_JSON_ENTRY=true
 
 echo "Getting current block height..."
-if ! CURRENT_HEIGHT=$(zetacored query block --node="$NODE_URL" --output=json latest | jq -r '.block.header.height' 2>/dev/null); then
+echo "[]" > "$FAILED_TX_FILE"
+echo "# Transaction Query Summary - Error Occurred" > "$SUMMARY_REPORT"
+
+if ! CURRENT_HEIGHT=$(zetacored query block --node="$NODE_URL" --output=json latest | jq -r '.block.header.height' 2>"$ERROR_LOG_FILE"); then
   echo "ERROR: Failed to query current block height. Check your API key and network connection."
+  echo "Error details:" 
+  cat "$ERROR_LOG_FILE"
+  
+  {
+    echo "# Transaction Query Error"
+    echo "- Network: $ENVIRONMENT"
+    echo "- Run Time: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+    echo "- Error: Failed to query current block height"
+    echo "- Possible causes:"
+    echo "  - Invalid API key"
+    echo "  - Network connectivity issues"
+    echo "  - RPC endpoint unavailable"
+  } > "$SUMMARY_REPORT"
+  
   exit 1
 fi
 echo "Current block height: $CURRENT_HEIGHT"
