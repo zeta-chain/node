@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/wallet"
 
-	"github.com/tonkeeper/tongo"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -45,26 +44,14 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 		toncontracts.FormatCoins(deployerBalance),
 	)
 
-	// Always deploy a new gateway, even if one exists in the env vars
-	if r.TONGateway != (tongo.AccountID{}) {
-		r.Logger.Print("🔍 Ignoring existing TON Gateway from environment: %s", r.TONGateway.ToRaw())
-	}
-
 	// 2. Deploy Gateway
 	gwAccount, err := ton.ConstructGatewayAccount(deployerID, r.TSSAddress)
 	require.NoError(r, err, "unable to initialize TON gateway")
 
-	r.Logger.Print("🔍 TON Gateway being deployed to address: %s", gwAccount.ID.ToRaw())
-	r.Logger.Print("🔍 TON Gateway derived from TSS address: %s", r.TSSAddress.Hex())
-
 	err = deployer.Deploy(ctx, gwAccount, toncontracts.Coins(1))
 	require.NoError(r, err, "unable to deploy TON gateway")
 
-	// Set runner field so we use this gateway for tests, overriding any env var
-	r.TONGateway = gwAccount.ID
-	r.Logger.Print("🔍 TON Gateway address saved in runner: %s", r.TONGateway.ToRaw())
-
-	// 3. Check that the gateway indeed was deployed and has TON balance.
+	// 3. Check that the gateway indeed was deployed and has desired TON balance.
 	gwBalance, err := r.Clients.TON.GetBalanceOf(ctx, gwAccount.ID, true)
 	require.NoError(r, err, "unable to get balance of TON gateway")
 	require.False(r, gwBalance.IsZero(), "TON gateway balance is zero")
@@ -81,35 +68,20 @@ func (r *E2ERunner) SetupTON(faucetURL string, userTON config.Account) {
 	r.tonProvisionUser(ctx, userTON, deployer, amount)
 
 	// 5. Set chain params & chain nonce
-	r.Logger.Print("🔍 Setting up TON chain parameters")
-
 	err = r.ensureTONChainParams(gwAccount)
 	require.NoError(r, err, "unable to ensure TON chain params")
 
-	// Verify the parameters were set correctly
-	chainID := chains.TONTestnet.ChainId
-	params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
-		ChainId: chainID,
-	})
-
-	if err != nil {
-		r.Logger.Print("⚠️ Chain params verification failed: %v", err)
-	} else {
-		r.Logger.Print("✅ TON chain parameters set. Gateway address: %s", params.ChainParams.GatewayAddress)
-		if params.ChainParams.GatewayAddress != gwAccount.ID.ToRaw() {
-			r.Logger.Print("⚠️ WARNING: Gateway address mismatch: expected %s, got %s",
-				gwAccount.ID.ToRaw(), params.ChainParams.GatewayAddress)
-		}
-	}
-
 	gw := toncontracts.NewGateway(gwAccount.ID)
 
-	// 6. Deposit TON to userTON
+	// 5. Deposit TON to userTON
 	zevmRecipient := userTON.EVMAddress()
 
 	cctx, err := r.TONDeposit(gw, &deployer.Wallet, amount, zevmRecipient)
 	require.NoError(r, err, "unable to deposit TON to userTON (additional account)")
 	require.Equal(r, cctxtypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// Set runner field
+	r.TONGateway = gw.AccountID()
 }
 
 func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
@@ -119,14 +91,8 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 
 	creator := r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName)
 
-	// Use TON testnet (Athens3) chain ID instead of localnet
-	chainID := chains.TONTestnet.ChainId
-	r.Logger.Print("🔍 Using TON testnet (Athens3) chain ID: %d", chainID)
+	chainID := chains.TONLocalnet.ChainId
 
-	r.Logger.Print("🔍 Setting TON chain params for gateway address: %s", gw.ID.ToRaw())
-	r.Logger.Print("🔍 Chain ID: %d, TSS address: %s", chainID, r.TSSAddress.Hex())
-
-	// Set up the chain parameters
 	chainParams := &observertypes.ChainParams{
 		ChainId:                     chainID,
 		ConfirmationCount:           1,
@@ -148,55 +114,32 @@ func (r *E2ERunner) ensureTONChainParams(gw *ton.AccountInit) error {
 		},
 	}
 
-	r.Logger.Print("🔍 Updating TON chain params with Gateway: %s", gw.ID.ToRaw())
-
-	// Update chain params
-	err := r.ZetaTxServer.UpdateChainParams(chainParams)
-	if err != nil {
-		r.Logger.Print("❌ Failed to broadcast TON chain params tx: %v", err)
+	if err := r.ZetaTxServer.UpdateChainParams(chainParams); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain params tx")
 	}
-	r.Logger.Print("✅ Successfully broadcast TON chain params update")
 
-	// Reset chain nonces
 	resetMsg := observertypes.NewMsgResetChainNonces(creator, chainID, 0, 0)
-	resp, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg)
-	if err != nil {
-		r.Logger.Print("❌ Failed to broadcast TON chain nonce reset tx: %v", err)
+	if _, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, resetMsg); err != nil {
 		return errors.Wrap(err, "unable to broadcast TON chain nonce reset tx")
 	}
-	r.Logger.Print("✅ Successfully broadcast TON chain nonce reset: %s", resp.TxHash)
 
-	// Allow some time for the transactions to be included in blocks
-	r.Logger.Print("⏳ Waiting for transactions to be included in blocks...")
-	time.Sleep(5 * time.Second)
+	r.Logger.Print("💎 Voted for adding TON chain params (localnet). Waiting for confirmation")
 
-	// Wait for params to be queryable
 	query := &observertypes.QueryGetChainParamsForChainRequest{ChainId: chainID}
-	const checkDuration = 5 * time.Second
-	const maxChecks = 10
 
-	for i := 0; i < maxChecks; i++ {
-		params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
+	const duration = 2 * time.Second
+
+	for i := 0; i < 10; i++ {
+		_, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, query)
 		if err == nil {
 			r.Logger.Print("💎 TON chain params are set")
-			r.Logger.Print("🔍 ZetaCore has TON Gateway address: %s", params.ChainParams.GatewayAddress)
-			r.Logger.Print("🔍 Gateway address match: %v", params.ChainParams.GatewayAddress == gw.ID.ToRaw())
-
-			// Extra verification
-			if params.ChainParams.GatewayAddress != gw.ID.ToRaw() {
-				r.Logger.Print("⚠️ Warning: Gateway address mismatch, but proceeding anyway")
-				r.Logger.Print("🔍 Expected: %s, Got: %s", gw.ID.ToRaw(), params.ChainParams.GatewayAddress)
-			}
-
 			return nil
 		}
 
-		r.Logger.Print("⏳ Waiting for TON chain params to be set (check %d/%d): %v", i+1, maxChecks, err)
-		time.Sleep(checkDuration)
+		time.Sleep(duration)
 	}
 
-	return errors.New("unable to set TON chain params after maximum attempts")
+	return errors.New("unable to set TON chain params")
 }
 
 // tonProvisionUser deploy & fund ton user account
