@@ -224,9 +224,9 @@ func (r *E2ERunner) TONDeposit(
 			cctx.InboundParams.Sender == senderAddress
 	}
 
-	// Wait for cctx with a 10-minute timeout
-	r.Logger.Info("⏳ Waiting for CCTX to be processed (10 minute timeout)...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 10*time.Minute)
+	// Wait for cctx to be mined
+	r.Logger.Info("⏳ Waiting for CCTX to be processed...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, r.CctxTimeout)
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	// Log detailed CCTX information
@@ -340,8 +340,8 @@ func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveA
 
 	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
 
-	// wait for the cctx to be mined (with 10-minute timeout)
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, 10*time.Minute)
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
 
 	// Log detailed CCTX information
