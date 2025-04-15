@@ -822,6 +822,24 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
 	})
 
+	t.Run("fails to parse and process invalid gateway withdraw to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.InvalidGatewayWithdrawToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.Error(t, err)
+	})
+
 	t.Run("successfully parse and process gateway call to SOL chain", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
@@ -843,6 +861,24 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.Equal(t, "4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc", cctxList[0].GetCurrentOutboundParam().Receiver)
 		require.Zero(t, cctxList[0].GetCurrentOutboundParam().Amount.BigInt().Int64())
 		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
+	})
+
+	t.Run("fails to parse and process invalid gateway call to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.InvalidGatewayCallToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.Error(t, err)
 	})
 
 	t.Run("successfully parse and process ZetaSentEvent", func(t *testing.T) {
