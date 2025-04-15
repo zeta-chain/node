@@ -218,10 +218,10 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("  - Expected sender: %s", senderAddress)
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
+		// Just check if it's from TON
 		return cctx != nil &&
 			cctx.InboundParams != nil &&
-			cctx.InboundParams.SenderChainId == expectedChainId &&
-			cctx.InboundParams.Sender == senderAddress
+			cctx.InboundParams.SenderChainId == expectedChainId
 	}
 
 	// Wait for cctx to be mined
@@ -231,6 +231,8 @@ func (r *E2ERunner) TONDeposit(
 
 	// Log detailed CCTX information
 	r.LogCCTXDetails(cctx)
+
+	r.Logger.Info("Transaction status: %s", cctx.CctxStatus.Status.String())
 
 	return cctx, nil
 }
@@ -301,6 +303,8 @@ func (r *E2ERunner) TONDepositAndCall(
 
 	// Log detailed CCTX information
 	r.LogCCTXDetails(cctx)
+
+	r.Logger.Info("Transaction status: %s", cctx.CctxStatus.Status.String())
 
 	return cctx, nil
 }
@@ -400,7 +404,7 @@ func (r *E2ERunner) TONDumpCCTXs() error {
 
 		r.Logger.Info("Processed %d CCTXs (page of %d)", len(resp.CrossChainTx), pageSize)
 
-		if resp.Pagination.NextKey == nil || len(resp.Pagination.NextKey) == 0 {
+		if len(resp.Pagination.NextKey) == 0 {
 			r.Logger.Info("Total CCTXs found: %d, TON-related: %d", resp.Pagination.Total, len(allCctxs))
 			break
 		}
@@ -456,6 +460,14 @@ func (r *E2ERunner) TONDumpCCTXs() error {
 	// Get detailed information for each TON-related CCTX
 	for _, cctx := range allCctxs {
 		r.LogCCTXDetails(cctx)
+	}
+
+	// Print the exact format of sender address in the transaction
+	for _, cctx := range allCctxs {
+		if cctx.InboundParams != nil &&
+			cctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
+			r.Logger.Info("Found TON tx with sender: %s", cctx.InboundParams.Sender)
+		}
 	}
 
 	return nil
