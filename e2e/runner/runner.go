@@ -125,14 +125,16 @@ type E2ERunner struct {
 	TONGateway ton.AccountID
 
 	// contract Sui
-	SuiGateway          *sui.Gateway
-	SuiExamplePackageID string
+	SuiGateway *sui.Gateway
 
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
 
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
+
+	// SuiExample is the example contract for Sui
+	SuiExample Example
 
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
@@ -289,6 +291,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.SuiGateway = other.SuiGateway
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
+	r.SuiExample = other.SuiExample
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)

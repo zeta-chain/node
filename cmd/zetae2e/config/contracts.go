@@ -138,6 +138,25 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SuiTokenTreasuryCap = c.String()
 	}
 
+	if c := conf.Contracts.Sui.ExamplePackageID; c != "" {
+		r.SuiExample.PackageID = c.String()
+	}
+	if c := conf.Contracts.Sui.ExampleTokenType; c != "" {
+		r.SuiExample.TokenType = c.String()
+	}
+	if c := conf.Contracts.Sui.ExampleGlobalConfigID; c != "" {
+		r.SuiExample.GlobalConfigID = c.String()
+	}
+	if c := conf.Contracts.Sui.ExamplePartnerID; c != "" {
+		r.SuiExample.PartnerID = c.String()
+	}
+	if c := conf.Contracts.Sui.ExampleClockID; c != "" {
+		r.SuiExample.ClockID = c.String()
+	}
+	if c := conf.Contracts.Sui.ExamplePoolID; c != "" {
+		r.SuiExample.PoolID = c.String()
+	}
+
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())

@@ -66,6 +66,12 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 
 	conf.Contracts.Sui.FungibleTokenCoinType = config.DoubleQuotedString(r.SuiTokenCoinType)
 	conf.Contracts.Sui.FungibleTokenTreasuryCap = config.DoubleQuotedString(r.SuiTokenTreasuryCap)
+	conf.Contracts.Sui.ExamplePackageID = config.DoubleQuotedString(r.SuiExample.PackageID)
+	conf.Contracts.Sui.ExampleTokenType = config.DoubleQuotedString(r.SuiExample.TokenType)
+	conf.Contracts.Sui.ExampleGlobalConfigID = config.DoubleQuotedString(r.SuiExample.GlobalConfigID)
+	conf.Contracts.Sui.ExamplePartnerID = config.DoubleQuotedString(r.SuiExample.PartnerID)
+	conf.Contracts.Sui.ExampleClockID = config.DoubleQuotedString(r.SuiExample.ClockID)
+	conf.Contracts.Sui.ExamplePoolID = config.DoubleQuotedString(r.SuiExample.PoolID)
 
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())

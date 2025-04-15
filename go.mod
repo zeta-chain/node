@@ -317,6 +317,8 @@ require (
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250320221859-9eabc2d8eba8
 )
 
+require github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
+
 require (
 	cloud.google.com/go/auth v0.6.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
@@ -327,6 +329,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20231025140028-3c0104f4b233 // indirect

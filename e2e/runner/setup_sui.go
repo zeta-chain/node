@@ -84,13 +84,13 @@ func (r *E2ERunner) deploySUIGateway() (whitelistCapID, withdrawCapID string) {
 	)
 
 	gatewayID, ok := objectIDs[filterGatewayType]
-	require.True(r, ok, "gateway not found")
+	require.True(r, ok, "gateway object not found")
 
 	whitelistCapID, ok = objectIDs[filterWhitelistCapType]
-	require.True(r, ok, "whitelistCap not found")
+	require.True(r, ok, "whitelistCap object not found")
 
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
-	require.True(r, ok, "withdrawCap not found")
+	require.True(r, ok, "withdrawCap object not found")
 
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
@@ -142,13 +142,33 @@ func (r *E2ERunner) deploySuiFakeUSDC() string {
 
 // deploySuiExample deploys the example package on Sui
 func (r *E2ERunner) deploySuiExample() {
-	packageID, _ := r.deploySuiPackage(
+	const (
+		filterGlobalConfigType = "example::GlobalConfig"
+		filterPartnerType      = "example::Partner"
+		filterClockType        = "example::Clock"
+		filterPoolType         = "example::Pool"
+	)
+
+	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType, filterPoolType}
+	packageID, objectIDs := r.deploySuiPackage(
 		[]string{suicontract.TokenBytecodeBase64(), suicontract.ExampleBytecodeBase64()},
-		nil,
+		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)
 
-	r.SuiExamplePackageID = packageID
+	globalConfigID, ok := objectIDs[filterGlobalConfigType]
+	require.True(r, ok, "globalConfig object not found")
+
+	partnerID, ok := objectIDs[filterPartnerType]
+	require.True(r, ok, "partner object not found")
+
+	clockID, ok := objectIDs[filterClockType]
+	require.True(r, ok, "clock object not found")
+
+	poolID, ok := objectIDs[filterPoolType]
+	require.True(r, ok, "pool object not found")
+
+	r.SuiExample = NewExample(packageID, globalConfigID, partnerID, clockID, poolID)
 }
 
 // deploySuiPackage is a helper function that deploys a package on Sui

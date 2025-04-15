@@ -150,6 +150,12 @@ type Sui struct {
 	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
+	ExamplePackageID         DoubleQuotedString `yaml:"example_package_id"`
+	ExampleTokenType         DoubleQuotedString `yaml:"example_token_type"`
+	ExampleGlobalConfigID    DoubleQuotedString `yaml:"example_global_config_id"`
+	ExamplePartnerID         DoubleQuotedString `yaml:"example_partner_id"`
+	ExampleClockID           DoubleQuotedString `yaml:"example_clock_id"`
+	ExamplePoolID            DoubleQuotedString `yaml:"example_pool_id"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
