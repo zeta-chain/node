@@ -16,7 +16,7 @@ import (
 )
 
 // TestZEVMToSolanaCall executes simple call from ZEVM to Solana, calling connected program
-func TestZEVMToSolanaCall(r *runner.E2ERunner, args []string) {
+func TestZEVMToSolanaCall(r *runner.E2ERunner, _ []string) {
 	// approve amount is 1 SOL
 	approvedAmount := new(big.Int).SetUint64(solana.LAMPORTS_PER_SOL)
 
