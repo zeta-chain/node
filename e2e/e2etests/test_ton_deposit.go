@@ -62,18 +62,8 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Given amount
 	amount := utils.ParseUint(r, args[0])
 
-	// Debug messages
-	_, s, err := r.Account.AsTONWallet(r.Clients.TON)
-
 	// Given approx deposit fee
 	depositFee, err := gw.GetTxFee(ctx, r.Clients.TON, toncontracts.OpDeposit)
-	if err != nil {
-		r.Logger.Print("Failed to retrieve deposit fee: %v (fee: %s, address: %s, account: %s)", err, depositFee.String(), s.GetAddress().ToHuman(false, true), gw.AccountID().ToRaw())
-		require.NoError(r, err)
-	}
-
-	// Debugging: Log deposit fee
-	r.Logger.Print("Deposit fee: %s", depositFee.String())
 
 	// Given a sender
 	r.Logger.Print("Preparing to call AsTONWallet...")
@@ -127,23 +117,8 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Print("	- Recipient: %s", recipient.Hex())
 	r.Logger.Print("	- Deposit Fee: %s", amount.Sub(depositFee))
 
-	// Log all existing CCTXs before starting the test
-	r.Logger.Print("📋 Logging all existing CCTXs before deposit...")
-	err = r.TONDumpCCTXs()
-	if err != nil {
-		r.Logger.Print("⚠️ Failed to dump CCTXs: %v", err)
-	}
-
 	// Send the deposit
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
-
-	// If we get an error about waiting for CCTXs, fail the test
-	if err != nil || cctx == nil {
-		r.Logger.Print("❌ Initial deposit attempt failed: %v", err)
-		r.Logger.Print("❌ TEST FAILED: No matching CCTX found after TON deposit")
-		r.FailNow()
-		return
-	}
 
 	// ASSERT
 	require.NotNil(r, cctx, "CCTX should not be nil")
