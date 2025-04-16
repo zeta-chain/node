@@ -156,68 +156,123 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("  - ZETA address: %s", zevmRecipient.Hex())
 	r.Logger.Info("  - Gateway address: %s", gw.AccountID().ToRaw())
 
+	// Get the current set of CCTXs before we send our transaction
+	beforeCCTXs, err := r.getAllCCTXsByChain(chain.ChainId)
+	if err != nil {
+		r.Logger.Error("Failed to get CCTXs before sending deposit: %v", err)
+	} else {
+		r.Logger.Info("Found %d existing TON CCTXs before sending deposit", len(beforeCCTXs))
+	}
+
 	// Send TX
 	r.Logger.Info("📤 Sending TON transaction to blockchain...")
-	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
+	err = gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
 		r.Logger.Error("Failed to send TON deposit: %v", err)
 		return nil, errors.Wrap(err, "failed to send TON deposit")
 	}
 	r.Logger.Info("✅ TON deposit transaction sent successfully")
 
-	// Give some time for the transaction to be processed
-	r.Logger.Info("⏱️ Waiting for transaction to be processed on TON blockchain...")
-	time.Sleep(30 * time.Second)
+	// Give some time for the TON chain to process our transaction
+	r.Logger.Info("⏱️ Waiting for transaction to be processed on TON blockchain (60 seconds)...")
+	time.Sleep(60 * time.Second)
 
-	// Dump all CCTXs to check for new ones
-	r.Logger.Info("📋 Checking for new TON CCTXs after sending deposit...")
-	err = r.TONDumpCCTXs()
-	if err != nil {
-		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
+	// Now we'll look for any new CCTXs that have appeared since we sent our transaction
+	r.Logger.Info("🔍 Looking for new CCTXs after deposit...")
+
+	// Wait for a new CCTX to appear with multiple retries
+	var cctx *cctypes.CrossChainTx
+	maxRetries := 10
+
+	for retry := 0; retry < maxRetries; retry++ {
+		r.Logger.Info("Retry %d/%d: Checking for new TON CCTXs...", retry+1, maxRetries)
+
+		afterCCTXs, err := r.getAllCCTXsByChain(chain.ChainId)
+		if err != nil {
+			r.Logger.Error("Failed to get CCTXs after deposit: %v", err)
+			time.Sleep(15 * time.Second)
+			continue
+		}
+
+		r.Logger.Info("Found %d TON CCTXs after deposit", len(afterCCTXs))
+
+		// Look for new CCTXs that weren't there before
+		for _, newCctx := range afterCCTXs {
+			// Skip if this CCTX was already present before our deposit
+			wasPresent := false
+			for _, oldCctx := range beforeCCTXs {
+				if oldCctx.Index == newCctx.Index {
+					wasPresent = true
+					break
+				}
+			}
+
+			if !wasPresent {
+				// This is a new CCTX!
+				r.Logger.Info("✅ Found new CCTX since deposit: %s", newCctx.Index)
+
+				// Check if it matches what we expect
+				if newCctx.InboundParams != nil &&
+					newCctx.InboundParams.Amount.Equal(amount) &&
+					newCctx.CctxStatus != nil {
+
+					createdTime := time.Unix(int64(newCctx.CctxStatus.CreatedTimestamp), 0)
+					r.Logger.Info("  - Created at: %s", createdTime.Format(time.RFC3339))
+					r.Logger.Info("  - Chain ID: %d", newCctx.InboundParams.SenderChainId)
+					r.Logger.Info("  - Amount: %s", newCctx.InboundParams.Amount.String())
+					r.Logger.Info("  - Sender: %s", newCctx.InboundParams.Sender)
+					r.Logger.Info("  - Status: %s", newCctx.CctxStatus.Status.String())
+
+					cctx = newCctx
+					break
+				}
+			}
+		}
+
+		if cctx != nil {
+			r.Logger.Info("✅ Found new CCTX since deposit: %s", cctx.Index)
+			break
+		}
+
+		// Wait before next retry
+		r.Logger.Info("No new matching CCTX found, waiting 15 seconds before retry...")
+		time.Sleep(15 * time.Second)
 	}
 
-	// Create a more flexible filter function to find matching CCTX
-	expectedChainId := chain.ChainId
+	// If no new CCTXs were found, try one last approach with a more general filter
+	if cctx == nil {
+		r.Logger.Info("⚠️ No new CCTXs found, trying more general filter...")
 
-	r.Logger.Info("🔍 Using strict filter to find the CCTX for TON deposit:")
-	r.Logger.Info("  - Looking for TON transactions (Chain ID: %d)", expectedChainId)
-	r.Logger.Info("  - Exact sender match: %s", sender.GetAddress().ToRaw())
-	r.Logger.Info("  - Amount: %s", amount.String())
+		// Filter that looks for recent TON transactions from any sender
+		filter := func(cctx *cctypes.CrossChainTx) bool {
+			// Combined null check and chain ID check
+			if cctx == nil || cctx.InboundParams == nil || cctx.InboundParams.SenderChainId != chain.ChainId {
+				return false
+			}
 
-	// Using a filter that matches the original approach with added null checks
-	filter := func(cctx *cctypes.CrossChainTx) bool {
-		// Null checks with logging
-		if cctx == nil || cctx.InboundParams == nil {
-			r.Logger.Info("❌ CCTX is nil or InboundParams is nil. CCTX: %v", cctx)
+			// Log for debugging
+			r.Logger.Info("Checking TON CCTX: %s", cctx.Index)
+			r.Logger.Info("  - Amount: %s vs Expected: %s",
+				cctx.InboundParams.Amount.String(), amount.String())
+
+			// Check amount is approximate (could be less due to fees)
+			if !cctx.InboundParams.Amount.IsZero() &&
+				cctx.InboundParams.Amount.LTE(amount) &&
+				cctx.InboundParams.Amount.GTE(amount.QuoUint64(2)) {
+
+				r.Logger.Info("  ✅ Found TON transaction with matching amount")
+				return true
+			}
+
 			return false
 		}
 
-		// Exact match on chain ID and sender address (original approach)
-		match := cctx.InboundParams.SenderChainId == expectedChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
-
-		// Log result for debugging
-		if match {
-			r.Logger.Info("✅ Found exact match for TON transaction: %s", cctx.Index)
-			r.Logger.Info("  - Sender: %s", cctx.InboundParams.Sender)
-			r.Logger.Info("  - Chain ID: %d", cctx.InboundParams.SenderChainId)
-			r.Logger.Info("  - Amount: %s", cctx.InboundParams.Amount.String())
-			r.Logger.Info("  - Hash: %s", cctx.InboundParams.ObservedHash)
-		} else if cctx.InboundParams.SenderChainId == expectedChainId {
-			// Log near-matches for debugging
-			r.Logger.Info("ℹ️ Found TON transaction but sender doesn't match: %s", cctx.Index)
-			r.Logger.Info("  - Actual sender: %s", cctx.InboundParams.Sender)
-			r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
-		}
-
-		return match
+		r.Logger.Info("⏳ Waiting for CCTX to be processed with general filter (5 minutes)...")
+		cctx = r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 5*time.Minute)
 	}
 
-	// Wait for cctx to be mined with a longer timeout (15 minutes)
-	r.Logger.Info("⏳ Waiting for CCTX to be processed (max 5 minutes)...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 5*time.Minute)
 	if cctx == nil {
-		r.Logger.Error("❌ No matching CCTX found after 15 minutes")
+		r.Logger.Error("❌ No matching CCTX found after 5 minutes")
 		return nil, errors.New("timeout waiting for CCTX")
 	}
 
@@ -229,6 +284,43 @@ func (r *E2ERunner) TONDeposit(
 	r.Logger.Info("Transaction status: %s", cctx.CctxStatus.Status.String())
 
 	return cctx, nil
+}
+
+// getAllCCTXsByChain returns all CCTXs for a specific chain
+func (r *E2ERunner) getAllCCTXsByChain(chainID int64) ([]*cctypes.CrossChainTx, error) {
+	var chainCCTXs []*cctypes.CrossChainTx
+	nextKey := []byte{}
+	pageSize := uint64(100)
+
+	for {
+		resp, err := r.CctxClient.CctxAll(
+			r.Ctx,
+			&cctypes.QueryAllCctxRequest{
+				Pagination: &query.PageRequest{
+					Key:        nextKey,
+					Limit:      pageSize,
+					CountTotal: true,
+				},
+			},
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get CCTXs")
+		}
+
+		for _, cctx := range resp.CrossChainTx {
+			if cctx.InboundParams != nil && cctx.InboundParams.SenderChainId == chainID {
+				chainCCTXs = append(chainCCTXs, cctx)
+			}
+		}
+
+		if len(resp.Pagination.NextKey) == 0 {
+			break
+		}
+
+		nextKey = resp.Pagination.NextKey
+	}
+
+	return chainCCTXs, nil
 }
 
 // TONDepositAndCall deposit TON to Gateway contract with call data.

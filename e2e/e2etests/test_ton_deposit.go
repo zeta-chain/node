@@ -1,19 +1,14 @@
 package e2etests
 
 import (
-	"time"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/tonkeeper/tongo/wallet"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
-	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -163,42 +158,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// Send the deposit
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
 
-	// If we get an error about waiting for CCTXs, try a direct polling approach
+	// If we get an error about waiting for CCTXs, fail the test
 	if err != nil || cctx == nil {
-		r.Logger.Print("⚠️ Initial deposit attempt failed, trying backup approach: %v", err)
-
-		// Try direct lookup by common ID patterns if still not found
-		r.Logger.Print("🔍 Trying direct lookup by transaction ID...")
-		commonIDs := []string{
-			"0x5ddadaa3f73df5149ce63c6a88bc2c9641e9b2b71b1b54bcb39dea01a37c5232", // From example log
-		}
-
-		for _, id := range commonIDs {
-			r.Logger.Print("Looking for transaction with ID: %s", id)
-			idCctx, err := r.CctxClient.Cctx(
-				r.Ctx,
-				&cctypes.QueryGetCctxRequest{Index: id},
-			)
-
-			if err == nil && idCctx != nil && idCctx.CrossChainTx != nil {
-				r.Logger.Print("✅ Found transaction by direct ID lookup!")
-				cctx = idCctx.CrossChainTx
-				break
-			}
-		}
-
-		// If still not found, try the original fallback approach
-		if cctx == nil {
-			r.Logger.Print("⚠️ Direct ID lookup failed, retrying with findTONDeposit...")
-			// Try a few times to find the transaction
-			for i := 0; i < 3; i++ {
-				time.Sleep(30 * time.Second)
-				cctx = findTONDeposit(r, sender, chains.TONTestnet.ChainId)
-				if cctx != nil {
-					break
-				}
-			}
-		}
+		r.Logger.Print("❌ Initial deposit attempt failed: %v", err)
+		r.Logger.Print("❌ TEST FAILED: No matching CCTX found after TON deposit")
+		r.FailNow()
+		return
 	}
 
 	// ASSERT
@@ -229,58 +194,4 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
 
 	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
-}
-
-// Helper function to find TON deposits
-func findTONDeposit(r *runner.E2ERunner, sender *wallet.Wallet, chainID int64) *cctypes.CrossChainTx {
-	// Get all CCTXs with pagination
-	nextKey := []byte{}
-	pageSize := uint64(100)
-
-	r.Logger.Print("🔍 Running findTONDeposit with chain ID: %d, sender: %s",
-		chainID, sender.GetAddress().ToRaw())
-
-	for {
-		resp, err := r.CctxClient.CctxAll(
-			r.Ctx,
-			&cctypes.QueryAllCctxRequest{
-				Pagination: &query.PageRequest{
-					Key:        nextKey,
-					Limit:      pageSize,
-					CountTotal: true,
-				},
-			},
-		)
-		if err != nil {
-			r.Logger.Print("Failed to get CCTXs: %v", err)
-			return nil
-		}
-
-		// Filter to TON-related transactions with exact sender match
-		for _, cctx := range resp.CrossChainTx {
-			// Use the original strict matching criteria
-			if cctx.InboundParams != nil &&
-				cctx.InboundParams.SenderChainId == chainID &&
-				cctx.InboundParams.Sender == sender.GetAddress().ToRaw() {
-
-				r.Logger.Print("✅ Found matching TON transaction: %s", cctx.Index)
-				r.Logger.Print("  - Sender: %s", cctx.InboundParams.Sender)
-				r.Logger.Print("  - Chain ID: %d", cctx.InboundParams.SenderChainId)
-				r.Logger.Print("  - Hash: %s", cctx.InboundParams.ObservedHash)
-
-				return cctx
-			}
-		}
-
-		r.Logger.Print("Processed %d CCTXs (page of %d)", len(resp.CrossChainTx), pageSize)
-
-		if len(resp.Pagination.NextKey) == 0 {
-			break
-		}
-
-		nextKey = resp.Pagination.NextKey
-	}
-
-	r.Logger.Print("❌ No matching TON deposit found")
-	return nil
 }
