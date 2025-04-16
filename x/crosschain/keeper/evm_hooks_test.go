@@ -257,7 +257,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			chains.BitcoinMainnet.ChainId,
 			coin.CoinType_Gas,
 		)
-		require.ErrorContains(t, err, "unsupported address")
+		require.ErrorContains(t, err, "unsupported Bitcoin address")
 	})
 
 	t.Run("unable to validate an event with an invalid solana address", func(t *testing.T) {
