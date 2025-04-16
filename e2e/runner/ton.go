@@ -18,7 +18,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // we need to use this send mode due to how wallet V5 works
@@ -187,41 +186,59 @@ func (r *E2ERunner) TONDeposit(
 	}
 	r.Logger.Info("✅ TON deposit transaction sent successfully")
 
-	// Get sender account details for reference
-	senderAddr := sender.GetAddress()
-	r.Logger.Info("📋 TON Transaction Details:")
-	r.Logger.Info("  - Sender Address: %s", senderAddr.ToRaw())
-	r.Logger.Info("  - Sender Address (human): %s", senderAddr.ToHuman(false, true))
-	r.Logger.Info("  - Gateway: %s", gw.AccountID().ToRaw())
-	r.Logger.Info("  - Amount: %s TON", amount.String())
-	r.Logger.Info("  - Chain ID: %d", chain.ChainId)
+	// Give some time for the transaction to be processed
+	r.Logger.Info("⏱️ Waiting for transaction to be processed on TON blockchain...")
+	time.Sleep(10 * time.Second)
 
-	// Verify chain params are set
-	chainParams, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
-		ChainId: chain.ChainId,
-	})
+	// Dump all CCTXs to check for new ones
+	r.Logger.Info("📋 Checking for new TON CCTXs...")
+	err = r.TONDumpCCTXs()
 	if err != nil {
-		r.Logger.Print("⚠️ Unable to get chain params for TON: %v", err)
-	} else {
-		r.Logger.Print("✅ Chain params for TON are set")
-		r.Logger.Print("🔍 Gateway address in chain params: %s", chainParams.ChainParams.GatewayAddress)
-		r.Logger.Print("🔍 Expected gateway address: %s", gw.AccountID().ToRaw())
-		r.Logger.Print("🔍 Gateway address match: %v", chainParams.ChainParams.GatewayAddress == gw.AccountID().ToRaw())
+		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
 	}
 
-	// Create a filter function to find matching CCTX
-	senderAddress := sender.GetAddress().ToRaw()
+	// Create a more flexible filter function to find matching CCTX
 	expectedChainId := chain.ChainId
 
-	r.Logger.Info("🔍 Filter criteria for CCTX:")
-	r.Logger.Info("  - Expected chain ID: %d", expectedChainId)
-	r.Logger.Info("  - Expected sender: %s", senderAddress)
+	r.Logger.Info("🔍 Using broader filter to find the CCTX:")
+	r.Logger.Info("  - Looking for TON transactions (Chain ID: %d)", expectedChainId)
+	r.Logger.Info("  - Target address: %s", zevmRecipient.Hex())
+	r.Logger.Info("  - Amount: %s", amount.String())
 
+	// Using a filter that only checks for essential criteria
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		// Just check if it's from TON
-		return cctx != nil &&
-			cctx.InboundParams != nil &&
-			cctx.InboundParams.SenderChainId == expectedChainId
+		if cctx == nil || cctx.InboundParams == nil {
+			return false
+		}
+
+		// Check if it's from TON chain
+		if cctx.InboundParams.SenderChainId != expectedChainId {
+			return false
+		}
+
+		// Log details for debugging
+		r.Logger.Info("Checking CCTX: %s", cctx.Index)
+		r.Logger.Info("  - Amount: %s vs Expected: %s",
+			cctx.InboundParams.Amount.String(), amount.String())
+		r.Logger.Info("  - Sender: %s", cctx.InboundParams.Sender)
+
+		// Check if this might be our transaction based on:
+		// 1. Amount - might not match exactly due to fees
+		// 2. Timing - it should be recent
+		if cctx.CctxStatus != nil {
+			createdTime := time.Unix(int64(cctx.CctxStatus.CreatedTimestamp), 0)
+			timeSince := time.Since(createdTime)
+			r.Logger.Info("  - Created: %s (%s ago)",
+				createdTime.Format(time.RFC3339), timeSince)
+
+			// If created in the last 5 minutes
+			if timeSince < 5*time.Minute {
+				r.Logger.Info("  ✅ Recent transaction found")
+				return true
+			}
+		}
+
+		return false
 	}
 
 	// Wait for cctx to be mined
