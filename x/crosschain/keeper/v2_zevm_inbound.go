@@ -10,6 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -75,16 +76,12 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if withdrawalEvent != nil || withdrawalAndCallEvent != nil {
-			err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, foreignCoin.CoinType, value, receiver)
-			if err != nil {
-				return err
-			}
-		} else { // validate data of the call event
-			err := k.validateCall(ctx, foreignCoin.ForeignChainId, receiver)
-			if err != nil {
-				return err
-			}
+		coinType := foreignCoin.CoinType
+		if callEvent != nil {
+			coinType = coin.CoinType_NoAssetCall
+		}
+		if err := k.validateOutbound(ctx, foreignCoin.ForeignChainId, coinType, value, receiver); err != nil {
+			return err
 		}
 
 		// create inbound object depending on the event type
