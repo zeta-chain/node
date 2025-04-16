@@ -363,7 +363,7 @@ func (k Keeper) validateZRC20Withdrawal(
 		}
 	} else if chains.IsSuiChain(chainID, additionalChains) {
 		// check the string format of the address is valid
-		if err := sui.ValidAddress("0x" + hex.EncodeToString(to)); err != nil {
+		if err := sui.ValidAddress(string(to)); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
 		}
 	}

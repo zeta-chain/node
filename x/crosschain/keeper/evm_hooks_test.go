@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -290,24 +289,26 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		// create a withdrawal event with an invalid address (contains additional character 'aa')
-		to, err := hex.DecodeString("25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5abaa")
-		require.NoError(t, err)
 		value := big.NewInt(1000000)
-		suiWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
+		suiWithdrawalEvent := sample.ZRC20Withdrawal(
+			[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5abaa"),
+			value,
+		)
 
-		err = k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
+		err := k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
 		require.ErrorContains(t, err, "invalid Sui address")
 	})
 
 	t.Run("validate valid Sui event", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		to, err := hex.DecodeString("25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5ab")
-		require.NoError(t, err)
 		value := big.NewInt(1000000)
-		suiWithdrawalEvent := sample.ZRC20Withdrawal(to, value)
+		suiWithdrawalEvent := sample.ZRC20Withdrawal(
+			[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5ab"),
+			value,
+		)
 
-		err = k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
+		err := k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
 		require.NoError(t, err)
 	})
 }
