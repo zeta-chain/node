@@ -5,6 +5,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ func (r *E2ERunner) SetupSolanaAccount() {
 }
 
 // SetupSolana sets Solana contracts and params
-func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
+func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivateKey string) {
 	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
@@ -147,6 +148,25 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	// deploy test spl
 	mintAccount := r.DeploySPL(&privkey, true)
 	r.SPLAddr = mintAccount.PublicKey()
+
+	// get spl account private key
+	splPrivkey, err := solana.PrivateKeyFromBase58(splAccountPrivateKey)
+	require.NoError(r, err)
+
+	// minting some tokens to spl account for testing
+	ata := r.ResolveSolanaATA(privkey, splPrivkey.PublicKey(), mintAccount.PublicKey())
+
+	mintToInstruction := token.NewMintToInstruction(uint64(100_000_000_000_000), mintAccount.PublicKey(), ata, privkey.PublicKey(), []solana.PublicKey{}).
+		Build()
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{mintToInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
