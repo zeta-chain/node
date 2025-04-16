@@ -151,7 +151,7 @@ func (r *E2ERunner) TONDeposit(
 	zevmRecipient eth.Address,
 ) (*cctypes.CrossChainTx, error) {
 	// Log all existing CCTXs before starting
-	r.Logger.Info("📋 Logging all existing CCTXs before deposit...")
+	r.Logger.Info("📋 Logging all existing CCTXs before deposit inside TONDeposit...")
 	if err := r.TONDumpCCTXs(); err != nil {
 		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
 	}
@@ -188,10 +188,10 @@ func (r *E2ERunner) TONDeposit(
 
 	// Give some time for the transaction to be processed
 	r.Logger.Info("⏱️ Waiting for transaction to be processed on TON blockchain...")
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	// Dump all CCTXs to check for new ones
-	r.Logger.Info("📋 Checking for new TON CCTXs...")
+	r.Logger.Info("📋 Checking for new TON CCTXs after sending deposit...")
 	err = r.TONDumpCCTXs()
 	if err != nil {
 		r.Logger.Info("⚠️ Failed to dump CCTXs: %v", err)
@@ -200,9 +200,10 @@ func (r *E2ERunner) TONDeposit(
 	// Create a more flexible filter function to find matching CCTX
 	expectedChainId := chain.ChainId
 
-	r.Logger.Info("🔍 Using broader filter to find the CCTX:")
+	r.Logger.Info("🔍 Using broader filter to find the CCTX for TON deposit:")
 	r.Logger.Info("  - Looking for TON transactions (Chain ID: %d)", expectedChainId)
-	r.Logger.Info("  - Target address: %s", zevmRecipient.Hex())
+	r.Logger.Info("  - TON Sender address: %s", sender.GetAddress().ToRaw())
+	r.Logger.Info("  - Target ZEVM address: %s", zevmRecipient.Hex())
 	r.Logger.Info("  - Amount: %s", amount.String())
 
 	// Using a filter that only checks for essential criteria
@@ -220,11 +221,16 @@ func (r *E2ERunner) TONDeposit(
 		r.Logger.Info("Checking CCTX: %s", cctx.Index)
 		r.Logger.Info("  - Amount: %s vs Expected: %s",
 			cctx.InboundParams.Amount.String(), amount.String())
-		r.Logger.Info("  - Sender: %s", cctx.InboundParams.Sender)
+		r.Logger.Info("  - Sender: %s vs Expected: %s",
+			cctx.InboundParams.Sender, sender.GetAddress().ToRaw())
 
-		// Check if this might be our transaction based on:
-		// 1. Amount - might not match exactly due to fees
-		// 2. Timing - it should be recent
+		// First check: exact sender match
+		if cctx.InboundParams.Sender == sender.GetAddress().ToRaw() {
+			r.Logger.Info("  ✅ Found matching sender address")
+			return true
+		}
+
+		// Check if this might be our transaction based on timing
 		if cctx.CctxStatus != nil {
 			createdTime := time.Unix(int64(cctx.CctxStatus.CreatedTimestamp), 0)
 			timeSince := time.Since(createdTime)
@@ -241,9 +247,14 @@ func (r *E2ERunner) TONDeposit(
 		return false
 	}
 
-	// Wait for cctx to be mined
-	r.Logger.Info("⏳ Waiting for CCTX to be processed...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, r.CctxTimeout)
+	// Wait for cctx to be mined with a longer timeout (15 minutes)
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (max 15 minutes)...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 15*time.Minute)
+	if cctx == nil {
+		r.Logger.Error("❌ No matching CCTX found after 15 minutes")
+		return nil, errors.New("timeout waiting for CCTX")
+	}
+
 	r.Logger.Info("✅ CCTX processed successfully")
 
 	// Log detailed CCTX information
