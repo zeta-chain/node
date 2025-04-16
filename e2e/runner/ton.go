@@ -209,11 +209,13 @@ func (r *E2ERunner) TONDeposit(
 	// Using a filter that only checks for essential criteria
 	filter := func(cctx *cctypes.CrossChainTx) bool {
 		if cctx == nil || cctx.InboundParams == nil {
+			r.Logger.Info("❌ CCTX is nil or InboundParams is nil. CCTX: %v", cctx)
 			return false
 		}
 
 		// Check if it's from TON chain
 		if cctx.InboundParams.SenderChainId != expectedChainId {
+			r.Logger.Info("❌ SenderChainId does not match expected Chain ID. Sender: %d, Expected: %d", cctx.InboundParams.SenderChainId, expectedChainId)
 			return false
 		}
 
@@ -413,6 +415,10 @@ func (r *E2ERunner) TONDumpCCTXs() error {
 			// Check inbound
 			if cctx.InboundParams != nil && cctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
 				isTonRelated = true
+				r.Logger.Info("🔍 Found TON inbound transaction: %s", cctx.Index)
+				r.Logger.Info("  - Sender: %s", cctx.InboundParams.Sender)
+				r.Logger.Info("  - Amount: %s", cctx.InboundParams.Amount)
+				r.Logger.Info("  - Hash: %s", cctx.InboundParams.ObservedHash)
 			}
 
 			// Check outbound
@@ -420,6 +426,10 @@ func (r *E2ERunner) TONDumpCCTXs() error {
 				for _, outbound := range cctx.OutboundParams {
 					if outbound.ReceiverChainId == chains.TONTestnet.ChainId {
 						isTonRelated = true
+						r.Logger.Info("🔍 Found TON outbound transaction: %s", cctx.Index)
+						r.Logger.Info("  - Receiver: %s", outbound.Receiver)
+						r.Logger.Info("  - Amount: %s", outbound.Amount)
+						r.Logger.Info("  - Hash: %s", outbound.Hash)
 						break
 					}
 				}
