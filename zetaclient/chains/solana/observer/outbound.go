@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"math/big"
 
@@ -18,6 +19,32 @@ import (
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
+)
+
+var (
+	gasOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionWithdraw(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecute(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteRevert(inst)
+		},
+	}
+
+	erc20OutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionWithdrawSPL(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteSPL(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteSPLRevert(inst)
+		},
+	}
 )
 
 // ProcessOutboundTrackers processes Solana outbound trackers
@@ -279,6 +306,22 @@ func (ob *Observer) CheckFinalizedTx(
 	return txResult, true
 }
 
+// parseInstructionWith attempts to parse an instruction using a list of parsers
+func parseInstructionWith(
+	instruction solana.CompiledInstruction,
+	parsers []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error),
+) (contracts.OutboundInstruction, error) {
+	var errs []error
+	for _, parser := range parsers {
+		if inst, err := parser(instruction); err == nil {
+			return inst, nil
+		} else {
+			errs = append(errs, err)
+		}
+	}
+	return nil, errors.Wrap(stderrors.Join(errs...), "failed to parse instruction")
+}
+
 // ParseGatewayInstruction parses the outbound instruction from tx result
 func ParseGatewayInstruction(
 	txResult *rpc.GetTransactionResult,
@@ -337,34 +380,13 @@ func ParseGatewayInstruction(
 	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		if inst, err := contracts.ParseInstructionWithdraw(instruction); err == nil {
-			return inst, nil
-		}
-		if inst, err := contracts.ParseInstructionExecute(instruction); err == nil {
-			return inst, nil
-		}
-		if inst, err := contracts.ParseInstructionExecuteRevert(instruction); err == nil {
-			return inst, nil
-		}
-		return nil, errors.New("failed to parse instruction")
+		return parseInstructionWith(instruction, gasOutboundParsers)
+	case coin.CoinType_ERC20:
+		return parseInstructionWith(instruction, erc20OutboundParsers)
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
-	case coin.CoinType_ERC20:
-		if inst, err := contracts.ParseInstructionWithdrawSPL(instruction); err == nil {
-			return inst, nil
-		}
-		if inst, err := contracts.ParseInstructionExecuteSPL(instruction); err == nil {
-			return inst, nil
-		}
-		if inst, err := contracts.ParseInstructionExecuteSPLRevert(instruction); err == nil {
-			return inst, nil
-		}
-		return nil, errors.New("failed to parse instruction")
 	case coin.CoinType_NoAssetCall:
-		if inst, err := contracts.ParseInstructionExecute(instruction); err == nil {
-			return inst, nil
-		}
-		return nil, errors.New("failed to parse instruction")
+		return contracts.ParseInstructionExecute(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}
