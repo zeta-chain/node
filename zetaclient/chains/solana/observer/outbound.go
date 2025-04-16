@@ -313,11 +313,11 @@ func parseInstructionWith(
 ) (contracts.OutboundInstruction, error) {
 	var errs []error
 	for _, parser := range parsers {
-		if inst, err := parser(instruction); err == nil {
+		inst, err := parser(instruction)
+		if err == nil {
 			return inst, nil
-		} else {
-			errs = append(errs, err)
 		}
+		errs = append(errs, err)
 	}
 	return nil, errors.Wrap(stderrors.Join(errs...), "failed to parse instruction")
 }
