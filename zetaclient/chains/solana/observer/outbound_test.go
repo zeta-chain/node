@@ -954,6 +954,6 @@ func Test_ParseInstructionCall(t *testing.T) {
 		require.Error(t, err)
 
 		// ASSERT
-		require.ErrorContains(t, err, "failed to parse instruction")
+		require.ErrorContains(t, err, "error deserializing instruction")
 	})
 }
