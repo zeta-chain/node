@@ -88,17 +88,17 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
 
 	// Retrieve withdraw cap ID
-	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
+	withdrawCapIDStr, err := s.getWithdrawCapIDCached(ctx)
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapIDStr, cctx.RelayedMessage)
 	}
 
-	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
+	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapIDStr)
 }
 
 // buildWithdrawTx builds unsigned withdraw transaction
@@ -129,10 +129,11 @@ func (s *Signer) buildWithdrawTx(
 // buildWithdrawAndCallTx builds unsigned withdrawAndCall
 // a withdrawAndCall is a PTB transaction that contains a withdraw_impl call and a on_call call
 func (s *Signer) buildWithdrawAndCallTx(
+	ctx context.Context,
 	params *cctypes.OutboundParams,
 	coinType,
 	gasBudget,
-	withdrawCapID,
+	withdrawCapIDStr,
 	payload string,
 ) (models.TxnMetaData, error) {
 	// decode and parse the payload to object the on_call arguments
@@ -145,6 +146,23 @@ func (s *Signer) buildWithdrawAndCallTx(
 	if err := cp.UnpackABI(payloadBytes); err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
+
+	// get latest TSS SUI coin object ref for gas payment
+	suiCoinObjRef, err := s.getTSSSuiCoinObjectRef(ctx)
+	if err != nil {
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
+	}
+
+	// get all other object references: [gateway, withdrawCap, ...]
+	objectIDStrs := append([]string{s.gateway.ObjectID(), withdrawCapIDStr}, cp.ObjectIDs...)
+	objectRefs, err := s.getSuiObjectRefs(ctx, objectIDStrs...)
+	if err != nil {
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to get objects")
+	}
+
+	gatewayObjRef := objectRefs[0]
+	withdrawCapObjRef := objectRefs[1]
+	onCallObjectRefs := objectRefs[2:]
 
 	// Note: logs not formatted in standard, it's a temporary log
 	s.Logger().Std.Info().Msgf(
@@ -162,8 +180,10 @@ func (s *Signer) buildWithdrawAndCallTx(
 		s.TSS().PubKey().AddressSui(),
 		s.gateway.PackageID(),
 		s.gateway.Module(),
-		s.gateway.ObjectID(),
-		withdrawCapID,
+		gatewayObjRef,
+		suiCoinObjRef,
+		withdrawCapObjRef,
+		onCallObjectRefs,
 		coinType,
 		params.Amount.String(),
 		strconv.FormatUint(params.TssNonce, 10),

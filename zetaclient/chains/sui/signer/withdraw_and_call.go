@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/pattonkan/sui-go/sui"
 	"github.com/pattonkan/sui-go/sui/suiptb"
 	"github.com/pattonkan/sui-go/suiclient"
+	"github.com/pkg/errors"
 
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
@@ -31,9 +33,11 @@ const (
 func withdrawAndCallPTB(
 	signerAddrStr,
 	gatewayPackageIDStr,
-	gatewayModule,
-	gatewayObjectIDStr,
-	withdrawCapIDStr,
+	gatewayModule string,
+	gatewayObjRef,
+	suiCoinObjRef,
+	withdrawCapObjRef sui.ObjectRef,
+	onCallObjectRefs []sui.ObjectRef,
 	coinTypeStr,
 	amountStr,
 	nonceStr,
@@ -54,15 +58,11 @@ func withdrawAndCallPTB(
 		return models.TxnMetaData{}, fmt.Errorf("failed to parse coin type: %w", err)
 	}
 
-	gatewayObjectID, err := sui.ObjectIdFromHex(gatewayObjectIDStr)
-	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse gateway object ID: %w", err)
-	}
 	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
-			Id:                   gatewayObjectID,
-			InitialSharedVersion: 0,    // TODO: get coin object for gas payment
-			Mutable:              true, // TODO: get coin object for gas payment
+			Id:                   gatewayObjRef.ObjectId,
+			InitialSharedVersion: gatewayObjRef.Version, // TODO: get coin object for gas payment
+			Mutable:              true,
 		},
 	})
 	if err != nil {
@@ -96,17 +96,7 @@ func withdrawAndCallPTB(
 		return models.TxnMetaData{}, fmt.Errorf("failed to create pure argument: %w", err)
 	}
 
-	withdrawCapID, err := sui.ObjectIdFromHex(withdrawCapIDStr)
-	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse withdraw cap ID: %w", err)
-	}
-	withdrawCap, err := ptb.Obj(suiptb.ObjectArg{
-		ImmOrOwnedObject: &sui.ObjectRef{
-			ObjectId: withdrawCapID,
-			Version:  0,   // TODO: get coin object for gas payment
-			Digest:   nil, // TODO: get coin object for gas payment
-		},
-	})
+	withdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to create object argument: %w", err)
 	}
@@ -184,16 +174,12 @@ func withdrawAndCallPTB(
 	onCallArgs = append(onCallArgs, withdrawnCoinsArg)
 
 	// Add the payload objects, objects are all shared
-	for _, objectID := range cp.ObjectIDs {
-		objectIDParsed, err := sui.ObjectIdFromHex(objectID)
-		if err != nil {
-			return models.TxnMetaData{}, fmt.Errorf("failed to parse object ID: %w", err)
-		}
+	for _, onCallObjectRef := range onCallObjectRefs {
 		objectArg, err := ptb.Obj(suiptb.ObjectArg{
 			SharedObject: &suiptb.SharedObjectArg{
-				Id:                   objectIDParsed,
-				InitialSharedVersion: 0,    // TODO: get the correct value by querying the object
-				Mutable:              true, // TODO: get coin object for gas payment
+				Id:                   onCallObjectRef.ObjectId,
+				InitialSharedVersion: onCallObjectRef.Version, // TODO: get the correct value by querying the object
+				Mutable:              true,                    // TODO: get coin object for gas payment
 			},
 		})
 		if err != nil {
@@ -232,7 +218,9 @@ func withdrawAndCallPTB(
 	txData := suiptb.NewTransactionData(
 		signerAddr,
 		pt,
-		[]*sui.ObjectRef{}, // TODO: get coin object for gas payment - retrieve a coin object owned by the signer
+		[]*sui.ObjectRef{
+			&suiCoinObjRef,
+		}, // TODO: get coin object for gas payment - retrieve a coin object owned by the signer
 		suiclient.DefaultGasBudget,
 		suiclient.DefaultGasPrice,
 	)
@@ -241,6 +229,8 @@ func withdrawAndCallPTB(
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to marshal transaction data: %w", err)
 	}
+
+	fmt.Println("withdrawAndCallPTB success")
 
 	// Encode the transaction bytes to base64
 	return models.TxnMetaData{
@@ -266,5 +256,93 @@ func parseTypeString(t string) (*sui.StructTag, error) {
 		Address: address,
 		Module:  module,
 		Name:    name,
+	}, nil
+}
+
+// getSuiObjectRefs returns the latest SUI object references for the given object IDs
+// Note: the SUI object may change over time, so we need to get the latest object
+func (s *Signer) getSuiObjectRefs(ctx context.Context, objectIDStrs ...string) ([]sui.ObjectRef, error) {
+	if len(objectIDStrs) == 0 {
+		return nil, errors.New("object ID is required")
+	}
+
+	// query objects in batch
+	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+		ObjectIds: objectIDStrs,
+		Options:   models.SuiObjectDataOptions{},
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get SUI objects for %v", objectIDStrs)
+	}
+
+	// convert object data to object references
+	objectRefs := make([]sui.ObjectRef, 0, len(objectIDStrs))
+
+	for _, object := range suiObjects {
+		objectID, err := sui.ObjectIdFromHex(object.Data.ObjectId)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse SUI object ID for %s", object.Data.ObjectId)
+		}
+		objectVersion, err := strconv.ParseUint(object.Data.Version, 10, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse SUI object version for %s", object.Data.ObjectId)
+		}
+		objectDigest, err := sui.NewBase58(object.Data.Digest)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse SUI object digest for %s", object.Data.ObjectId)
+		}
+
+		fmt.Printf("object: %s, version: %d, digest: %s\n", objectID.String(), objectVersion, objectDigest.String())
+
+		objectRefs = append(objectRefs, sui.ObjectRef{
+			ObjectId: objectID,
+			Version:  objectVersion,
+			Digest:   objectDigest,
+		})
+	}
+
+	return objectRefs, nil
+}
+
+// getTSSSuiCoinObjectRef returns the latest SUI coin object reference for the TSS address
+// Note: the SUI object may change over time, so we need to get the latest object
+func (s *Signer) getTSSSuiCoinObjectRef(ctx context.Context) (sui.ObjectRef, error) {
+	coins, err := s.client.SuiXGetAllCoins(ctx, models.SuiXGetAllCoinsRequest{
+		Owner: s.TSS().PubKey().AddressSui(),
+	})
+	if err != nil {
+		return sui.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
+	}
+
+	// locate the SUI coin object under TSS account
+	var suiCoin *models.CoinData
+	for _, coin := range coins.Data {
+		if zetasui.IsSUIType(zetasui.CoinType(coin.CoinType)) {
+			suiCoin = &coin
+			break
+		}
+	}
+	if suiCoin == nil {
+		return sui.ObjectRef{}, errors.New("SUI coin not found")
+	}
+
+	// convert coin data to object ref
+	suiCoinID, err := sui.ObjectIdFromHex(suiCoin.CoinObjectId)
+	if err != nil {
+		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin ID: %w", err)
+	}
+	suiCoinVersion, err := strconv.ParseUint(suiCoin.Version, 10, 64)
+	if err != nil {
+		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin version: %w", err)
+	}
+	suiCoinDigest, err := sui.NewBase58(suiCoin.Digest)
+	if err != nil {
+		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin digest: %w", err)
+	}
+
+	return sui.ObjectRef{
+		ObjectId: suiCoinID,
+		Version:  suiCoinVersion,
+		Digest:   suiCoinDigest,
 	}, nil
 }

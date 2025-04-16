@@ -12,9 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CoinType represents the coin type for the inbound
-type CoinType string
-
 // EventType represents Gateway event type (both inbound & outbound)
 type EventType string
 
@@ -37,9 +34,6 @@ type OutboundEventContent interface {
 	// TxNonce returns the nonce of the outbound
 	TxNonce() uint64
 }
-
-// SUI is the coin type for SUI, native gas token
-const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
 
 // Event types
 const (
