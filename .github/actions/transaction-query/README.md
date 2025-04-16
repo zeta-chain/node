@@ -4,6 +4,8 @@ This workflow queries and validates transactions from recent blocks in ZetaChain
 
 The idea is to query a block, then query some of its transactions and check that RPC is not failing to return the result.
 
+The idea is to query a block, then query some of its transactions and check that RPC is not failing to return the result.
+
 ## Configuration
 
 The `config/default.json` file contains the configuration for the transaction query limits:
