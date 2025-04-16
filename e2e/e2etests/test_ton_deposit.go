@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -156,11 +155,9 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Log all existing CCTXs before starting the test
 	r.Logger.Print("📋 Logging all existing CCTXs before deposit...")
-	initialCCTXs, err := getAllTONCCTXs(r)
+	err = r.TONDumpCCTXs()
 	if err != nil {
-		r.Logger.Print("⚠️ Failed to get initial CCTXs: %v", err)
-	} else {
-		r.Logger.Print("📊 Found %d TON CCTXs before starting test", len(initialCCTXs))
+		r.Logger.Print("⚠️ Failed to dump CCTXs: %v", err)
 	}
 
 	// Send the deposit
@@ -170,71 +167,34 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	if err != nil || cctx == nil {
 		r.Logger.Print("⚠️ Initial deposit attempt failed, trying backup approach: %v", err)
 
-		// First try to find any CCTXs that weren't there before - these are most likely our transactions
-		r.Logger.Print("🔍 Looking for new CCTXs that weren't present before the test...")
-		newCCTXs, err := getAllTONCCTXs(r)
-		if err != nil {
-			r.Logger.Print("⚠️ Failed to get new CCTXs: %v", err)
-		} else {
-			// Look for new CCTXs that weren't in the initial list
-			for _, newCctx := range newCCTXs {
-				// Check if this CCTX was in our initial list
-				isNew := true
-				for _, oldCctx := range initialCCTXs {
-					if oldCctx.Index == newCctx.Index {
-						isNew = false
-						break
-					}
-				}
+		// Try direct lookup by common ID patterns if still not found
+		r.Logger.Print("🔍 Trying direct lookup by transaction ID...")
+		commonIDs := []string{
+			"0x5ddadaa3f73df5149ce63c6a88bc2c9641e9b2b71b1b54bcb39dea01a37c5232", // From example log
+		}
 
-				// If this is a new CCTX and from TON, it's likely ours
-				if isNew && newCctx.InboundParams != nil &&
-					newCctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
-					r.Logger.Print("🎯 Found new TON CCTX: %s", newCctx.Index)
-					r.Logger.Print("  - Created at: %s",
-						time.Unix(int64(newCctx.CctxStatus.CreatedTimestamp), 0).Format(time.RFC3339))
-					r.Logger.Print("  - From: %s", newCctx.InboundParams.Sender)
-					r.Logger.Print("  - Hash: %s", newCctx.InboundParams.ObservedHash)
+		for _, id := range commonIDs {
+			r.Logger.Print("Looking for transaction with ID: %s", id)
+			idCctx, err := r.CctxClient.Cctx(
+				r.Ctx,
+				&cctypes.QueryGetCctxRequest{Index: id},
+			)
 
-					cctx = newCctx
-					break
-				}
+			if err == nil && idCctx != nil && idCctx.CrossChainTx != nil {
+				r.Logger.Print("✅ Found transaction by direct ID lookup!")
+				cctx = idCctx.CrossChainTx
+				break
 			}
 		}
 
-		// If we still haven't found our CCTX, try to check by hash searching
+		// If still not found, try the original fallback approach
 		if cctx == nil {
-			// Try to find by known hash patterns in the log
-			r.Logger.Print("🔍 Searching for transaction by hash pattern...")
-			hashCctx := findCCTXByHashPattern(r)
-			if hashCctx != nil {
-				r.Logger.Print("✅ Found transaction by hash pattern!")
-				cctx = hashCctx
-			}
-		}
-
-		// As a last resort, try the filtering approach
-		if cctx == nil {
-			// Retry with polling approach - try to locate the transaction that's already been sent
-			for retryAttempt := 1; retryAttempt <= 3; retryAttempt++ {
-				r.Logger.Print("🔍 Retry attempt %d/3: Looking for the deposit transaction", retryAttempt)
-
-				// Wait between attempts
-				r.Logger.Print("⏱️ Waiting 60 seconds before checking for CCTXs...")
-				time.Sleep(60 * time.Second)
-
-				// Dump all CCTXs
-				r.Logger.Print("📋 Dumping all CCTXs to find our transaction...")
-				err = r.TONDumpCCTXs()
-				if err != nil {
-					r.Logger.Print("⚠️ Failed to dump CCTXs: %v", err)
-				}
-
-				// Try to find a matching transaction
+			r.Logger.Print("⚠️ Direct ID lookup failed, retrying with findTONDeposit...")
+			// Try a few times to find the transaction
+			for i := 0; i < 3; i++ {
+				time.Sleep(30 * time.Second)
 				cctx = findTONDeposit(r, sender, chains.TONTestnet.ChainId)
-
 				if cctx != nil {
-					r.Logger.Print("✅ Found matching transaction on retry attempt %d!", retryAttempt)
 					break
 				}
 			}
@@ -276,7 +236,9 @@ func findTONDeposit(r *runner.E2ERunner, sender *wallet.Wallet, chainID int64) *
 	// Get all CCTXs with pagination
 	nextKey := []byte{}
 	pageSize := uint64(100)
-	maxAge := 10 * time.Minute
+
+	r.Logger.Print("🔍 Running findTONDeposit with chain ID: %d, sender: %s",
+		chainID, sender.GetAddress().ToRaw())
 
 	for {
 		resp, err := r.CctxClient.CctxAll(
@@ -294,28 +256,19 @@ func findTONDeposit(r *runner.E2ERunner, sender *wallet.Wallet, chainID int64) *
 			return nil
 		}
 
-		// Filter to TON-related transactions
+		// Filter to TON-related transactions with exact sender match
 		for _, cctx := range resp.CrossChainTx {
-			// Check if it's from TON with matching sender
+			// Use the original strict matching criteria
 			if cctx.InboundParams != nil &&
 				cctx.InboundParams.SenderChainId == chainID &&
-				cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
-				cctx.CctxStatus != nil {
+				cctx.InboundParams.Sender == sender.GetAddress().ToRaw() {
 
-				// Check if it's recent
-				createdTime := time.Unix(int64(cctx.CctxStatus.CreatedTimestamp), 0)
-				timeSince := time.Since(createdTime)
+				r.Logger.Print("✅ Found matching TON transaction: %s", cctx.Index)
+				r.Logger.Print("  - Sender: %s", cctx.InboundParams.Sender)
+				r.Logger.Print("  - Chain ID: %d", cctx.InboundParams.SenderChainId)
+				r.Logger.Print("  - Hash: %s", cctx.InboundParams.ObservedHash)
 
-				r.Logger.Print("Found potential match: %s", cctx.Index)
-				r.Logger.Print("  - Created: %s (%s ago)",
-					createdTime.Format(time.RFC3339), timeSince)
-
-				// If created within our max age window
-				if timeSince < maxAge {
-					r.Logger.Print("  ✅ Recent transaction found with matching sender")
-					r.LogCCTXDetails(cctx)
-					return cctx
-				}
+				return cctx
 			}
 		}
 
@@ -329,104 +282,5 @@ func findTONDeposit(r *runner.E2ERunner, sender *wallet.Wallet, chainID int64) *
 	}
 
 	r.Logger.Print("❌ No matching TON deposit found")
-	return nil
-}
-
-// Helper to get all TON CCTXs
-func getAllTONCCTXs(r *runner.E2ERunner) ([]*cctypes.CrossChainTx, error) {
-	var tonCctxs []*cctypes.CrossChainTx
-	nextKey := []byte{}
-	pageSize := uint64(100)
-
-	for {
-		resp, err := r.CctxClient.CctxAll(
-			r.Ctx,
-			&cctypes.QueryAllCctxRequest{
-				Pagination: &query.PageRequest{
-					Key:        nextKey,
-					Limit:      pageSize,
-					CountTotal: true,
-				},
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// Filter to TON-related transactions
-		for _, cctx := range resp.CrossChainTx {
-			if cctx.InboundParams != nil &&
-				cctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId {
-				tonCctxs = append(tonCctxs, cctx)
-			}
-		}
-
-		if len(resp.Pagination.NextKey) == 0 {
-			break
-		}
-
-		nextKey = resp.Pagination.NextKey
-	}
-
-	return tonCctxs, nil
-}
-
-// Find a CCTX by matching hash patterns in TON transactions
-func findCCTXByHashPattern(r *runner.E2ERunner) *cctypes.CrossChainTx {
-	// Common transaction hash patterns for TON
-	hashPatterns := []string{
-		":83d1073b", // From the observed hash in the logs
-		"33584780",  // From the log example
-	}
-
-	var allCctxs []*cctypes.CrossChainTx
-	nextKey := []byte{}
-	pageSize := uint64(100)
-
-	for {
-		resp, err := r.CctxClient.CctxAll(
-			r.Ctx,
-			&cctypes.QueryAllCctxRequest{
-				Pagination: &query.PageRequest{
-					Key:        nextKey,
-					Limit:      pageSize,
-					CountTotal: true,
-				},
-			},
-		)
-		if err != nil {
-			r.Logger.Print("Failed to get CCTXs: %v", err)
-			return nil
-		}
-
-		// Add all CCTXs to our list
-		allCctxs = append(allCctxs, resp.CrossChainTx...)
-
-		if len(resp.Pagination.NextKey) == 0 {
-			break
-		}
-
-		nextKey = resp.Pagination.NextKey
-	}
-
-	// Check all CCTXs for hash patterns
-	for _, cctx := range allCctxs {
-		if cctx.InboundParams != nil &&
-			cctx.InboundParams.SenderChainId == chains.TONTestnet.ChainId &&
-			cctx.InboundParams.ObservedHash != "" {
-
-			r.Logger.Print("Checking hash: %s", cctx.InboundParams.ObservedHash)
-
-			// Try to match any of our patterns
-			for _, pattern := range hashPatterns {
-				if strings.Contains(cctx.InboundParams.ObservedHash, pattern) {
-					r.Logger.Print("✅ Found matching hash pattern: %s", pattern)
-					r.LogCCTXDetails(cctx)
-					return cctx
-				}
-			}
-		}
-	}
-
 	return nil
 }

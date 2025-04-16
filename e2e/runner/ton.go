@@ -200,53 +200,38 @@ func (r *E2ERunner) TONDeposit(
 	// Create a more flexible filter function to find matching CCTX
 	expectedChainId := chain.ChainId
 
-	r.Logger.Info("🔍 Using broader filter to find the CCTX for TON deposit:")
+	r.Logger.Info("🔍 Using strict filter to find the CCTX for TON deposit:")
 	r.Logger.Info("  - Looking for TON transactions (Chain ID: %d)", expectedChainId)
-	r.Logger.Info("  - TON Sender address: %s", sender.GetAddress().ToRaw())
-	r.Logger.Info("  - Target ZEVM address: %s", zevmRecipient.Hex())
+	r.Logger.Info("  - Exact sender match: %s", sender.GetAddress().ToRaw())
 	r.Logger.Info("  - Amount: %s", amount.String())
 
-	// Using a filter that only checks for essential criteria
+	// Using a filter that matches the original approach with added null checks
 	filter := func(cctx *cctypes.CrossChainTx) bool {
+		// Null checks with logging
 		if cctx == nil || cctx.InboundParams == nil {
 			r.Logger.Info("❌ CCTX is nil or InboundParams is nil. CCTX: %v", cctx)
 			return false
 		}
 
-		// Check if it's from TON chain
-		if cctx.InboundParams.SenderChainId != expectedChainId {
-			r.Logger.Info("❌ SenderChainId does not match expected Chain ID. Sender: %d, Expected: %d", cctx.InboundParams.SenderChainId, expectedChainId)
-			return false
+		// Exact match on chain ID and sender address (original approach)
+		match := cctx.InboundParams.SenderChainId == expectedChainId &&
+			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+
+		// Log result for debugging
+		if match {
+			r.Logger.Info("✅ Found exact match for TON transaction: %s", cctx.Index)
+			r.Logger.Info("  - Sender: %s", cctx.InboundParams.Sender)
+			r.Logger.Info("  - Chain ID: %d", cctx.InboundParams.SenderChainId)
+			r.Logger.Info("  - Amount: %s", cctx.InboundParams.Amount.String())
+			r.Logger.Info("  - Hash: %s", cctx.InboundParams.ObservedHash)
+		} else if cctx.InboundParams.SenderChainId == expectedChainId {
+			// Log near-matches for debugging
+			r.Logger.Info("ℹ️ Found TON transaction but sender doesn't match: %s", cctx.Index)
+			r.Logger.Info("  - Actual sender: %s", cctx.InboundParams.Sender)
+			r.Logger.Info("  - Expected sender: %s", sender.GetAddress().ToRaw())
 		}
 
-		// Log details for debugging
-		r.Logger.Info("Checking CCTX: %s", cctx.Index)
-		r.Logger.Info("  - Amount: %s vs Expected: %s",
-			cctx.InboundParams.Amount.String(), amount.String())
-		r.Logger.Info("  - Sender: %s vs Expected: %s",
-			cctx.InboundParams.Sender, sender.GetAddress().ToRaw())
-
-		// First check: exact sender match
-		if cctx.InboundParams.Sender == sender.GetAddress().ToRaw() {
-			r.Logger.Info("  ✅ Found matching sender address")
-			return true
-		}
-
-		// Check if this might be our transaction based on timing
-		if cctx.CctxStatus != nil {
-			createdTime := time.Unix(int64(cctx.CctxStatus.CreatedTimestamp), 0)
-			timeSince := time.Since(createdTime)
-			r.Logger.Info("  - Created: %s (%s ago)",
-				createdTime.Format(time.RFC3339), timeSince)
-
-			// If created in the last 5 minutes
-			if timeSince < 5*time.Minute {
-				r.Logger.Info("  ✅ Recent transaction found")
-				return true
-			}
-		}
-
-		return false
+		return match
 	}
 
 	// Wait for cctx to be mined with a longer timeout (15 minutes)
