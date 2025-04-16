@@ -52,20 +52,14 @@ func (r *E2ERunner) LogCCTXDetails(cctx *cctypes.CrossChainTx) {
 	// Inbound parameters
 	if cctx.InboundParams != nil {
 		r.Logger.Info("  - Inbound Parameters:")
-		r.Logger.Info("    - SenderChainId: %d", cctx.InboundParams.SenderChainId)
-		r.Logger.Info("    - Sender: %s", cctx.InboundParams.Sender)
 		r.Logger.Info("    - TxOrigin: %s", cctx.InboundParams.TxOrigin)
 		r.Logger.Info("    - CoinType: %s", cctx.InboundParams.CoinType.String())
-		r.Logger.Info("    - Asset: %s", cctx.InboundParams.Asset)
 		r.Logger.Info("    - Amount: %s", cctx.InboundParams.Amount.String())
 		r.Logger.Info("    - ObservedHash: %s", cctx.InboundParams.ObservedHash)
-		r.Logger.Info("    - ObservedExternalHeight: %d", cctx.InboundParams.ObservedExternalHeight)
 		r.Logger.Info("    - BallotIndex: %s", cctx.InboundParams.BallotIndex)
-		r.Logger.Info("    - FinalizedZetaHeight: %d", cctx.InboundParams.FinalizedZetaHeight)
 		r.Logger.Info("    - TxFinalizationStatus: %s", cctx.InboundParams.TxFinalizationStatus.String())
 		r.Logger.Info("    - IsCrossChainCall: %t", cctx.InboundParams.IsCrossChainCall)
 		r.Logger.Info("    - InboundStatus: %s", cctx.InboundParams.Status.String())
-		r.Logger.Info("    - ConfirmationMode: %s", cctx.InboundParams.ConfirmationMode.String())
 	} else {
 		r.Logger.Info("  - Inbound Parameters: None")
 	}
@@ -84,18 +78,8 @@ func (r *E2ERunner) LogCCTXDetails(cctx *cctypes.CrossChainTx) {
 			r.Logger.Info("      - BallotIndex: %s", outbound.BallotIndex)
 			r.Logger.Info("      - ObservedExternalHeight: %d", outbound.ObservedExternalHeight)
 			r.Logger.Info("      - GasUsed: %d", outbound.GasUsed)
-			r.Logger.Info("      - EffectiveGasPrice: %s", outbound.EffectiveGasPrice.String())
-			r.Logger.Info("      - EffectiveGasLimit: %d", outbound.EffectiveGasLimit)
 			r.Logger.Info("      - TssPubkey: %s", outbound.TssPubkey)
 			r.Logger.Info("      - TxFinalizationStatus: %s", outbound.TxFinalizationStatus.String())
-
-			// Log call options if available
-			if outbound.CallOptions != nil {
-				r.Logger.Info("      - CallOptions:")
-				r.Logger.Info("        - GasLimit: %d", outbound.CallOptions.GasLimit)
-				r.Logger.Info("        - IsArbitraryCall: %t", outbound.CallOptions.IsArbitraryCall)
-			}
-
 			r.Logger.Info("      - ConfirmationMode: %s", outbound.ConfirmationMode.String())
 		}
 	} else {
@@ -106,14 +90,9 @@ func (r *E2ERunner) LogCCTXDetails(cctx *cctypes.CrossChainTx) {
 	if cctx.CctxStatus != nil {
 		r.Logger.Info("  - Status:")
 		r.Logger.Info("    - Status: %s", cctx.CctxStatus.Status.String())
-		r.Logger.Info("    - StatusMessage: %s", cctx.CctxStatus.StatusMessage)
 		if cctx.CctxStatus.ErrorMessage != "" {
 			r.Logger.Info("    - ErrorMessage: %s", cctx.CctxStatus.ErrorMessage)
 		}
-		r.Logger.Info("    - LastUpdateTimestamp: %d", cctx.CctxStatus.LastUpdateTimestamp)
-		r.Logger.Info("    - CreatedTimestamp: %d", cctx.CctxStatus.CreatedTimestamp)
-		r.Logger.Info("    - IsAbortRefunded: %t", cctx.CctxStatus.IsAbortRefunded)
-
 		if cctx.CctxStatus.ErrorMessageRevert != "" {
 			r.Logger.Info("    - ErrorMessageRevert: %s", cctx.CctxStatus.ErrorMessageRevert)
 		}
@@ -235,8 +214,8 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	// Wait for cctx to be mined with a longer timeout (15 minutes)
-	r.Logger.Info("⏳ Waiting for CCTX to be processed (max 15 minutes)...")
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 15*time.Minute)
+	r.Logger.Info("⏳ Waiting for CCTX to be processed (max 5 minutes)...")
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 5*time.Minute)
 	if cctx == nil {
 		r.Logger.Error("❌ No matching CCTX found after 15 minutes")
 		return nil, errors.New("timeout waiting for CCTX")
