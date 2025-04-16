@@ -182,7 +182,7 @@ func (r *E2ERunner) TONDeposit(
 
 	// Wait for a new CCTX to appear with multiple retries
 	var cctx *cctypes.CrossChainTx
-	maxRetries := 10
+	maxRetries := 3
 
 	for retry := 0; retry < maxRetries; retry++ {
 		r.Logger.Info("Retry %d/%d: Checking for new TON CCTXs...", retry+1, maxRetries)
