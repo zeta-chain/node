@@ -311,7 +311,7 @@ func parseInstructionWith(
 	instruction solana.CompiledInstruction,
 	parsers []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error),
 ) (contracts.OutboundInstruction, error) {
-	var errs []error
+	errs := make([]error, 0, len(parsers))
 	for _, parser := range parsers {
 		inst, err := parser(instruction)
 		if err == nil {
