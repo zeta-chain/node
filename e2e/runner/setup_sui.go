@@ -207,8 +207,6 @@ func (r *E2ERunner) deploySuiPackage(bytecodeBase64s []string, objectTypeFilters
 	})
 	require.NoError(r, err)
 
-	fmt.Printf("deploySuiPackage resp: \n%v\n", resp)
-
 	// find packageID
 	var packageID string
 	for _, change := range resp.ObjectChanges {

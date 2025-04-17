@@ -61,7 +61,7 @@ func withdrawAndCallPTB(
 	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
 			Id:                   gatewayObjRef.ObjectId,
-			InitialSharedVersion: gatewayObjRef.Version, // TODO: use initial version
+			InitialSharedVersion: 3, // TODO: get the correct initial version by querying the object
 			Mutable:              true,
 		},
 	})
@@ -178,8 +178,8 @@ func withdrawAndCallPTB(
 		objectArg, err := ptb.Obj(suiptb.ObjectArg{
 			SharedObject: &suiptb.SharedObjectArg{
 				Id:                   onCallObjectRef.ObjectId,
-				InitialSharedVersion: onCallObjectRef.Version, // TODO: get the correct value by querying the object
-				Mutable:              true,                    // TODO: get coin object for gas payment
+				InitialSharedVersion: 6,    // TODO: get the correct initial version by querying the object
+				Mutable:              true, // TODO: get coin object for gas payment
 			},
 		})
 		if err != nil {
