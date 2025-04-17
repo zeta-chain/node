@@ -34,7 +34,7 @@ var (
 		},
 	}
 
-	erc20OutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+	splOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
 		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
 			return contracts.ParseInstructionWithdrawSPL(inst)
 		},
@@ -382,7 +382,7 @@ func ParseGatewayInstruction(
 	case coin.CoinType_Gas:
 		return parseInstructionWith(instruction, gasOutboundParsers)
 	case coin.CoinType_ERC20:
-		return parseInstructionWith(instruction, erc20OutboundParsers)
+		return parseInstructionWith(instruction, splOutboundParsers)
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
 	default:
