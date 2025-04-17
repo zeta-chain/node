@@ -306,7 +306,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 // broadcastCancelTx broadcasts a cancel tx and returns the tx digest
 func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
-	logger := zerolog.Ctx(ctx)
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastCancelTx").Logger()
 
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder(ctx)

@@ -48,7 +48,7 @@ func withdrawAndCallPTB(
 	ptb := suiptb.NewTransactionDataTransactionBuilder()
 
 	// Parse arguments
-	packageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
+	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to parse package ID: %w", err)
 	}
@@ -61,7 +61,7 @@ func withdrawAndCallPTB(
 	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
 			Id:                   gatewayObjRef.ObjectId,
-			InitialSharedVersion: gatewayObjRef.Version, // TODO: get coin object for gas payment
+			InitialSharedVersion: gatewayObjRef.Version, // TODO: use initial version
 			Mutable:              true,
 		},
 	})
@@ -105,7 +105,7 @@ func withdrawAndCallPTB(
 	cmdIndex := uint16(len(ptb.Commands))
 	ptb.Command(suiptb.Command{
 		MoveCall: &suiptb.ProgrammableMoveCall{
-			Package:  packageID,
+			Package:  gatewayPackageID,
 			Module:   gatewayModule,
 			Function: funcWithdrawImpl,
 			TypeArguments: []sui.TypeTag{

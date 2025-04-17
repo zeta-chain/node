@@ -16,12 +16,11 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given a signer and an amount
-	signer, err := r.Account.SuiSigner()
-	require.NoError(r, err, "get deployer signer")
+	// Given target package ID (example package) and an SUI amount
+	targetPackageID := r.SuiExample.PackageID
 	amount := utils.ParseBigInt(r, args[0])
 
-	// Given example contract in Sui network
+	// Given example contract on_call function arguments
 	// sample withdrawAndCall payload
 	// TODO: use real contract
 	// https://github.com/zeta-chain/node/issues/3742
@@ -35,7 +34,8 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.SuiExample.ClockID,
 	}
 
-	// assemble payload with random Sui receiver address
+	// create a random Sui address and use it for on_call payload message
+	// the example contract will just forward the withdrawn SUI token to this address
 	suiAddress := sample.SuiAddress(r)
 	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
 	require.NoError(r, err)
@@ -47,7 +47,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(signer.Address(), amount, payload)
+	tx := r.SuiWithdrawAndCallSUI(targetPackageID, amount, payload)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
 
 	// ASSERT

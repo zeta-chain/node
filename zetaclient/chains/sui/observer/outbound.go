@@ -151,9 +151,6 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		cctypes.ConfirmationMode_SAFE,
 	)
 
-	// TODO compliance checks
-	// https://github.com/zeta-chain/node/issues/3584
-
 	if err := ob.postVoteOutbound(ctx, msg); err != nil {
 		return errors.Wrap(err, "unable to post vote outbound")
 	}
@@ -238,6 +235,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 		return errors.Wrap(err, "unable to post vote outbound")
 	case zetaTxHash != "":
 		ob.Logger().Outbound.Info().
+			Str(logs.FieldTx, msg.ObservedOutboundHash).
 			Str(logs.FieldZetaTx, zetaTxHash).
 			Str(logs.FieldBallot, ballot).
 			Msg("PostVoteOutbound: posted outbound vote successfully")

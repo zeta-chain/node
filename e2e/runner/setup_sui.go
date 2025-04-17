@@ -92,6 +92,13 @@ func (r *E2ERunner) deploySUIGateway() (whitelistCapID, withdrawCapID string) {
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
 
+	gatewayObj, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
+		ObjectId: gatewayID,
+		Options:  models.SuiObjectDataOptions{},
+	})
+	require.NoError(r, err)
+	r.Logger.Print("gateway object Data: %v", gatewayObj.Data)
+
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
@@ -206,6 +213,8 @@ func (r *E2ERunner) deploySuiPackage(bytecodeBase64s []string, objectTypeFilters
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
+
+	fmt.Printf("deploySuiPackage resp: \n%v\n", resp)
 
 	// find packageID
 	var packageID string

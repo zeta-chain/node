@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Signer Sui outbound transaction signer.
@@ -86,6 +87,13 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	if err != nil {
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
+
+	// prepare logger
+	logger := s.Logger().Std.With().
+		Int64(logs.FieldChain, s.Chain().ChainId).
+		Uint64(logs.FieldNonce, nonce).
+		Logger()
+	ctx = logger.WithContext(ctx)
 
 	var txDigest string
 
