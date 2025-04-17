@@ -48,6 +48,11 @@ func withdrawAndCallPTB(
 	ptb := suiptb.NewTransactionDataTransactionBuilder()
 
 	// Parse arguments
+	signerAddr, err := sui.AddressFromHex(signerAddrStr)
+	if err != nil {
+		return models.TxnMetaData{}, fmt.Errorf("failed to parse signer address: %w", err)
+	}
+
 	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to parse package ID: %w", err)
@@ -136,13 +141,12 @@ func withdrawAndCallPTB(
 		},
 	}
 
-	// Transfer the budget coins to the TSS address
-	tssAddrArg, err := ptb.Pure(signerAddrStr)
+	// Transfer budget coins to the TSS address
+	tssAddrArg, err := ptb.Pure(signerAddr)
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to create pure address argument: %w", err)
 	}
 
-	// Transfer budget coins to the TSS address
 	ptb.Command(suiptb.Command{
 		TransferObjects: &suiptb.ProgrammableTransferObjects{
 			Objects: []suiptb.Argument{budgetCoinsArg},
@@ -151,14 +155,13 @@ func withdrawAndCallPTB(
 	})
 
 	// Extract argument for on_call
-
 	// The receiver in the cctx is used as target package ID
 	targetPackageID, err := sui.PackageIdFromHex(receiver)
 	if err != nil {
 		return models.TxnMetaData{}, fmt.Errorf("failed to parse target package ID: %w", err)
 	}
 
-	// Convert call payload type arguments in addition to the withdrawn coin type
+	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
 	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
 	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
 	for _, typeArg := range cp.TypeArgs {
@@ -169,7 +172,7 @@ func withdrawAndCallPTB(
 		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: typeStruct})
 	}
 
-	// Build the args for on_call, contains withdrawns coins + payload objects + message
+	// Build the args for on_call: [withdrawns coins + payload objects + message]
 	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+1)
 	onCallArgs = append(onCallArgs, withdrawnCoinsArg)
 
@@ -210,11 +213,6 @@ func withdrawAndCallPTB(
 	pt := ptb.Finish()
 
 	// Get the signer address
-	signerAddr, err := sui.AddressFromHex(signerAddrStr)
-	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse signer address: %w", err)
-	}
-
 	txData := suiptb.NewTransactionData(
 		signerAddr,
 		pt,

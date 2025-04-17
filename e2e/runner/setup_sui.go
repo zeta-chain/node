@@ -143,15 +143,15 @@ func (r *E2ERunner) deploySuiFakeUSDC() string {
 // deploySuiExample deploys the example package on Sui
 func (r *E2ERunner) deploySuiExample() {
 	const (
-		filterGlobalConfigType = "example::GlobalConfig"
-		filterPartnerType      = "example::Partner"
-		filterClockType        = "example::Clock"
-		filterPoolType         = "example::Pool"
+		filterGlobalConfigType = "connected::GlobalConfig"
+		filterPartnerType      = "connected::Partner"
+		filterClockType        = "connected::Clock"
+		filterPoolType         = "connected::Pool"
 	)
 
 	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType, filterPoolType}
 	packageID, objectIDs := r.deploySuiPackage(
-		[]string{suicontract.TokenBytecodeBase64(), suicontract.ExampleBytecodeBase64()},
+		[]string{suicontract.ExampleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
 		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)

@@ -1,4 +1,4 @@
-module example::example;
+module example::connected;
 
 use sui::address::from_bytes;
 use sui::coin::Coin;
