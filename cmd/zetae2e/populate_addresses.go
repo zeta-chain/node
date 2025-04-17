@@ -5,7 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gagliardetto/solana-go"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/e2e/config"
 )
 
@@ -19,12 +21,13 @@ func NewPopulateAddressesCmd() *cobra.Command {
 	return cmd
 }
 
-func runPopulateAddresses(cmd *cobra.Command, args []string) error {
+func runPopulateAddresses(_ *cobra.Command, args []string) error {
 	conf, err := config.ReadConfig(args[0])
 	if err != nil {
 		return err
 	}
 
+	// evm address
 	privKey, err := conf.DefaultAccount.PrivateKey()
 	if err != nil {
 		return fmt.Errorf("decoding private key: %w", err)
@@ -36,6 +39,13 @@ func runPopulateAddresses(cmd *cobra.Command, args []string) error {
 	}
 	conf.DefaultAccount.RawEVMAddress = config.DoubleQuotedString(evmAddress.String())
 	conf.DefaultAccount.RawBech32Address = config.DoubleQuotedString(bech32Address)
+
+	// solana address
+	if conf.DefaultAccount.SolanaPrivateKey != "" {
+		sPrivKey := solana.MustPrivateKeyFromBase58(conf.DefaultAccount.SolanaPrivateKey.String())
+		sAddress := sPrivKey.PublicKey().String()
+		conf.DefaultAccount.SolanaAddress = config.DoubleQuotedString(sAddress)
+	}
 
 	err = config.WriteConfig(args[0], conf)
 	if err != nil {
