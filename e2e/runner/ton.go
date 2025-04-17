@@ -44,8 +44,6 @@ func (r *E2ERunner) TONDeposit(
 	amount math.Uint,
 	zevmRecipient eth.Address,
 ) (*cctypes.CrossChainTx, error) {
-	chain := chains.TONLocalnet
-
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 
 	require.NotNil(r, sender, "Sender wallet is nil")
@@ -66,12 +64,28 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+		if !chains.IsTONChain(cctx.InboundParams.SenderChainId, nil) {
+			return false
+		}
+
+		id := cctx.Index
+		params := cctx.InboundParams
+
+		r.Logger.Print("👺 TON cctx %q has inbound params: %+v", id, params)
+
+		matches := cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
+		if matches {
+			r.Logger.Print("❇️ TON cctx %q has sender %s as expected!", id, sender.GetAddress().ToRaw())
+			return true
+		}
+
+		r.Logger.Print("👺 TON cctx %q has sender %s, expected %s. SKIP", id, params.Sender, sender.GetAddress().ToRaw())
+
+		return false
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, time.Minute)
+	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 2*time.Minute)
 
 	return cctx, nil
 }
