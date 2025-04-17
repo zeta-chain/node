@@ -1,0 +1,45 @@
+package main
+
+import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/node/e2e/config"
+)
+
+func NewPopulateAddressesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "populate-addresses [config-file] ",
+		Short: "Derive addresses from the configured private keys and populate in the config file",
+		RunE:  runPopulateAddresses,
+		Args:  cobra.ExactArgs(1),
+	}
+	return cmd
+}
+
+func runPopulateAddresses(cmd *cobra.Command, args []string) error {
+	conf, err := config.ReadConfig(args[0])
+	if err != nil {
+		return err
+	}
+
+	privKey, err := conf.DefaultAccount.PrivateKey()
+	if err != nil {
+		return fmt.Errorf("decoding private key: %w", err)
+	}
+	evmAddress := crypto.PubkeyToAddress(privKey.PublicKey)
+	bech32Address, err := bech32.ConvertAndEncode("zeta", evmAddress.Bytes())
+	if err != nil {
+		return fmt.Errorf("bech32 convert and encode: %w", err)
+	}
+	conf.DefaultAccount.RawEVMAddress = config.DoubleQuotedString(evmAddress.String())
+	conf.DefaultAccount.RawBech32Address = config.DoubleQuotedString(bech32Address)
+
+	err = config.WriteConfig(args[0], conf)
+	if err != nil {
+		return err
+	}
+	return nil
+}
