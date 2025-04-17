@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"encoding/hex"
 	"math/big"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
 
 // we need to use this send mode due to how wallet V5 works
@@ -57,35 +59,44 @@ func (r *E2ERunner) TONDeposit(
 		zevmRecipient.Hex(),
 	)
 
+	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
+	}
+
+	var (
+		lastTxHash = gwState.LastTransHash
+		lastLt     = gwState.LastTransLt
+	)
+
 	// Send TX
-	err := gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
+	err = gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send TON deposit")
 	}
 
-	filter := func(cctx *cctypes.CrossChainTx) bool {
-		if !chains.IsTONChain(cctx.InboundParams.SenderChainId, nil) {
+	filter := func(tx *ton.Transaction) bool {
+		msgInfo := tx.Msgs.InMsg.Value.Value.Info.IntMsgInfo
+		if msgInfo == nil {
 			return false
 		}
 
-		id := cctx.Index
-		params := cctx.InboundParams
-
-		r.Logger.Print("👺 TON cctx %q has inbound params: %+v", id, params)
-
-		matches := cctx.InboundParams.Sender == sender.GetAddress().ToRaw()
-		if matches {
-			r.Logger.Print("❇️ TON cctx %q has sender %s as expected!", id, sender.GetAddress().ToRaw())
-			return true
+		from, err := ton.AccountIDFromTlb(msgInfo.Src)
+		if err != nil {
+			return false
 		}
 
-		r.Logger.Print("👺 TON cctx %q has sender %s, expected %s. SKIP", id, params.Sender, sender.GetAddress().ToRaw())
+		return from.ToRaw() == sender.GetAddress().ToRaw()
+	}
 
-		return false
+	waitFrom := tonWaitFrom{
+		accountID:  gw.AccountID(),
+		lastTxHash: ton.Bits256(lastTxHash),
+		lastLt:     lastLt,
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, cctypes.CctxStatus_OutboundMined, 2*time.Minute)
+	cctx := r.tonWaitForInboundCCTX(waitFrom, filter)
 
 	return cctx, nil
 }
@@ -172,4 +183,53 @@ func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveA
 	utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
 
 	return cctx
+}
+
+type tonWaitFrom struct {
+	accountID  ton.AccountID
+	lastTxHash ton.Bits256
+	lastLt     uint64
+}
+
+// waits for specific inbound message for a given account and
+func (r *E2ERunner) tonWaitForInboundCCTX(
+	from tonWaitFrom,
+	filter func(tx *ton.Transaction) bool,
+) *cctypes.CrossChainTx {
+	var (
+		timeout  = 2 * time.Minute
+		interval = time.Second
+	)
+
+	ctx, cancel := context.WithTimeout(r.Ctx, timeout)
+	defer cancel()
+
+	client := r.Clients.TON
+
+	for {
+		txs, err := client.GetTransactionsSince(ctx, from.accountID, from.lastLt, from.lastTxHash)
+		require.NoError(r, err, "failed to getTransactionsSince")
+
+		for i := range txs {
+			tx := txs[i]
+
+			if !filter(&tx) {
+				continue
+			}
+
+			cctx := utils.WaitCctxMinedByInboundHash(
+				ctx,
+				liteapi.TransactionToHashString(tx),
+				r.CctxClient,
+				r.Logger,
+				r.CctxTimeout,
+			)
+
+			utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
+
+			return cctx
+		}
+
+		time.Sleep(interval)
+	}
 }
