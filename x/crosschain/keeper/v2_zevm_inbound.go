@@ -50,8 +50,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 			contractAddress = withdrawalAndCallEvent.Raw.Address
 		}
 
-		k.Logger(ctx).Info(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
-
 		// get several information necessary for processing the inbound
 		foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
 		if !found {
