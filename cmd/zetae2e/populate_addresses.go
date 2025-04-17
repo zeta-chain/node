@@ -22,7 +22,7 @@ func NewPopulateAddressesCmd() *cobra.Command {
 }
 
 func runPopulateAddresses(_ *cobra.Command, args []string) error {
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], false)
 	if err != nil {
 		return err
 	}
