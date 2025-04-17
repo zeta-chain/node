@@ -42,7 +42,10 @@ func runPopulateAddresses(_ *cobra.Command, args []string) error {
 
 	// solana address
 	if conf.DefaultAccount.SolanaPrivateKey != "" {
-		sPrivKey := solana.MustPrivateKeyFromBase58(conf.DefaultAccount.SolanaPrivateKey.String())
+		sPrivKey, err := solana.PrivateKeyFromBase58(conf.DefaultAccount.SolanaPrivateKey.String())
+		if err != nil {
+			return fmt.Errorf("decoding Solana private key: %w", err)
+		}
 		sAddress := sPrivKey.PublicKey().String()
 		conf.DefaultAccount.SolanaAddress = config.DoubleQuotedString(sAddress)
 	}
