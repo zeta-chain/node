@@ -22,6 +22,7 @@ func NewPopulateAddressesCmd() *cobra.Command {
 }
 
 func runPopulateAddresses(_ *cobra.Command, args []string) error {
+	// do not validate the config on load as it will not have addresses populated yet
 	conf, err := config.ReadConfig(args[0], false)
 	if err != nil {
 		return err
