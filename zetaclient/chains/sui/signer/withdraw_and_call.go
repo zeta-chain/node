@@ -17,13 +17,6 @@ import (
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
-const (
-	typeSeparator    = "::"
-	funcWithdrawImpl = "withdraw_impl"
-	funcOnCall       = "on_call"
-	moduleConnected  = "connected"
-)
-
 // withdrawAndCallPTB builds unsigned withdraw and call PTB Sui transaction
 // it chains the following calls:
 // 1. withdraw_impl on gateway
@@ -44,75 +37,75 @@ func withdrawAndCallPTB(
 	gasBudgetStr,
 	receiver string,
 	cp zetasui.CallPayload,
-) (models.TxnMetaData, error) {
+) (tx models.TxnMetaData, err error) {
 	ptb := suiptb.NewTransactionDataTransactionBuilder()
 
 	// Parse arguments
 	signerAddr, err := sui.AddressFromHex(signerAddrStr)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse signer address: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse signer address %s", signerAddrStr)
 	}
 
 	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse package ID: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse package ID %s", gatewayPackageIDStr)
 	}
 
 	coinType, err := parseTypeString(coinTypeStr)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse coin type: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse coin type %s", coinTypeStr)
 	}
 
 	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
 			Id:                   gatewayObjRef.ObjectId,
-			InitialSharedVersion: 3, // TODO: get the correct initial version by querying the object
+			InitialSharedVersion: gatewayObjRef.Version,
 			Mutable:              true,
 		},
 	})
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create object argument: %w", err)
+		return tx, errors.Wrap(err, "failed to create gateway object argument")
 	}
 
 	amountUint64, err := strconv.ParseUint(amountStr, 10, 64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse amount: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse amount %s", amountStr)
 	}
 	amount, err := ptb.Pure(amountUint64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create pure argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create amount argument")
 	}
 
 	nonceUint64, err := strconv.ParseUint(nonceStr, 10, 64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse nonce: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse nonce %s", nonceStr)
 	}
 	nonce, err := ptb.Pure(nonceUint64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create pure argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create nonce argument")
 	}
 
 	gasBudgetUint64, err := strconv.ParseUint(gasBudgetStr, 10, 64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse gas budget: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse gas budget %s", gasBudgetStr)
 	}
 	gasBudget, err := ptb.Pure(gasBudgetUint64)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create pure argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create gas budget argument")
 	}
 
 	withdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create object argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create withdraw cap object argument")
 	}
 
-	// Move call for withdraw_impl and get its command index
+	// Move call for withdraw_impl and get its command index (0)
 	cmdIndex := uint16(len(ptb.Commands))
 	ptb.Command(suiptb.Command{
 		MoveCall: &suiptb.ProgrammableMoveCall{
 			Package:  gatewayPackageID,
 			Module:   gatewayModule,
-			Function: funcWithdrawImpl,
+			Function: zetasui.FuncWithdrawImpl,
 			TypeArguments: []sui.TypeTag{
 				{Struct: coinType},
 			},
@@ -141,10 +134,10 @@ func withdrawAndCallPTB(
 		},
 	}
 
-	// Transfer budget coins to the TSS address
+	// Transfer gas budget coins to the TSS address
 	tssAddrArg, err := ptb.Pure(signerAddr)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create pure address argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create tss address argument")
 	}
 
 	ptb.Command(suiptb.Command{
@@ -158,7 +151,7 @@ func withdrawAndCallPTB(
 	// The receiver in the cctx is used as target package ID
 	targetPackageID, err := sui.PackageIdFromHex(receiver)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to parse target package ID: %w", err)
+		return tx, errors.Wrapf(err, "failed to parse target package ID %s", receiver)
 	}
 
 	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
@@ -167,7 +160,7 @@ func withdrawAndCallPTB(
 	for _, typeArg := range cp.TypeArgs {
 		typeStruct, err := parseTypeString(typeArg)
 		if err != nil {
-			return models.TxnMetaData{}, fmt.Errorf("failed to parse type argument: %w", err)
+			return tx, errors.Wrapf(err, "failed to parse type argument %s", typeArg)
 		}
 		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: typeStruct})
 	}
@@ -181,12 +174,12 @@ func withdrawAndCallPTB(
 		objectArg, err := ptb.Obj(suiptb.ObjectArg{
 			SharedObject: &suiptb.SharedObjectArg{
 				Id:                   onCallObjectRef.ObjectId,
-				InitialSharedVersion: 6,    // TODO: get the correct initial version by querying the object
-				Mutable:              true, // TODO: get coin object for gas payment
+				InitialSharedVersion: onCallObjectRef.Version,
+				Mutable:              true,
 			},
 		})
 		if err != nil {
-			return models.TxnMetaData{}, fmt.Errorf("failed to create object argument: %w", err)
+			return tx, errors.Wrapf(err, "failed to create object argument: %v", onCallObjectRef)
 		}
 		onCallArgs = append(onCallArgs, objectArg)
 	}
@@ -194,7 +187,7 @@ func withdrawAndCallPTB(
 	// Add any additional message arguments
 	messageArg, err := ptb.Pure(cp.Message)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to create pure message argument: %w", err)
+		return tx, errors.Wrapf(err, "failed to create message argument: %x", cp.Message)
 	}
 	onCallArgs = append(onCallArgs, messageArg)
 
@@ -202,8 +195,8 @@ func withdrawAndCallPTB(
 	ptb.Command(suiptb.Command{
 		MoveCall: &suiptb.ProgrammableMoveCall{
 			Package:       targetPackageID,
-			Module:        moduleConnected,
-			Function:      funcOnCall,
+			Module:        zetasui.ModuleConnected,
+			Function:      zetasui.FuncOnCall,
 			TypeArguments: onCallTypeArgs,
 			Arguments:     onCallArgs,
 		},
@@ -218,17 +211,15 @@ func withdrawAndCallPTB(
 		pt,
 		[]*sui.ObjectRef{
 			&suiCoinObjRef,
-		}, // TODO: get coin object for gas payment - retrieve a coin object owned by the signer
+		},
 		suiclient.DefaultGasBudget,
 		suiclient.DefaultGasPrice,
 	)
 
 	txBytes, err := bcs.Marshal(txData)
 	if err != nil {
-		return models.TxnMetaData{}, fmt.Errorf("failed to marshal transaction data: %w", err)
+		return tx, errors.Wrapf(err, "failed to marshal transaction data: %v", txData)
 	}
-
-	fmt.Println("withdrawAndCallPTB success")
 
 	// Encode the transaction bytes to base64
 	return models.TxnMetaData{
@@ -237,7 +228,7 @@ func withdrawAndCallPTB(
 }
 
 func parseTypeString(t string) (*sui.StructTag, error) {
-	parts := strings.Split(t, typeSeparator)
+	parts := strings.Split(t, zetasui.TypeSeparator)
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid type string: %s", t)
 	}
@@ -257,40 +248,53 @@ func parseTypeString(t string) (*sui.StructTag, error) {
 	}, nil
 }
 
-// getSuiObjectRefs returns the latest SUI object references for the given object IDs
-// Note: the SUI object may change over time, so we need to get the latest object
-func (s *Signer) getSuiObjectRefs(ctx context.Context, objectIDStrs ...string) ([]sui.ObjectRef, error) {
-	if len(objectIDStrs) == 0 {
-		return nil, errors.New("object ID is required")
-	}
+// getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
+func (s *Signer) getWithdrawAndCallObjectRefs(
+	ctx context.Context,
+	gatewayID, withdrawCapID string,
+	onCallObjectIDs []string,
+) ([]sui.ObjectRef, error) {
+	objectIDs := append([]string{gatewayID, withdrawCapID}, onCallObjectIDs...)
 
 	// query objects in batch
 	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
-		ObjectIds: objectIDStrs,
-		Options:   models.SuiObjectDataOptions{},
+		ObjectIds: objectIDs,
+		Options: models.SuiObjectDataOptions{
+			// show owner info in order to retrieve object initial shared version
+			ShowOwner: true,
+		},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get SUI objects for %v", objectIDStrs)
+		return nil, errors.Wrapf(err, "unable to get SUI objects for %v", objectIDs)
 	}
 
 	// convert object data to object references
-	objectRefs := make([]sui.ObjectRef, 0, len(objectIDStrs))
+	objectRefs := make([]sui.ObjectRef, 0, len(objectIDs))
 
 	for _, object := range suiObjects {
 		objectID, err := sui.ObjectIdFromHex(object.Data.ObjectId)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse SUI object ID for %s", object.Data.ObjectId)
 		}
+
 		objectVersion, err := strconv.ParseUint(object.Data.Version, 10, 64)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse SUI object version for %s", object.Data.ObjectId)
 		}
+
+		// must use initial version for shared object, not the current version
+		// withdraw cap is not a shared object, so we must use current version
+		if object.Data.ObjectId != withdrawCapID {
+			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to extract initial shared version for %s", object.Data.ObjectId)
+			}
+		}
+
 		objectDigest, err := sui.NewBase58(object.Data.Digest)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse SUI object digest for %s", object.Data.ObjectId)
 		}
-
-		fmt.Printf("object: %s, version: %d, digest: %s\n", objectID.String(), objectVersion, objectDigest.String())
 
 		objectRefs = append(objectRefs, sui.ObjectRef{
 			ObjectId: objectID,

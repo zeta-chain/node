@@ -153,9 +153,8 @@ func (s *Signer) buildWithdrawAndCallTx(
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
 	}
 
-	// get all other object references: [gateway, withdrawCap, ...]
-	objectIDStrs := append([]string{s.gateway.ObjectID(), withdrawCapIDStr}, cp.ObjectIDs...)
-	objectRefs, err := s.getSuiObjectRefs(ctx, objectIDStrs...)
+	// get all other object references: [gateway, withdrawCap, onCallObjects]
+	objectRefs, err := s.getWithdrawAndCallObjectRefs(ctx, s.gateway.ObjectID(), withdrawCapIDStr, cp.ObjectIDs)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get objects")
 	}
@@ -164,13 +163,18 @@ func (s *Signer) buildWithdrawAndCallTx(
 	withdrawCapObjRef := objectRefs[1]
 	onCallObjectRefs := objectRefs[2:]
 
-	// Note: logs not formatted in standard, it's a temporary log
-	s.Logger().Std.Info().Msgf(
-		"WithdrawAndCall called with type arguments %v, object IDs %v, message %v",
-		cp.TypeArgs,
-		cp.ObjectIDs,
-		cp.Message,
-	)
+	// print PTB transaction parameters
+	s.Logger().Std.Info().
+		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
+		Str(logs.FieldCoinType, coinType).
+		Str("amount", params.Amount.String()).
+		Uint64(logs.FieldNonce, params.TssNonce).
+		Str("receiver", params.Receiver).
+		Str("gas_budget", gasBudget).
+		Any("type_args", cp.TypeArgs).
+		Any("object_ids", cp.ObjectIDs).
+		Hex("message", cp.Message).
+		Msg("calling withdrawAndCallPTB")
 
 	// TODO: check all object IDs are share object here
 	// https://github.com/zeta-chain/node/issues/3755

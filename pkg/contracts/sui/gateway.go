@@ -40,6 +40,10 @@ const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
+
+	// this event does not exist on gateway, this is to make the logic consistent
+	WithdrawAndCallPTBEvent EventType = "WithdrawAndCallPTBEvent"
+
 	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
 	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
@@ -221,6 +225,12 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
+	// normal withdraw contains only 1 command, if it contains 3 commands,
+	// try passing the transaction as a withdraw and call with PTB
+	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
+		return gw.parseWithdrawAndCallPTB(res)
+	}
+
 	if len(res.Events) == 0 {
 		return event, nil, errors.New("missing events")
 	}
@@ -304,6 +314,34 @@ func extractStr(kv map[string]any, key string) (string, error) {
 	}
 
 	return v, nil
+}
+
+func extractUint64(kv map[string]any, key string) (uint64, error) {
+	if _, ok := kv[key]; !ok {
+		return 0, errors.Errorf("missing %s", key)
+	}
+
+	v, ok := kv[key].(float64)
+	if !ok {
+		return 0, errors.Errorf("invalid %s", key)
+	}
+
+	// #nosec G115 always in range
+	return uint64(v), nil
+}
+
+func extractInt(kv map[string]any, key string) (int, error) {
+	if _, ok := kv[key]; !ok {
+		return 0, errors.Errorf("missing %s", key)
+	}
+
+	v, ok := kv[key].(float64)
+	if !ok {
+		return 0, errors.Errorf("invalid %s", key)
+	}
+
+	// #nosec G115 always in range
+	return int(v), nil
 }
 
 func convertPayload(data []any) ([]byte, error) {
