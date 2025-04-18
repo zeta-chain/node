@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"math/big"
 	"strconv"
 	"strings"
@@ -302,13 +303,16 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 	t.Run("validate valid Sui event", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
+		addr, err := sui.EncodeAddress("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5ab")
+		require.NoError(t, err)
+
 		value := big.NewInt(1000000)
 		suiWithdrawalEvent := sample.ZRC20Withdrawal(
-			[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5ab"),
+			addr,
 			value,
 		)
 
-		err := k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
+		err = k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
 		require.NoError(t, err)
 	})
 }

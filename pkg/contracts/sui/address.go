@@ -3,8 +3,9 @@ package sui
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // EncodeAddress encodes Sui address to bytes
