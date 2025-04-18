@@ -4,11 +4,11 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/contracts/sui"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
