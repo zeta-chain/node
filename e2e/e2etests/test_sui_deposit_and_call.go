@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -41,7 +42,9 @@ func TestSuiDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check sender passed in the call
 	signer, err := r.Account.SuiSigner()
 	require.NoError(r, err)
-	sender := []byte(signer.Address())
+
+	sender, err := sui.EncodeAddress(signer.Address())
+	require.NoError(r, err)
 
 	actualSender, err := r.TestDAppV2ZEVM.GetSenderWithMessage(&bind.CallOpts{}, payload)
 	require.NoError(r, err)
