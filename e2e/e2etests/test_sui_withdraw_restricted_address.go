@@ -64,7 +64,7 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 	// Invalid address format
 	_, err = r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
-		[]byte("invalid"),
+		[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5abaa"),
 		amount,
 		r.SUIZRC20Addr,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
