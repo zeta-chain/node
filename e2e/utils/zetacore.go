@@ -77,6 +77,8 @@ func WaitCctxsMinedByInboundHash(
 	startTime := time.Now()
 	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
 
+	logger.Info("WaitCctxsMinedByInboundHash: Waiting for %d CCTXs with hash: %s", cctxsCount, inboundHash)
+
 	// fetch cctxs by inboundHash
 	for i := 0; ; i++ {
 		// declare cctxs here so we can print the last fetched one if we reach timeout
@@ -117,6 +119,8 @@ func WaitCctxsMinedByInboundHash(
 		allFound := true
 		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
+			logger.Info("CCTX #%d status: %s (%s)", j, cctx.CctxStatus.Status.String(), cctx.CctxStatus.StatusMessage)
+
 			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
 				if i%20 == 0 {
@@ -131,11 +135,15 @@ func WaitCctxsMinedByInboundHash(
 				allFound = false
 				break
 			}
+
+			logger.Info("Found terminal CCTX status: %s", cctx.CctxStatus.Status.String())
 			cctxs = append(cctxs, &cctx)
 		}
 		if !allFound {
 			continue
 		}
+
+		logger.Info("All CCTXs found with terminal status")
 		return cctxs
 	}
 }

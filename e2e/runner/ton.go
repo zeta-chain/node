@@ -113,6 +113,9 @@ func (r *E2ERunner) TONDepositAndCall(
 		opt(cfg)
 	}
 
+	// Add debug message about expected status
+	r.Logger.Info("TONDepositAndCall: Expected status from options: %s", cfg.expectedStatus.String())
+
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
@@ -163,6 +166,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	// Wait for cctx
+	r.Logger.Info("TONDepositAndCall: Calling tonWaitForInboundCCTX with expected status: %s", cfg.expectedStatus.String())
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
 	// Debug info to help understand test failure
@@ -237,6 +241,8 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 		status = expectedStatus[0]
 	}
 
+	r.Logger.Info("tonWaitForInboundCCTX: Waiting for CCTX with expected status: %s", status.String())
+
 	ctx, cancel := context.WithTimeout(r.Ctx, timeout)
 	defer cancel()
 
@@ -246,13 +252,20 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 		txs, err := client.GetTransactionsSince(ctx, from.accountID, from.lastLt, from.lastTxHash)
 		require.NoError(r, err, "failed to getTransactionsSince")
 
+		r.Logger.Info("tonWaitForInboundCCTX: Found %d transactions since last hash", len(txs))
+
 		for i := range txs {
 			tx := txs[i]
 
+			// Apply the filter
 			if !filter(&tx) {
+				r.Logger.Info("tonWaitForInboundCCTX: Transaction %d filtered out", i)
 				continue
 			}
 
+			r.Logger.Info("tonWaitForInboundCCTX: Found matching transaction, hash: %s", liteapi.TransactionToHashString(tx))
+
+			// Get the CCTX by inbound hash
 			cctx := utils.WaitCctxMinedByInboundHash(
 				ctx,
 				liteapi.TransactionToHashString(tx),
@@ -261,7 +274,12 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 				r.CctxTimeout,
 			)
 
+			r.Logger.Info("tonWaitForInboundCCTX: Got CCTX with status: %s, requiring: %s", cctx.CctxStatus.Status.String(), status.String())
+
+			// Verify the status matches what we expect
 			utils.RequireCCTXStatus(r, cctx, status)
+
+			r.Logger.Info("tonWaitForInboundCCTX: CCTX status verified successfully")
 
 			return cctx
 		}
