@@ -38,15 +38,17 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	callData := []byte("hello from TON!")
 
 	// ACT
-	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
+	cctx, err := r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
 
 	expectedDeposit := amount.Sub(depositFee)
 
-	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))
+	// Verify the sender in the CCTX
+	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
+
+	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte{})
 
 	// Check receiver's balance
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
