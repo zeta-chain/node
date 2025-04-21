@@ -124,7 +124,6 @@ func (r *E2ERunner) TONDepositAndCall(
 	)
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
-
 	require.NotNil(r, sender, "Sender wallet is nil")
 	require.False(r, amount.IsZero())
 	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String())
@@ -143,11 +142,6 @@ func (r *E2ERunner) TONDepositAndCall(
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
 	}
 
-	/*filter := func(cctx *cctypes.CrossChainTx) bool {
-		return cctx.InboundParams.SenderChainId == chain.ChainId &&
-			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
-			cctx.RelayedMessage == hex.EncodeToString(callData)
-	}*/
 	filter := func(tx *ton.Transaction) bool {
 		msgInfo := tx.Msgs.InMsg.Value.Value.Info.IntMsgInfo
 		if msgInfo == nil {
@@ -169,8 +163,17 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	// Wait for cctx
-	//cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter)
+
+	// Debug info to help understand test failure
+	r.Logger.Info("CCTX Debug Info:")
+	r.Logger.Info("  Index: %s", cctx.Index)
+	r.Logger.Info("  InboundTxParams.Sender: %s", cctx.InboundParams.Sender)
+	r.Logger.Info("  InboundTxParams.SenderChainId: %d", cctx.InboundParams.SenderChainId)
+	r.Logger.Info("  InboundTxParams.ObservedHash: %s", cctx.InboundParams.ObservedHash)
+	r.Logger.Info("  RelayedMessage: %s", cctx.RelayedMessage)
+	r.Logger.Info("  Status: %s", cctx.CctxStatus.Status.String())
+	r.Logger.Info("  Sender Bytes Length: %d", len([]byte(cctx.InboundParams.Sender)))
 
 	return cctx, nil
 }
