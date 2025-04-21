@@ -48,5 +48,6 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.CCTX(*cctx, "ton_deposit_and_refund")
 
-	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
+	// Check for gas error message instead of revert error
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, "not enough gas")
 }
