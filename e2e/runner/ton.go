@@ -113,19 +113,6 @@ func (r *E2ERunner) TONDepositAndCall(
 		opt(cfg)
 	}
 
-	// Add debug message about expected status
-	r.Logger.Info("TONDepositAndCall: Expected status from options: %s", cfg.expectedStatus.String())
-
-	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
-	}
-
-	var (
-		lastTxHash = gwState.LastTransHash
-		lastLt     = gwState.LastTransLt
-	)
-
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 	require.NotNil(r, sender, "Sender wallet is nil")
 	require.False(r, amount.IsZero())
@@ -140,6 +127,17 @@ func (r *E2ERunner) TONDepositAndCall(
 		string(callData),
 	)
 
+	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
+	}
+
+	var (
+		lastTxHash = gwState.LastTransHash
+		lastLt     = gwState.LastTransLt
+	)
+
+	// Send TX
 	err = gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
@@ -166,18 +164,10 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	// Wait for cctx
-	r.Logger.Info("TONDepositAndCall: Calling tonWaitForInboundCCTX with expected status: %s", cfg.expectedStatus.String())
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
-	// Debug info to help understand test failure
-	r.Logger.Info("CCTX Debug Info:")
-	r.Logger.Info("  Index: %s", cctx.Index)
-	r.Logger.Info("  InboundTxParams.Sender: %s", cctx.InboundParams.Sender)
-	r.Logger.Info("  InboundTxParams.SenderChainId: %d", cctx.InboundParams.SenderChainId)
-	r.Logger.Info("  InboundTxParams.ObservedHash: %s", cctx.InboundParams.ObservedHash)
-	r.Logger.Info("  RelayedMessage: %s", cctx.RelayedMessage)
-	r.Logger.Info("  Status: %s", cctx.CctxStatus.Status.String())
-	r.Logger.Info("  Sender Bytes Length: %d", len([]byte(cctx.InboundParams.Sender)))
+	// Verify that the found CCTX has the correct relayed message
+	require.Equal(r, string(callData), cctx.RelayedMessage, "CCTX relayed message doesn't match the callData")
 
 	return cctx, nil
 }
