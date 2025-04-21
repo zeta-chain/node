@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"encoding/hex"
 	"math/big"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/tonkeeper/tongo/wallet"
 
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
@@ -115,7 +113,15 @@ func (r *E2ERunner) TONDepositAndCall(
 		opt(cfg)
 	}
 
-	chain := chains.TONLocalnet
+	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
+	}
+
+	var (
+		lastTxHash = gwState.LastTransHash
+		lastLt     = gwState.LastTransLt
+	)
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 
@@ -132,19 +138,39 @@ func (r *E2ERunner) TONDepositAndCall(
 		string(callData),
 	)
 
-	err := gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
+	err = gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send TON deposit and call")
 	}
 
-	filter := func(cctx *cctypes.CrossChainTx) bool {
+	/*filter := func(cctx *cctypes.CrossChainTx) bool {
 		return cctx.InboundParams.SenderChainId == chain.ChainId &&
 			cctx.InboundParams.Sender == sender.GetAddress().ToRaw() &&
 			cctx.RelayedMessage == hex.EncodeToString(callData)
+	}*/
+	filter := func(tx *ton.Transaction) bool {
+		msgInfo := tx.Msgs.InMsg.Value.Value.Info.IntMsgInfo
+		if msgInfo == nil {
+			return false
+		}
+
+		from, err := ton.AccountIDFromTlb(msgInfo.Src)
+		if err != nil {
+			return false
+		}
+
+		return from.ToRaw() == sender.GetAddress().ToRaw()
+	}
+
+	waitFrom := tonWaitFrom{
+		accountID:  gw.AccountID(),
+		lastTxHash: ton.Bits256(lastTxHash),
+		lastLt:     lastLt,
 	}
 
 	// Wait for cctx
-	cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
+	//cctx := r.WaitForSpecificCCTX(filter, cfg.expectedStatus, time.Minute)
+	cctx := r.tonWaitForInboundCCTX(waitFrom, filter)
 
 	return cctx, nil
 }
