@@ -34,6 +34,7 @@ const (
 
 // ptbWithdrawImplArgIndexes is the indexes of the inputs for the withdraw_impl command
 // these are the corresponding indexes for arguments: [gatewayObject, amount, nonce, gasBudget, withdrawCap]
+// the withdraw_impl command is the first command in the PTB, so the indexes will always be [0, 1, 2, 3, 4]
 var ptbWithdrawImplArgIndexes = []int{0, 1, 2, 3, 4}
 
 // WithdrawAndCallPTB represents data for a Sui withdraw and call event

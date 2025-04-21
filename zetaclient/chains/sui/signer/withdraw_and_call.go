@@ -253,7 +253,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	gatewayID, withdrawCapID string,
 	onCallObjectIDs []string,
-) ([]sui.ObjectRef, error) {
+) (gatewayObjRef, withdrawCapObjRef sui.ObjectRef, onCallObjectRefs []sui.ObjectRef, err error) {
 	objectIDs := append([]string{gatewayID, withdrawCapID}, onCallObjectIDs...)
 
 	// query objects in batch
@@ -265,21 +265,29 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 		},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get SUI objects for %v", objectIDs)
+		return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(err, "failed to get SUI objects for %v", objectIDs)
 	}
 
 	// convert object data to object references
-	objectRefs := make([]sui.ObjectRef, 0, len(objectIDs))
+	objectRefs := make([]sui.ObjectRef, len(objectIDs))
 
-	for _, object := range suiObjects {
+	for i, object := range suiObjects {
 		objectID, err := sui.ObjectIdFromHex(object.Data.ObjectId)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse SUI object ID for %s", object.Data.ObjectId)
+			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
+				err,
+				"failed to parse object ID %s",
+				object.Data.ObjectId,
+			)
 		}
 
 		objectVersion, err := strconv.ParseUint(object.Data.Version, 10, 64)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse SUI object version for %s", object.Data.ObjectId)
+			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
+				err,
+				"failed to parse object version %s",
+				object.Data.Version,
+			)
 		}
 
 		// must use initial version for shared object, not the current version
@@ -287,23 +295,31 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 		if object.Data.ObjectId != withdrawCapID {
 			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to extract initial shared version for %s", object.Data.ObjectId)
+				return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
+					err,
+					"failed to extract initial shared version for object %s",
+					object.Data.ObjectId,
+				)
 			}
 		}
 
 		objectDigest, err := sui.NewBase58(object.Data.Digest)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse SUI object digest for %s", object.Data.ObjectId)
+			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
+				err,
+				"failed to parse object digest %s",
+				object.Data.Digest,
+			)
 		}
 
-		objectRefs = append(objectRefs, sui.ObjectRef{
+		objectRefs[i] = sui.ObjectRef{
 			ObjectId: objectID,
 			Version:  objectVersion,
 			Digest:   objectDigest,
-		})
+		}
 	}
 
-	return objectRefs, nil
+	return objectRefs[0], objectRefs[1], objectRefs[2:], nil
 }
 
 // getTSSSuiCoinObjectRef returns the latest SUI coin object reference for the TSS address

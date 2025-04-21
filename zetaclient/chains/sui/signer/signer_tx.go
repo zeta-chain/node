@@ -154,14 +154,15 @@ func (s *Signer) buildWithdrawAndCallTx(
 	}
 
 	// get all other object references: [gateway, withdrawCap, onCallObjects]
-	objectRefs, err := s.getWithdrawAndCallObjectRefs(ctx, s.gateway.ObjectID(), withdrawCapIDStr, cp.ObjectIDs)
+	gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := s.getWithdrawAndCallObjectRefs(
+		ctx,
+		s.gateway.ObjectID(),
+		withdrawCapIDStr,
+		cp.ObjectIDs,
+	)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get objects")
 	}
-
-	gatewayObjRef := objectRefs[0]
-	withdrawCapObjRef := objectRefs[1]
-	onCallObjectRefs := objectRefs[2:]
 
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
