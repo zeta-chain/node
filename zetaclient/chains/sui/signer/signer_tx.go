@@ -161,7 +161,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		cp.ObjectIDs,
 	)
 	if err != nil {
-		return models.TxnMetaData{}, errors.Wrap(err, "unable to get objects")
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
 
 	// print PTB transaction parameters

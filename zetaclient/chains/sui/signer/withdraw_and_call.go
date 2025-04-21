@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/fardream/go-bcs/bcs"
@@ -51,7 +50,7 @@ func withdrawAndCallPTB(
 		return tx, errors.Wrapf(err, "failed to parse package ID %s", gatewayPackageIDStr)
 	}
 
-	coinType, err := parseTypeString(coinTypeStr)
+	coinType, err := zetasui.ParseTypeTagFromString(coinTypeStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to parse coin type %s", coinTypeStr)
 	}
@@ -67,29 +66,17 @@ func withdrawAndCallPTB(
 		return tx, errors.Wrap(err, "failed to create gateway object argument")
 	}
 
-	amountUint64, err := strconv.ParseUint(amountStr, 10, 64)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse amount %s", amountStr)
-	}
-	amount, err := ptb.Pure(amountUint64)
+	amount, err := zetasui.PureUint64FromString(ptb, amountStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create amount argument")
 	}
 
-	nonceUint64, err := strconv.ParseUint(nonceStr, 10, 64)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse nonce %s", nonceStr)
-	}
-	nonce, err := ptb.Pure(nonceUint64)
+	nonce, err := zetasui.PureUint64FromString(ptb, nonceStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create nonce argument")
 	}
 
-	gasBudgetUint64, err := strconv.ParseUint(gasBudgetStr, 10, 64)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse gas budget %s", gasBudgetStr)
-	}
-	gasBudget, err := ptb.Pure(gasBudgetUint64)
+	gasBudget, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create gas budget argument")
 	}
@@ -158,7 +145,7 @@ func withdrawAndCallPTB(
 	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
 	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
 	for _, typeArg := range cp.TypeArgs {
-		typeStruct, err := parseTypeString(typeArg)
+		typeStruct, err := zetasui.ParseTypeTagFromString(typeArg)
 		if err != nil {
 			return tx, errors.Wrapf(err, "failed to parse type argument %s", typeArg)
 		}
@@ -224,27 +211,6 @@ func withdrawAndCallPTB(
 	// Encode the transaction bytes to base64
 	return models.TxnMetaData{
 		TxBytes: base64.StdEncoding.EncodeToString(txBytes),
-	}, nil
-}
-
-func parseTypeString(t string) (*sui.StructTag, error) {
-	parts := strings.Split(t, zetasui.TypeSeparator)
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid type string: %s", t)
-	}
-
-	address, err := sui.AddressFromHex(parts[0])
-	if err != nil {
-		return nil, fmt.Errorf("invalid address: %s", parts[0])
-	}
-
-	module := parts[1]
-	name := parts[2]
-
-	return &sui.StructTag{
-		Address: address,
-		Module:  module,
-		Name:    name,
 	}, nil
 }
 
