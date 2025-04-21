@@ -73,11 +73,11 @@ func ExtractInitialSharedVersion(objData models.SuiObjectData) (uint64, error) {
 		return 0, fmt.Errorf("invalid shared object type %T", shared)
 	}
 
-	return extractUint64(sharedMap, "initial_shared_version")
+	return extractInteger[uint64](sharedMap, "initial_shared_version")
 }
 
 // parseWithdrawAndCallPTB parses withdraw and call with PTB.
-// There is no actual event on gateway for withdraw and call, so we construct our own event to make the logic consistent.
+// There is no actual event on gateway for withdraw and call, but we construct our own event to make the logic consistent.
 func (gw *Gateway) parseWithdrawAndCallPTB(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
@@ -210,7 +210,7 @@ func extractMoveCall(transaction any) (packageID, module, function string, argIn
 			return "", "", "", nil, errors.Wrap(ErrParseEvent, "invalid argument type")
 		}
 
-		index, err := extractInt(indexes, "Input")
+		index, err := extractInteger[int](indexes, "Input")
 		if err != nil {
 			return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing argument index")
 		}

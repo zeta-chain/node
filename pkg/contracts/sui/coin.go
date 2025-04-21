@@ -1,6 +1,6 @@
 package sui
 
-// CoinType represents the coin type for the inbound
+// CoinType represents the coin type for the SUI token
 type CoinType string
 
 const (
@@ -11,7 +11,7 @@ const (
 	SUIShort CoinType = "0x2::sui::SUI"
 )
 
-// IsSUIType returns true if the given coin type is SUI
-func IsSUIType(coinType CoinType) bool {
+// IsSUICoinType returns true if the given coin type is SUI
+func IsSUICoinType(coinType CoinType) bool {
 	return coinType == SUI || coinType == SUIShort
 }

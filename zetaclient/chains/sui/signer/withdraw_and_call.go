@@ -319,7 +319,7 @@ func (s *Signer) getTSSSuiCoinObjectRef(ctx context.Context) (sui.ObjectRef, err
 	// locate the SUI coin object under TSS account
 	var suiCoin *models.CoinData
 	for _, coin := range coins.Data {
-		if zetasui.IsSUIType(zetasui.CoinType(coin.CoinType)) {
+		if zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
 			suiCoin = &coin
 			break
 		}

@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/constraints"
 )
 
 // EventType represents Gateway event type (both inbound & outbound)
@@ -41,7 +42,7 @@ const (
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
 
-	// this event does not exist on gateway, this is to make the logic consistent
+	// this event does not exist on gateway, we define it to make the outbound processing consistent
 	WithdrawAndCallPTBEvent EventType = "WithdrawAndCallPTBEvent"
 
 	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
@@ -225,8 +226,8 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
-	// normal withdraw contains only 1 command, if it contains 3 commands,
-	// try passing the transaction as a withdraw and call with PTB
+	// a simple withdraw contains one single command, if it contains 3 commands,
+	// we try passing the transaction as a withdraw and call with PTB
 	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
 		return gw.parseWithdrawAndCallPTB(res)
 	}
@@ -316,32 +317,20 @@ func extractStr(kv map[string]any, key string) (string, error) {
 	return v, nil
 }
 
-func extractUint64(kv map[string]any, key string) (uint64, error) {
-	if _, ok := kv[key]; !ok {
+// extractInteger extracts a float64 value from a map and converts it to any integer type
+func extractInteger[T constraints.Integer](kv map[string]any, key string) (T, error) {
+	rawValue, ok := kv[key]
+	if !ok {
 		return 0, errors.Errorf("missing %s", key)
 	}
 
-	v, ok := kv[key].(float64)
+	v, ok := rawValue.(float64)
 	if !ok {
 		return 0, errors.Errorf("invalid %s", key)
 	}
 
 	// #nosec G115 always in range
-	return uint64(v), nil
-}
-
-func extractInt(kv map[string]any, key string) (int, error) {
-	if _, ok := kv[key]; !ok {
-		return 0, errors.Errorf("missing %s", key)
-	}
-
-	v, ok := kv[key].(float64)
-	if !ok {
-		return 0, errors.Errorf("invalid %s", key)
-	}
-
-	// #nosec G115 always in range
-	return int(v), nil
+	return T(v), nil
 }
 
 func convertPayload(data []any) ([]byte, error) {
