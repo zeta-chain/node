@@ -7,13 +7,25 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/liteapi"
+	"github.com/tonkeeper/tongo/config"
+	tongo "github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+
+	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 )
 
 type Client struct {
 	*liteapi.Client
+}
+
+func NewClient(cfg *config.GlobalConfigurationFile) (*Client, error) {
+	client, err := tongo.NewClient(tongo.WithConfigurationFile(*cfg))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create ton client")
+	}
+
+	return &Client{Client: liteapi.New(client)}, nil
 }
 
 // Status checks the health of the TON node

@@ -29,6 +29,7 @@ func NewRootCmd() *cobra.Command {
 		NewStressTestCmd(),
 		NewInitCmd(),
 		NewSetupBitcoinCmd(),
+		NewPopulateAddressesCmd(),
 	)
 
 	return cmd

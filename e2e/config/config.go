@@ -219,7 +219,7 @@ func DefaultConfig() Config {
 }
 
 // ReadConfig reads the config file
-func ReadConfig(file string) (config Config, err error) {
+func ReadConfig(file string, validate bool) (config Config, err error) {
 	if file == "" {
 		return Config{}, errors.New("file name cannot be empty")
 	}
@@ -233,8 +233,10 @@ func ReadConfig(file string) (config Config, err error) {
 	if err != nil {
 		return Config{}, err
 	}
-	if err := config.Validate(); err != nil {
-		return Config{}, err
+	if validate {
+		if err := config.Validate(); err != nil {
+			return Config{}, err
+		}
 	}
 
 	return
