@@ -94,7 +94,7 @@ func (r *E2ERunner) TONDeposit(
 	}
 
 	// Wait for cctx
-	cctx := r.tonWaitForInboundCCTX(waitFrom, filter)
+	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cctypes.CctxStatus_OutboundMined)
 
 	return cctx, nil
 }
@@ -163,7 +163,17 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	// Wait for cctx
-	cctx := r.tonWaitForInboundCCTX(waitFrom, filter)
+	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
+
+	// Debug info to help understand test failure
+	r.Logger.Info("CCTX Debug Info:")
+	r.Logger.Info("  Index: %s", cctx.Index)
+	r.Logger.Info("  InboundTxParams.Sender: %s", cctx.InboundParams.Sender)
+	r.Logger.Info("  InboundTxParams.SenderChainId: %d", cctx.InboundParams.SenderChainId)
+	r.Logger.Info("  InboundTxParams.ObservedHash: %s", cctx.InboundParams.ObservedHash)
+	r.Logger.Info("  RelayedMessage: %s", cctx.RelayedMessage)
+	r.Logger.Info("  Status: %s", cctx.CctxStatus.Status.String())
+	r.Logger.Info("  Sender Bytes Length: %d", len([]byte(cctx.InboundParams.Sender)))
 
 	return cctx, nil
 }
@@ -214,11 +224,18 @@ type tonWaitFrom struct {
 func (r *E2ERunner) tonWaitForInboundCCTX(
 	from tonWaitFrom,
 	filter func(tx *ton.Transaction) bool,
+	expectedStatus ...cctypes.CctxStatus,
 ) *cctypes.CrossChainTx {
 	var (
 		timeout  = 2 * time.Minute
 		interval = time.Second
+		status   = cctypes.CctxStatus_OutboundMined // Default status
 	)
+
+	// Override default status if provided
+	if len(expectedStatus) > 0 {
+		status = expectedStatus[0]
+	}
 
 	ctx, cancel := context.WithTimeout(r.Ctx, timeout)
 	defer cancel()
@@ -244,7 +261,7 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 				r.CctxTimeout,
 			)
 
-			utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
+			utils.RequireCCTXStatus(r, cctx, status)
 
 			return cctx
 		}
