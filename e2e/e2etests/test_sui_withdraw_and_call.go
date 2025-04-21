@@ -16,7 +16,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given target package ID (example package) and an SUI amount
+	// Given target package ID (example package) and a SUI amount
 	targetPackageID := r.SuiExample.PackageID
 	amount := utils.ParseBigInt(r, args[0])
 
@@ -39,7 +39,9 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	suiAddress := sample.SuiAddress(r)
 	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
 	require.NoError(r, err)
+	balanceBefore := r.SuiGetSUIBalance(suiAddress)
 
+	// create the payload
 	payload := sui.NewCallPayload(argumentTypes, objects, message)
 
 	// ACT
@@ -55,4 +57,8 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// balance after
+	balanceAfter := r.SuiGetSUIBalance(suiAddress)
+	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
 }
