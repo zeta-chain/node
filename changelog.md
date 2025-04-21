@@ -23,6 +23,7 @@
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
+* [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
 
 ### Fixes
 

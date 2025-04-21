@@ -261,7 +261,8 @@ func (k Keeper) ProcessZetaSentEvent(
 		return observertypes.ErrChainParamsNotFound
 	}
 
-	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
+	if receiverChain.IsExternalChain() &&
+		(chainParams.ZetaTokenContractAddress == "" || chainParams.ZetaTokenContractAddress == constant.EVMZeroAddress) {
 		return types.ErrUnableToSendCoinType
 	}
 
