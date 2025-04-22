@@ -19,6 +19,8 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		data   = []byte("hello reverter")
 	)
 
+	r.Logger.Info("Starting TON Deposit and Call Refund test with amount: %s nano TON", amount.String())
+
 	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
 
@@ -35,6 +37,7 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	// ACT
 	// Send a deposit and call transaction from the deployer (faucet)
 	// to the reverter contract
+	r.Logger.Info("Sending deposit and call with 1 TON and expecting Reverted status")
 	cctx, err := r.TONDepositAndCall(
 		gw,
 		sender,
@@ -46,6 +49,9 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 
 	// ASSERT
 	require.NoError(r, err)
+	r.Logger.Info("Received CCTX with status: %s and message: %s",
+		cctx.CctxStatus.Status.String(),
+		cctx.CctxStatus.ErrorMessage)
 	r.Logger.CCTX(*cctx, "ton_deposit_and_refund")
 
 	// Check for gas error message instead of revert error
