@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"strings"
-
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
@@ -57,22 +55,7 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		cctx.CctxStatus.ErrorMessage)
 	r.Logger.CCTX(*cctx, "ton_deposit_and_refund")
 
-	// Check for any of the known error messages that can occur with reverts
-	errorMessage := cctx.CctxStatus.ErrorMessage
-	r.Logger.Info("Checking if error message contains expected patterns: %s", errorMessage)
-
-	// Test passes if ANY of these patterns are found
-	isValid := false
-	if strings.Contains(errorMessage, "not enough gas") {
-		isValid = true
-		r.Logger.Info("Found 'not enough gas' in error message")
-	} else if strings.Contains(errorMessage, "execution reverted") {
-		isValid = true
-		r.Logger.Info("Found 'execution reverted' in error message")
-	} else if strings.Contains(errorMessage, "evm transaction execution failed") {
-		isValid = true
-		r.Logger.Info("Found 'evm transaction execution failed' in error message")
-	}
-
-	require.True(r, isValid, "Error message should contain one of the expected patterns")
+	// Check for the Foo() error hash
+	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo,
+		"Error message should contain the Foo() error hash")
 }
