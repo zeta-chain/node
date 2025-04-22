@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 
@@ -20,9 +21,10 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	height uint64,
 	asset string,
 	decimals uint8,
-	sender [20]byte,
+	sender string,
 	data []byte,
 	remainingAccounts []*solana.AccountMeta,
+	executeType contracts.ExecuteType,
 	cancelTx bool,
 ) (*contracts.MsgExecuteSPL, *contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
@@ -75,6 +77,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 		destinationProgramPdaAta,
 		sender,
 		data,
+		executeType,
 		remainingAccounts,
 	)
 	msgHash := msg.Hash()
@@ -98,19 +101,41 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 // createExecuteSPLInstruction wraps the execute spl 'msg' into a Solana instruction.
 func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (*solana.GenericInstruction, error) {
 	// create execute spl instruction with program call data
-	dataBytes, err := borsh.Serialize(contracts.ExecuteSPLInstructionParams{
-		Discriminator: contracts.DiscriminatorExecuteSPL,
-		Decimals:      msg.Decimals(),
-		Amount:        msg.Amount(),
-		Sender:        msg.Sender(),
-		Data:          msg.Data(),
-		Signature:     msg.SigRS(),
-		RecoveryID:    msg.SigV(),
-		MessageHash:   msg.Hash(),
-		Nonce:         msg.Nonce(),
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize execute spl instruction")
+	var dataBytes []byte
+	if msg.ExecuteType() == contracts.ExecuteTypeRevert {
+		serializedInst, err := borsh.Serialize(contracts.ExecuteSPLRevertInstructionParams{
+			Discriminator: contracts.DiscriminatorExecuteSPLRevert,
+			Decimals:      msg.Decimals(),
+			Amount:        msg.Amount(),
+			Sender:        solana.MustPublicKeyFromBase58(msg.Sender()),
+			Data:          msg.Data(),
+			Signature:     msg.SigRS(),
+			RecoveryID:    msg.SigV(),
+			MessageHash:   msg.Hash(),
+			Nonce:         msg.Nonce(),
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot serialize execute spl instruction")
+		}
+
+		dataBytes = serializedInst
+	} else {
+		serializedInst, err := borsh.Serialize(contracts.ExecuteSPLInstructionParams{
+			Discriminator: contracts.DiscriminatorExecuteSPL,
+			Decimals:      msg.Decimals(),
+			Amount:        msg.Amount(),
+			Sender:        common.HexToAddress(msg.Sender()),
+			Data:          msg.Data(),
+			Signature:     msg.SigRS(),
+			RecoveryID:    msg.SigV(),
+			MessageHash:   msg.Hash(),
+			Nonce:         msg.Nonce(),
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot serialize execute spl instruction")
+		}
+
+		dataBytes = serializedInst
 	}
 
 	pdaAta, _, err := solana.FindAssociatedTokenAddress(signer.pda, msg.MintAccount())
@@ -129,7 +154,7 @@ func (signer *Signer) createExecuteSPLInstruction(msg contracts.MsgExecuteSPL) (
 		solana.Meta(pdaAta).WRITE(),
 		solana.Meta(msg.MintAccount()),
 		solana.Meta(msg.To()),
-		solana.Meta(destinationProgramPda),
+		solana.Meta(destinationProgramPda).WRITE(),
 		solana.Meta(msg.RecipientAta()).WRITE(),
 		solana.Meta(solana.TokenProgramID),
 		solana.Meta(solana.SPLAssociatedTokenAccountProgramID),

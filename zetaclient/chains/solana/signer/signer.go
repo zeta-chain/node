@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/token"
@@ -148,6 +147,7 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
+	isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 
 	var outboundGetter outboundGetter
 
@@ -182,7 +182,7 @@ func (signer *Signer) TryProcessOutbound(
 		}
 
 	case coin.CoinType_ERC20:
-		if cctx.IsWithdrawAndCall() {
+		if cctx.IsWithdrawAndCall() || isRevert {
 			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
@@ -382,6 +382,33 @@ func (signer *Signer) prepareWithdrawTx(
 	}, nil
 }
 
+func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	return executeType, msg, nil
+}
+
 func (signer *Signer) prepareExecuteTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
@@ -404,27 +431,9 @@ func (signer *Signer) prepareExecuteTx(
 		)
 	}
 
-	var executeType contracts.ExecuteType
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
-		executeType = contracts.ExecuteTypeRevert
-	} else {
-		executeType = contracts.ExecuteTypeCall
-	}
-
-	var message []byte
-	if executeType == contracts.ExecuteTypeRevert {
-		message = cctx.RevertOptions.RevertMessage
-	} else {
-		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
-		}
-		message = messageToDecode
-	}
-
-	var msg contracts.ExecuteMsg
-	if err := msg.Decode(message); err != nil {
-		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}
@@ -563,14 +572,9 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, err
 	}
 
-	message, err := hex.DecodeString(cctx.RelayedMessage)
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
 	if err != nil {
-		return nil, err
-	}
-
-	var msg contracts.ExecuteMsg
-	if err := msg.Decode(message); err != nil {
-		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}
@@ -581,18 +585,17 @@ func (signer *Signer) prepareExecuteSPLTx(
 		})
 	}
 
-	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
-
-	// sign gateway withdraw spl message by TSS
+	// sign gateway execute spl revert message by TSS
 	msgExecuteSpl, msgIn, err := signer.createAndSignMsgExecuteSPL(
 		ctx,
 		params,
 		height,
 		cctx.InboundParams.Asset,
 		mint.Decimals,
-		sender,
+		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
+		executeType,
 		cancelTx,
 	)
 	if err != nil {

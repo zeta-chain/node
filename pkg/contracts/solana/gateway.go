@@ -54,6 +54,9 @@ var (
 	// DiscriminatorExecuteSPL returns the discriminator for Solana gateway 'execute_spl_token' instruction
 	DiscriminatorExecuteSPL = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token")
 
+	// DiscriminatorExecuteSPLRevert returns the discriminator for Solana gateway 'execute_spl_token_revert' instruction
+	DiscriminatorExecuteSPLRevert = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token_revert")
+
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")
 

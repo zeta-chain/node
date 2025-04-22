@@ -74,6 +74,9 @@ const (
 	TestSolanaWithdrawRestrictedName                      = "solana_withdraw_restricted"
 	TestSPLDepositName                                    = "spl_deposit"
 	TestSPLDepositAndCallName                             = "spl_deposit_and_call"
+	TestSPLDepositAndCallRevertName                       = "spl_deposit_and_call_revert"
+	TestSPLDepositAndCallRevertWithCallName               = "spl_deposit_and_call_revert_with_call"
+	TestSPLDepositAndCallRevertWithCallThatRevertsName    = "spl_deposit_and_call_revert_with_call_that_reverts"
 	TestSPLWithdrawName                                   = "spl_withdraw"
 	TestSPLWithdrawAndCallName                            = "spl_withdraw_and_call"
 	TestSPLWithdrawAndCallRevertName                      = "spl_withdraw_and_call_revert"
@@ -713,6 +716,33 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertName,
+		"deposit SPL into ZEVM and call which reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevert,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertWithCallName,
+		"deposit SPL into ZEVM and call which reverts with call on revert",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevertWithCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertWithCallThatRevertsName,
+		"deposit SPL into ZEVM and call which reverts with call on revert that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevertWithCallThatReverts,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	/*

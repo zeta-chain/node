@@ -111,7 +111,7 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
 		solana.Meta(signer.pda).WRITE(),
 		solana.Meta(msg.To()).WRITE(),
-		solana.Meta(destinationProgramPda),
+		solana.Meta(destinationProgramPda).WRITE(),
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 

@@ -455,6 +455,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 			splTests = append(splTests, []string{
 				e2etests.TestSPLDepositAndCallName,
+				e2etests.TestSPLDepositAndCallRevertName,
+				e2etests.TestSPLDepositAndCallRevertWithCallName,
+				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
 				e2etests.TestSPLWithdrawAndCallRevertName,

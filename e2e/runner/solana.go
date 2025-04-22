@@ -129,6 +129,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	to solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Instruction {
 	var err error
 	var depositSPLData []byte
@@ -137,6 +138,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 			Discriminator: solanacontract.DiscriminatorDepositSPL,
 			Amount:        amount,
 			Receiver:      receiver,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	} else {
@@ -145,6 +147,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 			Amount:        amount,
 			Receiver:      receiver,
 			Memo:          data,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	}
@@ -242,6 +245,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 	mintAccount solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
@@ -264,9 +268,10 @@ func (r *E2ERunner) SPLDepositAndCall(
 		pdaAta,
 		receiver,
 		data,
+		revertOptions,
 	)
 
-	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(500000).Build() // 500k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
@@ -549,8 +554,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
 	require.NoError(r, err)
 	msg := solanacontract.ExecuteMsg{
 		Accounts: []solanacontract.AccountMeta{
