@@ -382,10 +382,7 @@ func (signer *Signer) prepareWithdrawTx(
 	}, nil
 }
 
-func (signer *Signer) prepareExecuteMsg(
-	ctx context.Context,
-	cctx *types.CrossChainTx,
-) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
+func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
 	var executeType contracts.ExecuteType
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
 		executeType = contracts.ExecuteTypeRevert
@@ -434,7 +431,7 @@ func (signer *Signer) prepareExecuteTx(
 		)
 	}
 
-	executeType, msg, err := signer.prepareExecuteMsg(ctx, cctx)
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
 	}
@@ -575,7 +572,7 @@ func (signer *Signer) prepareExecuteSPLTx(
 		return nil, err
 	}
 
-	executeType, msg, err := signer.prepareExecuteMsg(ctx, cctx)
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
 	}
