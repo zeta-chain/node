@@ -21,6 +21,7 @@ const (
 )
 
 // ExecuteType represents the type of execute operation
+// it is used for withdraw and call and revert
 type ExecuteType uint8
 
 const (
