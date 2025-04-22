@@ -48,6 +48,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Verify the sender in the CCTX
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
 
+	// Use the updated utility function that handles environment differences
 	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte{})
 
 	// Check receiver's balance
