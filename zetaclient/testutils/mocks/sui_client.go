@@ -282,26 +282,26 @@ func (_m *SuiClient) SuiMultiGetObjects(ctx context.Context, req models.SuiMulti
 	return r0, r1
 }
 
-// SuiXGetAllCoins provides a mock function with given fields: ctx, req
-func (_m *SuiClient) SuiXGetAllCoins(ctx context.Context, req models.SuiXGetAllCoinsRequest) (models.PaginatedCoinsResponse, error) {
+// SuiXGetCoins provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiXGetCoins(ctx context.Context, req models.SuiXGetCoinsRequest) (models.PaginatedCoinsResponse, error) {
 	ret := _m.Called(ctx, req)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SuiXGetAllCoins")
+		panic("no return value specified for SuiXGetCoins")
 	}
 
 	var r0 models.PaginatedCoinsResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetAllCoinsRequest) (models.PaginatedCoinsResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetCoinsRequest) (models.PaginatedCoinsResponse, error)); ok {
 		return rf(ctx, req)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetAllCoinsRequest) models.PaginatedCoinsResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiXGetCoinsRequest) models.PaginatedCoinsResponse); ok {
 		r0 = rf(ctx, req)
 	} else {
 		r0 = ret.Get(0).(models.PaginatedCoinsResponse)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, models.SuiXGetAllCoinsRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiXGetCoinsRequest) error); ok {
 		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)

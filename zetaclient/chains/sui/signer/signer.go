@@ -32,7 +32,7 @@ type RPC interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	SuiXGetAllCoins(ctx context.Context, req models.SuiXGetAllCoinsRequest) (models.PaginatedCoinsResponse, error)
+	SuiXGetCoins(ctx context.Context, req models.SuiXGetCoinsRequest) (models.PaginatedCoinsResponse, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(

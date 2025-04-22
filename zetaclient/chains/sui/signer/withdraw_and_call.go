@@ -294,19 +294,29 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 // getTSSSuiCoinObjectRef returns the latest SUI coin object reference for the TSS address
 // Note: the SUI object may change over time, so we need to get the latest object
 func (s *Signer) getTSSSuiCoinObjectRef(ctx context.Context) (sui.ObjectRef, error) {
-	coins, err := s.client.SuiXGetAllCoins(ctx, models.SuiXGetAllCoinsRequest{
-		Owner: s.TSS().PubKey().AddressSui(),
+	coins, err := s.client.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
+		Owner:    s.TSS().PubKey().AddressSui(),
+		CoinType: string(zetasui.SUI),
 	})
 	if err != nil {
 		return sui.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
 	}
 
-	// locate the SUI coin object under TSS account
-	var suiCoin *models.CoinData
+	var (
+		suiCoin        *models.CoinData
+		suiCoinVersion uint64
+	)
+
+	// locate the latest version of SUI coin object under TSS account
 	for _, coin := range coins.Data {
-		if zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
+		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
+			continue
+		}
+
+		version, _ := strconv.ParseUint(coin.Version, 10, 64)
+		if version > suiCoinVersion {
 			suiCoin = &coin
-			break
+			suiCoinVersion = version
 		}
 	}
 	if suiCoin == nil {
@@ -318,10 +328,7 @@ func (s *Signer) getTSSSuiCoinObjectRef(ctx context.Context) (sui.ObjectRef, err
 	if err != nil {
 		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin ID: %w", err)
 	}
-	suiCoinVersion, err := strconv.ParseUint(suiCoin.Version, 10, 64)
-	if err != nil {
-		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin version: %w", err)
-	}
+
 	suiCoinDigest, err := sui.NewBase58(suiCoin.Digest)
 	if err != nil {
 		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin digest: %w", err)
