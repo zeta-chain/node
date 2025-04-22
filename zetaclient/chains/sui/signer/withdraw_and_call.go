@@ -87,6 +87,7 @@ func withdrawAndCallPTB(
 	}
 
 	// Move call for withdraw_impl and get its command index (0)
+	// #nosec G115 always in range
 	cmdIndex := uint16(len(ptb.Commands))
 	ptb.Command(suiptb.Command{
 		MoveCall: &suiptb.ProgrammableMoveCall{
