@@ -556,15 +556,17 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	// create encoded msg
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
 	require.NoError(r, err)
-
-	accounts := []solanacontract.AccountMeta{
-		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
 	}
 
-	msgEncoded, err := solanacontract.EncodeExecuteMessage(accounts, data)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// withdraw
@@ -605,14 +607,17 @@ func (r *E2ERunner) CallSOLZRC20(
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
 	require.NoError(r, err)
 
-	accounts := []solanacontract.AccountMeta{
-		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
 	}
 
-	msgEncoded, err := solanacontract.EncodeExecuteMessage(accounts, data)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// call
@@ -682,18 +687,21 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
 	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
 
-	accounts := []solanacontract.AccountMeta{
-		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
-		{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
 	}
 
-	msgEncoded, err := solanacontract.EncodeExecuteMessage(accounts, data)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// withdraw

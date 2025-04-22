@@ -23,15 +23,15 @@ const (
 	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 250000000000000000
-
 	// CCTXIndexLength is the length of a crosschain transaction index
 	CCTXIndexLength          = 66
 	MaxOutboundTrackerHashes = 5
 )
 
+// GetProtocolFee returns the protocol fee for the cross chain transaction
+// It is no longer used, but the function is kept for backward compatibility with the Zeta Conversion Rate query
 func GetProtocolFee() math.Uint {
-	return math.NewUint(ProtocolFee)
+	return math.ZeroUint()
 }
 
 func KeyPrefix(p string) []byte {

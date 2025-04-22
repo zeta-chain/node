@@ -36,13 +36,16 @@ func TestSolanaDepositAndCallRevertWithCallThatReverts(r *runner.E2ERunner, args
 	require.NoError(r, err)
 
 	// create encoded msg
-	accounts := []solanacontracts.AccountMeta{
-		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+	msg := solanacontracts.ExecuteMsg{
+		Accounts: []solanacontracts.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
 	}
 
-	msgEncoded, err := solanacontracts.EncodeExecuteMessage(accounts, data)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	sig := r.SOLDepositAndCall(nil, reverterAddr, depositAmount, data, &solanacontracts.RevertOptions{

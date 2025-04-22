@@ -24,7 +24,7 @@ const (
 
 // LegacySetEVMContractsFromConfig set legacy EVM contracts for e2e test from the config
 func (r *E2ERunner) LegacySetEVMContractsFromConfig() {
-	conf, err := config.ReadConfig(ContractsConfigFile)
+	conf, err := config.ReadConfig(ContractsConfigFile, true)
 	require.NoError(r, err)
 
 	// Set ZetaEthAddr

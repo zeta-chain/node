@@ -141,16 +141,25 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			return err
 		}
 
+		receiverBytes, err := chains.DecodeAddressFromChainID(
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().Receiver,
+			k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to decode receiver address")
+		}
+
 		// validate data of the revert outbound
 		err = k.validateOutbound(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
 			cctx.InboundParams.CoinType,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
-			[]byte(cctx.GetCurrentOutboundParam().Receiver),
+			receiverBytes,
 		)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to validate ZRC20 withdrawal")
 		}
 
 		err = k.SetObserverOutboundInfo(ctx, cctx.InboundParams.SenderChainId, cctx)
