@@ -107,7 +107,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 	}{
 		{
 			name:     "valid transaction block",
-			response: createValidTxResponse(txHash, packageID, amountStr, nonceStr),
+			response: createPTBResponse(txHash, packageID, amountStr, nonceStr),
 			want: WithdrawAndCallPTB{
 				PackageID: packageID,
 				Module:    moduleName,
@@ -119,7 +119,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid number of commands",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				res.Transaction.Data.Transaction.Transactions = res.Transaction.Data.Transaction.Transactions[:2]
 				return res
 			}(),
@@ -128,7 +128,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid number of inputs",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				res.Transaction.Data.Transaction.Inputs = res.Transaction.Data.Transaction.Inputs[:4]
 				return res
 			}(),
@@ -137,7 +137,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "unable to parse withdraw_impl",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				res.Transaction.Data.Transaction.Transactions[0] = "invalid"
 				return res
 			}(),
@@ -146,7 +146,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid package ID",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				moveCall := res.Transaction.Data.Transaction.Transactions[0].(map[string]any)["MoveCall"].(map[string]any)
 				moveCall["package"] = "wrong_package"
 				return res
@@ -156,7 +156,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid module name",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				moveCall := res.Transaction.Data.Transaction.Transactions[0].(map[string]any)["MoveCall"].(map[string]any)
 				moveCall["module"] = "wrong_module"
 				return res
@@ -166,7 +166,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid function name",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				moveCall := res.Transaction.Data.Transaction.Transactions[0].(map[string]any)["MoveCall"].(map[string]any)
 				moveCall["function"] = "wrong_function"
 				return res
@@ -176,7 +176,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid argument indexes",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				moveCall := res.Transaction.Data.Transaction.Transactions[0].(map[string]any)["MoveCall"].(map[string]any)
 				arguments := moveCall["arguments"].([]any)
 				arguments[0] = map[string]any{"Input": float64(5)} // Change index to make it invalid
@@ -187,7 +187,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid amount format",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				res.Transaction.Data.Transaction.Inputs[1] = models.SuiCallArg{
 					"value": "invalid_number",
 				}
@@ -198,7 +198,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		{
 			name: "invalid nonce format",
 			response: func() models.SuiTransactionBlockResponse {
-				res := createValidTxResponse(txHash, packageID, amountStr, nonceStr)
+				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
 				res.Transaction.Data.Transaction.Inputs[2] = models.SuiCallArg{
 					"value": "invalid_nonce",
 				}
@@ -228,7 +228,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 	}
 }
 
-func createValidTxResponse(txHash, packageID, amount, nonce string) models.SuiTransactionBlockResponse {
+func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransactionBlockResponse {
 	return models.SuiTransactionBlockResponse{
 		Digest: txHash,
 		Transaction: models.SuiTransactionBlock{

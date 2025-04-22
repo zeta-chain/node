@@ -50,7 +50,7 @@ func withdrawAndCallPTB(
 		return tx, errors.Wrapf(err, "failed to parse package ID %s", gatewayPackageIDStr)
 	}
 
-	coinType, err := zetasui.ParseTypeTagFromString(coinTypeStr)
+	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to parse coin type %s", coinTypeStr)
 	}
@@ -146,7 +146,7 @@ func withdrawAndCallPTB(
 	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
 	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
 	for _, typeArg := range cp.TypeArgs {
-		typeStruct, err := zetasui.ParseTypeTagFromString(typeArg)
+		typeStruct, err := zetasui.TypeTagFromString(typeArg)
 		if err != nil {
 			return tx, errors.Wrapf(err, "failed to parse type argument %s", typeArg)
 		}

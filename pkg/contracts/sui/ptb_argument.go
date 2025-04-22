@@ -28,7 +28,7 @@ func PureUint64FromString(
 	return arg, value, nil
 }
 
-// ParseTypeTagFromStr parses a PTB type argument StructTag from a type string
+// TypeTagFromString creates a PTB type argument StructTag from a type string
 // Example: "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI" ->
 //
 //	&sui.StructTag{
@@ -36,7 +36,7 @@ func PureUint64FromString(
 //		Module:  "sui",
 //		Name:    "SUI",
 //	}
-func ParseTypeTagFromString(t string) (*sui.StructTag, error) {
+func TypeTagFromString(t string) (*sui.StructTag, error) {
 	parts := strings.Split(t, TypeSeparator)
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid type string: %s", t)

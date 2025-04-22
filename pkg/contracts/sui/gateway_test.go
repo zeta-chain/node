@@ -378,6 +378,22 @@ func Test_ParseOutboundEvent(t *testing.T) {
 			},
 		},
 		{
+			name:     "withdrawAndCall with PTB",
+			response: createPTBResponse(txHash, packageID, "200", "123"),
+			wantEvent: Event{
+				TxHash:     txHash,
+				EventIndex: 0,
+				EventType:  WithdrawAndCallPTBEvent,
+				content: WithdrawAndCallPTB{
+					PackageID: packageID,
+					Module:    moduleName,
+					Function:  FuncWithdrawImpl,
+					Amount:    math.NewUint(200),
+					Nonce:     123,
+				},
+			},
+		},
+		{
 			name: "cancelTx",
 			response: models.SuiTransactionBlockResponse{
 				Events: []models.SuiEventResponse{

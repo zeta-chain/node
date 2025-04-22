@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseTypeTagFromString(t *testing.T) {
+func Test_TypeTagFromString(t *testing.T) {
 	suiAddr, err := sui.AddressFromHex("0000000000000000000000000000000000000000000000000000000000000002")
 	require.NoError(t, err)
 
@@ -55,7 +55,7 @@ func TestParseTypeTagFromString(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := ParseTypeTagFromString(string(test.coinType))
+			got, err := TypeTagFromString(string(test.coinType))
 			if test.errMsg != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, test.errMsg)
