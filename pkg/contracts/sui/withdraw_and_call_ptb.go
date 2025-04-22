@@ -82,28 +82,28 @@ func ExtractInitialSharedVersion(objData models.SuiObjectData) (uint64, error) {
 func (gw *Gateway) parseWithdrawAndCallPTB(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
-	tx := res.Transaction
+	tx := res.Transaction.Data.Transaction
 
 	// the number of PTB commands should be 3
-	if len(tx.Data.Transaction.Transactions) != ptbWithdrawAndCallCmdCount {
+	if len(tx.Transactions) != ptbWithdrawAndCallCmdCount {
 		return event, nil, errors.Wrapf(
 			ErrParseEvent,
 			"invalid number of commands(%d) in the PTB",
-			len(tx.Data.Transaction.Transactions),
+			len(tx.Transactions),
 		)
 	}
 
 	// the number of PTB inputs should be >= 5
-	if len(tx.Data.Transaction.Inputs) < ptbWithdrawImplInputCount {
+	if len(tx.Inputs) < ptbWithdrawImplInputCount {
 		return event, nil, errors.Wrapf(
 			ErrParseEvent,
 			"invalid number of inputs(%d) in the PTB",
-			len(tx.Data.Transaction.Inputs),
+			len(tx.Inputs),
 		)
 	}
 
 	// parse withdraw_impl at command 0
-	packageID, module, function, argIndexes, err := extractMoveCall(tx.Data.Transaction.Transactions[0])
+	packageID, module, function, argIndexes, err := extractMoveCall(tx.Transactions[0])
 	if err != nil {
 		return event, nil, errors.Wrap(ErrParseEvent, "unable to parse withdraw_impl command in the PTB")
 	}
@@ -127,7 +127,7 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 
 	// parse withdraw_impl arguments
 	// argument1: amount
-	amountStr, err := extractStr(tx.Data.Transaction.Inputs[1], "value")
+	amountStr, err := extractStr(tx.Inputs[1], "value")
 	if err != nil {
 		return Event{}, nil, errors.Wrap(ErrParseEvent, "unable to extract amount")
 	}
@@ -137,7 +137,7 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 	}
 
 	// argument2: nonce
-	nonceStr, err := extractStr(tx.Data.Transaction.Inputs[2], "value")
+	nonceStr, err := extractStr(tx.Inputs[2], "value")
 	if err != nil {
 		return Event{}, nil, errors.Wrap(ErrParseEvent, "unable to extract nonce")
 	}

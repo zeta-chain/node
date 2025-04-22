@@ -215,6 +215,8 @@ func withdrawAndCallPTB(
 }
 
 // getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
+//   - Initial shared version will be used for shared objects
+//   - Current version will be used for non-shared objects, e.g. withdraw cap
 func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	gatewayID, withdrawCapID string,
