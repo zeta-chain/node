@@ -121,7 +121,7 @@ func (ob *Observer) postVoteOutbound(
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
-	var retryGasLimit uint64
+	retryGasLimit := uint64(1_000_000)
 	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
