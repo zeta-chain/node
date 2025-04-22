@@ -162,6 +162,7 @@ func (signer *Signer) TryProcessOutbound(
 		outboundGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
+		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 		if cctx.IsWithdrawAndCall() || isRevert {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
@@ -420,9 +421,10 @@ func (signer *Signer) prepareExecuteTx(
 		}
 		message = messageToDecode
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, errors.Wrapf(err, "decodeExecuteMsg %s error", cctx.RelayedMessage)
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}
@@ -578,9 +580,10 @@ func (signer *Signer) prepareExecuteSPLTx(
 		}
 		message = messageToDecode
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, err
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}

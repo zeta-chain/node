@@ -25,15 +25,19 @@
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
+* [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
 
 ### Fixes
+
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 * [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
+* [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
+* [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 
 ### Tests
 
-* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
+* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
 
 ### Refactor
 

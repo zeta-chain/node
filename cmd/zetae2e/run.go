@@ -63,7 +63,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	conf, err := config.ReadConfig(configPath)
+	conf, err := config.ReadConfig(configPath, true)
 	if err != nil {
 		return err
 	}

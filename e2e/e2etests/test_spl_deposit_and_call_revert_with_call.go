@@ -41,16 +41,19 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("connected pda balance of SPL before revert: %s", connectedPdaBalanceBefore.Value.Amount)
 
 	// create encoded msg
-	accounts := []solanacontracts.AccountMeta{
-		{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
-		{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
-		{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
-		{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+	msg := solanacontracts.ExecuteMsg{
+		Accounts: []solanacontracts.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
 	}
 
-	msgEncoded, err := solanacontracts.EncodeExecuteMessage(accounts, data)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// #nosec G115 e2eTest - always in range
