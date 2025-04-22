@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -208,19 +209,32 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 	amount *big.Int,
 	approveAmount *big.Int,
 ) *ethtypes.Transaction {
-	// approve
-	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
+	// First check the current allowance
+	currentAllowance, err := r.TONZRC20.Allowance(&bind.CallOpts{}, r.EVMAddress(), r.GatewayZEVMAddr)
 	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt, "approve")
 
-	// withdraw
-	tx, err = r.TONZRC20.Withdraw(r.ZEVMAuth, []byte(to.ToRaw()), amount)
+	// Only approve if the current allowance is less than the needed amount
+	if currentAllowance.Cmp(approveAmount) < 0 {
+		// Reset allowance to 0 first to handle certain tokens that require this pattern
+		resetTx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, big.NewInt(0))
+		require.NoError(r, err)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, resetTx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt, "reset approve")
+
+		// Then set the actual approval
+		tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+		require.NoError(r, err)
+		receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt, "approve")
+	}
+
+	// Now perform the withdrawal
+	tx, err := r.TONZRC20.Withdraw(r.ZEVMAuth, []byte(to.ToRaw()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	// wait for tx receipt
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
