@@ -443,6 +443,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestZEVMToSolanaCallName,
 				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
 				e2etests.TestSolanaDepositAndCallRevertName,
 				e2etests.TestSolanaDepositAndCallRevertWithCallName,

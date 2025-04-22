@@ -385,6 +385,8 @@ func ParseGatewayInstruction(
 		return parseInstructionWith(instruction, splOutboundParsers)
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
+	case coin.CoinType_NoAssetCall:
+		return contracts.ParseInstructionExecute(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

@@ -58,6 +58,9 @@ const (
 
 	// executeSPLTokenRevertTxTest is local devnet tx result for testing
 	executeSPLTokenRevertTxTest = "4yYoLWeVwjRiLk4sf8aqnk41CRFFQZNLHxixybn7rU5R5YUjWnY5zfrdyevopkLmTLqQA6qL5Dwsrkz5NusKYoSo"
+
+	// callTxTest
+	callTxTest = "4QH54TrUEeXTCrpNbM4h7WzZrxEfhx4R9iHu2FcPF553w8VJ3Tftqf8ca2CnyZUJBNZ1vNidnKcDv4VSUoynBPP"
 )
 
 // createTestObserver creates a test observer for testing
@@ -908,5 +911,49 @@ func Test_ParseInstructionExecuteSPLRevert(t *testing.T) {
 		// ASSERT
 		require.ErrorContains(t, err, "not an execute_spl_token_revert instruction")
 		require.Nil(t, inst)
+	})
+}
+
+func Test_ParseInstructionCall(t *testing.T) {
+	// the test chain and transaction hash
+	chain := chains.SolanaDevnet
+	txHash := callTxTest
+	txAmount := uint64(0) // 0 amount for no asset call
+
+	// gateway address
+	gatewayID, err := solana.PublicKeyFromBase58("94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d")
+	require.NoError(t, err)
+
+	t.Run("should parse instruction call", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		// tss address used in local devnet
+		tssAddress := "0x0E2378D1A8B95C3CE6da64FC28e1dC0Ca28D000F"
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+
+		// ACT
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall)
+		require.NoError(t, err)
+
+		// ASSERT
+		// check sender, nonce and amount
+		sender, err := inst.Signer()
+		require.NoError(t, err)
+		require.Equal(t, tssAddress, sender.String())
+		require.EqualValues(t, inst.GatewayNonce(), 0)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
+	})
+
+	t.Run("should fail to parse instruction call if its asset instruction", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, executeSPLTxTest)
+
+		// ACT
+		_, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall)
+		require.Error(t, err)
+
+		// ASSERT
+		require.ErrorContains(t, err, "error deserializing instruction")
 	})
 }
