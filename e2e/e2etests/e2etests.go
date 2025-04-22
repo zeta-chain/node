@@ -719,7 +719,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositAndCallRefundName,
 		"deposit TON into ZEVM and call a smart contract that reverts; expect refund",
 		[]runner.ArgDefinition{
-			{Description: "amount in nano tons", DefaultValue: "20000000000"}, // Increase from 1.0 TON to 20.0 TON
+			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDepositAndCallRefund,
 	),
