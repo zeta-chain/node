@@ -421,9 +421,10 @@ func (signer *Signer) prepareExecuteTx(
 		}
 		message = messageToDecode
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, errors.Wrapf(err, "decodeExecuteMsg %s error", cctx.RelayedMessage)
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}
@@ -566,9 +567,10 @@ func (signer *Signer) prepareExecuteSPLTx(
 	if err != nil {
 		return nil, err
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, err
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}

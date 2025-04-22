@@ -636,9 +636,33 @@ type ExecuteMsg struct {
 	Data     []byte
 }
 
-// GetExecuteMsgAbi used for abi encoding/decoding execute msg
-func GetExecuteMsgAbi() (abi.Arguments, error) {
-	MsgAbiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
+func (m *ExecuteMsg) Encode() ([]byte, error) {
+	return executeMsgAbi.Pack(m)
+}
+
+func (m *ExecuteMsg) Decode(msgbz []byte) error {
+	unpacked, err := executeMsgAbi.Unpack(msgbz)
+	if err != nil {
+		return errors.Wrap(err, "error unpacking execute msg")
+	}
+
+	jsonMsg, err := json.Marshal(unpacked[0])
+	if err != nil {
+		return errors.Wrap(err, "error marshalling execute msg [0]")
+	}
+
+	err = json.Unmarshal(jsonMsg, m)
+	if err != nil {
+		return errors.Wrap(err, "error unmarshalling execute msg")
+	}
+
+	return nil
+}
+
+var executeMsgAbi = mustGetExecuteMsgAbi()
+
+func mustGetExecuteMsgAbi() abi.Arguments {
+	abiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
 		{
 			Name: "accounts",
 			Type: "tuple[]",
@@ -651,38 +675,10 @@ func GetExecuteMsgAbi() (abi.Arguments, error) {
 	})
 
 	if err != nil {
-		return abi.Arguments{}, err
+		panic(errors.Wrap(err, "error creating abi type"))
 	}
 
-	MsgAbiArgs := abi.Arguments{
-		{Type: MsgAbiType, Name: "msg"},
+	return abi.Arguments{
+		{Type: abiType, Name: "msg"},
 	}
-
-	return MsgAbiArgs, nil
-}
-
-// DecodeExecuteMsg decodes execute msg using abi decoding
-func DecodeExecuteMsg(msgbz []byte) (ExecuteMsg, error) {
-	args, err := GetExecuteMsgAbi()
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	unpacked, err := args.Unpack(msgbz)
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	jsonMsg, err := json.Marshal(unpacked[0])
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	var msg ExecuteMsg
-	err = json.Unmarshal(jsonMsg, &msg)
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	return msg, nil
 }

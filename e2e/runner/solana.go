@@ -552,8 +552,6 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
 	msg := solanacontract.ExecuteMsg{
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
@@ -564,7 +562,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 		Data: data,
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// withdraw
@@ -639,8 +637,6 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
 	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
 
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
 	msg := solanacontract.ExecuteMsg{
 		Accounts: []solanacontract.AccountMeta{
 			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
@@ -655,7 +651,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 		Data: data,
 	}
 
-	msgEncoded, err := abiArgs.Pack(msg)
+	msgEncoded, err := msg.Encode()
 	require.NoError(r, err)
 
 	// withdraw

@@ -767,21 +767,3 @@ func (msg *MsgWhitelist) Signer() (common.Address, error) {
 
 	return RecoverSigner(msgHash[:], msgSig[:])
 }
-
-// EncodeExecuteMessage encodes an execute message with the given parameters
-func EncodeExecuteMessage(
-	accounts []AccountMeta,
-	data []byte,
-) ([]byte, error) {
-	abiArgs, err := GetExecuteMsgAbi()
-	if err != nil {
-		return nil, err
-	}
-
-	msg := ExecuteMsg{
-		Accounts: accounts,
-		Data:     data,
-	}
-
-	return abiArgs.Pack(msg)
-}
