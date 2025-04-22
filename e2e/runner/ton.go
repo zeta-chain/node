@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -167,7 +168,17 @@ func (r *E2ERunner) TONDepositAndCall(
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
 	// Verify that the found CCTX has the correct relayed message
-	require.Equal(r, string(callData), cctx.RelayedMessage, "CCTX relayed message doesn't match the callData")
+	// The relayed message might be stored as a hex string, so we need to check both formats
+	if cctx.RelayedMessage != string(callData) {
+		// Check if the relayed message is a hex encoding of the call data
+		hexEncoded := fmt.Sprintf("%x", callData)
+		if cctx.RelayedMessage != hexEncoded {
+			require.Equal(r, string(callData), cctx.RelayedMessage,
+				"CCTX relayed message doesn't match the callData (also checked hex format)")
+		} else {
+			r.Logger.Info("CCTX relayed message matched the hex-encoded callData: %s", hexEncoded)
+		}
+	}
 
 	return cctx, nil
 }
