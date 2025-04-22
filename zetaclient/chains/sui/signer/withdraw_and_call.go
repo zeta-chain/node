@@ -3,7 +3,6 @@ package signer
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"strconv"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -39,75 +38,30 @@ func withdrawAndCallPTB(
 ) (tx models.TxnMetaData, err error) {
 	ptb := suiptb.NewTransactionDataTransactionBuilder()
 
-	// Parse arguments
+	// Parse signer address
 	signerAddr, err := sui.AddressFromHex(signerAddrStr)
 	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse signer address %s", signerAddrStr)
+		return tx, errors.Wrapf(err, "invalid signer address %s", signerAddrStr)
 	}
 
-	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
+	// Add withdraw_impl command and get its command index
+	gasBudgetUint, err := addPTBCmdWithdrawImpl(
+		ptb,
+		gatewayPackageIDStr,
+		gatewayModule,
+		gatewayObjRef,
+		withdrawCapObjRef,
+		coinTypeStr,
+		amountStr,
+		nonceStr,
+		gasBudgetStr,
+	)
 	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse package ID %s", gatewayPackageIDStr)
+		return tx, err
 	}
-
-	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse coin type %s", coinTypeStr)
-	}
-
-	argGatewayObject, err := ptb.Obj(suiptb.ObjectArg{
-		SharedObject: &suiptb.SharedObjectArg{
-			Id:                   gatewayObjRef.ObjectId,
-			InitialSharedVersion: gatewayObjRef.Version,
-			Mutable:              true,
-		},
-	})
-	if err != nil {
-		return tx, errors.Wrap(err, "failed to create gateway object argument")
-	}
-
-	argAmount, _, err := zetasui.PureUint64FromString(ptb, amountStr)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create amount argument")
-	}
-
-	argNonce, _, err := zetasui.PureUint64FromString(ptb, nonceStr)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create nonce argument")
-	}
-
-	argGasBudget, gasBudgetUint, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create gas budget argument")
-	}
-
-	argWithdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create withdraw cap object argument")
-	}
-
-	// Move call for withdraw_impl and get its command index (0)
-	// #nosec G115 always in range
-	cmdIndex := uint16(len(ptb.Commands))
-	ptb.Command(suiptb.Command{
-		MoveCall: &suiptb.ProgrammableMoveCall{
-			Package:  gatewayPackageID,
-			Module:   gatewayModule,
-			Function: zetasui.FuncWithdrawImpl,
-			TypeArguments: []sui.TypeTag{
-				{Struct: coinType},
-			},
-			Arguments: []suiptb.Argument{
-				argGatewayObject,
-				argAmount,
-				argNonce,
-				argGasBudget,
-				argWithdrawCap,
-			},
-		},
-	})
 
 	// Create arguments to access the two results from the withdraw_impl call
+	cmdIndex := uint16(0)
 	argWithdrawnCoins := suiptb.Argument{
 		NestedResult: &suiptb.NestedResult{
 			Cmd:    cmdIndex,
@@ -122,78 +76,29 @@ func withdrawAndCallPTB(
 		},
 	}
 
-	// Transfer gas budget coins to the TSS address
-	argTSSAddr, err := ptb.Pure(signerAddr)
+	// Add gas budget transfer command
+	err = addPTBCmdGasBudgetTransfer(ptb, argBudgetCoins, *signerAddr)
 	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create tss address argument")
+		return tx, err
 	}
 
-	ptb.Command(suiptb.Command{
-		TransferObjects: &suiptb.ProgrammableTransferObjects{
-			Objects: []suiptb.Argument{argBudgetCoins},
-			Address: argTSSAddr,
-		},
-	})
-
-	// Extract argument for on_call
-	// The receiver in the cctx is used as target package ID
-	targetPackageID, err := sui.PackageIdFromHex(receiver)
+	// Add on_call command
+	err = addPTBCmdOnCall(
+		ptb,
+		receiver,
+		coinTypeStr,
+		argWithdrawnCoins,
+		onCallObjectRefs,
+		cp,
+	)
 	if err != nil {
-		return tx, errors.Wrapf(err, "failed to parse target package ID %s", receiver)
+		return tx, err
 	}
-
-	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
-	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
-	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
-	for _, typeArg := range cp.TypeArgs {
-		typeStruct, err := zetasui.TypeTagFromString(typeArg)
-		if err != nil {
-			return tx, errors.Wrapf(err, "failed to parse type argument %s", typeArg)
-		}
-		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: typeStruct})
-	}
-
-	// Build the args for on_call: [withdrawns coins + payload objects + message]
-	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+1)
-	onCallArgs = append(onCallArgs, argWithdrawnCoins)
-
-	// Add the payload objects, objects are all shared
-	for _, onCallObjectRef := range onCallObjectRefs {
-		objectArg, err := ptb.Obj(suiptb.ObjectArg{
-			SharedObject: &suiptb.SharedObjectArg{
-				Id:                   onCallObjectRef.ObjectId,
-				InitialSharedVersion: onCallObjectRef.Version,
-				Mutable:              true,
-			},
-		})
-		if err != nil {
-			return tx, errors.Wrapf(err, "failed to create object argument: %v", onCallObjectRef)
-		}
-		onCallArgs = append(onCallArgs, objectArg)
-	}
-
-	// Add any additional message arguments
-	messageArg, err := ptb.Pure(cp.Message)
-	if err != nil {
-		return tx, errors.Wrapf(err, "failed to create message argument: %x", cp.Message)
-	}
-	onCallArgs = append(onCallArgs, messageArg)
-
-	// Call the target contract on_call
-	ptb.Command(suiptb.Command{
-		MoveCall: &suiptb.ProgrammableMoveCall{
-			Package:       targetPackageID,
-			Module:        zetasui.ModuleConnected,
-			Function:      zetasui.FuncOnCall,
-			TypeArguments: onCallTypeArgs,
-			Arguments:     onCallArgs,
-		},
-	})
 
 	// Finish building the PTB
 	pt := ptb.Finish()
 
-	// Get the signer address
+	// Wrap the PTB into a transaction data
 	txData := suiptb.NewTransactionData(
 		signerAddr,
 		pt,
@@ -215,18 +120,196 @@ func withdrawAndCallPTB(
 	}, nil
 }
 
+// addPTBCmdWithdrawImpl adds the withdraw_impl command to the PTB and returns the gas budget value
+func addPTBCmdWithdrawImpl(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	gatewayPackageIDStr string,
+	gatewayModule string,
+	gatewayObjRef sui.ObjectRef,
+	withdrawCapObjRef sui.ObjectRef,
+	coinTypeStr string,
+	amountStr string,
+	nonceStr string,
+	gasBudgetStr string,
+) (uint64, error) {
+	// Parse gateway package ID
+	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "invalid gateway package ID %s", gatewayPackageIDStr)
+	}
+
+	// Parse coin type
+	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
+	}
+
+	// Create gateway object argument
+	argGatewayObject, err := ptb.Obj(suiptb.ObjectArg{
+		SharedObject: &suiptb.SharedObjectArg{
+			Id:                   gatewayObjRef.ObjectId,
+			InitialSharedVersion: gatewayObjRef.Version,
+			Mutable:              true,
+		},
+	})
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to create gateway object argument")
+	}
+
+	// Create amount argument
+	argAmount, _, err := zetasui.PureUint64FromString(ptb, amountStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to create amount argument")
+	}
+
+	// Create nonce argument
+	argNonce, _, err := zetasui.PureUint64FromString(ptb, nonceStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to create nonce argument")
+	}
+
+	// Create gas budget argument
+	argGasBudget, gasBudgetUint, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to create gas budget argument")
+	}
+
+	// Create withdraw cap argument
+	argWithdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
+	if err != nil {
+		return 0, errors.Wrapf(err, "unable to create withdraw cap object argument")
+	}
+
+	// add Move call for withdraw_impl
+	// #nosec G115 always in range
+	ptb.Command(suiptb.Command{
+		MoveCall: &suiptb.ProgrammableMoveCall{
+			Package:  gatewayPackageID,
+			Module:   gatewayModule,
+			Function: zetasui.FuncWithdrawImpl,
+			TypeArguments: []sui.TypeTag{
+				{Struct: coinType},
+			},
+			Arguments: []suiptb.Argument{
+				argGatewayObject,
+				argAmount,
+				argNonce,
+				argGasBudget,
+				argWithdrawCap,
+			},
+		},
+	})
+
+	return gasBudgetUint, nil
+}
+
+// addPTBCmdGasBudgetTransfer adds the gas budget transfer command to the PTB
+func addPTBCmdGasBudgetTransfer(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	argBudgetCoins suiptb.Argument,
+	signerAddr sui.Address,
+) error {
+	// create TSS address argument
+	argTSSAddr, err := ptb.Pure(signerAddr)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create tss address argument")
+	}
+
+	ptb.Command(suiptb.Command{
+		TransferObjects: &suiptb.ProgrammableTransferObjects{
+			Objects: []suiptb.Argument{argBudgetCoins},
+			Address: argTSSAddr,
+		},
+	})
+
+	return nil
+}
+
+// addPTBCmdOnCall adds the on_call command to the PTB
+func addPTBCmdOnCall(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	receiver string,
+	coinTypeStr string,
+	argWithdrawnCoins suiptb.Argument,
+	onCallObjectRefs []sui.ObjectRef,
+	cp zetasui.CallPayload,
+) error {
+	// Parse target package ID
+	targetPackageID, err := sui.PackageIdFromHex(receiver)
+	if err != nil {
+		return errors.Wrapf(err, "invalid target package ID %s", receiver)
+	}
+
+	// Parse coin type
+	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
+	if err != nil {
+		return errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
+	}
+
+	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
+	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
+	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
+	for _, typeArg := range cp.TypeArgs {
+		typeStruct, err := zetasui.TypeTagFromString(typeArg)
+		if err != nil {
+			return errors.Wrapf(err, "invalid type argument %s", typeArg)
+		}
+		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: typeStruct})
+	}
+
+	// Build the args for on_call: [withdrawns coins + payload objects + message]
+	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+1)
+	onCallArgs = append(onCallArgs, argWithdrawnCoins)
+
+	// Add the payload objects, objects are all shared
+	for _, onCallObjectRef := range onCallObjectRefs {
+		objectArg, err := ptb.Obj(suiptb.ObjectArg{
+			SharedObject: &suiptb.SharedObjectArg{
+				Id:                   onCallObjectRef.ObjectId,
+				InitialSharedVersion: onCallObjectRef.Version,
+				Mutable:              true,
+			},
+		})
+		if err != nil {
+			return errors.Wrapf(err, "unable to create object argument: %v", onCallObjectRef)
+		}
+		onCallArgs = append(onCallArgs, objectArg)
+	}
+
+	// Add any additional message arguments
+	messageArg, err := ptb.Pure(cp.Message)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create message argument: %x", cp.Message)
+	}
+	onCallArgs = append(onCallArgs, messageArg)
+
+	// Call the target contract on_call
+	ptb.Command(suiptb.Command{
+		MoveCall: &suiptb.ProgrammableMoveCall{
+			Package:       targetPackageID,
+			Module:        zetasui.ModuleConnected,
+			Function:      zetasui.FuncOnCall,
+			TypeArguments: onCallTypeArgs,
+			Arguments:     onCallArgs,
+		},
+	})
+
+	return nil
+}
+
 // getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
 //   - Initial shared version will be used for shared objects
 //   - Current version will be used for non-shared objects, e.g. withdraw cap
-func (s *Signer) getWithdrawAndCallObjectRefs(
+func getWithdrawAndCallObjectRefs(
 	ctx context.Context,
+	rpc RPC,
 	gatewayID, withdrawCapID string,
 	onCallObjectIDs []string,
 ) (gatewayObjRef, withdrawCapObjRef sui.ObjectRef, onCallObjectRefs []sui.ObjectRef, err error) {
 	objectIDs := append([]string{gatewayID, withdrawCapID}, onCallObjectIDs...)
 
 	// query objects in batch
-	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+	suiObjects, err := rpc.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
 		ObjectIds: objectIDs,
 		Options: models.SuiObjectDataOptions{
 			// show owner info in order to retrieve object initial shared version
@@ -289,54 +372,4 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	return objectRefs[0], objectRefs[1], objectRefs[2:], nil
-}
-
-// getTSSSuiCoinObjectRef returns the latest SUI coin object reference for the TSS address
-// Note: the SUI object may change over time, so we need to get the latest object
-func (s *Signer) getTSSSuiCoinObjectRef(ctx context.Context) (sui.ObjectRef, error) {
-	coins, err := s.client.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
-		Owner:    s.TSS().PubKey().AddressSui(),
-		CoinType: string(zetasui.SUI),
-	})
-	if err != nil {
-		return sui.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
-	}
-
-	var (
-		suiCoin        *models.CoinData
-		suiCoinVersion uint64
-	)
-
-	// locate the latest version of SUI coin object under TSS account
-	for _, coin := range coins.Data {
-		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
-			continue
-		}
-
-		version, _ := strconv.ParseUint(coin.Version, 10, 64)
-		if version > suiCoinVersion {
-			suiCoin = &coin
-			suiCoinVersion = version
-		}
-	}
-	if suiCoin == nil {
-		return sui.ObjectRef{}, errors.New("SUI coin not found")
-	}
-
-	// convert coin data to object ref
-	suiCoinID, err := sui.ObjectIdFromHex(suiCoin.CoinObjectId)
-	if err != nil {
-		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin ID: %w", err)
-	}
-
-	suiCoinDigest, err := sui.NewBase58(suiCoin.Digest)
-	if err != nil {
-		return sui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin digest: %w", err)
-	}
-
-	return sui.ObjectRef{
-		ObjectId: suiCoinID,
-		Version:  suiCoinVersion,
-		Digest:   suiCoinDigest,
-	}, nil
 }

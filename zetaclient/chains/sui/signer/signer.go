@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	patsui "github.com/pattonkan/sui-go/sui"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/bg"
@@ -32,7 +33,7 @@ type RPC interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	SuiXGetCoins(ctx context.Context, req models.SuiXGetCoinsRequest) (models.PaginatedCoinsResponse, error)
+	GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.ObjectRef, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(

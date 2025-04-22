@@ -24,7 +24,6 @@ type suiClient interface {
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	SuiXGetCoins(ctx context.Context, req models.SuiXGetCoinsRequest) (models.PaginatedCoinsResponse, error)
 	SuiGetTransactionBlock(
 		ctx context.Context,
 		req models.SuiGetTransactionBlockRequest,

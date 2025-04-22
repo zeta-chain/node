@@ -10,7 +10,10 @@ import (
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
+	patsui "github.com/pattonkan/sui-go/sui"
 	"github.com/pkg/errors"
+
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 // Client Sui client.
@@ -245,6 +248,56 @@ func (c *Client) SuiExecuteTransactionBlock(
 	}
 
 	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
+// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address
+// Note: the SUI object may change over time, so we need to get the latest object
+func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.ObjectRef, error) {
+	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
+		Owner:    owner,
+		CoinType: string(zetasui.SUI),
+	})
+	if err != nil {
+		return patsui.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
+	}
+
+	var (
+		suiCoin        *models.CoinData
+		suiCoinVersion uint64
+	)
+
+	// locate the latest version of SUI coin object of given owner
+	for _, coin := range coins.Data {
+		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
+			continue
+		}
+
+		version, _ := strconv.ParseUint(coin.Version, 10, 64)
+		if version > suiCoinVersion {
+			suiCoin = &coin
+			suiCoinVersion = version
+		}
+	}
+	if suiCoin == nil {
+		return patsui.ObjectRef{}, errors.New("SUI coin not found")
+	}
+
+	// convert coin data to object ref
+	suiCoinID, err := patsui.ObjectIdFromHex(suiCoin.CoinObjectId)
+	if err != nil {
+		return patsui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin ID: %w", err)
+	}
+
+	suiCoinDigest, err := patsui.NewBase58(suiCoin.Digest)
+	if err != nil {
+		return patsui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin digest: %w", err)
+	}
+
+	return patsui.ObjectRef{
+		ObjectId: suiCoinID,
+		Version:  suiCoinVersion,
+		Digest:   suiCoinDigest,
+	}, nil
 }
 
 // EncodeCursor encodes event ID into cursor.

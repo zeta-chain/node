@@ -148,14 +148,15 @@ func (s *Signer) buildWithdrawAndCallTx(
 	}
 
 	// get latest TSS SUI coin object ref for gas payment
-	suiCoinObjRef, err := s.getTSSSuiCoinObjectRef(ctx)
+	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui())
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
 	}
 
 	// get all other object references: [gateway, withdrawCap, onCallObjects]
-	gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := s.getWithdrawAndCallObjectRefs(
+	gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := getWithdrawAndCallObjectRefs(
 		ctx,
+		s.client,
 		s.gateway.ObjectID(),
 		withdrawCapIDStr,
 		cp.ObjectIDs,

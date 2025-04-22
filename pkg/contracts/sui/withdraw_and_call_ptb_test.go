@@ -212,7 +212,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			event, content, err := gw.parseWithdrawAndCallPTB(test.response)
 			if test.errMsg != "" {
-				require.Contains(t, err.Error(), test.errMsg)
+				require.ErrorContains(t, err, test.errMsg)
 				return
 			}
 
