@@ -55,7 +55,7 @@ func withdrawAndCallPTB(
 		return tx, errors.Wrapf(err, "failed to parse coin type %s", coinTypeStr)
 	}
 
-	gatewayObject, err := ptb.Obj(suiptb.ObjectArg{
+	argGatewayObject, err := ptb.Obj(suiptb.ObjectArg{
 		SharedObject: &suiptb.SharedObjectArg{
 			Id:                   gatewayObjRef.ObjectId,
 			InitialSharedVersion: gatewayObjRef.Version,
@@ -66,22 +66,22 @@ func withdrawAndCallPTB(
 		return tx, errors.Wrap(err, "failed to create gateway object argument")
 	}
 
-	amount, err := zetasui.PureUint64FromString(ptb, amountStr)
+	argAmount, _, err := zetasui.PureUint64FromString(ptb, amountStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create amount argument")
 	}
 
-	nonce, err := zetasui.PureUint64FromString(ptb, nonceStr)
+	argNonce, _, err := zetasui.PureUint64FromString(ptb, nonceStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create nonce argument")
 	}
 
-	gasBudget, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
+	argGasBudget, gasBudgetUint, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create gas budget argument")
 	}
 
-	withdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
+	argWithdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create withdraw cap object argument")
 	}
@@ -98,24 +98,24 @@ func withdrawAndCallPTB(
 				{Struct: coinType},
 			},
 			Arguments: []suiptb.Argument{
-				gatewayObject,
-				amount,
-				nonce,
-				gasBudget,
-				withdrawCap,
+				argGatewayObject,
+				argAmount,
+				argNonce,
+				argGasBudget,
+				argWithdrawCap,
 			},
 		},
 	})
 
 	// Create arguments to access the two results from the withdraw_impl call
-	withdrawnCoinsArg := suiptb.Argument{
+	argWithdrawnCoins := suiptb.Argument{
 		NestedResult: &suiptb.NestedResult{
 			Cmd:    cmdIndex,
 			Result: 0, // First result (main coins)
 		},
 	}
 
-	budgetCoinsArg := suiptb.Argument{
+	argBudgetCoins := suiptb.Argument{
 		NestedResult: &suiptb.NestedResult{
 			Cmd:    cmdIndex,
 			Result: 1, // Second result (budget coins)
@@ -123,15 +123,15 @@ func withdrawAndCallPTB(
 	}
 
 	// Transfer gas budget coins to the TSS address
-	tssAddrArg, err := ptb.Pure(signerAddr)
+	argTSSAddr, err := ptb.Pure(signerAddr)
 	if err != nil {
 		return tx, errors.Wrapf(err, "failed to create tss address argument")
 	}
 
 	ptb.Command(suiptb.Command{
 		TransferObjects: &suiptb.ProgrammableTransferObjects{
-			Objects: []suiptb.Argument{budgetCoinsArg},
-			Address: tssAddrArg,
+			Objects: []suiptb.Argument{argBudgetCoins},
+			Address: argTSSAddr,
 		},
 	})
 
@@ -155,7 +155,7 @@ func withdrawAndCallPTB(
 
 	// Build the args for on_call: [withdrawns coins + payload objects + message]
 	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+1)
-	onCallArgs = append(onCallArgs, withdrawnCoinsArg)
+	onCallArgs = append(onCallArgs, argWithdrawnCoins)
 
 	// Add the payload objects, objects are all shared
 	for _, onCallObjectRef := range onCallObjectRefs {
@@ -200,7 +200,7 @@ func withdrawAndCallPTB(
 		[]*sui.ObjectRef{
 			&suiCoinObjRef,
 		},
-		suiclient.DefaultGasBudget,
+		gasBudgetUint,
 		suiclient.DefaultGasPrice,
 	)
 

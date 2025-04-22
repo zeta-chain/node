@@ -10,19 +10,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PureUint64ArgFromStr converts a string to a uint64 PTB pure argument
-func PureUint64FromString(ptb *suiptb.ProgrammableTransactionBuilder, integerStr string) (suiptb.Argument, error) {
-	valueUint64, err := strconv.ParseUint(integerStr, 10, 64)
+// PureUint64ArgFromStr converts a string to a uint64 and creates a PTB pure argument
+func PureUint64FromString(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	integerStr string,
+) (arg suiptb.Argument, value uint64, err error) {
+	value, err = strconv.ParseUint(integerStr, 10, 64)
 	if err != nil {
-		return suiptb.Argument{}, errors.Wrapf(err, "failed to parse amount %s", integerStr)
+		return suiptb.Argument{}, 0, errors.Wrapf(err, "failed to parse amount %s", integerStr)
 	}
 
-	arg, err := ptb.Pure(valueUint64)
+	arg, err = ptb.Pure(value)
 	if err != nil {
-		return suiptb.Argument{}, errors.Wrapf(err, "failed to create amount argument")
+		return suiptb.Argument{}, 0, errors.Wrapf(err, "failed to create amount argument")
 	}
 
-	return arg, nil
+	return arg, value, nil
 }
 
 // ParseTypeTagFromStr parses a PTB type argument StructTag from a type string
