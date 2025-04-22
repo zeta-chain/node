@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
-	ton "github.com/tonkeeper/tongo/liteapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -149,12 +148,7 @@ func getTONClient(ctx context.Context, configURLOrPath string) (*tonrunner.Clien
 		return nil, fmt.Errorf("failed to get ton config: %w", err)
 	}
 
-	client, err := ton.NewClient(ton.WithConfigurationFile(*cfg))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ton client: %w", err)
-	}
-
-	return &tonrunner.Client{Client: client}, nil
+	return tonrunner.NewClient(cfg)
 }
 
 func GetZetacoreClient(conf config.Config) (zetacore_rpc.Clients, error) {
