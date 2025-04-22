@@ -60,22 +60,27 @@ const (
 	/*
 	 * Solana tests
 	 */
-	TestSolanaDepositName                       = "solana_deposit"
-	TestSolanaWithdrawName                      = "solana_withdraw"
-	TestSolanaWithdrawAndCallName               = "solana_withdraw_and_call"
-	TestSolanaWithdrawAndCallRevertWithCallName = "solana_withdraw_and_call_revert_with_call"
-	TestSolanaDepositAndCallName                = "solana_deposit_and_call"
-	TestSolanaDepositAndCallRevertName          = "solana_deposit_and_call_revert"
-	TestSolanaDepositAndCallRevertWithDustName  = "solana_deposit_and_call_revert_with_dust"
-	TestSolanaToZEVMCallName                    = "solana_to_zevm_call"
-	TestSolanaDepositRestrictedName             = "solana_deposit_restricted"
-	TestSolanaWithdrawRestrictedName            = "solana_withdraw_restricted"
-	TestSPLDepositName                          = "spl_deposit"
-	TestSPLDepositAndCallName                   = "spl_deposit_and_call"
-	TestSPLWithdrawName                         = "spl_withdraw"
-	TestSPLWithdrawAndCallName                  = "spl_withdraw_and_call"
-	TestSPLWithdrawAndCallRevertName            = "spl_withdraw_and_call_revert"
-	TestSPLWithdrawAndCreateReceiverAtaName     = "spl_withdraw_and_create_receiver_ata"
+	TestSolanaDepositName                                 = "solana_deposit"
+	TestSolanaWithdrawName                                = "solana_withdraw"
+	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallRevertWithCallName           = "solana_withdraw_and_call_revert_with_call"
+	TestSolanaDepositAndCallName                          = "solana_deposit_and_call"
+	TestSolanaDepositAndCallRevertName                    = "solana_deposit_and_call_revert"
+	TestSolanaDepositAndCallRevertWithCallName            = "solana_deposit_and_call_revert_with_call"
+	TestSolanaDepositAndCallRevertWithCallThatRevertsName = "solana_deposit_and_call_revert_with_call_that_reverts"
+	TestSolanaDepositAndCallRevertWithDustName            = "solana_deposit_and_call_revert_with_dust"
+	TestSolanaToZEVMCallName                              = "solana_to_zevm_call"
+	TestSolanaDepositRestrictedName                       = "solana_deposit_restricted"
+	TestSolanaWithdrawRestrictedName                      = "solana_withdraw_restricted"
+	TestSPLDepositName                                    = "spl_deposit"
+	TestSPLDepositAndCallName                             = "spl_deposit_and_call"
+	TestSPLDepositAndCallRevertName                       = "spl_deposit_and_call_revert"
+	TestSPLDepositAndCallRevertWithCallName               = "spl_deposit_and_call_revert_with_call"
+	TestSPLDepositAndCallRevertWithCallThatRevertsName    = "spl_deposit_and_call_revert_with_call_that_reverts"
+	TestSPLWithdrawName                                   = "spl_withdraw"
+	TestSPLWithdrawAndCallName                            = "spl_withdraw_and_call"
+	TestSPLWithdrawAndCallRevertName                      = "spl_withdraw_and_call_revert"
+	TestSPLWithdrawAndCreateReceiverAtaName               = "spl_withdraw_and_create_receiver_ata"
 
 	/**
 	 * TON tests
@@ -646,6 +651,24 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithCallName,
+		"deposit SOL into ZEVM and call a contract that reverts with call on revert",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1200000"},
+		},
+		TestSolanaDepositAndCallRevertWithCall,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositAndCallRevertWithCallThatRevertsName,
+		"deposit SOL into ZEVM and call a contract that reverts with call on revert and connected program reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1200000"},
+		},
+		TestSolanaDepositAndCallRevertWithCallThatReverts,
+		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
 		TestSolanaDepositAndCallRevertWithDustName,
 		"deposit SOL into ZEVM; revert with dust amount that aborts the CCTX",
 		[]runner.ArgDefinition{},
@@ -693,6 +716,33 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount of spl tokens", DefaultValue: "12000000"},
 		},
 		TestSPLDepositAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertName,
+		"deposit SPL into ZEVM and call which reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevert,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertWithCallName,
+		"deposit SPL into ZEVM and call which reverts with call on revert",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevertWithCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSPLDepositAndCallRevertWithCallThatRevertsName,
+		"deposit SPL into ZEVM and call which reverts with call on revert that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount of spl tokens", DefaultValue: "12000000"},
+		},
+		TestSPLDepositAndCallRevertWithCallThatReverts,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	/*

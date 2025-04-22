@@ -36,7 +36,7 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// deposit SPL tokens
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
+	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

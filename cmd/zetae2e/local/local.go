@@ -252,6 +252,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			deployerRunner.SetupSolana(
 				conf.Contracts.Solana.GatewayProgramID.String(),
 				conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String(),
+				conf.AdditionalAccounts.UserSPL.SolanaPrivateKey.String(),
 			)
 		}
 
@@ -431,6 +432,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		solanaTests := []string{
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
+		}
+
+		splTests := []string{
+			e2etests.TestSolanaDepositName,
 			e2etests.TestSPLDepositName,
 		}
 
@@ -438,13 +443,21 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallName,
-				e2etests.TestSPLDepositAndCallName,
 				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
 				e2etests.TestSolanaDepositAndCallRevertName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSolanaDepositAndCallRevertWithDustName,
 				e2etests.TestSolanaDepositRestrictedName,
 				e2etests.TestSolanaToZEVMCallName,
 				e2etests.TestSolanaWithdrawRestrictedName,
+			}...)
+
+			splTests = append(splTests, []string{
+				e2etests.TestSPLDepositAndCallName,
+				e2etests.TestSPLDepositAndCallRevertName,
+				e2etests.TestSPLDepositAndCallRevertWithCallName,
+				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
 				e2etests.TestSPLWithdrawName,
 				e2etests.TestSPLWithdrawAndCallName,
 				e2etests.TestSPLWithdrawAndCallRevertName,
@@ -455,7 +468,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			}...)
 		}
 
-		eg.Go(solanaTestRoutine(conf, deployerRunner, verbose, solanaTests...))
+		eg.Go(
+			solanaTestRoutine(
+				conf,
+				"solana",
+				conf.AdditionalAccounts.UserSolana,
+				deployerRunner,
+				verbose,
+				solanaTests...),
+		)
+		eg.Go(
+			solanaTestRoutine(
+				conf,
+				"spl",
+				conf.AdditionalAccounts.UserSPL,
+				deployerRunner,
+				verbose,
+				splTests...),
+		)
 	}
 
 	if testSui {

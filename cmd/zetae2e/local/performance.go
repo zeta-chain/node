@@ -207,7 +207,7 @@ func solanaWithdrawPerformanceRoutine(
 		utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 		// same amount for spl
-		sig = r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, r.EVMAddress(), nil)
+		sig = r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, r.EVMAddress(), nil, nil)
 
 		// wait for the cctx to be mined
 		cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
