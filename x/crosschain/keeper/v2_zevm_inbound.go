@@ -10,6 +10,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -49,8 +50,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 			contractAddress = withdrawalAndCallEvent.Raw.Address
 		}
 
-		k.Logger(ctx).Error(fmt.Sprintf("processing inbound. zrc20: %s", zrc20.Hex()))
-
 		// get several information necessary for processing the inbound
 		foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
 		if !found {
@@ -75,7 +74,11 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if err := k.validateZRC20Withdrawal(ctx, foreignCoin.ForeignChainId, foreignCoin.CoinType, value, receiver); err != nil {
+		coinType := foreignCoin.CoinType
+		if callEvent != nil {
+			coinType = coin.CoinType_NoAssetCall
+		}
+		if err := k.validateOutbound(ctx, foreignCoin.ForeignChainId, coinType, value, receiver); err != nil {
 			return err
 		}
 

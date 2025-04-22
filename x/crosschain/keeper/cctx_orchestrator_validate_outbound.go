@@ -151,7 +151,7 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 		}
 
 		// validate data of the revert outbound
-		err = k.validateZRC20Withdrawal(
+		err = k.validateOutbound(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
 			cctx.InboundParams.CoinType,

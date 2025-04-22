@@ -20,6 +20,7 @@
 * [3792](https://github.com/zeta-chain/node/pull/3792) - add compliance check for Sui inbound and outbound
 * [3790](https://github.com/zeta-chain/node/pull/3790) - integrate execute revert
 * [3797](https://github.com/zeta-chain/node/pull/3797) - integrate execute SPL revert
+* [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 
 ### Refactor

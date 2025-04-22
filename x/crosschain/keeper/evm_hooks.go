@@ -318,12 +318,12 @@ func (k Keeper) ValidateZRC20WithdrawEvent(
 	coinType coin.CoinType,
 ) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
-	return k.validateZRC20Withdrawal(ctx, chainID, coinType, event.Value, event.To)
+	return k.validateOutbound(ctx, chainID, coinType, event.Value, event.To)
 }
 
-// validateZRC20Withdrawal validates the data of a ZRC20 Withdrawal event (version 1 or 2)
+// validateOutbound validates the data of a ZRC20 Withdrawals and Call event (version 1 or 2)
 // it checks if the withdrawal amount is valid and the destination address is supported depending on the chain
-func (k Keeper) validateZRC20Withdrawal(
+func (k Keeper) validateOutbound(
 	ctx sdk.Context,
 	chainID int64,
 	coinType coin.CoinType,
