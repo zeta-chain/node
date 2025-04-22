@@ -30,6 +30,7 @@ const tonDepositSendCode = toncontracts.SendFlagSeparateFees + toncontracts.Send
 // can be adopted for all TON ops
 type tonOpts struct {
 	expectedStatus cctypes.CctxStatus
+	revertGasLimit math.Uint
 }
 
 type TONOpt func(t *tonOpts)
@@ -128,6 +129,22 @@ func (r *E2ERunner) TONDepositAndCall(
 		string(callData),
 	)
 
+	// If we're expecting a Reverted status, ensure we have enough gas
+	if cfg.expectedStatus == cctypes.CctxStatus_Reverted {
+		// If revert gas limit wasn't explicitly set, use a reasonable default based on observed needs
+		if cfg.revertGasLimit.IsZero() {
+			cfg.revertGasLimit = math.NewUint(15000000) // 0.015 TON - slightly more than the 0.0084 needed
+			r.Logger.Info("Setting default revert gas limit to %s nano TON", cfg.revertGasLimit.String())
+		}
+
+		// Ensure at least 10% of the amount is available for gas
+		tenPercent := amount.MulUint64(10).QuoUint64(100)
+		if tenPercent.LT(cfg.revertGasLimit) {
+			r.Logger.Info("Warning: amount may be too low to cover revert gas costs. At least %s nano TON recommended.",
+				cfg.revertGasLimit.MulUint64(10))
+		}
+	}
+
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
@@ -137,6 +154,9 @@ func (r *E2ERunner) TONDepositAndCall(
 		lastTxHash = gwState.LastTransHash
 		lastLt     = gwState.LastTransLt
 	)
+
+	// Log pre-transaction info
+	r.Logger.Info("TON Pre-Transaction: lastTxHash=%v, lastLt=%v", lastTxHash, lastLt)
 
 	// Send TX
 	err = gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
@@ -167,7 +187,6 @@ func (r *E2ERunner) TONDepositAndCall(
 	// Wait for cctx
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
-	// Verify that the found CCTX has the correct relayed message
 	// The relayed message might be stored as a hex string, so we need to check both formats
 	if cctx.RelayedMessage != string(callData) {
 		// Check if the relayed message is a hex encoding of the call data
