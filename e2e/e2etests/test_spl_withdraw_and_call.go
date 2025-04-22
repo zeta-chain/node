@@ -90,9 +90,11 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	type ConnectedPdaInfo struct {
-		Discriminator [8]byte
-		LastSender    [20]byte
-		LastMessage   string
+		Discriminator     [8]byte
+		LastSender        [20]byte
+		LastMessage       string
+		LastRevertSender  solana.PublicKey
+		LastRevertMessage string
 	}
 	pda := ConnectedPdaInfo{}
 	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())

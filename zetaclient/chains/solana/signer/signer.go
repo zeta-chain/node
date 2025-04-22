@@ -162,7 +162,8 @@ func (signer *Signer) TryProcessOutbound(
 		outboundGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
-		if cctx.IsWithdrawAndCall() {
+		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
+		if cctx.IsWithdrawAndCall() || isRevert {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
@@ -403,13 +404,27 @@ func (signer *Signer) prepareExecuteTx(
 		)
 	}
 
-	message, err := hex.DecodeString(cctx.RelayedMessage)
-	if err != nil {
-		return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, errors.Wrapf(err, "decodeExecuteMsg %s error", cctx.RelayedMessage)
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return nil, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}
@@ -421,14 +436,14 @@ func (signer *Signer) prepareExecuteTx(
 	}
 
 	// sign gateway execute message by TSS
-	sender := ethcommon.HexToAddress(cctx.InboundParams.Sender)
 	msgExecute, msgIn, err := signer.createAndSignMsgExecute(
 		ctx,
 		params,
 		height,
-		sender,
+		cctx.InboundParams.Sender,
 		msg.Data,
 		remainingAccounts,
+		executeType,
 		cancelTx,
 	)
 	if err != nil {
@@ -552,9 +567,10 @@ func (signer *Signer) prepareExecuteSPLTx(
 	if err != nil {
 		return nil, err
 	}
-	msg, err := contracts.DecodeExecuteMsg(message)
-	if err != nil {
-		return nil, err
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return nil, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
 	}
 
 	remainingAccounts := []*solana.AccountMeta{}

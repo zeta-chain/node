@@ -113,7 +113,7 @@ func Test_MsgExecuteHash(t *testing.T) {
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, []byte("hello"), []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeCall, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT
@@ -140,6 +140,29 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 		// ACT
 		// create new execute message
 		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender, []byte("hello"), []*solana.AccountMeta{}).
+			Hash()
+
+		// ASSERT
+		require.EqualValues(t, hash[:], wantHashBytes)
+	})
+}
+
+func Test_MsgExecuteRevertHash(t *testing.T) {
+	t.Run("should calculate expected hash", func(t *testing.T) {
+		// ARRANGE
+		// #nosec G115 always positive
+		chainID := uint64(chains.SolanaLocalnet.ChainId)
+		nonce := uint64(0)
+		amount := uint64(1336000)
+		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
+		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
+
+		wantHash := "A55A5E8E302D5BA9A4C2DCDE54225F45F5E20081873AA7F6A3A361DB20527E31"
+		wantHashBytes := testutil.HexToBytes(t, wantHash)
+
+		// ACT
+		// create new execute message
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT

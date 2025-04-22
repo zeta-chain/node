@@ -52,6 +52,9 @@ const (
 
 	// incrementNonceTxTest is local devnet tx result for testing
 	incrementNonceTxTest = "5dpFTsscUKCGVQzL9bAUSuEE6yLXaf7d1wMjZa7RLqvtSUtAdfcdxQHNsbfcS2Sfzu4zBVxMJC2KWzuaUUbg1ZGk"
+
+	// executeRevertTxTest is local devnet tx result for testing
+	executeRevertTxTest = "4QjCYR4CfS5RFUQuRS8W68ZpBgqd91zZmC5Z1M4uyh4BeZWnB6NtRMxwwZttyre344zX6vTme2Eum94BHQ5Xk9Tf"
 )
 
 // createTestObserver creates a test observer for testing
@@ -755,6 +758,79 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 
 		// ASSERT
 		require.ErrorContains(t, err, "not an increment_nonce instruction")
+		require.Nil(t, inst)
+	})
+}
+
+func Test_ParseInstructionExecuteRevert(t *testing.T) {
+	// the test chain and transaction hash
+	chain := chains.SolanaDevnet
+	txHash := executeRevertTxTest
+	instructionIndex := 1
+	txAmount := uint64(1100000)
+
+	t.Run("should parse instruction execute_revert", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		// tss address used in local devnet
+		tssAddress := "0x5d6755eb2428cF5cB9cfe4b5699E98d7974f90eB"
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		tx, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		instruction := tx.Message.Instructions[instructionIndex]
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteRevert(instruction)
+		require.NoError(t, err)
+
+		// ASSERT
+		// check sender, nonce and amount
+		sender, err := inst.Signer()
+		require.NoError(t, err)
+		require.Equal(t, tssAddress, sender.String())
+		require.EqualValues(t, inst.GatewayNonce(), 0)
+		require.EqualValues(t, inst.TokenAmount(), txAmount)
+	})
+
+	t.Run("should return error on invalid instruction data", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// set invalid instruction data
+		instruction := txFake.Message.Instructions[instructionIndex]
+		instruction.Data = []byte("invalid instruction data")
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteRevert(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "error deserializing instruction")
+		require.Nil(t, inst)
+	})
+
+	t.Run("should return error on discriminator mismatch", func(t *testing.T) {
+		// ARRANGE
+		// load and unmarshal archived transaction
+		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
+		txFake, err := txResult.Transaction.GetTransaction()
+		require.NoError(t, err)
+
+		// overwrite discriminator (first 8 bytes)
+		instruction := txFake.Message.Instructions[instructionIndex]
+		fakeDiscriminator := "b712469c946da12100980d0000000000"
+		fakeDiscriminatorBytes, err := hex.DecodeString(fakeDiscriminator)
+		require.NoError(t, err)
+		copy(instruction.Data, fakeDiscriminatorBytes)
+
+		// ACT
+		inst, err := contracts.ParseInstructionExecuteRevert(instruction)
+
+		// ASSERT
+		require.ErrorContains(t, err, "not an execute_revert instruction")
 		require.Nil(t, inst)
 	})
 }

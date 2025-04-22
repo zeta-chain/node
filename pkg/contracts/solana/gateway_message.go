@@ -17,6 +17,16 @@ const (
 	InstructionExecute           byte = 5
 	InstructionExecuteSPL        byte = 6
 	InstructionIncrementNonce    byte = 7
+	InstructionExecuteRevert     byte = 8
+)
+
+// ExecuteType represents the type of execute operation
+// it is used for withdraw and call and revert
+type ExecuteType uint8
+
+const (
+	ExecuteTypeCall ExecuteType = iota
+	ExecuteTypeRevert
 )
 
 // InstructionIdentifier is used at beginning of message hash to make it project specific.
@@ -231,10 +241,13 @@ type MsgExecute struct {
 	signature [65]byte
 
 	// Sender is the sender address for the execute
-	sender [20]byte
+	sender string
 
 	// Data for execute
 	data []byte
+
+	// executeType indicates if it's a call or revert operation
+	executeType ExecuteType
 
 	// Remaining accounts for arbirtrary program
 	remainingAccounts []*solana.AccountMeta
@@ -244,8 +257,9 @@ type MsgExecute struct {
 func NewMsgExecute(
 	chainID, nonce, amount uint64,
 	to solana.PublicKey,
-	sender [20]byte,
+	sender string,
 	data []byte,
+	executeType ExecuteType,
 	remainingAccounts []*solana.AccountMeta,
 ) *MsgExecute {
 	return &MsgExecute{
@@ -255,6 +269,7 @@ func NewMsgExecute(
 		to:                to,
 		sender:            sender,
 		data:              data,
+		executeType:       executeType,
 		remainingAccounts: remainingAccounts,
 	}
 }
@@ -280,7 +295,7 @@ func (msg *MsgExecute) To() solana.PublicKey {
 }
 
 // Sender returns the sender address of the message
-func (msg *MsgExecute) Sender() [20]byte {
+func (msg *MsgExecute) Sender() string {
 	return msg.sender
 }
 
@@ -294,13 +309,23 @@ func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
 	return msg.remainingAccounts
 }
 
+// ExecuteType returns the type of execute operation
+func (msg *MsgExecute) ExecuteType() ExecuteType {
+	return msg.executeType
+}
+
 // Hash packs the execute message and computes the hash
 func (msg *MsgExecute) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
 	message = append(message, InstructionIdentifier...)
-	message = append(message, InstructionExecute)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, InstructionExecute)
+	} else {
+		message = append(message, InstructionExecuteRevert)
+	}
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
