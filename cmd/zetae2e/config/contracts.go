@@ -131,30 +131,21 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
 
-	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
-		r.SuiTokenCoinType = c.String()
-	}
-	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
-		r.SuiTokenTreasuryCap = c.String()
+	otherSuiFields := map[string]*string{
+		conf.Contracts.Sui.FungibleTokenCoinType.String():    &r.SuiTokenCoinType,
+		conf.Contracts.Sui.FungibleTokenTreasuryCap.String(): &r.SuiTokenTreasuryCap,
+		conf.Contracts.Sui.ExamplePackageID.String():         &r.SuiExample.PackageID,
+		conf.Contracts.Sui.ExampleTokenType.String():         &r.SuiExample.TokenType,
+		conf.Contracts.Sui.ExampleGlobalConfigID.String():    &r.SuiExample.GlobalConfigID,
+		conf.Contracts.Sui.ExamplePartnerID.String():         &r.SuiExample.PartnerID,
+		conf.Contracts.Sui.ExampleClockID.String():           &r.SuiExample.ClockID,
+		conf.Contracts.Sui.ExamplePoolID.String():            &r.SuiExample.PoolID,
 	}
 
-	if c := conf.Contracts.Sui.ExamplePackageID; c != "" {
-		r.SuiExample.PackageID = c.String()
-	}
-	if c := conf.Contracts.Sui.ExampleTokenType; c != "" {
-		r.SuiExample.TokenType = c.String()
-	}
-	if c := conf.Contracts.Sui.ExampleGlobalConfigID; c != "" {
-		r.SuiExample.GlobalConfigID = c.String()
-	}
-	if c := conf.Contracts.Sui.ExamplePartnerID; c != "" {
-		r.SuiExample.PartnerID = c.String()
-	}
-	if c := conf.Contracts.Sui.ExampleClockID; c != "" {
-		r.SuiExample.ClockID = c.String()
-	}
-	if c := conf.Contracts.Sui.ExamplePoolID; c != "" {
-		r.SuiExample.PoolID = c.String()
+	for source, target := range otherSuiFields {
+		if source != "" {
+			*target = source
+		}
 	}
 
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
