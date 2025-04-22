@@ -39,6 +39,11 @@ func TONExpectStatus(status cctypes.CctxStatus) TONOpt {
 	return func(t *tonOpts) { t.expectedStatus = status }
 }
 
+// TONSetRevertGasLimit sets a higher gas limit for revert operations
+func TONSetRevertGasLimit(gasLimit math.Uint) TONOpt {
+	return func(t *tonOpts) { t.revertGasLimit = gasLimit }
+}
+
 // TONDeposit deposit TON to Gateway contract
 func (r *E2ERunner) TONDeposit(
 	gw *toncontracts.Gateway,
@@ -110,7 +115,12 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
-	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
+	// Initialize with default values to avoid nil pointer issues
+	cfg := &tonOpts{
+		expectedStatus: cctypes.CctxStatus_OutboundMined,
+		revertGasLimit: math.ZeroUint(), // Initialize with zero instead of nil
+	}
+
 	for _, opt := range opts {
 		opt(cfg)
 	}
@@ -131,6 +141,10 @@ func (r *E2ERunner) TONDepositAndCall(
 
 	// If we're expecting a Reverted status, ensure we have enough gas
 	if cfg.expectedStatus == cctypes.CctxStatus_Reverted {
+		// Log that we're expecting a reverted status, but don't do anything special yet
+		r.Logger.Info("Expecting Reverted status for this transaction")
+
+		/* Temporarily disabled until we can properly debug the issue
 		// If revert gas limit wasn't explicitly set, use a reasonable default based on observed needs
 		if cfg.revertGasLimit.IsZero() {
 			cfg.revertGasLimit = math.NewUint(15000000) // 0.015 TON - slightly more than the 0.0084 needed
@@ -143,6 +157,7 @@ func (r *E2ERunner) TONDepositAndCall(
 			r.Logger.Info("Warning: amount may be too low to cover revert gas costs. At least %s nano TON recommended.",
 				cfg.revertGasLimit.MulUint64(10))
 		}
+		*/
 	}
 
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
