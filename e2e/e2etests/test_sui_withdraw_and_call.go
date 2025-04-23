@@ -21,8 +21,6 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given example contract on_call function arguments
 	// sample withdrawAndCall payload
-	// TODO: use real contract
-	// https://github.com/zeta-chain/node/issues/3742
 	argumentTypes := []string{
 		r.SuiExample.TokenType.String(),
 	}
