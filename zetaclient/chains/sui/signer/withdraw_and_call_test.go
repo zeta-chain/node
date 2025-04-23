@@ -1,9 +1,12 @@
 package signer
 
 import (
+	"context"
 	"testing"
 
+	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pattonkan/sui-go/sui"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -230,6 +233,185 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotEmpty(t, got.TxBytes)
+		})
+	}
+}
+
+func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
+	// create test objects references
+	gatewayID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
+	require.NoError(t, err)
+	withdrawCapID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
+	require.NoError(t, err)
+	onCallObjectID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
+	require.NoError(t, err)
+
+	// create test object digests
+	digest1, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
+	digest2, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
+	digest3, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
+
+	tests := []struct {
+		name            string
+		gatewayID       string
+		withdrawCapID   string
+		onCallObjectIDs []string
+		mockObjects     []*models.SuiObjectResponse
+		mockError       error
+		expected        []sui.ObjectRef
+		errMsg          string
+	}{
+		{
+			name:            "successful get object refs",
+			gatewayID:       gatewayID.String(),
+			withdrawCapID:   withdrawCapID.String(),
+			onCallObjectIDs: []string{onCallObjectID.String()},
+			mockObjects: []*models.SuiObjectResponse{
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: gatewayID.String(),
+						Version:  "3",
+						Digest:   digest1.String(),
+						Owner: map[string]any{
+							"Shared": map[string]any{
+								"initial_shared_version": float64(1),
+							},
+						},
+					},
+				},
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: withdrawCapID.String(),
+						Version:  "2",
+						Digest:   digest2.String(),
+					},
+				},
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: onCallObjectID.String(),
+						Version:  "3",
+						Digest:   digest3.String(),
+						Owner: map[string]any{
+							"Shared": map[string]any{
+								"initial_shared_version": float64(1),
+							},
+						},
+					},
+				},
+			},
+			expected: []sui.ObjectRef{
+				{
+					ObjectId: gatewayID,
+					Version:  1,
+					Digest:   digest1,
+				},
+				{
+					ObjectId: withdrawCapID,
+					Version:  2,
+					Digest:   digest2,
+				},
+				{
+					ObjectId: onCallObjectID,
+					Version:  1,
+					Digest:   digest3,
+				},
+			},
+		},
+		{
+			name:            "rpc call fails",
+			gatewayID:       gatewayID.String(),
+			withdrawCapID:   withdrawCapID.String(),
+			onCallObjectIDs: []string{onCallObjectID.String()},
+			mockError:       sample.ErrSample,
+			errMsg:          "failed to get SUI objects",
+		},
+		{
+			name:            "invalid object ID",
+			gatewayID:       gatewayID.String(),
+			withdrawCapID:   withdrawCapID.String(),
+			onCallObjectIDs: []string{onCallObjectID.String()},
+			mockObjects: []*models.SuiObjectResponse{
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: "invalid_id",
+						Version:  "1",
+						Digest:   digest1.String(),
+					},
+				},
+			},
+			errMsg: "failed to parse object ID",
+		},
+		{
+			name:            "invalid object version",
+			gatewayID:       gatewayID.String(),
+			withdrawCapID:   withdrawCapID.String(),
+			onCallObjectIDs: []string{onCallObjectID.String()},
+			mockObjects: []*models.SuiObjectResponse{
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: gatewayID.String(),
+						Version:  "invalid_version",
+						Digest:   digest1.String(),
+					},
+				},
+			},
+			errMsg: "failed to parse object version",
+		},
+		{
+			name:            "invalid initial shared version",
+			gatewayID:       gatewayID.String(),
+			withdrawCapID:   withdrawCapID.String(),
+			onCallObjectIDs: []string{onCallObjectID.String()},
+			mockObjects: []*models.SuiObjectResponse{
+				{
+					Data: &models.SuiObjectData{
+						ObjectId: gatewayID.String(),
+						Version:  "1",
+						Digest:   digest1.String(),
+						Owner: map[string]any{
+							"Shared": map[string]any{
+								"initial_shared_version": "invalid_version",
+							},
+						},
+					},
+				},
+			},
+			errMsg: "failed to extract initial shared version",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			ts := newTestSuite(t)
+
+			// setup mock
+			ctx := context.Background()
+			ts.SuiMock.On("SuiMultiGetObjects", ctx, mock.Anything).Return(tt.mockObjects, tt.mockError)
+
+			// ACT
+			gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := getWithdrawAndCallObjectRefs(
+				ctx,
+				ts.SuiMock,
+				tt.gatewayID,
+				tt.withdrawCapID,
+				tt.onCallObjectIDs,
+			)
+
+			// ASSERT
+			if tt.errMsg != "" {
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.EqualValues(t, tt.expected[0], gatewayObjRef)
+			require.EqualValues(t, tt.expected[1], withdrawCapObjRef)
+			require.EqualValues(t, tt.expected[2:], onCallObjectRefs)
+			require.Len(t, onCallObjectRefs, len(tt.onCallObjectIDs))
 		})
 	}
 }
