@@ -188,7 +188,7 @@ func addPTBCmdWithdrawImpl(
 			Module:   gatewayModule,
 			Function: zetasui.FuncWithdrawImpl,
 			TypeArguments: []sui.TypeTag{
-				{Struct: coinType},
+				{Struct: &coinType},
 			},
 			Arguments: []suiptb.Argument{
 				argGatewayObject,
@@ -248,13 +248,13 @@ func addPTBCmdOnCall(
 
 	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
 	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
-	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: coinType})
+	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: &coinType})
 	for _, typeArg := range cp.TypeArgs {
 		typeStruct, err := zetasui.TypeTagFromString(typeArg)
 		if err != nil {
 			return errors.Wrapf(err, "invalid type argument %s", typeArg)
 		}
-		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: typeStruct})
+		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: &typeStruct})
 	}
 
 	// Build the args for on_call: [withdrawns coins + payload objects + message]

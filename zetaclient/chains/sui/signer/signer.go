@@ -89,10 +89,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	}
 
 	// prepare logger
-	logger := s.Logger().Std.With().
-		Int64(logs.FieldChain, s.Chain().ChainId).
-		Uint64(logs.FieldNonce, nonce).
-		Logger()
+	logger := s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
 	ctx = logger.WithContext(ctx)
 
 	var txDigest string

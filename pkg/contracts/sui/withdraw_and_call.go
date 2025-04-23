@@ -20,8 +20,8 @@ const (
 	// FuncOnCall is the Sui connected module function name on_call
 	FuncOnCall = "on_call"
 
-	// TypeSeparator is the separator for Sui package and module
-	TypeSeparator = "::"
+	// typeSeparator is the separator for Sui package and module
+	typeSeparator = "::"
 
 	// ptbWithdrawAndCallCmdCount is the number of commands in the PTB withdraw and call
 	// the three commands are: [withdraw_impl, transfer_objects, on_call]
@@ -58,6 +58,10 @@ func (d WithdrawAndCallPTB) TxNonce() uint64 {
 }
 
 // ExtractInitialSharedVersion extracts the object initial shared version from the object data
+//
+// Objects referenced for on_call are shared objects, initial shared version is required to build
+// the withdraw and call using PTB.
+// see: https://docs.sui.io/concepts/transactions/prog-txn-blocks#inputs
 func ExtractInitialSharedVersion(objData models.SuiObjectData) (uint64, error) {
 	owner, ok := objData.Owner.(map[string]any)
 	if !ok {

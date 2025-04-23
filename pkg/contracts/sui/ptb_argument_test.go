@@ -18,13 +18,13 @@ func Test_TypeTagFromString(t *testing.T) {
 	tests := []struct {
 		name     string
 		coinType CoinType
-		want     *sui.StructTag
+		want     sui.StructTag
 		errMsg   string
 	}{
 		{
 			name:     "SUI coin type",
 			coinType: SUI,
-			want: &sui.StructTag{
+			want: sui.StructTag{
 				Address: suiAddr,
 				Module:  "sui",
 				Name:    "SUI",
@@ -33,7 +33,7 @@ func Test_TypeTagFromString(t *testing.T) {
 		{
 			name:     "some other coin type",
 			coinType: CoinType(otherAddrStr + "::other::TOKEN"),
-			want: &sui.StructTag{
+			want: sui.StructTag{
 				Address: otherAddr,
 				Module:  "other",
 				Name:    "TOKEN",
@@ -42,13 +42,13 @@ func Test_TypeTagFromString(t *testing.T) {
 		{
 			name:     "invalid type string",
 			coinType: CoinType(otherAddrStr),
-			want:     nil,
+			want:     sui.StructTag{},
 			errMsg:   "invalid type string",
 		},
 		{
 			name:     "invalid address",
 			coinType: "invalid::sui::SUI",
-			want:     nil,
+			want:     sui.StructTag{},
 			errMsg:   "invalid address",
 		},
 	}
@@ -57,7 +57,7 @@ func Test_TypeTagFromString(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := TypeTagFromString(string(test.coinType))
 			if test.errMsg != "" {
-				require.Error(t, err)
+				require.Empty(t, got)
 				require.ErrorContains(t, err, test.errMsg)
 				return
 			}

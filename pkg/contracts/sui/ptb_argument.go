@@ -36,21 +36,21 @@ func PureUint64FromString(
 //		Module:  "sui",
 //		Name:    "SUI",
 //	}
-func TypeTagFromString(t string) (*sui.StructTag, error) {
-	parts := strings.Split(t, TypeSeparator)
+func TypeTagFromString(t string) (tag sui.StructTag, err error) {
+	parts := strings.Split(t, typeSeparator)
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid type string: %s", t)
+		return tag, fmt.Errorf("invalid type string: %s", t)
 	}
 
 	address, err := sui.AddressFromHex(parts[0])
 	if err != nil {
-		return nil, fmt.Errorf("invalid address: %s", parts[0])
+		return tag, errors.Wrapf(err, "invalid address: %s", parts[0])
 	}
 
 	module := parts[1]
 	name := parts[2]
 
-	return &sui.StructTag{
+	return sui.StructTag{
 		Address: address,
 		Module:  module,
 		Name:    name,
