@@ -219,7 +219,7 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, txHash, event.TxHash)
 			require.Zero(t, event.EventIndex)
-			require.Equal(t, WithdrawAndCallPTBEvent, event.EventType)
+			require.Equal(t, WithdrawAndCallEvent, event.EventType)
 
 			withdrawCallPTB, ok := content.(WithdrawAndCallPTB)
 			require.True(t, ok)

@@ -20,7 +20,6 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Given example contract on_call function arguments
-	// sample withdrawAndCall payload
 	argumentTypes := []string{
 		r.SuiExample.TokenType.String(),
 	}

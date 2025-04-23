@@ -383,7 +383,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 			wantEvent: Event{
 				TxHash:     txHash,
 				EventIndex: 0,
-				EventType:  WithdrawAndCallPTBEvent,
+				EventType:  WithdrawAndCallEvent,
 				content: WithdrawAndCallPTB{
 					PackageID: packageID,
 					Module:    moduleName,

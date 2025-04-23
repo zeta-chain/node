@@ -157,7 +157,7 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 	event = Event{
 		TxHash:     res.Digest,
 		EventIndex: 0,
-		EventType:  WithdrawAndCallPTBEvent,
+		EventType:  WithdrawAndCallEvent,
 		content:    content,
 	}
 

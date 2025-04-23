@@ -10,7 +10,7 @@ import (
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
-	patsui "github.com/pattonkan/sui-go/sui"
+	suiptb "github.com/pattonkan/sui-go/sui"
 	"github.com/pkg/errors"
 
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
@@ -252,13 +252,13 @@ func (c *Client) SuiExecuteTransactionBlock(
 
 // GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address
 // Note: the SUI object may change over time, so we need to get the latest object
-func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.ObjectRef, error) {
+func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error) {
 	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
 		Owner:    owner,
 		CoinType: string(zetasui.SUI),
 	})
 	if err != nil {
-		return patsui.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
+		return suiptb.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
 	}
 
 	var (
@@ -274,7 +274,7 @@ func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.
 
 		version, err := strconv.ParseUint(coin.Version, 10, 64)
 		if err != nil {
-			return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
+			return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
 		}
 
 		if version > suiCoinVersion {
@@ -283,21 +283,21 @@ func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.
 		}
 	}
 	if suiCoin == nil {
-		return patsui.ObjectRef{}, errors.New("SUI coin not found")
+		return suiptb.ObjectRef{}, errors.New("SUI coin not found")
 	}
 
 	// convert coin data to object ref
-	suiCoinID, err := patsui.ObjectIdFromHex(suiCoin.CoinObjectId)
+	suiCoinID, err := suiptb.ObjectIdFromHex(suiCoin.CoinObjectId)
 	if err != nil {
-		return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
+		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
 	}
 
-	suiCoinDigest, err := patsui.NewBase58(suiCoin.Digest)
+	suiCoinDigest, err := suiptb.NewBase58(suiCoin.Digest)
 	if err != nil {
-		return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
+		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
 	}
 
-	return patsui.ObjectRef{
+	return suiptb.ObjectRef{
 		ObjectId: suiCoinID,
 		Version:  suiCoinVersion,
 		Digest:   suiCoinDigest,

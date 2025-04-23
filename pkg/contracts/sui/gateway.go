@@ -43,7 +43,7 @@ const (
 	WithdrawEvent       EventType = "WithdrawEvent"
 
 	// this event does not exist on gateway, we define it to make the outbound processing consistent
-	WithdrawAndCallPTBEvent EventType = "WithdrawAndCallPTBEvent"
+	WithdrawAndCallEvent EventType = "WithdrawAndCallEvent"
 
 	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
 	CancelTxEvent EventType = "NonceIncreaseEvent"
