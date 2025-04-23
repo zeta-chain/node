@@ -144,18 +144,23 @@ type TON struct {
 	GatewayAccountID DoubleQuotedString `yaml:"gateway_account_id"`
 }
 
+// SuiExample contains the object IDs in the example package
+type SuiExample struct {
+	PackageID      DoubleQuotedString `yaml:"package_id"`
+	TokenType      DoubleQuotedString `yaml:"token_type"`
+	GlobalConfigID DoubleQuotedString `yaml:"global_config_id"`
+	PartnerID      DoubleQuotedString `yaml:"partner_id"`
+	ClockID        DoubleQuotedString `yaml:"clock_id"`
+	PoolID         DoubleQuotedString `yaml:"pool_id"`
+}
+
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
 	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
 	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
-	ExamplePackageID         DoubleQuotedString `yaml:"example_package_id"`
-	ExampleTokenType         DoubleQuotedString `yaml:"example_token_type"`
-	ExampleGlobalConfigID    DoubleQuotedString `yaml:"example_global_config_id"`
-	ExamplePartnerID         DoubleQuotedString `yaml:"example_partner_id"`
-	ExampleClockID           DoubleQuotedString `yaml:"example_clock_id"`
-	ExamplePoolID            DoubleQuotedString `yaml:"example_pool_id"`
+	Example                  SuiExample         `yaml:"example"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain

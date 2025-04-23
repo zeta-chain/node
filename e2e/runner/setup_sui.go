@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/config"
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -168,7 +169,14 @@ func (r *E2ERunner) deploySuiExample() {
 	poolID, ok := objectIDs[filterPoolType]
 	require.True(r, ok, "pool object not found")
 
-	r.SuiExample = NewExample(packageID, globalConfigID, partnerID, clockID, poolID)
+	r.SuiExample = config.SuiExample{
+		PackageID:      config.DoubleQuotedString(packageID),
+		TokenType:      config.DoubleQuotedString(packageID + "::token::TOKEN"),
+		GlobalConfigID: config.DoubleQuotedString(globalConfigID),
+		PartnerID:      config.DoubleQuotedString(partnerID),
+		ClockID:        config.DoubleQuotedString(clockID),
+		PoolID:         config.DoubleQuotedString(poolID),
+	}
 }
 
 // deploySuiPackage is a helper function that deploys a package on Sui

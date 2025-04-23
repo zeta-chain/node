@@ -88,17 +88,17 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
 
 	// Retrieve withdraw cap ID
-	withdrawCapIDStr, err := s.getWithdrawCapIDCached(ctx)
+	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapIDStr, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
 	}
 
-	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapIDStr)
+	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
 }
 
 // buildWithdrawTx builds unsigned withdraw transaction
@@ -133,7 +133,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	params *cctypes.OutboundParams,
 	coinType,
 	gasBudget,
-	withdrawCapIDStr,
+	withdrawCapID,
 	payload string,
 ) (models.TxnMetaData, error) {
 	// decode and parse the payload to object the on_call arguments
@@ -158,7 +158,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		ctx,
 		s.client,
 		s.gateway.ObjectID(),
-		withdrawCapIDStr,
+		withdrawCapID,
 		cp.ObjectIDs,
 	)
 	if err != nil {

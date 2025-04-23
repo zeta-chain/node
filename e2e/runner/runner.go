@@ -133,8 +133,8 @@ type E2ERunner struct {
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
 
-	// SuiExample is the example contract for Sui
-	SuiExample Example
+	// SuiExample contains the example package information for Sui
+	SuiExample config.SuiExample
 
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address

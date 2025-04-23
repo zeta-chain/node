@@ -17,7 +17,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// ARRANGE
 	// Given target package ID (example package) and a SUI amount
-	targetPackageID := r.SuiExample.PackageID
+	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Given example contract on_call function arguments
@@ -25,13 +25,13 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// TODO: use real contract
 	// https://github.com/zeta-chain/node/issues/3742
 	argumentTypes := []string{
-		r.SuiExample.TokenType,
+		r.SuiExample.TokenType.String(),
 	}
 	objects := []string{
-		r.SuiExample.GlobalConfigID,
-		r.SuiExample.PoolID,
-		r.SuiExample.PartnerID,
-		r.SuiExample.ClockID,
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PoolID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
 	}
 
 	// create a random Sui address and use it for on_call payload message

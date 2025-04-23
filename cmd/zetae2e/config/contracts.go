@@ -130,24 +130,15 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if suiPackageID != "" && suiGatewayID != "" {
 		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
-
-	otherSuiFields := map[string]*string{
-		conf.Contracts.Sui.FungibleTokenCoinType.String():    &r.SuiTokenCoinType,
-		conf.Contracts.Sui.FungibleTokenTreasuryCap.String(): &r.SuiTokenTreasuryCap,
-		conf.Contracts.Sui.ExamplePackageID.String():         &r.SuiExample.PackageID,
-		conf.Contracts.Sui.ExampleTokenType.String():         &r.SuiExample.TokenType,
-		conf.Contracts.Sui.ExampleGlobalConfigID.String():    &r.SuiExample.GlobalConfigID,
-		conf.Contracts.Sui.ExamplePartnerID.String():         &r.SuiExample.PartnerID,
-		conf.Contracts.Sui.ExampleClockID.String():           &r.SuiExample.ClockID,
-		conf.Contracts.Sui.ExamplePoolID.String():            &r.SuiExample.PoolID,
+	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
+		r.SuiTokenCoinType = c.String()
 	}
-
-	for source, target := range otherSuiFields {
-		if source != "" {
-			*target = source
-		}
+	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
+		r.SuiTokenTreasuryCap = c.String()
 	}
+	r.SuiExample = conf.Contracts.Sui.Example
 
+	// set EVM contracts
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())

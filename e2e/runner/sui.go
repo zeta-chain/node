@@ -17,31 +17,6 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
-// Example is the struct containing the object IDs of the Example package
-type Example struct {
-	PackageID      string
-	TokenType      string
-	GlobalConfigID string
-	PartnerID      string
-	ClockID        string
-	PoolID         string
-}
-
-// NewExample creates a new Example struct
-func NewExample(packageID, globalConfigID, partnerID, clockID, poolID string) Example {
-	// token type is the packageID + ::token::TOKEN
-	tokenType := packageID + "::token::TOKEN"
-
-	return Example{
-		PackageID:      packageID,
-		TokenType:      tokenType,
-		GlobalConfigID: globalConfigID,
-		PartnerID:      partnerID,
-		ClockID:        clockID,
-		PoolID:         poolID,
-	}
-}
-
 // SuiGetSUIBalance returns the SUI balance of an address
 func (r *E2ERunner) SuiGetSUIBalance(addr string) uint64 {
 	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
