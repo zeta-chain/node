@@ -50,17 +50,17 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package
-	whitelistCapID, withdrawCapID := r.deploySUIGateway()
+	whitelistCapID, withdrawCapID := r.suiDeployGateway()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
 
 	// deploy fake USDC and whitelist it
-	fakeUSDCCoinType := r.deploySuiFakeUSDC()
+	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	// deploy example contract with on_call function
-	r.deploySuiExample()
+	r.suiDeployExample()
 
 	// send withdraw cap to TSS
 	r.suiSendWithdrawCapToTSS(deployerSigner, withdrawCapID)
@@ -70,8 +70,8 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// deploySUIGateway deploys the SUI gateway package on Sui
-func (r *E2ERunner) deploySUIGateway() (whitelistCapID, withdrawCapID string) {
+// suiDeployGateway deploys the SUI gateway package on Sui
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 	const (
 		filterGatewayType      = "gateway::Gateway"
 		filterWithdrawCapType  = "gateway::WithdrawCap"
@@ -79,7 +79,7 @@ func (r *E2ERunner) deploySUIGateway() (whitelistCapID, withdrawCapID string) {
 	)
 
 	objectTypeFilters := []string{filterGatewayType, filterWhitelistCapType, filterWithdrawCapType}
-	packageID, objectIDs := r.deploySuiPackage(
+	packageID, objectIDs := r.suiDeployPackage(
 		[]string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
 		objectTypeFilters,
 	)
@@ -121,10 +121,10 @@ func (r *E2ERunner) deploySUIZRC20() {
 	r.SetupSUIZRC20()
 }
 
-// deploySuiFakeUSDC deploys the FakeUSDC contract on Sui
+// suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the treasuryCap object ID that allows to mint tokens
-func (r *E2ERunner) deploySuiFakeUSDC() string {
-	packageID, objectIDs := r.deploySuiPackage([]string{suicontract.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
+func (r *E2ERunner) suiDeployFakeUSDC() string {
+	packageID, objectIDs := r.suiDeployPackage([]string{suicontract.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
 
 	treasuryCap, ok := objectIDs["TreasuryCap"]
 	require.True(r, ok, "treasuryCap not found")
@@ -141,8 +141,8 @@ func (r *E2ERunner) deploySuiFakeUSDC() string {
 	return coinType
 }
 
-// deploySuiExample deploys the example package on Sui
-func (r *E2ERunner) deploySuiExample() {
+// suiDeployExample deploys the example package on Sui
+func (r *E2ERunner) suiDeployExample() {
 	const (
 		filterGlobalConfigType = "connected::GlobalConfig"
 		filterPartnerType      = "connected::Partner"
@@ -151,8 +151,8 @@ func (r *E2ERunner) deploySuiExample() {
 	)
 
 	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType, filterPoolType}
-	packageID, objectIDs := r.deploySuiPackage(
-		[]string{suicontract.ExampleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
+	packageID, objectIDs := r.suiDeployPackage(
+		[]string{suicontract.ExampleFungibleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
 		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)
@@ -179,9 +179,9 @@ func (r *E2ERunner) deploySuiExample() {
 	}
 }
 
-// deploySuiPackage is a helper function that deploys a package on Sui
+// suiDeployPackage is a helper function that deploys a package on Sui
 // It returns the packageID and a map of object types to their IDs
-func (r *E2ERunner) deploySuiPackage(bytecodeBase64s []string, objectTypeFilters []string) (string, map[string]string) {
+func (r *E2ERunner) suiDeployPackage(bytecodeBase64s []string, objectTypeFilters []string) (string, map[string]string) {
 	client := r.Clients.Sui
 
 	deployerSigner, err := r.Account.SuiSigner()

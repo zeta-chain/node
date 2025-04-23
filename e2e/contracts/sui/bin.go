@@ -35,12 +35,12 @@ func EVMBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(evmBinary)
 }
 
-// ExampleTokenBytecodeBase64 gets the token binary encoded as base64 for deployment
-func ExampleTokenBytecodeBase64() string {
+// ExampleFungibleTokenBytecodeBase64 gets the example package's fungible token binary encoded as base64 for deployment
+func ExampleFungibleTokenBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(tokenBinary)
 }
 
-// ExampleConnectedBytecodeBase64 gets the connected binary encoded as base64 for deployment
+// ExampleConnectedBytecodeBase64 gets the example package's connected binary encoded as base64 for deployment
 func ExampleConnectedBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(connectedBinary)
 }
