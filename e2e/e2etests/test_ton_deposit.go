@@ -7,7 +7,6 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestTONDeposit(r *runner.E2ERunner, args []string) {
@@ -29,8 +28,9 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Given sample EVM address
-	recipient := sample.EthAddress()
+	// Given zEVM sender address
+	recipient := r.EVMAddress()
+	r.Logger.Info("Recipient address: %s", recipient)
 
 	// ACT
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
