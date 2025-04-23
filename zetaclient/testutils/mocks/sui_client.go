@@ -11,6 +11,8 @@ import (
 
 	models "github.com/block-vision/sui-go-sdk/models"
 
+	sui "github.com/pattonkan/sui-go/sui"
+
 	time "time"
 )
 
@@ -68,6 +70,34 @@ func (_m *SuiClient) GetOwnedObjectID(ctx context.Context, ownerAddress string, 
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = rf(ctx, ownerAddress, structType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSuiCoinObjectRef provides a mock function with given fields: ctx, owner
+func (_m *SuiClient) GetSuiCoinObjectRef(ctx context.Context, owner string) (sui.ObjectRef, error) {
+	ret := _m.Called(ctx, owner)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSuiCoinObjectRef")
+	}
+
+	var r0 sui.ObjectRef
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (sui.ObjectRef, error)); ok {
+		return rf(ctx, owner)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) sui.ObjectRef); ok {
+		r0 = rf(ctx, owner)
+	} else {
+		r0 = ret.Get(0).(sui.ObjectRef)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, owner)
 	} else {
 		r1 = ret.Error(1)
 	}
