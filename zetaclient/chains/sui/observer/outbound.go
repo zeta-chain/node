@@ -232,7 +232,7 @@ func (ob *Observer) validateOutbound(cctx *cctypes.CrossChainTx, tx models.SuiTr
 func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOutbound) error {
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
-	retryGasLimit := uint64(0)
+	retryGasLimit := zetacore.PostVoteOutboundRetryGasLimit
 	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
