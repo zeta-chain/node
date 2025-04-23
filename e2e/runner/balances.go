@@ -251,6 +251,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* SUI Token balance: %d", balances.SuiToken)
 
 	// TON
+	r.Logger.Print("TON:")
 	tonBalance, err := tonWallet.GetBalance(r.Ctx)
 	if err != nil {
 		r.Logger.Print("Error getting TON balance: %s", err.Error())
