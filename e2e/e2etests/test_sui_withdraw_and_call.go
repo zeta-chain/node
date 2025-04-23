@@ -8,7 +8,6 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
-	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -34,9 +33,9 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.SuiExample.ClockID.String(),
 	}
 
-	// create a random Sui address and use it for on_call payload message
+	// define a deterministic address and use it for on_call payload message
 	// the example contract will just forward the withdrawn SUI token to this address
-	suiAddress := sample.SuiAddress(r)
+	suiAddress := "0x34a30aaee833d649d7313ddfe4ff5b6a9bac48803236b919369e6636fe93392e"
 	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
 	require.NoError(r, err)
 	balanceBefore := r.SuiGetSUIBalance(suiAddress)

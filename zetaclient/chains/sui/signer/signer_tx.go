@@ -175,7 +175,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Str("gas_budget", gasBudget).
 		Any("type_args", cp.TypeArgs).
 		Any("object_ids", cp.ObjectIDs).
-		Hex("message", cp.Message).
+		Hex("payload", cp.Message).
 		Msg("calling withdrawAndCallPTB")
 
 	// TODO: check all object IDs are share object here
