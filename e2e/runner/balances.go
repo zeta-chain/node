@@ -242,6 +242,20 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("Sui:")
 	r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
 	r.Logger.Print("* SUI Token balance: %d", balances.SuiToken)
+
+	// TON
+	_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+	if err != nil {
+		r.Logger.Print("Error getting TON address: %s", err.Error())
+	} else {
+		r.Logger.Print("* TON: %s", tonWallet.GetAddress().ToHuman(false, true))
+	}
+	r.Logger.Print("TON:")
+	tonBalance, err := tonWallet.GetBalance(r.Ctx)
+	if err != nil {
+		r.Logger.Print("Error getting TON balance: %s", err.Error())
+	}
+	r.Logger.Print("* TON balance: %d", tonBalance)
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
