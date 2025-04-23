@@ -272,7 +272,11 @@ func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.
 			continue
 		}
 
-		version, _ := strconv.ParseUint(coin.Version, 10, 64)
+		version, err := strconv.ParseUint(coin.Version, 10, 64)
+		if err != nil {
+			return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
+		}
+
 		if version > suiCoinVersion {
 			suiCoin = &coin
 			suiCoinVersion = version
