@@ -472,3 +472,120 @@ func Test_ParseOutboundEvent(t *testing.T) {
 		})
 	}
 }
+
+func Test_extractInteger(t *testing.T) {
+	tests := []struct {
+		name   string
+		kv     map[string]any
+		key    string
+		want   any
+		errMsg string
+	}{
+		{
+			name: "valid int8",
+			kv:   map[string]any{"key": float64(42)},
+			key:  "key",
+			want: int8(42),
+		},
+		{
+			name: "valid int16",
+			kv:   map[string]any{"key": float64(1000)},
+			key:  "key",
+			want: int16(1000),
+		},
+		{
+			name: "valid int32",
+			kv:   map[string]any{"key": float64(100000)},
+			key:  "key",
+			want: int32(100000),
+		},
+		{
+			name: "valid int64",
+			kv:   map[string]any{"key": float64(1000000000)},
+			key:  "key",
+			want: int64(1000000000),
+		},
+		{
+			name: "valid uint8",
+			kv:   map[string]any{"key": float64(42)},
+			key:  "key",
+			want: uint8(42),
+		},
+		{
+			name: "valid uint16",
+			kv:   map[string]any{"key": float64(1000)},
+			key:  "key",
+			want: uint16(1000),
+		},
+		{
+			name: "valid uint32",
+			kv:   map[string]any{"key": float64(100000)},
+			key:  "key",
+			want: uint32(100000),
+		},
+		{
+			name: "valid uint64",
+			kv:   map[string]any{"key": float64(1000000000)},
+			key:  "key",
+			want: uint64(1000000000),
+		},
+		{
+			name:   "missing key",
+			kv:     map[string]any{},
+			key:    "key",
+			errMsg: "missing key",
+		},
+		{
+			name:   "invalid value type",
+			kv:     map[string]any{"key": "not a number"},
+			key:    "key",
+			errMsg: "want float64, got string for key",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			switch tt.name {
+			case "valid int8":
+				got, err := extractInteger[int8](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid int16":
+				got, err := extractInteger[int16](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid int32":
+				got, err := extractInteger[int32](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid int64":
+				got, err := extractInteger[int64](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid uint8":
+				got, err := extractInteger[uint8](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid uint16":
+				got, err := extractInteger[uint16](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid uint32":
+				got, err := extractInteger[uint32](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			case "valid uint64":
+				got, err := extractInteger[uint64](tt.kv, tt.key)
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			default:
+				// Test error cases for all types
+				if tt.errMsg != "" {
+					// Test with int64 as an example
+					_, err := extractInteger[int64](tt.kv, tt.key)
+					require.ErrorContains(t, err, tt.errMsg)
+				}
+			}
+		})
+	}
+}

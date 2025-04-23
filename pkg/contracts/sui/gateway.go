@@ -326,7 +326,7 @@ func extractInteger[T constraints.Integer](kv map[string]any, key string) (T, er
 
 	v, ok := rawValue.(float64)
 	if !ok {
-		return 0, errors.Errorf("invalid %s", key)
+		return 0, errors.Errorf("want float64, got %T for %s", rawValue, key)
 	}
 
 	// #nosec G115 always in range
