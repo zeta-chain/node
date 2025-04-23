@@ -289,12 +289,12 @@ func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (patsui.
 	// convert coin data to object ref
 	suiCoinID, err := patsui.ObjectIdFromHex(suiCoin.CoinObjectId)
 	if err != nil {
-		return patsui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin ID: %w", err)
+		return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
 	}
 
 	suiCoinDigest, err := patsui.NewBase58(suiCoin.Digest)
 	if err != nil {
-		return patsui.ObjectRef{}, fmt.Errorf("failed to parse SUI coin digest: %w", err)
+		return patsui.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
 	}
 
 	return patsui.ObjectRef{

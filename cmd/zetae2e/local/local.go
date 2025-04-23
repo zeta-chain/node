@@ -502,8 +502,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
-
-			// TODO: enable withdraw and call test
 			// https://github.com/zeta-chain/node/issues/3742
 			e2etests.TestSuiWithdrawAndCallName,
 		}
