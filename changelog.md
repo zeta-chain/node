@@ -18,11 +18,15 @@
 * [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
 * [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdrawal
 * [3792](https://github.com/zeta-chain/node/pull/3792) - add compliance check for Sui inbound and outbound
+* [3790](https://github.com/zeta-chain/node/pull/3790) - integrate execute revert
+* [3797](https://github.com/zeta-chain/node/pull/3797) - integrate execute SPL revert
+* [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
 
 ### Refactor
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
+* [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
 
 ### Fixes
 
@@ -31,6 +35,7 @@
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
 * [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
+* [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 
 ### Tests
 

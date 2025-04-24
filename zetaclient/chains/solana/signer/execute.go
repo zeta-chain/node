@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
 
@@ -18,9 +19,10 @@ func (signer *Signer) createAndSignMsgExecute(
 	ctx context.Context,
 	params *types.OutboundParams,
 	height uint64,
-	sender [20]byte,
+	sender string,
 	data []byte,
 	remainingAccounts []*solana.AccountMeta,
+	executeType contracts.ExecuteType,
 	cancelTx bool,
 ) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
 	chain := signer.Chain()
@@ -41,7 +43,7 @@ func (signer *Signer) createAndSignMsgExecute(
 	}
 
 	// prepare execute msg and compute hash
-	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, remainingAccounts)
+	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, executeType, remainingAccounts)
 	msgHash := msg.Hash()
 
 	// prepare increment_nonce msg and compute hash, it will be used as fallback tx in case execute fails
@@ -63,18 +65,41 @@ func (signer *Signer) createAndSignMsgExecute(
 // createExecuteInstruction wraps the execute 'msg' into a Solana instruction.
 func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solana.GenericInstruction, error) {
 	// create execute instruction with program call data
-	dataBytes, err := borsh.Serialize(contracts.ExecuteInstructionParams{
-		Discriminator: contracts.DiscriminatorExecute,
-		Amount:        msg.Amount(),
-		Sender:        msg.Sender(),
-		Data:          msg.Data(),
-		Signature:     msg.SigRS(),
-		RecoveryID:    msg.SigV(),
-		MessageHash:   msg.Hash(),
-		Nonce:         msg.Nonce(),
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot serialize execute instruction")
+	discriminator := contracts.DiscriminatorExecute
+	var dataBytes []byte
+	if msg.ExecuteType() == contracts.ExecuteTypeRevert {
+		discriminator = contracts.DiscriminatorExecuteRevert
+		serializedInst, err := borsh.Serialize(contracts.ExecuteRevertInstructionParams{
+			Discriminator: discriminator,
+			Amount:        msg.Amount(),
+			Sender:        solana.MustPublicKeyFromBase58(msg.Sender()),
+			Data:          msg.Data(),
+			Signature:     msg.SigRS(),
+			RecoveryID:    msg.SigV(),
+			MessageHash:   msg.Hash(),
+			Nonce:         msg.Nonce(),
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot serialize execute_revert instruction")
+		}
+
+		dataBytes = serializedInst
+	} else {
+		serializedInst, err := borsh.Serialize(contracts.ExecuteInstructionParams{
+			Discriminator: discriminator,
+			Amount:        msg.Amount(),
+			Sender:        common.HexToAddress(msg.Sender()),
+			Data:          msg.Data(),
+			Signature:     msg.SigRS(),
+			RecoveryID:    msg.SigV(),
+			MessageHash:   msg.Hash(),
+			Nonce:         msg.Nonce(),
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot serialize execute instruction")
+		}
+
+		dataBytes = serializedInst
 	}
 
 	destinationProgramPda, err := contracts.ComputeConnectedPdaAddress(msg.To())
@@ -86,7 +111,7 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 		solana.Meta(signer.relayerKey.PublicKey()).WRITE().SIGNER(),
 		solana.Meta(signer.pda).WRITE(),
 		solana.Meta(msg.To()).WRITE(),
-		solana.Meta(destinationProgramPda),
+		solana.Meta(destinationProgramPda).WRITE(),
 	}
 	allAccounts := append(predefinedAccounts, msg.RemainingAccounts()...)
 

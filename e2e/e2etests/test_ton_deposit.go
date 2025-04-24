@@ -13,6 +13,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	ctx := r.Ctx
+	recipient := r.Account.EVMAddress()
+
+	// Get TON ZRC20 balance before deposit
+	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
+	require.NoError(r, err)
+	r.Logger.Info("Recipient's zEVM TON balance before deposit: %d", balanceBefore.Uint64())
 
 	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
@@ -28,38 +34,24 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Given zEVM sender address
-	recipient := r.EVMAddress()
-	r.Logger.Info("Recipient address: %s", recipient)
-
-	// Get balance before deposit
-	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
-	require.NoError(r, err)
-	r.Logger.Info("Recipient's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
-
 	// ACT
 	cctx, err := r.TONDeposit(gw, sender, amount, recipient)
-
-	// ASSERT
 	require.NoError(r, err)
 
+	// ASSERT
 	// Check CCTX
 	expectedDeposit := amount.Sub(depositFee)
-
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
 	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
 
 	// Check receiver's balance after deposit
 	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
-	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d (0x%x)", balanceAfter.Uint64(), balanceAfter.Uint64())
-	r.Logger.Info("Expected deposit based on calculation: %d (0x%x)", expectedDeposit.Uint64(), expectedDeposit.Uint64())
-	r.Logger.Info("CCTX reported amount: %d (0x%x)", cctx.InboundParams.Amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
 	require.NoError(r, err)
+	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balanceAfter.Uint64())
 
-	// Calculate the actual amount deposited (balance difference)
-	balanceDiff := balanceAfter.Uint64() - balanceBefore.Uint64()
-	r.Logger.Info("Balance difference (actual deposit): %d (0x%x)", balanceDiff, balanceDiff)
+	// The recipient balance should be increased by the expected deposit amount
+	amountIncreased := bigSub(balanceAfter, balanceBefore)
+	require.Equal(r, expectedDeposit.Uint64(), amountIncreased.Uint64())
 
-	// Check if the balance difference matches the expected deposit amount
-	require.Equal(r, expectedDeposit.Uint64(), balanceDiff, "Balance difference should match expected deposit amount")
 }

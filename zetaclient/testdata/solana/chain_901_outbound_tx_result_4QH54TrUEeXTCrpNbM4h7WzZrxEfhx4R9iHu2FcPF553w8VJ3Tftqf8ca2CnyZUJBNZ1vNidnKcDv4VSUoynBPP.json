@@ -1,0 +1,119 @@
+{
+    "blockTime": 1744696683,
+    "meta": {
+        "computeUnitsConsumed": 79454,
+        "err": null,
+        "fee": 5000,
+        "innerInstructions": [
+            {
+                "index": 1,
+                "instructions": [
+                    {
+                        "accounts": [
+                            3,
+                            1,
+                            4,
+                            5
+                        ],
+                        "data": "u9WXgeYjFoGz8VZEtUtCXMaWFb3axJ59z7szifTAWM8XtLHfaVNw96mrNecYcywhJteWX",
+                        "programIdIndex": 2,
+                        "stackHeight": 2
+                    }
+                ]
+            }
+        ],
+        "loadedAddresses": {
+            "readonly": [],
+            "writable": []
+        },
+        "logMessages": [
+            "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+            "Program ComputeBudget111111111111111111111111111111 success",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d invoke [1]",
+            "Program log: Instruction: Execute",
+            "Program log: Computed message hash: [240, 118, 179, 150, 248, 165, 198, 178, 149, 129, 235, 203, 93, 75, 183, 108, 201, 17, 191, 95, 220, 80, 230, 120, 136, 95, 254, 42, 23, 13, 227, 64]",
+            "Program log: Recovered address [14, 35, 120, 209, 168, 185, 92, 60, 230, 218, 100, 252, 40, 225, 220, 12, 162, 141, 0, 15]",
+            "Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc invoke [2]",
+            "Program log: Instruction: OnCall",
+            "Program log: On call executed with amount 0, sender [16, 63, 217, 34, 79, 0, 206, 48, 19, 233, 86, 41, 229, 45, 252, 49, 216, 5, 214, 141] and message simple call",
+            "Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc consumed 12710 of 195593 compute units",
+            "Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc success",
+            "Program log: Execute done: destination contract = 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc, amount = 0",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d consumed 79304 of 249850 compute units",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d success"
+        ],
+        "postBalances": [
+            99999995000,
+            29447680,
+            1141440,
+            1837440,
+            999960235720,
+            1,
+            1,
+            1141440
+        ],
+        "postTokenBalances": [],
+        "preBalances": [
+            100000000000,
+            29447680,
+            1141440,
+            1837440,
+            999960235720,
+            1,
+            1,
+            1141440
+        ],
+        "preTokenBalances": [],
+        "rewards": [],
+        "status": {
+            "Ok": null
+        }
+    },
+    "slot": 495,
+    "transaction": {
+        "message": {
+            "accountKeys": [
+                "2qBVcNBZCubcnSR3NyCnFjCfkCVUB3G7ECPoaW5rxVjx",
+                "9dcAyYG4bawApZocwZSyJBi9Mynf5EuKAJfifXdfkqik",
+                "4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc",
+                "VqaCSRDVj4vDupnETzRshW69LsFXovkZwd65EeZA8ru",
+                "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ",
+                "11111111111111111111111111111111",
+                "ComputeBudget111111111111111111111111111111",
+                "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+            ],
+            "header": {
+                "numReadonlySignedAccounts": 0,
+                "numReadonlyUnsignedAccounts": 3,
+                "numRequiredSignatures": 1
+            },
+            "instructions": [
+                {
+                    "accounts": [],
+                    "data": "HnkkG7",
+                    "programIdIndex": 6,
+                    "stackHeight": null
+                },
+                {
+                    "accounts": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        3,
+                        1,
+                        4,
+                        5
+                    ],
+                    "data": "cG7mDRsXEHXUQy8nD3ZVbgb14dfBYsfpWGYb5Drn76r9jnnQwYtxt21fC3VzLB7shs8u7W6ivWXfDfjgasf4b7HnHB9kTtMQ4opP1x3J1rTKSjqt6AgVGNyd622csKnRJmQ43Frg4HEjU1WPorbkkUNeYER5jWWbX5yYoa1qobN9J1Rbw4VqbAQ7L6T4zLX9ysbiyGPn86wqzac9U77dZ",
+                    "programIdIndex": 7,
+                    "stackHeight": null
+                }
+            ],
+            "recentBlockhash": "3Q1eE7AJQF7E5SB3L1eou6SDbhjAEfhtqeySGNV7NiR8"
+        },
+        "signatures": [
+            "4QH54TrUEeXTCrpNbM4h7WzZrxEfhx4R9iHu2FcPF553w8VJ3Tftqf8ca2CnyZUJBNZ1vNidnKcDv4VSUoynBPP"
+        ]
+    }
+}
