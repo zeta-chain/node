@@ -16,7 +16,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	ctx := r.Ctx
 
-	// Given gateway
+	// Using gateway address from config.yml (specified as gateway_account_id)
 	gw := toncontracts.NewGateway(r.TONGateway)
 
 	// Given amount
@@ -31,9 +31,9 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// Get balance before deposit
-	// Using the TONZRC20 address from config
+	// Using the TONZRC20 address from config.yml (specified as ton_zrc20)
 	contractAddr := r.TONZRC20Addr
-	r.Logger.Info("Using TON ZRC20 contract address: %s", contractAddr.Hex())
+	r.Logger.Info("Using TON ZRC20 contract address %s and TON gateway address %s", contractAddr.Hex(), r.TONGateway.ToRaw())
 	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	r.Logger.Info("Account's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
