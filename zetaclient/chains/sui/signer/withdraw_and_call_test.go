@@ -12,42 +12,22 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
-// testPTBArgs holds all the arguments needed for withdrawAndCallPTB
-type testPTBArgs struct {
-	signerAddrStr       string
-	gatewayPackageIDStr string
-	gatewayModule       string
-	gatewayObjRef       sui.ObjectRef
-	suiCoinObjRef       sui.ObjectRef
-	withdrawCapObjRef   sui.ObjectRef
-	onCallObjectRefs    []sui.ObjectRef
-	coinTypeStr         string
-	amountStr           string
-	nonceStr            string
-	gasBudget           uint64
-	receiver            string
-	cp                  zetasui.CallPayload
-}
-
-// newTestPTBArgs creates a testArgs struct with default values
-func newTestPTBArgs(
+// newTestWACPTBArgs creates a withdrawAndCallPTBArgs struct for testing
+func newTestWACPTBArgs(
 	t *testing.T,
 	gatewayObjRef, suiCoinObjRef, withdrawCapObjRef sui.ObjectRef,
 	onCallObjectRefs []sui.ObjectRef,
-) testPTBArgs {
-	return testPTBArgs{
-		signerAddrStr:       sample.SuiAddress(t),
-		gatewayPackageIDStr: sample.SuiAddress(t),
-		gatewayModule:       "gateway",
-		gatewayObjRef:       gatewayObjRef,
-		suiCoinObjRef:       suiCoinObjRef,
-		withdrawCapObjRef:   withdrawCapObjRef,
-		onCallObjectRefs:    onCallObjectRefs,
-		coinTypeStr:         string(zetasui.SUI),
-		amountStr:           "1000000",
-		nonceStr:            "1",
-		gasBudget:           2000000,
-		receiver:            sample.SuiAddress(t),
+) withdrawAndCallPTBArgs {
+	return withdrawAndCallPTBArgs{
+		gatewayObjRef:     gatewayObjRef,
+		suiCoinObjRef:     suiCoinObjRef,
+		withdrawCapObjRef: withdrawCapObjRef,
+		onCallObjectRefs:  onCallObjectRefs,
+		coinType:          string(zetasui.SUI),
+		amount:            1000000,
+		nonce:             1,
+		gasBudget:         2000000,
+		receiver:          sample.SuiAddress(t),
 		cp: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
@@ -57,6 +37,9 @@ func newTestPTBArgs(
 }
 
 func Test_withdrawAndCallPTB(t *testing.T) {
+	// Create a test suite
+	ts := newTestSuite(t)
+
 	// create test objects references
 	gatewayObjRef := sampleObjectRef(t)
 	suiCoinObjRef := sampleObjectRef(t)
@@ -65,17 +48,17 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		args   testPTBArgs
+		args   withdrawAndCallPTBArgs
 		errMsg string
 	}{
 		{
 			name: "successful withdraw and call",
-			args: newTestPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, []sui.ObjectRef{onCallObjRef}),
+			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, []sui.ObjectRef{onCallObjRef}),
 		},
 		{
 			name: "successful withdraw and call with empty payload",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
+			args: func() withdrawAndCallPTBArgs {
+				args := newTestWACPTBArgs(
 					t,
 					gatewayObjRef,
 					suiCoinObjRef,
@@ -87,84 +70,24 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 			}(),
 		},
 		{
-			name: "invalid signer address",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.signerAddrStr = "invalid_address"
-				return args
-			}(),
-			errMsg: "invalid signer address",
-		},
-		{
-			name: "invalid gateway package ID",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.gatewayPackageIDStr = "invalid_package_id"
-				return args
-			}(),
-			errMsg: "invalid gateway package ID",
-		},
-		{
 			name: "invalid coin type",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
+			args: func() withdrawAndCallPTBArgs {
+				args := newTestWACPTBArgs(
 					t,
 					gatewayObjRef,
 					suiCoinObjRef,
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
-				args.coinTypeStr = "invalid_coin_type"
+				args.coinType = "invalid_coin_type"
 				return args
 			}(),
 			errMsg: "invalid coin type",
 		},
 		{
-			name: "unable to create amount argument",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.amountStr = "invalid_amount"
-				return args
-			}(),
-			errMsg: "unable to create amount argument",
-		},
-		{
-			name: "unable to create nonce argument",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.nonceStr = "invalid_nonce"
-				return args
-			}(),
-			errMsg: "unable to create nonce argument",
-		},
-		{
 			name: "invalid target package ID",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
+			args: func() withdrawAndCallPTBArgs {
+				args := newTestWACPTBArgs(
 					t,
 					gatewayObjRef,
 					suiCoinObjRef,
@@ -178,8 +101,8 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 		},
 		{
 			name: "invalid type argument",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
+			args: func() withdrawAndCallPTBArgs {
+				args := newTestWACPTBArgs(
 					t,
 					gatewayObjRef,
 					suiCoinObjRef,
@@ -195,21 +118,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := withdrawAndCallPTB(
-				tt.args.signerAddrStr,
-				tt.args.gatewayPackageIDStr,
-				tt.args.gatewayModule,
-				tt.args.gatewayObjRef,
-				tt.args.suiCoinObjRef,
-				tt.args.withdrawCapObjRef,
-				tt.args.onCallObjectRefs,
-				tt.args.coinTypeStr,
-				tt.args.amountStr,
-				tt.args.nonceStr,
-				tt.args.gasBudget,
-				tt.args.receiver,
-				tt.args.cp,
-			)
+			got, err := ts.Signer.withdrawAndCallPTB(tt.args)
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)

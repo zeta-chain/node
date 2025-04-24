@@ -168,38 +168,37 @@ func (s *Signer) buildWithdrawAndCallTx(
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
 
+	args := withdrawAndCallPTBArgs{
+		gatewayObjRef:     gatewayObjRef,
+		suiCoinObjRef:     suiCoinObjRef,
+		withdrawCapObjRef: withdrawCapObjRef,
+		onCallObjectRefs:  onCallObjectRefs,
+		coinType:          coinType,
+		amount:            params.Amount.Uint64(),
+		nonce:             params.TssNonce,
+		gasBudget:         gasBudget,
+		receiver:          params.Receiver,
+		cp:                cp,
+	}
+
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
 		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
+		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, coinType).
-		Str("amount", params.Amount.String()).
-		Uint64(logs.FieldNonce, params.TssNonce).
-		Str("receiver", params.Receiver).
-		Uint64("gas_budget", gasBudget).
-		Any("type_args", cp.TypeArgs).
-		Any("object_ids", cp.ObjectIDs).
-		Hex("payload", cp.Message).
+		Uint64("amount", args.amount).
+		Str("receiver", args.receiver).
+		Uint64("gas_budget", args.gasBudget).
+		Any("type_args", args.cp.TypeArgs).
+		Any("object_ids", args.cp.ObjectIDs).
+		Hex("payload", args.cp.Message).
 		Msg("calling withdrawAndCallPTB")
 
 	// TODO: check all object IDs are share object here
 	// https://github.com/zeta-chain/node/issues/3755
 
 	// build the PTB transaction
-	return withdrawAndCallPTB(
-		s.TSS().PubKey().AddressSui(),
-		s.gateway.PackageID(),
-		s.gateway.Module(),
-		gatewayObjRef,
-		suiCoinObjRef,
-		withdrawCapObjRef,
-		onCallObjectRefs,
-		coinType,
-		params.Amount.String(),
-		strconv.FormatUint(params.TssNonce, 10),
-		gasBudget,
-		params.Receiver,
-		cp,
-	)
+	return s.withdrawAndCallPTB(args)
 }
 
 // createCancelTxBuilder creates a cancel tx builder for given CCTX

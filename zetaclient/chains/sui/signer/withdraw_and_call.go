@@ -15,46 +15,51 @@ import (
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
+// withdrawAndCallPTBArgs holds all the arguments needed for withdrawAndCallPTB
+type withdrawAndCallPTBArgs struct {
+	gatewayObjRef     sui.ObjectRef
+	suiCoinObjRef     sui.ObjectRef
+	withdrawCapObjRef sui.ObjectRef
+	onCallObjectRefs  []sui.ObjectRef
+	coinType          string
+	amount            uint64
+	nonce             uint64
+	gasBudget         uint64
+	receiver          string
+	cp                zetasui.CallPayload
+}
+
 // withdrawAndCallPTB builds unsigned withdraw and call PTB Sui transaction
 // it chains the following calls:
 // 1. withdraw_impl on gateway
 // 2. gas budget coin transfer to TSS
 // 3. on_call on target contract
 // The function returns a TxnMetaData object with tx bytes, the other fields are ignored
-func withdrawAndCallPTB(
-	signerAddrStr,
-	gatewayPackageIDStr,
-	gatewayModule string,
-	gatewayObjRef,
-	suiCoinObjRef,
-	withdrawCapObjRef sui.ObjectRef,
-	onCallObjectRefs []sui.ObjectRef,
-	coinTypeStr,
-	amountStr,
-	nonceStr string,
-	gasBudget uint64,
-	receiver string,
-	cp zetasui.CallPayload,
-) (tx models.TxnMetaData, err error) {
-	ptb := suiptb.NewTransactionDataTransactionBuilder()
+func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnMetaData, err error) {
+	var (
+		tssAddress       = s.TSS().PubKey().AddressSui()
+		gatewayPackageID = s.gateway.PackageID()
+		gatewayModule    = s.gateway.Module()
+		ptb              = suiptb.NewTransactionDataTransactionBuilder()
+	)
 
 	// Parse signer address
-	signerAddr, err := sui.AddressFromHex(signerAddrStr)
+	signerAddr, err := sui.AddressFromHex(tssAddress)
 	if err != nil {
-		return tx, errors.Wrapf(err, "invalid signer address %s", signerAddrStr)
+		return tx, errors.Wrapf(err, "invalid signer address %s", tssAddress)
 	}
 
 	// Add withdraw_impl command and get its command index
 	if err := ptbAddCmdWithdrawImpl(
 		ptb,
-		gatewayPackageIDStr,
+		gatewayPackageID,
 		gatewayModule,
-		gatewayObjRef,
-		withdrawCapObjRef,
-		coinTypeStr,
-		amountStr,
-		nonceStr,
-		gasBudget,
+		args.gatewayObjRef,
+		args.withdrawCapObjRef,
+		args.coinType,
+		args.amount,
+		args.nonce,
+		args.gasBudget,
 	); err != nil {
 		return tx, err
 	}
@@ -84,11 +89,11 @@ func withdrawAndCallPTB(
 	// Add on_call command
 	err = ptbAddCmdOnCall(
 		ptb,
-		receiver,
-		coinTypeStr,
+		args.receiver,
+		args.coinType,
 		argWithdrawnCoins,
-		onCallObjectRefs,
-		cp,
+		args.onCallObjectRefs,
+		args.cp,
 	)
 	if err != nil {
 		return tx, err
@@ -102,9 +107,9 @@ func withdrawAndCallPTB(
 		signerAddr,
 		pt,
 		[]*sui.ObjectRef{
-			&suiCoinObjRef,
+			&args.suiCoinObjRef,
 		},
-		gasBudget,
+		args.gasBudget,
 		suiclient.DefaultGasPrice,
 	)
 
@@ -126,9 +131,9 @@ func ptbAddCmdWithdrawImpl(
 	gatewayModule string,
 	gatewayObjRef sui.ObjectRef,
 	withdrawCapObjRef sui.ObjectRef,
-	coinTypeStr string,
-	amountStr string,
-	nonceStr string,
+	coinType string,
+	amount uint64,
+	nonce uint64,
 	gasBudget uint64,
 ) error {
 	// Parse gateway package ID
@@ -138,9 +143,9 @@ func ptbAddCmdWithdrawImpl(
 	}
 
 	// Parse coin type
-	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
+	tagCoinType, err := zetasui.TypeTagFromString(coinType)
 	if err != nil {
-		return errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
+		return errors.Wrapf(err, "invalid coin type %s", coinType)
 	}
 
 	// Create gateway object argument
@@ -156,13 +161,13 @@ func ptbAddCmdWithdrawImpl(
 	}
 
 	// Create amount argument
-	argAmount, _, err := zetasui.PureUint64FromString(ptb, amountStr)
+	argAmount, err := ptb.Pure(amount)
 	if err != nil {
 		return errors.Wrapf(err, "unable to create amount argument")
 	}
 
 	// Create nonce argument
-	argNonce, _, err := zetasui.PureUint64FromString(ptb, nonceStr)
+	argNonce, err := ptb.Pure(nonce)
 	if err != nil {
 		return errors.Wrapf(err, "unable to create nonce argument")
 	}
@@ -187,7 +192,7 @@ func ptbAddCmdWithdrawImpl(
 			Module:   gatewayModule,
 			Function: zetasui.FuncWithdrawImpl,
 			TypeArguments: []sui.TypeTag{
-				{Struct: &coinType},
+				{Struct: &tagCoinType},
 			},
 			Arguments: []suiptb.Argument{
 				argGatewayObject,
