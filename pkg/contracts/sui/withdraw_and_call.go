@@ -37,12 +37,17 @@ const (
 // the withdraw_impl command is the first command in the PTB, so the indexes will always be [0, 1, 2, 3, 4]
 var ptbWithdrawImplArgIndexes = []int{0, 1, 2, 3, 4}
 
+// MoveCall represents a Sui Move call with package ID, module and function
+type MoveCall struct {
+	PackageID  string
+	Module     string
+	Function   string
+	ArgIndexes []int
+}
+
 // WithdrawAndCallPTB represents data for a Sui withdraw and call event
 type WithdrawAndCallPTB struct {
-	PackageID string
-	Module    string
-	Function  string
-
+	MoveCall
 	Amount math.Uint
 	Nonce  uint64
 }
@@ -107,26 +112,26 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 	}
 
 	// parse withdraw_impl at command 0
-	packageID, module, function, argIndexes, err := extractMoveCall(tx.Transactions[0])
+	moveCall, err := extractMoveCall(tx.Transactions[0])
 	if err != nil {
 		return event, nil, errors.Wrap(ErrParseEvent, "unable to parse withdraw_impl command in the PTB")
 	}
 
-	if packageID != gw.packageID {
-		return event, nil, errors.Wrapf(ErrParseEvent, "invalid package id %s in the PTB", packageID)
+	if moveCall.PackageID != gw.packageID {
+		return event, nil, errors.Wrapf(ErrParseEvent, "invalid package id %s in the PTB", moveCall.PackageID)
 	}
 
-	if module != moduleName {
-		return event, nil, errors.Wrapf(ErrParseEvent, "invalid module name %s in the PTB", module)
+	if moveCall.Module != moduleName {
+		return event, nil, errors.Wrapf(ErrParseEvent, "invalid module name %s in the PTB", moveCall.Module)
 	}
 
-	if function != FuncWithdrawImpl {
-		return event, nil, errors.Wrapf(ErrParseEvent, "invalid function name %s in the PTB", function)
+	if moveCall.Function != FuncWithdrawImpl {
+		return event, nil, errors.Wrapf(ErrParseEvent, "invalid function name %s in the PTB", moveCall.Function)
 	}
 
 	// ensure the argument indexes are matching the expected indexes
-	if !slices.Equal(argIndexes, ptbWithdrawImplArgIndexes) {
-		return event, nil, errors.Wrapf(ErrParseEvent, "invalid argument indexes %v", argIndexes)
+	if !slices.Equal(moveCall.ArgIndexes, ptbWithdrawImplArgIndexes) {
+		return event, nil, errors.Wrapf(ErrParseEvent, "invalid argument indexes %v", moveCall.ArgIndexes)
 	}
 
 	// parse withdraw_impl arguments
@@ -151,11 +156,9 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 	}
 
 	content = WithdrawAndCallPTB{
-		PackageID: packageID,
-		Module:    moduleName,
-		Function:  FuncWithdrawImpl,
-		Amount:    amount,
-		Nonce:     nonce,
+		MoveCall: moveCall,
+		Amount:   amount,
+		Nonce:    nonce,
 	}
 
 	event = Event{
@@ -169,58 +172,63 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 }
 
 // extractMoveCall extracts the MoveCall information from the PTB transaction command
-func extractMoveCall(transaction any) (packageID, module, function string, argIndexes []int, err error) {
+func extractMoveCall(transaction any) (MoveCall, error) {
 	commands, ok := transaction.(map[string]any)
 	if !ok {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "invalid command type")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "invalid command type")
 	}
 
 	// parse MoveCall info
 	moveCall, ok := commands["MoveCall"].(map[string]any)
 	if !ok {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing MoveCall")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "missing MoveCall")
 	}
 
-	packageID, err = extractStr(moveCall, "package")
+	packageID, err := extractStr(moveCall, "package")
 	if err != nil {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing package ID")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "missing package ID")
 	}
 
-	module, err = extractStr(moveCall, "module")
+	module, err := extractStr(moveCall, "module")
 	if err != nil {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing module name")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "missing module name")
 	}
 
-	function, err = extractStr(moveCall, "function")
+	function, err := extractStr(moveCall, "function")
 	if err != nil {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing function name")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "missing function name")
 	}
 
 	// parse MoveCall data
 	data, ok := moveCall["arguments"]
 	if !ok {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing arguments")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "missing arguments")
 	}
 
 	arguments, ok := data.([]any)
 	if !ok {
-		return "", "", "", nil, errors.Wrap(ErrParseEvent, "arguments should be of slice type")
+		return MoveCall{}, errors.Wrap(ErrParseEvent, "arguments should be of slice type")
 	}
 
 	// extract MoveCall argument indexes
-	argIndexes = make([]int, len(arguments))
+	argIndexes := make([]int, len(arguments))
 	for i, arg := range arguments {
 		indexes, ok := arg.(map[string]any)
 		if !ok {
-			return "", "", "", nil, errors.Wrap(ErrParseEvent, "invalid argument type")
+			return MoveCall{}, errors.Wrap(ErrParseEvent, "invalid argument type")
 		}
 
 		index, err := extractInteger[int](indexes, "Input")
 		if err != nil {
-			return "", "", "", nil, errors.Wrap(ErrParseEvent, "missing argument index")
+			return MoveCall{}, errors.Wrap(ErrParseEvent, "missing argument index")
 		}
 		argIndexes[i] = index
 	}
 
-	return packageID, module, function, argIndexes, nil
+	return MoveCall{
+		PackageID:  packageID,
+		Module:     module,
+		Function:   function,
+		ArgIndexes: argIndexes,
+	}, nil
 }

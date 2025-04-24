@@ -109,11 +109,13 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 			name:     "valid transaction block",
 			response: createPTBResponse(txHash, packageID, amountStr, nonceStr),
 			want: WithdrawAndCallPTB{
-				PackageID: packageID,
-				Module:    moduleName,
-				Function:  FuncWithdrawImpl,
-				Amount:    math.NewUint(100),
-				Nonce:     2,
+				MoveCall: MoveCall{
+					PackageID: packageID,
+					Module:    moduleName,
+					Function:  FuncWithdrawImpl,
+				},
+				Amount: math.NewUint(100),
+				Nonce:  2,
 			},
 		},
 		{
