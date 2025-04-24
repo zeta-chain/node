@@ -71,6 +71,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	receiver string,
 	amount *big.Int,
 	payload sui.CallPayload,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
@@ -89,7 +90,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 			IsArbitraryCall: false,
 			GasLimit:        big.NewInt(20000),
 		},
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
 	)
 	require.NoError(r, err)
 

@@ -2,8 +2,10 @@ package e2etests
 
 import (
 	"encoding/hex"
+	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -48,7 +50,12 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(targetPackageID, amount, payload)
+	tx := r.SuiWithdrawAndCallSUI(
+		targetPackageID,
+		amount,
+		payload,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
 
 	// ASSERT
