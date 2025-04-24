@@ -239,6 +239,12 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 						Digest:   digest1.String(),
 					},
 				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
 			},
 			errMsg: "failed to parse object ID",
 		},
@@ -254,6 +260,12 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 						Version:  "invalid_version",
 						Digest:   digest1.String(),
 					},
+				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
+				{
+					Data: sampleSharedObjectData(t),
 				},
 			},
 			errMsg: "failed to parse object version",
@@ -275,6 +287,12 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 							},
 						},
 					},
+				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
+				{
+					Data: sampleSharedObjectData(t),
 				},
 			},
 			errMsg: "failed to extract initial shared version",
@@ -315,5 +333,19 @@ func sampleObjectRef(t *testing.T) sui.ObjectRef {
 		ObjectId: objectID,
 		Version:  1,
 		Digest:   digest,
+	}
+}
+
+// sampleSharedObjectData creates a sample Sui object data for a shared object
+func sampleSharedObjectData(t *testing.T) *models.SuiObjectData {
+	return &models.SuiObjectData{
+		ObjectId: sample.SuiAddress(t),
+		Version:  "1",
+		Digest:   sample.SuiDigest(t),
+		Owner: map[string]any{
+			"Shared": map[string]any{
+				"initial_shared_version": float64(1),
+			},
+		},
 	}
 }

@@ -374,28 +374,29 @@ func (c *Client) CheckObjectIDsShared(ctx context.Context, objectIDs []string) e
 		return fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(res))
 	}
 
-	return checkContainOwnedObject(res)
+	return CheckContainOwnedObject(res)
 }
 
-func checkContainOwnedObject(res []*models.SuiObjectResponse) error {
+// CheckContainOwnedObject checks if the provided object list represents Sui shared or immmutable objects
+func CheckContainOwnedObject(res []*models.SuiObjectResponse) error {
 	for i, obj := range res {
 		if obj.Data == nil {
-			return fmt.Errorf("object %d is missing data", i)
+			return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d is missing data", i)
 		}
 
 		switch owner := obj.Data.Owner.(type) {
 		case string:
 			if owner != immutableOwner {
-				return fmt.Errorf("object %d has unexpected string owner: %s", i, owner)
+				return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d has unexpected string owner: %s", i, owner)
 			}
 			// Immutable is valid, continue
-		case map[string]interface{}:
+		case map[string]any:
 			if _, isShared := owner[sharedOwner]; !isShared {
-				return fmt.Errorf("object %d is not shared or immutable: owner = %+v", i, owner)
+				return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d is not shared or immutable: owner = %+v", i, owner)
 			}
 			// Shared is valid, continue
 		default:
-			return fmt.Errorf("object %d has unknown owner type: %+v", i, obj.Data.Owner)
+			return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d has unknown owner type: %+v", i, obj.Data.Owner)
 		}
 	}
 

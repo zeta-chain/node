@@ -3,6 +3,7 @@ package signer
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"strconv"
 
 	"github.com/block-vision/sui-go-sdk/models"
@@ -13,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
 // withdrawAndCallObjRefs contains all the object references needed for withdraw and call
@@ -149,6 +151,16 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	})
 	if err != nil {
 		return withdrawAndCallObjRefs{}, errors.Wrapf(err, "failed to get objects for %v", objectIDs)
+	}
+
+	// should never mismatch, just a sanity check
+	if len(suiObjects) != len(objectIDs) {
+		return withdrawAndCallObjRefs{}, fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(suiObjects))
+	}
+
+	// ensure no owned objects are used for on_call
+	if err := client.CheckContainOwnedObject(suiObjects[2:]); err != nil {
+		return withdrawAndCallObjRefs{}, errors.Wrapf(err, "objects used for on_call must be shared")
 	}
 
 	// convert object data to object references

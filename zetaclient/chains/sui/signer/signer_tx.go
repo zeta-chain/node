@@ -187,9 +187,6 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Hex("payload", args.cp.Message).
 		Msg("calling withdrawAndCallPTB")
 
-	// TODO: check all object IDs are share object here
-	// https://github.com/zeta-chain/node/issues/3755
-
 	// build the PTB transaction
 	return s.withdrawAndCallPTB(args)
 }
@@ -259,7 +256,12 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	}
 
 	tx, sig, err := withdrawTxBuilder(ctx)
-	if err != nil {
+
+	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
+	if errors.Is(err, sui.ErrObjectOwnership) {
+		logger.Info().Any("Err", err).Msg("cancelling tx due to wrong object ownership")
+		return s.broadcastCancelTx(ctx, cancelTxBuilder)
+	} else if err != nil {
 		return "", errors.Wrap(err, "unable to build withdraw tx")
 	}
 
