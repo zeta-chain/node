@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
@@ -25,7 +23,9 @@ func (k Keeper) AddVoteToBallot(
 	if err != nil {
 		return ballot, err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot identifier %s", address, ballot.BallotIdentifier))
+	ctx.Logger().Debug("vote added",
+		"voter", address,
+		"ballot_id", ballot.BallotIdentifier)
 	k.SetBallot(ctx, &ballot)
 	return ballot, nil
 }
