@@ -79,6 +79,9 @@ type sigCache = lru.Cache[string, [][65]byte]
 // signatures per chain
 const sigCacheSize = 512
 
+// number of max concurrent (in-flight) TSS requests
+const defaultMaxPendingSignatures = 30
+
 // Metrics Prometheus metrics for the TSS service.
 type Metrics struct {
 	ActiveMsgsSigns    prometheus.Gauge
@@ -159,7 +162,7 @@ func NewService(
 	// defaults, can be overridden by opts
 	cfg := serviceConfig{
 		metrics:              &noopMetrics,
-		maxPendingSignatures: 30,
+		maxPendingSignatures: defaultMaxPendingSignatures,
 		postBlame:            false,
 	}
 
