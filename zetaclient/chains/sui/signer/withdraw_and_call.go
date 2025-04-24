@@ -31,8 +31,8 @@ func withdrawAndCallPTB(
 	onCallObjectRefs []sui.ObjectRef,
 	coinTypeStr,
 	amountStr,
-	nonceStr,
-	gasBudgetStr,
+	nonceStr string,
+	gasBudget uint64,
 	receiver string,
 	cp zetasui.CallPayload,
 ) (tx models.TxnMetaData, err error) {
@@ -45,7 +45,7 @@ func withdrawAndCallPTB(
 	}
 
 	// Add withdraw_impl command and get its command index
-	gasBudgetUint, err := addPTBCmdWithdrawImpl(
+	if err := ptbAddCmdWithdrawImpl(
 		ptb,
 		gatewayPackageIDStr,
 		gatewayModule,
@@ -54,9 +54,8 @@ func withdrawAndCallPTB(
 		coinTypeStr,
 		amountStr,
 		nonceStr,
-		gasBudgetStr,
-	)
-	if err != nil {
+		gasBudget,
+	); err != nil {
 		return tx, err
 	}
 
@@ -77,13 +76,13 @@ func withdrawAndCallPTB(
 	}
 
 	// Add gas budget transfer command
-	err = addPTBCmdGasBudgetTransfer(ptb, argBudgetCoins, *signerAddr)
+	err = ptbAddCmdGasBudgetTransfer(ptb, argBudgetCoins, *signerAddr)
 	if err != nil {
 		return tx, err
 	}
 
 	// Add on_call command
-	err = addPTBCmdOnCall(
+	err = ptbAddCmdOnCall(
 		ptb,
 		receiver,
 		coinTypeStr,
@@ -105,7 +104,7 @@ func withdrawAndCallPTB(
 		[]*sui.ObjectRef{
 			&suiCoinObjRef,
 		},
-		gasBudgetUint,
+		gasBudget,
 		suiclient.DefaultGasPrice,
 	)
 
@@ -120,8 +119,8 @@ func withdrawAndCallPTB(
 	}, nil
 }
 
-// addPTBCmdWithdrawImpl adds the withdraw_impl command to the PTB and returns the gas budget value
-func addPTBCmdWithdrawImpl(
+// ptbAddCmdWithdrawImpl adds the withdraw_impl command to the PTB
+func ptbAddCmdWithdrawImpl(
 	ptb *suiptb.ProgrammableTransactionBuilder,
 	gatewayPackageIDStr string,
 	gatewayModule string,
@@ -130,18 +129,18 @@ func addPTBCmdWithdrawImpl(
 	coinTypeStr string,
 	amountStr string,
 	nonceStr string,
-	gasBudgetStr string,
-) (uint64, error) {
+	gasBudget uint64,
+) error {
 	// Parse gateway package ID
 	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
 	if err != nil {
-		return 0, errors.Wrapf(err, "invalid gateway package ID %s", gatewayPackageIDStr)
+		return errors.Wrapf(err, "invalid gateway package ID %s", gatewayPackageIDStr)
 	}
 
 	// Parse coin type
 	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
 	if err != nil {
-		return 0, errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
+		return errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
 	}
 
 	// Create gateway object argument
@@ -153,31 +152,31 @@ func addPTBCmdWithdrawImpl(
 		},
 	})
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to create gateway object argument")
+		return errors.Wrap(err, "unable to create gateway object argument")
 	}
 
 	// Create amount argument
 	argAmount, _, err := zetasui.PureUint64FromString(ptb, amountStr)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create amount argument")
+		return errors.Wrapf(err, "unable to create amount argument")
 	}
 
 	// Create nonce argument
 	argNonce, _, err := zetasui.PureUint64FromString(ptb, nonceStr)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create nonce argument")
+		return errors.Wrapf(err, "unable to create nonce argument")
 	}
 
 	// Create gas budget argument
-	argGasBudget, gasBudgetUint, err := zetasui.PureUint64FromString(ptb, gasBudgetStr)
+	argGasBudget, err := ptb.Pure(gasBudget)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create gas budget argument")
+		return errors.Wrapf(err, "unable to create gas budget argument")
 	}
 
 	// Create withdraw cap argument
 	argWithdrawCap, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &withdrawCapObjRef})
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create withdraw cap object argument")
+		return errors.Wrapf(err, "unable to create withdraw cap object argument")
 	}
 
 	// add Move call for withdraw_impl
@@ -200,11 +199,11 @@ func addPTBCmdWithdrawImpl(
 		},
 	})
 
-	return gasBudgetUint, nil
+	return nil
 }
 
-// addPTBCmdGasBudgetTransfer adds the gas budget transfer command to the PTB
-func addPTBCmdGasBudgetTransfer(
+// ptbAddCmdGasBudgetTransfer adds the gas budget transfer command to the PTB
+func ptbAddCmdGasBudgetTransfer(
 	ptb *suiptb.ProgrammableTransactionBuilder,
 	argBudgetCoins suiptb.Argument,
 	signerAddr sui.Address,
@@ -225,8 +224,8 @@ func addPTBCmdGasBudgetTransfer(
 	return nil
 }
 
-// addPTBCmdOnCall adds the on_call command to the PTB
-func addPTBCmdOnCall(
+// ptbAddCmdOnCall adds the on_call command to the PTB
+func ptbAddCmdOnCall(
 	ptb *suiptb.ProgrammableTransactionBuilder,
 	receiver string,
 	coinTypeStr string,

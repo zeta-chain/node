@@ -85,7 +85,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to parse gas price")
 	}
-	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
+	gasBudget := gasPrice * params.CallOptions.GasLimit
 
 	// Retrieve withdraw cap ID
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
@@ -105,12 +105,15 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 func (s *Signer) buildWithdrawTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType, gasBudget, withdrawCapID string,
+	coinType string,
+	gasBudget uint64,
+	withdrawCapID string,
 ) (models.TxnMetaData, error) {
 	var (
-		nonce     = strconv.FormatUint(params.TssNonce, 10)
-		recipient = params.Receiver
-		amount    = params.Amount.String()
+		nonce        = strconv.FormatUint(params.TssNonce, 10)
+		recipient    = params.Receiver
+		amount       = params.Amount.String()
+		gasBudgetStr = strconv.FormatUint(gasBudget, 10)
 	)
 
 	req := models.MoveCallRequest{
@@ -119,8 +122,8 @@ func (s *Signer) buildWithdrawTx(
 		Module:          s.gateway.Module(),
 		Function:        funcWithdraw,
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudget, withdrawCapID},
-		GasBudget:       gasBudget,
+		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudgetStr, withdrawCapID},
+		GasBudget:       gasBudgetStr,
 	}
 
 	return s.client.MoveCall(ctx, req)
@@ -131,13 +134,13 @@ func (s *Signer) buildWithdrawTx(
 func (s *Signer) buildWithdrawAndCallTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType,
-	gasBudget,
-	withdrawCapID,
-	payload string,
+	coinType string,
+	gasBudget uint64,
+	withdrawCapID string,
+	payloadHex string,
 ) (models.TxnMetaData, error) {
-	// decode and parse the payload to object the on_call arguments
-	payloadBytes, err := hex.DecodeString(payload)
+	// decode and parse the payload into object IDs and on_call arguments
+	payloadBytes, err := hex.DecodeString(payloadHex)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
@@ -172,7 +175,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Str("amount", params.Amount.String()).
 		Uint64(logs.FieldNonce, params.TssNonce).
 		Str("receiver", params.Receiver).
-		Str("gas_budget", gasBudget).
+		Uint64("gas_budget", gasBudget).
 		Any("type_args", cp.TypeArgs).
 		Any("object_ids", cp.ObjectIDs).
 		Hex("payload", cp.Message).

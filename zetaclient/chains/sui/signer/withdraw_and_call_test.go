@@ -24,7 +24,7 @@ type testPTBArgs struct {
 	coinTypeStr         string
 	amountStr           string
 	nonceStr            string
-	gasBudgetStr        string
+	gasBudget           uint64
 	receiver            string
 	cp                  zetasui.CallPayload
 }
@@ -46,7 +46,7 @@ func newTestPTBArgs(
 		coinTypeStr:         string(zetasui.SUI),
 		amountStr:           "1000000",
 		nonceStr:            "1",
-		gasBudgetStr:        "2000000",
+		gasBudget:           2000000,
 		receiver:            sample.SuiAddress(t),
 		cp: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
@@ -162,21 +162,6 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 			errMsg: "unable to create nonce argument",
 		},
 		{
-			name: "unable to create gas budget argument",
-			args: func() testPTBArgs {
-				args := newTestPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.gasBudgetStr = "invalid_gas_budget"
-				return args
-			}(),
-			errMsg: "unable to create gas budget argument",
-		},
-		{
 			name: "invalid target package ID",
 			args: func() testPTBArgs {
 				args := newTestPTBArgs(
@@ -221,7 +206,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 				tt.args.coinTypeStr,
 				tt.args.amountStr,
 				tt.args.nonceStr,
-				tt.args.gasBudgetStr,
+				tt.args.gasBudget,
 				tt.args.receiver,
 				tt.args.cp,
 			)
