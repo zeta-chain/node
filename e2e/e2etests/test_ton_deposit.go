@@ -46,12 +46,12 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Check receiver's balance
 	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
+	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d (0x%x)", balance.Uint64(), balance.Uint64())
+	r.Logger.Info("Expected deposit based on calculation: %d (0x%x)", expectedDeposit.Uint64(), expectedDeposit.Uint64())
+	r.Logger.Info("CCTX reported amount: %d (0x%x)", cctx.InboundParams.Amount.Uint64(), cctx.InboundParams.Amount.Uint64())
+
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balance.Uint64())
-	r.Logger.Info("Expected deposit based on calculation: %d", expectedDeposit.Uint64())
-	r.Logger.Info("CCTX reported amount: %d", cctx.InboundParams.Amount.Uint64())
-
-	// Use the amount from the CCTX as the source of truth
-	require.Equal(r, cctx.InboundParams.Amount.Uint64(), balance.Uint64())
+	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
 }
