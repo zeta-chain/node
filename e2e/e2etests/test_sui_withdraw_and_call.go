@@ -37,6 +37,9 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	balanceBefore := r.SuiGetSUIBalance(suiAddress)
 
+	// query the called_count before withdraw and call
+	calledCountBefore := r.SuiGetConnectedCalledCount()
+
 	// create the payload
 	payload := sui.NewCallPayload(argumentTypes, objects, message)
 
@@ -57,4 +60,8 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// balance after
 	balanceAfter := r.SuiGetSUIBalance(suiAddress)
 	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
+
+	// verify the called_count increased by 1
+	calledCountAfter := r.SuiGetConnectedCalledCount()
+	require.Equal(r, calledCountBefore+1, calledCountAfter)
 }
