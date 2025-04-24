@@ -9,16 +9,16 @@ import (
 
 // RateLimiter is a simple semaphore for limiting the number of concurrent signatures.
 //
-// This is a naive implementation that probably requires more complex logic to
-// handle real-world scenarios.
+// This is a naive implementation that probably requires
+// improvements to handle real-world scenarios.
 //
 // Pros:
-// - Has simple interface that hides the underlying implementation details.
+// - Has a simple interface that hides the underlying implementation details;
 //
 // Cons:
-// - Doesn't take into account number of signatures per chain,
-// - Doesn't take nonce ordering into account
-// - Doesn't take chain-fairness into account
+// - Doesn't take number of signatures per chain into account;
+// - Doesn't take nonce ordering into account;
+// - Doesn't take chain "fairness" into account;
 //
 // TBD:
 // How to ensure that each O+S throttles the same CCTX at a given point in time?
@@ -30,6 +30,7 @@ type RateLimiter struct {
 
 var ErrThrottled = errors.New("action is throttled")
 
+// New RateLimiter constructor.
 func New(maxPending int64) *RateLimiter {
 	return &RateLimiter{
 		sem:     semaphore.NewWeighted(maxPending),
@@ -37,6 +38,8 @@ func New(maxPending int64) *RateLimiter {
 	}
 }
 
+// Acquire acquires a signature for a given chain and nonce.
+// Returns ErrThrottled if the rate limit is exceeded.
 func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 	if !r.sem.TryAcquire(1) {
 		return errors.Wrapf(ErrThrottled, "chain: %d, nonce: %d", chainID, nonce)
@@ -47,6 +50,7 @@ func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 	return nil
 }
 
+// Release releases a signature for a given chain and nonce.
 func (r *RateLimiter) Release(_, _ uint64) {
 	// noop
 	if r.pending.Load() == 0 {
@@ -57,6 +61,8 @@ func (r *RateLimiter) Release(_, _ uint64) {
 	r.pending.Add(-1)
 }
 
+// Pending returns the number of pending signatures.
 func (r *RateLimiter) Pending() uint64 {
+	// #nosec G115 always in range
 	return uint64(r.pending.Load())
 }

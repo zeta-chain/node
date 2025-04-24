@@ -292,6 +292,7 @@ var (
 
 // sign sends TSS key sign request to the underlying go-tss and registers metrics
 func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res keysign.Response, err error) {
+	// #nosec G115 always in range
 	cid := uint64(chainID)
 	if err := s.rateLimiter.Acquire(cid, nonce); err != nil {
 		return keysign.Response{}, errors.Wrap(err, "request throttled")
