@@ -3,7 +3,6 @@ package e2etests
 import (
 	"github.com/stretchr/testify/require"
 
-	testcontract "github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -24,11 +23,9 @@ func TestTONDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
 
-	// Given deployer mock revert contract
-	// deploy a reverter contract in ZEVM
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
-	require.NoError(r, err)
-	r.Logger.Info("Reverter contract deployed at: %s", reverterAddr.String())
+	// Get the contract address from the runner instead of deploying a new one
+	reverterAddr := r.EVMAddress()
+	r.Logger.Info("Using contract address: %s", reverterAddr.Hex())
 
 	// Given a sender
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
