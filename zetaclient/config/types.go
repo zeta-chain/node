@@ -77,24 +77,25 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer                string         `json:"Peer"`
-	PublicIP            string         `json:"PublicIP"`
-	LogFormat           string         `json:"LogFormat"`
-	LogLevel            int8           `json:"LogLevel"`
-	LogSampler          bool           `json:"LogSampler"`
-	PreParamsPath       string         `json:"PreParamsPath"`
-	ZetaCoreHome        string         `json:"ZetaCoreHome"`
-	ChainID             string         `json:"ChainID"`
-	ZetaCoreURL         string         `json:"ZetaCoreURL"`
-	AuthzGranter        string         `json:"AuthzGranter"`
-	AuthzHotkey         string         `json:"AuthzHotkey"`
-	P2PDiagnostic       bool           `json:"P2PDiagnostic"`
-	ConfigUpdateTicker  uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker uint64         `json:"P2PDiagnosticTicker"`
-	TssPath             string         `json:"TssPath"`
-	TestTssKeysign      bool           `json:"TestTssKeysign"`
-	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
-	RelayerKeyPath      string         `json:"RelayerKeyPath"`
+	Peer                    string         `json:"Peer"`
+	PublicIP                string         `json:"PublicIP"`
+	LogFormat               string         `json:"LogFormat"`
+	LogLevel                int8           `json:"LogLevel"`
+	LogSampler              bool           `json:"LogSampler"`
+	PreParamsPath           string         `json:"PreParamsPath"`
+	ZetaCoreHome            string         `json:"ZetaCoreHome"`
+	ChainID                 string         `json:"ChainID"`
+	ZetaCoreURL             string         `json:"ZetaCoreURL"`
+	AuthzGranter            string         `json:"AuthzGranter"`
+	AuthzHotkey             string         `json:"AuthzHotkey"`
+	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
+	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
+	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
+	TssPath                 string         `json:"TssPath"`
+	TssMaxPendingSignatures int64          `json:"TssMaxPendingSignatures"`
+	TestTssKeysign          bool           `json:"TestTssKeysign"`
+	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
+	RelayerKeyPath          string         `json:"RelayerKeyPath"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
