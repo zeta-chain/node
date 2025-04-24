@@ -386,9 +386,10 @@ func Test_ParseOutboundEvent(t *testing.T) {
 				EventType:  WithdrawAndCallEvent,
 				content: WithdrawAndCallPTB{
 					MoveCall: MoveCall{
-						PackageID: packageID,
-						Module:    moduleName,
-						Function:  FuncWithdrawImpl,
+						PackageID:  packageID,
+						Module:     moduleName,
+						Function:   FuncWithdrawImpl,
+						ArgIndexes: ptbWithdrawImplArgIndexes,
 					},
 					Amount: math.NewUint(200),
 					Nonce:  123,

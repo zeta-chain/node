@@ -110,9 +110,10 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 			response: createPTBResponse(txHash, packageID, amountStr, nonceStr),
 			want: WithdrawAndCallPTB{
 				MoveCall: MoveCall{
-					PackageID: packageID,
-					Module:    moduleName,
-					Function:  FuncWithdrawImpl,
+					PackageID:  packageID,
+					Module:     moduleName,
+					Function:   FuncWithdrawImpl,
+					ArgIndexes: ptbWithdrawImplArgIndexes,
 				},
 				Amount: math.NewUint(100),
 				Nonce:  2,
