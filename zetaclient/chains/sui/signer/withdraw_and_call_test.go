@@ -19,15 +19,17 @@ func newTestWACPTBArgs(
 	onCallObjectRefs []sui.ObjectRef,
 ) withdrawAndCallPTBArgs {
 	return withdrawAndCallPTBArgs{
-		gatewayObjRef:     gatewayObjRef,
-		suiCoinObjRef:     suiCoinObjRef,
-		withdrawCapObjRef: withdrawCapObjRef,
-		onCallObjectRefs:  onCallObjectRefs,
-		coinType:          string(zetasui.SUI),
-		amount:            1000000,
-		nonce:             1,
-		gasBudget:         2000000,
-		receiver:          sample.SuiAddress(t),
+		withdrawAndCallObjRefs: withdrawAndCallObjRefs{
+			gatewayObjRef:     gatewayObjRef,
+			withdrawCapObjRef: withdrawCapObjRef,
+			onCallObjectRefs:  onCallObjectRefs,
+			suiCoinObjRef:     suiCoinObjRef,
+		},
+		coinType:  string(zetasui.SUI),
+		amount:    1000000,
+		nonce:     1,
+		gasBudget: 2000000,
+		receiver:  sample.SuiAddress(t),
 		cp: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
@@ -155,7 +157,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 		onCallObjectIDs []string
 		mockObjects     []*models.SuiObjectResponse
 		mockError       error
-		expected        []sui.ObjectRef
+		expected        withdrawAndCallObjRefs
 		errMsg          string
 	}{
 		{
@@ -196,21 +198,23 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 					},
 				},
 			},
-			expected: []sui.ObjectRef{
-				{
+			expected: withdrawAndCallObjRefs{
+				gatewayObjRef: sui.ObjectRef{
 					ObjectId: gatewayID,
 					Version:  1,
 					Digest:   digest1,
 				},
-				{
+				withdrawCapObjRef: sui.ObjectRef{
 					ObjectId: withdrawCapID,
 					Version:  2,
 					Digest:   digest2,
 				},
-				{
-					ObjectId: onCallObjectID,
-					Version:  1,
-					Digest:   digest3,
+				onCallObjectRefs: []sui.ObjectRef{
+					{
+						ObjectId: onCallObjectID,
+						Version:  1,
+						Digest:   digest3,
+					},
 				},
 			},
 		},
@@ -220,7 +224,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			withdrawCapID:   withdrawCapID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockError:       sample.ErrSample,
-			errMsg:          "failed to get SUI objects",
+			errMsg:          "failed to get objects",
 		},
 		{
 			name:            "invalid object ID",
@@ -287,13 +291,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			ts.SuiMock.On("SuiMultiGetObjects", ctx, mock.Anything).Return(tt.mockObjects, tt.mockError)
 
 			// ACT
-			gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := getWithdrawAndCallObjectRefs(
-				ctx,
-				ts.SuiMock,
-				tt.gatewayID,
-				tt.withdrawCapID,
-				tt.onCallObjectIDs,
-			)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs)
 
 			// ASSERT
 			if tt.errMsg != "" {
@@ -302,10 +300,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			require.EqualValues(t, tt.expected[0], gatewayObjRef)
-			require.EqualValues(t, tt.expected[1], withdrawCapObjRef)
-			require.EqualValues(t, tt.expected[2:], onCallObjectRefs)
-			require.Len(t, onCallObjectRefs, len(tt.onCallObjectIDs))
+			require.Equal(t, tt.expected, got)
 		})
 	}
 }

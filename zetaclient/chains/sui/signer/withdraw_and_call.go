@@ -15,18 +15,23 @@ import (
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
-// withdrawAndCallPTBArgs holds all the arguments needed for withdrawAndCallPTB
-type withdrawAndCallPTBArgs struct {
+// withdrawAndCallObjRefs contains all the object references needed for withdraw and call
+type withdrawAndCallObjRefs struct {
 	gatewayObjRef     sui.ObjectRef
-	suiCoinObjRef     sui.ObjectRef
 	withdrawCapObjRef sui.ObjectRef
 	onCallObjectRefs  []sui.ObjectRef
-	coinType          string
-	amount            uint64
-	nonce             uint64
-	gasBudget         uint64
-	receiver          string
-	cp                zetasui.CallPayload
+	suiCoinObjRef     sui.ObjectRef
+}
+
+// withdrawAndCallPTBArgs contains all the arguments needed for withdraw and call
+type withdrawAndCallPTBArgs struct {
+	withdrawAndCallObjRefs
+	coinType  string
+	amount    uint64
+	nonce     uint64
+	gasBudget uint64
+	receiver  string
+	cp        zetasui.CallPayload
 }
 
 // withdrawAndCallPTB builds unsigned withdraw and call PTB Sui transaction
@@ -121,6 +126,74 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 	// Encode the transaction bytes to base64
 	return models.TxnMetaData{
 		TxBytes: base64.StdEncoding.EncodeToString(txBytes),
+	}, nil
+}
+
+// getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
+//   - Initial shared version will be used for shared objects
+//   - Current version will be used for non-shared objects, e.g. withdraw cap
+func (s *Signer) getWithdrawAndCallObjectRefs(
+	ctx context.Context,
+	withdrawCapID string,
+	onCallObjectIDs []string,
+) (withdrawAndCallObjRefs, error) {
+	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID}, onCallObjectIDs...)
+
+	// query objects in batch
+	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+		ObjectIds: objectIDs,
+		Options: models.SuiObjectDataOptions{
+			// show owner info in order to retrieve object initial shared version
+			ShowOwner: true,
+		},
+	})
+	if err != nil {
+		return withdrawAndCallObjRefs{}, errors.Wrapf(err, "failed to get objects for %v", objectIDs)
+	}
+
+	// convert object data to object references
+	objectRefs := make([]sui.ObjectRef, len(objectIDs))
+
+	for i, object := range suiObjects {
+		objectID, err := sui.ObjectIdFromHex(object.Data.ObjectId)
+		if err != nil {
+			return withdrawAndCallObjRefs{}, errors.Wrapf(err, "failed to parse object ID %s", object.Data.ObjectId)
+		}
+
+		objectVersion, err := strconv.ParseUint(object.Data.Version, 10, 64)
+		if err != nil {
+			return withdrawAndCallObjRefs{}, errors.Wrapf(err, "failed to parse object version %s", object.Data.Version)
+		}
+
+		// must use initial version for shared object, not the current version
+		// withdraw cap is not a shared object, so we must use current version
+		if object.Data.ObjectId != withdrawCapID {
+			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
+			if err != nil {
+				return withdrawAndCallObjRefs{}, errors.Wrapf(
+					err,
+					"failed to extract initial shared version for object %s",
+					object.Data.ObjectId,
+				)
+			}
+		}
+
+		objectDigest, err := sui.NewBase58(object.Data.Digest)
+		if err != nil {
+			return withdrawAndCallObjRefs{}, errors.Wrapf(err, "failed to parse object digest %s", object.Data.Digest)
+		}
+
+		objectRefs[i] = sui.ObjectRef{
+			ObjectId: objectID,
+			Version:  objectVersion,
+			Digest:   objectDigest,
+		}
+	}
+
+	return withdrawAndCallObjRefs{
+		gatewayObjRef:     objectRefs[0],
+		withdrawCapObjRef: objectRefs[1],
+		onCallObjectRefs:  objectRefs[2:],
 	}, nil
 }
 
@@ -299,81 +372,4 @@ func ptbAddCmdOnCall(
 	})
 
 	return nil
-}
-
-// getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
-//   - Initial shared version will be used for shared objects
-//   - Current version will be used for non-shared objects, e.g. withdraw cap
-func getWithdrawAndCallObjectRefs(
-	ctx context.Context,
-	rpc RPC,
-	gatewayID, withdrawCapID string,
-	onCallObjectIDs []string,
-) (gatewayObjRef, withdrawCapObjRef sui.ObjectRef, onCallObjectRefs []sui.ObjectRef, err error) {
-	objectIDs := append([]string{gatewayID, withdrawCapID}, onCallObjectIDs...)
-
-	// query objects in batch
-	suiObjects, err := rpc.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
-		ObjectIds: objectIDs,
-		Options: models.SuiObjectDataOptions{
-			// show owner info in order to retrieve object initial shared version
-			ShowOwner: true,
-		},
-	})
-	if err != nil {
-		return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(err, "failed to get SUI objects for %v", objectIDs)
-	}
-
-	// convert object data to object references
-	objectRefs := make([]sui.ObjectRef, len(objectIDs))
-
-	for i, object := range suiObjects {
-		objectID, err := sui.ObjectIdFromHex(object.Data.ObjectId)
-		if err != nil {
-			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
-				err,
-				"failed to parse object ID %s",
-				object.Data.ObjectId,
-			)
-		}
-
-		objectVersion, err := strconv.ParseUint(object.Data.Version, 10, 64)
-		if err != nil {
-			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
-				err,
-				"failed to parse object version %s",
-				object.Data.Version,
-			)
-		}
-
-		// must use initial version for shared object, not the current version
-		// withdraw cap is not a shared object, so we must use current version
-		if object.Data.ObjectId != withdrawCapID {
-			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
-			if err != nil {
-				return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
-					err,
-					"failed to extract initial shared version for object %s",
-					object.Data.ObjectId,
-				)
-			}
-		}
-
-		objectDigest, err := sui.NewBase58(object.Data.Digest)
-		if err != nil {
-			return gatewayObjRef, withdrawCapObjRef, nil, errors.Wrapf(
-				err,
-				"failed to parse object digest %s",
-				object.Data.Digest,
-			)
-		}
-
-		objectRefs[i] = sui.ObjectRef{
-			ObjectId: objectID,
-			Version:  objectVersion,
-			Digest:   objectDigest,
-		}
-	}
-
-	return objectRefs[0], objectRefs[1], objectRefs[2:], nil
 }

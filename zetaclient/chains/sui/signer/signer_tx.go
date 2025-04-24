@@ -150,42 +150,35 @@ func (s *Signer) buildWithdrawAndCallTx(
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
 
+	// get all needed object references
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs)
+	if err != nil {
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
+	}
+
 	// get latest TSS SUI coin object ref for gas payment
 	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui())
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
 	}
+	wacRefs.suiCoinObjRef = suiCoinObjRef
 
-	// get all other object references: [gateway, withdrawCap, onCallObjects]
-	gatewayObjRef, withdrawCapObjRef, onCallObjectRefs, err := getWithdrawAndCallObjectRefs(
-		ctx,
-		s.client,
-		s.gateway.ObjectID(),
-		withdrawCapID,
-		cp.ObjectIDs,
-	)
-	if err != nil {
-		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
-	}
-
+	// all PTB arguments
 	args := withdrawAndCallPTBArgs{
-		gatewayObjRef:     gatewayObjRef,
-		suiCoinObjRef:     suiCoinObjRef,
-		withdrawCapObjRef: withdrawCapObjRef,
-		onCallObjectRefs:  onCallObjectRefs,
-		coinType:          coinType,
-		amount:            params.Amount.Uint64(),
-		nonce:             params.TssNonce,
-		gasBudget:         gasBudget,
-		receiver:          params.Receiver,
-		cp:                cp,
+		withdrawAndCallObjRefs: wacRefs,
+		coinType:               coinType,
+		amount:                 params.Amount.Uint64(),
+		nonce:                  params.TssNonce,
+		gasBudget:              gasBudget,
+		receiver:               params.Receiver,
+		cp:                     cp,
 	}
 
 	// print PTB transaction parameters
 	s.Logger().Std.Info().
 		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
-		Str(logs.FieldCoinType, coinType).
+		Str(logs.FieldCoinType, args.coinType).
 		Uint64("amount", args.amount).
 		Str("receiver", args.receiver).
 		Uint64("gas_budget", args.gasBudget).
