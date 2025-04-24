@@ -25,7 +25,7 @@ func (k Keeper) AddVoteToBallot(
 	}
 	ctx.Logger().Debug("vote added",
 		"voter", address,
-		"ballot_id", ballot.BallotIdentifier)
+		"ballot_identifier", ballot.BallotIdentifier)
 	k.SetBallot(ctx, &ballot)
 	return ballot, nil
 }
