@@ -156,13 +156,6 @@ func (s *Signer) buildWithdrawAndCallTx(
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
 
-	// get latest TSS SUI coin object ref for gas payment
-	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui())
-	if err != nil {
-		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
-	}
-	wacRefs.suiCoin = suiCoinObjRef
-
 	// all PTB arguments
 	args := withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: wacRefs,

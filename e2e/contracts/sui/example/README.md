@@ -19,6 +19,8 @@ This is implemented as a single atomic transaction using Sui's Programmable Tran
      - Verifies the withdrawal parameters
      - Withdraw and returns two coin objects: the main withdrawn coins and the gas budget coins
    - **Gas Budget Transfer**: The second command transfers the gas budget coins to the TSS address to cover transaction fees.
+     - The gas budget is the SUI coin withdrawn from sui vault, together with withdrawn CCTX's coinType.
+     - The gas budget needs to be forwarded to TSS address to cover the transaction fee.
    - **Connected Module Call**: The third command calls the `on_call` function in the connected module, passing:
      - The withdrawn coins
      - The call payload from the user
