@@ -45,7 +45,6 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	callData := []byte("hello from TON!")
 
 	// Call TONDepositAndCall with recipient as the zEVM address, not the contract address
-	r.Logger.Info("Sending deposit of %s nano TON from %s to recipient %s", amount.String(), sender.GetAddress().ToRaw(), recipientAddr.Hex())
 	_, err = r.TONDepositAndCall(gw, sender, amount, recipientAddr, callData)
 
 	// ASSERT
