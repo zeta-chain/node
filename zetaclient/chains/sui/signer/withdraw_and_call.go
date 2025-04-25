@@ -19,10 +19,10 @@ import (
 
 // withdrawAndCallObjRefs contains all the object references needed for withdraw and call
 type withdrawAndCallObjRefs struct {
-	gatewayObjRef     sui.ObjectRef
-	withdrawCapObjRef sui.ObjectRef
-	onCallObjectRefs  []sui.ObjectRef
-	suiCoinObjRef     sui.ObjectRef
+	gateway     sui.ObjectRef
+	withdrawCap sui.ObjectRef
+	onCall      []sui.ObjectRef
+	suiCoin     sui.ObjectRef
 }
 
 // withdrawAndCallPTBArgs contains all the arguments needed for withdraw and call
@@ -33,7 +33,7 @@ type withdrawAndCallPTBArgs struct {
 	nonce     uint64
 	gasBudget uint64
 	receiver  string
-	cp        zetasui.CallPayload
+	payload   zetasui.CallPayload
 }
 
 // withdrawAndCallPTB builds unsigned withdraw and call PTB Sui transaction
@@ -61,8 +61,8 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 		ptb,
 		gatewayPackageID,
 		gatewayModule,
-		args.gatewayObjRef,
-		args.withdrawCapObjRef,
+		args.gateway,
+		args.withdrawCap,
 		args.coinType,
 		args.amount,
 		args.nonce,
@@ -99,8 +99,8 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 		args.receiver,
 		args.coinType,
 		argWithdrawnCoins,
-		args.onCallObjectRefs,
-		args.cp,
+		args.onCall,
+		args.payload,
 	)
 	if err != nil {
 		return tx, err
@@ -114,7 +114,7 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 		signerAddr,
 		pt,
 		[]*sui.ObjectRef{
-			&args.suiCoinObjRef,
+			&args.suiCoin,
 		},
 		args.gasBudget,
 		suiclient.DefaultGasPrice,
@@ -203,9 +203,9 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	return withdrawAndCallObjRefs{
-		gatewayObjRef:     objectRefs[0],
-		withdrawCapObjRef: objectRefs[1],
-		onCallObjectRefs:  objectRefs[2:],
+		gateway:     objectRefs[0],
+		withdrawCap: objectRefs[1],
+		onCall:      objectRefs[2:],
 	}, nil
 }
 

@@ -20,17 +20,17 @@ func newTestWACPTBArgs(
 ) withdrawAndCallPTBArgs {
 	return withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: withdrawAndCallObjRefs{
-			gatewayObjRef:     gatewayObjRef,
-			withdrawCapObjRef: withdrawCapObjRef,
-			onCallObjectRefs:  onCallObjectRefs,
-			suiCoinObjRef:     suiCoinObjRef,
+			gateway:     gatewayObjRef,
+			withdrawCap: withdrawCapObjRef,
+			onCall:      onCallObjectRefs,
+			suiCoin:     suiCoinObjRef,
 		},
 		coinType:  string(zetasui.SUI),
 		amount:    1000000,
 		nonce:     1,
 		gasBudget: 2000000,
 		receiver:  sample.SuiAddress(t),
-		cp: zetasui.CallPayload{
+		payload: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
 			Message:   []byte("test message"),
@@ -67,7 +67,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
-				args.cp.Message = []byte{}
+				args.payload.Message = []byte{}
 				return args
 			}(),
 		},
@@ -111,7 +111,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
-				args.cp.TypeArgs[0] = "invalid_type_argument"
+				args.payload.TypeArgs[0] = "invalid_type_argument"
 				return args
 			}(),
 			errMsg: "invalid type argument",
@@ -199,17 +199,17 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				},
 			},
 			expected: withdrawAndCallObjRefs{
-				gatewayObjRef: sui.ObjectRef{
+				gateway: sui.ObjectRef{
 					ObjectId: gatewayID,
 					Version:  1,
 					Digest:   digest1,
 				},
-				withdrawCapObjRef: sui.ObjectRef{
+				withdrawCap: sui.ObjectRef{
 					ObjectId: withdrawCapID,
 					Version:  2,
 					Digest:   digest2,
 				},
-				onCallObjectRefs: []sui.ObjectRef{
+				onCall: []sui.ObjectRef{
 					{
 						ObjectId: onCallObjectID,
 						Version:  1,

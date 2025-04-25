@@ -161,7 +161,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get TSS SUI coin object")
 	}
-	wacRefs.suiCoinObjRef = suiCoinObjRef
+	wacRefs.suiCoin = suiCoinObjRef
 
 	// all PTB arguments
 	args := withdrawAndCallPTBArgs{
@@ -171,7 +171,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		nonce:                  params.TssNonce,
 		gasBudget:              gasBudget,
 		receiver:               params.Receiver,
-		cp:                     cp,
+		payload:                cp,
 	}
 
 	// print PTB transaction parameters
@@ -179,12 +179,12 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
-		Uint64("amount", args.amount).
-		Str("receiver", args.receiver).
-		Uint64("gas_budget", args.gasBudget).
-		Any("type_args", args.cp.TypeArgs).
-		Any("object_ids", args.cp.ObjectIDs).
-		Hex("payload", args.cp.Message).
+		Uint64("tx.amount", args.amount).
+		Str("tx.receiver", args.receiver).
+		Uint64("tx.gas_budget", args.gasBudget).
+		Strs("tx.type_args", args.payload.TypeArgs).
+		Strs("tx.object_ids", args.payload.ObjectIDs).
+		Hex("tx.payload", args.payload.Message).
 		Msg("calling withdrawAndCallPTB")
 
 	// build the PTB transaction
@@ -258,10 +258,11 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	tx, sig, err := withdrawTxBuilder(ctx)
 
 	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
-	if errors.Is(err, sui.ErrObjectOwnership) {
-		logger.Info().Any("Err", err).Msg("cancelling tx due to wrong object ownership")
+	switch {
+	case errors.Is(err, sui.ErrObjectOwnership):
+		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
 		return s.broadcastCancelTx(ctx, cancelTxBuilder)
-	} else if err != nil {
+	case err != nil:
 		return "", errors.Wrap(err, "unable to build withdraw tx")
 	}
 
