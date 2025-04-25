@@ -21,6 +21,7 @@ func (r *E2ERunner) ETHDeposit(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	revertOptions gatewayevm.RevertOptions,
+	wait bool,
 ) *ethtypes.Transaction {
 	r.Lock()
 	defer r.Unlock()
@@ -35,7 +36,9 @@ func (r *E2ERunner) ETHDeposit(
 	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, revertOptions)
 	require.NoError(r, err)
 
-	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
+	if wait {
+		logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
+	}
 
 	return tx
 }
@@ -43,7 +46,7 @@ func (r *E2ERunner) ETHDeposit(
 // DepositEtherDeployer sends Ethers into ZEVM using V2 protocol contracts
 func (r *E2ERunner) DepositEtherDeployer() ethcommon.Hash {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
-	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
 	return tx.Hash()
 }
 

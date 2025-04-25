@@ -253,6 +253,10 @@ const (
 
 )
 
+const (
+	CountArgDescription = "count"
+)
+
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
 	/*
@@ -1126,7 +1130,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test Ether withdrawal",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "count", DefaultValue: "100"},
+			{Description: CountArgDescription, DefaultValue: "100"},
 		},
 		TestStressEtherWithdraw,
 	),
@@ -1135,7 +1139,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test BTC withdrawal",
 		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.01"},
-			{Description: "count", DefaultValue: "100"},
+			{Description: CountArgDescription, DefaultValue: "100"},
 		},
 		TestStressBTCWithdraw,
 	),
@@ -1144,7 +1148,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test Ether deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "count", DefaultValue: "100"},
+			{Description: CountArgDescription, DefaultValue: "100"},
 		},
 		TestStressEtherDeposit,
 	),
@@ -1153,7 +1157,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test BTC deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.001"},
-			{Description: "count", DefaultValue: "100"},
+			{Description: CountArgDescription, DefaultValue: "100"},
 		},
 		TestStressBTCDeposit,
 	),
@@ -1162,7 +1166,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SOL deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamports", DefaultValue: "1200000"},
-			{Description: "count of SOL deposits", DefaultValue: "50"},
+			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSolanaDeposit,
 	),
@@ -1171,7 +1175,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SPL deposit",
 		[]runner.ArgDefinition{
 			{Description: "amount in SPL tokens", DefaultValue: "1200000"},
-			{Description: "count of SPL deposits", DefaultValue: "50"},
+			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSPLDeposit,
 	),
@@ -1180,7 +1184,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SOL withdrawals",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamports", DefaultValue: "1000000"},
-			{Description: "count of SOL withdrawals", DefaultValue: "50"},
+			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSolanaWithdraw,
 	),
@@ -1189,7 +1193,7 @@ var AllE2ETests = []runner.E2ETest{
 		"stress test SPL withdrawals",
 		[]runner.ArgDefinition{
 			{Description: "amount in SPL tokens", DefaultValue: "1000000"},
-			{Description: "count of SPL withdrawals", DefaultValue: "50"},
+			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSPLWithdraw,
 	),
@@ -1574,7 +1578,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit ERC20 into ZEVM in multiple deposits (v1 protocol contracts)",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000000000"},
-			{Description: "count", DefaultValue: "3"},
+			{Description: CountArgDescription, DefaultValue: "3"},
 		},
 		legacy.TestMultipleERC20Deposit,
 	),
@@ -1583,7 +1587,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM in multiple withdrawals (v1 protocol contracts)",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100"},
-			{Description: "count", DefaultValue: "3"},
+			{Description: CountArgDescription, DefaultValue: "3"},
 		},
 		legacy.TestMultipleERC20Withdraws,
 	),

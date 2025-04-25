@@ -67,6 +67,7 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 		r.EVMAddress(),
 		fastAmountCap.BigInt(),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
 	)
 	r.Logger.Info("deposited exactly fast amount %d cap tx hash: %s", fastAmountCap, tx.Hash().Hex())
 
@@ -83,7 +84,12 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// ACT-2
 	// deposit with amount more than fast amount cap
 	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap.BigInt(), big.NewInt(1))
-	tx = r.ETHDeposit(r.EVMAddress(), amountMoreThanCap, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx = r.ETHDeposit(
+		r.EVMAddress(),
+		amountMoreThanCap,
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
+	)
 	r.Logger.Info("deposited more than fast amount cap %d tx hash: %s", amountMoreThanCap, tx.Hash().Hex())
 
 	// ASSERT-2
