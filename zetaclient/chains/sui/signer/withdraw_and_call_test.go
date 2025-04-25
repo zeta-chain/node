@@ -141,6 +141,8 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	onCallObjectID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
+	suiCoinID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
+	require.NoError(t, err)
 
 	// create test object digests
 	digest1, err := sui.NewBase58(sample.SuiDigest(t))
@@ -149,6 +151,15 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	digest3, err := sui.NewBase58(sample.SuiDigest(t))
 	require.NoError(t, err)
+	digest4, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
+
+	// create SUI coin object reference
+	suiCoinObjRef := sui.ObjectRef{
+		ObjectId: suiCoinID,
+		Version:  1,
+		Digest:   digest4,
+	}
 
 	tests := []struct {
 		name            string
@@ -216,6 +227,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 						Digest:   digest3,
 					},
 				},
+				suiCoin: suiCoinObjRef,
 			},
 		},
 		{
@@ -304,9 +316,10 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			// ARRANGE
 			ts := newTestSuite(t)
 
-			// setup mock
+			// setup RPC mock
 			ctx := context.Background()
 			ts.SuiMock.On("SuiMultiGetObjects", ctx, mock.Anything).Return(tt.mockObjects, tt.mockError)
+			ts.SuiMock.On("GetSuiCoinObjectRef", ctx, mock.Anything).Maybe().Return(suiCoinObjRef, nil)
 
 			// ACT
 			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs)
