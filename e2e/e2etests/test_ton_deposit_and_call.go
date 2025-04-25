@@ -45,7 +45,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	callData := []byte("hello from TON!")
 
 	// Call TONDepositAndCall with the contract address
-	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
+	_, err = r.TONDepositAndCall(gw, sender, amount, recipientAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)

@@ -116,10 +116,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
-	// Initialize with default values to avoid nil pointer issues
-	cfg := &tonOpts{
-		expectedStatus: cctypes.CctxStatus_OutboundMined,
-	}
+	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
 
 	for _, opt := range opts {
 		opt(cfg)
