@@ -117,6 +117,36 @@ func (r *E2ERunner) SuiWithdrawFungibleToken(
 	return tx
 }
 
+// SuiWithdrawAndCallFungibleToken calls WithdrawAndCall of Gateway with Sui fungible token ZRC20 on ZEVM
+func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
+	receiver string,
+	amount *big.Int,
+	payload sui.CallPayload,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	payloadBytes, err := payload.PackABI()
+	require.NoError(r, err)
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SuiTokenZRC20Addr,
+		payloadBytes,
+		gatewayzevm.CallOptions{
+			IsArbitraryCall: false,
+			GasLimit:        big.NewInt(20000),
+		},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
 // SuiDepositSUI calls Deposit on Sui
 func (r *E2ERunner) SuiDepositSUI(
 	receiver ethcommon.Address,

@@ -13,16 +13,16 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
+func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example package) and a token amount
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Given example contract on_call function arguments
-	// only the CCTX's coinType (0x02::sui::SUI) is needed, no additional arguments
+	// only the CCTX's coinType (0x***::fake_usdc::FAKE_USDC) is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
 		r.SuiExample.GlobalConfigID.String(),
@@ -30,25 +30,28 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		r.SuiExample.ClockID.String(),
 	}
 
-	// define a deterministic address and use it for on_call payload message
-	// the example contract will just forward the withdrawn SUI token to this address
-	suiAddress := "0x34a30aaee833d649d7313ddfe4ff5b6a9bac48803236b919369e6636fe93392e"
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	require.NoError(r, err)
-	balanceBefore := r.SuiGetSUIBalance(suiAddress)
+	// Given sui address
+	// the example contract will just forward the withdrawn token to this address
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	suiAddress := signer.Address()
 
-	// query the called_count before withdraw and call
+	// Given initial balance and called_count
+	balanceBefore := r.SuiGetFungibleTokenBalance(suiAddress)
 	calledCountBefore := r.SuiGetConnectedCalledCount()
 
-	// create the payload
+	// create the payload message
+	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
+	require.NoError(r, err)
 	payload := sui.NewCallPayload(argumentTypes, objects, message)
 
 	// ACT
-	// approve SUI ZRC20 token
+	// approve both SUI gas budget token and fungible token ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(
+	// perform the fungible token withdraw and call
+	tx := r.SuiWithdrawAndCallFungibleToken(
 		targetPackageID,
 		amount,
 		payload,
@@ -62,9 +65,9 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// balance after
-	balanceAfter := r.SuiGetSUIBalance(suiAddress)
-	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
+	// check the balance after the withdraw
+	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
+	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
 	calledCountAfter := r.SuiGetConnectedCalledCount()

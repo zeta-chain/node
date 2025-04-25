@@ -151,7 +151,6 @@ type SuiExample struct {
 	GlobalConfigID DoubleQuotedString `yaml:"global_config_id"`
 	PartnerID      DoubleQuotedString `yaml:"partner_id"`
 	ClockID        DoubleQuotedString `yaml:"clock_id"`
-	PoolID         DoubleQuotedString `yaml:"pool_id"`
 }
 
 // Sui contains the addresses of predeployed contracts on the Sui chain

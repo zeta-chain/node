@@ -14,19 +14,19 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSuiWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm gateway with SUI token.
+// TestSuiTokenWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm gateway with fungible token.
 // The outbound is rejected by the connected module due to invalid payload (invalid address),
 // and 'onRevert' is called instead to handle the revert.
-func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
+func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example package) and a token amount
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// Given example contract on_call function arguments
-	// only the CCTX's coinType (0x02::sui::SUI) is needed, no additional arguments
+	// only the CCTX's coinType (0x***::fake_usdc::FAKE_USDC) is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
 		r.SuiExample.GlobalConfigID.String(),
@@ -41,7 +41,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
-	dAppBalanceBefore, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
+	dAppBalanceBefore, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
 	require.NoError(r, err)
 
 	// given random payload for 'onRevert'
@@ -52,11 +52,12 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	payloadOnCall := sui.NewCallPayload(argumentTypes, objects, message)
 
 	// ACT
-	// approve SUI ZRC20 token
+	// approve both SUI gas budget token and fungible token ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call with revert options
-	tx := r.SuiWithdrawAndCallSUI(
+	tx := r.SuiWithdrawAndCallFungibleToken(
 		targetPackageID,
 		amount,
 		payloadOnCall,
@@ -87,7 +88,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, r.ZEVMAuth.From, sender)
 
 	// the dApp address should get reverted amount
-	dAppBalanceAfter, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
+	dAppBalanceAfter, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, dAppAddress)
 	require.NoError(r, err)
 	require.Equal(r, amount.Int64(), dAppBalanceAfter.Int64()-dAppBalanceBefore.Int64())
 }
