@@ -4,6 +4,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -14,7 +15,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	ctx := r.Ctx
 
-	// Using gateway address from config.yml (specified as gateway_account_id)
+	// Given gateway
 	gw := toncontracts.NewGateway(r.TONGateway)
 
 	// Given amount
@@ -28,22 +29,15 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Get zEVM address as the recipient
-	recipientAddr := r.EVMAddress()
-
-	// Using the TONZRC20 address from config.yml (specified as ton_zrc20)
-	contractAddr := r.TONZRC20Addr
-	r.Logger.Info("Using TON ZRC20 contract address %s and TON gateway address %s", contractAddr.Hex(), r.TONGateway.ToRaw())
-	r.Logger.Info("Recipient address (user's EVM address): %s", recipientAddr.Hex())
-
-	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
-	require.NoError(r, err)
-	r.Logger.Info("Recipient's zEVM TON balance before deposit (contract address: %s): %d (0x%x)", contractAddr.Hex(), balanceBefore.Uint64(), balanceBefore.Uint64())
+	// Given sample zEVM contract deployed by userTON account
+	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err, "unable to deploy example contract")
+	r.Logger.Info("Example zevm contract deployed at: %s", contractAddr.String())
 
 	// Given call data
 	callData := []byte("hello from TON!")
 
-	// Call TONDepositAndCall with the contract address
+	// ACT
 	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
@@ -51,15 +45,14 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	expectedDeposit := amount.Sub(depositFee)
 
-	// Check the balance after deposit
-	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
+	// check if example contract has been called, bar value should be set to amount
+	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))
+
+	// Check receiver's balance
+	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
-	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d (0x%x)", balanceAfter.Uint64(), balanceAfter.Uint64())
 
-	// Calculate and log expected deposit amount (amount minus fee)
+	r.Logger.Info("Contract's zEVM TON balance after deposit: %d", balance.Uint64())
 
-	r.Logger.Info("Expected deposit amount: %d (0x%x)", expectedDeposit.Uint64(), expectedDeposit.Uint64())
-
-	require.Equal(r, expectedDeposit.Uint64(), balanceAfter.Uint64())
-
+	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
 }
