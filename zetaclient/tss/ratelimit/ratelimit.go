@@ -20,9 +20,12 @@ import (
 // - Doesn't take nonce ordering into account;
 // - Doesn't take chain "fairness" into account;
 //
-// TBD:
-// How to ensure that each O+S throttles the same CCTX at a given point in time?
-// Otherwise, different nodes might throttle different cctx => no party formed => error
+// TODO TBD:
+// https://github.com/zeta-chain/node/issues/3830
+//
+//  1. We could get/adjust the value from an on-chain param instead of the config.
+//  2. How to ensure that each O+S throttles the same CCTX at a given point in time?
+//     Otherwise, different nodes might throttle different cctx => no party formed => error
 type RateLimiter struct {
 	sem     *semaphore.Weighted
 	pending *atomic.Int32
