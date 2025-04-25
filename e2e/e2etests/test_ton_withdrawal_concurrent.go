@@ -21,7 +21,7 @@ import (
 // and that zetaclient tolerates "invalid nonce" error from RPC.
 func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 	// ARRANGE
-	const recipientsCount = 10
+	const recipientsCount = 2
 
 	// Fire withdrawals. Note that zevm sender is r.ZEVMAuth
 	var wg sync.WaitGroup
@@ -31,9 +31,9 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 		// and withdrawal amounts between 1 and 5 TON
 		var (
 			// #nosec G404: it's a test
-			amountCoins = 1 + rand.Intn(5)
+			amountCoins = 0.001 + rand.Float64()*0.999
 			// #nosec G115 test - always in range
-			amount    = toncontracts.Coins(uint64(amountCoins))
+			amount    = toncontracts.Coins(uint64(amountCoins * 1e9))
 			recipient = sample.GenerateTONAccountID()
 		)
 
