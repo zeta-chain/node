@@ -44,8 +44,8 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Given call data
 	callData := []byte("hello from TON!")
 
-	// Call TONDepositAndCall with recipient as the zEVM address, not the contract address
-	_, err = r.TONDepositAndCall(gw, sender, amount, recipientAddr, callData)
+	// Call TONDepositAndCall with the contract address
+	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
