@@ -152,19 +152,19 @@ func (signer *Signer) TryProcessOutbound(
 
 	case coin.CoinType_Gas:
 		if cctx.IsWithdrawAndCall() {
-			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
-				return
-			}
 			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
 				return
 			}
-
-			txGetter = executeTxGetter
-			fallbackTxGetter = incrementNonceTxGetter
+			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound, use increment nonce")
+				txGetter = incrementNonceTxGetter
+			} else {
+				txGetter = executeTxGetter
+				fallbackTxGetter = incrementNonceTxGetter
+			}
 		} else {
 			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
 			if err != nil {
@@ -177,20 +177,22 @@ func (signer *Signer) TryProcessOutbound(
 
 	case coin.CoinType_ERC20:
 		if cctx.IsWithdrawAndCall() {
-			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
-				return
-			}
-
 			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
 				return
 			}
 
-			txGetter = executeSPLTxGetter
-			fallbackTxGetter = incrementNonceTxGetter
+			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().
+					Err(err).
+					Msgf("TryProcessOutbound: Fail to sign execute spl outbound, use increment nonce")
+				txGetter = incrementNonceTxGetter
+			} else {
+				txGetter = executeSPLTxGetter
+				fallbackTxGetter = incrementNonceTxGetter
+			}
 		} else {
 			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
 			if err != nil {

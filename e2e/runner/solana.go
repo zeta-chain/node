@@ -480,7 +480,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
-	data []byte,
+	msgEncoded []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// approve
@@ -488,25 +488,6 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
-
-	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
-	require.NoError(r, err)
-	abiArgs, err := solanacontract.GetExecuteMsgAbi()
-	require.NoError(r, err)
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
-	}
-
-	msgEncoded, err := abiArgs.Pack(msg)
-	require.NoError(r, err)
 
 	// withdraw
 	// TODO: gas limit?
