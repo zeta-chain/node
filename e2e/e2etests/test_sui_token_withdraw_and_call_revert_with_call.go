@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"encoding/hex"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -25,18 +23,9 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
-	// Given example contract on_call function arguments
-	// only the CCTX's coinType (0x***::fake_usdc::FAKE_USDC) is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
-	}
-
-	// define an invalid address to cause 'on_call' failure
+	// create the payload for 'on_call' with invalid address
 	invalidAddress := "8f569597ebca884b784d32678a6f"
-	message, err := hex.DecodeString(invalidAddress)
+	payloadOnCall, err := r.SuiCreateExampleWACPayload(invalidAddress)
 	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)
@@ -47,9 +36,6 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	// given random payload for 'onRevert'
 	payloadOnRevert := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payloadOnRevert, amount)
-
-	// create the payload for 'on_call'
-	payloadOnCall := sui.NewCallPayload(argumentTypes, objects, message)
 
 	// ACT
 	// approve both SUI gas budget token and fungible token ZRC20

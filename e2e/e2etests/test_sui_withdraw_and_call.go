@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"encoding/hex"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -21,27 +19,18 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
-	// Given example contract on_call function arguments
-	// only the CCTX's coinType (0x02::sui::SUI) is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
-	}
+	// use the deployer address as on_call payload message
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	suiAddress := signer.Address()
 
-	// define a deterministic address and use it for on_call payload message
-	// the example contract will just forward the withdrawn SUI token to this address
-	suiAddress := "0x34a30aaee833d649d7313ddfe4ff5b6a9bac48803236b919369e6636fe93392e"
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	require.NoError(r, err)
+	// Given initial balance and called_count
 	balanceBefore := r.SuiGetSUIBalance(suiAddress)
-
-	// query the called_count before withdraw and call
 	calledCountBefore := r.SuiGetConnectedCalledCount()
 
-	// create the payload
-	payload := sui.NewCallPayload(argumentTypes, objects, message)
+	// create the on_call payload
+	payloadOnCall, err := r.SuiCreateExampleWACPayload(suiAddress)
+	require.NoError(r, err)
 
 	// ACT
 	// approve SUI ZRC20 token
@@ -51,7 +40,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	tx := r.SuiWithdrawAndCallSUI(
 		targetPackageID,
 		amount,
-		payload,
+		payloadOnCall,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")

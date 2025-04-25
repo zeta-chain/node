@@ -238,6 +238,26 @@ func (r *E2ERunner) SuiMintUSDC(
 	return r.suiExecuteTx(signer, tx)
 }
 
+// SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
+// The example on_call function will just forward the withdrawn token to given 'suiAddress'
+func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPayload, error) {
+	// only the CCTX's coinType is needed, no additional arguments
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	// create the payload message from the sui address
+	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
+	if err != nil {
+		return sui.CallPayload{}, err
+	}
+
+	return sui.NewCallPayload(argumentTypes, objects, message), nil
+}
+
 // SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
 func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
 	// Get object data
