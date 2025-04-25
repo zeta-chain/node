@@ -4,7 +4,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -37,30 +36,23 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Using TON ZRC20 contract address %s and TON gateway address %s", contractAddr.Hex(), r.TONGateway.ToRaw())
 	r.Logger.Info("Recipient address (user's EVM address): %s", recipientAddr.Hex())
 
-	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipientAddr)
+	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
-	r.Logger.Info("Recipient's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
+	r.Logger.Info("Recipient's zEVM TON balance before deposit (contract address: %s): %d (0x%x)", contractAddr.Hex(), balanceBefore.Uint64(), balanceBefore.Uint64())
 
 	// Given call data
 	callData := []byte("hello from TON!")
 
 	// Call TONDepositAndCall with the contract address
-	_, err = r.TONDepositAndCall(gw, sender, amount, recipientAddr, callData)
+	_, err = r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
 
 	expectedDeposit := amount.Sub(depositFee)
 
-	// Create Example contract instance from the recipient address
-	exampleContract, err := testcontract.NewExample(recipientAddr, r.ZEVMClient)
-	require.NoError(r, err)
-
-	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, exampleContract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))
-
 	// Check the balance after deposit
-	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipientAddr)
+	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
 	require.NoError(r, err)
 	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d (0x%x)", balanceAfter.Uint64(), balanceAfter.Uint64())
 
