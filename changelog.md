@@ -41,6 +41,7 @@
 ### Tests
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
+* [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
 
 ### Refactor
 
