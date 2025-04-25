@@ -2,8 +2,10 @@ package e2etests
 
 import (
 	"encoding/hex"
+	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -14,36 +16,59 @@ import (
 func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	signer, err := r.Account.SuiSigner()
-	require.NoError(r, err, "get deployer signer")
-
+	// ARRANGE
+	// Given target package ID (example package) and a SUI amount
+	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
-	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
-
-	// sample withdrawAndCall payload
-	// TODO: use real contract
-	// https://github.com/zeta-chain/node/issues/3742
+	// Given example contract on_call function arguments
 	argumentTypes := []string{
-		"0xb112f370bc8e3ba6e45ad1a954660099fc3e6de2a203df9d26e11aa0d870f635::token::TOKEN",
+		r.SuiExample.TokenType.String(),
 	}
 	objects := []string{
-		"0x57dd7b5841300199ac87b420ddeb48229523e76af423b4fce37da0cb78604408",
-		"0xbab1a2d90ea585eab574932e1b3467ff1d5d3f2aee55fed304f963ca2b9209eb",
-		"0xee6f1f44d24a8bf7268d82425d6e7bd8b9c48d11b2119b20756ee150c8e24ac3",
-		"0x039ce62b538a0d0fca21c3c3a5b99adf519d55e534c536568fbcca40ee61fb7e",
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PoolID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
 	}
-	message, err := hex.DecodeString("3573924024f4a7ff8e6755cb2d9fdeef69bdb65329f081d21b0b6ab37a265d06")
-	require.NoError(r, err)
 
+	// define a deterministic address and use it for on_call payload message
+	// the example contract will just forward the withdrawn SUI token to this address
+	suiAddress := "0x34a30aaee833d649d7313ddfe4ff5b6a9bac48803236b919369e6636fe93392e"
+	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
+	require.NoError(r, err)
+	balanceBefore := r.SuiGetSUIBalance(suiAddress)
+
+	// query the called_count before withdraw and call
+	calledCountBefore := r.SuiGetConnectedCalledCount()
+
+	// create the payload
 	payload := sui.NewCallPayload(argumentTypes, objects, message)
 
+	// ACT
+	// approve SUI ZRC20 token
+	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
+
 	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(signer.Address(), amount, payload)
+	tx := r.SuiWithdrawAndCallSUI(
+		targetPackageID,
+		amount,
+		payload,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
 
+	// ASSERT
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// balance after
+	balanceAfter := r.SuiGetSUIBalance(suiAddress)
+	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
+
+	// verify the called_count increased by 1
+	calledCountAfter := r.SuiGetConnectedCalledCount()
+	require.Equal(r, calledCountBefore+1, calledCountAfter)
 }

@@ -62,9 +62,6 @@ func sepoliaBlockHeaders(t *testing.T) (proofs.BlockHeader, proofs.BlockHeader, 
 	headerRLP3, err := rlp.EncodeToBytes(header1)
 	require.NoError(t, err)
 
-	hex := header1.Hash().Hex()
-	hex = hex
-
 	return proofs.BlockHeader{
 			Height:     5000000,
 			Hash:       header1.Hash().Bytes(),
