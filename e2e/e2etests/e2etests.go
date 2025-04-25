@@ -95,18 +95,19 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName                   = "sui_deposit"
-	TestSuiDepositAndCallName            = "sui_deposit_and_call"
-	TestSuiDepositAndCallRevertName      = "sui_deposit_and_call_revert"
-	TestSuiTokenDepositName              = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallName       = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallRevertName = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawName                  = "sui_withdraw"
-	TestSuiTokenWithdrawName             = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawAndCallName           = "sui_withdraw_and_call"
-	TestSuiWithdrawRevertWithCallName    = "sui_withdraw_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiDepositRestrictedName         = "sui_deposit_restricted"
-	TestSuiWithdrawRestrictedName        = "sui_withdraw_restricted"
+	TestSuiDepositName                       = "sui_deposit"
+	TestSuiDepositAndCallName                = "sui_deposit_and_call"
+	TestSuiDepositAndCallRevertName          = "sui_deposit_and_call_revert"
+	TestSuiTokenDepositName                  = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName           = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallRevertName     = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawName                      = "sui_withdraw"
+	TestSuiTokenWithdrawName                 = "sui_token_withdraw" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawAndCallName               = "sui_withdraw_and_call"
+	TestSuiWithdrawRevertWithCallName        = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawAndCallRevertWithCallName = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiDepositRestrictedName             = "sui_deposit_restricted"
+	TestSuiWithdrawRestrictedName            = "sui_withdraw_restricted"
 
 	/*
 	 Bitcoin tests
@@ -881,6 +882,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRevertWithCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallRevertWithCallName,
+		"withdraw SUI from ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawAndCallRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(

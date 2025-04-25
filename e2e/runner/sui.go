@@ -71,6 +71,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	receiver string,
 	amount *big.Int,
 	payload sui.CallPayload,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
@@ -89,7 +90,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 			IsArbitraryCall: false,
 			GasLimit:        big.NewInt(20000),
 		},
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
 	)
 	require.NoError(r, err)
 
@@ -205,6 +206,35 @@ func (r *E2ERunner) SuiMintUSDC(
 	require.NoError(r, err)
 
 	return r.suiExecuteTx(signer, tx)
+}
+
+// SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
+func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
+	// Get object data
+	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
+		ObjectId: r.SuiExample.GlobalConfigID.String(),
+		Options:  models.SuiObjectDataOptions{ShowContent: true},
+	})
+
+	require.NoError(r, err)
+	require.Nil(r, resp.Error)
+	require.NotNil(r, resp.Data)
+	require.NotNil(r, resp.Data.Content)
+
+	fields := resp.Data.Content.Fields
+
+	// Extract called_count field from the object content
+	rawValue, ok := fields["called_count"]
+	require.True(r, ok, "missing called_count field")
+
+	v, ok := rawValue.(string)
+	require.True(r, ok, "want string, got %T for called_count", rawValue)
+
+	// #nosec G115 always in range
+	calledCount, err := strconv.ParseUint(v, 10, 64)
+	require.NoError(r, err)
+
+	return calledCount
 }
 
 // suiExecuteDeposit executes a deposit on the SUI contract

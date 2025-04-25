@@ -11,6 +11,8 @@ import (
 
 	models "github.com/block-vision/sui-go-sdk/models"
 
+	sui "github.com/pattonkan/sui-go/sui"
+
 	time "time"
 )
 
@@ -68,6 +70,34 @@ func (_m *SuiClient) GetOwnedObjectID(ctx context.Context, ownerAddress string, 
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = rf(ctx, ownerAddress, structType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSuiCoinObjectRef provides a mock function with given fields: ctx, owner
+func (_m *SuiClient) GetSuiCoinObjectRef(ctx context.Context, owner string) (sui.ObjectRef, error) {
+	ret := _m.Called(ctx, owner)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSuiCoinObjectRef")
+	}
+
+	var r0 sui.ObjectRef
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (sui.ObjectRef, error)); ok {
+		return rf(ctx, owner)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) sui.ObjectRef); ok {
+		r0 = rf(ctx, owner)
+	} else {
+		r0 = ret.Get(0).(sui.ObjectRef)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, owner)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -224,34 +254,6 @@ func (_m *SuiClient) SuiExecuteTransactionBlock(ctx context.Context, req models.
 	return r0, r1
 }
 
-// SuiGetObject provides a mock function with given fields: ctx, req
-func (_m *SuiClient) SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error) {
-	ret := _m.Called(ctx, req)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SuiGetObject")
-	}
-
-	var r0 models.SuiObjectResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetObjectRequest) (models.SuiObjectResponse, error)); ok {
-		return rf(ctx, req)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.SuiGetObjectRequest) models.SuiObjectResponse); ok {
-		r0 = rf(ctx, req)
-	} else {
-		r0 = ret.Get(0).(models.SuiObjectResponse)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, models.SuiGetObjectRequest) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // SuiGetTransactionBlock provides a mock function with given fields: ctx, req
 func (_m *SuiClient) SuiGetTransactionBlock(ctx context.Context, req models.SuiGetTransactionBlockRequest) (models.SuiTransactionBlockResponse, error) {
 	ret := _m.Called(ctx, req)
@@ -272,6 +274,36 @@ func (_m *SuiClient) SuiGetTransactionBlock(ctx context.Context, req models.SuiG
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, models.SuiGetTransactionBlockRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SuiMultiGetObjects provides a mock function with given fields: ctx, req
+func (_m *SuiClient) SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuiMultiGetObjects")
+	}
+
+	var r0 []*models.SuiObjectResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SuiMultiGetObjectsRequest) []*models.SuiObjectResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.SuiObjectResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SuiMultiGetObjectsRequest) error); ok {
 		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)

@@ -37,7 +37,6 @@ type RPC interface {
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
-	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
 	SuiGetTransactionBlock(
 		ctx context.Context,
 		req models.SuiGetTransactionBlockRequest,
