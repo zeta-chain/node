@@ -36,13 +36,10 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Using TON ZRC20 contract address %s and TON gateway address %s", contractAddr.Hex(), r.TONGateway.ToRaw())
 	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
-	r.Logger.Info("Account's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
+	r.Logger.Info("Recipient's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
 
 	// Given call data
 	callData := []byte("hello from TON!")
-
-	// ACT
-	r.Logger.Info("Sending deposit and call with %s nano TON from %s to %s", amount.String(), sender.GetAddress().ToRaw(), contractAddr.Hex())
 
 	// Call the TONDepositAndCall using the TON ZRC20 address
 	cctx, err := r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
