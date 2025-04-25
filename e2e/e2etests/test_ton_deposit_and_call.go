@@ -30,19 +30,24 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	_, sender, err := r.Account.AsTONWallet(r.Clients.TON)
 	require.NoError(r, err)
 
-	// Get balance before deposit
+	// Get zEVM address as the recipient
+	recipientAddr := r.EVMAddress()
+
 	// Using the TONZRC20 address from config.yml (specified as ton_zrc20)
 	contractAddr := r.TONZRC20Addr
 	r.Logger.Info("Using TON ZRC20 contract address %s and TON gateway address %s", contractAddr.Hex(), r.TONGateway.ToRaw())
-	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	r.Logger.Info("Recipient address (user's EVM address): %s", recipientAddr.Hex())
+
+	balanceBefore, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipientAddr)
 	require.NoError(r, err)
 	r.Logger.Info("Recipient's zEVM TON balance before deposit: %d (0x%x)", balanceBefore.Uint64(), balanceBefore.Uint64())
 
 	// Given call data
 	callData := []byte("hello from TON!")
 
-	// Call the TONDepositAndCall using the TON ZRC20 address
-	cctx, err := r.TONDepositAndCall(gw, sender, amount, contractAddr, callData)
+	// Call TONDepositAndCall with recipient as the zEVM address, not the contract address
+	r.Logger.Info("Sending deposit of %s nano TON from %s to recipient %s", amount.String(), sender.GetAddress().ToRaw(), recipientAddr.Hex())
+	cctx, err := r.TONDepositAndCall(gw, sender, amount, recipientAddr, callData)
 
 	// ASSERT
 	require.NoError(r, err)
@@ -51,9 +56,9 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
 
 	// Check the balance after deposit
-	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipientAddr)
 	require.NoError(r, err)
-	r.Logger.Info("Account's zEVM TON balance after deposit: %d (0x%x)", balanceAfter.Uint64(), balanceAfter.Uint64())
+	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d (0x%x)", balanceAfter.Uint64(), balanceAfter.Uint64())
 
 	// Calculate and log expected deposit amount (amount minus fee)
 	expectedDeposit := amount.Sub(depositFee)
