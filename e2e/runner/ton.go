@@ -119,7 +119,6 @@ func (r *E2ERunner) TONDepositAndCall(
 	// Initialize with default values to avoid nil pointer issues
 	cfg := &tonOpts{
 		expectedStatus: cctypes.CctxStatus_OutboundMined,
-		revertGasLimit: math.ZeroUint(), // Initialize with zero instead of nil
 	}
 
 	for _, opt := range opts {
