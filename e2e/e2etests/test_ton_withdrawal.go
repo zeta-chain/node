@@ -41,8 +41,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
 	amount := utils.ParseUint(r, args[0])
 	r.Logger.Info("Amount to withdraw: %s", toncontracts.FormatCoins(amount))
-	// Double the amount to ensure the approval is enough
-	approvedAmount := amount.MulUint64(2).Add(toncontracts.Coins(1))
+	approvedAmount := amount.Add(toncontracts.Coins(1))
 
 	// ACT
 	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), approvedAmount.BigInt())
