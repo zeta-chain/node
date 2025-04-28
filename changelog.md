@@ -22,6 +22,7 @@
 * [3797](https://github.com/zeta-chain/node/pull/3797) - integrate execute SPL revert
 * [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
+* [3833](https://github.com/zeta-chain/node/pull/3833) - enable precompiled contracts 
 
 ### Refactor
 

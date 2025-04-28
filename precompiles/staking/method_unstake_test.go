@@ -37,6 +37,9 @@ func Test_Unstake(t *testing.T) {
 	//	})
 	//})
 
+	// Tests have been disabled since
+	// https://github.com/zeta-chain/node/pull/3019
+
 	// t.Run("should fail in read only method", func(t *testing.T) {
 	// 	// ARRANGE
 	// 	ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
