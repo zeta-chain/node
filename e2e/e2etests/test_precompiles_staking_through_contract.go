@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/contracts/teststaking"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -232,4 +231,31 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	})
 	require.NoError(r, err)
 	require.Equal(r, int64(1), delegationAfterVal2.DelegationResponse.Balance.Amount.Int64())
+
+	for _, validator := range validators {
+		delegator := sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String()
+		delegation, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
+			DelegatorAddr: delegator,
+			ValidatorAddr: validator.OperatorAddress,
+		})
+		if err != nil || delegation.DelegationResponse == nil {
+			continue
+		}
+
+		delegationAmount := delegation.DelegationResponse.Balance.Amount.Int64()
+		if delegationAmount > 0 && err == nil {
+			tx, err := testStaking.Unstake(
+				r.ZEVMAuth,
+				r.ZEVMAuth.From,
+				validator.OperatorAddress,
+				big.NewInt(delegationAmount),
+			)
+			require.NoError(r, err)
+			utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		}
+	}
 }
+
+//func CleanValidatorDelegationsUsingContract(r *runner.E2ERunner, stakingContract *teststaking.TestStaking, validators []teststaking.Validator) {
+//
+//}

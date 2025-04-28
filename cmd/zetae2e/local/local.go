@@ -333,14 +333,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
-	deployerRunner.Logger.Print("Precompiles tests %v", skipPrecompiles)
-
 	if !skipPrecompiles {
 		precompiledContractTests := []string{
 			e2etests.TestPrecompilesPrototypeName,
 			e2etests.TestPrecompilesPrototypeThroughContractName,
-			//// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-			//// e2etests.TestPrecompilesStakingThroughContractName,
+			e2etests.TestPrecompilesStakingThroughContractName,
 			e2etests.TestPrecompilesBankName,
 			e2etests.TestPrecompilesBankFailName,
 			e2etests.TestPrecompilesBankThroughContractName,

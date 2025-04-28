@@ -67,6 +67,7 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	validatorAddr, validatorValAddr := getValidatorAddresses(r, distrContract)
 
 	// Reset the test after it finishes.
+	//resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
 	defer resetDistributionTest(r, distrContract, lockerAddress, previousGasLimit, staker, validatorValAddr)
 
 	// Get ERC20ZRC20.
