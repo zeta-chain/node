@@ -33,8 +33,15 @@ type RateLimiter struct {
 
 var ErrThrottled = errors.New("action is throttled")
 
+// number of max concurrent (in-flight) TSS requests
+const DefaultMaxPendingSignatures = 30
+
 // New RateLimiter constructor.
 func New(maxPending uint64) *RateLimiter {
+	if maxPending == 0 {
+		maxPending = DefaultMaxPendingSignatures
+	}
+
 	return &RateLimiter{
 		// #nosec G115 always in range
 		sem:     semaphore.NewWeighted(int64(maxPending)),
