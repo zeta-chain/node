@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	suiptb "github.com/pattonkan/sui-go/sui"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/bg"
@@ -14,6 +15,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // Signer Sui outbound transaction signer.
@@ -30,6 +32,8 @@ type Signer struct {
 type RPC interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
+	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
+	GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(
@@ -83,6 +87,10 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	if err != nil {
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
+
+	// prepare logger
+	logger := s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
+	ctx = logger.WithContext(ctx)
 
 	var txDigest string
 

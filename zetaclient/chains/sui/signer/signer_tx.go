@@ -85,7 +85,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to parse gas price")
 	}
-	gasBudget := strconv.FormatUint(gasPrice*params.CallOptions.GasLimit, 10)
+	gasBudget := gasPrice * params.CallOptions.GasLimit
 
 	// Retrieve withdraw cap ID
 	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
@@ -105,12 +105,15 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 func (s *Signer) buildWithdrawTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType, gasBudget, withdrawCapID string,
+	coinType string,
+	gasBudget uint64,
+	withdrawCapID string,
 ) (models.TxnMetaData, error) {
 	var (
-		nonce     = strconv.FormatUint(params.TssNonce, 10)
-		recipient = params.Receiver
-		amount    = params.Amount.String()
+		nonce        = strconv.FormatUint(params.TssNonce, 10)
+		recipient    = params.Receiver
+		amount       = params.Amount.String()
+		gasBudgetStr = strconv.FormatUint(gasBudget, 10)
 	)
 
 	req := models.MoveCallRequest{
@@ -119,8 +122,8 @@ func (s *Signer) buildWithdrawTx(
 		Module:          s.gateway.Module(),
 		Function:        funcWithdraw,
 		TypeArguments:   []any{coinType},
-		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudget, withdrawCapID},
-		GasBudget:       gasBudget,
+		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudgetStr, withdrawCapID},
+		GasBudget:       gasBudgetStr,
 	}
 
 	return s.client.MoveCall(ctx, req)
@@ -131,13 +134,13 @@ func (s *Signer) buildWithdrawTx(
 func (s *Signer) buildWithdrawAndCallTx(
 	ctx context.Context,
 	params *cctypes.OutboundParams,
-	coinType,
-	gasBudget,
-	withdrawCapID,
-	payload string,
+	coinType string,
+	gasBudget uint64,
+	withdrawCapID string,
+	payloadHex string,
 ) (models.TxnMetaData, error) {
-	// decode and parse the payload to object the on_call arguments
-	payloadBytes, err := hex.DecodeString(payload)
+	// decode and parse the payload into object IDs and on_call arguments
+	payloadBytes, err := hex.DecodeString(payloadHex)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
@@ -147,28 +150,38 @@ func (s *Signer) buildWithdrawAndCallTx(
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
 
-	// Note: logs not formatted in standard, it's a temporary log
-	s.Logger().Std.Info().Msgf(
-		"WithdrawAndCall called with type arguments %v, object IDs %v, message %v",
-		cp.TypeArgs,
-		cp.ObjectIDs,
-		cp.Message,
-	)
+	// get all needed object references
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs)
+	if err != nil {
+		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
+	}
 
-	// keep lint quiet without using _ in params
-	_ = ctx
-	_ = params
-	_ = coinType
-	_ = gasBudget
-	_ = withdrawCapID
+	// all PTB arguments
+	args := withdrawAndCallPTBArgs{
+		withdrawAndCallObjRefs: wacRefs,
+		coinType:               coinType,
+		amount:                 params.Amount.Uint64(),
+		nonce:                  params.TssNonce,
+		gasBudget:              gasBudget,
+		receiver:               params.Receiver,
+		payload:                cp,
+	}
 
-	// TODO: check all object IDs are share object here
-	// https://github.com/zeta-chain/node/issues/3755
+	// print PTB transaction parameters
+	s.Logger().Std.Info().
+		Str(logs.FieldMethod, "buildWithdrawAndCallTx").
+		Uint64(logs.FieldNonce, args.nonce).
+		Str(logs.FieldCoinType, args.coinType).
+		Uint64("tx.amount", args.amount).
+		Str("tx.receiver", args.receiver).
+		Uint64("tx.gas_budget", args.gasBudget).
+		Strs("tx.type_args", args.payload.TypeArgs).
+		Strs("tx.object_ids", args.payload.ObjectIDs).
+		Hex("tx.payload", args.payload.Message).
+		Msg("calling withdrawAndCallPTB")
 
-	// TODO: build PTB here
-	// https://github.com/zeta-chain/node/issues/3741
-
-	return models.TxnMetaData{}, errors.New("not implemented")
+	// build the PTB transaction
+	return s.withdrawAndCallPTB(args)
 }
 
 // createCancelTxBuilder creates a cancel tx builder for given CCTX
@@ -236,7 +249,13 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	}
 
 	tx, sig, err := withdrawTxBuilder(ctx)
-	if err != nil {
+
+	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
+	switch {
+	case errors.Is(err, sui.ErrObjectOwnership):
+		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
+		return s.broadcastCancelTx(ctx, cancelTxBuilder)
+	case err != nil:
 		return "", errors.Wrap(err, "unable to build withdraw tx")
 	}
 
@@ -284,7 +303,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 // broadcastCancelTx broadcasts a cancel tx and returns the tx digest
 func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilder) (string, error) {
-	logger := zerolog.Ctx(ctx)
+	logger := zerolog.Ctx(ctx).With().Str(logs.FieldMethod, "broadcastCancelTx").Logger()
 
 	// build cancel tx
 	txCancel, sigCancel, err := cancelTxBuilder(ctx)

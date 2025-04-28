@@ -10,10 +10,8 @@ import (
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/constraints"
 )
-
-// CoinType represents the coin type for the inbound
-type CoinType string
 
 // EventType represents Gateway event type (both inbound & outbound)
 type EventType string
@@ -38,14 +36,15 @@ type OutboundEventContent interface {
 	TxNonce() uint64
 }
 
-// SUI is the coin type for SUI, native gas token
-const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
-
 // Event types
 const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
+
+	// this event does not exist on gateway, we define it to make the outbound processing consistent
+	WithdrawAndCallEvent EventType = "WithdrawAndCallEvent"
+
 	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
 	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
@@ -227,6 +226,12 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
+	// a simple withdraw contains one single command, if it contains 3 commands,
+	// we try passing the transaction as a withdraw and call with PTB
+	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
+		return gw.parseWithdrawAndCallPTB(res)
+	}
+
 	if len(res.Events) == 0 {
 		return event, nil, errors.New("missing events")
 	}
@@ -310,6 +315,22 @@ func extractStr(kv map[string]any, key string) (string, error) {
 	}
 
 	return v, nil
+}
+
+// extractInteger extracts a float64 value from a map and converts it to any integer type
+func extractInteger[T constraints.Integer](kv map[string]any, key string) (T, error) {
+	rawValue, ok := kv[key]
+	if !ok {
+		return 0, errors.Errorf("missing %s", key)
+	}
+
+	v, ok := rawValue.(float64)
+	if !ok {
+		return 0, errors.Errorf("want float64, got %T for %s", rawValue, key)
+	}
+
+	// #nosec G115 always in range
+	return T(v), nil
 }
 
 func convertPayload(data []any) ([]byte, error) {
