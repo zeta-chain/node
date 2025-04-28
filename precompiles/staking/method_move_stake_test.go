@@ -1,71 +1,63 @@
 package staking
 
 import (
-	"math/rand"
 	"testing"
-
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/cmd/zetacored/config"
-	precompiletypes "github.com/zeta-chain/node/precompiles/types"
-	"github.com/zeta-chain/node/testutil/sample"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func Test_MoveStake(t *testing.T) {
 	// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-	t.Run("should fail with error disabled", func(t *testing.T) {
-		// ARRANGE
-		s := newTestSuite(t)
-		methodID := s.stkContractABI.Methods[MoveStakeMethodName]
-		r := rand.New(rand.NewSource(42))
-		validatorSrc := sample.Validator(t, r)
-		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validatorSrc)
-		validatorDest := sample.Validator(t, r)
-
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, sample.Coins())
-		require.NoError(t, err)
-		err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
-
-		stakerAddr := common.BytesToAddress(staker.Bytes())
-		s.mockVMContract.CallerAddress = stakerAddr
-
-		argsStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
-
-		// stake to validator src
-		stakeMethodID := s.stkContractABI.Methods[StakeMethodName]
-		s.mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
-		_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
-			Method: StakeMethodName,
-		})
-
-		argsMoveStake := []interface{}{
-			stakerEthAddr,
-			validatorSrc.OperatorAddress,
-			validatorDest.OperatorAddress,
-			coins.AmountOf(config.BaseDenom).BigInt(),
-		}
-		s.mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
-
-		// ACT
-		_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
-
-		// ASSERT
-		require.Error(t, err)
-		require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
-			Method: MoveStakeMethodName,
-		})
-	})
+	//t.Run("should fail with error disabled", func(t *testing.T) {
+	//	// ARRANGE
+	//	s := newTestSuite(t)
+	//	methodID := s.stkContractABI.Methods[MoveStakeMethodName]
+	//	r := rand.New(rand.NewSource(42))
+	//	validatorSrc := sample.Validator(t, r)
+	//	s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validatorSrc)
+	//	validatorDest := sample.Validator(t, r)
+	//
+	//	staker := sample.Bech32AccAddress()
+	//	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	//	coins := sample.Coins()
+	//	err := s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, sample.Coins())
+	//	require.NoError(t, err)
+	//	err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
+	//	require.NoError(t, err)
+	//
+	//	stakerAddr := common.BytesToAddress(staker.Bytes())
+	//	s.mockVMContract.CallerAddress = stakerAddr
+	//
+	//	argsStake := []interface{}{
+	//		stakerEthAddr,
+	//		validatorSrc.OperatorAddress,
+	//		coins.AmountOf(config.BaseDenom).BigInt(),
+	//	}
+	//
+	//	// stake to validator src
+	//	stakeMethodID := s.stkContractABI.Methods[StakeMethodName]
+	//	s.mockVMContract.Input = packInputArgs(t, stakeMethodID, argsStake...)
+	//	_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	//	require.Error(t, err)
+	//	require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
+	//		Method: StakeMethodName,
+	//	})
+	//
+	//	argsMoveStake := []interface{}{
+	//		stakerEthAddr,
+	//		validatorSrc.OperatorAddress,
+	//		validatorDest.OperatorAddress,
+	//		coins.AmountOf(config.BaseDenom).BigInt(),
+	//	}
+	//	s.mockVMContract.Input = packInputArgs(t, methodID, argsMoveStake...)
+	//
+	//	// ACT
+	//	_, err = s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	//
+	//	// ASSERT
+	//	require.Error(t, err)
+	//	require.ErrorIs(t, err, precompiletypes.ErrDisabledMethod{
+	//		Method: MoveStakeMethodName,
+	//	})
+	//})
 
 	// t.Run("should fail in read only method", func(t *testing.T) {
 	// 	// ARRANGE

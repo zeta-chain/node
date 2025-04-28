@@ -82,6 +82,8 @@ func TestPrecompilesStaking(r *runner.E2ERunner, args []string) {
 	require.GreaterOrEqual(r, len(validators), 2)
 
 	CleanValidatorDelegations(r, stakingContract, validators)
+	// Clean delegations so the the subsequent tests can work as they expected the delegations to be not preset
+	defer CleanValidatorDelegations(r, stakingContract, validators)
 
 	// shares are 0 for both validators at the start
 	sharesBeforeVal1, err := stakingContract.GetShares(&bind.CallOpts{}, r.ZEVMAuth.From, validators[0].OperatorAddress)

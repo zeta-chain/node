@@ -178,12 +178,6 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		}
 		return res, nil
 	case StakeMethodName:
-		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, precompiletypes.ErrDisabledMethod{
-			Method: method.Name,
-		}
-
-		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Stake(ctx, evm, contract, method, args)
@@ -194,12 +188,6 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		}
 		return res, nil
 	case UnstakeMethodName:
-		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, precompiletypes.ErrDisabledMethod{
-			Method: method.Name,
-		}
-
-		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.Unstake(ctx, evm, contract, method, args)
@@ -210,12 +198,6 @@ func (c *Contract) Run(evm *vm.EVM, contract *vm.Contract, readOnly bool) ([]byt
 		}
 		return res, nil
 	case MoveStakeMethodName:
-		// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-		return nil, precompiletypes.ErrDisabledMethod{
-			Method: method.Name,
-		}
-
-		//nolint:govet
 		var res []byte
 		execErr := stateDB.ExecuteNativeAction(contract.Address(), nil, func(ctx sdk.Context) error {
 			res, err = c.MoveStake(ctx, evm, contract, method, args)
