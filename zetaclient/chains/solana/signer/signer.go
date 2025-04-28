@@ -138,7 +138,14 @@ func (signer *Signer) TryProcessOutbound(
 	coinType := cctx.InboundParams.CoinType
 
 	var txGetter txGetterT
-	var fallbackTxGetter txGetterT
+
+	// always have increment nonce as fallback tx
+	incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+	if err != nil {
+		logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
+		return
+	}
+	fallbackTxGetter := incrementNonceTxGetter
 
 	switch coinType {
 	case coin.CoinType_Cmd:
@@ -152,18 +159,12 @@ func (signer *Signer) TryProcessOutbound(
 
 	case coin.CoinType_Gas:
 		if cctx.IsWithdrawAndCall() {
-			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
-				return
-			}
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound, use increment nonce")
 				txGetter = incrementNonceTxGetter
 			} else {
 				txGetter = executeTxGetter
-				fallbackTxGetter = incrementNonceTxGetter
 			}
 		} else {
 			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
@@ -177,12 +178,6 @@ func (signer *Signer) TryProcessOutbound(
 
 	case coin.CoinType_ERC20:
 		if cctx.IsWithdrawAndCall() {
-			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
-				return
-			}
-
 			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
 				logger.Error().
@@ -191,7 +186,6 @@ func (signer *Signer) TryProcessOutbound(
 				txGetter = incrementNonceTxGetter
 			} else {
 				txGetter = executeSPLTxGetter
-				fallbackTxGetter = incrementNonceTxGetter
 			}
 		} else {
 			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)

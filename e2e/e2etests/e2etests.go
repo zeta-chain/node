@@ -62,6 +62,7 @@ const (
 	 */
 	TestSolanaDepositName                           = "solana_deposit"
 	TestSolanaWithdrawName                          = "solana_withdraw"
+	TestSolanaWithdrawRevertExecutableReceiverName  = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                   = "solana_withdraw_and_call"
 	TestSolanaWithdrawAndCallInvalidMsgEncodingName = "solana_withdraw_and_call_invalid_msg_encoding"
 	TestSolanaWithdrawAndCallRevertWithCallName     = "solana_withdraw_and_call_revert_with_call"
@@ -549,6 +550,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdraw,
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawRevertExecutableReceiverName,
+		"withdraw SOL from ZEVM reverts if executable receiver",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawRevertExecutableReceiver,
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallName,
