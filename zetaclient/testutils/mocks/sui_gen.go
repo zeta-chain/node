@@ -5,6 +5,7 @@ import (
 	time "time"
 
 	models "github.com/block-vision/sui-go-sdk/models"
+	suiptb "github.com/pattonkan/sui-go/sui"
 
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
@@ -19,11 +20,12 @@ type suiClient interface {
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
+	GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error)
 
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
 	SuiXQueryEvents(ctx context.Context, req models.SuiXQueryEventsRequest) (models.PaginatedEventsResponse, error)
-	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
+	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
 	SuiGetTransactionBlock(
 		ctx context.Context,
 		req models.SuiGetTransactionBlockRequest,
