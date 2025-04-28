@@ -21,16 +21,16 @@ func TestRateLimiter(t *testing.T) {
 	require.ErrorIs(t, r.Acquire(4, 400), ErrThrottled)
 
 	// Release 3 requests
-	r.Release(1, 100)
-	r.Release(2, 200)
-	r.Release(3, 300)
+	r.Release()
+	r.Release()
+	r.Release()
 
 	// Should be allowed
 	require.NoError(t, r.Acquire(4, 401))
-	r.Release(4, 401)
+	r.Release()
 
 	// noop
-	r.Release(4, 402)
+	r.Release()
 
 	require.Equal(t, uint64(0), r.Pending())
 }

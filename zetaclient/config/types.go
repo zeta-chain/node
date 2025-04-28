@@ -92,7 +92,7 @@ type Config struct {
 	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
 	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
 	TssPath                 string         `json:"TssPath"`
-	TSSMaxPendingSignatures int64          `json:"TSSMaxPendingSignatures"`
+	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
 	TestTssKeysign          bool           `json:"TestTssKeysign"`
 	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
 	RelayerKeyPath          string         `json:"RelayerKeyPath"`

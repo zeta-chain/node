@@ -91,7 +91,7 @@ type Metrics struct {
 
 type serviceConfig struct {
 	postBlame            bool
-	maxPendingSignatures int64
+	maxPendingSignatures uint64
 	metrics              *Metrics
 }
 
@@ -130,15 +130,9 @@ func WithMetrics(ctx context.Context, zetacore Zetacore, m *Metrics) Opt {
 }
 
 // WithRateLimit configures the TSS to rate limit the number of concurrent signatures.
-func WithRateLimit(maxPendingSignatures int64) Opt {
+func WithRateLimit(maxPendingSignatures uint64) Opt {
 	return func(cfg *serviceConfig, _ zerolog.Logger) error {
-		// noop
-		if maxPendingSignatures <= 0 {
-			return nil
-		}
-
 		cfg.maxPendingSignatures = maxPendingSignatures
-
 		return nil
 	}
 }
@@ -312,7 +306,7 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 
 	// metrics finish
 	defer func() {
-		s.rateLimiter.Release(cid, nonce)
+		s.rateLimiter.Release()
 		s.metrics.ActiveMsgsSigns.Sub(messagesCount)
 
 		latency := time.Since(start).Seconds()

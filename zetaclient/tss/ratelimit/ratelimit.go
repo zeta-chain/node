@@ -34,9 +34,10 @@ type RateLimiter struct {
 var ErrThrottled = errors.New("action is throttled")
 
 // New RateLimiter constructor.
-func New(maxPending int64) *RateLimiter {
+func New(maxPending uint64) *RateLimiter {
 	return &RateLimiter{
-		sem:     semaphore.NewWeighted(maxPending),
+		// #nosec G115 always in range
+		sem:     semaphore.NewWeighted(int64(maxPending)),
 		pending: &atomic.Int32{},
 	}
 }
@@ -53,8 +54,7 @@ func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 	return nil
 }
 
-// Release releases a signature for a given chain and nonce.
-func (r *RateLimiter) Release(_, _ uint64) {
+func (r *RateLimiter) Release() {
 	// noop
 	if r.pending.Load() == 0 {
 		return
