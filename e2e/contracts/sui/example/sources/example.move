@@ -43,10 +43,13 @@ fun init(ctx: &mut TxContext) {
     transfer::share_object(clock);
 }
 
-public entry fun on_call<SOURCE_COIN, TARGET_COIN>(
+public entry fun on_call<SOURCE_COIN>(
     in_coins: Coin<SOURCE_COIN>,
     cetus_config: &mut GlobalConfig,
-    _pool: &mut Pool<SOURCE_COIN, TARGET_COIN>,
+    // Note: this pool type is hardcoded as <SUI, TOKEN> and therefore causes type mismatch error in the
+    // fungible token withdrawAndCall test, where the SOURCE_COIN type is FAKE_USDC instead of TOKEN.
+    // Disabling the pool object for now is the easiest solution to allow the E2E tests to go through.
+    // _pool: &mut Pool<SOURCE_COIN, TARGET_COIN>,
     _cetus_partner: &mut Partner,
     _clock: &Clock,
     data: vector<u8>,

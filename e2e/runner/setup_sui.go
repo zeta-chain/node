@@ -147,10 +147,9 @@ func (r *E2ERunner) suiDeployExample() {
 		filterGlobalConfigType = "connected::GlobalConfig"
 		filterPartnerType      = "connected::Partner"
 		filterClockType        = "connected::Clock"
-		filterPoolType         = "connected::Pool"
 	)
 
-	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType, filterPoolType}
+	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
 	packageID, objectIDs := r.suiDeployPackage(
 		[]string{suicontract.ExampleFungibleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
 		objectTypeFilters,
@@ -166,16 +165,12 @@ func (r *E2ERunner) suiDeployExample() {
 	clockID, ok := objectIDs[filterClockType]
 	require.True(r, ok, "clock object not found")
 
-	poolID, ok := objectIDs[filterPoolType]
-	require.True(r, ok, "pool object not found")
-
 	r.SuiExample = config.SuiExample{
 		PackageID:      config.DoubleQuotedString(packageID),
 		TokenType:      config.DoubleQuotedString(packageID + "::token::TOKEN"),
 		GlobalConfigID: config.DoubleQuotedString(globalConfigID),
 		PartnerID:      config.DoubleQuotedString(partnerID),
 		ClockID:        config.DoubleQuotedString(clockID),
-		PoolID:         config.DoubleQuotedString(poolID),
 	}
 }
 

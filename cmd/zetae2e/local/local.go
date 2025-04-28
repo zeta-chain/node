@@ -521,11 +521,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawRevertWithCallName,
-			e2etests.TestSuiTokenWithdrawName,
-			// https://github.com/zeta-chain/node/issues/3742
 			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
 		}

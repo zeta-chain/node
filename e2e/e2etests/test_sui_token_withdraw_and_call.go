@@ -11,11 +11,11 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
+func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example package) and a token amount
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
@@ -25,7 +25,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	suiAddress := signer.Address()
 
 	// Given initial balance and called_count
-	balanceBefore := r.SuiGetSUIBalance(suiAddress)
+	balanceBefore := r.SuiGetFungibleTokenBalance(suiAddress)
 	calledCountBefore := r.SuiGetConnectedCalledCount()
 
 	// create the on_call payload
@@ -33,11 +33,12 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// ACT
-	// approve SUI ZRC20 token
+	// approve both SUI gas budget token and fungible token ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(
+	// perform the fungible token withdraw and call
+	tx := r.SuiWithdrawAndCallFungibleToken(
 		targetPackageID,
 		amount,
 		payloadOnCall,
@@ -51,9 +52,9 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// balance after
-	balanceAfter := r.SuiGetSUIBalance(suiAddress)
-	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
+	// check the balance after the withdraw
+	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
+	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
 	calledCountAfter := r.SuiGetConnectedCalledCount()
