@@ -25,6 +25,7 @@ type AccountBalances struct {
 	ZetaSPL      *big.Int
 	ZetaSui      *big.Int
 	ZetaSuiToken *big.Int
+	ZetaTON      *big.Int
 	EvmETH       *big.Int
 	EvmZETA      *big.Int
 	EvmERC20     *big.Int
@@ -33,6 +34,7 @@ type AccountBalances struct {
 	SolSPL       *big.Int
 	SuiSUI       uint64
 	SuiToken     uint64
+	TONTON       uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -78,6 +80,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaSPL := r.getERC20BalanceSafe(r.SPLZRC20, "spl zrc20")
 	zetaSui := r.getERC20BalanceSafe(r.SUIZRC20, "sui zrc20")
 	zetaSuiToken := r.getERC20BalanceSafe(r.SuiTokenZRC20, "sui token zrc20")
+	zetaTon := r.getERC20BalanceSafe(r.TONZRC20, "ton zrc20")
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
@@ -145,6 +148,18 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		suiToken = r.SuiGetFungibleTokenBalance(signer.Address())
 	}
 
+	// TON
+	var tonTON uint64
+	if r.Clients.TON != nil {
+		_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+		if err == nil {
+			tonBalance, err := tonWallet.GetBalance(r.Ctx)
+			if err == nil {
+				tonTON = tonBalance
+			}
+		}
+	}
+
 	return AccountBalances{
 		ZetaETH:      zetaEth,
 		ZetaZETA:     zetaZeta,
@@ -155,6 +170,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaSPL:      zetaSPL,
 		ZetaSui:      zetaSui,
 		ZetaSuiToken: zetaSuiToken,
+		ZetaTON:      zetaTon,
 		EvmETH:       evmEth,
 		EvmZETA:      evmZeta,
 		EvmERC20:     evmErc20,
@@ -163,6 +179,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		SolSPL:       solSPL,
 		SuiSUI:       suiSUI,
 		SuiToken:     suiToken,
+		TONTON:       tonTON,
 	}, nil
 }
 
@@ -225,6 +242,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
 	r.Logger.Print("* SUI balance: %s", balances.ZetaSui.String())
 	r.Logger.Print("* SUI Token balance: %s", balances.ZetaSuiToken.String())
+	r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 
 	// evm
 	r.Logger.Print("EVM:")
@@ -252,11 +270,13 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 
 	// TON
 	r.Logger.Print("TON:")
-	tonBalance, err := tonWallet.GetBalance(r.Ctx)
+	_, tonWallet, err = r.Account.AsTONWallet(r.Clients.TON)
 	if err != nil {
-		r.Logger.Print("Error getting TON balance: %s", err.Error())
+		r.Logger.Print("Error getting TON address: %s", err.Error())
+	} else {
+		r.Logger.Print("* TON address: %s", tonWallet.GetAddress().ToHuman(false, true))
+		r.Logger.Print("* TON balance: %d", balances.TONTON) // Use the stored balance
 	}
-	r.Logger.Print("* TON balance: %d", tonBalance)
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
