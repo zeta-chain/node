@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -24,7 +25,8 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	// create the payload for 'on_call' with invalid address
-	invalidAddress := "8f569597ebca884b784d32678a6f"
+	// taking the first 10 letters to form an invalid address
+	invalidAddress := sample.SuiAddress(r)[:10]
 	payloadOnCall, err := r.SuiCreateExampleWACPayload(invalidAddress)
 	require.NoError(r, err)
 
