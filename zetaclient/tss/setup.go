@@ -149,6 +149,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		p.Zetacore,
 		logger,
 		WithPostBlame(p.PostBlame),
+		WithRateLimit(p.Config.TSSMaxPendingSignatures),
 		WithMetrics(ctx, p.Zetacore, &Metrics{
 			ActiveMsgsSigns:    metrics.NumActiveMsgSigns,
 			SignLatency:        metrics.SignLatency,

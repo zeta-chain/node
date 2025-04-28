@@ -22,6 +22,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/tss/ratelimit"
 )
 
 // KeySigner signs messages using TSS (subset of go-tss)
@@ -65,8 +66,9 @@ type Service struct {
 	postBlame bool
 	metrics   *Metrics
 
-	mu       sync.RWMutex
-	sigCache map[int64]*sigCache
+	mu          sync.RWMutex
+	sigCache    map[int64]*sigCache
+	rateLimiter *ratelimit.RateLimiter
 
 	logger zerolog.Logger
 }
@@ -85,8 +87,9 @@ type Metrics struct {
 }
 
 type serviceConfig struct {
-	postBlame bool
-	metrics   *Metrics
+	postBlame            bool
+	maxPendingSignatures uint64
+	metrics              *Metrics
 }
 
 // Opt Service option.
@@ -123,6 +126,17 @@ func WithMetrics(ctx context.Context, zetacore Zetacore, m *Metrics) Opt {
 	}
 }
 
+// WithRateLimit configures the TSS to rate limit the number of concurrent signatures.
+func WithRateLimit(maxPendingSignatures uint64) Opt {
+	return func(cfg *serviceConfig, _ zerolog.Logger) error {
+		if maxPendingSignatures > 0 {
+			cfg.maxPendingSignatures = maxPendingSignatures
+		}
+
+		return nil
+	}
+}
+
 var noopMetrics = Metrics{
 	ActiveMsgsSigns:    prometheus.NewGauge(prometheus.GaugeOpts{Name: "noop"}),
 	SignLatency:        prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "noop"}, []string{"result"}),
@@ -139,9 +153,11 @@ func NewService(
 ) (*Service, error) {
 	logger = logger.With().Str(logs.FieldModule, "tss_service").Logger()
 
+	// defaults, can be overridden by opts
 	cfg := serviceConfig{
-		metrics:   &noopMetrics,
-		postBlame: false,
+		metrics:              &noopMetrics,
+		maxPendingSignatures: ratelimit.DefaultMaxPendingSignatures,
+		postBlame:            false,
 	}
 
 	for _, opt := range opts {
@@ -157,6 +173,8 @@ func NewService(
 		return nil, errors.Wrap(err, "invalid tss pub key")
 	}
 
+	logger.Info().Msgf("Setting max pending signatures to %d", cfg.maxPendingSignatures)
+
 	return &Service{
 		tss:           keySigner,
 		currentPubKey: currentPubKey,
@@ -164,8 +182,9 @@ func NewService(
 		postBlame:     cfg.postBlame,
 		metrics:       cfg.metrics,
 
-		sigCache: make(map[int64]*sigCache),
-		mu:       sync.RWMutex{},
+		sigCache:    make(map[int64]*sigCache),
+		rateLimiter: ratelimit.New(cfg.maxPendingSignatures),
+		mu:          sync.RWMutex{},
 
 		logger: logger,
 	}, nil
@@ -221,6 +240,12 @@ func (s *Service) SignBatch(
 
 	res, err := s.sign(req, nonce, chainID)
 	switch {
+	case errors.Is(err, ratelimit.ErrThrottled):
+		s.logger.Warn().
+			Fields(keysignLogFields(req, height, nonce, chainID)).
+			Msg("Signature request throttled")
+
+		return nil, err
 	case err != nil:
 		// unexpected error (not related to failed key sign)
 		return nil, errors.Wrap(err, "unable to perform a key sign")
@@ -261,6 +286,12 @@ var (
 
 // sign sends TSS key sign request to the underlying go-tss and registers metrics
 func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res keysign.Response, err error) {
+	// #nosec G115 always in range
+	cid := uint64(chainID)
+	if err := s.rateLimiter.Acquire(cid, nonce); err != nil {
+		return keysign.Response{}, errors.Wrap(err, "request throttled")
+	}
+
 	// metrics start
 	messagesCount, start := float64(len(req.Messages)), time.Now()
 	s.metrics.ActiveMsgsSigns.Add(messagesCount)
@@ -275,6 +306,7 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 
 	// metrics finish
 	defer func() {
+		s.rateLimiter.Release()
 		s.metrics.ActiveMsgsSigns.Sub(messagesCount)
 
 		latency := time.Since(start).Seconds()
