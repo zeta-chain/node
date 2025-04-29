@@ -244,18 +244,13 @@ type tonWaitFrom struct {
 func (r *E2ERunner) tonWaitForInboundCCTX(
 	from tonWaitFrom,
 	filter func(tx *ton.Transaction) bool,
-	expectedStatus ...cctypes.CctxStatus,
+	expectedStatus cctypes.CctxStatus,
 ) *cctypes.CrossChainTx {
 	var (
 		timeout  = 2 * time.Minute
 		interval = time.Second
-		status   = cctypes.CctxStatus_OutboundMined // Default status
+		status   = expectedStatus // Use the passed status directly
 	)
-
-	// Override default status if provided
-	if len(expectedStatus) > 0 {
-		status = expectedStatus[0]
-	}
 
 	r.Logger.Info("tonWaitForInboundCCTX: Waiting for CCTX with expected status: %s", status.String())
 
