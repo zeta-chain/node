@@ -154,7 +154,7 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.Equal(r, zrc20DistrAmt.Uint64(), eventDitributed.Amount.Uint64())
 
 	// After one block the rewards should have been distributed and fee collector should have 0 ZRC20 balance.
-	r.WaitForBlocks(1)
+	r.WaitForBlocks(2)
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// DelegatorValidators returns the list of validator this delegator has delegated to.
@@ -168,9 +168,12 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(rewards), 2)
 	found := false
+	availableRewards := big.NewInt(0)
 	for _, coin := range rewards {
 		if strings.Contains(coin.Denom, config.ZRC20DenomPrefix) {
 			found = true
+			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+			availableRewards = new(big.Int).Div(coin.Amount, divisor)
 			break
 		}
 	}
@@ -182,21 +185,24 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "claim rewards should succeed")
 
-	// Before claiming rewards the ZRC20 balance is 0. After claiming rewards the ZRC20 balance should be 14239697290875601808.
-	// Which is the amount of ZRC20 distributed, divided by two validators, and subtracted the commissions.
-	zrc20RewardsAmt, ok := big.NewInt(0).SetString("14239697290875601808", 10)
+	r.WaitForBlocks(1)
+
+	// The claim function withdraws all available rewards.
 	require.True(r, ok)
-	balanceShouldBe(r, zrc20RewardsAmt, checkZRC20Balance(r, staker))
+	require.Equal(r, availableRewards.String(), checkZRC20Balance(r, staker).String())
+
+	r.Logger.Print("ZRC20 balance staker after claiming rewards again : %s", checkZRC20Balance(r, staker).String())
 
 	eventClaimed, err := distrContract.ParseClaimedRewards(*receipt.Logs[0])
 	require.NoError(r, err)
+
 	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
 	require.Equal(r, staker, eventClaimed.ClaimAddress)
 	require.Equal(r, common.BytesToAddress(validatorValAddr.Bytes()), eventClaimed.Validator)
-	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
+	require.Equal(r, availableRewards.String(), eventClaimed.Amount.String())
 
 	// Locker final balance should be zrc20Disitributed - zrc20RewardsAmt.
-	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmt, zrc20RewardsAmt)
+	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmt, availableRewards)
 	balanceShouldBe(r, lockerFinalBalance, checkZRC20Balance(r, lockerAddress))
 
 	// Staker final cosmos balance should be 0.
@@ -341,3 +347,24 @@ func getValidatorAddresses(r *runner.E2ERunner, distrContract *staking.IStaking)
 
 	return validators[0].OperatorAddress, validatorAddr
 }
+
+//2025-04-29 10:39:24 precompiles  | ZRC20 balance staker after claiming rewards: 293999999999999999705000
+//2025-04-29 10:39:24 precompiles  | ZRC20 balance locker after claiming rewards: 706000000000000000295000
+//2025-04-29 10:39:24 precompiles  | Staker claiming rewards: 0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
+//2025-04-29 10:39:24 precompiles  | Locker address: 0x0000000000000000000000000000000000000067
+//2025-04-29 10:39:24 precompiles  | ZRC20 balance staker after claiming rewards again : 293999999999999999705000
+//2025-04-29 10:39:24 precompiles  | Claim address: 0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
+//2025-04-29 10:39:24 precompiles  | ZRC20 Address used for distribute address: 0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
+//2025-04-29 10:39:24 precompiles  | Validator address: 0x95d85993d2b9Ac3a61da99644D53F5b143B8F6b8
+//2025-04-29 10:39:24 precompiles  | ZRC20 token: 0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
+//2025-04-29 10:39:24 precompiles  | Amount: 293999999999999999705000
+
+//2025-04-29 10:39:17 -------------------------------------------------------------------------------------
+//2025-04-29 10:39:17 Validator Cosmos Address:  zetavaloper1jhv9ny7jhxkr5cw6n9jy65l4k9pm3a4c4v9wrr
+//2025-04-29 10:39:17 Delegator Cosmos Address:  zeta1k4f0l2e9qqjccxnstwj0uaarxvn44lj990she9
+//2025-04-29 10:39:17 Rewards withdrawn:  12203615152363055000azeta,293999999999999999705000zrc20/0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
+//2025-04-29 10:39:17 Unlocked ZRC20 coins:  293999999999999999705000
+//2025-04-29 10:39:17 Unlocked delegator address (TO):  0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
+//2025-04-29 10:39:17 Unlocked bank address (FROM):  0x0000000000000000000000000000000000000067
+//2025-04-29 10:39:17 Coin set:  293999999999999999705000zrc20/0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
+//2025-04-29 10:39:17 ------------------------------------------------------

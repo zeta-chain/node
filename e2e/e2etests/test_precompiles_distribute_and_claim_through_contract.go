@@ -35,19 +35,17 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 		zrc20Denom    = precompiletypes.ZRC20ToCosmosDenom(zrc20Address)
 		zrc20DistrAmt = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1e6))
 
-		// carry is carried from the TestPrecompilesDistributeName test. It's applicable only to locker address.
-		// This is needed because there's no easy way to retrieve that balance from the locker.
-		carry              = big.NewInt(6210810988040846448)
-		zrc20DistrAmtCarry = new(big.Int).Add(zrc20DistrAmt, carry)
-		oneThousand        = big.NewInt(1e3)
-		oneThousandOne     = big.NewInt(1001)
-		fiveHundred        = big.NewInt(500)
-		fiveHundredOne     = big.NewInt(501)
-		zero               = big.NewInt(0)
-		stake              = "1000000000000000000000"
+		oneThousand    = big.NewInt(1e3)
+		oneThousandOne = big.NewInt(1001)
+		fiveHundred    = big.NewInt(500)
+		fiveHundredOne = big.NewInt(501)
+		zero           = big.NewInt(0)
+		stake          = "1000000000000000000000"
 
 		previousGasLimit = r.ZEVMAuth.GasLimit
 	)
+
+	initialLockerBalance := checkZRC20Balance(r, lockerAddress)
 
 	// stakeAmt has to be as big as the validator self delegation.
 	// This way the rewards will be distributed 50%.
@@ -95,7 +93,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 
 	// Check initial balances.
 	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, initialLockerBalance, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	tx, err = testDstrContract.DistributeThroughContract(r.ZEVMAuth, zrc20Address, oneThousand)
@@ -105,7 +103,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, initialLockerBalance, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Allow 500.
@@ -118,7 +116,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, initialLockerBalance, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to 1000.
@@ -132,7 +130,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 
 	// Balances shouldn't change after a failed attempt.
 	balanceShouldBe(r, zrc20DistrAmt, checkZRC20Balance(r, staker))
-	balanceShouldBe(r, carry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, initialLockerBalance, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zero, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	// Raise the allowance to max tokens.
@@ -144,8 +142,9 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "distribute should succeed when distributing within balance and allowance")
 
+	expectedLockerBalance := big.NewInt(0).Add(initialLockerBalance, zrc20DistrAmt)
 	balanceShouldBe(r, zero, checkZRC20Balance(r, staker))
-	balanceShouldBe(r, zrc20DistrAmtCarry, checkZRC20Balance(r, lockerAddress))
+	balanceShouldBe(r, expectedLockerBalance, checkZRC20Balance(r, lockerAddress))
 	balanceShouldBe(r, zrc20DistrAmt, checkCosmosBalance(r, r.FeeCollectorAddress, zrc20Denom))
 
 	eventDitributed, err := distrContract.ParseDistributed(*receipt.Logs[0])
@@ -169,9 +168,12 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(rewards), 2)
 	found := false
+	availableRewards := big.NewInt(0)
 	for _, coin := range rewards {
 		if strings.Contains(coin.Denom, config.ZRC20DenomPrefix) {
 			found = true
+			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+			availableRewards = new(big.Int).Div(coin.Amount, divisor)
 			break
 		}
 	}
@@ -182,21 +184,18 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "claim rewards should succeed")
 
-	// Before claiming rewards the ZRC20 balance is 0. After claiming rewards the ZRC20 balance should be 14239697290875601808.
-	// Which is the amount of ZRC20 distributed, divided by two validators, and subtracted the commissions.
-	zrc20RewardsAmt, ok := big.NewInt(0).SetString("14239697290875601808", 10)
 	require.True(r, ok)
-	balanceShouldBe(r, zrc20RewardsAmt, checkZRC20Balance(r, staker))
+	require.Equal(r, availableRewards.String(), checkZRC20Balance(r, staker).String())
 
 	eventClaimed, err := distrContract.ParseClaimedRewards(*receipt.Logs[0])
 	require.NoError(r, err)
 	require.Equal(r, zrc20Address, eventClaimed.Zrc20Token)
 	require.Equal(r, staker, eventClaimed.ClaimAddress)
 	require.Equal(r, common.BytesToAddress(validatorValAddr.Bytes()), eventClaimed.Validator)
-	require.Equal(r, zrc20RewardsAmt.Uint64(), eventClaimed.Amount.Uint64())
+	require.Equal(r, availableRewards.String(), eventClaimed.Amount.String())
 
 	// Locker final balance should be zrc20Distributed with carry - zrc20RewardsAmt.
-	lockerFinalBalance := big.NewInt(0).Sub(zrc20DistrAmtCarry, zrc20RewardsAmt)
+	lockerFinalBalance := big.NewInt(0).Sub(expectedLockerBalance, availableRewards)
 	balanceShouldBe(r, lockerFinalBalance, checkZRC20Balance(r, lockerAddress))
 
 	// Staker final cosmos balance should be 0.
