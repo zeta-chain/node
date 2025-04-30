@@ -4,6 +4,7 @@
 package fanout
 
 import (
+	"slices"
 	"sync"
 	"sync/atomic"
 )
@@ -66,7 +67,7 @@ func (f *FanOut[T]) remove(out *output[T]) {
 	for i := range f.outputs {
 		if f.outputs[i].equal(out) {
 			// cut item from the slice
-			f.outputs = append(f.outputs[:i], f.outputs[i+1:]...)
+			f.outputs = slices.Delete(f.outputs, i, i+1)
 			out.close()
 			return
 		}
