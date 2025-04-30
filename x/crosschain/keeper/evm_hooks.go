@@ -349,7 +349,8 @@ func (k Keeper) validateOutbound(
 		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
 		// The rent exempt check is not needed for ZRC20 (SPL) tokens because withdrawing SPL token
-		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check.
+		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check,
+		// and also not needed for simple no asset call.
 		if coinType == coin.CoinType_Gas && value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,

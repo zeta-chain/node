@@ -21,6 +21,8 @@
 * [3790](https://github.com/zeta-chain/node/pull/3790) - integrate execute revert
 * [3797](https://github.com/zeta-chain/node/pull/3797) - integrate execute SPL revert
 * [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
+* [3826](https://github.com/zeta-chain/node/pull/3826) - add global tss signature rate-limiter to zetaclient
+* [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 
 ### Refactor
 
@@ -35,10 +37,12 @@
 * [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
 * [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
+* [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 
 ### Tests
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
+* [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
 
 ### Refactor
 

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestContainsOwnedObject(t *testing.T) {
+func TestCheckContainOwnedObject(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   []*models.SuiObjectResponse
@@ -68,7 +68,7 @@ func TestContainsOwnedObject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := checkContainOwnedObject(tt.input)
+			err := CheckContainOwnedObject(tt.input)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

@@ -36,6 +36,7 @@ const (
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
 	flagTestPerformance   = "test-performance"
+	flagIterations        = "iterations"
 	flagTestSolana        = "test-solana"
 	flagTestTON           = "test-ton"
 	flagTestSui           = "test-sui"
@@ -74,6 +75,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
+	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
 	cmd.Flags().Bool(flagTestSui, false, "set to true to run Sui tests")
@@ -109,6 +111,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		configOut         = must(cmd.Flags().GetString(flagConfigOut))
 		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
 		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
+		iterations        = must(cmd.Flags().GetInt(flagIterations))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
 		testSui           = must(cmd.Flags().GetBool(flagTestSui))
@@ -149,6 +152,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
+
+	if testPerformance && iterations > 100 {
+		TestTimeout = time.Hour
+	}
 
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
@@ -377,8 +384,24 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testPerformance {
-		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
-		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
+		eg.Go(
+			ethereumDepositPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherDepositName},
+				iterations,
+			),
+		)
+		eg.Go(
+			ethereumWithdrawPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherWithdrawName},
+				iterations,
+			),
+		)
 		eg.Go(
 			solanaDepositPerformanceRoutine(
 				conf,
@@ -386,7 +409,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
-				e2etests.TestStressSolanaDepositName,
+				[]string{e2etests.TestStressSolanaDepositName},
 			),
 		)
 		eg.Go(
@@ -396,7 +419,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
-				e2etests.TestStressSPLDepositName,
+				[]string{e2etests.TestStressSPLDepositName},
 			),
 		)
 		eg.Go(
@@ -406,7 +429,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSolana,
-				e2etests.TestStressSolanaWithdrawName,
+				[]string{e2etests.TestStressSolanaWithdrawName},
 			),
 		)
 		eg.Go(
@@ -416,7 +439,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				deployerRunner,
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
-				e2etests.TestStressSPLWithdrawName,
+				[]string{e2etests.TestStressSPLWithdrawName},
 			),
 		)
 	}
@@ -499,14 +522,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
+			e2etests.TestSuiWithdrawAndCallName,
 			e2etests.TestSuiWithdrawRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
-
-			// TODO: enable withdraw and call test
-			// https://github.com/zeta-chain/node/issues/3742
-			//e2etests.TestSuiWithdrawAndCallName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
