@@ -573,7 +573,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestSolanaDepositThroughProgramName,
-		"deposit SOL into ZEVM",
+		"deposit SOL into ZEVM through example connected program",
 		[]runner.ArgDefinition{
 			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},

@@ -157,10 +157,12 @@ func FilterInboundEvents(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
+	// there should be at least one instruction and one account, otherwise skip
 	if len(tx.Message.Instructions) == 0 {
 		return nil, nil
 	}
 
+	// create event array to collect all events in the transaction
 	seenDeposit := false
 	seenDepositSPL := false
 	seenCall := false
