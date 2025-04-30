@@ -142,8 +142,8 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 
 // FilterInboundEvents filters inbound events from a tx result.
 // Note: for consistency with EVM chains, this method
-//   - takes at one event (the first) per token (SOL or SPL) per transaction.
-//   - takes at most two events (one SOL + one SPL) per transaction.
+//   - takes at least one event (the first) per token (SOL or SPL or call) per transaction.
+//   - takes at most 3 events (one SOL + one SPL + one call) per transaction.
 //   - ignores exceeding events.
 func FilterInboundEvents(
 	txResult *rpc.GetTransactionResult,
