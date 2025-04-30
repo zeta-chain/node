@@ -36,17 +36,26 @@ var (
 	// DiscriminatorDepositSPLAndCall returns the discriminator for Solana gateway 'deposit_spl_token_and_call' instruction
 	DiscriminatorDepositSPLAndCall = idlgateway.IDLGateway.GetDiscriminator("deposit_spl_token_and_call")
 
+	// DiscriminatorCall returns the discriminator for Solana gateway 'call' instruction
+	DiscriminatorCall = idlgateway.IDLGateway.GetDiscriminator("call")
+
 	// DiscriminatorWithdraw returns the discriminator for Solana gateway 'withdraw' instruction
 	DiscriminatorWithdraw = idlgateway.IDLGateway.GetDiscriminator("withdraw")
 
 	// DiscriminatorExecute returns the discriminator for Solana gateway 'execute' instruction
 	DiscriminatorExecute = idlgateway.IDLGateway.GetDiscriminator("execute")
 
+	// DiscriminatorExecuteRevert returns the discriminator for Solana gateway 'execute_revert' instruction
+	DiscriminatorExecuteRevert = idlgateway.IDLGateway.GetDiscriminator("execute_revert")
+
 	// DiscriminatorIncrementNonce returns the discriminator for Solana gateway 'increment_nonce' instruction
 	DiscriminatorIncrementNonce = idlgateway.IDLGateway.GetDiscriminator("increment_nonce")
 
 	// DiscriminatorExecuteSPL returns the discriminator for Solana gateway 'execute_spl_token' instruction
 	DiscriminatorExecuteSPL = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token")
+
+	// DiscriminatorExecuteSPLRevert returns the discriminator for Solana gateway 'execute_spl_token_revert' instruction
+	DiscriminatorExecuteSPLRevert = idlgateway.IDLGateway.GetDiscriminator("execute_spl_token_revert")
 
 	// DiscriminatorWithdrawSPL returns the discriminator for Solana gateway 'withdraw_spl_token' instruction
 	DiscriminatorWithdrawSPL = idlgateway.IDLGateway.GetDiscriminator("withdraw_spl_token")

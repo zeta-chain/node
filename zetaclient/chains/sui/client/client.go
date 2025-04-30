@@ -10,7 +10,10 @@ import (
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/block-vision/sui-go-sdk/sui"
+	suiptb "github.com/pattonkan/sui-go/sui"
 	"github.com/pkg/errors"
+
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 // Client Sui client.
@@ -18,9 +21,26 @@ type Client struct {
 	sui.ISuiAPI
 }
 
-const DefaultEventsLimit = 50
+const (
+	// DefaultEventsLimit is the default limit for querying gateway module events.
+	DefaultEventsLimit = 50
 
-const filterMoveEventModule = "MoveEventModule"
+	// TxStatusSuccess is the success status for a transaction.
+	TxStatusSuccess = "success"
+
+	// TxStatusFailure is the failure status for a transaction.
+	TxStatusFailure = "failure"
+
+	// filterMoveEventModule is the event filter for querying events for specified move module.
+	// @see https://docs.sui.io/guides/developer/sui-101/using-events#filtering-event-queries
+	filterMoveEventModule = "MoveEventModule"
+
+	// immutableOwner is the owner type for immutable objects.
+	immutableOwner = "Immutable"
+
+	// sharedOwner is the owner type for shared objects.
+	sharedOwner = "Shared"
+)
 
 // NewFromEndpoint Client constructor based on endpoint string.
 func NewFromEndpoint(endpoint string) *Client {
@@ -156,6 +176,39 @@ func (c *Client) GetOwnedObjectID(ctx context.Context, ownerAddress, structType 
 	return res.Data[0].Data.ObjectId, nil
 }
 
+// InspectTransactionBlock manual implementation of ISuiAPI.InspectTransactionBlock
+// Don't use this function at this moment because Sui SDK currently returns deserialization error.
+// TODO: https://github.com/zeta-chain/node/issues/3775
+//
+// @see sui.(*suiReadTransactionImpl).InspectTransactionBlock
+// @see https://docs.sui.io/sui-api-ref#sui_devinspecttransactionblock
+func (c *Client) InspectTransactionBlock(
+	ctx context.Context,
+	req models.SuiDevInspectTransactionBlockRequest,
+) (models.SuiTransactionBlockResponse, error) {
+	const method = "sui_devInspectTransactionBlock"
+
+	params := []any{
+		req.Sender,
+		req.TxBytes,
+		any(nil), // gas_price
+		any(nil), // epoch
+		any(nil), // additional_args
+	}
+
+	resRaw, err := c.SuiCall(ctx, method, params...)
+	if err != nil {
+		return models.SuiTransactionBlockResponse{}, errors.Wrap(err, method)
+	}
+
+	resString, ok := resRaw.(string)
+	if !ok {
+		return models.SuiTransactionBlockResponse{}, errors.New("invalid response type")
+	}
+
+	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
 // SuiExecuteTransactionBlock manual implementation of ISuiAPI.SuiExecuteTransactionBlock
 // That uses proper parameters signature (original has a bug in marshaling)
 //
@@ -195,6 +248,60 @@ func (c *Client) SuiExecuteTransactionBlock(
 	}
 
 	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
+}
+
+// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address
+// Note: the SUI object may change over time, so we need to get the latest object
+func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error) {
+	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
+		Owner:    owner,
+		CoinType: string(zetasui.SUI),
+	})
+	if err != nil {
+		return suiptb.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
+	}
+
+	var (
+		suiCoin        *models.CoinData
+		suiCoinVersion uint64
+	)
+
+	// locate the latest version of SUI coin object of given owner
+	for _, coin := range coins.Data {
+		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
+			continue
+		}
+
+		version, err := strconv.ParseUint(coin.Version, 10, 64)
+		if err != nil {
+			return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
+		}
+
+		if version > suiCoinVersion {
+			suiCoin = &coin
+			suiCoinVersion = version
+		}
+	}
+	if suiCoin == nil {
+		return suiptb.ObjectRef{}, errors.New("SUI coin not found")
+	}
+
+	// convert coin data to object ref
+	suiCoinID, err := suiptb.ObjectIdFromHex(suiCoin.CoinObjectId)
+	if err != nil {
+		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
+	}
+
+	suiCoinDigest, err := suiptb.NewBase58(suiCoin.Digest)
+	if err != nil {
+		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
+	}
+
+	return suiptb.ObjectRef{
+		ObjectId: suiCoinID,
+		Version:  suiCoinVersion,
+		Digest:   suiCoinDigest,
+	}, nil
 }
 
 // EncodeCursor encodes event ID into cursor.
@@ -244,4 +351,54 @@ func parseRPCResponse[T any](raw []byte) (T, error) {
 	}
 
 	return tt, nil
+}
+
+// CheckObjectIDsShared checks if the provided object ID list represents Sui shared or immmutable objects
+func (c *Client) CheckObjectIDsShared(ctx context.Context, objectIDs []string) error {
+	if len(objectIDs) == 0 {
+		return nil
+	}
+
+	res, err := c.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
+		ObjectIds: objectIDs,
+		Options: models.SuiObjectDataOptions{
+			ShowOwner: true,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "unable to get objects")
+	}
+
+	// should always be the case, we add this check as a extra safety measure to ensure an object is not skipped
+	if len(res) != len(objectIDs) {
+		return fmt.Errorf("expected %d objects, but got %d", len(objectIDs), len(res))
+	}
+
+	return CheckContainOwnedObject(res)
+}
+
+// CheckContainOwnedObject checks if the provided object list represents Sui shared or immmutable objects
+func CheckContainOwnedObject(res []*models.SuiObjectResponse) error {
+	for i, obj := range res {
+		if obj.Data == nil {
+			return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d is missing data", i)
+		}
+
+		switch owner := obj.Data.Owner.(type) {
+		case string:
+			if owner != immutableOwner {
+				return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d has unexpected string owner: %s", i, owner)
+			}
+			// Immutable is valid, continue
+		case map[string]any:
+			if _, isShared := owner[sharedOwner]; !isShared {
+				return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d is not shared or immutable: owner = %+v", i, owner)
+			}
+			// Shared is valid, continue
+		default:
+			return errors.Wrapf(zetasui.ErrObjectOwnership, "object %d has unknown owner type: %+v", i, obj.Data.Owner)
+		}
+	}
+
+	return nil
 }

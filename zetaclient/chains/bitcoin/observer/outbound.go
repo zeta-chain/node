@@ -390,7 +390,7 @@ func (ob *Observer) checkTssOutboundResult(
 	}
 
 	// differentiate between normal and cancelled cctx
-	if compliance.IsCctxRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
+	if compliance.IsCCTXRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(

@@ -16,7 +16,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls connected program on solana
+// TestSPLWithdrawAndCallRevert executes withdrawAndCall on zevm and calls connected program on solana
 // execution is reverted in connected program on_call function
 func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)

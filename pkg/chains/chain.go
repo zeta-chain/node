@@ -10,6 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -140,7 +141,11 @@ func DecodeAddressFromChainID(chainID int64, addr string, additionalChains []Cha
 		}
 		return []byte(acc.ToRaw()), nil
 	case IsSuiChain(chainID, additionalChains):
-		return []byte(addr), nil
+		addrBytes, err := sui.EncodeAddress(addr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid Sui address %q: %w", addr, err)
+		}
+		return addrBytes, nil
 	default:
 		return nil, fmt.Errorf("chain (%d) not supported", chainID)
 	}

@@ -113,7 +113,7 @@ func NewOutboundData(
 	amountSats := params.Amount.BigInt().Int64()
 
 	// compliance check
-	restrictedCCTX := compliance.IsCctxRestricted(cctx)
+	restrictedCCTX := compliance.IsCCTXRestricted(cctx)
 	if restrictedCCTX {
 		compliance.PrintComplianceLog(logger, loggerCompliance,
 			true, params.ReceiverChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")

@@ -290,6 +290,11 @@ start-e2e-performance-test: e2e-images solana
 	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
+start-e2e-performance-test-1k: e2e-images solana
+	@echo "--> Starting e2e performance test"
+	export E2E_ARGS="--test-performance --iterations=1000" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
 start-e2e-import-mainnet-test: e2e-images
 	@echo "--> Starting e2e import-data test"
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \

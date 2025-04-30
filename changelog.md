@@ -2,6 +2,10 @@
 
 # UNRELEASED
 
+### Breaking Changes
+
+* All Solana inbounds have new optional param `revert_options`. Solana Gateway program must be upgraded after node upgrade.
+
 ### Features
 
 * [3672](https://github.com/zeta-chain/node/pull/3672) - zetaclient: cache tss signatures for performance.
@@ -9,19 +13,37 @@
 * [3699](https://github.com/zeta-chain/node/pull/3699) - use real gas usage for TON withdrawals
 * [3710](https://github.com/zeta-chain/node/pull/3710) - support preflight RPC health metrics before fully enable a chain
 * [3377](https://github.com/zeta-chain/node/pull/3377) - have zetacore increase the gas price in pending Bitcoin cctxs and burns additional gas fees
+* [3750](https://github.com/zeta-chain/node/pull/3750) - support simple call from solana
+* [3764](https://github.com/zeta-chain/node/pull/3764) - add payload parsing for Sui WithdrawAndCall
+* [3756](https://github.com/zeta-chain/node/pull/3756) - parse revert options in solana inbounds
+* [3765](https://github.com/zeta-chain/node/pull/3765) - support cancelling Sui rejected withdrawal
+* [3792](https://github.com/zeta-chain/node/pull/3792) - add compliance check for Sui inbound and outbound
+* [3790](https://github.com/zeta-chain/node/pull/3790) - integrate execute revert
+* [3797](https://github.com/zeta-chain/node/pull/3797) - integrate execute SPL revert
+* [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
+* [3826](https://github.com/zeta-chain/node/pull/3826) - add global tss signature rate-limiter to zetaclient
+* [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 
 ### Refactor
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
+* [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
+* [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
 
 ### Fixes
+
 * [3711](https://github.com/zeta-chain/node/pull/3711) - fix TON call_data parsing
 * [3717](https://github.com/zeta-chain/node/pull/3717) - fix solana withdraw and call panic
+* [3770](https://github.com/zeta-chain/node/pull/3770) - improve fallback tx error handling
+* [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
+* [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
+* [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 
 ### Tests
 
-* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx , to test observer staking hooks
+* [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
+* [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
 
 ### Refactor
 
@@ -71,6 +93,7 @@
 * [3602](https://github.com/zeta-chain/node/pull/3602) - hardcode gas limits to avoid estimate gas calls
 * [3622](https://github.com/zeta-chain/node/pull/3622) - allow object for tracerConfig in `debug_traceTransaction` RPC
 * [3634](https://github.com/zeta-chain/node/pull/3634) - return proper synthetic tx in `eth_getBlockByNumber` RPC
+* [3754](https://github.com/zeta-chain/node/pull/3754) - make the Bitcoin deposit to revert when the memo output is missing
 
 ### Tests
 

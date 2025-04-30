@@ -238,6 +238,42 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
 	})
 
+	t.Run("successfully set SOL revert address V2", func(t *testing.T) {
+		cctx := sample.CrossChainTxV2(t, "test")
+		cctx.OutboundParams = cctx.OutboundParams[:1]
+		cctx.InboundParams.SenderChainId = chains.SolanaDevnet.ChainId
+		cctx.RevertOptions.RevertAddress = sample.SolanaAddress(t)
+
+		err := cctx.AddRevertOutbound(100)
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.RevertOptions.RevertAddress)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
+	})
+
+	t.Run("successfully set SOL revert address V2 to inbound sender if revert address is invalid", func(t *testing.T) {
+		cctx := sample.CrossChainTxV2(t, "test")
+		cctx.OutboundParams = cctx.OutboundParams[:1]
+		cctx.InboundParams.SenderChainId = chains.SolanaDevnet.ChainId
+		cctx.RevertOptions.RevertAddress = sample.EthAddress().Hex()
+
+		err := cctx.AddRevertOutbound(100)
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundParams, 2)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Receiver, cctx.InboundParams.Sender)
+		require.Equal(t, cctx.GetCurrentOutboundParam().ReceiverChainId, cctx.InboundParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutboundParam().Amount, cctx.OutboundParams[0].Amount)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CallOptions.GasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutboundParam().TssPubkey, cctx.OutboundParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundParams[0].TxFinalizationStatus)
+		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
+	})
+
 	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")
 		err := cctx.AddRevertOutbound(100)

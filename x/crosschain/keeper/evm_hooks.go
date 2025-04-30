@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -260,7 +261,8 @@ func (k Keeper) ProcessZetaSentEvent(
 		return observertypes.ErrChainParamsNotFound
 	}
 
-	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
+	if receiverChain.IsExternalChain() &&
+		(chainParams.ZetaTokenContractAddress == "" || chainParams.ZetaTokenContractAddress == constant.EVMZeroAddress) {
 		return types.ErrUnableToSendCoinType
 	}
 
@@ -316,12 +318,12 @@ func (k Keeper) ValidateZRC20WithdrawEvent(
 	coinType coin.CoinType,
 ) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
-	return k.validateZRC20Withdrawal(ctx, chainID, coinType, event.Value, event.To)
+	return k.validateOutbound(ctx, chainID, coinType, event.Value, event.To)
 }
 
-// validateZRC20Withdrawal validates the data of a ZRC20 Withdrawal event (version 1 or 2)
+// validateOutbound validates the data of a ZRC20 Withdrawals and Call event (version 1 or 2)
 // it checks if the withdrawal amount is valid and the destination address is supported depending on the chain
-func (k Keeper) validateZRC20Withdrawal(
+func (k Keeper) validateOutbound(
 	ctx sdk.Context,
 	chainID int64,
 	coinType coin.CoinType,
@@ -340,14 +342,15 @@ func (k Keeper) validateZRC20Withdrawal(
 		}
 		addr, err := chains.DecodeBtcAddress(string(to), chainID)
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Bitcoin address %s", string(to))
 		}
 		if !chains.IsBtcAddressSupported(addr) {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "unsupported Bitcoin address %s", string(to))
 		}
 	} else if chains.IsSolanaChain(chainID, additionalChains) {
 		// The rent exempt check is not needed for ZRC20 (SPL) tokens because withdrawing SPL token
-		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check.
+		// already needs a non-trivial amount of SOL for potential ATA creation so we can skip the check,
+		// and also not needed for simple no asset call.
 		if coinType == coin.CoinType_Gas && value.Cmp(big.NewInt(constant.SolanaWalletRentExempt)) < 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalAmount,
@@ -358,7 +361,17 @@ func (k Keeper) validateZRC20Withdrawal(
 		}
 		_, err := chains.DecodeSolanaWalletAddress(string(to))
 		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid address %s", string(to))
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Solana address %s", string(to))
+		}
+	} else if chains.IsSuiChain(chainID, additionalChains) {
+		// check the string format of the address is valid
+
+		addr, err := sui.DecodeAddress(to)
+		if err != nil {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
+		}
+		if err := sui.ValidAddress(addr); err != nil {
+			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
 		}
 	}
 

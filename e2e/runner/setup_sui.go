@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/config"
 	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -48,82 +49,18 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// TODO: this step might no longer necessary if a custom solution is implemented for the TSS funding
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
-	client := r.Clients.Sui
-
-	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
-		Sender:          deployerAddress,
-		CompiledModules: []string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
-		Dependencies: []string{
-			"0x0000000000000000000000000000000000000000000000000000000000000001",
-			"0x0000000000000000000000000000000000000000000000000000000000000002",
-		},
-		GasBudget: "5000000000",
-	})
-	require.NoError(r, err, "create publish tx")
-
-	signature, err := deployerSigner.SignTxBlock(publishTx)
-	require.NoError(r, err, "sign transaction")
-
-	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   publishTx.TxBytes,
-		Signature: []string{signature},
-		Options: models.SuiTransactionBlockOptions{
-			ShowEffects:        true,
-			ShowBalanceChanges: true,
-			ShowEvents:         true,
-			ShowObjectChanges:  true,
-		},
-		RequestType: "WaitForLocalExecution",
-	})
-	require.NoError(r, err)
-
-	// find packageID
-	var packageID, gatewayID, whitelistCapID, withdrawCapID string
-	for _, change := range resp.ObjectChanges {
-		if change.Type == "published" {
-			packageID = change.PackageId
-		}
-	}
-	require.NotEmpty(r, packageID, "packageID not found")
-
-	// find gateway objectID
-	gatewayType := fmt.Sprintf("%s::gateway::Gateway", packageID)
-	for _, change := range resp.ObjectChanges {
-		if change.Type == changeTypeCreated && change.ObjectType == gatewayType {
-			gatewayID = change.ObjectId
-		}
-	}
-	require.NotEmpty(r, gatewayID, "gatewayID not found")
-
-	// find WhitelistCap objectID
-	whitelistType := fmt.Sprintf("%s::gateway::WhitelistCap", packageID)
-	for _, change := range resp.ObjectChanges {
-		if change.Type == changeTypeCreated && change.ObjectType == whitelistType {
-			whitelistCapID = change.ObjectId
-		}
-	}
-	require.NotEmpty(r, whitelistCapID, "whitelistID not found")
-
-	// find WithdrawCap objectID
-	withdrawCapType := fmt.Sprintf("%s::gateway::WithdrawCap", packageID)
-	for _, change := range resp.ObjectChanges {
-		if change.Type == changeTypeCreated && change.ObjectType == withdrawCapType {
-			withdrawCapID = change.ObjectId
-		}
-	}
-
-	// set sui gateway
-	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
+	// deploy gateway package
+	whitelistCapID, withdrawCapID := r.suiDeployGateway()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
 
-	// deploy fake USDC
-	fakeUSDCCoinType, treasuryCap := r.suiDeployFakeUSDC()
+	// deploy fake USDC and whitelist it
+	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
-	r.SuiTokenCoinType = fakeUSDCCoinType
-	r.SuiTokenTreasuryCap = treasuryCap
+	// deploy example contract with on_call function
+	r.suiDeployExample()
 
 	// send withdraw cap to TSS
 	r.suiSendWithdrawCapToTSS(deployerSigner, withdrawCapID)
@@ -131,6 +68,35 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// set the chain params
 	err = r.setSuiChainParams()
 	require.NoError(r, err)
+}
+
+// suiDeployGateway deploys the SUI gateway package on Sui
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
+	const (
+		filterGatewayType      = "gateway::Gateway"
+		filterWithdrawCapType  = "gateway::WithdrawCap"
+		filterWhitelistCapType = "gateway::WhitelistCap"
+	)
+
+	objectTypeFilters := []string{filterGatewayType, filterWhitelistCapType, filterWithdrawCapType}
+	packageID, objectIDs := r.suiDeployPackage(
+		[]string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
+		objectTypeFilters,
+	)
+
+	gatewayID, ok := objectIDs[filterGatewayType]
+	require.True(r, ok, "gateway object not found")
+
+	whitelistCapID, ok = objectIDs[filterWhitelistCapType]
+	require.True(r, ok, "whitelistCap object not found")
+
+	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
+	require.True(r, ok, "withdrawCap object not found")
+
+	// set sui gateway
+	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
+
+	return whitelistCapID, withdrawCapID
 }
 
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
@@ -156,29 +122,83 @@ func (r *E2ERunner) deploySUIZRC20() {
 }
 
 // suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
-// it returns the coinType to be used as asset value for zrc20 and treasuryCap object ID that allows to mint tokens
-func (r *E2ERunner) suiDeployFakeUSDC() (string, string) {
+// it returns the treasuryCap object ID that allows to mint tokens
+func (r *E2ERunner) suiDeployFakeUSDC() string {
+	packageID, objectIDs := r.suiDeployPackage([]string{suicontract.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
+
+	treasuryCap, ok := objectIDs["TreasuryCap"]
+	require.True(r, ok, "treasuryCap not found")
+
+	coinType := packageID + "::fake_usdc::FAKE_USDC"
+
+	// strip 0x from packageID
+	coinType = coinType[2:]
+
+	// set asset value for zrc20 and treasuryCap object ID
+	r.SuiTokenCoinType = coinType
+	r.SuiTokenTreasuryCap = treasuryCap
+
+	return coinType
+}
+
+// suiDeployExample deploys the example package on Sui
+func (r *E2ERunner) suiDeployExample() {
+	const (
+		filterGlobalConfigType = "connected::GlobalConfig"
+		filterPartnerType      = "connected::Partner"
+		filterClockType        = "connected::Clock"
+	)
+
+	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
+	packageID, objectIDs := r.suiDeployPackage(
+		[]string{suicontract.ExampleFungibleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
+		objectTypeFilters,
+	)
+	r.Logger.Info("deployed example package with packageID: %s", packageID)
+
+	globalConfigID, ok := objectIDs[filterGlobalConfigType]
+	require.True(r, ok, "globalConfig object not found")
+
+	partnerID, ok := objectIDs[filterPartnerType]
+	require.True(r, ok, "partner object not found")
+
+	clockID, ok := objectIDs[filterClockType]
+	require.True(r, ok, "clock object not found")
+
+	r.SuiExample = config.SuiExample{
+		PackageID:      config.DoubleQuotedString(packageID),
+		TokenType:      config.DoubleQuotedString(packageID + "::token::TOKEN"),
+		GlobalConfigID: config.DoubleQuotedString(globalConfigID),
+		PartnerID:      config.DoubleQuotedString(partnerID),
+		ClockID:        config.DoubleQuotedString(clockID),
+	}
+}
+
+// suiDeployPackage is a helper function that deploys a package on Sui
+// It returns the packageID and a map of object types to their IDs
+func (r *E2ERunner) suiDeployPackage(bytecodeBase64s []string, objectTypeFilters []string) (string, map[string]string) {
 	client := r.Clients.Sui
+
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 	deployerAddress := deployerSigner.Address()
 
-	publishReq, err := client.Publish(r.Ctx, models.PublishRequest{
+	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
-		CompiledModules: []string{suicontract.FakeUSDCBytecodeBase64()},
+		CompiledModules: bytecodeBase64s,
 		Dependencies: []string{
-			"0x0000000000000000000000000000000000000000000000000000000000000001",
-			"0x0000000000000000000000000000000000000000000000000000000000000002",
+			"0x1", // Sui Framework
+			"0x2", // Move Standard Library
 		},
 		GasBudget: "5000000000",
 	})
 	require.NoError(r, err, "create publish tx")
 
-	signature, err := deployerSigner.SignTxBlock(publishReq)
+	signature, err := deployerSigner.SignTxBlock(publishTx)
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:   publishReq.TxBytes,
+		TxBytes:   publishTx.TxBytes,
 		Signature: []string{signature},
 		Options: models.SuiTransactionBlockOptions{
 			ShowEffects:        true,
@@ -190,7 +210,8 @@ func (r *E2ERunner) suiDeployFakeUSDC() (string, string) {
 	})
 	require.NoError(r, err)
 
-	var packageID, treasuryCap string
+	// find packageID
+	var packageID string
 	for _, change := range resp.ObjectChanges {
 		if change.Type == "published" {
 			packageID = change.PackageId
@@ -198,19 +219,17 @@ func (r *E2ERunner) suiDeployFakeUSDC() (string, string) {
 	}
 	require.NotEmpty(r, packageID, "packageID not found")
 
-	for _, change := range resp.ObjectChanges {
-		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, "TreasuryCap") {
-			treasuryCap = change.ObjectId
+	// find objects by type filters
+	objectIDs := make(map[string]string)
+	for _, filter := range objectTypeFilters {
+		for _, change := range resp.ObjectChanges {
+			if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, filter) {
+				objectIDs[filter] = change.ObjectId
+			}
 		}
 	}
-	require.NotEmpty(r, treasuryCap, "objectID not found")
 
-	coinType := packageID + "::fake_usdc::FAKE_USDC"
-
-	// strip 0x from packageID
-	coinType = coinType[2:]
-
-	return coinType, treasuryCap
+	return packageID, objectIDs
 }
 
 // whitelistSuiFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it

@@ -83,7 +83,6 @@ type E2ERunner struct {
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
 	SuiTSSAddress         string
-	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	FeeCollectorAddress   types.AccAddress
 
@@ -133,6 +132,9 @@ type E2ERunner struct {
 
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
+
+	// SuiExample contains the example package information for Sui
+	SuiExample config.SuiExample
 
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
@@ -289,6 +291,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.SuiGateway = other.SuiGateway
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
+	r.SuiExample = other.SuiExample
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)

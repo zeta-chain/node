@@ -42,7 +42,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	// send eth deposit
 	r.Logger.Print("🏃test eth deposit")
-	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, false)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
 	r.Logger.Print("🍾 eth deposit observed")
 

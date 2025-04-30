@@ -45,10 +45,11 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 	return balance
 }
 
-// SuiWithdrawSUI calls Withdraw of Gateway with SUI Zrc20 on ZEVM
+// SuiWithdrawSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
 func (r *E2ERunner) SuiWithdrawSUI(
 	receiver string,
 	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
@@ -58,7 +59,38 @@ func (r *E2ERunner) SuiWithdrawSUI(
 		receiverBytes,
 		amount,
 		r.SUIZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// SuiWithdrawAndCallSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
+func (r *E2ERunner) SuiWithdrawAndCallSUI(
+	receiver string,
+	amount *big.Int,
+	payload sui.CallPayload,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	// ACT
+	payloadBytes, err := payload.PackABI()
+	require.NoError(r, err)
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SUIZRC20Addr,
+		payloadBytes,
+		gatewayzevm.CallOptions{
+			IsArbitraryCall: false,
+			GasLimit:        big.NewInt(20000),
+		},
+		revertOptions,
 	)
 	require.NoError(r, err)
 
@@ -79,6 +111,36 @@ func (r *E2ERunner) SuiWithdrawFungibleToken(
 		amount,
 		r.SuiTokenZRC20Addr,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// SuiWithdrawAndCallFungibleToken calls WithdrawAndCall of Gateway with Sui fungible token ZRC20 on ZEVM
+func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
+	receiver string,
+	amount *big.Int,
+	payload sui.CallPayload,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	receiverBytes, err := hex.DecodeString(receiver[2:])
+	require.NoError(r, err, "receiver: "+receiver[2:])
+
+	payloadBytes, err := payload.PackABI()
+	require.NoError(r, err)
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiverBytes,
+		amount,
+		r.SuiTokenZRC20Addr,
+		payloadBytes,
+		gatewayzevm.CallOptions{
+			IsArbitraryCall: false,
+			GasLimit:        big.NewInt(20000),
+		},
+		revertOptions,
 	)
 	require.NoError(r, err)
 
@@ -174,6 +236,55 @@ func (r *E2ERunner) SuiMintUSDC(
 	require.NoError(r, err)
 
 	return r.suiExecuteTx(signer, tx)
+}
+
+// SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
+// The example on_call function will just forward the withdrawn token to given 'suiAddress'
+func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPayload, error) {
+	// only the CCTX's coinType is needed, no additional arguments
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	// create the payload message from the sui address
+	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
+	if err != nil {
+		return sui.CallPayload{}, err
+	}
+
+	return sui.NewCallPayload(argumentTypes, objects, message), nil
+}
+
+// SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
+func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
+	// Get object data
+	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
+		ObjectId: r.SuiExample.GlobalConfigID.String(),
+		Options:  models.SuiObjectDataOptions{ShowContent: true},
+	})
+
+	require.NoError(r, err)
+	require.Nil(r, resp.Error)
+	require.NotNil(r, resp.Data)
+	require.NotNil(r, resp.Data.Content)
+
+	fields := resp.Data.Content.Fields
+
+	// Extract called_count field from the object content
+	rawValue, ok := fields["called_count"]
+	require.True(r, ok, "missing called_count field")
+
+	v, ok := rawValue.(string)
+	require.True(r, ok, "want string, got %T for called_count", rawValue)
+
+	// #nosec G115 always in range
+	calledCount, err := strconv.ParseUint(v, 10, 64)
+	require.NoError(r, err)
+
+	return calledCount
 }
 
 // suiExecuteDeposit executes a deposit on the SUI contract

@@ -36,7 +36,7 @@ require (
 	github.com/libp2p/go-libp2p v0.27.8
 	github.com/mattn/go-sqlite3 v1.14.19 // indirect
 	github.com/multiformats/go-multiaddr v0.9.0
-	github.com/near/borsh-go v0.3.1
+	github.com/near/borsh-go v0.3.1-0.20240503120250-847ff6f195e8
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rakyll/statik v0.1.7
@@ -307,13 +307,17 @@ require (
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
+	github.com/fardream/go-bcs v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/montanaflynn/stats v0.7.1
+	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.14.8
-	github.com/zeta-chain/go-tss v0.2.0
-	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250212192042-34095b214e51
+	github.com/zeta-chain/go-tss v0.5.0
+	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 )
+
+require github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
 
 require (
 	cloud.google.com/go/auth v0.6.0 // indirect
@@ -323,7 +327,9 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/aead/siphash v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
+	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+	github.com/coming-chat/go-sui/v2 v2.0.1
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20231025140028-3c0104f4b233 // indirect
@@ -349,6 +355,7 @@ require (
 	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
+	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect

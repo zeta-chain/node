@@ -105,6 +105,48 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.Equal(t, eventExpected, event)
 	})
 
+	t.Run("it's ok if no memo provided", func(t *testing.T) {
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// mock up the input
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		// mock up the output
+		// remove OP_RETURN output to simulate no memo provided
+		tx.Vout[1] = tx.Vout[2]
+		tx.Vout = tx.Vout[:2]
+
+		eventExpected := &observer.BTCInboundEvent{
+			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:    tssAddress,
+			Value:        tx.Vout[0].Value - depositorFee,
+			DepositorFee: depositorFee,
+			MemoBytes:    []byte("no memo found"),
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
+		}
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
+		// get BTC event
+		event, err := observer.GetBtcEventWithWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
+	})
+
 	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)

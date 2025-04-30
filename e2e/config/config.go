@@ -144,12 +144,22 @@ type TON struct {
 	GatewayAccountID DoubleQuotedString `yaml:"gateway_account_id"`
 }
 
+// SuiExample contains the object IDs in the example package
+type SuiExample struct {
+	PackageID      DoubleQuotedString `yaml:"package_id"`
+	TokenType      DoubleQuotedString `yaml:"token_type"`
+	GlobalConfigID DoubleQuotedString `yaml:"global_config_id"`
+	PartnerID      DoubleQuotedString `yaml:"partner_id"`
+	ClockID        DoubleQuotedString `yaml:"clock_id"`
+}
+
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
 	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
 	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
+	Example                  SuiExample         `yaml:"example"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -213,7 +223,7 @@ func DefaultConfig() Config {
 }
 
 // ReadConfig reads the config file
-func ReadConfig(file string) (config Config, err error) {
+func ReadConfig(file string, validate bool) (config Config, err error) {
 	if file == "" {
 		return Config{}, errors.New("file name cannot be empty")
 	}
@@ -227,8 +237,10 @@ func ReadConfig(file string) (config Config, err error) {
 	if err != nil {
 		return Config{}, err
 	}
-	if err := config.Validate(); err != nil {
-		return Config{}, err
+	if validate {
+		if err := config.Validate(); err != nil {
+			return Config{}, err
+		}
 	}
 
 	return

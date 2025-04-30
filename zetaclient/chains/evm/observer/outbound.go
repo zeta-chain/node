@@ -121,7 +121,7 @@ func (ob *Observer) postVoteOutbound(
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
-	var retryGasLimit uint64
+	retryGasLimit := zetacore.PostVoteOutboundRetryGasLimit
 	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
@@ -187,7 +187,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	cointype := cctx.InboundParams.CoinType
 
 	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
+	if compliance.IsCCTXRestricted(cctx) {
 		// use cctx's amount to bypass the amount check in zetacore
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
 		receiveStatus := chains.ReceiveStatus_failed

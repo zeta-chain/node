@@ -34,10 +34,8 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		r.EVMAddress(),
 		amountMoreThanCap,
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
 	)
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
 
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
@@ -52,10 +50,8 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		r.EVMAddress(),
 		amountLessThanCap,
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
 	)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
 
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
@@ -80,10 +76,8 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		r.EVMAddress(),
 		amountMoreThanCap,
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
 	)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
 
 	utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	expectedBalance = big.NewInt(0).Add(initialBal, amountMoreThanCap)

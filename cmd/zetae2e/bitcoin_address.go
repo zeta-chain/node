@@ -37,7 +37,7 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	}
 
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], true)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	addr, privKey := r.GetBtcAddress()
+	addr, privKey := r.GetBtcKeypair()
 
 	logger.Print("* BTC address: %s", addr.EncodeAddress())
 	if showPrivKey {

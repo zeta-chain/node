@@ -473,13 +473,25 @@ func TestGetBtcEvent(t *testing.T) {
 		require.Equal(t, eventExpected, event)
 	})
 
-	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
-		// load tx and modify the tx to have only 1 vout
-		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+	t.Run("it's ok if no memo is provided", func(t *testing.T) {
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+		eventExpected.FromAddress = "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
+
+		// mock up the output
+		// remove OP_RETURN output to simulate no memo provided
 		tx.Vout = tx.Vout[:1]
 
+		// no memo is found in this case
+		expectedEvent := *eventExpected
+		expectedEvent.MemoBytes = []byte("no memo found")
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
 		// get BTC event
-		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEvent(
 			ctx,
 			rpcClient,
@@ -491,7 +503,7 @@ func TestGetBtcEvent(t *testing.T) {
 			feeCalculator,
 		)
 		require.NoError(t, err)
-		require.Nil(t, event)
+		require.Equal(t, expectedEvent, *event)
 	})
 
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
@@ -571,13 +583,20 @@ func TestGetBtcEvent(t *testing.T) {
 		require.Nil(t, event)
 	})
 
-	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
+	t.Run("should not skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
 		// get BTC event
-		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEvent(
 			ctx,
 			rpcClient,
@@ -589,16 +608,23 @@ func TestGetBtcEvent(t *testing.T) {
 			feeCalculator,
 		)
 		require.NoError(t, err)
-		require.Nil(t, event)
+		require.NotNil(t, event)
 	})
 
-	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
+	t.Run("should not skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
 		// get BTC event
-		rpcClient := mocks.NewBitcoinClient(t)
 		event, err := observer.GetBtcEvent(
 			ctx,
 			rpcClient,
@@ -610,7 +636,7 @@ func TestGetBtcEvent(t *testing.T) {
 			feeCalculator,
 		)
 		require.NoError(t, err)
-		require.Nil(t, event)
+		require.NotNil(t, event)
 	})
 
 	t.Run("should skip tx if sender address is empty", func(t *testing.T) {

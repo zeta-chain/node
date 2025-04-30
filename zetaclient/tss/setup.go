@@ -41,7 +41,7 @@ type SetupProps struct {
 // Setup beefy function that does all the logic for bootstrapping tss-server, tss signer,
 // generating TSS key is needed, etc...
 func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, error) {
-	logger = logger.With().Str(logs.FieldModule, "tss_setup").Logger()
+	setupLogger := logger.With().Str(logs.FieldModule, "tss_setup").Logger()
 
 	// 0. Resolve Hot Private Key
 	hotPrivateKey, err := p.Zetacore.GetKeys().GetPrivateKey(p.HotKeyPassword)
@@ -65,9 +65,9 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	if len(bootstrapPeers) == 0 {
-		logger.Warn().Msg("No bootstrap peers provided")
+		setupLogger.Warn().Msg("No bootstrap peers provided")
 	} else {
-		logger.Info().Interface("bootstrap_peers", bootstrapPeers).Msgf("Bootstrap peers")
+		setupLogger.Info().Interface("bootstrap_peers", bootstrapPeers).Msgf("Bootstrap peers")
 	}
 
 	// 2. Resolve pre-params. We want to enforce pre-params file existence
@@ -76,7 +76,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to resolve TSS pre-params. Use `zetaclient tss gen-pre-params`")
 	}
 
-	logger.Info().Msg("Pre-params file resolved")
+	setupLogger.Info().Msg("Pre-params file resolved")
 
 	// 3. Prepare whitelist of peers
 	tssKeygen, err := p.Zetacore.GetKeyGen(ctx)
@@ -84,7 +84,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to get TSS keygen")
 	}
 
-	logger.Info().Msg("Fetched TSS keygen info")
+	setupLogger.Info().Msg("Fetched TSS keygen info")
 
 	whitelistedPeers := make([]peer.ID, len(tssKeygen.GranteePubkeys))
 	for i, pk := range tssKeygen.GranteePubkeys {
@@ -94,10 +94,10 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		}
 	}
 
-	logger.Info().Interface("whitelisted_peers", whitelistedPeers).Msg("Resolved whitelist peers")
+	setupLogger.Info().Interface("whitelisted_peers", whitelistedPeers).Msg("Resolved whitelist peers")
 
 	// 4. Bootstrap go-tss TSS server
-	tssServer, err := NewTSSServer(
+	tssServer, err := NewServer(
 		bootstrapPeers,
 		whitelistedPeers,
 		tssPreParams,
@@ -114,7 +114,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		p.Telemetry.SetP2PID(tssServer.GetLocalPeerID())
 	}
 
-	logger.Info().Msg("TSS server started")
+	setupLogger.Info().Msg("TSS server started")
 
 	// 5. Perform key generation (if needed)
 	tssInfo, err := KeygenCeremony(ctx, tssServer, p.Zetacore, logger)
@@ -128,12 +128,12 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	}
 
 	// 6. Verify key shares
-	logger.Info().Msg("Got historical TSS info from zetacore. Verifying key shares...")
+	setupLogger.Info().Msg("Got historical TSS info from zetacore. Verifying key shares...")
 	if err = verifyKeySharesForPubKeys(p, historicalTSSInfo, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to verify key shares for pub keys")
 	}
 
-	logger.Info().Msg("Key shared verified")
+	setupLogger.Info().Msg("Key shared verified")
 
 	// 7. Optionally test key signing
 	if p.Config.TestTssKeysign {
@@ -149,6 +149,7 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		p.Zetacore,
 		logger,
 		WithPostBlame(p.PostBlame),
+		WithRateLimit(p.Config.TSSMaxPendingSignatures),
 		WithMetrics(ctx, p.Zetacore, &Metrics{
 			ActiveMsgsSigns:    metrics.NumActiveMsgSigns,
 			SignLatency:        metrics.SignLatency,
@@ -159,14 +160,14 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 		return nil, errors.Wrap(err, "unable to create TSS service")
 	}
 
-	logger.Info().Msg("TSS service created")
+	setupLogger.Info().Msg("TSS service created")
 
 	// 9. Ensure that TSS has valid EVM and BTC addresses
 	if err = validateAddresses(service, p.BitcoinChainIDs, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to validate tss addresses")
 	}
 
-	logger.Info().Msg("TSS addresses validated. Starting healthcheck worker")
+	setupLogger.Info().Msg("TSS addresses validated. Starting healthcheck worker")
 
 	healthCheckProps := HealthcheckProps{
 		Telemetry:               p.Telemetry,
@@ -182,11 +183,11 @@ func Setup(ctx context.Context, p SetupProps, logger zerolog.Logger) (*Service, 
 	return service, nil
 }
 
-// NewTSSServer creates a new tss.TssServer (go-tss) instance for key signing.
+// NewServer creates a new tss.TssServer (go-tss) instance for key signing.
 // - bootstrapPeers are used to discover other peers
 // - whitelistPeers are the only peers that are allowed in p2p key signing.
 // - preParams are the TSS pre-params required for key generation
-func NewTSSServer(
+func NewServer(
 	bootstrapPeers []multiaddr.Multiaddr,
 	whitelistPeers []peer.ID,
 	preParams *keygen.LocalPreParams,
@@ -213,24 +214,27 @@ func NewTSSServer(
 		return nil, errors.Wrap(err, "unable to resolve TSS path")
 	}
 
-	tssConfig := tsscommon.TssConfig{
-		EnableMonitor:   true,              // enables prometheus metrics
-		KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
-		KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
-		PartyTimeout:    30 * time.Second,
-		PreParamTimeout: 5 * time.Minute,
+	networkConfig := tss.NetworkConfig{
+		TssConfig: tsscommon.TssConfig{
+			EnableMonitor:   true,              // enables prometheus metrics
+			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
+			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    30 * time.Second,
+			PreParamTimeout: 5 * time.Minute,
+		},
+		ExternalIP:       cfg.PublicIP,
+		Port:             Port,
+		BootstrapPeers:   bootstrapPeers,
+		WhitelistedPeers: whitelistPeers,
 	}
 
 	tssServer, err := tss.New(
-		bootstrapPeers,
-		Port,
-		privateKey,
+		networkConfig,
 		tssPath,
-		tssConfig,
-		preParams,
-		cfg.PublicIP,
+		privateKey,
 		tssPassword,
-		whitelistPeers,
+		preParams,
+		logger,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create TSS server")

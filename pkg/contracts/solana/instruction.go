@@ -34,6 +34,9 @@ type DepositInstructionParams struct {
 
 	// Receiver is the receiver for the deposit
 	Receiver [20]byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositAndCallInstructionParams contains the parameters for a gateway deposit_and_call instruction
@@ -49,6 +52,9 @@ type DepositAndCallInstructionParams struct {
 
 	// Memo is the memo for the deposit_and_call
 	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositSPLInstructionParams contains the parameters for a gateway deposit_spl instruction
@@ -61,6 +67,9 @@ type DepositSPLInstructionParams struct {
 
 	// Receiver is the receiver for the deposit_spl
 	Receiver [20]byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
 }
 
 // DepositSPLAndCallInstructionParams contains the parameters for a gateway deposit_spl_and_call instruction
@@ -76,6 +85,42 @@ type DepositSPLAndCallInstructionParams struct {
 
 	// Memo is the memo for the deposit_spl_and_call
 	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
+}
+
+// CallInstructionParams contains the parameters for a gateway call instruction
+type CallInstructionParams struct {
+	// Discriminator is the unique identifier for the call instruction
+	Discriminator [8]byte
+
+	// Receiver is the receiver for the call
+	Receiver [20]byte
+
+	// Memo is the memo for the call
+	Memo []byte
+
+	// RevertOptions are optional revert options
+	RevertOptions *RevertOptions
+}
+
+// RevertOptions contains options for reverted txs
+type RevertOptions struct {
+	// RevertAddress is address to receive revert
+	RevertAddress solana.PublicKey
+
+	// AbortAddress is address to receive funds if aborted
+	AbortAddress solana.PublicKey
+
+	// CallOnRevert is flag marking if on_revert hook should be called
+	CallOnRevert bool
+
+	// RevertMessage is arbitrary data sent back in on_revert
+	RevertMessage []byte
+
+	// OnRevertGasLimit is gas limit for revert tx
+	OnRevertGasLimit uint64
 }
 
 // OutboundInstruction is the interface for all gateway outbound instructions
@@ -296,6 +341,77 @@ func ParseInstructionExecute(instruction solana.CompiledInstruction) (*ExecuteIn
 	return inst, nil
 }
 
+var _ OutboundInstruction = (*ExecuteInstructionParams)(nil)
+
+// ExecuteRevertInstructionParams contains the parameters for a gateway execute_revert instruction
+type ExecuteRevertInstructionParams struct {
+	// Discriminator is the unique identifier for the execute_revert instruction
+	Discriminator [8]byte
+
+	// Amount is the lamports amount for the execute_revert
+	Amount uint64
+
+	// Sender that initiated cctx
+	Sender solana.PublicKey
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the execute_revert
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the execute_revert
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteRevertInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteRevertInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteRevertInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteRevertInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecute tries to parse the instruction as a 'execute_revert'.
+// It returns nil if the instruction can't be parsed as a 'execute_revert'.
+func ParseInstructionExecuteRevert(instruction solana.CompiledInstruction) (*ExecuteRevertInstructionParams, error) {
+	// try deserializing instruction as a 'execute_revert'
+	inst := &ExecuteRevertInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_revert' instruction
+	if inst.Discriminator != DiscriminatorExecuteRevert {
+		return nil, fmt.Errorf("not an execute_revert instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
 var _ OutboundInstruction = (*WithdrawSPLInstructionParams)(nil)
 
 type WithdrawSPLInstructionParams struct {
@@ -436,6 +552,81 @@ func ParseInstructionExecuteSPL(instruction solana.CompiledInstruction) (*Execut
 	return inst, nil
 }
 
+var _ OutboundInstruction = (*ExecuteSPLRevertInstructionParams)(nil)
+
+type ExecuteSPLRevertInstructionParams struct {
+	// Discriminator is the unique identifier for the execute spl revert instruction
+	Discriminator [8]byte
+
+	// Decimals is decimals for spl token
+	Decimals uint8
+
+	// Amount is the lamports amount for the withdraw
+	Amount uint64
+
+	// Sender that initated cctx
+	Sender solana.PublicKey
+
+	// Data for connected program
+	Data []byte
+
+	// Signature is the ECDSA signature (by TSS) for the withdraw
+	Signature [64]byte
+
+	// RecoveryID is the recovery ID used to recover the public key from ECDSA signature
+	RecoveryID uint8
+
+	// MessageHash is the hash of the message signed by TSS
+	MessageHash [32]byte
+
+	// Nonce is the nonce for the withdraw
+	Nonce uint64
+}
+
+// InstructionDiscriminator returns the discriminator of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) InstructionDiscriminator() [8]byte {
+	return inst.Discriminator
+}
+
+// Signer returns the signer of the signature contained
+func (inst *ExecuteSPLRevertInstructionParams) Signer() (signer common.Address, err error) {
+	var signature [65]byte
+	copy(signature[:], inst.Signature[:64])
+	signature[64] = inst.RecoveryID
+
+	return RecoverSigner(inst.MessageHash[:], signature[:])
+}
+
+// GatewayNonce returns the nonce of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) GatewayNonce() uint64 {
+	return inst.Nonce
+}
+
+// TokenAmount returns the amount of the instruction
+func (inst *ExecuteSPLRevertInstructionParams) TokenAmount() uint64 {
+	return inst.Amount
+}
+
+// ParseInstructionExecuteSPL tries to parse the instruction as a 'execute_spl_token_revert'.
+// It returns nil if the instruction can't be parsed as a 'execute_spl_token_revert'.
+func ParseInstructionExecuteSPLRevert(
+	instruction solana.CompiledInstruction,
+) (*ExecuteSPLRevertInstructionParams, error) {
+	// try deserializing instruction as a 'execute_spl_token_revert'
+	inst := &ExecuteSPLRevertInstructionParams{}
+	err := borsh.Deserialize(inst, instruction.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "error deserializing instruction")
+	}
+
+	// check the discriminator to ensure it's a 'execute_spl_token_revert' instruction
+	if inst.Discriminator != DiscriminatorExecuteSPLRevert {
+		return nil, fmt.Errorf("not an execute_spl_token_revert instruction: %v", inst.Discriminator)
+	}
+
+	return inst, nil
+}
+
 // RecoverSigner recover the ECDSA signer from given message hash and signature
 func RecoverSigner(msgHash []byte, msgSig []byte) (signer common.Address, err error) {
 	// recover the public key
@@ -520,9 +711,33 @@ type ExecuteMsg struct {
 	Data     []byte
 }
 
-// GetExecuteMsgAbi used for abi encoding/decoding execute msg
-func GetExecuteMsgAbi() (abi.Arguments, error) {
-	MsgAbiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
+func (m *ExecuteMsg) Encode() ([]byte, error) {
+	return executeMsgAbi.Pack(m)
+}
+
+func (m *ExecuteMsg) Decode(msgbz []byte) error {
+	unpacked, err := executeMsgAbi.Unpack(msgbz)
+	if err != nil {
+		return errors.Wrap(err, "error unpacking execute msg")
+	}
+
+	jsonMsg, err := json.Marshal(unpacked[0])
+	if err != nil {
+		return errors.Wrap(err, "error marshalling execute msg [0]")
+	}
+
+	err = json.Unmarshal(jsonMsg, m)
+	if err != nil {
+		return errors.Wrap(err, "error unmarshalling execute msg")
+	}
+
+	return nil
+}
+
+var executeMsgAbi = mustGetExecuteMsgAbi()
+
+func mustGetExecuteMsgAbi() abi.Arguments {
+	abiType, err := abi.NewType("tuple", "struct Msg", []abi.ArgumentMarshaling{
 		{
 			Name: "accounts",
 			Type: "tuple[]",
@@ -535,38 +750,10 @@ func GetExecuteMsgAbi() (abi.Arguments, error) {
 	})
 
 	if err != nil {
-		return abi.Arguments{}, err
+		panic(errors.Wrap(err, "error creating abi type"))
 	}
 
-	MsgAbiArgs := abi.Arguments{
-		{Type: MsgAbiType, Name: "msg"},
+	return abi.Arguments{
+		{Type: abiType, Name: "msg"},
 	}
-
-	return MsgAbiArgs, nil
-}
-
-// DecodeExecuteMsg decodes execute msg using abi decoding
-func DecodeExecuteMsg(msgbz []byte) (ExecuteMsg, error) {
-	args, err := GetExecuteMsgAbi()
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	unpacked, err := args.Unpack(msgbz)
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	jsonMsg, err := json.Marshal(unpacked[0])
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	var msg ExecuteMsg
-	err = json.Unmarshal(jsonMsg, &msg)
-	if err != nil {
-		return ExecuteMsg{}, err
-	}
-
-	return msg, nil
 }

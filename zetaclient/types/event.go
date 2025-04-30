@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -70,6 +71,9 @@ type InboundEvent struct {
 
 	// IsCrossChainCall is true if the inbound is a cross-chain call
 	IsCrossChainCall bool
+
+	// RevertOptions are optional revert options
+	RevertOptions *solana.RevertOptions
 }
 
 // DecodeMemo decodes the receiver from the memo bytes

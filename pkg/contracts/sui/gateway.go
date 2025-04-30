@@ -7,12 +7,11 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/constraints"
 )
-
-// CoinType represents the coin type for the inbound
-type CoinType string
 
 // EventType represents Gateway event type (both inbound & outbound)
 type EventType string
@@ -28,20 +27,29 @@ type Gateway struct {
 	mu sync.RWMutex
 }
 
-// SUI is the coin type for SUI, native gas token
-const SUI CoinType = "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
+// OutboundEventContent is the interface of gateway outbound event content
+type OutboundEventContent interface {
+	// TokenAmount returns the amount of the outbound
+	TokenAmount() math.Uint
+
+	// TxNonce returns the nonce of the outbound
+	TxNonce() uint64
+}
 
 // Event types
 const (
 	DepositEvent        EventType = "DepositEvent"
 	DepositAndCallEvent EventType = "DepositAndCallEvent"
 	WithdrawEvent       EventType = "WithdrawEvent"
+
+	// this event does not exist on gateway, we define it to make the outbound processing consistent
+	WithdrawAndCallEvent EventType = "WithdrawAndCallEvent"
+
+	// the gateway.move uses name "NonceIncreaseEvent", but here uses a more descriptive name
+	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
 
 const moduleName = "gateway"
-
-// ErrParseEvent event parse error
-var ErrParseEvent = errors.New("event parse error")
 
 // NewGatewayFromPairID creates a new Sui Gateway
 // from pair of `$packageID,$gatewayObjectID`
@@ -86,11 +94,25 @@ func (e *Event) IsWithdraw() bool {
 	return e.EventType == WithdrawEvent
 }
 
-// Withdrawal extract WithdrawData.
+// Withdrawal extract withdraw data.
 func (e *Event) Withdrawal() (Withdrawal, error) {
 	v, ok := e.content.(Withdrawal)
 	if !ok {
 		return Withdrawal{}, errors.Errorf("invalid content type %T", e.content)
+	}
+
+	return v, nil
+}
+
+func (e *Event) IsCancelTx() bool {
+	return e.EventType == CancelTxEvent
+}
+
+// CancelTx extract cancel tx data.
+func (e *Event) CancelTx() (CancelTx, error) {
+	v, ok := e.content.(CancelTx)
+	if !ok {
+		return CancelTx{}, errors.Errorf("invalid content type %T", e.content)
 	}
 
 	return v, nil
@@ -182,6 +204,8 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		content, err = parseDeposit(event, eventType)
 	case WithdrawEvent:
 		content, err = parseWithdrawal(event, eventType)
+	case CancelTxEvent:
+		content, err = parseCancelTx(event, eventType)
 	default:
 		return Event{}, errors.Wrapf(ErrParseEvent, "unknown event %q", eventType)
 	}
@@ -196,6 +220,44 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 		EventType:  eventType,
 		content:    content,
 	}, nil
+}
+
+// ParseOutboundEvent parses outbound event from transaction block response.
+func (gw *Gateway) ParseOutboundEvent(
+	res models.SuiTransactionBlockResponse,
+) (event Event, content OutboundEventContent, err error) {
+	// a simple withdraw contains one single command, if it contains 3 commands,
+	// we try passing the transaction as a withdraw and call with PTB
+	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
+		return gw.parseWithdrawAndCallPTB(res)
+	}
+
+	if len(res.Events) == 0 {
+		return event, nil, errors.New("missing events")
+	}
+
+	event, err = gw.ParseEvent(res.Events[0])
+	if err != nil {
+		return event, nil, errors.Wrap(err, "unable to parse event")
+	}
+
+	// filter outbound events
+	switch event.EventType {
+	case WithdrawEvent:
+		withdrawal, err := event.Withdrawal()
+		if err != nil {
+			return event, nil, errors.Wrap(err, "unable to extract withdraw event")
+		}
+		return event, withdrawal, nil
+	case CancelTxEvent:
+		cancelTx, err := event.CancelTx()
+		if err != nil {
+			return event, nil, errors.Wrap(err, "unable to extract cancel tx event")
+		}
+		return event, cancelTx, nil
+	default:
+		return event, nil, errors.Errorf("unsupported outbound event type %s", event.EventType)
+	}
 }
 
 // ParseTxWithdrawal a syntax sugar around ParseEvent and Withdrawal.
@@ -253,6 +315,22 @@ func extractStr(kv map[string]any, key string) (string, error) {
 	}
 
 	return v, nil
+}
+
+// extractInteger extracts a float64 value from a map and converts it to any integer type
+func extractInteger[T constraints.Integer](kv map[string]any, key string) (T, error) {
+	rawValue, ok := kv[key]
+	if !ok {
+		return 0, errors.Errorf("missing %s", key)
+	}
+
+	v, ok := rawValue.(float64)
+	if !ok {
+		return 0, errors.Errorf("want float64, got %T for %s", rawValue, key)
+	}
+
+	// #nosec G115 always in range
+	return T(v), nil
 }
 
 func convertPayload(data []any) ([]byte, error) {
