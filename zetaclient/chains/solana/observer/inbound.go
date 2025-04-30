@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
@@ -156,41 +157,41 @@ func FilterInboundEvents(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
-	// there should be at least one instruction and one account, otherwise skip
-	if len(tx.Message.Instructions) <= 0 {
+	if len(tx.Message.Instructions) == 0 {
 		return nil, nil
 	}
 
-	// create event array to collect all events in the transaction
 	seenDeposit := false
 	seenDepositSPL := false
 	seenCall := false
 	events := make([]*clienttypes.InboundEvent, 0)
 
-	// loop through instruction list to filter the 1st valid event
-	for i, instruction := range tx.Message.Instructions {
+	// helper to parse any instruction
+	parseInstruction := func(instruction solana.CompiledInstruction, location string) error {
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
 			logger.Err(err).
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
+				Str("location", location).
 				Uint16("index", instruction.ProgramIDIndex).
 				Msg("no program found")
-			continue
+			return nil
 		}
 
 		// skip instructions that are irrelevant to the gateway program invocation
 		if !programPk.Equals(gatewayID) {
-			continue
+			return nil
 		}
 
 		// try parsing the instruction as a 'deposit' if not seen yet
 		if !seenDeposit {
-			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, i, txResult.Slot)
+			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
 			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
-			} else if deposit != nil {
+				return errors.Wrap(err, "error ParseInboundAsDeposit")
+			}
+			if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID:    senderChainID,
@@ -210,58 +211,62 @@ func FilterInboundEvents(
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
+					Str("location", location).
 					Msg("deposit detected")
+				return nil
 			}
 		} else {
 			logger.Warn().
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
+				Str("location", location).
 				Msg("multiple deposits detected")
 		}
 
 		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
 		if !seenDepositSPL {
-			deposit, err := solanacontracts.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
+			depositSPL, err := solanacontracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
 			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsDepositSPL")
-			} else if deposit != nil {
+				return errors.Wrap(err, "error ParseInboundAsDepositSPL")
+			}
+			if depositSPL != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID:    senderChainID,
-					Sender:           deposit.Sender,
-					Receiver:         deposit.Receiver,
-					TxOrigin:         deposit.Sender,
-					Amount:           deposit.Amount,
-					Memo:             deposit.Memo,
-					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					Sender:           depositSPL.Sender,
+					Receiver:         depositSPL.Receiver,
+					TxOrigin:         depositSPL.Sender,
+					Amount:           depositSPL.Amount,
+					Memo:             depositSPL.Memo,
+					BlockNumber:      depositSPL.Slot, // instead of using block, Solana explorer uses slot for indexing
 					TxHash:           tx.Signatures[0].String(),
 					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
 					CoinType:         coin.CoinType_ERC20,
-					Asset:            deposit.Asset,
-					IsCrossChainCall: deposit.IsCrossChainCall,
-					RevertOptions:    deposit.RevertOptions,
+					Asset:            depositSPL.Asset,
+					IsCrossChainCall: depositSPL.IsCrossChainCall,
+					RevertOptions:    depositSPL.RevertOptions,
 				})
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
+					Str("location", location).
 					Msg("SPL deposit detected")
+				return nil
 			}
 		} else {
 			logger.Warn().
 				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
+				Str("location", location).
 				Msg("multiple SPL deposits detected")
 		}
 
 		// try parsing the instruction as a 'call' if not seen yet
 		if !seenCall {
-			call, err := solanacontracts.ParseInboundAsCall(tx, i, txResult.Slot)
+			call, err := solanacontracts.ParseInboundAsCall(tx, instruction, txResult.Slot)
 			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsCall")
-			} else if call != nil {
+				return errors.Wrap(err, "error ParseInboundAsCall")
+			}
+			if call != nil {
 				seenCall = true
 				events = append(events, &clienttypes.InboundEvent{
 					SenderChainID:    senderChainID,
@@ -281,15 +286,38 @@ func FilterInboundEvents(
 				logger.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
+					Str("location", location).
 					Msg("call detected")
+				return nil
 			}
 		} else {
 			logger.Warn().
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
+				Str("location", location).
 				Msg("multiple calls detected")
+		}
+
+		return nil
+	}
+
+	// parse top-level instructions
+	for i, instruction := range tx.Message.Instructions {
+		err := parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// parse inner instructions
+	if txResult.Meta != nil && txResult.Meta.InnerInstructions != nil {
+		for _, inner := range txResult.Meta.InnerInstructions {
+			for j, instruction := range inner.Instructions {
+				err := parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index))
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 	}
 
