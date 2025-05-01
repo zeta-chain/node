@@ -74,20 +74,22 @@ func NewOutboundData(
 	}
 
 	// check if zetacore has bumped the fee rate
-	// 'GasPriorityFee' is always empty for Bitcoin unless zetacore bumps the fee rate
+	// 'GasPriorityFee' is always "0" for Bitcoin unless zetacore bumps the fee rate
 	var (
 		feeRateBumped bool
 		feeRateLatest int64
 	)
 	if params.GasPriorityFee != "" {
 		gasPriorityFee, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-		if err != nil || gasPriorityFee <= 0 {
+		if err != nil {
 			return nil, fmt.Errorf("invalid gas priority fee %s", params.GasPriorityFee)
 		}
 
-		feeRateBumped = true
-		feeRateLatest = gasPriorityFee
-		logger.Info().Str("latest_fee_rate", params.GasPriorityFee).Msg("fee rate is bumped by zetacore")
+		if gasPriorityFee > 0 {
+			feeRateBumped = true
+			feeRateLatest = gasPriorityFee
+			logger.Info().Str("latest_fee_rate", params.GasPriorityFee).Msg("fee rate is bumped by zetacore")
+		}
 	}
 
 	// to avoid minRelayTxFee error, please do not use the minimum rate (1 sat/vB by default).
