@@ -19,11 +19,11 @@ import (
 )
 
 // EnabledStatefulContracts contains the list of all enabled stateful precompiles.
-// This is useful for listing and reading from other packages, such as BlockedAddrs() function.
-// Setting to false a contract here will disable it, not being included in the blockchain.
+// This is useful for listing and reading from other packages, such as the BlockedAddrs() function.
+// Setting the value to true means that the contract is enabled.
 var EnabledStatefulContracts = map[common.Address]bool{
 	prototype.ContractAddress: true,
-	bank.ContractAddress:      true,
+	bank.ContractAddress:      false,
 	staking.ContractAddress:   false,
 }
 

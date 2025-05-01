@@ -23,7 +23,7 @@
 * [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
 * [3826](https://github.com/zeta-chain/node/pull/3826) - add global tss signature rate-limiter to zetaclient
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
-* [3833](https://github.com/zeta-chain/node/pull/3833) - enable precompiled contracts 
+* [3833](https://github.com/zeta-chain/node/pull/3833) - enable prototype precompiled contracts 
 
 ### Refactor
 

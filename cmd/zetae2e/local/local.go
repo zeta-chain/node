@@ -29,30 +29,32 @@ import (
 )
 
 const (
-	flagContractsDeployed = "deployed"
-	flagWaitForHeight     = "wait-for"
-	FlagConfigFile        = "config"
-	flagConfigOut         = "config-out"
-	flagVerbose           = "verbose"
-	flagTestAdmin         = "test-admin"
-	flagTestPerformance   = "test-performance"
-	flagIterations        = "iterations"
-	flagTestSolana        = "test-solana"
-	flagTestTON           = "test-ton"
-	flagTestSui           = "test-sui"
-	flagSkipRegular       = "skip-regular"
-	flagLight             = "light"
-	flagSetupOnly         = "setup-only"
-	flagSkipSetup         = "skip-setup"
-	flagTestTSSMigration  = "test-tss-migration"
-	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
-	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestLegacy        = "test-legacy"
-	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagSkipPrecompiles   = "skip-precompiles"
-	flagUpgradeContracts  = "upgrade-contracts"
-	flagTestFilter        = "test-filter"
-	flagTestStaking       = "test-staking"
+	flagContractsDeployed        = "deployed"
+	flagWaitForHeight            = "wait-for"
+	FlagConfigFile               = "config"
+	flagConfigOut                = "config-out"
+	flagVerbose                  = "verbose"
+	flagTestAdmin                = "test-admin"
+	flagTestPerformance          = "test-performance"
+	flagIterations               = "iterations"
+	flagTestSolana               = "test-solana"
+	flagTestTON                  = "test-ton"
+	flagTestSui                  = "test-sui"
+	flagSkipRegular              = "skip-regular"
+	flagLight                    = "light"
+	flagSetupOnly                = "setup-only"
+	flagSkipSetup                = "skip-setup"
+	flagTestTSSMigration         = "test-tss-migration"
+	flagSkipBitcoinSetup         = "skip-bitcoin-setup"
+	flagSkipHeaderProof          = "skip-header-proof"
+	flagTestLegacy               = "test-legacy"
+	flagSkipTrackerCheck         = "skip-tracker-check"
+	flagTestPrototypePrecompiled = "test-prototype-precompiled"
+	flagTestBankPrecompiled      = "test-bank-precompiled"
+	flagTestStakingPrecompiled   = "test-staking-precompiled"
+	flagUpgradeContracts         = "upgrade-contracts"
+	flagTestFilter               = "test-filter"
+	flagTestStaking              = "test-staking"
 )
 
 var (
@@ -89,7 +91,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagSkipPrecompiles, false, "set to true to skip stateful precompiled contracts test")
+	cmd.Flags().Bool(flagTestPrototypePrecompiled, true, "set to true to test the prototype precompiles")
+	cmd.Flags().Bool(flagTestBankPrecompiled, false, "set to true to test the bank precompiles")
+	cmd.Flags().Bool(flagTestStakingPrecompiled, false, "set to true to test the staking precompiles")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
@@ -105,30 +109,32 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose           = must(cmd.Flags().GetBool(flagVerbose))
-		configOut         = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
-		iterations        = must(cmd.Flags().GetInt(flagIterations))
-		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON           = must(cmd.Flags().GetBool(flagTestTON))
-		testSui           = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		setupSolana       = testSolana || testPerformance
-		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
-		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
+		waitForHeight            = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed        = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose                  = must(cmd.Flags().GetBool(flagVerbose))
+		configOut                = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin                = must(cmd.Flags().GetBool(flagTestAdmin))
+		testPerformance          = must(cmd.Flags().GetBool(flagTestPerformance))
+		iterations               = must(cmd.Flags().GetInt(flagIterations))
+		testSolana               = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON                  = must(cmd.Flags().GetBool(flagTestTON))
+		testSui                  = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular              = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                    = must(cmd.Flags().GetBool(flagLight))
+		setupOnly                = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup                = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup         = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof          = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck         = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration         = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy               = must(cmd.Flags().GetBool(flagTestLegacy))
+		testPrototypePrecompiled = must(cmd.Flags().GetBool(flagTestPrototypePrecompiled))
+		testBankPrecompiled      = must(cmd.Flags().GetBool(flagTestBankPrecompiled))
+		testStakingPrecompiled   = must(cmd.Flags().GetBool(flagTestStakingPrecompiled))
+		upgradeContracts         = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		setupSolana              = testSolana || testPerformance
+		testFilterStr            = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking              = must(cmd.Flags().GetBool(flagTestStaking))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -146,7 +152,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testPerformance {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
-		skipPrecompiles = true
 	}
 
 	// initialize tests config
@@ -193,12 +198,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 	noError(err)
 
-	// Drop this cond after TON e2e is included in the default suite
+	// Drop this condition after TON e2e is included in the default suite
 	if !testTON {
 		conf.RPCs.TON = ""
 	}
 
-	// initialize deployer runner with config
+	//Initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
@@ -239,6 +244,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
+	deployerRunner.Logger.Print("e2e start height: %d", e2eStartHeight)
 	noError(err)
 
 	// setting up the networks
@@ -333,28 +339,34 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 
-	if !skipPrecompiles {
-		precompiledContractTests := []string{
+	var precompiledContractTests []string
+	if testPrototypePrecompiled {
+		precompiledContractTests = append(precompiledContractTests,
 			e2etests.TestPrecompilesPrototypeName,
 			e2etests.TestPrecompilesPrototypeThroughContractName,
+		)
+	}
+
+	if testBankPrecompiled {
+		precompiledContractTests = append(precompiledContractTests,
 			e2etests.TestPrecompilesBankName,
 			e2etests.TestPrecompilesBankFailName,
 			e2etests.TestPrecompilesBankThroughContractName,
-			//e2etests.TestPrecompilesStakingThroughContractName,
-		}
-		if e2eStartHeight < 100 {
-			// these tests require a clean system
-			// since unstaking has an unbonding period
-			precompiledContractTests = append(precompiledContractTests) //e2etests.TestPrecompilesStakingName,
-			//e2etests.TestPrecompilesDistributeName,
-			//e2etests.TestPrecompilesDistributeNonZRC20Name,
-			//e2etests.TestPrecompilesDistributeThroughContractName,
+		)
+	}
 
-			// prevent lint error
-			_ = precompiledContractTests
-		} else {
-			logger.Print("⚠️ partial precompiled run (unclean state)")
-		}
+	if testStakingPrecompiled {
+		precompiledContractTests = append(precompiledContractTests,
+			e2etests.TestPrecompilesStakingThroughContractName,
+			e2etests.TestPrecompilesStakingName,
+			e2etests.TestPrecompilesStakingThroughContractName,
+			e2etests.TestPrecompilesDistributeName,
+			e2etests.TestPrecompilesDistributeNonZRC20Name,
+			e2etests.TestPrecompilesDistributeThroughContractName,
+		)
+	}
+
+	if len(precompiledContractTests) > 0 {
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
 
