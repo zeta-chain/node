@@ -60,6 +60,7 @@ func (c *Contract) Stake(
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = msgServer.Delegate(ctx, &stakingtypes.MsgDelegate{
 		DelegatorAddress: sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorAddress: validatorAddress,

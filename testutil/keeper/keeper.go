@@ -431,15 +431,15 @@ func NewSDKKeepersWithKeys(
 		memKeys[authoritytypes.MemStoreKey],
 		AuthorityGovAddress,
 	)
-	accountKeeper := authkeeper.NewAccountKeeper(
-		cdc,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
-		maccPerms,
-		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
-	)
+	//accountKeeper := authkeeper.NewAccountKeeper(
+	//	cdc,
+	//	runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+	//	ethermint.ProtoAccount,
+	//	maccPerms,
+	//	authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+	//	sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	//	authtypes.NewModuleAddress(authtypes.ModuleName).String(),
+	//)
 	paramsKeeper := paramskeeper.NewKeeper(
 		cdc,
 		fungibletypes.Amino,
@@ -509,7 +509,7 @@ func NewSDKKeepersWithKeys(
 	dstrKeeper := distrkeeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
-		accountKeeper,
+		authKeeper,
 		bankKeeper,
 		stakingKeeper,
 		authtypes.FeeCollectorName,

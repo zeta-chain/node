@@ -8,13 +8,9 @@ import (
 
 	"math/big"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store"
-	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/holiman/uint256"
 
-	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -209,28 +205,33 @@ func Test_RunInvalidMethod(t *testing.T) {
 func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *vm.EVM, *vm.Contract) {
 	// Initialize state.
 	// Get sdk keepers initialized with this state and the context.
-	cdc := keeper.NewCodec()
-	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
+	//cdc := keeper.NewCodec()
+	//db := tmdb.NewMemDB()
+	//logger := log.NewNopLogger()
+	//stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
+	////keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
+	//
+	////sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
+	//
+	//sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
 
-	sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
+	fungibleKeeper, ctx, sdkKeepers, _ := keeper.FungibleKeeper(t)
 
-	for _, key := range keys {
-		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	}
-	for _, key := range tkeys {
-		stateStore.MountStoreWithDB(key, storetypes.StoreTypeTransient, nil)
-	}
-	for _, key := range memKeys {
-		stateStore.MountStoreWithDB(key, storetypes.StoreTypeMemory, nil)
-	}
+	//for _, key := range keys {
+	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
+	//}
+	//for _, key := range tkeys {
+	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeTransient, nil)
+	//}
+	//for _, key := range memKeys {
+	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeMemory, nil)
+	//}
 
-	require.NoError(t, stateStore.LoadLatestVersion())
+	//require.NoError(t, stateStore.LoadLatestVersion())
+	//
+	//ctx := keeper.NewContext(stateStore)
 
-	ctx := keeper.NewContext(stateStore)
-
-	// Intiliaze codecs and gas config.
+	// Initialize codecs and gas config.
 	var encoding ethermint.EncodingConfig
 	appCodec := encoding.Codec
 	gasConfig := storetypes.TransientGasConfig()
@@ -240,11 +241,13 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
 
 	// Get the fungible keeper.
-	fungibleKeeper, _, _, _ := keeper.FungibleKeeper(t)
+	//fungibleKeeper, _, _, _ := keeper.FungibleKeeper(t)
 
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
-	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
+	//num := sdkKeepers.AuthKeeper.NextAccountNumber(ctx)
+	//fmt.Printf("Next account number: %d\n", num)
+	acc := sdkKeepers.AuthKeeper.NewAccountWithAddress(ctx, accAddress)
+	sdkKeepers.AuthKeeper.SetAccount(ctx, acc)
 
 	// Initialize staking contract.
 	contract := NewIStakingContract(

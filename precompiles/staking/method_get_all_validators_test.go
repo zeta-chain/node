@@ -3,6 +3,7 @@ package staking
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -43,7 +44,7 @@ func Test_GetAllValidators(t *testing.T) {
 		s := newTestSuite(t)
 		methodID := s.stkContractABI.Methods[GetAllValidatorsMethodName]
 		s.mockVMContract.Input = methodID.ID
-		r := rand.New(rand.NewSource(42))
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		validator := sample.Validator(t, r)
 		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 

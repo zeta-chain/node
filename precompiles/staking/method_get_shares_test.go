@@ -1,57 +1,61 @@
 package staking
 
 import (
+	"fmt"
+	"math/big"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/testutil/sample"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func Test_GetShares(t *testing.T) {
-	// Disabled temporarily because the staking functions were disabled.
-	// Issue: https://github.com/zeta-chain/node/issues/3009
-	// t.Run("should return stakes", func(t *testing.T) {
-	// 	// ARRANGE
-	// 	s := newTestSuite(t)
-	// 	methodID := s.contractABI.Methods[GetSharesMethodName]
-	// 	r := rand.New(rand.NewSource(42))
-	// 	validator := sample.Validator(t, r)
-	// 	s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+	t.Run("should return stakes", func(t *testing.T) {
+		// ARRANGE
+		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
+		methodID := abi.Methods[GetSharesMethodName]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		validator := sample.Validator(t, r)
+		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
 
-	// 	staker := sample.Bech32AccAddress()
-	// 	stakerEthAddr := common.BytesToAddress(staker.Bytes())
-	// 	coins := sample.Coins()
-	// 	err := s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, sample.Coins())
-	// 	require.NoError(t, err)
-	// 	err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
-	// 	require.NoError(t, err)
+		staker := sample.Bech32AccAddress()
+		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+		coins := sample.Coins()
+		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		require.NoError(t, err)
+		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
+		require.NoError(t, err)
 
-	// 	stakerAddr := common.BytesToAddress(staker.Bytes())
+		stakerAddr := common.BytesToAddress(staker.Bytes())
 
-	// 	stakeArgs := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
+		stakeArgs := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
-	// 	stakeMethodID := s.contractABI.Methods[StakeMethodName]
+		stakeMethodID := abi.Methods[StakeMethodName]
 
-	// 	// ACT
-	// 	_, err = s.contract.Stake(s.ctx, s.mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, stakeArgs)
-	// 	require.NoError(t, err)
+		// ACT
+		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, stakeArgs)
+		require.NoError(t, err)
 
-	// 	// ASSERT
-	// 	args := []interface{}{stakerEthAddr, validator.OperatorAddress}
-	// 	s.mockVMContract.Input = packInputArgs(t, methodID, args...)
-	// 	stakes, err := s.contract.Run(s.mockEVM, s.mockVMContract, false)
-	// 	require.NoError(t, err)
+		// ASSERT
+		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
+		mockVMContract.Input = packInputArgs(t, methodID, args...)
+		stakes, err := contract.Run(mockEVM, mockVMContract, false)
+		require.NoError(t, err)
 
-	// 	res, err := methodID.Outputs.Unpack(stakes)
-	// 	require.NoError(t, err)
-	// 	require.Equal(
-	// 		t,
-	// 		fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()),
-	// 		res[0].(*big.Int).String(),
-	// 	)
-	// })
+		res, err := methodID.Outputs.Unpack(stakes)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			fmt.Sprintf("%d000000000000000000", coins.AmountOf(config.BaseDenom).BigInt().Int64()),
+			res[0].(*big.Int).String(),
+		)
+	})
 
 	t.Run("should fail if wrong args amount", func(t *testing.T) {
 		// ARRANGE
@@ -72,7 +76,7 @@ func Test_GetShares(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
 		methodID := s.stkContractABI.Methods[GetSharesMethodName]
-		r := rand.New(rand.NewSource(42))
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		validator := sample.Validator(t, r)
 		args := []interface{}{42, validator.OperatorAddress}
 
