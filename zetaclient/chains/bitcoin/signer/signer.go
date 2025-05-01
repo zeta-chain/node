@@ -134,9 +134,9 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	var (
-		signedTx *wire.MsgTx
-		stuckTx  = observer.GetLastStuckOutbound()
-		rbfTx    = stuckTx != nil && stuckTx.Nonce == txData.nonce
+		signedTx       *wire.MsgTx
+		stuckTx, found = observer.LastStuckOutbound()
+		rbfTx          = found && stuckTx.Nonce == txData.nonce
 	)
 
 	// sign outbound

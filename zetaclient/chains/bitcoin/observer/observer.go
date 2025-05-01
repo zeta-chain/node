@@ -210,16 +210,16 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 	return blockNheader, nil
 }
 
-// GetLastStuckOutbound returns the last stuck outbound tx information
-func (ob *Observer) GetLastStuckOutbound() *LastStuckOutbound {
+// LastStuckOutbound returns the last stuck outbound tx information
+func (ob *Observer) LastStuckOutbound() (tx *LastStuckOutbound, found bool) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 
-	return ob.lastStuckTx
+	return ob.lastStuckTx, ob.lastStuckTx != nil
 }
 
-// SetLastStuckOutbound sets the information of last stuck outbound
-func (ob *Observer) SetLastStuckOutbound(stuckTx *LastStuckOutbound) {
+// setLastStuckOutbound sets the information of last stuck outbound
+func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 

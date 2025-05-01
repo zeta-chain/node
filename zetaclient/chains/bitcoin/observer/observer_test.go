@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -154,7 +153,7 @@ func Test_NewObserver(t *testing.T) {
 			require.NoError(t, err)
 
 			// create observer
-			ob, err := observer.New(tt.chain, baseObserver, tt.btcClient)
+			ob, err := New(tt.chain, baseObserver, tt.btcClient)
 			if tt.errorMessage != "" {
 				require.ErrorContains(t, err, tt.errorMessage)
 				require.Nil(t, ob)
@@ -210,34 +209,41 @@ func Test_BlockCache(t *testing.T) {
 func Test_SetLastStuckOutbound(t *testing.T) {
 	// create observer and example stuck tx
 	ob := newTestSuite(t, chains.BitcoinMainnet)
-	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
+	btcTx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 
 	// STEP 1
-	// initial stuck outbound is nil
-	require.Nil(t, ob.GetLastStuckOutbound())
+	// initial stuck outbound does not exist
+	_, found := ob.LastStuckOutbound()
+	require.False(t, found)
 
 	// STEP 2
 	// set stuck outbound
-	stuckTx := observer.NewLastStuckOutbound(100, tx, 30*time.Minute)
-	ob.SetLastStuckOutbound(stuckTx)
+	stuckTx := NewLastStuckOutbound(100, btcTx, 30*time.Minute)
+	ob.setLastStuckOutbound(stuckTx)
 
 	// retrieve stuck outbound
-	require.Equal(t, stuckTx, ob.GetLastStuckOutbound())
+	tx, found := ob.LastStuckOutbound()
+	require.True(t, found)
+	require.Equal(t, stuckTx, tx)
 
 	// STEP 3
 	// update stuck outbound
-	stuckTxUpdate := observer.NewLastStuckOutbound(101, tx, 40*time.Minute)
-	ob.SetLastStuckOutbound(stuckTxUpdate)
+	stuckTxUpdate := NewLastStuckOutbound(101, btcTx, 40*time.Minute)
+	ob.setLastStuckOutbound(stuckTxUpdate)
 
 	// retrieve updated stuck outbound
-	require.Equal(t, stuckTxUpdate, ob.GetLastStuckOutbound())
+	tx, found = ob.LastStuckOutbound()
+	require.True(t, found)
+	require.Equal(t, stuckTxUpdate, tx)
 
 	// STEP 4
 	// clear stuck outbound
-	ob.SetLastStuckOutbound(nil)
+	ob.setLastStuckOutbound(nil)
 
 	// stuck outbound should be nil
-	require.Nil(t, ob.GetLastStuckOutbound())
+	tx, found = ob.LastStuckOutbound()
+	require.False(t, found)
+	require.Nil(t, tx)
 }
 
 func TestSubmittedTx(t *testing.T) {
@@ -259,7 +265,7 @@ func TestSubmittedTx(t *testing.T) {
 }
 
 type testSuite struct {
-	*observer.Observer
+	*Observer
 
 	ctx      context.Context
 	client   *mocks.BitcoinClient
@@ -327,7 +333,7 @@ func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
 	)
 	require.NoError(t, err)
 
-	ob, err := observer.New(chain, baseObserver, client)
+	ob, err := New(chain, baseObserver, client)
 	require.NoError(t, err)
 
 	ts := &testSuite{

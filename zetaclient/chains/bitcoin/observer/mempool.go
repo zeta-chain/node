@@ -110,9 +110,9 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	//  1. wait for the gas rate to drop.
 	//  2. manually clear the stuck txs by using transaction accelerator services.
 	if stuck {
-		ob.SetLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
+		ob.setLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
 	} else {
-		ob.SetLastStuckOutbound(nil)
+		ob.setLastStuckOutbound(nil)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -23,7 +22,7 @@ func Test_NewLastStuckOutbound(t *testing.T) {
 	nonce := uint64(1)
 	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 	stuckFor := 30 * time.Minute
-	stuckOutbound := observer.NewLastStuckOutbound(nonce, tx, stuckFor)
+	stuckOutbound := NewLastStuckOutbound(nonce, tx, stuckFor)
 
 	require.Equal(t, nonce, stuckOutbound.Nonce)
 	require.Equal(t, tx, stuckOutbound.Tx)
@@ -36,10 +35,10 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		txFinder   observer.PendingTxFinder
-		txChecker  observer.StuckTxChecker
-		oldStuckTx *observer.LastStuckOutbound
-		expectedTx *observer.LastStuckOutbound
+		txFinder   PendingTxFinder
+		txChecker  StuckTxChecker
+		oldStuckTx *LastStuckOutbound
+		expectedTx *LastStuckOutbound
 		errMsg     string
 	}{
 		{
@@ -47,20 +46,20 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
 			txChecker:  makeStuckTxChecker(true, 30*time.Minute, ""),
 			oldStuckTx: nil,
-			expectedTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			expectedTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 		},
 		{
 			name:       "should update last stuck tx successfully",
 			txFinder:   makePendingTxFinder(sampleTx2, 2, ""),
 			txChecker:  makeStuckTxChecker(true, 40*time.Minute, ""),
-			oldStuckTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
-			expectedTx: observer.NewLastStuckOutbound(2, sampleTx2, 40*time.Minute),
+			oldStuckTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			expectedTx: NewLastStuckOutbound(2, sampleTx2, 40*time.Minute),
 		},
 		{
 			name:       "should clear last stuck tx successfully",
 			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
 			txChecker:  makeStuckTxChecker(false, 1*time.Minute, ""),
-			oldStuckTx: observer.NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			oldStuckTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 			expectedTx: nil,
 		},
 		{
@@ -84,7 +83,7 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 
 			// setup old stuck tx
 			if tt.oldStuckTx != nil {
-				ob.SetLastStuckOutbound(tt.oldStuckTx)
+				ob.setLastStuckOutbound(tt.oldStuckTx)
 			}
 
 			// refresh
@@ -98,7 +97,7 @@ func Test_FefreshLastStuckOutbound(t *testing.T) {
 			}
 
 			// check
-			stuckTx := ob.GetLastStuckOutbound()
+			stuckTx, _ := ob.LastStuckOutbound()
 			require.Equal(t, tt.expectedTx, stuckTx)
 		})
 	}
@@ -313,7 +312,7 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			}
 
 			ctx := context.Background()
-			lastTx, lastNonce, err := observer.GetLastPendingOutbound(ctx, ob.Observer)
+			lastTx, lastNonce, err := GetLastPendingOutbound(ctx, ob.Observer)
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
@@ -333,33 +332,33 @@ func Test_GetStuckTxCheck(t *testing.T) {
 	tests := []struct {
 		name      string
 		chainID   int64
-		txChecker observer.StuckTxChecker
+		txChecker StuckTxChecker
 	}{
 		{
 			name:      "should return 3 blocks for Bitcoin mainnet",
 			chainID:   chains.BitcoinMainnet.ChainId,
-			txChecker: observer.IsTxStuckInMempool,
+			txChecker: IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 3 blocks for Bitcoin testnet4",
 			chainID:   chains.BitcoinTestnet.ChainId,
-			txChecker: observer.IsTxStuckInMempool,
+			txChecker: IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 3 blocks for Bitcoin Signet",
 			chainID:   chains.BitcoinSignetTestnet.ChainId,
-			txChecker: observer.IsTxStuckInMempool,
+			txChecker: IsTxStuckInMempool,
 		},
 		{
 			name:      "should return 10 blocks for Bitcoin regtest",
 			chainID:   chains.BitcoinRegtest.ChainId,
-			txChecker: observer.IsTxStuckInMempoolRegnet,
+			txChecker: IsTxStuckInMempoolRegnet,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			txChecker := observer.GetStuckTxChecker(tt.chainID)
+			txChecker := GetStuckTxChecker(tt.chainID)
 			require.Equal(t, reflect.ValueOf(tt.txChecker).Pointer(), reflect.ValueOf(txChecker).Pointer())
 		})
 	}
@@ -374,51 +373,51 @@ func Test_GetFeeBumpWaitBlocks(t *testing.T) {
 		{
 			name:               "should return wait blocks for Bitcoin mainnet",
 			chainID:            chains.BitcoinMainnet.ChainId,
-			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
+			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
 		},
 		{
 			name:               "should return wait blocks for Bitcoin testnet4",
 			chainID:            chains.BitcoinTestnet.ChainId,
-			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
+			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
 		},
 		{
 			name:               "should return wait blocks for Bitcoin signet",
 			chainID:            chains.BitcoinSignetTestnet.ChainId,
-			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocks,
+			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
 		},
 		{
 			name:               "should return wait blocks for Bitcoin regtest",
 			chainID:            chains.BitcoinRegtest.ChainId,
-			expectedWaitBlocks: observer.PendingTxFeeBumpWaitBlocksRegnet,
+			expectedWaitBlocks: PendingTxFeeBumpWaitBlocksRegnet,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			blocks := observer.GetFeeBumpWaitBlocks(tt.chainID)
+			blocks := GetFeeBumpWaitBlocks(tt.chainID)
 			require.Equal(t, tt.expectedWaitBlocks, blocks)
 		})
 	}
 }
 
 // makePendingTxFinder is a helper function to create a mock pending tx finder
-func makePendingTxFinder(tx *btcutil.Tx, nonce uint64, errMsg string) observer.PendingTxFinder {
+func makePendingTxFinder(tx *btcutil.Tx, nonce uint64, errMsg string) PendingTxFinder {
 	var err error
 	if errMsg != "" {
 		err = errors.New(errMsg)
 	}
-	return func(_ context.Context, _ *observer.Observer) (*btcutil.Tx, uint64, error) {
+	return func(_ context.Context, _ *Observer) (*btcutil.Tx, uint64, error) {
 		return tx, nonce, err
 	}
 }
 
 // makeStuckTxChecker is a helper function to create a mock stuck tx checker
-func makeStuckTxChecker(stuck bool, stuckFor time.Duration, errMsg string) observer.StuckTxChecker {
+func makeStuckTxChecker(stuck bool, stuckFor time.Duration, errMsg string) StuckTxChecker {
 	var err error
 	if errMsg != "" {
 		err = errors.New(errMsg)
 	}
-	return func(_ context.Context, _ observer.RPC, _ string, _ int64) (bool, time.Duration, error) {
+	return func(_ context.Context, _ RPC, _ string, _ int64) (bool, time.Duration, error) {
 		return stuck, stuckFor, err
 	}
 }
