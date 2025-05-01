@@ -203,33 +203,7 @@ func Test_RunInvalidMethod(t *testing.T) {
 }
 
 func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *vm.EVM, *vm.Contract) {
-	// Initialize state.
-	// Get sdk keepers initialized with this state and the context.
-	//cdc := keeper.NewCodec()
-	//db := tmdb.NewMemDB()
-	//logger := log.NewNopLogger()
-	//stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
-	////keys, memKeys, tkeys, allKeys := keeper.StoreKeys()
-	//
-	////sdkKeepers := keeper.NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
-	//
-	//sdkKeepers := keeper.NewSDKKeepers(cdc, db, stateStore)
-
 	fungibleKeeper, ctx, sdkKeepers, _ := keeper.FungibleKeeper(t)
-
-	//for _, key := range keys {
-	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	//}
-	//for _, key := range tkeys {
-	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeTransient, nil)
-	//}
-	//for _, key := range memKeys {
-	//	stateStore.MountStoreWithDB(key, storetypes.StoreTypeMemory, nil)
-	//}
-
-	//require.NoError(t, stateStore.LoadLatestVersion())
-	//
-	//ctx := keeper.NewContext(stateStore)
 
 	// Initialize codecs and gas config.
 	var encoding ethermint.EncodingConfig
@@ -250,7 +224,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 	sdkKeepers.AuthKeeper.SetAccount(ctx, acc)
 
 	// Initialize staking contract.
-	contract := NewIStakingContract(
+	stakingContract := NewIStakingContract(
 		ctx,
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
@@ -259,12 +233,12 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 		appCodec,
 		gasConfig,
 	)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+	require.NotNil(t, stakingContract, "NewIStakingContract() should not return a nil contract")
 
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
+	stakingAbi := stakingContract.Abi()
+	require.NotNil(t, stakingAbi, "contract ABI should not be nil")
 
-	address := contract.Address()
+	address := stakingContract.Address()
 	require.NotNil(t, address, "contract address should not be nil")
 
 	mockEVM := vm.NewEVM(
@@ -282,7 +256,7 @@ func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *v
 		0,
 	)
 
-	return ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract
+	return ctx, stakingContract, stakingAbi, sdkKeepers, mockEVM, mockVMContract
 }
 
 /*

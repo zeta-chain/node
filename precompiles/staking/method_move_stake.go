@@ -67,20 +67,6 @@ func (c *Contract) MoveStake(
 		return nil, err
 	}
 
-	//v, err := sdk.ValAddressFromBech32(validatorSrcAddress)
-	//val, err := c.stakingKeeper.GetValidator(ctx, v)
-	//if err != nil {
-	//	fmt.Println("validatorSrc not found")
-	//}
-	//fmt.Println("validatorSrc found", val.OperatorAddress, validatorSrcAddress)
-
-	v, err := sdk.ValAddressFromBech32(validatorDstAddress)
-	val, err := c.stakingKeeper.GetValidator(ctx, v)
-	if err != nil {
-		fmt.Println("validatorDst not found")
-	}
-	fmt.Println("validatorDst found", val.OperatorAddress, validatorDstAddress)
-
 	res, err := msgServer.BeginRedelegate(ctx, &stakingtypes.MsgBeginRedelegate{
 		DelegatorAddress:    sdk.AccAddress(stakerAddress.Bytes()).String(),
 		ValidatorSrcAddress: validatorSrcAddress,
