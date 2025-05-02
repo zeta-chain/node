@@ -87,7 +87,7 @@ func NewCPFPFeeBumper(
 		Logger:      logger,
 	}
 
-	err := fb.FetchFeeBumpInfo()
+	err := fb.fetchFeeBumpInfo()
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
-func (b *CPFPFeeBumper) FetchFeeBumpInfo() error {
+func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	// query live fee rate
 	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1)
 	if err != nil {

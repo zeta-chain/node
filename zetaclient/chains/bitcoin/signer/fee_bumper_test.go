@@ -75,13 +75,30 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			},
 		},
 		{
+			chain:    chains.BitcoinMainnet,
+			name:     "should fail if unable to estimate smart fee",
+			client:   mocks.NewBitcoinClient(t),
+			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			liveRate: 0,
+			errMsg:   "GetEstimatedFeeRate failed",
+		},
+		{
 			chain:        chains.BitcoinMainnet,
-			name:         "should fail when mempool txs info fetcher returns error",
+			name:         "should fail if unable to fetch mempool txs info",
 			client:       mocks.NewBitcoinClient(t),
 			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
 			liveRate:     12,
 			memplTxsInfo: nil,
 			errMsg:       "unable to fetch mempool txs info",
+		},
+		{
+			chain:        chains.BitcoinMainnet,
+			name:         "should fail if unable to convert total fees",
+			client:       mocks.NewBitcoinClient(t),
+			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			liveRate:     12,
+			memplTxsInfo: newMempoolTxsInfo(2, 21000000.1, 1000, 10), // fee exceeds max BTC supply
+			errMsg:       "cannot convert total fees",
 		},
 	}
 
@@ -89,15 +106,20 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// ARRANGE
 			// mock RPC fee rate
-			tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(tt.liveRate, nil)
+			if tt.liveRate > 0 {
+				tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything).Return(tt.liveRate, nil)
+			} else {
+				tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything).Return(uint64(0), errors.New("rpc error"))
+			}
 
 			// mock mempool txs information
 			if tt.memplTxsInfo != nil {
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
+				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
 					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
 			} else {
 				v := int64(0)
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
+				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
+					Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
 			}
 
 			// ACT
@@ -246,98 +268,6 @@ func Test_BumpTxFee(t *testing.T) {
 				require.Equal(t, tt.expectedNewTx, newTx)
 				require.Equal(t, tt.additionalFees, additionalFees)
 				require.Equal(t, tt.expectedNewRate, newRate)
-			}
-		})
-	}
-}
-
-func Test_FetchFeeBumpInfo(t *testing.T) {
-	liveRate := uint64(12)
-
-	tests := []struct {
-		name         string
-		tx           *btcutil.Tx
-		liveRate     uint64
-		memplTxsInfo *mempoolTxsInfo
-		expected     *CPFPFeeBumper
-		errMsg       string
-	}{
-		{
-			name:     "should fetch fee bump info successfully",
-			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			liveRate: 12,
-			memplTxsInfo: newMempoolTxsInfo(
-				2,      // 2 stuck TSS txs
-				0.0001, // total fees 0.0001 BTC
-				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vB
-			),
-			expected: &CPFPFeeBumper{
-				Tx:         btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-				LiveRate:   12,
-				TotalTxs:   2,
-				TotalFees:  10000,
-				TotalVSize: 1000,
-				AvgFeeRate: 10,
-				Logger:     log.Logger,
-			},
-		},
-		{
-			name:     "should fail if unable to estimate smart fee",
-			liveRate: 0,
-			errMsg:   "GetEstimatedFeeRate failed",
-		},
-		{
-			name:         "should fail if unable to fetch mempool txs info",
-			liveRate:     12,
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfo: nil,
-			errMsg:       "unable to fetch mempool txs info",
-		},
-		{
-			name:         "should fail on invalid total fees",
-			liveRate:     12,
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfo: newMempoolTxsInfo(2, 21000000.1, 1000, 10), // fee exceeds max BTC supply
-			errMsg:       "cannot convert total fees",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// ARRANGE
-			// mock RPC fee rate
-			client := mocks.NewBitcoinClient(t)
-			if tt.liveRate > 0 {
-				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(liveRate, nil)
-			} else {
-				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(uint64(0), errors.New("rpc error"))
-			}
-
-			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
-			} else {
-				v := int64(0)
-				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
-			}
-
-			// ACT
-			bumper := &CPFPFeeBumper{
-				RPC:    client,
-				Tx:     tt.tx,
-				Logger: log.Logger,
-			}
-			err := bumper.FetchFeeBumpInfo()
-
-			// ASSERT
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-			} else {
-				bumper.RPC = nil // ignore the RPC client
-				require.NoError(t, err)
-				require.Equal(t, tt.expected, bumper)
 			}
 		})
 	}
