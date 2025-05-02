@@ -33,7 +33,7 @@ func Test_ErrInvalidArgument(t *testing.T) {
 		Got: "foo",
 	}
 	got := e.Error()
-	expect := "invalid argument: foo"
+	expect := "invalid argument: got foo (type string)"
 	require.Equal(t, expect, got)
 	require.ErrorIs(t, ErrInvalidArgument{"foo"}, e)
 }

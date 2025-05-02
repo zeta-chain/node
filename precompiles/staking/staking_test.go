@@ -2,6 +2,7 @@ package staking
 
 import (
 	"encoding/json"
+	"math/rand"
 	"testing"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
@@ -41,22 +42,26 @@ func Test_IStakingContract(t *testing.T) {
 	gasConfig := storetypes.TransientGasConfig()
 
 	t.Run("should check methods are present in ABI", func(t *testing.T) {
-		require.NotNil(t, s.stkContractABI.Methods[StakeMethodName], "stake method should be present in the ABI")
-		require.NotNil(t, s.stkContractABI.Methods[UnstakeMethodName], "unstake method should be present in the ABI")
+		require.NotNil(t, s.stakingContractABI.Methods[StakeMethodName], "stake method should be present in the ABI")
 		require.NotNil(
 			t,
-			s.stkContractABI.Methods[MoveStakeMethodName],
+			s.stakingContractABI.Methods[UnstakeMethodName],
+			"unstake method should be present in the ABI",
+		)
+		require.NotNil(
+			t,
+			s.stakingContractABI.Methods[MoveStakeMethodName],
 			"moveStake method should be present in the ABI",
 		)
 
 		require.NotNil(
 			t,
-			s.stkContractABI.Methods[GetAllValidatorsMethodName],
+			s.stakingContractABI.Methods[GetAllValidatorsMethodName],
 			"getAllValidators method should be present in the ABI",
 		)
 		require.NotNil(
 			t,
-			s.stkContractABI.Methods[GetSharesMethodName],
+			s.stakingContractABI.Methods[GetSharesMethodName],
 			"getShares method should be present in the ABI",
 		)
 	})
@@ -66,9 +71,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("stake", func(t *testing.T) {
 			// ACT
-			stake := s.stkContract.RequiredGas(s.stkContractABI.Methods[StakeMethodName].ID)
+			stake := s.stakingContract.RequiredGas(s.stakingContractABI.Methods[StakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.stkContractABI.Methods[StakeMethodName].ID[:4])
+			copy(method[:], s.stakingContractABI.Methods[StakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -82,9 +87,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("unstake", func(t *testing.T) {
 			// ACT
-			unstake := s.stkContract.RequiredGas(s.stkContractABI.Methods[UnstakeMethodName].ID)
+			unstake := s.stakingContract.RequiredGas(s.stakingContractABI.Methods[UnstakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.stkContractABI.Methods[UnstakeMethodName].ID[:4])
+			copy(method[:], s.stakingContractABI.Methods[UnstakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -98,9 +103,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("moveStake", func(t *testing.T) {
 			// ACT
-			moveStake := s.stkContract.RequiredGas(s.stkContractABI.Methods[MoveStakeMethodName].ID)
+			moveStake := s.stakingContract.RequiredGas(s.stakingContractABI.Methods[MoveStakeMethodName].ID)
 			// ASSERT
-			copy(method[:], s.stkContractABI.Methods[MoveStakeMethodName].ID[:4])
+			copy(method[:], s.stakingContractABI.Methods[MoveStakeMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.WriteCostPerByte
 			require.Equal(
 				t,
@@ -114,9 +119,11 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("getAllValidators", func(t *testing.T) {
 			// ACT
-			getAllValidators := s.stkContract.RequiredGas(s.stkContractABI.Methods[GetAllValidatorsMethodName].ID)
+			getAllValidators := s.stakingContract.RequiredGas(
+				s.stakingContractABI.Methods[GetAllValidatorsMethodName].ID,
+			)
 			// ASSERT
-			copy(method[:], s.stkContractABI.Methods[GetAllValidatorsMethodName].ID[:4])
+			copy(method[:], s.stakingContractABI.Methods[GetAllValidatorsMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
 				t,
@@ -130,9 +137,9 @@ func Test_IStakingContract(t *testing.T) {
 
 		t.Run("getShares", func(t *testing.T) {
 			// ACT
-			getShares := s.stkContract.RequiredGas(s.stkContractABI.Methods[GetSharesMethodName].ID)
+			getShares := s.stakingContract.RequiredGas(s.stakingContractABI.Methods[GetSharesMethodName].ID)
 			// ASSERT
-			copy(method[:], s.stkContractABI.Methods[GetSharesMethodName].ID[:4])
+			copy(method[:], s.stakingContractABI.Methods[GetSharesMethodName].ID[:4])
 			baseCost := uint64(len(method)) * gasConfig.ReadCostPerByte
 			require.Equal(
 				t,
@@ -148,7 +155,7 @@ func Test_IStakingContract(t *testing.T) {
 			// ARRANGE
 			invalidMethodBytes := []byte("invalidMethod")
 			// ACT
-			gasInvalidMethod := s.stkContract.RequiredGas(invalidMethodBytes)
+			gasInvalidMethod := s.stakingContract.RequiredGas(invalidMethodBytes)
 			// ASSERT
 			require.Equal(
 				t,
@@ -165,7 +172,7 @@ func Test_IStakingContract(t *testing.T) {
 func Test_InvalidMethod(t *testing.T) {
 	s := newTestSuite(t)
 
-	_, doNotExist := s.stkContractABI.Methods["invalidMethod"]
+	_, doNotExist := s.stakingContractABI.Methods["invalidMethod"]
 	require.False(t, doNotExist, "invalidMethod should not be present in the ABI")
 }
 
@@ -196,86 +203,24 @@ func Test_RunInvalidMethod(t *testing.T) {
 	s.mockVMContract.Input = packInputArgs(t, methodID, args...)
 
 	// ACT
-	_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	_, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 	// ASSERT
 	require.Error(t, err)
 }
 
-func setup(t *testing.T) (sdk.Context, *Contract, abi.ABI, keeper.SDKKeepers, *vm.EVM, *vm.Contract) {
-	fungibleKeeper, ctx, sdkKeepers, _ := keeper.FungibleKeeper(t)
-
-	// Initialize codecs and gas config.
-	var encoding ethermint.EncodingConfig
-	appCodec := encoding.Codec
-	gasConfig := storetypes.TransientGasConfig()
-
-	stakingGenesisState := stakingtypes.DefaultGenesisState()
-	stakingGenesisState.Params.BondDenom = config.BaseDenom
-	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
-
-	// Get the fungible keeper.
-	//fungibleKeeper, _, _, _ := keeper.FungibleKeeper(t)
-
-	accAddress := sdk.AccAddress(ContractAddress.Bytes())
-	//num := sdkKeepers.AuthKeeper.NextAccountNumber(ctx)
-	//fmt.Printf("Next account number: %d\n", num)
-	acc := sdkKeepers.AuthKeeper.NewAccountWithAddress(ctx, accAddress)
-	sdkKeepers.AuthKeeper.SetAccount(ctx, acc)
-
-	// Initialize staking contract.
-	stakingContract := NewIStakingContract(
-		ctx,
-		&sdkKeepers.StakingKeeper,
-		*fungibleKeeper,
-		sdkKeepers.BankKeeper,
-		sdkKeepers.DistributionKeeper,
-		appCodec,
-		gasConfig,
-	)
-	require.NotNil(t, stakingContract, "NewIStakingContract() should not return a nil contract")
-
-	stakingAbi := stakingContract.Abi()
-	require.NotNil(t, stakingAbi, "contract ABI should not be nil")
-
-	address := stakingContract.Address()
-	require.NotNil(t, address, "contract address should not be nil")
-
-	mockEVM := vm.NewEVM(
-		vm.BlockContext{},
-		vm.TxContext{},
-		statedb.New(ctx, sdkKeepers.EvmKeeper, statedb.TxConfig{}),
-		&params.ChainConfig{},
-		vm.Config{},
-	)
-
-	mockVMContract := vm.NewContract(
-		contractRef{address: common.Address{}},
-		contractRef{address: ContractAddress},
-		uint256.NewInt(0),
-		0,
-	)
-
-	return ctx, stakingContract, stakingAbi, sdkKeepers, mockEVM, mockVMContract
-}
-
-/*
-	Complete Test Suite
-	TODO: Migrate all staking tests to this suite.
-*/
-
 type testSuite struct {
-	ctx            sdk.Context
-	stkContract    *Contract
-	stkContractABI *abi.ABI
-	fungibleKeeper *fungiblekeeper.Keeper
-	sdkKeepers     keeper.SDKKeepers
-	mockEVM        *vm.EVM
-	mockVMContract *vm.Contract
-	defaultCaller  common.Address
-	defaultLocker  common.Address
-	zrc20Address   common.Address
-	zrc20ABI       *abi.ABI
+	ctx                sdk.Context
+	stakingContract    *Contract
+	stakingContractABI *abi.ABI
+	fungibleKeeper     *fungiblekeeper.Keeper
+	sdkKeepers         keeper.SDKKeepers
+	mockEVM            *vm.EVM
+	mockVMContract     *vm.Contract
+	defaultCaller      common.Address
+	defaultLocker      common.Address
+	zrc20Address       common.Address
+	zrc20ABI           *abi.ABI
 }
 
 func newTestSuite(t *testing.T) testSuite {
@@ -296,8 +241,12 @@ func newTestSuite(t *testing.T) testSuite {
 	appCodec := encoding.Codec
 	gasConfig := storetypes.TransientGasConfig()
 
+	stakingGenesisState := stakingtypes.DefaultGenesisState()
+	stakingGenesisState.Params.BondDenom = config.BaseDenom
+	sdkKeepers.StakingKeeper.InitGenesis(ctx, stakingGenesisState)
+
 	// Create the staking contract.
-	contract := NewIStakingContract(
+	stakingContract := NewIStakingContract(
 		ctx,
 		&sdkKeepers.StakingKeeper,
 		*fungibleKeeper,
@@ -306,16 +255,16 @@ func newTestSuite(t *testing.T) testSuite {
 		appCodec,
 		gasConfig,
 	)
-	require.NotNil(t, contract, "NewIStakingContract() should not return a nil contract")
+	require.NotNil(t, stakingContract, "NewIStakingContract() should not return a nil contract")
 
 	accAddress := sdk.AccAddress(ContractAddress.Bytes())
 	acc := fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ctx, accAddress)
 	fungibleKeeper.GetAuthKeeper().SetAccount(ctx, acc)
 
-	abi := contract.Abi()
-	require.NotNil(t, abi, "contract ABI should not be nil")
+	stakingContractAbi := stakingContract.Abi()
+	require.NotNil(t, stakingContractAbi, "contract ABI should not be nil")
 
-	address := contract.Address()
+	address := stakingContract.Address()
 	require.NotNil(t, address, "contract address should not be nil")
 
 	mockEVM := vm.NewEVM(
@@ -346,8 +295,8 @@ func newTestSuite(t *testing.T) testSuite {
 
 	return testSuite{
 		ctx,
-		contract,
-		&abi,
+		stakingContract,
+		&stakingContractAbi,
 		fungibleKeeper,
 		sdkKeepers,
 		mockEVM,
@@ -357,6 +306,45 @@ func newTestSuite(t *testing.T) testSuite {
 		zrc20Address,
 		zrc20ABI,
 	}
+}
+
+func (s *testSuite) setupStaker(t *testing.T, r *rand.Rand, coins sdk.Coins) (common.Address, stakingtypes.Validator) {
+	validator := sample.Validator(t, r)
+	validator.Status = stakingtypes.Bonded
+	err := s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+	require.NoError(t, err)
+
+	staker := sample.Bech32AccAddress()
+	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	err = s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, coins)
+	require.NoError(t, err)
+	err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
+	require.NoError(t, err)
+
+	return stakerEthAddr, validator
+}
+
+func (s *testSuite) setupStakerDefaultAmount(
+	t *testing.T,
+	r *rand.Rand,
+) (common.Address, stakingtypes.Validator, sdk.Coins) {
+
+	amount := "1000000000000000000"
+	amountInt, ok := math.NewIntFromString(amount)
+	require.True(t, ok)
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amountInt))
+
+	validator := sample.Validator(t, r)
+	validator.Status = stakingtypes.Bonded
+
+	staker := sample.Bech32AccAddress()
+	stakerEthAddr := common.BytesToAddress(staker.Bytes())
+	err := s.sdkKeepers.BankKeeper.MintCoins(s.ctx, fungibletypes.ModuleName, coins)
+	require.NoError(t, err)
+	err = s.sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, fungibletypes.ModuleName, staker, coins)
+	require.NoError(t, err)
+
+	return stakerEthAddr, validator, coins
 }
 
 func packInputArgs(t *testing.T, methodID abi.Method, args ...interface{}) []byte {
@@ -374,7 +362,7 @@ func allowStaking(t *testing.T, ts testSuite, amount *big.Int) {
 		fungibletypes.ModuleAddressEVM,
 		ts.zrc20Address,
 		"approve",
-		[]interface{}{ts.stkContract.Address(), amount},
+		[]interface{}{ts.stakingContract.Address(), amount},
 	)
 	require.NoError(t, err, "error allowing staking to spend ZRC20 tokens")
 
@@ -393,7 +381,7 @@ func stakeThroughCosmosAPI(
 	amount math.Int,
 ) {
 	// Coins to stake with default cosmos denom.
-	coins := sdk.NewCoins(sdk.NewCoin("stake", amount))
+	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 
 	err := bankKeeper.MintCoins(ctx, fungibletypes.ModuleName, coins)
 	require.NoError(t, err)
@@ -418,7 +406,7 @@ func distributeZRC20(
 	s testSuite,
 	amount *big.Int,
 ) {
-	distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+	distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 
 	_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, amount)
 	require.NoError(t, err)
@@ -432,7 +420,7 @@ func distributeZRC20(
 	)
 
 	// Call distribute method.
-	success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+	success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 	require.NoError(t, err)
 
 	res, err := distributeMethod.Outputs.Unpack(success)

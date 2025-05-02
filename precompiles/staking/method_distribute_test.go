@@ -16,7 +16,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to run distribute as read only method", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
@@ -28,7 +28,7 @@ func Test_Distribute(t *testing.T) {
 		)
 
 		// Call method as read only.
-		result, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, true)
+		result, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, true)
 
 		// Check error and result.
 		require.ErrorIs(t, err, precompiletypes.ErrWriteMethod{
@@ -51,7 +51,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to distribute with 0 token balance", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Setup method input.
@@ -62,7 +62,7 @@ func Test_Distribute(t *testing.T) {
 		)
 
 		// Call method.
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.ErrorAs(
@@ -92,7 +92,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to distribute with 0 allowance", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
@@ -107,7 +107,7 @@ func Test_Distribute(t *testing.T) {
 		)
 
 		// Call method.
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.Error(t, err)
@@ -132,7 +132,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to distribute 0 token", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
@@ -150,7 +150,7 @@ func Test_Distribute(t *testing.T) {
 		)
 
 		// Call method.
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.Error(t, err)
@@ -175,7 +175,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to distribute more than allowed to staking", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
@@ -193,7 +193,7 @@ func Test_Distribute(t *testing.T) {
 		)
 
 		// Call method.
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.Error(t, err)
@@ -218,7 +218,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should fail to distribute more than user balance", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 		zrc20Denom := precompiletypes.ZRC20ToCosmosDenom(s.zrc20Address)
 
 		// Set caller balance.
@@ -235,7 +235,7 @@ func Test_Distribute(t *testing.T) {
 			[]interface{}{s.zrc20Address, big.NewInt(1001)}...,
 		)
 
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.Error(t, err)
@@ -260,7 +260,7 @@ func Test_Distribute(t *testing.T) {
 	t.Run("should distribute and lock ZRC20", func(t *testing.T) {
 		// Setup test.
 		s := newTestSuite(t)
-		distributeMethod := s.stkContractABI.Methods[DistributeMethodName]
+		distributeMethod := s.stakingContractABI.Methods[DistributeMethodName]
 
 		// Set caller balance.
 		_, err := s.fungibleKeeper.DepositZRC20(s.ctx, s.zrc20Address, s.defaultCaller, big.NewInt(1000))
@@ -276,7 +276,7 @@ func Test_Distribute(t *testing.T) {
 			[]interface{}{s.zrc20Address, big.NewInt(1000)}...,
 		)
 
-		success, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		success, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 
 		// Check error.
 		require.NoError(t, err)

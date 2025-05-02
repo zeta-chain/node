@@ -25,7 +25,7 @@ func Test_GetValidators(t *testing.T) {
 
 		/* ACT */
 		// Call getValidatorListForDelegator.
-		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
+		getValidatorsMethod := s.stakingContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -33,7 +33,7 @@ func Test_GetValidators(t *testing.T) {
 			[]interface{}{stakerEVMAddr}...,
 		)
 
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		bytes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
 		res, err := getValidatorsMethod.Outputs.Unpack(bytes)
@@ -55,7 +55,7 @@ func Test_GetValidators(t *testing.T) {
 
 		/* ACT */
 		// Call getValidatorListForDelegator.
-		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
+		getValidatorsMethod := s.stakingContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -63,7 +63,7 @@ func Test_GetValidators(t *testing.T) {
 			[]interface{}{common.Address{}}...,
 		)
 
-		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
 		require.Contains(
 			t,
@@ -98,7 +98,7 @@ func Test_GetValidators(t *testing.T) {
 
 		/* ACT */
 		// Call getValidatorListForDelegator.
-		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
+		getValidatorsMethod := s.stakingContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -106,7 +106,7 @@ func Test_GetValidators(t *testing.T) {
 			[]interface{}{stakerEVMAddr}...,
 		)
 
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		bytes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
 		res, err := getValidatorsMethod.Outputs.Unpack(bytes)
@@ -146,7 +146,7 @@ func Test_GetValidators(t *testing.T) {
 
 		/* ACT */
 		// Call getValidatorListForDelegator.
-		getValidatorsMethod := s.stkContractABI.Methods[GetValidatorsMethodName]
+		getValidatorsMethod := s.stakingContractABI.Methods[GetValidatorsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -154,7 +154,7 @@ func Test_GetValidators(t *testing.T) {
 			[]interface{}{stakerEVMAddr}...,
 		)
 
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		bytes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
 		res, err := getValidatorsMethod.Outputs.Unpack(bytes)

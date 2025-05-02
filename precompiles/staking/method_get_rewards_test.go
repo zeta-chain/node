@@ -27,7 +27,7 @@ func Test_GetRewards(t *testing.T) {
 
 		/* ACT */
 		// Call getRewards.
-		getRewardsMethod := s.stkContractABI.Methods[GetRewardsMethodName]
+		getRewardsMethod := s.stakingContractABI.Methods[GetRewardsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -36,7 +36,7 @@ func Test_GetRewards(t *testing.T) {
 		)
 
 		/* ASSERT */
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		bytes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 		res, err := getRewardsMethod.Outputs.Unpack(bytes)
 		require.NoError(t, err)
@@ -85,7 +85,7 @@ func Test_GetRewards(t *testing.T) {
 
 		/* ACT */
 		// Call getRewards.
-		getRewardsMethod := s.stkContractABI.Methods[GetRewardsMethodName]
+		getRewardsMethod := s.stakingContractABI.Methods[GetRewardsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -93,7 +93,7 @@ func Test_GetRewards(t *testing.T) {
 			[]interface{}{stakerEVMAddr, validator.GetOperator()}...,
 		)
 
-		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		bytes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
 		/* ASSERT */

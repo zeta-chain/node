@@ -17,7 +17,7 @@ func Test_ClaimRewards(t *testing.T) {
 
 		/* ACT */
 		// Call claimRewardsMethod.
-		claimRewardsMethod := s.stkContractABI.Methods[ClaimRewardsMethodName]
+		claimRewardsMethod := s.stakingContractABI.Methods[ClaimRewardsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -25,7 +25,7 @@ func Test_ClaimRewards(t *testing.T) {
 			[]interface{}{common.Address{}, validator.OperatorAddress}...,
 		)
 
-		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
 		require.Contains(
 			t,
@@ -43,7 +43,7 @@ func Test_ClaimRewards(t *testing.T) {
 
 		/* ACT */
 		// Call claimRewardsMethod.
-		claimRewardsMethod := s.stkContractABI.Methods[ClaimRewardsMethodName]
+		claimRewardsMethod := s.stakingContractABI.Methods[ClaimRewardsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -51,7 +51,7 @@ func Test_ClaimRewards(t *testing.T) {
 			[]interface{}{stakerEVMAddr, "cosmosvaloper100000000000000000000000000000000000000"}...,
 		)
 
-		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "decoding bech32 failed")
 	})
@@ -66,7 +66,7 @@ func Test_ClaimRewards(t *testing.T) {
 
 		/* ACT */
 		// Call claimRewardsMethod.
-		claimRewardsMethod := s.stkContractABI.Methods[ClaimRewardsMethodName]
+		claimRewardsMethod := s.stakingContractABI.Methods[ClaimRewardsMethodName]
 
 		s.mockVMContract.Input = packInputArgs(
 			t,
@@ -74,7 +74,7 @@ func Test_ClaimRewards(t *testing.T) {
 			[]interface{}{stakerEVMAddr, validator.OperatorAddress}...,
 		)
 
-		_, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)
+		_, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.Error(t, err)
 		require.Contains(
 			t,

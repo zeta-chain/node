@@ -7,45 +7,40 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/testutil/sample"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func Test_GetShares(t *testing.T) {
 	t.Run("should return stakes", func(t *testing.T) {
 		// ARRANGE
-		ctx, contract, abi, sdkKeepers, mockEVM, mockVMContract := setup(t)
-		methodID := abi.Methods[GetSharesMethodName]
+		s := newTestSuite(t)
+		methodID := s.stakingContractABI.Methods[GetSharesMethodName]
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		validator := sample.Validator(t, r)
-		sdkKeepers.StakingKeeper.SetValidator(ctx, validator)
-
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		coins := sample.Coins()
-		err := sdkKeepers.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sample.Coins())
+		stakerEthAddr, validator, coins := s.setupStakerDefaultAmount(t, r)
+		err := s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
 		require.NoError(t, err)
-		err = sdkKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, fungibletypes.ModuleName, staker, coins)
-		require.NoError(t, err)
-
-		stakerAddr := common.BytesToAddress(staker.Bytes())
 
 		stakeArgs := []interface{}{stakerEthAddr, validator.OperatorAddress, coins.AmountOf(config.BaseDenom).BigInt()}
 
-		stakeMethodID := abi.Methods[StakeMethodName]
+		stakeMethodID := s.stakingContractABI.Methods[StakeMethodName]
 
 		// ACT
-		_, err = contract.Stake(ctx, mockEVM, &vm.Contract{CallerAddress: stakerAddr}, &stakeMethodID, stakeArgs)
+		_, err = s.stakingContract.Stake(
+			s.ctx,
+			s.mockEVM,
+			&vm.Contract{CallerAddress: stakerEthAddr},
+			&stakeMethodID,
+			stakeArgs,
+		)
 		require.NoError(t, err)
 
 		// ASSERT
 		args := []interface{}{stakerEthAddr, validator.OperatorAddress}
-		mockVMContract.Input = packInputArgs(t, methodID, args...)
-		stakes, err := contract.Run(mockEVM, mockVMContract, false)
+		s.mockVMContract.Input = packInputArgs(t, methodID, args...)
+		stakes, err := s.stakingContract.Run(s.mockEVM, s.mockVMContract, false)
 		require.NoError(t, err)
 
 		res, err := methodID.Outputs.Unpack(stakes)
@@ -57,63 +52,71 @@ func Test_GetShares(t *testing.T) {
 		)
 	})
 
-	t.Run("should fail if wrong args amount", func(t *testing.T) {
+	t.Run("should fail if wrong args number", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.stkContractABI.Methods[GetSharesMethodName]
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		args := []interface{}{stakerEthAddr}
+		methodID := s.stakingContractABI.Methods[GetSharesMethodName]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		stakerEthAddr, _, _ := s.setupStakerDefaultAmount(t, r)
 
+		args := []interface{}{stakerEthAddr}
 		// ACT
-		_, err := s.stkContract.GetShares(s.ctx, &methodID, args)
+		_, err := s.stakingContract.GetShares(s.ctx, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid number of arguments")
 	})
 
 	t.Run("should fail if invalid staker arg", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.stkContractABI.Methods[GetSharesMethodName]
+		methodID := s.stakingContractABI.Methods[GetSharesMethodName]
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		validator := sample.Validator(t, r)
+		_, validator, _ := s.setupStakerDefaultAmount(t, r)
+
 		args := []interface{}{42, validator.OperatorAddress}
 
 		// ACT
-		_, err := s.stkContract.GetShares(s.ctx, &methodID, args)
+		_, err := s.stakingContract.GetShares(s.ctx, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid argument: got 42 (type int)")
 	})
 
 	t.Run("should fail if invalid val address", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.stkContractABI.Methods[GetSharesMethodName]
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
-		args := []interface{}{stakerEthAddr, staker.String()}
+		methodID := s.stakingContractABI.Methods[GetSharesMethodName]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		stakerEthAddr, _, _ := s.setupStakerDefaultAmount(t, r)
+
+		// Set AccAddress instead of ValAddress
+		args := []interface{}{stakerEthAddr, sample.Bech32AccAddress().String()}
 
 		// ACT
-		_, err := s.stkContract.GetShares(s.ctx, &methodID, args)
+		_, err := s.stakingContract.GetShares(s.ctx, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid Bech32 prefix; expected zetavaloper, got zeta")
 	})
 
 	t.Run("should fail if invalid val address format", func(t *testing.T) {
 		// ARRANGE
 		s := newTestSuite(t)
-		methodID := s.stkContractABI.Methods[GetSharesMethodName]
-		staker := sample.Bech32AccAddress()
-		stakerEthAddr := common.BytesToAddress(staker.Bytes())
+		methodID := s.stakingContractABI.Methods[GetSharesMethodName]
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		stakerEthAddr, _, _ := s.setupStakerDefaultAmount(t, r)
+
 		args := []interface{}{stakerEthAddr, 42}
 
 		// ACT
-		_, err := s.stkContract.GetShares(s.ctx, &methodID, args)
+		_, err := s.stakingContract.GetShares(s.ctx, &methodID, args)
 
 		// ASSERT
 		require.Error(t, err)
+		require.ErrorContains(t, err, "invalid argument: got 42 (type int)")
 	})
 }

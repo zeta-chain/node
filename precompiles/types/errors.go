@@ -32,7 +32,7 @@ type ErrInvalidArgument struct {
 }
 
 func (e ErrInvalidArgument) Error() string {
-	return fmt.Sprintf("invalid argument: %s", e.Got.(string))
+	return fmt.Sprintf("invalid argument: got %v (type %T)", e.Got, e.Got)
 }
 
 /*
