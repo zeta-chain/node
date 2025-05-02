@@ -348,7 +348,8 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 	} else {
 		// for other hash:
 		// got multiple hashes for same nonce. RBF tx replacement happened.
-		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound %s", res.TxID)
+		lf["prior_tx"] = res.TxID
+		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound")
 
 		// remove prior txHash and txResult
 		delete(ob.tssOutboundHashes, res.TxID)

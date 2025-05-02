@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -84,7 +83,7 @@ func Test_SignRBFTx(t *testing.T) {
 		chain        chains.Chain
 		lastTx       *btcutil.Tx
 		preTxs       []prevTx
-		txData       signer.OutboundData
+		txData       OutboundData
 		liveRate     uint64
 		memplTxsInfo *mempoolTxsInfo
 		errMsg       string
@@ -105,7 +104,7 @@ func Test_SignRBFTx(t *testing.T) {
 			),
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := signer.CopyMsgTxNoWitness(msgTx)
+				newTx := CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut[2].Value -= 5790
 				return newTx
 			}(),
@@ -231,7 +230,7 @@ func Test_SignRBFTx(t *testing.T) {
 }
 
 // mkTxData creates a new outbound data for testing
-func mkTxData(t *testing.T, minRelayFee float64, latestFeeRate string) signer.OutboundData {
+func mkTxData(t *testing.T, minRelayFee float64, latestFeeRate string) OutboundData {
 	net := &chaincfg.MainNetParams
 	cctx := sample.CrossChainTx(t, "0x123")
 	cctx.InboundParams.CoinType = coin.CoinType_Gas
@@ -241,7 +240,7 @@ func mkTxData(t *testing.T, minRelayFee float64, latestFeeRate string) signer.Ou
 	cctx.GetCurrentOutboundParam().ReceiverChainId = chains.BitcoinMainnet.ChainId
 	cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
 
-	txData, err := signer.NewOutboundData(cctx, 1, minRelayFee, zerolog.Nop(), zerolog.Nop())
+	txData, err := NewOutboundData(cctx, 1, minRelayFee, zerolog.Nop(), zerolog.Nop())
 	require.NoError(t, err)
 	return *txData
 }

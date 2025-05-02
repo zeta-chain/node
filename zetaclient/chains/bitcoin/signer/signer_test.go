@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -37,7 +36,7 @@ import (
 var TestDataDir = "../../../"
 
 type testSuite struct {
-	*signer.Signer
+	*Signer
 	observer       *observer.Observer
 	tss            *mocks.TSS
 	client         *mocks.BitcoinClient
@@ -68,7 +67,7 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 
 	// create signer
 	baseSigner := base.NewSigner(chain, tss, baseLogger)
-	signer := signer.New(baseSigner, rpcClient)
+	signer := New(baseSigner, rpcClient)
 
 	// create test suite and observer
 	suite := &testSuite{
