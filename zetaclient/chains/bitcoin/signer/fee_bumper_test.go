@@ -45,19 +45,19 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				AvgFeeRate: 10,    // average fee rate 10 sat/vB
 			},
 			expected: &CPFPFeeBumper{
-				Ctx:         context.Background(),
-				Chain:       chains.BitcoinMainnet,
-				Tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-				MinRelayFee: 0.00001,
-				CCTXRate:    10,
-				LiveRate:    12,
-				TxsAndFees: client.MempoolTxsAndFees{
+				ctx:         context.Background(),
+				chain:       chains.BitcoinMainnet,
+				tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+				minRelayFee: 0.00001,
+				cctxRate:    10,
+				liveRate:    12,
+				txsAndFees: client.MempoolTxsAndFees{
 					TotalTxs:   2,
 					TotalFees:  10000,
 					TotalVSize: 1000,
 					AvgFeeRate: 10,
 				},
-				Logger: log.Logger,
+				logger: log.Logger,
 			},
 		},
 		{
@@ -112,7 +112,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				require.Nil(t, bumper)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
-				bumper.RPC = nil // ignore the RPC
+				bumper.rpc = nil // ignore the RPC
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, bumper)
 			}
@@ -135,16 +135,16 @@ func Test_BumpTxFee(t *testing.T) {
 		{
 			name: "should bump tx fee successfully",
 			feeBumper: &CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00001,
-				CCTXRate:    55,
-				LiveRate:    67,
-				TxsAndFees: client.MempoolTxsAndFees{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00001,
+				cctxRate:    55,
+				liveRate:    67,
+				txsAndFees: client.MempoolTxsAndFees{
 					TotalFees:  27213,
 					TotalVSize: 579,
 					AvgFeeRate: 47,
 				},
-				Logger: log.Logger,
+				logger: log.Logger,
 			},
 			expected: BumpResult{
 				NewTx: func() *wire.MsgTx {
@@ -160,21 +160,21 @@ func Test_BumpTxFee(t *testing.T) {
 		{
 			name: "should give up all reserved bump fees",
 			feeBumper: &CPFPFeeBumper{
-				Tx: func() *btcutil.Tx {
+				tx: func() *btcutil.Tx {
 					// modify reserved bump fees to barely cover bump fees
 					newTx := msgTx.Copy()
 					newTx.TxOut[2].Value = 57*579 - 27213 + constant.BTCWithdrawalDustAmount - 1 // 6789
 					return btcutil.NewTx(newTx)
 				}(),
-				MinRelayFee: 0.00001,
-				CCTXRate:    57,
-				LiveRate:    67,
-				TxsAndFees: client.MempoolTxsAndFees{
+				minRelayFee: 0.00001,
+				cctxRate:    57,
+				liveRate:    67,
+				txsAndFees: client.MempoolTxsAndFees{
 					TotalFees:  27213,
 					TotalVSize: 579,
 					AvgFeeRate: 47,
 				},
-				Logger: log.Logger,
+				logger: log.Logger,
 			},
 			expected: BumpResult{
 				NewTx: func() *wire.MsgTx {
@@ -190,16 +190,16 @@ func Test_BumpTxFee(t *testing.T) {
 		{
 			name: "should set new gas rate to 'gasRateCap'",
 			feeBumper: &CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00001,
-				CCTXRate:    101, // > 100
-				LiveRate:    120,
-				TxsAndFees: client.MempoolTxsAndFees{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00001,
+				cctxRate:    101, // > 100
+				liveRate:    120,
+				txsAndFees: client.MempoolTxsAndFees{
 					TotalFees:  27213,
 					TotalVSize: 579,
 					AvgFeeRate: 47,
 				},
-				Logger: log.Logger,
+				logger: log.Logger,
 			},
 			expected: BumpResult{
 				NewTx: func() *wire.MsgTx {
@@ -215,7 +215,7 @@ func Test_BumpTxFee(t *testing.T) {
 		{
 			name: "should fail if original tx has no reserved bump fees",
 			feeBumper: &CPFPFeeBumper{
-				Tx: func() *btcutil.Tx {
+				tx: func() *btcutil.Tx {
 					// remove the change output
 					newTx := msgTx.Copy()
 					newTx.TxOut = newTx.TxOut[:2]
@@ -227,16 +227,16 @@ func Test_BumpTxFee(t *testing.T) {
 		{
 			name: "should hold on RBF if additional fees is lower than min relay fees",
 			feeBumper: &CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
-				CCTXRate:    6,
-				LiveRate:    7,
-				TxsAndFees: client.MempoolTxsAndFees{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
+				cctxRate:    6,
+				liveRate:    7,
+				txsAndFees: client.MempoolTxsAndFees{
 					TotalFees:  2895,
 					TotalVSize: 579,
 					AvgFeeRate: 5,
 				},
-				Logger: log.Logger,
+				logger: log.Logger,
 			},
 			errMsg: "lower than min relay fees",
 		},

@@ -34,29 +34,29 @@ const (
 
 // CPFPFeeBumper is a helper struct to contain CPFP (child-pays-for-parent) fee bumping logic
 type CPFPFeeBumper struct {
-	Ctx context.Context
+	ctx context.Context
 
-	Chain chains.Chain
+	chain chains.Chain
 
-	// RPC is the interface to interact with the Bitcoin chain
-	RPC RPC
+	// rpc is the interface to interact with the Bitcoin chain
+	rpc RPC
 
-	// Tx is the stuck transaction to bump
-	Tx *btcutil.Tx
+	// tx is the stuck transaction to bump
+	tx *btcutil.Tx
 
-	// MinRelayFee is the minimum relay fee in BTC
-	MinRelayFee float64
+	// minRelayFee is the minimum relay fee in BTC
+	minRelayFee float64
 
-	// CCTXRate is the most recent fee rate of the CCTX
-	CCTXRate uint64
+	// cctxRate is the most recent fee rate of the CCTX
+	cctxRate uint64
 
-	// LiveRate is the most recent market fee rate
-	LiveRate uint64
+	// liveRate is the most recent market fee rate
+	liveRate uint64
 
-	// TxsAndFees contains the information of all pending txs and fees
-	TxsAndFees client.MempoolTxsAndFees
+	// txsAndFees contains the information of all pending txs and fees
+	txsAndFees client.MempoolTxsAndFees
 
-	Logger zerolog.Logger
+	logger zerolog.Logger
 }
 
 // BumpResult contains the result of the fee bump
@@ -77,13 +77,13 @@ func NewCPFPFeeBumper(
 	logger zerolog.Logger,
 ) (*CPFPFeeBumper, error) {
 	fb := &CPFPFeeBumper{
-		Ctx:         ctx,
-		Chain:       chain,
-		RPC:         rpc,
-		Tx:          tx,
-		MinRelayFee: minRelayFee,
-		CCTXRate:    cctxRate,
-		Logger:      logger,
+		ctx:         ctx,
+		chain:       chain,
+		rpc:         rpc,
+		tx:          tx,
+		minRelayFee: minRelayFee,
+		cctxRate:    cctxRate,
+		logger:      logger,
 	}
 
 	err := fb.fetchFeeBumpInfo()
@@ -96,7 +96,7 @@ func NewCPFPFeeBumper(
 // BumpTxFee bumps the fee of the stuck transaction using reserved bump fees
 func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 	// reuse old tx body
-	newTx := CopyMsgTxNoWitness(b.Tx.MsgTx())
+	newTx := CopyMsgTxNoWitness(b.tx.MsgTx())
 	if len(newTx.TxOut) < 3 {
 		return result, errors.New("original tx has no reserved bump fees")
 	}
@@ -104,31 +104,31 @@ func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 	// the new fee rate is supposed to be much higher than current paid rate (old rate).
 	// we print a warning message if it's not the case for monitoring purposes.
 	// #nosec G115 always positive
-	oldRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.TxsAndFees.AvgFeeRate), decentFeeBumpPercent)
-	if sdkmath.NewUint(b.CCTXRate).LT(oldRateBumped) {
-		b.Logger.Warn().
-			Uint64("old_fee_rate", b.TxsAndFees.AvgFeeRate).
-			Uint64("new_fee_rate", b.CCTXRate).
+	oldRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.txsAndFees.AvgFeeRate), decentFeeBumpPercent)
+	if sdkmath.NewUint(b.cctxRate).LT(oldRateBumped) {
+		b.logger.Warn().
+			Uint64("old_fee_rate", b.txsAndFees.AvgFeeRate).
+			Uint64("new_fee_rate", b.cctxRate).
 			Msg("new fee rate is not much higher than the old fee rate")
 	}
 
 	// the live rate may continue increasing during network congestion, and the new fee rate is still not high enough.
 	// but we should still continue with the tx replacement because zetacore had already bumped the fee rate.
-	newRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.CCTXRate), decentFeeBumpPercent)
-	if sdkmath.NewUint(b.LiveRate).GT(newRateBumped) {
-		b.Logger.Warn().
-			Uint64("new_fee_rate", b.CCTXRate).
-			Uint64("live_fee_rate", b.LiveRate).
+	newRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.cctxRate), decentFeeBumpPercent)
+	if sdkmath.NewUint(b.liveRate).GT(newRateBumped) {
+		b.logger.Warn().
+			Uint64("new_fee_rate", b.cctxRate).
+			Uint64("live_fee_rate", b.liveRate).
 			Msg("live fee rate is still much higher than the new fee rate")
 	}
 
 	// cap the fee rate to avoid excessive fees
-	feeRateNew := min(b.CCTXRate, feeRateCap)
+	feeRateNew := min(b.cctxRate, feeRateCap)
 
 	// calculate minmimum relay fees of the new replacement tx
 	// the new tx will have almost same size as the old one because the tx body stays the same
-	txVSize := mempool.GetTxVirtualSize(b.Tx)
-	minRelayFeeRate, err := common.FeeRateToSatPerByte(b.MinRelayFee)
+	txVSize := mempool.GetTxVirtualSize(b.tx)
+	minRelayFeeRate, err := common.FeeRateToSatPerByte(b.minRelayFee)
 	if err != nil {
 		return result, errors.Wrapf(err, "unable to convert min relay fee rate")
 	}
@@ -142,7 +142,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 	//
 	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	// #nosec G115 always in range
-	additionalFees := b.TxsAndFees.TotalVSize*int64(feeRateNew) - b.TxsAndFees.TotalFees
+	additionalFees := b.txsAndFees.TotalVSize*int64(feeRateNew) - b.txsAndFees.TotalFees
 	if additionalFees < minRelayTxFees {
 		return result, fmt.Errorf(
 			"hold on RBF: additional fees %d is lower than min relay fees %d",
@@ -163,7 +163,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 
 	// effective fee rate
 	// #nosec G115 always positive
-	feeRateNew = uint64(math.Ceil(float64(b.TxsAndFees.TotalFees+additionalFees) / float64(b.TxsAndFees.TotalVSize)))
+	feeRateNew = uint64(math.Ceil(float64(b.txsAndFees.TotalFees+additionalFees) / float64(b.txsAndFees.TotalVSize)))
 
 	return BumpResult{
 		NewTx:          newTx,
@@ -175,28 +175,28 @@ func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx
 func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	// query live fee rate
-	liveRate, err := b.RPC.GetEstimatedFeeRate(b.Ctx, 1)
+	liveRate, err := b.rpc.GetEstimatedFeeRate(b.ctx, 1)
 	if err != nil {
 		return errors.Wrap(err, "GetEstimatedFeeRate failed")
 	}
-	b.LiveRate = liveRate
+	b.liveRate = liveRate
 
 	// create a new context with timeout
-	ctx, cancel := context.WithTimeout(b.Ctx, time.Minute)
+	ctx, cancel := context.WithTimeout(b.ctx, time.Minute)
 	defer cancel()
 
 	// query total fees and sizes of all pending parent TSS txs
-	txsAndFees, err := b.RPC.GetMempoolTxsAndFees(ctx, b.Tx.MsgTx().TxID())
+	txsAndFees, err := b.rpc.GetMempoolTxsAndFees(ctx, b.tx.MsgTx().TxID())
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}
-	b.TxsAndFees = txsAndFees
+	b.txsAndFees = txsAndFees
 
-	b.Logger.Info().
-		Int64("total_txs", b.TxsAndFees.TotalTxs).
-		Int64("total_fees", b.TxsAndFees.TotalFees).
-		Int64("total_vsize", b.TxsAndFees.TotalVSize).
-		Uint64("avg_fee_rate", b.TxsAndFees.AvgFeeRate).
+	b.logger.Info().
+		Int64("total_txs", b.txsAndFees.TotalTxs).
+		Int64("total_fees", b.txsAndFees.TotalFees).
+		Int64("total_vsize", b.txsAndFees.TotalVSize).
+		Uint64("avg_fee_rate", b.txsAndFees.AvgFeeRate).
 		Msg("fetched fee bump information")
 
 	return nil
