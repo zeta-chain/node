@@ -19,14 +19,14 @@ func Test_SolanaRPCLive(t *testing.T) {
 		return
 	}
 
-	LiveTest_GetTransactionWithVersion(t)
-	LiveTest_GetFirstSignatureForAddress(t)
-	LiveTest_GetSignaturesForAddressUntil(t)
-	LiveTest_GetSignaturesForAddressUntil_Version0(t)
-	LiveTest_HealthCheck(t)
+	Test_GetTransactionWithVersion(t)
+	Test_GetFirstSignatureForAddress(t)
+	Test_GetSignaturesForAddressUntil(t)
+	Test_GetSignaturesForAddressUntil_Version0(t)
+	Test_HealthCheck(t)
 }
 
-func LiveTest_GetTransactionWithVersion(t *testing.T) {
+func Test_GetTransactionWithVersion(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -44,7 +44,7 @@ func LiveTest_GetTransactionWithVersion(t *testing.T) {
 	})
 }
 
-func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
+func Test_GetFirstSignatureForAddress(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -60,7 +60,7 @@ func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
 	require.Equal(t, actualSig, sig.String())
 }
 
-func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
+func Test_GetSignaturesForAddressUntil(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -83,7 +83,7 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 	}
 }
 
-func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
+func Test_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -99,7 +99,7 @@ func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func LiveTest_HealthCheck(t *testing.T) {
+func Test_HealthCheck(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
