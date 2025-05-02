@@ -32,7 +32,7 @@ type client interface {
 	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*types.TxRawResult, error)
 	GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error)
 	GetRawMempool(ctx context.Context) ([]*hash.Hash, error)
-	GetMempoolTxsAndFees(ctx context.Context, childHash string, timeout time.Duration) (MempoolTxsAndFees, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string) (MempoolTxsAndFees, error)
 
 	GetRawTransactionResult(
 		ctx context.Context,

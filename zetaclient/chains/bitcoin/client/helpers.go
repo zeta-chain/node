@@ -241,12 +241,10 @@ func (c *Client) Healthcheck(ctx context.Context) (time.Time, error) {
 func (c *Client) GetMempoolTxsAndFees(
 	ctx context.Context,
 	childHash string,
-	timeout time.Duration,
 ) (txsAndFees MempoolTxsAndFees, err error) {
 	totalFeesFloat := float64(0)
 
 	// loop through all parents
-	startTime := time.Now()
 	parentHash := childHash
 	for {
 		memplEntry, err := c.GetMempoolEntry(ctx, parentHash)
@@ -271,8 +269,10 @@ func (c *Client) GetMempoolTxsAndFees(
 		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
 
 		// check timeout to avoid infinite loop
-		if time.Since(startTime) > timeout {
-			return txsAndFees, errors.Errorf("timeout reached on %dth tx: %s", txsAndFees.TotalTxs, parentHash)
+		if deadline, ok := ctx.Deadline(); ok {
+			if time.Now().After(deadline) {
+				return txsAndFees, errors.Errorf("timeout reached on %dth tx: %s", txsAndFees.TotalTxs, parentHash)
+			}
 		}
 	}
 

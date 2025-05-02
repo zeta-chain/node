@@ -387,9 +387,9 @@ func (_m *BitcoinClient) GetMempoolEntry(ctx context.Context, txHash string) (*b
 	return r0, r1
 }
 
-// GetMempoolTxsAndFees provides a mock function with given fields: ctx, childHash, timeout
-func (_m *BitcoinClient) GetMempoolTxsAndFees(ctx context.Context, childHash string, timeout time.Duration) (client.MempoolTxsAndFees, error) {
-	ret := _m.Called(ctx, childHash, timeout)
+// GetMempoolTxsAndFees provides a mock function with given fields: ctx, childHash
+func (_m *BitcoinClient) GetMempoolTxsAndFees(ctx context.Context, childHash string) (client.MempoolTxsAndFees, error) {
+	ret := _m.Called(ctx, childHash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMempoolTxsAndFees")
@@ -397,17 +397,17 @@ func (_m *BitcoinClient) GetMempoolTxsAndFees(ctx context.Context, childHash str
 
 	var r0 client.MempoolTxsAndFees
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (client.MempoolTxsAndFees, error)); ok {
-		return rf(ctx, childHash, timeout)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (client.MempoolTxsAndFees, error)); ok {
+		return rf(ctx, childHash)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) client.MempoolTxsAndFees); ok {
-		r0 = rf(ctx, childHash, timeout)
+	if rf, ok := ret.Get(0).(func(context.Context, string) client.MempoolTxsAndFees); ok {
+		r0 = rf(ctx, childHash)
 	} else {
 		r0 = ret.Get(0).(client.MempoolTxsAndFees)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, time.Duration) error); ok {
-		r1 = rf(ctx, childHash, timeout)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, childHash)
 	} else {
 		r1 = ret.Error(1)
 	}

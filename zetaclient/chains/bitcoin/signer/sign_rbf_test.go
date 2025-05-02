@@ -178,11 +178,9 @@ func Test_SignRBFTx(t *testing.T) {
 
 			// mock mempool txs information
 			if tt.txsAndFees != nil {
-				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(*tt.txsAndFees, nil)
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Return(*tt.txsAndFees, nil)
 			} else {
-				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
-					Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(client.MempoolTxsAndFees{}, nil)
 			}
 
 			// mock RPC transactions

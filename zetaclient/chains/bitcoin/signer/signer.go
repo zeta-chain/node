@@ -38,7 +38,7 @@ type RPC interface {
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
-	GetMempoolTxsAndFees(ctx context.Context, childHash string, timeout time.Duration) (client.MempoolTxsAndFees, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string) (client.MempoolTxsAndFees, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.

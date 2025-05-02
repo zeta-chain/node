@@ -91,11 +91,9 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 
 			// mock mempool txs information
 			if tt.txsAndFees != nil {
-				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
-					Return(*tt.txsAndFees, nil)
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(*tt.txsAndFees, nil)
 			} else {
-				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
-					Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
 			}
 
 			// ACT

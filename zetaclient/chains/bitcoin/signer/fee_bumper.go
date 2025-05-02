@@ -170,8 +170,12 @@ func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	}
 	b.LiveRate = liveRate
 
+	// create a new context with timeout
+	ctx, cancel := context.WithTimeout(b.Ctx, time.Minute)
+	defer cancel()
+
 	// query total fees and sizes of all pending parent TSS txs
-	txsAndFees, err := b.RPC.GetMempoolTxsAndFees(b.Ctx, b.Tx.MsgTx().TxID(), time.Minute)
+	txsAndFees, err := b.RPC.GetMempoolTxsAndFees(ctx, b.Tx.MsgTx().TxID())
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}
