@@ -1395,12 +1395,14 @@ var AllE2ETests = []runner.E2ETest{
 		"test stateful precompiled contracts prototype",
 		[]runner.ArgDefinition{},
 		TestPrecompilesPrototype,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestPrecompilesPrototypeThroughContractName,
 		"test stateful precompiled contracts prototype through contract",
 		[]runner.ArgDefinition{},
 		TestPrecompilesPrototypeThroughContract,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestPrecompilesStakingName,

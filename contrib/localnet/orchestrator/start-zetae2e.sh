@@ -218,7 +218,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
     sleep 10
 
   zetae2e local --skip-setup --config "$deployed_config_path" \
-    --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles
+    --skip-bitcoin-setup --light --skip-header-proof
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"
@@ -260,7 +260,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
 
     # Use light flag to ensure tests can complete before the upgrade height
     # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light --skip-precompiles ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "first e2e failed"
       exit 1

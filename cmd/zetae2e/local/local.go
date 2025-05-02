@@ -91,9 +91,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagTestPrototypePrecompiled, true, "set to true to test the prototype precompiles")
-	cmd.Flags().Bool(flagTestBankPrecompiled, false, "set to true to test the bank precompiles")
-	cmd.Flags().Bool(flagTestStakingPrecompiled, false, "set to true to test the staking precompiles")
+	cmd.Flags().Bool(flagTestPrototypePrecompiled, true, "set to true to test the prototype precompiled contracts")
+	cmd.Flags().Bool(flagTestBankPrecompiled, false, "set to true to test the bank precompiled contracts")
+	cmd.Flags().Bool(flagTestStakingPrecompiled, false, "set to true to test the staking precompiled contracts")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
@@ -244,8 +244,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
-	deployerRunner.Logger.Print("e2e start height: %d", e2eStartHeight)
 	noError(err)
+	deployerRunner.Logger.Print("e2e start height: %d", e2eStartHeight)
 
 	// setting up the networks
 	if !skipSetup {
