@@ -26,6 +26,14 @@ const (
 	maxBTCSupply = 21000000.0
 )
 
+// MempoolTxsAndFees contains the information of pending mempool txs and fees
+type MempoolTxsAndFees struct {
+	TotalTxs   int64
+	TotalFees  int64
+	TotalVSize int64
+	AvgFeeRate uint64
+}
+
 // IsRegnet returns true if the chain is regnet
 func (c *Client) IsRegnet() bool {
 	return c.isRegnet
@@ -225,24 +233,17 @@ func (c *Client) Healthcheck(ctx context.Context) (time.Time, error) {
 	return header.Timestamp, nil
 }
 
-// GetTotalMempoolParentsSizeNFees returns the information of all pending parent txs of a given tx (inclusive)
+// GetMempoolTxsAndFees returns the information of all pending parent txs and fees of a given tx (inclusive)
 //
 // A parent tx is defined as:
 //   - a tx that is also pending in the mempool
 //   - a tx that has its first output spent by the child as first input
-//
-// Returns: (totalTxs, totalFees, totalVSize, error)
-func (c *Client) GetTotalMempoolParentsSizeNFees(
+func (c *Client) GetMempoolTxsAndFees(
 	ctx context.Context,
 	childHash string,
 	timeout time.Duration,
-) (int64, float64, int64, uint64, error) {
-	var (
-		totalTxs   int64
-		totalFees  float64
-		totalVSize int64
-		avgFeeRate uint64
-	)
+) (txsAndFees MempoolTxsAndFees, err error) {
+	totalFeesFloat := float64(0)
 
 	// loop through all parents
 	startTime := time.Now()
@@ -250,46 +251,57 @@ func (c *Client) GetTotalMempoolParentsSizeNFees(
 	for {
 		memplEntry, err := c.GetMempoolEntry(ctx, parentHash)
 		if err != nil {
-			if strings.Contains(err.Error(), "Transaction not in mempool") {
+			if IsTxNotInMempoolError(err) {
 				// not a mempool tx, stop looking for parents
 				break
 			}
-			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
+			return txsAndFees, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
 		}
 
 		// accumulate fees and vsize
-		totalTxs++
-		totalFees += memplEntry.Fee
-		totalVSize += int64(memplEntry.VSize)
+		txsAndFees.TotalTxs++
+		totalFeesFloat += memplEntry.Fee
+		txsAndFees.TotalVSize += int64(memplEntry.VSize)
 
 		// find the parent tx
 		tx, err := c.GetRawTransactionByStr(ctx, parentHash)
 		if err != nil {
-			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get tx %s", parentHash)
+			return txsAndFees, errors.Wrapf(err, "unable to get tx %s", parentHash)
 		}
 		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
 
 		// check timeout to avoid infinite loop
 		if time.Since(startTime) > timeout {
-			return 0, 0, 0, 0, errors.Errorf("timeout reached on %dth tx: %s", totalTxs, parentHash)
+			return txsAndFees, errors.Errorf("timeout reached on %dth tx: %s", txsAndFees.TotalTxs, parentHash)
 		}
 	}
 
 	// no pending tx found
-	if totalTxs == 0 {
-		return 0, 0, 0, 0, errors.Errorf("given tx is not pending: %s", childHash)
+	if txsAndFees.TotalTxs == 0 {
+		return txsAndFees, errors.Errorf("given tx is not pending: %s", childHash)
+	}
+
+	// convert total fees to satoshis
+	txsAndFees.TotalFees, err = common.GetSatoshis(totalFeesFloat)
+	if err != nil {
+		return txsAndFees, errors.Wrapf(err, "invalid total fees: %f", totalFeesFloat)
 	}
 
 	// sanity check, should never happen
-	if totalFees < 0 || totalVSize <= 0 {
-		return 0, 0, 0, 0, errors.Errorf("invalid result: totalFees %f, totalVSize %d", totalFees, totalVSize)
+	if txsAndFees.TotalVSize <= 0 {
+		return txsAndFees, errors.Errorf("invalid totalVSize %d", txsAndFees.TotalVSize)
 	}
 
 	// calculate the average fee rate
 	// #nosec G115 always positive
-	avgFeeRate = uint64(math.Ceil(totalFees / float64(totalVSize)))
+	txsAndFees.AvgFeeRate = uint64(math.Ceil(totalFeesFloat / float64(txsAndFees.TotalVSize)))
 
-	return totalTxs, totalFees, totalVSize, avgFeeRate, nil
+	return txsAndFees, nil
+}
+
+// IsTxNotInMempoolError checks if the given error is due to the transaction not being in the mempool.
+func IsTxNotInMempoolError(err error) bool {
+	return strings.Contains(err.Error(), "Transaction not in mempool")
 }
 
 func strToHash(s string) (*chainhash.Hash, error) {

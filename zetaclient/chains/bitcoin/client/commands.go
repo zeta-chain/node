@@ -82,7 +82,7 @@ func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
 
 	out, err := c.sendCommand(ctx, cmd)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to list unspent")
+		return nil, errors.Wrap(err, "unable to get raw mempool")
 	}
 
 	txHashStrs, err := unmarshal[[]string](out)

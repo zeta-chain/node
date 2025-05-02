@@ -8,6 +8,8 @@ import (
 
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 
+	client "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+
 	context "context"
 
 	json "encoding/json"
@@ -385,6 +387,34 @@ func (_m *BitcoinClient) GetMempoolEntry(ctx context.Context, txHash string) (*b
 	return r0, r1
 }
 
+// GetMempoolTxsAndFees provides a mock function with given fields: ctx, childHash, timeout
+func (_m *BitcoinClient) GetMempoolTxsAndFees(ctx context.Context, childHash string, timeout time.Duration) (client.MempoolTxsAndFees, error) {
+	ret := _m.Called(ctx, childHash, timeout)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMempoolTxsAndFees")
+	}
+
+	var r0 client.MempoolTxsAndFees
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (client.MempoolTxsAndFees, error)); ok {
+		return rf(ctx, childHash, timeout)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) client.MempoolTxsAndFees); ok {
+		r0 = rf(ctx, childHash, timeout)
+	} else {
+		r0 = ret.Get(0).(client.MempoolTxsAndFees)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, time.Duration) error); ok {
+		r1 = rf(ctx, childHash, timeout)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNetworkInfo provides a mock function with given fields: ctx
 func (_m *BitcoinClient) GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error) {
 	ret := _m.Called(ctx)
@@ -591,55 +621,6 @@ func (_m *BitcoinClient) GetRawTransactionVerbose(ctx context.Context, hash *cha
 	}
 
 	return r0, r1
-}
-
-// GetTotalMempoolParentsSizeNFees provides a mock function with given fields: ctx, childHash, timeout
-func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, childHash string, timeout time.Duration) (int64, float64, int64, uint64, error) {
-	ret := _m.Called(ctx, childHash, timeout)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetTotalMempoolParentsSizeNFees")
-	}
-
-	var r0 int64
-	var r1 float64
-	var r2 int64
-	var r3 uint64
-	var r4 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (int64, float64, int64, uint64, error)); ok {
-		return rf(ctx, childHash, timeout)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) int64); ok {
-		r0 = rf(ctx, childHash, timeout)
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, time.Duration) float64); ok {
-		r1 = rf(ctx, childHash, timeout)
-	} else {
-		r1 = ret.Get(1).(float64)
-	}
-
-	if rf, ok := ret.Get(2).(func(context.Context, string, time.Duration) int64); ok {
-		r2 = rf(ctx, childHash, timeout)
-	} else {
-		r2 = ret.Get(2).(int64)
-	}
-
-	if rf, ok := ret.Get(3).(func(context.Context, string, time.Duration) uint64); ok {
-		r3 = rf(ctx, childHash, timeout)
-	} else {
-		r3 = ret.Get(3).(uint64)
-	}
-
-	if rf, ok := ret.Get(4).(func(context.Context, string, time.Duration) error); ok {
-		r4 = rf(ctx, childHash, timeout)
-	} else {
-		r4 = ret.Error(4)
-	}
-
-	return r0, r1, r2, r3, r4
 }
 
 // GetTransaction provides a mock function with given fields: ctx, hash

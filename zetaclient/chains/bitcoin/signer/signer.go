@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -37,11 +38,7 @@ type RPC interface {
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
-	GetTotalMempoolParentsSizeNFees(
-		ctx context.Context,
-		childHash string,
-		timeout time.Duration,
-	) (int64, float64, int64, uint64, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string, timeout time.Duration) (client.MempoolTxsAndFees, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.

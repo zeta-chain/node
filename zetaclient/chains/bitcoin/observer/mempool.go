@@ -2,13 +2,13 @@ package observer
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -210,7 +210,7 @@ func IsTxStuckInMempool(
 
 	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
 	if err != nil {
-		if strings.Contains(err.Error(), "Transaction not in mempool") {
+		if client.IsTxNotInMempoolError(err) {
 			return false, 0, nil // not a mempool tx, of course not stuck
 		}
 		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
@@ -242,7 +242,7 @@ func IsTxStuckInMempoolRegnet(
 
 	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
 	if err != nil {
-		if strings.Contains(err.Error(), "Transaction not in mempool") {
+		if client.IsTxNotInMempoolError(err) {
 			return false, 0, nil // not a mempool tx, of course not stuck
 		}
 		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -79,15 +80,15 @@ func Test_SignRBFTx(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name         string
-		chain        chains.Chain
-		lastTx       *btcutil.Tx
-		preTxs       []prevTx
-		txData       OutboundData
-		liveRate     uint64
-		memplTxsInfo *mempoolTxsInfo
-		errMsg       string
-		expectedTx   *wire.MsgTx
+		name       string
+		chain      chains.Chain
+		lastTx     *btcutil.Tx
+		preTxs     []prevTx
+		txData     OutboundData
+		liveRate   uint64
+		txsAndFees *client.MempoolTxsAndFees
+		errMsg     string
+		expectedTx *wire.MsgTx
 	}{
 		{
 			name:     "should sign RBF tx successfully",
@@ -96,12 +97,12 @@ func Test_SignRBFTx(t *testing.T) {
 			preTxs:   preTxs,
 			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
 			liveRate: 59,                         // 59 sat/vB
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
 				newTx := CopyMsgTxNoWitness(msgTx)
@@ -117,12 +118,12 @@ func Test_SignRBFTx(t *testing.T) {
 			errMsg: "fee rate is not bumped by zetacore yet",
 		},
 		{
-			name:         "should return error if unable to create fee bumper",
-			chain:        chains.BitcoinMainnet,
-			lastTx:       btcutil.NewTx(msgTx.Copy()),
-			txData:       mkTxData(t, 0.00001, "57"),
-			memplTxsInfo: nil, // no mempool txs info provided
-			errMsg:       "NewCPFPFeeBumper failed",
+			name:       "should return error if unable to create fee bumper",
+			chain:      chains.BitcoinMainnet,
+			lastTx:     btcutil.NewTx(msgTx.Copy()),
+			txData:     mkTxData(t, 0.00001, "57"),
+			txsAndFees: nil, // no mempool txs info provided
+			errMsg:     "NewCPFPFeeBumper failed",
 		},
 		{
 			name:  "should return error if unable to bump tx fee",
@@ -134,12 +135,12 @@ func Test_SignRBFTx(t *testing.T) {
 			}(),
 			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
 			liveRate: 99,                         // 99 sat/vB is much higher than ccxt rate
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			errMsg: "BumpTxFee failed",
 		},
 		{
@@ -149,12 +150,12 @@ func Test_SignRBFTx(t *testing.T) {
 			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
 			preTxs:   nil,                        // no previous info provided
 			liveRate: 59,                         // 59 sat/vB
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			errMsg: "unable to get previous tx",
 		},
 	}
@@ -176,11 +177,12 @@ func Test_SignRBFTx(t *testing.T) {
 			}
 
 			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			if tt.txsAndFees != nil {
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).
+					Return(*tt.txsAndFees, nil)
 			} else {
-				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(0, 0.0, 0, 0, "rpc error")
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
+					Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
 			}
 
 			// mock RPC transactions

@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	mathpkg "github.com/zeta-chain/node/pkg/math"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
@@ -52,17 +53,8 @@ type CPFPFeeBumper struct {
 	// LiveRate is the most recent market fee rate
 	LiveRate uint64
 
-	// TotalTxs is the total number of stuck TSS txs
-	TotalTxs int64
-
-	// TotalFees is the total fees of all stuck TSS txs
-	TotalFees int64
-
-	// TotalVSize is the total vsize of all stuck TSS txs
-	TotalVSize int64
-
-	// AvgFeeRate is the average fee rate of all stuck TSS txs
-	AvgFeeRate uint64
+	// TxsAndFees contains the information of all pending txs and fees
+	TxsAndFees client.MempoolTxsAndFees
 
 	Logger zerolog.Logger
 }
@@ -105,10 +97,10 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	// the new fee rate is supposed to be much higher than current paid rate (old rate).
 	// we print a warning message if it's not the case for monitoring purposes.
 	// #nosec G115 always positive
-	oldRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.AvgFeeRate), decentFeeBumpPercent)
+	oldRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.TxsAndFees.AvgFeeRate), decentFeeBumpPercent)
 	if sdkmath.NewUint(b.CCTXRate).LT(oldRateBumped) {
 		b.Logger.Warn().
-			Uint64("old_fee_rate", b.AvgFeeRate).
+			Uint64("old_fee_rate", b.TxsAndFees.AvgFeeRate).
 			Uint64("new_fee_rate", b.CCTXRate).
 			Msg("new fee rate is not much higher than the old fee rate")
 	}
@@ -143,7 +135,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	//
 	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	// #nosec G115 always in range
-	additionalFees := b.TotalVSize*int64(feeRateNew) - b.TotalFees
+	additionalFees := b.TxsAndFees.TotalVSize*int64(feeRateNew) - b.TxsAndFees.TotalFees
 	if additionalFees < minRelayTxFees {
 		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: additional fees %d is lower than min relay fees %d",
@@ -164,7 +156,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 
 	// effective fee rate
 	// #nosec G115 always positive
-	feeRateNew = uint64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
+	feeRateNew = uint64(math.Ceil(float64(b.TxsAndFees.TotalFees+additionalFees) / float64(b.TxsAndFees.TotalVSize)))
 
 	return newTx, additionalFees, feeRateNew, nil
 }
@@ -179,29 +171,17 @@ func (b *CPFPFeeBumper) fetchFeeBumpInfo() error {
 	b.LiveRate = liveRate
 
 	// query total fees and sizes of all pending parent TSS txs
-	totalTxs, totalFees, totalVSize, avgFeeRate, err := b.RPC.GetTotalMempoolParentsSizeNFees(
-		b.Ctx,
-		b.Tx.MsgTx().TxID(),
-		time.Minute,
-	)
+	txsAndFees, err := b.RPC.GetMempoolTxsAndFees(b.Ctx, b.Tx.MsgTx().TxID(), time.Minute)
 	if err != nil {
 		return errors.Wrap(err, "unable to fetch mempool txs info")
 	}
-	totalFeesSats, err := common.GetSatoshis(totalFees)
-	if err != nil {
-		return errors.Wrapf(err, "cannot convert total fees %f", totalFees)
-	}
-
-	b.TotalTxs = totalTxs
-	b.TotalFees = totalFeesSats
-	b.TotalVSize = totalVSize
-	b.AvgFeeRate = avgFeeRate
+	b.TxsAndFees = txsAndFees
 
 	b.Logger.Info().
-		Int64("total_txs", totalTxs).
-		Int64("total_fees", totalFeesSats).
-		Int64("total_vsize", totalVSize).
-		Uint64("avg_fee_rate", avgFeeRate).
+		Int64("total_txs", b.TxsAndFees.TotalTxs).
+		Int64("total_fees", b.TxsAndFees.TotalFees).
+		Int64("total_vsize", b.TxsAndFees.TotalVSize).
+		Uint64("avg_fee_rate", b.TxsAndFees.AvgFeeRate).
 		Msg("fetched fee bump information")
 
 	return nil

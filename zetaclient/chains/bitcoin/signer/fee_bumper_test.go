@@ -12,39 +12,23 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// mempoolTxsInfo is a helper struct to contain mempool txs information
-type mempoolTxsInfo struct {
-	totalTxs   int64
-	totalFees  float64
-	totalVSize int64
-	avgFeeRate uint64
-}
-
-func newMempoolTxsInfo(totalTxs int64, totalFees float64, totalVSize int64, avgFeeRate uint64) *mempoolTxsInfo {
-	return &mempoolTxsInfo{
-		totalTxs:   totalTxs,
-		totalFees:  totalFees,
-		totalVSize: totalVSize,
-		avgFeeRate: avgFeeRate,
-	}
-}
-
 func Test_NewCPFPFeeBumper(t *testing.T) {
 	tests := []struct {
-		name         string
-		chain        chains.Chain
-		client       *mocks.BitcoinClient
-		tx           *btcutil.Tx
-		cctxRate     uint64
-		liveRate     uint64
-		minRelayFee  float64
-		memplTxsInfo *mempoolTxsInfo
-		errMsg       string
-		expected     *CPFPFeeBumper
+		name        string
+		chain       chains.Chain
+		client      *mocks.BitcoinClient
+		tx          *btcutil.Tx
+		cctxRate    uint64
+		liveRate    uint64
+		minRelayFee float64
+		txsAndFees  *client.MempoolTxsAndFees
+		errMsg      string
+		expected    *CPFPFeeBumper
 	}{
 		{
 			chain:       chains.BitcoinMainnet,
@@ -54,12 +38,12 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			cctxRate:    10,
 			liveRate:    12,
 			minRelayFee: 0.00001,
-			memplTxsInfo: newMempoolTxsInfo(
-				2,      // 2 stuck TSS txs
-				0.0001, // total fees 0.0001 BTC
-				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vB
-			),
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   2,     // 2 stuck TSS txs
+				TotalFees:  10000, // total fees 0.0001 BTC
+				TotalVSize: 1000,  // total vsize 1000
+				AvgFeeRate: 10,    // average fee rate 10 sat/vB
+			},
 			expected: &CPFPFeeBumper{
 				Ctx:         context.Background(),
 				Chain:       chains.BitcoinMainnet,
@@ -67,11 +51,13 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				MinRelayFee: 0.00001,
 				CCTXRate:    10,
 				LiveRate:    12,
-				TotalTxs:    2,
-				TotalFees:   10000,
-				TotalVSize:  1000,
-				AvgFeeRate:  10,
-				Logger:      log.Logger,
+				TxsAndFees: client.MempoolTxsAndFees{
+					TotalTxs:   2,
+					TotalFees:  10000,
+					TotalVSize: 1000,
+					AvgFeeRate: 10,
+				},
+				Logger: log.Logger,
 			},
 		},
 		{
@@ -83,22 +69,13 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			errMsg:   "GetEstimatedFeeRate failed",
 		},
 		{
-			chain:        chains.BitcoinMainnet,
-			name:         "should fail if unable to fetch mempool txs info",
-			client:       mocks.NewBitcoinClient(t),
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			liveRate:     12,
-			memplTxsInfo: nil,
-			errMsg:       "unable to fetch mempool txs info",
-		},
-		{
-			chain:        chains.BitcoinMainnet,
-			name:         "should fail if unable to convert total fees",
-			client:       mocks.NewBitcoinClient(t),
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			liveRate:     12,
-			memplTxsInfo: newMempoolTxsInfo(2, 21000000.1, 1000, 10), // fee exceeds max BTC supply
-			errMsg:       "cannot convert total fees",
+			chain:      chains.BitcoinMainnet,
+			name:       "should fail if unable to fetch mempool txs info",
+			client:     mocks.NewBitcoinClient(t),
+			tx:         btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			liveRate:   12,
+			txsAndFees: nil,
+			errMsg:     "unable to fetch mempool txs info",
 		},
 	}
 
@@ -113,13 +90,12 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			}
 
 			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			if tt.txsAndFees != nil {
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
+					Return(*tt.txsAndFees, nil)
 			} else {
-				v := int64(0)
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
-					Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything, mock.Anything).Maybe().
+					Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
 			}
 
 			// ACT
@@ -167,10 +143,12 @@ func Test_BumpTxFee(t *testing.T) {
 				MinRelayFee: 0.00001,
 				CCTXRate:    55,
 				LiveRate:    67,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
-				Logger:      log.Logger,
+				TxsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				Logger: log.Logger,
 			},
 			additionalFees:  4632, // 579*55 - 27213
 			expectedNewRate: 55,
@@ -193,10 +171,12 @@ func Test_BumpTxFee(t *testing.T) {
 				MinRelayFee: 0.00001,
 				CCTXRate:    57,
 				LiveRate:    67,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
-				Logger:      log.Logger,
+				TxsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				Logger: log.Logger,
 			},
 			additionalFees:  6789, // same as the reserved value in 2nd output
 			expectedNewRate: 59,   // (27213 + 6789) / 579 ≈ 59
@@ -214,10 +194,12 @@ func Test_BumpTxFee(t *testing.T) {
 				MinRelayFee: 0.00001,
 				CCTXRate:    101, // > 100
 				LiveRate:    120,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
-				Logger:      log.Logger,
+				TxsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				Logger: log.Logger,
 			},
 			additionalFees:  30687, // (100-47)*579
 			expectedNewRate: 100,
@@ -247,10 +229,12 @@ func Test_BumpTxFee(t *testing.T) {
 				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
 				CCTXRate:    6,
 				LiveRate:    7,
-				TotalFees:   2895,
-				TotalVSize:  579,
-				AvgFeeRate:  5,
-				Logger:      log.Logger,
+				TxsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  2895,
+					TotalVSize: 579,
+					AvgFeeRate: 5,
+				},
+				Logger: log.Logger,
 			},
 			errMsg: "lower than min relay fees",
 		},
