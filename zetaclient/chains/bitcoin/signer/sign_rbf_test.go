@@ -85,7 +85,7 @@ func Test_SignRBFTx(t *testing.T) {
 		lastTx       *btcutil.Tx
 		preTxs       []prevTx
 		txData       signer.OutboundData
-		liveRate     int64
+		liveRate     uint64
 		memplTxsInfo *mempoolTxsInfo
 		errMsg       string
 		expectedTx   *wire.MsgTx
@@ -173,7 +173,7 @@ func Test_SignRBFTx(t *testing.T) {
 			if tt.liveRate > 0 {
 				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(tt.liveRate, nil)
 			} else {
-				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(int64(0), errors.New("rpc error"))
+				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(uint64(0), errors.New("rpc error"))
 			}
 
 			// mock mempool txs information

@@ -38,7 +38,7 @@ type RPC interface {
 	) (btcjson.TxRawResult, error)
 	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
 
 	EstimateSmartFee(

@@ -49,7 +49,8 @@ func (signer *Signer) SignWithdrawTx(
 	// we don't know how many UTXOs will be used beforehand, so we do
 	// a conservative estimation using the maximum size of the outbound tx:
 	// estimateFee = feeRate * maxTxSize
-	estimateFee := float64(txData.feeRate*common.OutboundBytesMax) / 1e8
+	// #nosec G115 always in range
+	estimateFee := float64(int64(txData.feeRate)*common.OutboundBytesMax) / 1e8
 	totalAmount := txData.amount + estimateFee + reservedRBFFees + float64(nonceMark)*1e-8
 
 	// refreshing UTXO list before TSS keysign is important:
@@ -97,7 +98,8 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// fee calculation
-	fees := txSize * txData.feeRate
+	// #nosec G115 always in range
+	fees := txSize * int64(txData.feeRate)
 
 	// add tx outputs
 	inputValue := selected.Value
@@ -106,7 +108,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 	signer.Logger().
 		Std.Info().
-		Int64("tx.rate", txData.feeRate).
+		Uint64("tx.rate", txData.feeRate).
 		Int64("tx.fees", fees).
 		Uint16("tx.consolidated_utxos", selected.ConsolidatedUTXOs).
 		Float64("tx.consolidated_value", selected.ConsolidatedValue).

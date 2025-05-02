@@ -131,7 +131,7 @@ func LiveTest_RBFTransaction(t *testing.T) {
 	// two rules to satisfy:
 	//   - feeTx3 >= feeTx1 + feeTx2
 	//   - additionalFees >= vSizeTx3 * minRelayFeeRate
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	minRelayFeeRate := int64(1)
 	feeRateIncrease := minRelayFeeRate
 	sizeTx3 := mempool.GetTxVirtualSize(rawTx1)
@@ -241,7 +241,7 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// two rules to satisfy:
 	//   - feeTx4 >= feeTx3
 	//   - additionalFees >= vSizeTx4 * minRelayFeeRate
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	minRelayFeeRate := int64(1)
 	feeRateIncrease := minRelayFeeRate
 	additionalFees := (mempool.GetTxVirtualSize(rawTx3) + 1) * feeRateIncrease

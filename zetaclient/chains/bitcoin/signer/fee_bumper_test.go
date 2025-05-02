@@ -22,10 +22,10 @@ type mempoolTxsInfo struct {
 	totalTxs   int64
 	totalFees  float64
 	totalVSize int64
-	avgFeeRate int64
+	avgFeeRate uint64
 }
 
-func newMempoolTxsInfo(totalTxs int64, totalFees float64, totalVSize int64, avgFeeRate int64) *mempoolTxsInfo {
+func newMempoolTxsInfo(totalTxs int64, totalFees float64, totalVSize int64, avgFeeRate uint64) *mempoolTxsInfo {
 	return &mempoolTxsInfo{
 		totalTxs:   totalTxs,
 		totalFees:  totalFees,
@@ -40,8 +40,8 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 		chain        chains.Chain
 		client       *mocks.BitcoinClient
 		tx           *btcutil.Tx
-		cctxRate     int64
-		liveRate     int64
+		cctxRate     uint64
+		liveRate     uint64
 		minRelayFee  float64
 		memplTxsInfo *mempoolTxsInfo
 		errMsg       string
@@ -98,7 +98,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
 			} else {
 				v := int64(0)
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(v, 0.0, v, v, errors.New("rpc error"))
+				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
 			}
 
 			// ACT
@@ -135,7 +135,7 @@ func Test_BumpTxFee(t *testing.T) {
 		name            string
 		feeBumper       *signer.CPFPFeeBumper
 		additionalFees  int64
-		expectedNewRate int64
+		expectedNewRate uint64
 		expectedNewTx   *wire.MsgTx
 		errMsg          string
 	}{
@@ -253,12 +253,12 @@ func Test_BumpTxFee(t *testing.T) {
 }
 
 func Test_FetchFeeBumpInfo(t *testing.T) {
-	liveRate := int64(12)
+	liveRate := uint64(12)
 
 	tests := []struct {
 		name         string
 		tx           *btcutil.Tx
-		liveRate     int64
+		liveRate     uint64
 		memplTxsInfo *mempoolTxsInfo
 		expected     *signer.CPFPFeeBumper
 		errMsg       string
@@ -312,7 +312,7 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 			if tt.liveRate > 0 {
 				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(liveRate, nil)
 			} else {
-				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(int64(0), errors.New("rpc error"))
+				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(uint64(0), errors.New("rpc error"))
 			}
 
 			// mock mempool txs information
@@ -321,7 +321,7 @@ func Test_FetchFeeBumpInfo(t *testing.T) {
 					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
 			} else {
 				v := int64(0)
-				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(v, 0.0, v, v, errors.New("rpc error"))
+				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(v, 0.0, v, uint64(0), errors.New("rpc error"))
 			}
 
 			// ACT

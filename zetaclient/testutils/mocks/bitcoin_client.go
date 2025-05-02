@@ -328,22 +328,22 @@ func (_m *BitcoinClient) GetBlockVerboseByStr(ctx context.Context, blockHash str
 }
 
 // GetEstimatedFeeRate provides a mock function with given fields: ctx, confTarget
-func (_m *BitcoinClient) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error) {
+func (_m *BitcoinClient) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error) {
 	ret := _m.Called(ctx, confTarget)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEstimatedFeeRate")
 	}
 
-	var r0 int64
+	var r0 uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (int64, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (uint64, error)); ok {
 		return rf(ctx, confTarget)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) int64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) uint64); ok {
 		r0 = rf(ctx, confTarget)
 	} else {
-		r0 = ret.Get(0).(int64)
+		r0 = ret.Get(0).(uint64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
@@ -594,7 +594,7 @@ func (_m *BitcoinClient) GetRawTransactionVerbose(ctx context.Context, hash *cha
 }
 
 // GetTotalMempoolParentsSizeNFees provides a mock function with given fields: ctx, childHash, timeout
-func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, childHash string, timeout time.Duration) (int64, float64, int64, int64, error) {
+func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, childHash string, timeout time.Duration) (int64, float64, int64, uint64, error) {
 	ret := _m.Called(ctx, childHash, timeout)
 
 	if len(ret) == 0 {
@@ -604,9 +604,9 @@ func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, ch
 	var r0 int64
 	var r1 float64
 	var r2 int64
-	var r3 int64
+	var r3 uint64
 	var r4 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (int64, float64, int64, int64, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) (int64, float64, int64, uint64, error)); ok {
 		return rf(ctx, childHash, timeout)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string, time.Duration) int64); ok {
@@ -627,10 +627,10 @@ func (_m *BitcoinClient) GetTotalMempoolParentsSizeNFees(ctx context.Context, ch
 		r2 = ret.Get(2).(int64)
 	}
 
-	if rf, ok := ret.Get(3).(func(context.Context, string, time.Duration) int64); ok {
+	if rf, ok := ret.Get(3).(func(context.Context, string, time.Duration) uint64); ok {
 		r3 = rf(ctx, childHash, timeout)
 	} else {
-		r3 = ret.Get(3).(int64)
+		r3 = ret.Get(3).(uint64)
 	}
 
 	if rf, ok := ret.Get(4).(func(context.Context, string, time.Duration) error); ok {

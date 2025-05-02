@@ -137,14 +137,26 @@ func Test_NewOutboundData(t *testing.T) {
 			errMsg:   "invalid gas priority fee",
 		},
 		{
+			name: "invalid min relay fee",
+			cctx: sample.CrossChainTx(t, "0x123"),
+			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
+				cctx.InboundParams.CoinType = coin.CoinType_Gas
+				cctx.GetCurrentOutboundParam().GasPrice = "8"
+			},
+			minRelayFee: 0, // invalid min relay fee
+			expected:    nil,
+			errMsg:      "invalid min relay fee",
+		},
+		{
 			name: "invalid receiver address",
 			cctx: sample.CrossChainTx(t, "0x123"),
 			cctxModifier: func(cctx *crosschaintypes.CrossChainTx) {
 				cctx.InboundParams.CoinType = coin.CoinType_Gas
 				cctx.GetCurrentOutboundParam().Receiver = "invalid"
 			},
-			expected: nil,
-			errMsg:   "cannot decode receiver address",
+			minRelayFee: 0.00001, // 1000 sat/KB
+			expected:    nil,
+			errMsg:      "cannot decode receiver address",
 		},
 		{
 			name: "unsupported receiver address",
@@ -154,8 +166,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().Receiver = "035e4ae279bd416b5da724972c9061ec6298dac020d1e3ca3f06eae715135cdbec"
 				cctx.GetCurrentOutboundParam().ReceiverChainId = chain.ChainId
 			},
-			expected: nil,
-			errMsg:   "unsupported receiver address",
+			minRelayFee: 0.00001, // 1000 sat/KB
+			expected:    nil,
+			errMsg:      "unsupported receiver address",
 		},
 		{
 			name: "should cancel restricted CCTX",

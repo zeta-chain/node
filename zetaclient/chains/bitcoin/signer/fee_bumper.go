@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/mempool"
 	"github.com/btcsuite/btcd/wire"
@@ -46,10 +47,10 @@ type CPFPFeeBumper struct {
 	MinRelayFee float64
 
 	// CCTXRate is the most recent fee rate of the CCTX
-	CCTXRate int64
+	CCTXRate uint64
 
 	// LiveRate is the most recent market fee rate
-	LiveRate int64
+	LiveRate uint64
 
 	// TotalTxs is the total number of stuck TSS txs
 	TotalTxs int64
@@ -61,7 +62,7 @@ type CPFPFeeBumper struct {
 	TotalVSize int64
 
 	// AvgFeeRate is the average fee rate of all stuck TSS txs
-	AvgFeeRate int64
+	AvgFeeRate uint64
 
 	Logger zerolog.Logger
 }
@@ -72,7 +73,7 @@ func NewCPFPFeeBumper(
 	rpc RPC,
 	chain chains.Chain,
 	tx *btcutil.Tx,
-	cctxRate int64,
+	cctxRate uint64,
 	minRelayFee float64,
 	logger zerolog.Logger,
 ) (*CPFPFeeBumper, error) {
@@ -94,7 +95,7 @@ func NewCPFPFeeBumper(
 }
 
 // BumpTxFee bumps the fee of the stuck transaction using reserved bump fees
-func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
+func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	// reuse old tx body
 	newTx := CopyMsgTxNoWitness(b.Tx.MsgTx())
 	if len(newTx.TxOut) < 3 {
@@ -103,21 +104,22 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 
 	// the new fee rate is supposed to be much higher than current paid rate (old rate).
 	// we print a warning message if it's not the case for monitoring purposes.
-	oldRateBumped := mathpkg.IncreaseIntByPercent(b.AvgFeeRate, decentFeeBumpPercent)
-	if b.CCTXRate < oldRateBumped {
+	// #nosec G115 always positive
+	oldRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.AvgFeeRate), decentFeeBumpPercent)
+	if sdkmath.NewUint(b.CCTXRate).LT(oldRateBumped) {
 		b.Logger.Warn().
-			Int64("old_fee_rate", b.AvgFeeRate).
-			Int64("new_fee_rate", b.CCTXRate).
+			Uint64("old_fee_rate", b.AvgFeeRate).
+			Uint64("new_fee_rate", b.CCTXRate).
 			Msg("new fee rate is not much higher than the old fee rate")
 	}
 
 	// the live rate may continue increasing during network congestion, and the new fee rate is still not high enough.
 	// but we should still continue with the tx replacement because zetacore had already bumped the fee rate.
-	newRateBumped := mathpkg.IncreaseIntByPercent(b.CCTXRate, decentFeeBumpPercent)
-	if b.LiveRate > newRateBumped {
+	newRateBumped, _ := mathpkg.IncreaseUintByPercent(sdkmath.NewUint(b.CCTXRate), decentFeeBumpPercent)
+	if sdkmath.NewUint(b.LiveRate).GT(newRateBumped) {
 		b.Logger.Warn().
-			Int64("new_fee_rate", b.CCTXRate).
-			Int64("live_fee_rate", b.LiveRate).
+			Uint64("new_fee_rate", b.CCTXRate).
+			Uint64("live_fee_rate", b.LiveRate).
 			Msg("live fee rate is still much higher than the new fee rate")
 	}
 
@@ -127,16 +129,21 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	// calculate minmimum relay fees of the new replacement tx
 	// the new tx will have almost same size as the old one because the tx body stays the same
 	txVSize := mempool.GetTxVirtualSize(b.Tx)
-	minRelayFeeRate := common.FeeRateToSatPerByte(b.MinRelayFee)
-	minRelayTxFees := txVSize * minRelayFeeRate
+	minRelayFeeRate, err := common.FeeRateToSatPerByte(b.MinRelayFee)
+	if err != nil {
+		return nil, 0, 0, errors.Wrapf(err, "unable to convert min relay fee rate")
+	}
+	// #nosec G115 always in range
+	minRelayTxFees := txVSize * int64(minRelayFeeRate)
 
 	// calculate the RBF additional fees required by Bitcoin protocol
 	// two conditions to satisfy:
 	// 1. new txFees >= old txFees (already handled above)
 	// 2. additionalFees >= minRelayTxFees
 	//
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
-	additionalFees := b.TotalVSize*feeRateNew - b.TotalFees
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
+	// #nosec G115 always in range
+	additionalFees := b.TotalVSize*int64(feeRateNew) - b.TotalFees
 	if additionalFees < minRelayTxFees {
 		return nil, 0, 0, fmt.Errorf(
 			"hold on RBF: additional fees %d is lower than min relay fees %d",
@@ -156,7 +163,8 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, int64, error) {
 	}
 
 	// effective fee rate
-	feeRateNew = int64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
+	// #nosec G115 always positive
+	feeRateNew = uint64(math.Ceil(float64(b.TotalFees+additionalFees) / float64(b.TotalVSize)))
 
 	return newTx, additionalFees, feeRateNew, nil
 }
@@ -193,7 +201,7 @@ func (b *CPFPFeeBumper) FetchFeeBumpInfo() error {
 		Int64("total_txs", totalTxs).
 		Int64("total_fees", totalFeesSats).
 		Int64("total_vsize", totalVSize).
-		Int64("avg_fee_rate", avgFeeRate).
+		Uint64("avg_fee_rate", avgFeeRate).
 		Msg("fetched fee bump information")
 
 	return nil

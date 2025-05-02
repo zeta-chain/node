@@ -35,13 +35,13 @@ type RPC interface {
 	IsRegnet() bool
 	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 	GetTotalMempoolParentsSizeNFees(
 		ctx context.Context,
 		childHash string,
 		timeout time.Duration,
-	) (int64, float64, int64, int64, error)
+	) (int64, float64, int64, uint64, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.

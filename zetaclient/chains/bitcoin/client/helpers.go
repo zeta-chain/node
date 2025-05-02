@@ -125,7 +125,7 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 }
 
 // GetEstimatedFeeRate gets estimated smart fee rate (sat/vB) targeting given block confirmation
-func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (satsPerByte int64, err error) {
+func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (satsPerByte uint64, err error) {
 	// RPC 'EstimateSmartFee' is not available in regnet
 	if c.isRegnet {
 		return FeeRateRegnet, nil
@@ -145,7 +145,13 @@ func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (sat
 	if feeRate <= 0 || feeRate >= maxBTCSupply {
 		return 0, fmt.Errorf("invalid fee rate: %f", feeRate)
 	}
-	return common.FeeRateToSatPerByte(feeRate), nil
+
+	feeRateUint, err := common.FeeRateToSatPerByte(feeRate)
+	if err != nil {
+		return 0, errors.Wrapf(err, "invalid fee rate: %f", feeRate)
+	}
+
+	return feeRateUint, nil
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
@@ -230,12 +236,12 @@ func (c *Client) GetTotalMempoolParentsSizeNFees(
 	ctx context.Context,
 	childHash string,
 	timeout time.Duration,
-) (int64, float64, int64, int64, error) {
+) (int64, float64, int64, uint64, error) {
 	var (
 		totalTxs   int64
 		totalFees  float64
 		totalVSize int64
-		avgFeeRate int64
+		avgFeeRate uint64
 	)
 
 	// loop through all parents
@@ -280,7 +286,8 @@ func (c *Client) GetTotalMempoolParentsSizeNFees(
 	}
 
 	// calculate the average fee rate
-	avgFeeRate = int64(math.Ceil(totalFees / float64(totalVSize)))
+	// #nosec G115 always positive
+	avgFeeRate = uint64(math.Ceil(totalFees / float64(totalVSize)))
 
 	return totalTxs, totalFees, totalVSize, avgFeeRate, nil
 }

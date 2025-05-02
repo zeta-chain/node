@@ -57,8 +57,8 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
 	logger.Info().
-		Int64("old_fee_rate", fb.AvgFeeRate).
-		Int64("new_fee_rate", newRate).
+		Uint64("old_fee_rate", fb.AvgFeeRate).
+		Uint64("new_fee_rate", newRate).
 		Int64("additional_fees", additionalFees).
 		Msg("BumpTxFee succeed")
 

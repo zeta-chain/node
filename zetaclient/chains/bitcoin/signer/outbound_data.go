@@ -28,11 +28,11 @@ type OutboundData struct {
 	amountSats int64
 
 	// feeRate is the fee rate in satoshis/vByte
-	feeRate int64
+	feeRate uint64
 
 	// feeRateLatest is the latest median fee rate in satoshis/vByte
 	// this value is fed by the zetacore when it bumps the gas price with gas stability pool
-	feeRateLatest int64
+	feeRateLatest uint64
 
 	// feeRateBumpped is a flag to indicate if the fee rate in CCTX is bumped by zetacore
 	feeRateBumped bool
@@ -68,8 +68,8 @@ func NewOutboundData(
 	}
 
 	// parse fee rate
-	feeRate, err := strconv.ParseInt(params.GasPrice, 10, 64)
-	if err != nil || feeRate <= 0 {
+	feeRate, err := strconv.ParseUint(params.GasPrice, 10, 64)
+	if err != nil || feeRate == 0 {
 		return nil, fmt.Errorf("invalid fee rate %s", params.GasPrice)
 	}
 
@@ -77,10 +77,10 @@ func NewOutboundData(
 	// 'GasPriorityFee' is always "0" for Bitcoin unless zetacore bumps the fee rate
 	var (
 		feeRateBumped bool
-		feeRateLatest int64
+		feeRateLatest uint64
 	)
 	if params.GasPriorityFee != "" {
-		gasPriorityFee, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
+		gasPriorityFee, err := strconv.ParseUint(params.GasPriorityFee, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid gas priority fee %s", params.GasPriorityFee)
 		}
@@ -94,8 +94,11 @@ func NewOutboundData(
 
 	// to avoid minRelayTxFee error, please do not use the minimum rate (1 sat/vB by default).
 	// we simply add additional 1 sat/vB to 'minRate' to avoid tx rejection by Bitcoin core.
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/policy.h#L35
-	minRate := common.FeeRateToSatPerByte(minRelayFee)
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/policy.h#L42
+	minRate, err := common.FeeRateToSatPerByte(minRelayFee)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid min relay fee")
+	}
 	if feeRate <= minRate {
 		feeRate = minRate + 1
 	}

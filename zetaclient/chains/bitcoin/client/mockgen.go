@@ -36,7 +36,7 @@ type client interface {
 		ctx context.Context,
 		childHash string,
 		timeout time.Duration,
-	) (int64, float64, int64, int64, error)
+	) (int64, float64, int64, uint64, error)
 
 	GetRawTransactionResult(
 		ctx context.Context,
@@ -46,7 +46,7 @@ type client interface {
 
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,
