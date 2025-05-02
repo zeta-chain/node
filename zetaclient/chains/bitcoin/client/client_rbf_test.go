@@ -32,9 +32,17 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		t.Skip("skipping live test")
 	}
 
-	Test_RBFTransaction(t)
-	Test_RBFTransaction_Chained_CPFP(t)
-	Test_PendingMempoolTx(t)
+	t.Run("RBFTransaction", func(t *testing.T) {
+		Run_RBFTransaction(t)
+	})
+
+	t.Run("RBFTransaction_Chained_CPFP", func(t *testing.T) {
+		Run_RBFTransaction_Chained_CPFP(t)
+	})
+
+	t.Run("PendingMempoolTx", func(t *testing.T) {
+		Run_PendingMempoolTx(t)
+	})
 }
 
 // setupRBFTest initializes the test suite, privateKey, sender, receiver
@@ -71,7 +79,7 @@ func setupRBFTest(t *testing.T) (*testSuite, *secp256k1.PrivateKey, btcutil.Addr
 	return ts, privKey, sender, to
 }
 
-func Test_RBFTransaction(t *testing.T) {
+func Run_RBFTransaction(t *testing.T) {
 	// setup test
 	ts, privKey, sender, to := setupRBFTest(t)
 
@@ -163,7 +171,7 @@ func Test_RBFTransaction(t *testing.T) {
 }
 
 // Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
-func Test_RBFTransaction_Chained_CPFP(t *testing.T) {
+func Run_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
 	ts, privKey, sender, to := setupRBFTest(t)
 
@@ -269,7 +277,7 @@ func Test_RBFTransaction_Chained_CPFP(t *testing.T) {
 	fmt.Println("tx1 dropped")
 }
 
-func Test_PendingMempoolTx(t *testing.T) {
+func Run_PendingMempoolTx(t *testing.T) {
 	// network to use
 	config := config.BTCConfig{
 		RPCHost:   os.Getenv(common.EnvBtcRPCMainnet),
