@@ -52,19 +52,19 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	}
 
 	// bump tx fees
-	newTx, additionalFees, newRate, err := fb.BumpTxFee()
+	result, err := fb.BumpTxFee()
 	if err != nil {
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
 	logger.Info().
 		Uint64("old_fee_rate", fb.TxsAndFees.AvgFeeRate).
-		Uint64("new_fee_rate", newRate).
-		Int64("additional_fees", additionalFees).
+		Uint64("new_fee_rate", result.NewFeeRate).
+		Int64("additional_fees", result.AdditionalFees).
 		Msg("BumpTxFee succeed")
 
 	// collect input amounts for signing
-	inAmounts := make([]int64, len(newTx.TxIn))
-	for i, input := range newTx.TxIn {
+	inAmounts := make([]int64, len(result.NewTx.TxIn))
+	for i, input := range result.NewTx.TxIn {
 		preOut := input.PreviousOutPoint
 		preTx, err := signer.rpc.GetRawTransaction(ctx, &preOut.Hash)
 		if err != nil {
@@ -74,10 +74,10 @@ func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastT
 	}
 
 	// sign the RBF tx
-	err = signer.SignTx(ctx, newTx, inAmounts, txData.height, txData.nonce)
+	err = signer.SignTx(ctx, result.NewTx, inAmounts, txData.height, txData.nonce)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
 
-	return newTx, nil
+	return result.NewTx, nil
 }

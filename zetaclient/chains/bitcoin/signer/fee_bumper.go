@@ -59,6 +59,13 @@ type CPFPFeeBumper struct {
 	Logger zerolog.Logger
 }
 
+// BumpResult contains the result of the fee bump
+type BumpResult struct {
+	NewTx          *wire.MsgTx
+	AdditionalFees int64
+	NewFeeRate     uint64
+}
+
 // NewCPFPFeeBumper creates a new CPFPFeeBumper
 func NewCPFPFeeBumper(
 	ctx context.Context,
@@ -87,11 +94,11 @@ func NewCPFPFeeBumper(
 }
 
 // BumpTxFee bumps the fee of the stuck transaction using reserved bump fees
-func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
+func (b *CPFPFeeBumper) BumpTxFee() (result BumpResult, err error) {
 	// reuse old tx body
 	newTx := CopyMsgTxNoWitness(b.Tx.MsgTx())
 	if len(newTx.TxOut) < 3 {
-		return nil, 0, 0, errors.New("original tx has no reserved bump fees")
+		return result, errors.New("original tx has no reserved bump fees")
 	}
 
 	// the new fee rate is supposed to be much higher than current paid rate (old rate).
@@ -123,7 +130,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	txVSize := mempool.GetTxVirtualSize(b.Tx)
 	minRelayFeeRate, err := common.FeeRateToSatPerByte(b.MinRelayFee)
 	if err != nil {
-		return nil, 0, 0, errors.Wrapf(err, "unable to convert min relay fee rate")
+		return result, errors.Wrapf(err, "unable to convert min relay fee rate")
 	}
 	// #nosec G115 always in range
 	minRelayTxFees := txVSize * int64(minRelayFeeRate)
@@ -137,7 +144,7 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	// #nosec G115 always in range
 	additionalFees := b.TxsAndFees.TotalVSize*int64(feeRateNew) - b.TxsAndFees.TotalFees
 	if additionalFees < minRelayTxFees {
-		return nil, 0, 0, fmt.Errorf(
+		return result, fmt.Errorf(
 			"hold on RBF: additional fees %d is lower than min relay fees %d",
 			additionalFees,
 			minRelayTxFees,
@@ -158,7 +165,11 @@ func (b *CPFPFeeBumper) BumpTxFee() (*wire.MsgTx, int64, uint64, error) {
 	// #nosec G115 always positive
 	feeRateNew = uint64(math.Ceil(float64(b.TxsAndFees.TotalFees+additionalFees) / float64(b.TxsAndFees.TotalVSize)))
 
-	return newTx, additionalFees, feeRateNew, nil
+	return BumpResult{
+		NewTx:          newTx,
+		AdditionalFees: additionalFees,
+		NewFeeRate:     feeRateNew,
+	}, nil
 }
 
 // fetchFeeBumpInfo fetches all necessary information needed to bump the stuck tx

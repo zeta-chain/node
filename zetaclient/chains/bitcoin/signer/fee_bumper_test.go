@@ -127,12 +127,10 @@ func Test_BumpTxFee(t *testing.T) {
 	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
 	tests := []struct {
-		name            string
-		feeBumper       *CPFPFeeBumper
-		additionalFees  int64
-		expectedNewRate uint64
-		expectedNewTx   *wire.MsgTx
-		errMsg          string
+		name      string
+		feeBumper *CPFPFeeBumper
+		expected  BumpResult
+		errMsg    string
 	}{
 		{
 			name: "should bump tx fee successfully",
@@ -148,14 +146,16 @@ func Test_BumpTxFee(t *testing.T) {
 				},
 				Logger: log.Logger,
 			},
-			additionalFees:  4632, // 579*55 - 27213
-			expectedNewRate: 55,
-			expectedNewTx: func() *wire.MsgTx {
-				// deduct additional fees
-				newTx := CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut[2].Value -= 4632
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// deduct additional fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut[2].Value -= 4632
+					return newTx
+				}(),
+				AdditionalFees: 4632, // 579*55 - 27213
+				NewFeeRate:     55,
+			},
 		},
 		{
 			name: "should give up all reserved bump fees",
@@ -176,14 +176,16 @@ func Test_BumpTxFee(t *testing.T) {
 				},
 				Logger: log.Logger,
 			},
-			additionalFees:  6789, // same as the reserved value in 2nd output
-			expectedNewRate: 59,   // (27213 + 6789) / 579 ≈ 59
-			expectedNewTx: func() *wire.MsgTx {
-				// give up all reserved bump fees
-				newTx := CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut = newTx.TxOut[:2]
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// give up all reserved bump fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut = newTx.TxOut[:2]
+					return newTx
+				}(),
+				AdditionalFees: 6789, // same as the reserved value in 2nd output
+				NewFeeRate:     59,   // (27213 + 6789) / 579 ≈ 59
+			},
 		},
 		{
 			name: "should set new gas rate to 'gasRateCap'",
@@ -199,14 +201,16 @@ func Test_BumpTxFee(t *testing.T) {
 				},
 				Logger: log.Logger,
 			},
-			additionalFees:  30687, // (100-47)*579
-			expectedNewRate: 100,
-			expectedNewTx: func() *wire.MsgTx {
-				// deduct additional fees
-				newTx := CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut[2].Value -= 30687
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// deduct additional fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut[2].Value -= 30687
+					return newTx
+				}(),
+				AdditionalFees: 30687, // (100-47)*579
+				NewFeeRate:     100,
+			},
 		},
 		{
 			name: "should fail if original tx has no reserved bump fees",
@@ -240,16 +244,13 @@ func Test_BumpTxFee(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newTx, additionalFees, newRate, err := tt.feeBumper.BumpTxFee()
+			result, err := tt.feeBumper.BumpTxFee()
 			if tt.errMsg != "" {
-				require.Nil(t, newTx)
-				require.Zero(t, additionalFees)
+				require.Nil(t, result.NewTx)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedNewTx, newTx)
-				require.Equal(t, tt.additionalFees, additionalFees)
-				require.Equal(t, tt.expectedNewRate, newRate)
+				require.Equal(t, tt.expected, result)
 			}
 		})
 	}
