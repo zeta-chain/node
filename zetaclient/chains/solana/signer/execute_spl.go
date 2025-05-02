@@ -26,7 +26,7 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	remainingAccounts []*solana.AccountMeta,
 	executeType contracts.ExecuteType,
 	cancelTx bool,
-) (*contracts.MsgExecuteSPL, *contracts.MsgIncrementNonce, error) {
+) (*contracts.MsgExecuteSPL, error) {
 	chain := signer.Chain()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
@@ -41,24 +41,24 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
+		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
 	// parse mint account
 	mintAccount, err := solana.PublicKeyFromBase58(asset)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "cannot parse asset public key %s", asset)
+		return nil, errors.Wrapf(err, "cannot parse asset public key %s", asset)
 	}
 
 	// get recipient ata
 	destinationProgramPda, err := contracts.ComputeConnectedPdaAddress(to)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot decode connected spl pda address")
+		return nil, errors.Wrap(err, "cannot decode connected spl pda address")
 	}
 
 	destinationProgramPdaAta, _, err := solana.FindAssociatedTokenAddress(destinationProgramPda, mintAccount)
 	if err != nil {
-		return nil, nil, errors.Wrapf(
+		return nil, errors.Wrapf(
 			err,
 			"cannot find ATA for %s and mint account %s",
 			destinationProgramPda,
@@ -82,20 +82,15 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	)
 	msgHash := msg.Hash()
 
-	// prepare increment_nonce msg and compute hash, it will be used as fallback tx in case execute spl fails
-	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
-	msgHashIncrementNonce := msgIncrementNonce.Hash()
-
 	// sign the message with TSS to get an ECDSA signature.
 	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().
-		SignBatch(ctx, [][]byte{msgHash[:], msgHashIncrementNonce[:]}, height, nonce, chain.ChainId)
+	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "key-sign failed")
+		return nil, errors.Wrap(err, "key-sign failed")
 	}
 
 	// attach the signature and return
-	return msg.SetSignature(signature[0]), msgIncrementNonce.SetSignature(signature[1]), nil
+	return msg.SetSignature(signature), nil
 }
 
 // createExecuteSPLInstruction wraps the execute spl 'msg' into a Solana instruction.
