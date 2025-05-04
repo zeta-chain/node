@@ -769,6 +769,14 @@ export declare class QueryAllCctxRequest extends Message<QueryAllCctxRequest> {
    */
   pagination?: PageRequest;
 
+  /**
+   * Bulk dump all CCTX without ordering.
+   * This is useful for initializing a CCTX indexer.
+   *
+   * @generated from field: bool unordered = 2;
+   */
+  unordered: boolean;
+
   constructor(data?: PartialMessage<QueryAllCctxRequest>);
 
   static readonly runtime: typeof proto3;

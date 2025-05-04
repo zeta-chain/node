@@ -1,11 +1,8 @@
-package observer_test
+package observer
 
 import (
-	"encoding/hex"
-	"math/big"
 	"testing"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -13,13 +10,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
@@ -30,14 +24,15 @@ func createTestBtcEvent(
 	net *chaincfg.Params,
 	memo []byte,
 	memoStd *memo.InboundMemo,
-) observer.BTCInboundEvent {
-	return observer.BTCInboundEvent{
-		FromAddress: sample.BTCAddressP2WPKH(t, net).String(),
+) BTCInboundEvent {
+	return BTCInboundEvent{
+		FromAddress: sample.BTCAddressP2WPKH(t, sample.Rand(), net).String(),
 		ToAddress:   sample.EthAddress().Hex(),
 		MemoBytes:   memo,
 		MemoStd:     memoStd,
 		TxHash:      sample.Hash().Hex(),
 		BlockNumber: 123456,
+		Status:      crosschaintypes.InboundStatus_SUCCESS,
 	}
 }
 
@@ -46,25 +41,25 @@ func Test_Category(t *testing.T) {
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {
 		name     string
-		event    *observer.BTCInboundEvent
+		event    *BTCInboundEvent
 		expected clienttypes.InboundCategory
 	}{
 		{
-			name: "should return InboundCategoryGood for a processable inbound event",
-			event: &observer.BTCInboundEvent{
+			name: "should return InboundCategoryProcessable for a processable inbound event",
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
-			expected: clienttypes.InboundCategoryGood,
+			expected: clienttypes.InboundCategoryProcessable,
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted sender address",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: sample.RestrictedBtcAddressTest,
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
@@ -72,7 +67,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted receiver address in standard memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoStd: &memo.InboundMemo{
@@ -85,7 +80,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted revert address in standard memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoStd: &memo.InboundMemo{
@@ -100,7 +95,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryDonation for a donation inbound event",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoBytes:   []byte(constant.DonationMessage),
@@ -122,7 +117,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 	tests := []struct {
 		name             string
 		chainID          int64
-		event            *observer.BTCInboundEvent
+		event            *BTCInboundEvent
 		expectedMemoStd  *memo.InboundMemo
 		expectedReceiver common.Address
 		donation         bool
@@ -131,7 +126,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should decode standard memo bytes successfully",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -154,7 +149,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should fall back to legacy memo successfully",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// raw address + payload
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
@@ -163,7 +158,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should disable standard memo for Bitcoin mainnet",
 			chainID: chains.BitcoinMainnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -173,9 +168,17 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			expectedReceiver: common.HexToAddress("0x5A0110032d07A9cbd57dcCa3e2Cf966c88bC8744"),
 		},
 		{
+			name:    "should return error if no memo is found",
+			chainID: chains.BitcoinTestnet.ChainId,
+			event: &BTCInboundEvent{
+				MemoBytes: []byte("no memo found"),
+			},
+			errMsg: "no memo found in inbound",
+		},
+		{
 			name:    "should do nothing for donation message",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				MemoBytes: []byte(constant.DonationMessage),
 			},
 			donation: true,
@@ -183,7 +186,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should return error if standard memo contains improper data",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call, receiver is empty ZEVM address
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -195,7 +198,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should return error if standard memo validation failed",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a no asset call opCode passed, not supported at the moment
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -235,6 +238,8 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 }
 
 func Test_ValidateStandardMemo(t *testing.T) {
+	r := sample.Rand()
+
 	// test cases
 	tests := []struct {
 		name   string
@@ -249,7 +254,7 @@ func Test_ValidateStandardMemo(t *testing.T) {
 				},
 				FieldsV0: memo.FieldsV0{
 					RevertOptions: crosschaintypes.RevertOptions{
-						RevertAddress: sample.BTCAddressP2WPKH(t, &chaincfg.TestNet3Params).String(),
+						RevertAddress: sample.BTCAddressP2WPKH(t, r, &chaincfg.TestNet3Params).String(),
 					},
 				},
 			},
@@ -291,7 +296,7 @@ func Test_ValidateStandardMemo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := observer.ValidateStandardMemo(tt.memo, chains.BitcoinTestnet.ChainId)
+			err := ValidateStandardMemo(tt.memo, chains.BitcoinTestnet.ChainId)
 			if tt.errMsg != "" {
 				require.Contains(t, err.Error(), tt.errMsg)
 				return
@@ -306,18 +311,18 @@ func Test_IsEventProcessable(t *testing.T) {
 	chain := chains.BitcoinMainnet
 
 	// create test observer
-	ob := newTestSuite(t, chain, "")
+	ob := newTestSuite(t, chain)
 
 	// setup compliance config
 	cfg := config.Config{
 		ComplianceConfig: sample.ComplianceConfig(),
 	}
-	config.LoadComplianceConfig(cfg)
+	config.SetRestrictedAddressesFromConfig(cfg)
 
 	// test cases
 	tests := []struct {
 		name   string
-		event  observer.BTCInboundEvent
+		event  BTCInboundEvent
 		result bool
 	}{
 		{
@@ -347,98 +352,4 @@ func Test_IsEventProcessable(t *testing.T) {
 			require.Equal(t, tt.result, result)
 		})
 	}
-}
-
-func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinMainnet
-
-	// create test observer
-	ob := newTestSuite(t, chain, "")
-	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
-
-	t.Run("should create new inbound vote msg V1", func(t *testing.T) {
-		// create test event
-		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dummy memo"), nil)
-
-		// test amount
-		amountSats := big.NewInt(1000)
-
-		// expected vote
-		expectedVote := crosschaintypes.MsgVoteInbound{
-			Sender:             event.FromAddress,
-			SenderChainId:      chain.ChainId,
-			TxOrigin:           event.FromAddress,
-			Receiver:           event.ToAddress,
-			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
-			Message:            hex.EncodeToString(event.MemoBytes),
-			InboundHash:        event.TxHash,
-			InboundBlockHeight: event.BlockNumber,
-			CallOptions: &crosschaintypes.CallOptions{
-				GasLimit: 0,
-			},
-			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1,
-			RevertOptions:           crosschaintypes.NewEmptyRevertOptions(), // ignored by V1
-		}
-
-		// create new inbound vote V1
-		vote := ob.NewInboundVoteFromLegacyMemo(&event, amountSats)
-		require.Equal(t, expectedVote, *vote)
-	})
-}
-
-func Test_NewInboundVoteFromStdMemo(t *testing.T) {
-	// can use any bitcoin chain for testing
-	chain := chains.BitcoinMainnet
-
-	// create test observer
-	ob := newTestSuite(t, chain, "")
-	ob.zetacore.WithKeys(&keys.Keys{}).WithZetaChain()
-
-	t.Run("should create new inbound vote msg with standard memo", func(t *testing.T) {
-		// create revert options
-		revertOptions := crosschaintypes.NewEmptyRevertOptions()
-		revertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, &chaincfg.MainNetParams).String()
-
-		// create test event
-		receiver := sample.EthAddress()
-		event := createTestBtcEvent(t, &chaincfg.MainNetParams, []byte("dymmy"), &memo.InboundMemo{
-			FieldsV0: memo.FieldsV0{
-				Receiver:      receiver,
-				Payload:       []byte("some payload"),
-				RevertOptions: revertOptions,
-			},
-		})
-
-		// test amount
-		amountSats := big.NewInt(1000)
-
-		// expected vote
-		memoBytesExpected := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
-		expectedVote := crosschaintypes.MsgVoteInbound{
-			Sender:             event.FromAddress,
-			SenderChainId:      chain.ChainId,
-			TxOrigin:           event.FromAddress,
-			Receiver:           event.ToAddress,
-			ReceiverChain:      ob.ZetacoreClient().Chain().ChainId,
-			Amount:             cosmosmath.NewUint(amountSats.Uint64()),
-			Message:            hex.EncodeToString(memoBytesExpected), // a simulated legacy memo
-			InboundHash:        event.TxHash,
-			InboundBlockHeight: event.BlockNumber,
-			CallOptions: &crosschaintypes.CallOptions{
-				GasLimit: 0,
-			},
-			CoinType:                coin.CoinType_Gas,
-			ProtocolContractVersion: crosschaintypes.ProtocolContractVersion_V1,
-			RevertOptions: crosschaintypes.RevertOptions{
-				RevertAddress: revertOptions.RevertAddress, // should be overridden by revert address
-			},
-		}
-
-		// create new inbound vote V1 with standard memo
-		vote := ob.NewInboundVoteFromStdMemo(&event, amountSats)
-		require.Equal(t, expectedVote, *vote)
-	})
 }

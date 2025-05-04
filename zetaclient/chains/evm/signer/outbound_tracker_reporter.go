@@ -9,8 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/bg"
 	crosschainkeeper "github.com/zeta-chain/node/x/crosschain/keeper"
-	"github.com/zeta-chain/node/zetaclient/chains/evm"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/rpc"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -55,13 +54,13 @@ func (signer *Signer) reportToOutboundTracker(
 			// 1. the gas stability pool should have kicked in and replaced the tx by then.
 			// 2. even if there is a chance that the tx is included later, most likely it's going to be a false tx hash (either replaced or dropped).
 			// 3. we prefer missed tx hash over potentially invalid txhash.
-			if time.Since(tStart) > evm.OutboundInclusionTimeout {
+			if time.Since(tStart) > common.OutboundInclusionTimeout {
 				logger.Info().Msgf("timeout waiting outbound inclusion")
 				return nil
 			}
 
 			// check tx confirmation status
-			confirmed, err := rpc.IsTxConfirmed(ctx, signer.client, outboundHash, evm.ReorgProtectBlockCount)
+			confirmed, err := signer.client.IsTxConfirmed(ctx, outboundHash, common.ReorgProtectBlockCount)
 			if err != nil {
 				logger.Err(err).Msg("unable to check confirmation status of outbound")
 				continue

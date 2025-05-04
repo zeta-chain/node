@@ -1,12 +1,12 @@
 package app
 
 import (
+	"context"
 	"os"
 	"path"
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/stretchr/testify/require"
 
@@ -17,9 +17,7 @@ import (
 func TestUpgradeTracker(t *testing.T) {
 	r := require.New(t)
 
-	tmpdir, err := os.MkdirTemp("", "storeupgradetracker-*")
-	r.NoError(err)
-	defer os.RemoveAll(tmpdir)
+	tmpdir := t.TempDir()
 
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{
@@ -34,13 +32,13 @@ func TestUpgradeTracker(t *testing.T) {
 				storeUpgrade: &storetypes.StoreUpgrades{
 					Added: []string{lightclienttypes.ModuleName},
 				},
-				upgradeHandler: func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error) {
+				upgradeHandler: func(ctx context.Context, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				},
 			},
 			{
 				index: 3000,
-				upgradeHandler: func(ctx sdk.Context, vm module.VersionMap) (module.VersionMap, error) {
+				upgradeHandler: func(ctx context.Context, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				},
 			},
@@ -55,7 +53,7 @@ func TestUpgradeTracker(t *testing.T) {
 	r.Len(upgradeHandlers, 2)
 
 	// should return all migrations on first call
-	upgradeHandlers, storeUpgrades, err = allUpgrades.getIncrementalUpgrades()
+	upgradeHandlers, storeUpgrades, err := allUpgrades.getIncrementalUpgrades()
 	r.NoError(err)
 	r.Len(storeUpgrades.Added, 2)
 	r.Len(storeUpgrades.Renamed, 0)
@@ -90,13 +88,11 @@ func TestUpgradeTracker(t *testing.T) {
 func TestUpgradeTrackerBadState(t *testing.T) {
 	r := require.New(t)
 
-	tmpdir, err := os.MkdirTemp("", "storeupgradetracker-*")
-	r.NoError(err)
-	defer os.RemoveAll(tmpdir)
+	tmpdir := t.TempDir()
 
 	stateFilePath := path.Join(tmpdir, incrementalUpgradeTrackerStateFile)
 
-	err = os.WriteFile(stateFilePath, []byte("badstate"), 0o600)
+	err := os.WriteFile(stateFilePath, []byte("badstate"), 0o600)
 	r.NoError(err)
 
 	allUpgrades := upgradeTracker{

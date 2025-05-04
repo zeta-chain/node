@@ -5,7 +5,7 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -21,13 +21,13 @@ import (
 type ChainGasParams struct {
 	GasZRC20 ethcommon.Address
 
-	GasLimit math.Uint
-	GasPrice math.Uint
+	GasLimit sdkmath.Uint
+	GasPrice sdkmath.Uint
 
 	// PriorityFee (optional for EIP-1559)
-	PriorityFee math.Uint
+	PriorityFee sdkmath.Uint
 
-	ProtocolFlatFee math.Uint
+	ProtocolFlatFee sdkmath.Uint
 }
 
 // PayGasAndUpdateCctx updates the outbound tx with the new amount after paying the gas fee
@@ -37,7 +37,7 @@ func (k Keeper) PayGasAndUpdateCctx(
 	ctx sdk.Context,
 	chainID int64,
 	cctx *types.CrossChainTx,
-	inputAmount math.Uint,
+	inputAmount sdkmath.Uint,
 	noEthereumTxEvent bool,
 ) error {
 	// Dispatch to the correct function based on the coin type
@@ -88,10 +88,10 @@ func (k Keeper) ChainGasParams(ctx sdk.Context, chainID int64) (ChainGasParams, 
 
 	return ChainGasParams{
 		GasZRC20:        gasZRC20,
-		GasLimit:        math.NewUintFromBigInt(gasLimit),
+		GasLimit:        sdkmath.NewUintFromBigInt(gasLimit),
 		GasPrice:        gasPrice,
 		PriorityFee:     priorityFee,
-		ProtocolFlatFee: math.NewUintFromBigInt(protocolFlatFee),
+		ProtocolFlatFee: sdkmath.NewUintFromBigInt(protocolFlatFee),
 	}, nil
 }
 
@@ -101,7 +101,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	ctx sdk.Context,
 	chainID int64,
 	cctx *types.CrossChainTx,
-	inputAmount math.Uint,
+	inputAmount sdkmath.Uint,
 ) error {
 	// preliminary checks
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
@@ -134,10 +134,12 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	if outTxGasFee.GT(inputAmount) {
 		return cosmoserrors.Wrap(
 			types.ErrNotEnoughGas,
-			fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
+			fmt.Sprintf(
+				"unable to pay for outbound tx using gas token, outbound chain: %d, required: %s, available: %s",
+				chainID,
 				outTxGasFee,
 				inputAmount,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
 	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", inputAmount.String(), "fee", outTxGasFee.String())
@@ -160,7 +162,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	ctx sdk.Context,
 	chainID int64,
 	cctx *types.CrossChainTx,
-	inputAmount math.Uint,
+	inputAmount sdkmath.Uint,
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
@@ -220,16 +222,18 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	// subtract the withdraw fee from the input amount
-	if math.NewUintFromBigInt(feeInZRC20).GT(inputAmount) {
+	if sdkmath.NewUintFromBigInt(feeInZRC20).GT(inputAmount) {
 		return cosmoserrors.Wrap(
 			types.ErrNotEnoughGas,
-			fmt.Sprintf("feeInZRC20(%s) more than available gas for tx (%s) | Identifiers : %s ",
-				feeInZRC20,
+			fmt.Sprintf(
+				"unable to pay for outbound tx using zrc20 token, outbound chain: %d, required: %s, available: %s",
+				chainID,
+				outTxGasFee,
 				inputAmount,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
-	newAmount := inputAmount.Sub(math.NewUintFromBigInt(feeInZRC20))
+	newAmount := inputAmount.Sub(sdkmath.NewUintFromBigInt(feeInZRC20))
 
 	// mint the amount of ERC20 to be burnt as gas fee
 	_, err = k.fungibleKeeper.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, feeInZRC20)
@@ -318,7 +322,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	ctx sdk.Context,
 	chainID int64,
 	cctx *types.CrossChainTx,
-	zetaBurnt math.Uint,
+	zetaBurnt sdkmath.Uint,
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
@@ -347,9 +351,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	gasPrice, priorityFee, isFound := k.GetMedianGasValues(ctx, chainID)
 	if !isFound {
 		return cosmoserrors.Wrapf(types.ErrUnableToGetGasPrice,
-			"chain %d; identifiers %q",
+			"chain %d",
 			chainID,
-			cctx.LogIdentifierForCCTX(),
 		)
 	}
 	// overpays gas price
@@ -368,7 +371,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	// get the gas fee in gas token
-	gasLimit := sdk.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
+	gasLimit := sdkmath.NewUint(cctx.GetCurrentOutboundParam().CallOptions.GasLimit)
 	outTxGasFee := gasLimit.Mul(gasPrice)
 
 	// get the gas fee in Zeta using system uniswapv2 pool wzeta/gasZRC20 and adding the protocol fee
@@ -376,15 +379,18 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	if err != nil {
 		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapV2RouterGetZetaAmountsIn")
 	}
-	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
+	feeInZeta := types.GetProtocolFee().Add(sdkmath.NewUintFromBigInt(outTxGasFeeInZeta))
+
 	// reduce the amount of the outbound tx
 	if feeInZeta.GT(zetaBurnt) {
 		return cosmoserrors.Wrap(
-			types.ErrNotEnoughZetaBurnt,
-			fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
-				feeInZeta,
+			types.ErrNotEnoughGas,
+			fmt.Sprintf(
+				"unable to pay for outbound tx using zeta token, outbound chain: %d, required: %s, available: %s",
+				chainID,
+				outTxGasFee,
 				zetaBurnt,
-				cctx.LogIdentifierForCCTX()),
+			),
 		)
 	}
 	ctx.Logger().Info("Subtracting amount from inbound tx",
@@ -396,7 +402,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
 	{
-		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
+		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(feeInZeta.BigInt())))
 		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")

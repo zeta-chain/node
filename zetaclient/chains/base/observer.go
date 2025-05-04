@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -131,21 +132,21 @@ func (ob *Observer) Stop() {
 	defer ob.mu.Unlock()
 
 	if !ob.started {
-		ob.logger.Chain.Info().Msgf("Observer already stopped for chain %d", ob.Chain().ChainId)
+		ob.logger.Chain.Info().Msg("Observer already stopped")
 		return
 	}
 
-	ob.logger.Chain.Info().Msgf("Stopping observer for chain %d", ob.Chain().ChainId)
+	ob.logger.Chain.Info().Msg("Stopping observer")
 
 	close(ob.stop)
 	ob.started = false
 
 	// close database
 	if err := ob.db.Close(); err != nil {
-		ob.Logger().Chain.Error().Err(err).Msgf("unable to close db for chain %d", ob.Chain().ChainId)
+		ob.Logger().Chain.Error().Err(err).Msg("Unable to close db")
 	}
 
-	ob.Logger().Chain.Info().Msgf("observer stopped for chain %d", ob.Chain().ChainId)
+	ob.Logger().Chain.Info().Msgf("observer stopped")
 }
 
 // Chain returns the chain for the observer.
@@ -212,15 +213,6 @@ func (ob *Observer) WithLastBlock(lastBlock uint64) *Observer {
 	return ob
 }
 
-// IsBlockConfirmed checks if the given block number is confirmed.
-//
-// Note: block 100 is confirmed if the last block is 100 and confirmation count is 1.
-func (ob *Observer) IsBlockConfirmed(blockNumber uint64) bool {
-	lastBlock := ob.LastBlock()
-	confBlock := blockNumber + ob.chainParams.ConfirmationCount - 1
-	return lastBlock >= confBlock
-}
-
 // LastBlockScanned get last block scanned (not necessarily caught up with the chain; could be slow/paused).
 func (ob *Observer) LastBlockScanned() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
@@ -241,6 +233,9 @@ func (ob *Observer) LastTxScanned() string {
 
 // WithLastTxScanned set last transaction scanned.
 func (ob *Observer) WithLastTxScanned(txHash string) *Observer {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
+
 	ob.lastTxScanned = txHash
 	return ob
 }
@@ -401,9 +396,28 @@ func (ob *Observer) PostVoteInbound(
 
 	// prepare logger fields
 	lf := map[string]any{
-		logs.FieldMethod:   "PostVoteInbound",
-		logs.FieldTx:       txHash,
-		logs.FieldCoinType: coinType.String(),
+		logs.FieldMethod:           "PostVoteInbound",
+		logs.FieldTx:               txHash,
+		logs.FieldCoinType:         coinType.String(),
+		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
+	}
+
+	cctxIndex := msg.Digest()
+	// The cctx is created after the inbound ballot is finalized
+	// 1. if the cctx already exists, we could try voting if the ballot is present
+	// 2. if the cctx exists but the ballot does not exist, we do not need to vote
+	_, err := ob.ZetacoreClient().GetCctxByHash(ctx, cctxIndex)
+	if err == nil {
+		// The cctx exists we should still vote if the ballot is present
+		_, ballotErr := ob.ZetacoreClient().GetBallotByID(ctx, cctxIndex)
+		if ballotErr != nil {
+			// Verify ballot is not found
+			if st, ok := status.FromError(ballotErr); ok && st.Code() == codes.NotFound {
+				// Query for ballot failed, the ballot does not exist we can return
+				ob.logger.Inbound.Info().Fields(lf).Msg("inbound detected: cctx exists but the ballot does not")
+				return cctxIndex, nil
+			}
+		}
 	}
 
 	// make sure the message is valid to avoid unnecessary retries
@@ -428,14 +442,6 @@ func (ob *Observer) PostVoteInbound(
 	}
 
 	return ballot, nil
-}
-
-// ReportBlockLatency records the latency between the current time
-// an the latest block time for a chain as a metric
-func (ob *Observer) ReportBlockLatency(latestBlockTime time.Time) {
-	elapsedTime := time.Since(latestBlockTime)
-
-	metrics.LatestBlockLatency.WithLabelValues(ob.chain.Name).Set(elapsedTime.Seconds())
 }
 
 // EnvVarLatestBlockByChain returns the environment variable for the last block by chain.

@@ -7,9 +7,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -43,7 +43,7 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	// execute the deposit transaction
 	data := []byte("hello spl tokens")
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, contractAddr, data)
+	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, contractAddr, data, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -52,7 +52,13 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContractWithMsg(r, contract, big.NewInt(int64(amount)), data)
+	utils.MustHaveCalledExampleContractWithMsg(
+		r,
+		contract,
+		big.NewInt(int64(amount)),
+		data,
+		[]byte(r.GetSolanaPrivKey().PublicKey().String()),
+	)
 
 	// verify balances are updated
 	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
+	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -13,62 +14,80 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/memo"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
 // ObserveInbound observes the Bitcoin chain for inbounds and post votes to zetacore
-// TODO(revamp): simplify this function into smaller functions
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	// get and update latest block height
-	currentBlock, err := ob.rpc.GetBlockCount(ctx)
-	if err != nil {
-		return fmt.Errorf("observeInboundBTC: error getting block number: %s", err)
-	}
-	if currentBlock < 0 {
-		return fmt.Errorf("observeInboundBTC: block number is negative: %d", currentBlock)
-	}
+	logger := ob.Logger().Inbound.With().Str(logs.FieldMethod, "observe_inbound").Logger()
 
-	// 0 will be returned if the node is not synced
-	if currentBlock == 0 {
-		ob.nodeEnabled.Store(false)
-		ob.logger.Inbound.Debug().Err(err).Msg("WatchInbound: Bitcoin node is not enabled")
-		return nil
-	}
-
-	ob.nodeEnabled.Store(true)
-
-	// #nosec G115 checked positive
-	lastBlock := uint64(currentBlock)
-	if lastBlock < ob.LastBlock() {
-		return fmt.Errorf(
-			"observeInboundBTC: block number should not decrease: current %d last %d",
-			currentBlock,
-			ob.LastBlock(),
-		)
-	}
-	ob.WithLastBlock(lastBlock)
-
-	// check confirmation
-	blockNumber := ob.LastBlockScanned() + 1
-	if !ob.IsBlockConfirmed(blockNumber) {
-		return nil
-	}
-
-	// query incoming gas asset to TSS address
-	// #nosec G115 always in range
-	res, err := ob.GetBlockByNumberCached(ctx, int64(blockNumber))
-	if err != nil {
-		ob.logger.Inbound.Error().Err(err).Msgf("observeInboundBTC: error getting bitcoin block %d", blockNumber)
+	// keep last block up-to-date
+	if err := ob.updateLastBlock(ctx); err != nil {
 		return err
 	}
-	ob.logger.Inbound.Info().Msgf("observeInboundBTC: block %d has %d txs, current block %d, last scanned %d",
-		blockNumber, len(res.Block.Tx), currentBlock, blockNumber-1)
 
-	// add block header to zetacore
-	if len(res.Block.Tx) > 1 {
+	// scan SAFE confirmed blocks
+	startBlockSafe, endBlockSafe := ob.GetScanRangeInboundSafe(config.MaxBlocksPerScan)
+	if startBlockSafe < endBlockSafe {
+		// observe inbounds for the block range [startBlock, endBlock-1]
+		lastScannedNew, err := ob.observeInboundInBlockRange(ctx, startBlockSafe, endBlockSafe-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", startBlockSafe).
+				Uint64("to", endBlockSafe-1).
+				Msg("error observing inbounds in block range")
+		}
+
+		// save last scanned block to both memory and db
+		if lastScannedNew > ob.LastBlockScanned() {
+			logger.Info().
+				Uint64("from", startBlockSafe).
+				Uint64("to", lastScannedNew).
+				Msg("observed blocks for inbounds")
+			if err := ob.SaveLastBlockScanned(lastScannedNew); err != nil {
+				return errors.Wrapf(err, "unable to save last scanned Bitcoin block %d", lastScannedNew)
+			}
+		}
+	}
+
+	// scan FAST confirmed blocks if available
+	_, endBlockFast := ob.GetScanRangeInboundFast(config.MaxBlocksPerScan)
+	if endBlockSafe < endBlockFast {
+		_, err := ob.observeInboundInBlockRange(ctx, endBlockSafe, endBlockFast-1)
+		if err != nil {
+			logger.Error().
+				Err(err).
+				Uint64("from", endBlockSafe).
+				Uint64("to", endBlockFast-1).
+				Msg("error observing inbounds in block range (fast)")
+		}
+	}
+
+	return nil
+}
+
+// observeInboundInBlockRange observes inbounds for given block range [startBlock, toBlock (inclusive)]
+// It returns the last successfully scanned block height, so the caller knows where to resume next time
+func (ob *Observer) observeInboundInBlockRange(ctx context.Context, startBlock, toBlock uint64) (uint64, error) {
+	for blockNumber := startBlock; blockNumber <= toBlock; blockNumber++ {
+		// query incoming gas asset to TSS address
+		// #nosec G115 always in range
+		res, err := ob.GetBlockByNumberCached(ctx, int64(blockNumber))
+		if err != nil {
+			// we have to re-scan this block next time
+			return blockNumber - 1, errors.Wrapf(err, "error getting bitcoin block %d", blockNumber)
+		}
+
+		if len(res.Block.Tx) <= 1 {
+			continue
+		}
+
 		// filter incoming txs to TSS address
 		tssAddress := ob.TSSAddressString()
 
@@ -83,127 +102,40 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			ob.netParams,
 		)
 		if err != nil {
-			ob.logger.Inbound.Error().
-				Err(err).
-				Msgf("observeInboundBTC: error filtering incoming txs for block %d", blockNumber)
-			return err // we have to re-scan this block next time
+			// we have to re-scan this block next time
+			return blockNumber - 1, errors.Wrapf(err, "error filtering incoming txs for block %d", blockNumber)
 		}
 
 		// post inbound vote message to zetacore
 		for _, event := range events {
 			msg := ob.GetInboundVoteFromBtcEvent(event)
 			if msg != nil {
+				// skip early observed inbound that is not eligible for fast confirmation
+				if msg.ConfirmationMode == crosschaintypes.ConfirmationMode_FAST {
+					eligible, err := ob.IsInboundEligibleForFastConfirmation(ctx, msg)
+					if err != nil {
+						return blockNumber - 1, errors.Wrapf(
+							err,
+							"unable to determine inbound fast confirmation eligibility for tx %s",
+							event.TxHash,
+						)
+					}
+					if !eligible {
+						continue
+					}
+				}
+
 				_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 				if err != nil {
-					return errors.Wrapf(err, "error PostVoteInbound") // we have to re-scan this block next time
+					// we have to re-scan this block next time
+					return blockNumber - 1, errors.Wrapf(err, "error posting inbound vote for tx %s", event.TxHash)
 				}
 			}
 		}
 	}
 
-	// save last scanned block to both memory and db
-	if err := ob.SaveLastBlockScanned(blockNumber); err != nil {
-		ob.logger.Inbound.Error().
-			Err(err).
-			Msgf("observeInboundBTC: error writing last scanned block %d to db", blockNumber)
-	}
-
-	return nil
-}
-
-// ObserveInboundTrackers processes inbound trackers
-// TODO(revamp): move inbound tracker logic in a specific file
-func (ob *Observer) ObserveInboundTrackers(ctx context.Context) error {
-	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
-	if err != nil {
-		return err
-	}
-
-	for _, tracker := range trackers {
-		ob.logger.Inbound.Info().
-			Str("tracker.hash", tracker.TxHash).
-			Str("tracker.coin-type", tracker.CoinType.String()).
-			Msgf("checking tracker")
-		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(ctx, tracker.TxHash, true)
-		if err != nil {
-			return err
-		}
-		ob.logger.Inbound.Info().
-			Str("inbound.chain", ob.Chain().Name).
-			Str("inbound.ballot", ballotIdentifier).
-			Str("inbound.coin-type", coin.CoinType_Gas.String()).
-			Msgf("Vote submitted for inbound Tracker")
-	}
-
-	return nil
-}
-
-// CheckReceiptForBtcTxHash checks the receipt for a btc tx hash
-func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string, vote bool) (string, error) {
-	hash, err := chainhash.NewHashFromStr(txHash)
-	if err != nil {
-		return "", err
-	}
-
-	tx, err := ob.rpc.GetRawTransactionVerbose(ctx, hash)
-	if err != nil {
-		return "", err
-	}
-
-	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
-	if err != nil {
-		return "", err
-	}
-
-	blockVb, err := ob.rpc.GetBlockVerbose(ctx, blockHash)
-	if err != nil {
-		return "", err
-	}
-
-	if len(blockVb.Tx) <= 1 {
-		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
-	}
-
-	tss, err := ob.ZetacoreClient().GetBTCTSSAddress(ctx, ob.Chain().ChainId)
-	if err != nil {
-		return "", err
-	}
-
-	// check confirmation
-	// #nosec G115 block height always positive
-	if !ob.IsBlockConfirmed(uint64(blockVb.Height)) {
-		return "", fmt.Errorf("block %d is not confirmed yet", blockVb.Height)
-	}
-
-	// #nosec G115 always positive
-	event, err := GetBtcEvent(
-		ctx,
-		ob.rpc,
-		*tx,
-		tss,
-		uint64(blockVb.Height),
-		ob.logger.Inbound,
-		ob.netParams,
-		common.CalcDepositorFee,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	if event == nil {
-		return "", errors.New("no btc deposit event found")
-	}
-
-	msg := ob.GetInboundVoteFromBtcEvent(event)
-	if msg == nil {
-		return "", errors.New("no message built for btc sent to TSS")
-	}
-
-	if !vote {
-		return msg.Digest(), nil
-	}
-
-	return ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+	// successful processed all blocks in [startBlock, toBlock]
+	return toBlock, nil
 }
 
 // FilterAndParseIncomingTx given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
@@ -235,7 +167,6 @@ func FilterAndParseIncomingTx(
 
 		if event != nil {
 			events = append(events, event)
-			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 
@@ -256,10 +187,11 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	}
 
 	// decode event memo bytes
+	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
 		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
-		return nil
+		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
 	// check if the event is processable
@@ -285,7 +217,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 }
 
 // GetBtcEvent returns a valid BTCInboundEvent or nil
-// it uses witness data to extract the sender address, except for mainnet
+// it uses witness data to extract the sender address
 func GetBtcEvent(
 	ctx context.Context,
 	rpc RPC,
@@ -296,101 +228,7 @@ func GetBtcEvent(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
-	if netParams.Name == chaincfg.MainNetParams.Name {
-		return GetBtcEventWithoutWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
-	}
-
 	return GetBtcEventWithWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
-}
-
-// GetBtcEventWithoutWitness either returns a valid BTCInboundEvent or nil
-// Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
-// TODO(revamp): simplify this function
-func GetBtcEventWithoutWitness(
-	ctx context.Context,
-	rpc RPC,
-	tx btcjson.TxRawResult,
-	tssAddress string,
-	blockNumber uint64,
-	logger zerolog.Logger,
-	netParams *chaincfg.Params,
-	feeCalculator common.DepositorFeeCalculator,
-) (*BTCInboundEvent, error) {
-	var (
-		found        bool
-		value        float64
-		depositorFee float64
-		memo         []byte
-	)
-
-	if len(tx.Vout) >= 2 {
-		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
-		vout0 := tx.Vout[0]
-		script := vout0.ScriptPubKey.Hex
-		if len(script) == 44 && script[:4] == "0014" {
-			// P2WPKH output: 0x00 + 20 bytes of pubkey hash
-			receiver, err := common.DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
-			if err != nil { // should never happen
-				return nil, err
-			}
-
-			// skip irrelevant tx to us
-			if receiver != tssAddress {
-				return nil, nil
-			}
-
-			// calculate depositor fee
-			depositorFee, err = feeCalculator(ctx, rpc, &tx, netParams)
-			if err != nil {
-				return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
-			}
-
-			// deposit amount has to be no less than the minimum depositor fee
-			if vout0.Value < depositorFee {
-				logger.Info().
-					Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
-				return nil, nil
-			}
-			value = vout0.Value - depositorFee
-
-			// 2nd vout must be a valid OP_RETURN memo
-			vout1 := tx.Vout[1]
-			memo, found, err = common.DecodeOpReturnMemo(vout1.ScriptPubKey.Hex)
-			if err != nil {
-				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
-				return nil, nil
-			}
-		}
-	}
-	// event found, get sender address
-	if found {
-		if len(tx.Vin) == 0 { // should never happen
-			return nil, fmt.Errorf("GetBtcEvent: no input found for inbound: %s", tx.Txid)
-		}
-
-		// get sender address by input (vin)
-		fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
-		if err != nil {
-			return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
-		}
-
-		// skip this tx and move on (e.g., due to unknown script type)
-		// we don't know whom to refund if this tx gets reverted in zetacore
-		if fromAddress == "" {
-			return nil, nil
-		}
-
-		return &BTCInboundEvent{
-			FromAddress:  fromAddress,
-			ToAddress:    tssAddress,
-			Value:        value,
-			DepositorFee: depositorFee,
-			MemoBytes:    memo,
-			BlockNumber:  blockNumber,
-			TxHash:       tx.Txid,
-		}, nil
-	}
-	return nil, nil
 }
 
 // GetSenderAddressByVin get the sender address from the transaction input (vin)
@@ -421,4 +259,83 @@ func GetSenderAddressByVin(
 	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
 
 	return common.DecodeSenderFromScript(pkScript, net)
+}
+
+// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
+func (ob *Observer) NewInboundVoteFromLegacyMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		event.FromAddress,
+		ob.Chain().ChainId,
+		event.FromAddress,
+		event.ToAddress,
+		ob.ZetacoreClient().Chain().ChainId,
+		cosmosmath.NewUintFromBigInt(amountSats),
+		hex.EncodeToString(event.MemoBytes),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		coin.CoinType_Gas,
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		crosschaintypes.WithCrossChainCall(len(event.MemoBytes) > 0),
+	)
+}
+
+// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
+func (ob *Observer) NewInboundVoteFromStdMemo(
+	event *BTCInboundEvent,
+	amountSats *big.Int,
+) *crosschaintypes.MsgVoteInbound {
+	// inject the 'revertAddress' specified in the memo, so that
+	// zetacore will create a revert outbound that points to the custom revert address.
+	revertOptions := crosschaintypes.RevertOptions{
+		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
+		AbortAddress:  event.MemoStd.RevertOptions.AbortAddress,
+	}
+
+	// check if the memo is a cross-chain call, or simple token deposit
+	isCrosschainCall := event.MemoStd.OpCode == memo.OpCodeCall || event.MemoStd.OpCode == memo.OpCodeDepositAndCall
+
+	// determine confirmation mode
+	confirmationMode := crosschaintypes.ConfirmationMode_FAST
+	if ob.IsBlockConfirmedForInboundSafe(event.BlockNumber) {
+		confirmationMode = crosschaintypes.ConfirmationMode_SAFE
+	}
+
+	return crosschaintypes.NewMsgVoteInbound(
+		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
+		event.FromAddress,
+		ob.Chain().ChainId,
+		event.FromAddress,
+		event.MemoStd.Receiver.Hex(),
+		ob.ZetacoreClient().Chain().ChainId,
+		cosmosmath.NewUintFromBigInt(amountSats),
+		hex.EncodeToString(event.MemoStd.Payload),
+		event.TxHash,
+		event.BlockNumber,
+		0,
+		coin.CoinType_Gas,
+		"",
+		0,
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // no arbitrary call for deposit to ZetaChain
+		event.Status,
+		confirmationMode,
+		crosschaintypes.WithRevertOptions(revertOptions),
+		crosschaintypes.WithCrossChainCall(isCrosschainCall),
+	)
 }

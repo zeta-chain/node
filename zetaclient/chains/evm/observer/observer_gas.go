@@ -2,53 +2,10 @@ package observer
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
-
-	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
-
-// WatchGasPrice watches evm chain for gas prices and post to zetacore
-// TODO(revamp): move inner logic to a separate function
-func (ob *Observer) WatchGasPrice(ctx context.Context) error {
-	// report gas price right away as the ticker takes time to kick in
-	err := ob.PostGasPrice(ctx)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-	}
-
-	// start gas price ticker
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("EVM_WatchGasPrice_%d", ob.Chain().ChainId),
-		ob.ChainParams().GasPriceTicker,
-	)
-	if err != nil {
-		ob.Logger().GasPrice.Error().Err(err).Msg("NewDynamicTicker error")
-		return err
-	}
-	ob.Logger().GasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
-		ob.Chain().ChainId, ob.ChainParams().GasPriceTicker)
-
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !ob.ChainParams().IsSupported {
-				continue
-			}
-			err = ob.PostGasPrice(ctx)
-			if err != nil {
-				ob.Logger().GasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.Chain().ChainId)
-			}
-			ticker.UpdateInterval(ob.ChainParams().GasPriceTicker, ob.Logger().GasPrice)
-		case <-ob.StopChannel():
-			ob.Logger().GasPrice.Info().Msg("WatchGasPrice stopped")
-			return nil
-		}
-	}
-}
 
 // PostGasPrice posts gas price to zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {

@@ -22,7 +22,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse arguments
-	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
+	defaultReceiver := r.GetBtcAddress().EncodeAddress()
 	to, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
 	// initiate a withdraw CCTX

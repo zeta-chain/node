@@ -17,12 +17,29 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// Find the index of the count argument in ArgsDefinition.
+// Update the corresponding argument with the count value
+func updateTestCountArg(tests []runner.E2ETest, count int) {
+	for i := range tests {
+		if len(tests[i].Args) == 0 {
+			tests[i].Args = tests[i].DefaultArgs()
+		}
+		for j, argDef := range tests[i].ArgsDefinition {
+			if argDef.Description == e2etests.CountArgDescription {
+				tests[i].Args[j] = fmt.Sprintf("%d", count)
+				break
+			}
+		}
+	}
+}
+
 // ethereumDepositPerformanceRoutine runs performance tests for Ether deposit
 func ethereumDepositPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for ether test
@@ -47,6 +64,7 @@ func ethereumDepositPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
@@ -63,7 +81,8 @@ func ethereumWithdrawPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
-	testNames ...string,
+	testNames []string,
+	count int,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for ether test
@@ -89,7 +108,7 @@ func ethereumWithdrawPerformanceRoutine(
 		startTime := time.Now()
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := r.LegacyDepositEther()
+		txEtherDeposit := r.DepositEtherDeployer()
 		r.WaitForMinedCCTX(txEtherDeposit)
 
 		tests, err := r.GetE2ETestsToRunByName(
@@ -99,6 +118,7 @@ func ethereumWithdrawPerformanceRoutine(
 		if err != nil {
 			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
 		}
+		updateTestCountArg(tests, count)
 
 		if err := r.RunE2ETests(tests); err != nil {
 			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
@@ -117,7 +137,7 @@ func solanaDepositPerformanceRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	account config.Account,
-	testNames ...string,
+	testNames []string,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for solana test
@@ -168,7 +188,7 @@ func solanaWithdrawPerformanceRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	account config.Account,
-	testNames ...string,
+	testNames []string,
 ) func() error {
 	return func() (err error) {
 		// initialize runner for solana test
@@ -199,7 +219,7 @@ func solanaWithdrawPerformanceRoutine(
 
 		// execute the deposit sol transaction
 		amount := big.NewInt(0).Mul(big.NewInt(1e9), big.NewInt(100)) // 100 sol in lamports
-		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), amount, nil)
+		sig := r.SOLDepositAndCall(nil, r.EVMAddress(), amount, nil, nil)
 
 		// wait for the cctx to be mined
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -207,7 +227,7 @@ func solanaWithdrawPerformanceRoutine(
 		utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 		// same amount for spl
-		sig = r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, r.EVMAddress(), nil)
+		sig = r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, r.EVMAddress(), nil, nil)
 
 		// wait for the cctx to be mined
 		cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

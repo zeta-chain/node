@@ -11,8 +11,73 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 )
+
+// startBitcoinTests starts Bitcoin related tests
+func startBitcoinTests(
+	eg *errgroup.Group,
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	verbose bool,
+	light, skipBitcoinSetup bool,
+) {
+	// start the bitcoin tests
+	// btc withdraw tests are those that need a Bitcoin node wallet to send UTXOs
+	bitcoinDepositTests := []string{
+		e2etests.TestBitcoinDonationName,
+		e2etests.TestBitcoinDepositName,
+		e2etests.TestBitcoinDepositFastConfirmationName,
+		e2etests.TestBitcoinDepositAndCallName,
+		e2etests.TestBitcoinDepositAndCallRevertName,
+		e2etests.TestBitcoinStdMemoDepositName,
+		e2etests.TestBitcoinStdMemoDepositAndCallName,
+		e2etests.TestBitcoinStdMemoDepositAndCallRevertName,
+		e2etests.TestBitcoinStdMemoDepositAndCallRevertAndAbortName,
+		e2etests.TestBitcoinStdMemoInscribedDepositAndCallName,
+		e2etests.TestBitcoinDepositAndAbortWithLowDepositFeeName,
+		e2etests.TestBitcoinDepositInvalidMemoRevertName,
+		e2etests.TestCrosschainSwapName,
+	}
+	bitcoinDepositTestsAdvanced := []string{
+		e2etests.TestBitcoinDepositAndCallRevertWithDustName,
+		e2etests.TestBitcoinStdMemoDepositAndCallRevertOtherAddressName,
+		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
+	}
+	bitcoinWithdrawTests := []string{
+		// need initial deposit to fund the withdraws
+		e2etests.TestBitcoinDepositName,
+		e2etests.TestBitcoinWithdrawSegWitName,
+		e2etests.TestBitcoinWithdrawInvalidAddressName,
+		e2etests.TestLegacyZetaWithdrawBTCRevertName,
+	}
+	bitcoinWithdrawTestsAdvanced := []string{
+		e2etests.TestBitcoinWithdrawTaprootName,
+		e2etests.TestBitcoinWithdrawLegacyName,
+		e2etests.TestBitcoinWithdrawP2SHName,
+		e2etests.TestBitcoinWithdrawP2WSHName,
+		e2etests.TestBitcoinWithdrawMultipleName,
+		e2etests.TestBitcoinWithdrawRestrictedName,
+		//e2etests.TestBitcoinWithdrawRBFName,
+	}
+
+	if !light {
+		// if light is enabled, only the most basic tests are run and advanced are skipped
+		bitcoinDepositTests = append(bitcoinDepositTests, bitcoinDepositTestsAdvanced...)
+		bitcoinWithdrawTests = append(bitcoinWithdrawTests, bitcoinWithdrawTestsAdvanced...)
+	}
+	bitcoinDepositTestRoutine, bitcoinWithdrawTestRoutine := bitcoinTestRoutines(
+		conf,
+		deployerRunner,
+		verbose,
+		!skipBitcoinSetup,
+		bitcoinDepositTests,
+		bitcoinWithdrawTests,
+	)
+	eg.Go(bitcoinDepositTestRoutine)
+	eg.Go(bitcoinWithdrawTestRoutine)
+}
 
 // bitcoinTestRoutines returns test routines for deposit and withdraw tests
 func bitcoinTestRoutines(
@@ -24,7 +89,6 @@ func bitcoinTestRoutines(
 	withdrawTests []string,
 ) (func() error, func() error) {
 	// initialize runner for deposit tests
-	// deposit tests need Bitcoin node wallet to handle UTXOs
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
 		"btc_deposit",
@@ -34,11 +98,9 @@ func bitcoinTestRoutines(
 		color.FgYellow,
 		verbose,
 		initNetwork,
-		true,
 	)
 
 	// initialize runner for withdraw tests
-	// withdraw tests DON'T use Bitcoin node wallet
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
 		"btc_withdraw",
@@ -48,7 +110,6 @@ func bitcoinTestRoutines(
 		color.FgHiYellow,
 		verbose,
 		initNetwork,
-		false,
 	)
 
 	// initialize funds
@@ -56,12 +117,11 @@ func bitcoinTestRoutines(
 	if initNetwork {
 		// mine 101 blocks to ensure the BTC rewards are spendable
 		// Note: the block rewards can be sent to any address in here
-		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
+		_, err := deployerRunner.GenerateToAddressIfLocalBitcoin(101, deployerRunner.GetBtcAddress())
 		require.NoError(runnerDeposit, err)
 
-		// send BTC to ZEVM addresses
-		runnerDeposit.DepositBTC(runnerDeposit.EVMAddress())
-		runnerDeposit.DepositBTC(runnerWithdraw.EVMAddress())
+		// donate BTC to TSS and send BTC to ZEVM addresses
+		deployerRunner.DonateBTC()
 	}
 
 	// create test routines
@@ -78,19 +138,29 @@ func initBitcoinRunner(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	printColor color.Attribute,
-	verbose, initNetwork, createWallet bool,
+	verbose, initNetwork bool,
 ) *runner.E2ERunner {
 	// initialize runner for bitcoin test
-	runner, err := initTestRunner(name, conf, deployerRunner, account, runner.NewLogger(verbose, printColor, name))
+	runner, err := initTestRunner(
+		name,
+		conf,
+		deployerRunner,
+		account,
+		runner.NewLogger(verbose, printColor, name),
+		runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
+	)
 	testutil.NoError(err)
-
-	// setup TSS address and setup deployer wallet
-	runner.SetupBitcoinAccounts(createWallet)
 
 	// initialize funds
 	if initNetwork {
-		// send some BTC block rewards to the deployer address
-		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		address, _ := runner.GetBtcKeypair()
+
+		// ensure address is imported
+		err := runner.BtcRPCClient.ImportAddress(runner.Ctx, address.EncodeAddress())
+		require.NoError(runner, err)
+
+		// send some BTC block rewards
+		_, err = runner.GenerateToAddressIfLocalBitcoin(101, address)
 		require.NoError(runner, err)
 
 		// send ERC20 token on EVM
@@ -98,8 +168,8 @@ func initBitcoinRunner(
 		runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := runner.LegacyDepositEther()
-		txERC20Deposit := runner.LegacyDepositERC20()
+		txEtherDeposit := runner.DepositEtherDeployer()
+		txERC20Deposit := runner.DepositERC20Deployer()
 
 		runner.WaitForMinedCCTX(txEtherDeposit)
 		runner.WaitForMinedCCTX(txERC20Deposit)

@@ -11,14 +11,16 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/keysign"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/cosmos"
 )
 
@@ -69,11 +71,7 @@ func NewPubKeyFromECDSA(pk ecdsa.PublicKey) (PubKey, error) {
 
 // NewPubKeyFromECDSAHexString creates PubKey from 0xABC12...
 func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
-	if strings.HasPrefix(raw, "0x") {
-		raw = raw[2:]
-	}
-
-	b, err := hex.DecodeString(raw)
+	b, err := hex.DecodeString(strings.TrimPrefix(raw, "0x"))
 	if err != nil {
 		return PubKey{}, errors.Wrap(err, "unable to decode hex string")
 	}
@@ -86,6 +84,10 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 	return NewPubKeyFromECDSA(*pk)
 }
 
+func (k PubKey) AsECDSA() *ecdsa.PublicKey {
+	return k.ecdsaPubKey
+}
+
 // Bytes marshals pubKey to bytes either as compressed or uncompressed slice.
 //
 // In ECDSA, a compressed pubKey includes only the X and a parity bit for the Y,
@@ -94,7 +96,7 @@ func NewPubKeyFromECDSAHexString(raw string) (PubKey, error) {
 func (k PubKey) Bytes(compress bool) []byte {
 	pk := k.ecdsaPubKey
 	if compress {
-		return elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
+		return crypto.CompressPubkey(pk)
 	}
 
 	return crypto.FromECDSAPub(pk)
@@ -111,14 +113,28 @@ func (k PubKey) Bech32String() string {
 	return v
 }
 
-// AddressBTC returns the bitcoin address of the public key.
+// AddressBTC returns the Bitcoin address of the public key.
 func (k PubKey) AddressBTC(chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
 	return bitcoinP2WPKH(k.Bytes(true), chainID)
+}
+
+// BTCPayToAddrScript returns the script for the Bitcoin TSS address.
+func (k PubKey) BTCPayToAddrScript(chainID int64) ([]byte, error) {
+	tssAddrP2WPKH, err := k.AddressBTC(chainID)
+	if err != nil {
+		return nil, err
+	}
+	return txscript.PayToAddrScript(tssAddrP2WPKH)
 }
 
 // AddressEVM returns the ethereum address of the public key.
 func (k PubKey) AddressEVM() eth.Address {
 	return crypto.PubkeyToAddress(*k.ecdsaPubKey)
+}
+
+// AddressSui returns Sui address of the public key.
+func (k PubKey) AddressSui() string {
+	return sui.AddressFromPubKeyECDSA(k.ecdsaPubKey)
 }
 
 // VerifySignature checks that keysign.Signature is valid and origins from expected TSS public key.

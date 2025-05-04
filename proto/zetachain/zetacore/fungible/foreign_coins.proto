@@ -15,10 +15,11 @@ message ForeignCoins {
   string name = 6;
   string symbol = 7;
   pkg.coin.CoinType coin_type = 8;
-  uint64 gas_limit = 9;
+  // Deprecated: value stored in the zrc20 smart contract is used instead
+  uint64 gas_limit = 9 [ deprecated = true ];
   bool paused = 10;
   string liquidity_cap = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }

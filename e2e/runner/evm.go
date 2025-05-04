@@ -21,7 +21,11 @@ func (r *E2ERunner) ETHDeposit(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	revertOptions gatewayevm.RevertOptions,
+	wait bool,
 ) *ethtypes.Transaction {
+	r.Lock()
+	defer r.Unlock()
+
 	// set the value of the transaction
 	previousValue := r.EVMAuth.Value
 	defer func() {
@@ -32,9 +36,29 @@ func (r *E2ERunner) ETHDeposit(
 	tx, err := r.GatewayEVM.Deposit0(r.EVMAuth, receiver, revertOptions)
 	require.NoError(r, err)
 
-	logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
+	if wait {
+		logDepositInfoAndWaitForTxReceipt(r, tx, "eth_deposit")
+	}
 
 	return tx
+}
+
+// DepositEtherDeployer sends Ethers into ZEVM using V2 protocol contracts
+func (r *E2ERunner) DepositEtherDeployer() ethcommon.Hash {
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
+	return tx.Hash()
+}
+
+// DepositERC20Deployer sends ERC20 into ZEVM using v2 protocol contracts
+func (r *E2ERunner) DepositERC20Deployer() ethcommon.Hash {
+	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
+
+	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
+
+	oneHundred := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100))
+	tx := r.ERC20Deposit(r.EVMAddress(), oneHundred, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	return tx.Hash()
 }
 
 // ETHDepositAndCall calls DepositAndCall of Gateway with gas token on EVM
@@ -162,40 +186,6 @@ func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
 		tx, err := r.ERC20.Approve(r.EVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-		require.True(r, receipt.Status == 1, "approval failed")
-	}
-}
-
-// ApproveETHZRC20 approves ETH ZRC20 on EVM to a specific address
-// check if allowance is zero before calling this method
-// allow a high amount to avoid multiple approvals
-func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
-	require.NoError(r, err)
-
-	// approve 1M*1e18 if allowance is below 1k
-	thousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
-	if allowance.Cmp(thousand) < 0 {
-		tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
-		require.NoError(r, err)
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-		require.True(r, receipt.Status == 1, "approval failed")
-	}
-}
-
-// ApproveERC20ZRC20 approves ERC20 ZRC20 on EVM to a specific address
-// check if allowance is zero before calling this method
-// allow a high amount to avoid multiple approvals
-func (r *E2ERunner) ApproveERC20ZRC20(allowed ethcommon.Address) {
-	allowance, err := r.ERC20ZRC20.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
-	require.NoError(r, err)
-
-	// approve 1M*1e18 if allowance is below 1k
-	thousand := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000))
-	if allowance.Cmp(thousand) < 0 {
-		tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
-		require.NoError(r, err)
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		require.True(r, receipt.Status == 1, "approval failed")
 	}
 }

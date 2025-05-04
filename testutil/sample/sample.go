@@ -43,7 +43,7 @@ func Rand() *rand.Rand {
 func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 	seed := []byte(strconv.Itoa(r.Int()))
 	val, err := stakingtypes.NewValidator(
-		ValAddress(r),
+		ValAddress(r).String(),
 		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
 		stakingtypes.Description{})
 	require.NoError(t, err)
@@ -84,28 +84,40 @@ func StringRandom(r *rand.Rand, length int) string {
 
 // Coins returns a sample sdk.Coins
 func Coins() sdk.Coins {
-	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(42)))
 }
 
 // Uint64InRange returns a sample uint64 in the given ranges
 func Uint64InRange(low, high uint64) uint64 {
 	r := newRandFromSeed(int64(low))
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Uint64()%(high-low) + low
 }
 
-// Uint64InRange returns a sample uint64 in the given ranges
+// Uint64InRangeFromRand returns a sample uint64 in the given ranges
 func Uint64InRangeFromRand(r *rand.Rand, low, high uint64) uint64 {
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Uint64()%(high-low) + low
 }
 
 // Int64InRange returns a sample int64 in the given ranges
 func Int64InRange(low, high int64) int64 {
 	r := newRandFromSeed(low)
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Int63()%(high-low) + low
 }
 
 // Int64InRangeFromRand returns a sample int64 in the given ranges
 func Int64InRangeFromRand(r *rand.Rand, low, high int64) int64 {
+	if low == high {
+		return low // avoid division by zero
+	}
 	return r.Int63()%(high-low) + low
 }
 
@@ -118,8 +130,9 @@ func IntInRange(low, high int64) sdkmath.Int {
 	i := Int64InRange(low, high)
 	return sdkmath.NewInt(i)
 }
+
 func AppState(t *testing.T) map[string]json.RawMessage {
-	appState, err := genutiltypes.GenesisStateFromGenDoc(*GenDoc(t))
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(AppGenesis(t))
 	require.NoError(t, err)
 	return appState
 }

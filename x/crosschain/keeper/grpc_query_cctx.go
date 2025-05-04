@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
@@ -22,6 +22,7 @@ const (
 	MaxLookbackNonce = 1000
 
 	DefaultPageSize = 100
+	MaxPageSize     = 1000
 )
 
 func (k Keeper) ZetaAccounting(
@@ -42,11 +43,11 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	var sends []*types.CrossChainTx
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	sendStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
+	cctxStore := prefix.NewStore(store, types.KeyPrefix(types.CCTXKey))
+	counterStore := k.getCounterIndexStore(ctx)
 
 	if req.Pagination == nil {
 		req.Pagination = &query.PageRequest{}
@@ -54,15 +55,37 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	if req.Pagination.Limit == 0 {
 		req.Pagination.Limit = DefaultPageSize
 	}
+	if req.Pagination.Limit > MaxPageSize {
+		req.Pagination.Limit = MaxPageSize
+	}
 
-	pageRes, err := query.Paginate(sendStore, req.Pagination, func(_ []byte, value []byte) error {
-		var send types.CrossChainTx
-		if err := k.cdc.Unmarshal(value, &send); err != nil {
-			return err
-		}
-		sends = append(sends, &send)
-		return nil
-	})
+	var sends []*types.CrossChainTx
+	var pageRes *query.PageResponse
+	var err error
+	if req.Unordered {
+		pageRes, err = query.Paginate(cctxStore, req.Pagination, func(_ []byte, value []byte) error {
+			var send types.CrossChainTx
+			if err := k.cdc.Unmarshal(value, &send); err != nil {
+				return err
+			}
+			sends = append(sends, &send)
+			return nil
+		})
+	} else {
+		pageRes, err = query.Paginate(counterStore, req.Pagination, func(_ []byte, value []byte) error {
+			cctxIndex, err := types.GetCctxIndexFromArbitraryBytes(value)
+			if err != nil {
+				return err
+			}
+			var cctx types.CrossChainTx
+			cctxBytes := cctxStore.Get(types.KeyPrefix(cctxIndex))
+			if err := k.cdc.Unmarshal(cctxBytes, &cctx); err != nil {
+				return err
+			}
+			sends = append(sends, &cctx)
+			return nil
+		})
+	}
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

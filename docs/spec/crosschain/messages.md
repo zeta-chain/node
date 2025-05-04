@@ -34,6 +34,18 @@ message MsgAddInboundTracker {
 }
 ```
 
+## MsgRemoveInboundTracker
+
+RemoveInboundTracker removes the inbound tracker if it exists.
+
+```proto
+message MsgRemoveInboundTracker {
+	string creator = 1;
+	int64 chain_id = 2;
+	string tx_hash = 3;
+}
+```
+
 ## MsgRemoveOutboundTracker
 
 RemoveOutboundTracker removes a record from the outbound transaction tracker by chain ID and nonce.
@@ -125,6 +137,7 @@ message MsgVoteOutbound {
 	int64 outbound_chain = 7;
 	uint64 outbound_tss_nonce = 8;
 	pkg.coin.CoinType coin_type = 9;
+	ConfirmationMode confirmation_mode = 13;
 }
 ```
 
@@ -192,6 +205,8 @@ message MsgVoteInbound {
 	RevertOptions revert_options = 17;
 	CallOptions call_options = 18;
 	bool is_cross_chain_call = 19;
+	InboundStatus status = 20;
+	ConfirmationMode confirmation_mode = 21;
 }
 ```
 
@@ -211,6 +226,7 @@ message MsgWhitelistERC20 {
 	string symbol = 5;
 	uint32 decimals = 6;
 	int64 gas_limit = 7;
+	string liquidity_cap = 8;
 }
 ```
 

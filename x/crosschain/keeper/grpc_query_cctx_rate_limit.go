@@ -111,8 +111,8 @@ func (k Keeper) RateLimiterInput(
 
 	// define a few variables to be used in the query loops
 	totalPending := uint64(0)
-	pastCctxsValue := sdk.NewInt(0)
-	pendingCctxsValue := sdk.NewInt(0)
+	pastCctxsValue := sdkmath.NewInt(0)
+	pendingCctxsValue := sdkmath.NewInt(0)
 	cctxsMissed := make([]*types.CrossChainTx, 0)
 	cctxsPending := make([]*types.CrossChainTx, 0)
 
@@ -313,7 +313,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 		pendingCctxWindow := height - lowestPendingCctxHeight + 1
 		if pendingCctxWindow > rateLimitFlags.Window {
 			withdrawWindow = pendingCctxWindow
-			withdrawLimitInAzeta = blockLimitInAzeta.Mul(sdk.NewInt(pendingCctxWindow))
+			withdrawLimitInAzeta = blockLimitInAzeta.Mul(sdkmath.NewInt(pendingCctxWindow))
 		}
 	}
 
@@ -423,7 +423,7 @@ func (k Keeper) ListPendingCctxWithinRateLimit(
 		CrossChainTx:          cctxs,
 		TotalPending:          totalPending,
 		CurrentWithdrawWindow: withdrawWindow,
-		CurrentWithdrawRate:   totalWithdrawInAzeta.Quo(sdk.NewInt(withdrawWindow)).String(),
+		CurrentWithdrawRate:   totalWithdrawInAzeta.Quo(sdkmath.NewInt(withdrawWindow)).String(),
 		RateLimitExceeded:     limitExceeded,
 	}, nil
 }

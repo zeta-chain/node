@@ -2,7 +2,9 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"regexp"
 	"sync"
 	"time"
 
@@ -20,6 +22,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+	"github.com/tonkeeper/tongo/ton"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -33,12 +36,12 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
+	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
-	tonrunner "github.com/zeta-chain/node/e2e/runner/ton"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/contracts/testdappv2"
-	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
+	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -65,6 +68,12 @@ func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
 	}
 }
 
+func WithTestFilter(testFilter *regexp.Regexp) E2ERunnerOption {
+	return func(r *E2ERunner) {
+		r.TestFilter = testFilter
+	}
+}
+
 // E2ERunner stores all the clients and addresses needed for E2E test
 // Exposes a method to run E2E test
 // It also provides some helper functions
@@ -73,10 +82,8 @@ type E2ERunner struct {
 	Account               config.Account
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
-	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
+	SuiTSSAddress         string
 	SolanaDeployerAddress solana.PublicKey
-	TONDeployer           *tonrunner.Deployer
-	TONGateway            *toncontracts.Gateway
 	FeeCollectorAddress   types.AccAddress
 
 	// all clients.
@@ -114,6 +121,21 @@ type E2ERunner struct {
 	GatewayProgram solana.PublicKey
 	SPLAddr        solana.PublicKey
 
+	// TON related
+	TONGateway ton.AccountID
+
+	// contract Sui
+	SuiGateway *sui.Gateway
+
+	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
+	SuiTokenCoinType string
+
+	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
+	SuiTokenTreasuryCap string
+
+	// SuiExample contains the example package information for Sui
+	SuiExample config.SuiExample
+
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
 	ZetaEth           *zetaeth.ZetaEth
@@ -130,18 +152,25 @@ type E2ERunner struct {
 	TestDAppV2EVM     *testdappv2.TestDAppV2
 
 	// contracts zevm
-	ERC20ZRC20Addr       ethcommon.Address
-	ERC20ZRC20           *zrc20.ZRC20
-	SPLZRC20Addr         ethcommon.Address
-	SPLZRC20             *zrc20.ZRC20
-	ETHZRC20Addr         ethcommon.Address
-	ETHZRC20             *zrc20.ZRC20
-	BTCZRC20Addr         ethcommon.Address
-	BTCZRC20             *zrc20.ZRC20
-	SOLZRC20Addr         ethcommon.Address
-	SOLZRC20             *zrc20.ZRC20
-	TONZRC20Addr         ethcommon.Address
-	TONZRC20             *zrc20.ZRC20
+	// zrc20 contracts
+	ERC20ZRC20Addr    ethcommon.Address
+	ERC20ZRC20        *zrc20.ZRC20
+	SPLZRC20Addr      ethcommon.Address
+	SPLZRC20          *zrc20.ZRC20
+	ETHZRC20Addr      ethcommon.Address
+	ETHZRC20          *zrc20.ZRC20
+	BTCZRC20Addr      ethcommon.Address
+	BTCZRC20          *zrc20.ZRC20
+	SOLZRC20Addr      ethcommon.Address
+	SOLZRC20          *zrc20.ZRC20
+	TONZRC20Addr      ethcommon.Address
+	TONZRC20          *zrc20.ZRC20
+	SUIZRC20Addr      ethcommon.Address
+	SUIZRC20          *zrc20.ZRC20
+	SuiTokenZRC20Addr ethcommon.Address
+	SuiTokenZRC20     *zrc20.ZRC20
+
+	// other contracts
 	UniswapV2FactoryAddr ethcommon.Address
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
@@ -167,18 +196,20 @@ type E2ERunner struct {
 	ReceiptTimeout time.Duration
 
 	// other
-	Name          string
-	Ctx           context.Context
-	CtxCancel     context.CancelFunc
-	Logger        *Logger
-	BitcoinParams *chaincfg.Params
-	mutex         sync.Mutex
+	Name             string
+	Ctx              context.Context
+	CtxCancel        context.CancelCauseFunc
+	Logger           *Logger
+	BitcoinParams    *chaincfg.Params
+	TestFilter       *regexp.Regexp
+	mutex            sync.Mutex
+	zetacoredVersion string
 }
 
 func NewE2ERunner(
 	ctx context.Context,
 	name string,
-	ctxCancel context.CancelFunc,
+	ctxCancel context.CancelCauseFunc,
 	account config.Account,
 	clients Clients,
 	logger *Logger,
@@ -229,6 +260,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
 	r.TSSAddress = other.TSSAddress
 	r.BTCTSSAddress = other.BTCTSSAddress
+	r.SuiTSSAddress = other.SuiTSSAddress
 
 	// copy addresses
 	r.ZetaEthAddr = other.ZetaEthAddr
@@ -240,6 +272,8 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.BTCZRC20Addr = other.BTCZRC20Addr
 	r.SOLZRC20Addr = other.SOLZRC20Addr
 	r.TONZRC20Addr = other.TONZRC20Addr
+	r.SUIZRC20Addr = other.SUIZRC20Addr
+	r.SuiTokenZRC20Addr = other.SuiTokenZRC20Addr
 	r.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	r.UniswapV2RouterAddr = other.UniswapV2RouterAddr
 	r.ConnectorZEVMAddr = other.ConnectorZEVMAddr
@@ -251,6 +285,13 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.ZevmTestDAppAddr = other.ZevmTestDAppAddr
 
 	r.GatewayProgram = other.GatewayProgram
+
+	r.TONGateway = other.TONGateway
+
+	r.SuiGateway = other.SuiGateway
+	r.SuiTokenCoinType = other.SuiTokenCoinType
+	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
+	r.SuiExample = other.SuiExample
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
@@ -289,6 +330,15 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
+	r.SUIZRC20, err = zrc20.NewZRC20(r.SUIZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+	r.SuiTokenZRC20, err = zrc20.NewZRC20(r.SuiTokenZRC20Addr, r.ZEVMClient)
+	if err != nil {
+		return err
+	}
+
 	r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 	if err != nil {
 		return err
@@ -362,7 +412,22 @@ func (r *E2ERunner) Unlock() {
 func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜Solana addresses ---")
 	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
-	r.Logger.Print("SPL:        %s", r.SPLAddr.String())
+	r.Logger.Print("SPL:            %s", r.SPLAddr.String())
+
+	r.Logger.Print(" --- 📜TON addresses ---")
+	if !r.TONGateway.IsZero() {
+		r.Logger.Print("Gateway:        %s", r.TONGateway.ToRaw())
+	} else {
+		r.Logger.Print("Gateway:        not set! 💤")
+	}
+
+	r.Logger.Print(" --- 📜Sui addresses ---")
+	if r.SuiGateway != nil {
+		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
+		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+	} else {
+		r.Logger.Print("💤 Sui tests disabled")
+	}
 
 	// zevm contracts
 	r.Logger.Print(" --- 📜zEVM contracts ---")
@@ -373,6 +438,8 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
 	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
+	r.Logger.Print("SUIZRC20:       %s", r.SUIZRC20Addr.Hex())
+	r.Logger.Print("SuiTokenZRC20:  %s", r.SuiTokenZRC20Addr.Hex())
 	r.Logger.Print("UniswapFactory: %s", r.UniswapV2FactoryAddr.Hex())
 	r.Logger.Print("UniswapRouter:  %s", r.UniswapV2RouterAddr.Hex())
 	r.Logger.Print("ConnectorZEVM:  %s", r.ConnectorZEVMAddr.Hex())
@@ -409,9 +476,15 @@ func (r *E2ERunner) Errorf(format string, args ...any) {
 
 // FailNow implemented to mimic the behavior of testing.T.FailNow
 func (r *E2ERunner) FailNow() {
-	r.Logger.Error("Test failed")
-	r.CtxCancel()
-	os.Exit(1)
+	err := fmt.Errorf("(*E2ERunner).FailNow for runner %q. Exiting", r.Name)
+
+	r.Logger.Error("Failure: %s", err.Error())
+	r.CtxCancel(err)
+
+	// this panic ensures that the test routine exits fast.
+	// it should be caught and handled gracefully so long
+	// as the test is being executed by RunE2ETest().
+	panic(err)
 }
 
 func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ...any) {
@@ -427,4 +500,14 @@ func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
 	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	require.NoError(r, err)
 	return privkey
+}
+
+func (r *E2ERunner) GetZetacoredVersion() string {
+	if r.zetacoredVersion != "" {
+		return r.zetacoredVersion
+	}
+	nodeInfo, err := r.Clients.Zetacore.GetNodeInfo(r.Ctx)
+	require.NoError(r, err, "get node info")
+	r.zetacoredVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
+	return r.zetacoredVersion
 }

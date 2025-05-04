@@ -107,7 +107,7 @@ type ParsedTxs struct {
 
 // ParseTxResult parse eth tx infos from cosmos-sdk events.
 // It supports two event formats, the formats are described in the comments of the format constants.
-func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error) {
+func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 	format := eventFormatUnknown
 	// the index of current ethereum_tx event in format 1 or the second part of format 2
 	eventIndex := -1
@@ -260,7 +260,7 @@ func ParseTxIndexerResult(
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
 func ParseTxBlockResult(
-	txResult *abci.ResponseDeliverTx,
+	txResult *abci.ExecTxResult,
 	tx sdk.Tx,
 	txIndex int,
 	height int64,
@@ -273,7 +273,8 @@ func ParseTxBlockResult(
 	if len(txs.Txs) == 0 {
 		return nil, nil, nil
 	}
-	parsedTx := txs.Txs[0]
+	// TODO: check why when there are multiple synthetic txs events are in reversed order
+	parsedTx := txs.Txs[len(txs.Txs)-1]
 	if parsedTx.Type == CosmosEVMTxType {
 		return &ethermint.TxResult{
 				Height: height,

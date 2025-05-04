@@ -18,7 +18,8 @@ import (
 //go:generate mockery --name client --structname BitcoinClient --filename bitcoin_client.go --output ../../../testutils/mocks
 type client interface {
 	Ping(ctx context.Context) error
-	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+	IsRegnet() bool
+	Healthcheck(ctx context.Context) (time.Time, error)
 	GetNetworkInfo(ctx context.Context) (*types.GetNetworkInfoResult, error)
 
 	GetBlockCount(ctx context.Context) (int64, error)
@@ -31,11 +32,7 @@ type client interface {
 	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*types.TxRawResult, error)
 	GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error)
 	GetRawMempool(ctx context.Context) ([]*hash.Hash, error)
-	GetTotalMempoolParentsSizeNFees(
-		ctx context.Context,
-		childHash string,
-		timeout time.Duration,
-	) (int64, float64, int64, int64, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string) (MempoolTxsAndFees, error)
 
 	GetRawTransactionResult(
 		ctx context.Context,
@@ -43,16 +40,9 @@ type client interface {
 		res *types.GetTransactionResult,
 	) (types.TxRawResult, error)
 
-	CreateRawTransaction(
-		ctx context.Context,
-		inputs []types.TransactionInput,
-		amounts map[btcutil.Address]btcutil.Amount,
-		lockTime *int64,
-	) (*wire.MsgTx, error)
-
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,
@@ -75,7 +65,6 @@ type client interface {
 	CreateWallet(ctx context.Context, name string, opts ...rpcclient.CreateWalletOpt) (*types.CreateWalletResult, error)
 	GetNewAddress(ctx context.Context, account string) (btcutil.Address, error)
 	ImportAddress(ctx context.Context, address string) error
-	ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error
 	GetBalance(ctx context.Context, account string) (btcutil.Amount, error)
 	GenerateToAddress(
 		ctx context.Context,
@@ -83,12 +72,6 @@ type client interface {
 		address btcutil.Address,
 		maxTries *int64,
 	) ([]*hash.Hash, error)
-
-	SignRawTransactionWithWallet2(
-		ctx context.Context,
-		tx *wire.MsgTx,
-		inputs []types.RawTxWitnessInput,
-	) (*wire.MsgTx, bool, error)
 
 	RawRequest(ctx context.Context, method string, params []json.RawMessage) (json.RawMessage, error)
 }

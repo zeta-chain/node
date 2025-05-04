@@ -48,7 +48,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// 	- Return false will abort the cctx
 		indexBytes, err := cctx.GetCCTXIndexBytes()
 		if err != nil {
-			return false, err
+			return false, errors.Wrap(types.ErrUnableToParseCCTXIndexBytes, err.Error())
 		}
 		data, err := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
@@ -148,7 +148,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 				tmpCtx.EventManager().EmitEvent(
 					sdk.NewEvent(sdk.EventTypeMessage,
 						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-						sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
+						sdk.NewAttribute("action", "CallDepositAndCall"),
 						sdk.NewAttribute("contract", to.String()),
 						sdk.NewAttribute("data", hex.EncodeToString(message)),
 						sdk.NewAttribute("cctxIndex", cctx.Index),

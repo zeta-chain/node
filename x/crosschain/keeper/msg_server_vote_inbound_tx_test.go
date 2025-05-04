@@ -26,7 +26,8 @@ import (
 )
 
 func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest.ZetaKeepers) []string {
-	validators := k.GetStakingKeeper().GetAllValidators(ctx)
+	validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+	require.NoError(t, err)
 
 	validatorAddressListFormatted := make([]string, len(validators))
 	for i, validator := range validators {
@@ -104,7 +105,8 @@ func TestKeeper_VoteInbound(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 
 		// Convert the validator address into a user address.
-		validators := k.GetStakingKeeper().GetAllValidators(ctx)
+		validators, err := k.GetStakingKeeper().GetAllValidators(ctx)
+		require.NoError(t, err)
 		validatorAddress := validators[0].OperatorAddress
 		valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
 		addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
@@ -131,13 +133,15 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			CallOptions: &types.CallOptions{
 				GasLimit: 1000000000,
 			},
-			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:    0, // zeta
-			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:       "",
-			EventIndex:  1,
+			InboundHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:         0, // zeta
+			TxOrigin:         "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:            "",
+			EventIndex:       1,
+			Status:           types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+			ConfirmationMode: types.ConfirmationMode_FAST,
 		}
-		_, err := msgServer.VoteInbound(
+		_, err = msgServer.VoteInbound(
 			ctx,
 			msg,
 		)
@@ -160,11 +164,13 @@ func TestKeeper_VoteInbound(t *testing.T) {
 			CallOptions: &types.CallOptions{
 				GasLimit: 1000000001, // <---- Change here
 			},
-			InboundHash: "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-			CoinType:    0,
-			TxOrigin:    "0x954598965C2aCdA2885B037561526260764095B8",
-			Asset:       "",
-			EventIndex:  1,
+			InboundHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:         0,
+			TxOrigin:         "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:            "",
+			EventIndex:       1,
+			Status:           types.InboundStatus_SUCCESS, // <---- Change here
+			ConfirmationMode: types.ConfirmationMode_SAFE, // <---- Change here
 		}
 
 		_, err = msgServer.VoteInbound(
@@ -304,7 +310,7 @@ func TestStatus_UpdateCctxStatus(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {
-			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, test.Msg, "")
+			test.Status.UpdateStatusAndErrorMessages(test.NonErrStatus, types.StatusMessages{StatusMessage: test.Msg})
 			if test.IsErr {
 				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {
@@ -411,5 +417,6 @@ func GetERC20Cctx(
 	cctx.GetCurrentOutboundParam().TssNonce = 42
 	cctx.GetCurrentOutboundParam().GasUsed = 100
 	cctx.GetCurrentOutboundParam().EffectiveGasLimit = 100
+	cctx.GetCurrentOutboundParam().ConfirmationMode = types.ConfirmationMode_SAFE
 	return cctx
 }

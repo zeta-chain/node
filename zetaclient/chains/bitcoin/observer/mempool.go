@@ -2,13 +2,13 @@ package observer
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -95,7 +95,7 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	// step 3: update last outbound stuck tx information
 	//
 	// the key ideas to determine if Bitcoin outbound is stuck/unstuck:
-	// 	1. outbound txs are a sequence of txs chained by nonce-mark UTXOs.
+	//  1. outbound txs are a sequence of txs chained by nonce-mark UTXOs.
 	//  2. outbound tx with nonce N+1 MUST spend the nonce-mark UTXO produced by parent tx with nonce N.
 	//  3. when the last descendant tx is stuck, none of its ancestor txs can go through, so the stuck flag is set.
 	//  4. then RBF kicks in, it bumps the fee of the last descendant tx and aims to increase the average fee
@@ -108,11 +108,11 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	//
 	// Note: reserved RBF bumping fee might be not enough to clear the stuck txs during extreme traffic surges, two options:
 	//  1. wait for the gas rate to drop.
-	//  2. manually clear the stuck txs by using offline accelerator services.
+	//  2. manually clear the stuck txs by using transaction accelerator services.
 	if stuck {
-		ob.SetLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
+		ob.setLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
 	} else {
-		ob.SetLastStuckOutbound(nil)
+		ob.setLastStuckOutbound(nil)
 	}
 
 	return nil
@@ -188,7 +188,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	//  3. zetaclient needs the original tx body of a stuck tx to bump its fee and sign again.
 	lastTx, err := ob.rpc.GetRawTransactionByStr(ctx, lastHash)
 	if err != nil {
-		return nil, 0, errors.Wrapf(err, "GetRawTxByHash failed for last tx %s nonce %d", lastHash, lastNonce)
+		return nil, 0, errors.Wrapf(err, "GetRawTransactionByStr failed for last tx %s nonce %d", lastHash, lastNonce)
 	}
 
 	return lastTx, lastNonce, nil
@@ -210,7 +210,7 @@ func IsTxStuckInMempool(
 
 	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
 	if err != nil {
-		if strings.Contains(err.Error(), "Transaction not in mempool") {
+		if client.IsTxNotInMempoolError(err) {
 			return false, 0, nil // not a mempool tx, of course not stuck
 		}
 		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
@@ -242,7 +242,7 @@ func IsTxStuckInMempoolRegnet(
 
 	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
 	if err != nil {
-		if strings.Contains(err.Error(), "Transaction not in mempool") {
+		if client.IsTxNotInMempoolError(err) {
 			return false, 0, nil // not a mempool tx, of course not stuck
 		}
 		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")

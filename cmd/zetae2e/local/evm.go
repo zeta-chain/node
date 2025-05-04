@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
+	"github.com/zeta-chain/node/pkg/errgroup"
 )
 
 // startEVMTests starts EVM chains related tests in parallel
@@ -18,6 +18,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
 		e2etests.TestETHDepositAndCallName,
+		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
@@ -57,10 +58,15 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestETHDepositName, // necessary to pay fees on ZEVM and withdraw
 			e2etests.TestETHDepositAndCallRevertName,
 			e2etests.TestETHDepositAndCallRevertWithCallName,
+			e2etests.TestETHDepositRevertAndAbortName,
 			e2etests.TestETHWithdrawAndCallRevertName,
 			e2etests.TestETHWithdrawAndCallRevertWithCallName,
+			e2etests.TestETHWithdrawRevertAndAbortName,
 			e2etests.TestETHWithdrawAndCallRevertWithWithdrawName,
 			e2etests.TestDepositAndCallOutOfGasName,
+			e2etests.TestZEVMToEVMCallRevertName,
+			e2etests.TestZEVMToEVMCallRevertAndAbortName,
+			e2etests.TestEVMToZEVMCallAbortName,
 		),
 	)
 
@@ -79,8 +85,10 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestOperationAddLiquidityERC20Name,
 			e2etests.TestERC20DepositAndCallRevertName,
 			e2etests.TestERC20DepositAndCallRevertWithCallName,
+			e2etests.TestERC20DepositRevertAndAbortName,
 			e2etests.TestERC20WithdrawAndCallRevertName,
 			e2etests.TestERC20WithdrawAndCallRevertWithCallName,
+			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
 }

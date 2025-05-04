@@ -51,7 +51,10 @@ export declare class ForeignCoins extends Message<ForeignCoins> {
   coinType: CoinType;
 
   /**
-   * @generated from field: uint64 gas_limit = 9;
+   * Deprecated: value stored in the zrc20 smart contract is used instead
+   *
+   * @generated from field: uint64 gas_limit = 9 [deprecated = true];
+   * @deprecated
    */
   gasLimit: bigint;
 

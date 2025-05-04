@@ -92,18 +92,13 @@ cat upgrade.json | jq --arg info "$(cat upgrade_plan_info.json)" '.messages[0].p
 
 echo "Submitting upgrade proposal"
 
-zetacored tx gov submit-proposal upgrade_full.json --from operator --keyring-backend test --chain-id $CHAINID --yes --fees 2000000000000000azeta -o json | tee proposal.json
+zetacored tx gov submit-proposal upgrade_full.json --from operator --keyring-backend test --chain-id $CHAINID --yes --gas 300000 --fees 3000000000000000azeta -o json | tee proposal.json
 PROPOSAL_TX_HASH=$(jq -r .txhash proposal.json)
 PROPOSAL_ID=""
-# WARN: this seems to be unstable
 while [[ -z $PROPOSAL_ID ]]; do
     echo "waiting to get proposal_id"
     sleep 1
-    # v0.47 version
-    # proposal_id=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
-    
-    # v0.46 version
-    PROPOSAL_ID=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.logs[0].events[] | select(.type == "proposal_deposit") | .attributes[] | select(.key == "proposal_id") | .value')
+    PROPOSAL_ID=$(zetacored query tx $PROPOSAL_TX_HASH -o json | jq -r '.events[] | select(.type == "submit_proposal") | .attributes[] | select(.key == "proposal_id") | .value')
 done
 echo "proposal id is ${PROPOSAL_ID}"
 

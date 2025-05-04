@@ -15,7 +15,7 @@ import (
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	var (
 		err              error
-		feeRateEstimated int64
+		feeRateEstimated uint64
 	)
 
 	// estimate fee rate according to network type
@@ -30,7 +30,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 			return errors.Wrapf(err, "unable to get recent fee rate")
 		}
 	case chains.NetworkType_mainnet:
-		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1, false)
+		feeRateEstimated, err = ob.rpc.GetEstimatedFeeRate(ctx, 1)
 		if err != nil {
 			return errors.Wrap(err, "unable to get estimated fee rate")
 		}
@@ -49,7 +49,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 	// #nosec G115 always positive
 	_, err = ob.ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), uint64(feeRateEstimated), priorityFee, uint64(blockNumber))
+		PostVoteGasPrice(ctx, ob.Chain(), feeRateEstimated, priorityFee, uint64(blockNumber))
 	if err != nil {
 		return errors.Wrap(err, "PostVoteGasPrice error")
 	}

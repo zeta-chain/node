@@ -32,7 +32,8 @@ func GetInboundVoteMessage(
 	coinType coin.CoinType,
 	asset string,
 	signerAddress string,
-	eventIndex uint,
+	eventIndex uint64,
+	status types.InboundStatus,
 ) *types.MsgVoteInbound {
 	msg := types.NewMsgVoteInbound(
 		signerAddress,
@@ -51,6 +52,8 @@ func GetInboundVoteMessage(
 		eventIndex,
 		types.ProtocolContractVersion_V1,
 		false, // not relevant for v1
+		status,
+		types.ConfirmationMode_SAFE,
 	)
 	return msg
 }
@@ -73,8 +76,10 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
 	// verify message validity
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+	if m, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return nil, clientauthz.Signer{}, errors.Wrapf(err, "invalid message %q", msgURL)
+		}
 	}
 
 	authzSigner := clientauthz.GetSigner(msgURL)
@@ -86,7 +91,9 @@ func WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, clientauthz.Signer, error) {
 // PostOutboundTracker adds an outbound tracker
 func (c *Client) PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error) {
 	// don't report if the tracker already contains the txHash
-	tracker, err := c.GetOutboundTracker(ctx, chains.Chain{ChainId: chainID}, nonce)
+	tracker, err := c.GetOutboundTracker(ctx, chains.Chain{
+		ChainId: chainID,
+	}, nonce)
 	if err == nil {
 		for _, hash := range tracker.HashList {
 			if strings.EqualFold(hash.TxHash, txHash) {

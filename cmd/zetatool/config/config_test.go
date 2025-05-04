@@ -1,77 +1,55 @@
-package config
+package config_test
 
 import (
 	"testing"
 
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/cmd/zetatool/config"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
-func TestDefaultConfig(t *testing.T) {
-	cfg := DefaultConfig()
-	require.Equal(t, cfg.EthRPCURL, EthRPCURL)
-	require.Equal(t, cfg.ZetaURL, ZetaURL)
-	require.Equal(t, cfg.BtcExplorerURL, BtcExplorerURL)
-	require.Equal(t, cfg.ConnectorAddress, ConnectorAddress)
-	require.Equal(t, cfg.CustodyAddress, CustodyAddress)
+func TestRead(t *testing.T) {
+	t.Run("TestRead", func(t *testing.T) {
+		c := config.Config{}
+		err := c.Read("sample_config.json")
+		require.NoError(t, err)
+
+		require.Equal(t, "https://zetachain-testnet-grpc.itrocket.net:443", c.ZetaChainRPC)
+		require.Equal(t, "https://ethereum-sepolia-rpc.publicnode.com", c.EthereumRPC)
+		require.Equal(t, int64(101), c.ZetaChainID)
+		require.Equal(t, "", c.BtcUser)
+		require.Equal(t, "", c.BtcPassword)
+		require.Equal(t, "", c.BtcHost)
+		require.Equal(t, "", c.BtcParams)
+		require.Equal(t, "", c.SolanaRPC)
+		require.Equal(t, "https://bsc-testnet-rpc.publicnode.com", c.BscRPC)
+		require.Equal(t, "https://polygon-amoy.gateway.tenderly.com", c.PolygonRPC)
+		require.Equal(t, "https://base-sepolia-rpc.publicnode.com", c.BaseRPC)
+	})
 }
 
 func TestGetConfig(t *testing.T) {
-	AppFs = afero.NewMemMapFs()
-	defaultCfg := DefaultConfig()
-
-	t.Run("No config file specified", func(t *testing.T) {
-		cfg, err := GetConfig("")
+	t.Run("Get default config if not specified", func(t *testing.T) {
+		cfg, err := config.GetConfig(chains.Ethereum, "")
 		require.NoError(t, err)
-		require.Equal(t, cfg, defaultCfg)
+		require.Equal(t, "https://zetachain-mainnet.g.allthatnode.com:443/archive/tendermint", cfg.ZetaChainRPC)
 
-		exists, err := afero.Exists(AppFs, defaultCfgFileName)
+		cfg, err = config.GetConfig(chains.Sepolia, "")
 		require.NoError(t, err)
-		require.True(t, exists)
+		require.Equal(t, "https://zetachain-athens.g.allthatnode.com/archive/tendermint", cfg.ZetaChainRPC)
+
+		cfg, err = config.GetConfig(chains.GoerliLocalnet, "")
+		require.NoError(t, err)
+		require.Equal(t, "http://127.0.0.1:26657", cfg.ZetaChainRPC)
 	})
 
-	t.Run("config file specified", func(t *testing.T) {
-		cfg, err := GetConfig(defaultCfgFileName)
+	t.Run("Get config from file if specified", func(t *testing.T) {
+		cfg, err := config.GetConfig(chains.Ethereum, "sample_config.json")
 		require.NoError(t, err)
-		require.Equal(t, cfg, defaultCfg)
+		require.Equal(t, "https://zetachain-testnet-grpc.itrocket.net:443", cfg.ZetaChainRPC)
+
+		cfg, err = config.GetConfig(chains.Sepolia, "sample_config.json")
+		require.NoError(t, err)
+		require.Equal(t, "https://zetachain-testnet-grpc.itrocket.net:443", cfg.ZetaChainRPC)
 	})
-}
-
-func TestConfig_Read(t *testing.T) {
-	AppFs = afero.NewMemMapFs()
-	cfg, err := GetConfig("")
-	require.NoError(t, err)
-
-	t.Run("read existing file", func(t *testing.T) {
-		c := &Config{}
-		err := c.Read(defaultCfgFileName)
-		require.NoError(t, err)
-		require.Equal(t, c, cfg)
-	})
-
-	t.Run("read non-existent file", func(t *testing.T) {
-		err := AppFs.Remove(defaultCfgFileName)
-		require.NoError(t, err)
-		c := &Config{}
-		err = c.Read(defaultCfgFileName)
-		require.ErrorContains(t, err, "file does not exist")
-		require.NotEqual(t, c, cfg)
-	})
-}
-
-func TestConfig_Save(t *testing.T) {
-	AppFs = afero.NewMemMapFs()
-	cfg := DefaultConfig()
-	cfg.EtherscanAPIkey = "DIFFERENTAPIKEY"
-
-	t.Run("save modified cfg", func(t *testing.T) {
-		err := cfg.Save()
-		require.NoError(t, err)
-
-		newCfg, err := GetConfig(defaultCfgFileName)
-		require.NoError(t, err)
-		require.Equal(t, cfg, newCfg)
-	})
-
-	// Should test invalid json encoding but currently not able to without interface
 }

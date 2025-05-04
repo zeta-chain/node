@@ -5,7 +5,7 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
@@ -374,7 +374,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 		sender,
 		routerAddress,
 		BigIntZero,
-		big.NewInt(1000_000),
+		big.NewInt(1_000_000),
 		true,
 		noEthereumTxEvent,
 		"swapExactTokensForTokens",
@@ -732,7 +732,7 @@ func (k *Keeper) CallZRC20Burn(
 		sender,
 		zrc20address,
 		big.NewInt(0),
-		big.NewInt(100_000),
+		DefaultGasLimit,
 		true,
 		noEthereumTxEvent,
 		"burn",
@@ -764,7 +764,7 @@ func (k *Keeper) CallZRC20Deposit(
 		sender,
 		zrc20address,
 		big.NewInt(0),
-		big.NewInt(100_000),
+		DefaultGasLimit,
 		true,
 		false,
 		"deposit",
@@ -797,7 +797,7 @@ func (k *Keeper) CallZRC20Approve(
 		owner,
 		zrc20address,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		noEthereumTxEvent,
 		"approve",

@@ -2,9 +2,11 @@ package orchestrator
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -19,13 +21,16 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// V2 represents the orchestrator V2 while they co-exist with Orchestrator.
+// V2 represents the orchestrator V2.
+// Will be renamed to `Orchestrator` in the following PR to avoid merge conflicts.
 type V2 struct {
 	deps      *Dependencies
 	scheduler *scheduler.Scheduler
 
 	chains map[int64]ObserverSigner
 	mu     sync.RWMutex
+
+	operatorBalance sdkmath.Int
 
 	logger loggers
 }
@@ -70,6 +75,11 @@ func (oc *V2) Start(ctx context.Context) error {
 		return err
 	}
 
+	newBlocksChan, err := oc.deps.Zetacore.NewBlockSubscriber(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to subscribe to new block")
+	}
+
 	// syntax sugar
 	opts := func(name string, opts ...scheduler.Opt) []scheduler.Opt {
 		return append(opts, scheduler.GroupName(schedulerGroup), scheduler.Name(name))
@@ -79,11 +89,18 @@ func (oc *V2) Start(ctx context.Context) error {
 		return ticker.DurationFromUint64Seconds(app.Config().ConfigUpdateTicker)
 	})
 
-	// every other block
+	// every other block, regardless of block events from zetacore
 	syncInterval := scheduler.Interval(2 * constant.ZetaBlockTime)
+
+	blocksTicker := scheduler.BlockTicker(newBlocksChan)
+
+	// refresh preflight metrics in a lazy manner
+	preflightTicker := scheduler.Interval(1 * time.Minute)
 
 	oc.scheduler.Register(ctx, oc.UpdateContext, opts("update_context", contextInterval)...)
 	oc.scheduler.Register(ctx, oc.SyncChains, opts("sync_chains", syncInterval)...)
+	oc.scheduler.Register(ctx, oc.updateMetrics, opts("update_metrics", blocksTicker)...)
+	oc.scheduler.Register(ctx, oc.reportPreflightMetrics, opts("report_preflight_metrics", preflightTicker)...)
 
 	return nil
 }
@@ -153,21 +170,17 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 		case chain.IsBitcoin():
 			observerSigner, err = oc.bootstrapBitcoin(ctx, chain)
 		case chain.IsEVM():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3302
-			continue
+			observerSigner, err = oc.bootstrapEVM(ctx, chain)
 		case chain.IsSolana():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3301
-			continue
+			observerSigner, err = oc.bootstrapSolana(ctx, chain)
+		case chain.IsSui():
+			observerSigner, err = oc.bootstrapSui(ctx, chain)
 		case chain.IsTON():
-			// TODO
-			// https://github.com/zeta-chain/node/issues/3300
-			continue
+			observerSigner, err = oc.bootstrapTON(ctx, chain)
 		}
 
 		switch {
-		case errors.Is(errSkipChain, err):
+		case errors.Is(err, errSkipChain):
 			// TODO use throttled logger instead of sampled one.
 			// https://github.com/zeta-chain/node/issues/3336
 			oc.logger.sampled.Warn().Err(err).Fields(chain.LogFields()).Msg("Skipping observer-signer")
@@ -200,6 +213,59 @@ func (oc *V2) SyncChains(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+var (
+	zero   = sdkmath.NewInt(0)
+	maxInt = sdkmath.NewInt(math.MaxInt64)
+)
+
+func (oc *V2) updateMetrics(ctx context.Context) error {
+	block, sleepDuration, err := scheduler.BlockFromContextWithDelay(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable get block from context")
+	}
+
+	zetacore := oc.deps.Zetacore
+	ts := oc.deps.Telemetry
+
+	zetaBlockHeight := block.Block.Height
+
+	// 0. Set block metrics
+	metrics.CoreBlockLatency.Set(time.Since(block.Block.Time).Seconds())
+	metrics.CoreBlockLatencySleep.Set(sleepDuration.Seconds())
+
+	ts.SetCoreBlockNumber(zetaBlockHeight)
+
+	// 1. Fetch hot key balance
+	balance, err := zetacore.GetZetaHotKeyBalance(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get hot key balance")
+	}
+
+	// 2. Set it within orchestrator
+	oc.operatorBalance = balance
+
+	// 3. Update telemetry
+	diff := oc.operatorBalance.Sub(balance)
+	if diff.GT(zero) && diff.LT(maxInt) {
+		ts.AddFeeEntry(zetaBlockHeight, diff.Int64())
+	}
+
+	// 4. Update metrics
+	burnRate := ts.HotKeyBurnRate.GetBurnRate().Int64()
+	metrics.HotKeyBurnRate.Set(float64(burnRate))
+
+	return nil
+}
+
+func (oc *V2) reportPreflightMetrics(ctx context.Context) error {
+	app, err := zctx.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger)
 }
 
 func (oc *V2) hasChain(chainID int64) bool {

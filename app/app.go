@@ -8,32 +8,42 @@ import (
 	"runtime/debug"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/upgrade"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -48,9 +58,6 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -73,10 +80,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -121,13 +124,13 @@ import (
 // "github.com/cosmos/cosmos-sdk/x/capability"
 // capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 // capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-// "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-// transferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-// transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-// ibccore "github.com/cosmos/ibc-go/v7/modules/core"
-// ibctypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-// ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-// ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+// "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+// transferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+// transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+// ibccore "github.com/cosmos/ibc-go/v8/modules/core"
+// ibctypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+// ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+// ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 // "github.com/zeta-chain/node/x/ibccrosschain"
 // ibccrosschainkeeper "github.com/zeta-chain/node/x/ibccrosschain/keeper"
 // ibccrosschaintypes "github.com/zeta-chain/node/x/ibccrosschain/types"
@@ -152,8 +155,6 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 	var govProposalHandlers []govclient.ProposalHandler
 	govProposalHandlers = append(govProposalHandlers,
 		paramsclient.ProposalHandler,
-		upgradeclient.LegacyProposalHandler,
-		upgradeclient.LegacyCancelProposalHandler,
 		//ibcclientclient.UpdateClientProposalHandler,
 		//ibcclientclient.UpgradeProposalHandler,
 	)
@@ -276,7 +277,7 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
-	keys := sdk.NewKVStoreKeys(
+	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,
@@ -303,8 +304,8 @@ func New(
 		consensusparamtypes.StoreKey,
 		crisistypes.StoreKey,
 	)
-	tKeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
-	memKeys := sdk.NewMemoryStoreKeys(
+	tKeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
+	memKeys := storetypes.NewMemoryStoreKeys(
 	// capabilitytypes.MemStoreKey,
 	)
 
@@ -327,8 +328,13 @@ func New(
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tKeys[paramstypes.TStoreKey])
 	// set the BaseApp's parameter store
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
-	bApp.SetParamStore(&app.ConsensusParamsKeeper)
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+		authAddr,
+		runtime.EventService{},
+	)
+	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	customProposalHandler := zetamempool.NewCustomProposalHandler(bApp.Mempool(), bApp)
 	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
@@ -346,32 +352,36 @@ func New(
 	// add keepers
 	// use custom Ethermint account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey],
+		appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		ethermint.ProtoAccount,
 		maccPerms,
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authAddr,
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		app.BlockedAddrs(),
 		authAddr,
+		logger,
 	)
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
-		keys[stakingtypes.StoreKey],
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authAddr,
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
-		keys[distrtypes.StoreKey],
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
@@ -382,23 +392,24 @@ func New(
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		app.LegacyAmino(),
-		keys[slashingtypes.StoreKey],
+		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
 		authAddr,
 	)
 
 	app.CrisisKeeper = *crisiskeeper.NewKeeper(
 		appCodec,
-		keys[crisistypes.StoreKey],
+		runtime.NewKVStoreService(keys[crisistypes.StoreKey]),
 		invCheckPeriod,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 		authAddr,
+		app.AccountKeeper.AddressCodec(),
 	)
 
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		keys[upgradetypes.StoreKey],
+		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
 		appCodec,
 		homePath,
 		app.BaseApp,
@@ -478,7 +489,7 @@ func New(
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
-		keys[authzkeeper.StoreKey],
+		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
 		appCodec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -501,16 +512,15 @@ func New(
 	feeSs := app.GetSubspace(feemarkettypes.ModuleName)
 	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
 		appCodec,
+		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
-		keys[feemarkettypes.StoreKey],
-		tKeys[feemarkettypes.TransientKey],
-		feeSs,
-		app.ConsensusParamsKeeper,
-	)
+		keys[feemarkettypes.StoreKey], tKeys[feemarkettypes.TransientKey])
+
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
+		runtime.NewKVStoreService(keys[evmtypes.StoreKey]),
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
@@ -519,7 +529,6 @@ func New(
 		app.StakingKeeper,
 		&app.FeeMarketKeeper,
 		tracer,
-		evmSs,
 		precompiles.StatefulContracts(
 			&app.FungibleKeeper,
 			app.StakingKeeper,
@@ -528,7 +537,6 @@ func New(
 			appCodec,
 			storetypes.TransientGasConfig(),
 		),
-		app.ConsensusParamsKeeper,
 		aggregateAllKeys(keys, tKeys, memKeys),
 	)
 
@@ -588,19 +596,14 @@ func New(
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
-		keys[govtypes.StoreKey],
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.MsgServiceRouter(),
-		govConfig,
-		authAddr,
+		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper,
+		app.MsgServiceRouter(), govConfig, authAddr,
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(
@@ -613,8 +616,13 @@ func New(
 
 	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
+		appCodec,
+		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+		app.StakingKeeper, app.SlashingKeeper,
+		app.AccountKeeper.AddressCodec(),
+		runtime.ProvideCometInfoService(),
 	)
+
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
@@ -637,8 +645,7 @@ func New(
 
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
+			app.AccountKeeper, app.StakingKeeper, app, encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
@@ -659,6 +666,7 @@ func New(
 			app.BankKeeper,
 			app.StakingKeeper,
 			app.GetSubspace(slashingtypes.ModuleName),
+			app.interfaceRegistry,
 		),
 		distr.NewAppModule(
 			appCodec,
@@ -675,7 +683,7 @@ func New(
 			app.BankKeeper,
 			app.GetSubspace(stakingtypes.ModuleName),
 		),
-		upgrade.NewAppModule(app.UpgradeKeeper),
+		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -695,70 +703,31 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
-	app.mb = ModuleBasics
+	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration and genesis verification.
+	// By default, it is composed of all the modules from the module manager.
+	// Additionally, app module basics can be overwritten by passing them as an argument.
+	app.mb = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+				},
+			),
+		},
+	)
+	app.mb.RegisterLegacyAminoCodec(cdc)
+	app.mb.RegisterInterfaces(interfaceRegistry)
 
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
-		//capabilitytypes.ModuleName,
+	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
-		evmtypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		paramstypes.ModuleName,
-		group.ModuleName,
-		vestingtypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
-	app.mm.SetOrderEndBlockers(
-		//capabilitytypes.ModuleName,
-		banktypes.ModuleName,
-		authtypes.ModuleName,
-		upgradetypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		vestingtypes.ModuleName,
-		govtypes.ModuleName,
-		paramstypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		genutiltypes.ModuleName,
-		group.ModuleName,
-		crisistypes.ModuleName,
-		evmtypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
-	)
+
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+
+	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -766,11 +735,13 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	// NOTE: Cross-chain module must be initialized after observer module, as pending nonces in crosschain needs the tss pubkey from observer module
-	app.mm.SetOrderInitGenesis(InitGenesisModuleList()...)
+	app.mm.SetOrderInitGenesis(OrderInitGenesis()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	if err := app.mm.RegisterServices(app.configurator); err != nil {
+		panic(err)
+	}
 
 	app.sm = module.NewSimulationManager(simulationModules(app, appCodec, skipGenesisInvariants)...)
 
@@ -783,6 +754,7 @@ func New(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	options := ante.HandlerOptions{
@@ -827,18 +799,23 @@ func New(
 // Name returns the name of the App
 func (app *App) Name() string { return app.BaseApp.Name() }
 
+// PreBlocker updates every pre begin block
+func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.mm.PreBlock(ctx)
+}
+
 // BeginBlocker application updates every begin block
-func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization
-func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	// InitChainErrorMessage is the error message displayed when trying to sync testnet or mainnet from block 1 using the latest binary.
 	const InitChainErrorMessage = `
 Unable to sync testnet or mainnet from block 1 using the latest version.
@@ -863,7 +840,10 @@ https://www.zetachain.com/docs/nodes/start-here/syncing/`
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()); err != nil {
+		panic(err)
+	}
+
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -903,6 +883,27 @@ func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
+// AutoCliOpts returns the autocli options for the app.
+func (app *App) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
+}
+
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
@@ -940,7 +941,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
-	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
@@ -953,8 +954,8 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	}
 }
 
-func (app *App) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+func (app *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
@@ -975,7 +976,7 @@ func (app *App) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(
+	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
 		app.interfaceRegistry,

@@ -22,8 +22,8 @@ import (
 	"sort"
 	"strings"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -109,6 +109,7 @@ func (b *Backend) getAccountNonce(
 
 			sender, err := ethMsg.GetSender(b.chainID)
 			if err != nil {
+				b.logger.Debug("failed to parse from field", "hash", ethMsg.Hash, "error", err.Error())
 				continue
 			}
 			if sender == accAddr {
@@ -285,7 +286,7 @@ func ParseTxLogsFromEvent(event abci.Event) ([]*ethtypes.Log, error) {
 
 // ShouldIgnoreGasUsed returns true if the gasUsed in result should be ignored
 // workaround for issue: https://github.com/cosmos/cosmos-sdk/issues/10832
-func ShouldIgnoreGasUsed(res *abci.ResponseDeliverTx) bool {
+func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 	return res.GetCode() == 11 && strings.Contains(res.GetLog(), "no block gas left to run tx: out of gas")
 }
 

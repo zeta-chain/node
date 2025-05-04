@@ -12,7 +12,7 @@ func TestBitcoinWithdrawSegWit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// parse arguments
-	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
+	defaultReceiver := r.GetBtcAddress().EncodeAddress()
 	receiver, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 	_, ok := receiver.(*btcutil.AddressWitnessPubKeyHash)
 	require.True(r, ok, "Invalid receiver address specified for TestBitcoinWithdrawSegWit.")

@@ -15,12 +15,12 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/go-tss/blame"
+	tsscommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/node/pkg/cosmos"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/tss"
-	"gitlab.com/thorchain/tss/go-tss/blame"
-	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
 )
 
 var (
@@ -153,7 +153,7 @@ func newKeySignerMock(t *testing.T) *keySignerMock {
 	}
 }
 
-func (*keySignerMock) Stop() { return }
+func (*keySignerMock) Stop() {}
 
 func (m *keySignerMock) PubKeyBech32() string {
 	cosmosPrivateKey := &secp256k1.PrivKey{Key: m.privateKey.D.Bytes()}

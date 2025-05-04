@@ -7,14 +7,12 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/pkg/ticker"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -23,58 +21,16 @@ const (
 	// TODO: move to config
 	// https://github.com/zeta-chain/node/issues/3086
 	maxTransactionsPerTick = 100
-	// zero log sample rate for sampled logger (to avoid spamming logs)
-	logSampleRate = 10
 )
 
-// watchInbound watches for new txs to Gateway's account.
-func (ob *Observer) watchInbound(ctx context.Context) error {
-	return ob.inboundTicker(ctx, "WatchInbound", ob.observeGateway)
-}
-
-func (ob *Observer) watchInboundTracker(ctx context.Context) error {
-	return ob.inboundTicker(ctx, "WatchInboundTracker", ob.processInboundTrackers)
-}
-
-func (ob *Observer) inboundTicker(ctx context.Context, taskName string, taskFunc func(context.Context) error) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	initialInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: logSampleRate})
-
-	task := func(ctx context.Context, t *ticker.Ticker) error {
-		if !app.IsInboundObservationEnabled() {
-			sampledLogger.Info().Msgf("%s: inbound observation is disabled", taskName)
-			return nil
-		}
-
-		if err := taskFunc(ctx); err != nil {
-			ob.Logger().Inbound.Err(err).Msgf("%s failed", taskName)
-		}
-
-		newInterval := ticker.DurationFromUint64Seconds(ob.ChainParams().InboundTicker)
-		t.SetInterval(newInterval)
-
-		return nil
-	}
-
-	return ticker.Run(
-		ctx,
-		initialInterval,
-		task,
-		ticker.WithStopChan(ob.StopChannel()),
-		ticker.WithLogger(ob.Logger().Inbound, taskName),
-	)
-}
-
-// observeGateway observes Gateway's account for new transactions.
-// Due to TON architecture we have to scan for all net-new transactions.
+// ObserveInbound observes Gateway's account for new transactions [INBOUND AND OUTBOUND]
+//
+// Due to TON's architecture we have to scan for all net-new transactions.
 // The main purpose is to observe inbounds from TON.
 // Note that we might also have *outbounds* here (if a signer broadcasts a tx, it will be observed here).
-func (ob *Observer) observeGateway(ctx context.Context) error {
+//
+// The name `ObserveInbound` is used for consistency with other chains.
+func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	if err := ob.ensureLastScannedTX(ctx); err != nil {
 		return errors.Wrap(err, "unable to ensure last scanned tx")
 	}
@@ -164,8 +120,8 @@ func (ob *Observer) observeGateway(ctx context.Context) error {
 	return nil
 }
 
-// processInboundTrackers handles adhoc trackers that were somehow missed by
-func (ob *Observer) processInboundTrackers(ctx context.Context) error {
+// ProcessInboundTrackers handles adhoc trackers that were somehow missed by
+func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	trackers, err := ob.ZetacoreClient().GetInboundTrackersForChain(ctx, ob.Chain().ChainId)
 	if err != nil {
 		return errors.Wrap(err, "unable to get inbound trackers")
@@ -221,6 +177,15 @@ func (ob *Observer) processInboundTrackers(ctx context.Context) error {
 	return nil
 }
 
+// inboundData represents extract data from a TON inbound deposit
+type inboundData struct {
+	sender         string
+	amount         math.Uint
+	receiver       string
+	message        []byte
+	isContractCall bool
+}
+
 // Sends PostVoteInbound to zetacore
 func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) (string, error) {
 	// noop
@@ -237,51 +202,59 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return "", errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
 	}
 
-	sender, amount, memo, err := extractInboundData(tx)
+	inboundData, err := extractInboundData(tx)
 	if err != nil {
 		return "", err
 	}
 
 	seqno := blockHeader.MinRefMcSeqno
 
-	return ob.voteDeposit(ctx, tx, sender, amount, memo, seqno)
+	return ob.voteDeposit(ctx, tx, inboundData, seqno)
 }
 
 // extractInboundData parses Gateway tx into deposit (TON sender, amount, memo)
-func extractInboundData(tx *toncontracts.Transaction) (string, math.Uint, []byte, error) {
+func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
 	switch tx.Operation {
 	case toncontracts.OpDeposit:
 		d, err := tx.Deposit()
 		if err != nil {
-			return "", math.NewUint(0), nil, err
+			return inboundData{}, err
 		}
-
-		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
+		return inboundData{
+			sender:         d.Sender.ToRaw(),
+			amount:         d.Amount,
+			receiver:       d.Recipient.Hex(),
+			message:        []byte{},
+			isContractCall: false,
+		}, nil
 	case toncontracts.OpDepositAndCall:
 		d, err := tx.DepositAndCall()
 		if err != nil {
-			return "", math.NewUint(0), nil, err
+			return inboundData{}, err
 		}
-
-		return d.Sender.ToRaw(), d.Amount, d.Memo(), nil
+		return inboundData{
+			sender:         d.Sender.ToRaw(),
+			amount:         d.Amount,
+			receiver:       d.Recipient.Hex(),
+			message:        d.CallData,
+			isContractCall: true,
+		}, nil
 	default:
-		return "", math.NewUint(0), nil, fmt.Errorf("unknown operation %d", tx.Operation)
+		return inboundData{}, fmt.Errorf("unknown operation %d", tx.Operation)
 	}
 }
 
 func (ob *Observer) voteDeposit(
 	ctx context.Context,
 	tx *toncontracts.Transaction,
-	sender string,
-	amount math.Uint,
-	memo []byte,
+	inboundData inboundData,
 	seqno uint32,
 ) (string, error) {
 	const (
 		eventIndex    = 0 // not a smart contract call
 		coinType      = coin.CoinType_Gas
 		asset         = "" // empty for gas coin
-		gasLimit      = 0
+		gasLimit      = maxGasLimit
 		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
 	)
 
@@ -290,24 +263,27 @@ func (ob *Observer) voteDeposit(
 		inboundHash     = liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
 	)
 
-	// TODO: use protocol contract v2 for deposit
-	// https://github.com/zeta-chain/node/issues/2967
-
-	msg := zetacore.GetInboundVoteMessage(
-		sender,
+	// create the inbound message
+	msg := types.NewMsgVoteInbound(
+		operatorAddress.String(),
+		inboundData.sender,
 		ob.Chain().ChainId,
-		sender,
-		sender,
+		inboundData.sender,
+		inboundData.receiver,
 		ob.ZetacoreClient().Chain().ChainId,
-		amount,
-		hex.EncodeToString(memo),
+		inboundData.amount,
+		hex.EncodeToString(inboundData.message),
 		inboundHash,
 		uint64(seqno),
 		gasLimit,
 		coinType,
 		asset,
-		operatorAddress.String(),
 		eventIndex,
+		types.ProtocolContractVersion_V2,
+		false, // not used
+		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
+		types.WithCrossChainCall(inboundData.isContractCall),
 	)
 
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)

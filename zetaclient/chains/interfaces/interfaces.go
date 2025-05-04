@@ -4,23 +4,24 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/gagliardetto/solana-go"
 	solrpc "github.com/gagliardetto/solana-go/rpc"
-	"github.com/onrik/ethrpc"
-	"gitlab.com/thorchain/tss/go-tss/blame"
+	"github.com/zeta-chain/go-tss/blame"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	ethclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
@@ -31,44 +32,6 @@ const (
 	Ascending  Order = "ASC"
 	Descending Order = "DESC"
 )
-
-// ChainObserver is the interface for chain observer
-type ChainObserver interface {
-	// Start starts the observer
-	Start(ctx context.Context)
-
-	// Stop stops the observer
-	Stop()
-
-	// ChainParams returns observer chain params (might be out of date with zetacore)
-	ChainParams() observertypes.ChainParams
-
-	// SetChainParams sets observer chain params
-	SetChainParams(observertypes.ChainParams)
-
-	// VoteOutboundIfConfirmed checks outbound status and returns (continueKeySign, error)
-	// todo we should make this simpler.
-	VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschaintypes.CrossChainTx) (bool, error)
-}
-
-// ChainSigner is the interface to sign transactions for a chain
-type ChainSigner interface {
-	TryProcessOutbound(
-		ctx context.Context,
-		cctx *crosschaintypes.CrossChainTx,
-		outboundProc *outboundprocessor.Processor,
-		outboundID string,
-		observer ChainObserver,
-		zetacoreClient ZetacoreClient,
-		height uint64,
-	)
-	SetZetaConnectorAddress(address ethcommon.Address)
-	SetERC20CustodyAddress(address ethcommon.Address)
-	GetZetaConnectorAddress() ethcommon.Address
-	GetERC20CustodyAddress() ethcommon.Address
-	SetGatewayAddress(address string)
-	GetGatewayAddress() string
-}
 
 type ZetacoreVoter interface {
 	PostVoteGasPrice(
@@ -101,6 +64,11 @@ type ZetacoreClient interface {
 	GetSupportedChains(ctx context.Context) ([]chains.Chain, error)
 	GetAdditionalChains(ctx context.Context) ([]chains.Chain, error)
 	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
+	GetForeignCoinsFromAsset(
+		ctx context.Context,
+		chainID int64,
+		assetAddress ethcommon.Address,
+	) (fungibletypes.ForeignCoins, error)
 
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
@@ -114,7 +82,7 @@ type ZetacoreClient interface {
 
 	GetBlockHeight(ctx context.Context) (int64, error)
 
-	ListPendingCCTX(ctx context.Context, chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
+	ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	ListPendingCCTXWithinRateLimit(
 		ctx context.Context,
 	) (*crosschaintypes.QueryListPendingCctxWithinRateLimitResponse, error)
@@ -141,15 +109,19 @@ type ZetacoreClient interface {
 
 	PostOutboundTracker(ctx context.Context, chainID int64, nonce uint64, txHash string) (string, error)
 	NewBlockSubscriber(ctx context.Context) (chan cometbfttypes.EventDataNewBlock, error)
+	GetBallotByID(ctx context.Context, id string) (*observertypes.QueryBallotByIdentifierResponse, error)
+	GetCctxByHash(ctx context.Context, sendHash string) (*crosschaintypes.CrossChainTx, error)
 }
 
 // EVMRPCClient is the interface for EVM RPC client
+// TODO https://github.com/zeta-chain/node/issues/3107
+//
+//go:generate mockery --name EVMRPCClient --filename evm_rpc.go --case underscore --output ../../testutils/mocks
 type EVMRPCClient interface {
 	bind.ContractBackend
 	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
 	SuggestGasPrice(ctx context.Context) (*big.Int, error)
 	BlockNumber(ctx context.Context) (uint64, error)
-	BlockByNumber(ctx context.Context, number *big.Int) (*ethtypes.Block, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
@@ -159,6 +131,10 @@ type EVMRPCClient interface {
 		block ethcommon.Hash,
 		index uint,
 	) (ethcommon.Address, error)
+
+	BlockByNumberCustom(ctx context.Context, number *big.Int) (*ethclient.Block, error)
+	TransactionByHashCustom(ctx context.Context, hash string) (*ethclient.Transaction, error)
+	HealthCheck(ctx context.Context) (time.Time, error)
 }
 
 // SolanaRPCClient is the interface for Solana RPC client
@@ -198,12 +174,6 @@ type SolanaRPCClient interface {
 		transaction *solana.Transaction,
 		opts solrpc.TransactionOpts,
 	) (solana.Signature, error)
-}
-
-// EVMJSONRPCClient is the interface for EVM JSON RPC client
-type EVMJSONRPCClient interface {
-	EthGetBlockByNumber(number int, withTransactions bool) (*ethrpc.Block, error)
-	EthGetTransactionByHash(hash string) (*ethrpc.Transaction, error)
 }
 
 // TSSSigner is the interface for TSS signer

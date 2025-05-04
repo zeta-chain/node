@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/block-vision/sui-go-sdk/sui"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
-	ton "github.com/tonkeeper/tongo/liteapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/zeta-chain/node/pkg/retry"
 	zetacore_rpc "github.com/zeta-chain/node/pkg/rpc"
 	btcclient "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
-	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton"
+	tonconfig "github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 )
 
@@ -43,12 +43,17 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 	}
 
 	var tonClient *tonrunner.Client
-	if conf.RPCs.TONSidecarURL != "" {
-		c, err := getTONClient(ctx, conf.RPCs.TONSidecarURL)
+	if conf.RPCs.TON != "" {
+		c, err := getTONClient(ctx, conf.RPCs.TON)
 		if err != nil {
 			return runner.Clients{}, fmt.Errorf("failed to get ton client: %w", err)
 		}
 		tonClient = c
+	}
+
+	var suiClient sui.ISuiAPI
+	if conf.RPCs.Sui != "" {
+		suiClient = sui.NewSuiClient(conf.RPCs.Sui)
 	}
 
 	zetaCoreClients, err := GetZetacoreClient(conf)
@@ -66,6 +71,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, account confi
 		BtcRPC:            btcRPCClient,
 		Solana:            solanaClient,
 		TON:               tonClient,
+		Sui:               suiClient,
 		Evm:               evmClient,
 		EvmAuth:           evmAuth,
 		Zevm:              zevmClient,
@@ -125,17 +131,16 @@ func getEVMClient(
 	return evmClient, evmAuth, nil
 }
 
-func getTONClient(ctx context.Context, sidecarURL string) (*tonrunner.Client, error) {
-	if sidecarURL == "" {
-		return nil, fmt.Errorf("sidecar URL is empty")
+// getTONClient resolved tonrunner based on lite-server config (path or url)
+func getTONClient(ctx context.Context, configURLOrPath string) (*tonrunner.Client, error) {
+	if configURLOrPath == "" {
+		return nil, fmt.Errorf("config is empty")
 	}
-
-	sidecar := tonrunner.NewSidecarClient(sidecarURL)
 
 	// It might take some time to bootstrap the sidecar
 	cfg, err := retry.DoTypedWithRetry(
 		func() (*tonconfig.GlobalConfigurationFile, error) {
-			return tonconfig.ConfigFromURL(ctx, sidecar.LiteServerURL())
+			return tonconfig.FromSource(ctx, configURLOrPath)
 		},
 	)
 
@@ -143,15 +148,7 @@ func getTONClient(ctx context.Context, sidecarURL string) (*tonrunner.Client, er
 		return nil, fmt.Errorf("failed to get ton config: %w", err)
 	}
 
-	client, err := ton.NewClient(ton.WithConfigurationFile(*cfg))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ton client: %w", err)
-	}
-
-	return &tonrunner.Client{
-		Client:        client,
-		SidecarClient: sidecar,
-	}, nil
+	return tonrunner.NewClient(cfg)
 }
 
 func GetZetacoreClient(conf config.Config) (zetacore_rpc.Clients, error) {

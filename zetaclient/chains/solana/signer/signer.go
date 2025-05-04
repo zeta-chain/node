@@ -2,29 +2,28 @@ package signer
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"time"
 
 	"cosmossdk.io/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 const (
@@ -38,9 +37,17 @@ const (
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 + 64 = 127 seconds, good enough for the 2 minute timeout
 	broadcastRetries = 7
+
+	// SolanaMaxComputeBudget is the max compute budget for a transaction.
+	SolanaMaxComputeBudget = 1_400_000
 )
 
-var _ interfaces.ChainSigner = (*Signer)(nil)
+type Outbound struct {
+	Tx         *solana.Transaction
+	FallbackTx *solana.Transaction
+}
+
+type outboundGetter func() (*Outbound, error)
 
 // Signer deals with signing Solana transactions and implements the ChainSigner interface
 type Signer struct {
@@ -60,45 +67,40 @@ type Signer struct {
 	pda solana.PublicKey
 }
 
-// NewSigner creates a new Solana signer
-func NewSigner(
-	chain chains.Chain,
-	chainParams observertypes.ChainParams,
+// New Signer constructor.
+func New(
+	baseSigner *base.Signer,
 	solClient interfaces.SolanaRPCClient,
-	tss interfaces.TSSSigner,
+	gatewayAddress string,
 	relayerKey *keys.RelayerKey,
-	logger base.Logger,
 ) (*Signer, error) {
-	// create base signer
-	baseSigner := base.NewSigner(chain, tss, logger)
-
 	// parse gateway ID and PDA
-	gatewayID, pda, err := contracts.ParseGatewayWithPDA(chainParams.GatewayAddress)
+	gatewayID, pda, err := contracts.ParseGatewayWithPDA(gatewayAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot parse gateway address %s", chainParams.GatewayAddress)
+		return nil, errors.Wrapf(err, "cannot parse gateway address %s", gatewayAddress)
 	}
 
-	// create Solana signer
-	signer := &Signer{
-		Signer:    baseSigner,
-		client:    solClient,
-		gatewayID: gatewayID,
-		pda:       pda,
-	}
+	var rk *solana.PrivateKey
 
-	// construct Solana private key if present
 	if relayerKey != nil {
-		privKey, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
+		pk, err := solana.PrivateKeyFromBase58(relayerKey.PrivateKey)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to construct solana private key")
 		}
-		signer.relayerKey = &privKey
-		logger.Std.Info().Msgf("Solana relayer address: %s", signer.relayerKey.PublicKey())
+
+		rk = &pk
+		baseSigner.Logger().Std.Info().Stringer("relayer_key", rk.PublicKey()).Msg("Loaded relayer key")
 	} else {
-		logger.Std.Info().Msg("Solana relayer key is not provided")
+		baseSigner.Logger().Std.Info().Msg("Solana relayer key is not provided")
 	}
 
-	return signer, nil
+	return &Signer{
+		Signer:     baseSigner,
+		client:     solClient,
+		gatewayID:  gatewayID,
+		relayerKey: rk,
+		pda:        pda,
+	}, nil
 }
 
 // HasRelayerKey returns true if the signer has a relayer key
@@ -112,17 +114,23 @@ func (signer *Signer) HasRelayerKey() bool {
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	outboundProc *outboundprocessor.Processor,
-	outboundID string,
-	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
-		outboundProc.EndTryProcess(outboundID)
+		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
-			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().
+				Std.Error().
+				Str(logs.FieldMethod, "TryProcessOutbound").
+				Str(logs.FieldCctx, cctx.Index).
+				Interface("panic", err).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("caught panic error")
 		}
 	}()
 
@@ -139,36 +147,66 @@ func (signer *Signer) TryProcessOutbound(
 	chainID := signer.Chain().ChainId
 	nonce := params.TssNonce
 	coinType := cctx.InboundParams.CoinType
+	isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 
-	var tx *solana.Transaction
+	var outboundGetter outboundGetter
 
 	switch coinType {
 	case coin.CoinType_Cmd:
-		whitelistTx, err := signer.prepareWhitelistTx(ctx, cctx, height)
+		whitelistTxGetter, err := signer.prepareWhitelistTx(ctx, cctx, height)
 		if err != nil {
 			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign whitelist outbound")
 			return
 		}
 
-		tx = whitelistTx
+		outboundGetter = whitelistTxGetter
 
 	case coin.CoinType_Gas:
-		withdrawTx, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
-		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
-			return
-		}
+		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
+		if cctx.IsWithdrawAndCall() || isRevert {
+			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
+				return
+			}
 
-		tx = withdrawTx
+			outboundGetter = executeTxGetter
+		} else {
+			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
+				return
+			}
+
+			outboundGetter = withdrawTxGetter
+		}
 
 	case coin.CoinType_ERC20:
-		withdrawSPLTx, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+		if cctx.IsWithdrawAndCall() || isRevert {
+			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
+				return
+			}
+
+			outboundGetter = executeSPLTxGetter
+		} else {
+			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+			if err != nil {
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+				return
+			}
+
+			outboundGetter = withdrawSPLTxGetter
+		}
+	case coin.CoinType_NoAssetCall:
+		executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 		if err != nil {
-			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
+			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
 			return
 		}
 
-		tx = withdrawSPLTx
+		outboundGetter = executeTxGetter
 	default:
 		logger.Error().
 			Msgf("TryProcessOutbound: can only send SOL to the Solana network")
@@ -184,19 +222,77 @@ func (signer *Signer) TryProcessOutbound(
 	// set relayer balance metrics
 	signer.SetRelayerBalanceMetrics(ctx)
 
+	// Get transactions from getters
+	// This is when the recent block hash timer starts
+	outbound, err := outboundGetter()
+	if err != nil {
+		logger.Error().Err(err).Msgf("TryProcessOutbound: Failed to get transaction")
+		return
+	}
+
 	// broadcast the signed tx to the Solana network
-	signer.broadcastOutbound(ctx, tx, chainID, nonce, logger, zetacoreClient)
+	signer.broadcastOutbound(ctx, outbound, chainID, nonce, logger, zetacoreClient)
+}
+
+// signTx creates and signs solana tx containing provided instruction with relayer key.
+func (signer *Signer) signTx(
+	ctx context.Context,
+	inst *solana.GenericInstruction,
+	limit uint64,
+) (*solana.Transaction, error) {
+	// get a recent blockhash
+	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		return nil, errors.Wrap(err, "getLatestBlockhash error")
+	}
+
+	// if limit is provided, prepend compute unit limit instruction
+	var instructions []solana.Instruction
+	if limit > 0 {
+		limit = min(limit, SolanaMaxComputeBudget)
+		// #nosec G115 always in range
+		limitInst := computebudget.NewSetComputeUnitLimitInstruction(uint32(limit)).Build()
+		instructions = append(instructions, limitInst)
+	}
+
+	instructions = append(instructions, inst)
+
+	// create a transaction that wraps the instruction
+	tx, err := solana.NewTransaction(
+		// TODO: outbound now uses 5K lamports as the fixed fee, we could explore priority fee and compute budget
+		// https://github.com/zeta-chain/node/issues/2599
+		instructions,
+		recent.Value.Blockhash,
+		solana.TransactionPayer(signer.relayerKey.PublicKey()),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create new tx")
+	}
+
+	// relayer signs the transaction
+	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
+		if key.Equals(signer.relayerKey.PublicKey()) {
+			return signer.relayerKey
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "signer unable to sign transaction")
+	}
+
+	return tx, nil
 }
 
 // broadcastOutbound sends the signed transaction to the Solana network
 func (signer *Signer) broadcastOutbound(
 	ctx context.Context,
-	tx *solana.Transaction,
+	outbound *Outbound,
 	chainID int64,
 	nonce uint64,
 	logger zerolog.Logger,
 	zetacoreClient interfaces.ZetacoreClient,
 ) {
+	tx := outbound.Tx
 	// prepare logger fields
 	lf := map[string]any{
 		logs.FieldMethod: "broadcastOutbound",
@@ -236,6 +332,9 @@ func (signer *Signer) broadcastOutbound(
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 		)
 		if err != nil {
+			if outbound.FallbackTx != nil && shouldUseFallbackTx(err, signer.GetGatewayAddress()) {
+				tx = outbound.FallbackTx
+			}
 			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
 			backOff *= 2
 			continue
@@ -253,10 +352,10 @@ func (signer *Signer) prepareWithdrawTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -273,16 +372,127 @@ func (signer *Signer) prepareWithdrawTx(
 	// sign gateway withdraw message by TSS
 	msg, err := signer.createAndSignMsgWithdraw(ctx, params, height, cancelTx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createAndSignMsgWithdraw error")
 	}
 
-	// sign the withdraw transaction by relayer key
-	tx, err := signer.signWithdrawTx(ctx, *msg)
+	return func() (*Outbound, error) {
+		// sign the withdraw transaction by relayer key
+		inst, err := signer.createWithdrawInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating withdraw instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing withdraw instruction")
+		}
+		return &Outbound{Tx: tx}, nil
+	}, nil
+}
+
+func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	return executeType, msg, nil
+}
+
+func (signer *Signer) prepareExecuteTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCCTXRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
 	}
 
-	return tx, nil
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
+	}
+
+	// sign gateway execute message by TSS
+	msgExecute, msgIn, err := signer.createAndSignMsgExecute(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Sender,
+		msg.Data,
+		remainingAccounts,
+		executeType,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "createAndSignMsgExecute error")
+	}
+
+	return func() (*Outbound, error) {
+		// sign the execute transaction by relayer key
+		inst, err := signer.createExecuteInstruction(*msgExecute)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute instruction")
+		}
+
+		fallbackInst, err := signer.createIncrementNonceInstruction(*msgIn)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating increment nonce instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing execute instruction")
+		}
+
+		fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing increment nonce instruction")
+		}
+		return &Outbound{
+			Tx:         tx,
+			FallbackTx: fallbackTx,
+		}, nil
+	}, nil
 }
 
 func (signer *Signer) prepareWithdrawSPLTx(
@@ -290,10 +500,67 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	cctx *types.CrossChainTx,
 	height uint64,
 	logger zerolog.Logger,
-) (*solana.Transaction, error) {
+) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	// compliance check
-	cancelTx := compliance.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCCTXRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, errors.Wrap(err, "decodeMintAccountDetails error")
+	}
+
+	// sign gateway withdraw spl message by TSS
+	msg, err := signer.createAndSignMsgWithdrawSPL(
+		ctx,
+		params,
+		height,
+		cctx.InboundParams.Asset,
+		mint.Decimals,
+		cancelTx,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "createAndSignMsgWithdrawSPL error")
+	}
+
+	return func() (*Outbound, error) {
+		// sign the withdraw transaction by relayer key
+		inst, err := signer.createWithdrawSPLInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating withdraw SPL instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing withdraw SPL instruction")
+		}
+
+		return &Outbound{Tx: tx}, nil
+	}, nil
+}
+
+func (signer *Signer) prepareExecuteSPLTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCCTXRestricted(cctx)
 	if cancelTx {
 		compliance.PrintComplianceLog(
 			logger,
@@ -313,33 +580,70 @@ func (signer *Signer) prepareWithdrawSPLTx(
 		return nil, err
 	}
 
-	// sign gateway withdraw spl message by TSS
-	msg, err := signer.createAndSignMsgWithdrawSPL(
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "prepare ExecuteMsg error")
+	}
+
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
+	}
+
+	// sign gateway execute spl revert message by TSS
+	msgExecuteSpl, msgIn, err := signer.createAndSignMsgExecuteSPL(
 		ctx,
 		params,
 		height,
 		cctx.InboundParams.Asset,
 		mint.Decimals,
+		cctx.InboundParams.Sender,
+		msg.Data,
+		remainingAccounts,
+		executeType,
 		cancelTx,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// sign the withdraw transaction by relayer key
-	tx, err := signer.signWithdrawSPLTx(ctx, *msg)
-	if err != nil {
-		return nil, err
-	}
+	return func() (*Outbound, error) {
+		// sign the execute spl transaction by relayer key
+		inst, err := signer.createExecuteSPLInstruction(*msgExecuteSpl)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute SPL instruction")
+		}
 
-	return tx, nil
+		fallbackInst, err := signer.createIncrementNonceInstruction(*msgIn)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating increment nonce instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, params.CallOptions.GasLimit)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing execute SPL instruction")
+		}
+
+		fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing increment nonce instruction")
+		}
+
+		return &Outbound{
+			Tx:         tx,
+			FallbackTx: fallbackTx,
+		}, nil
+	}, nil
 }
 
 func (signer *Signer) prepareWhitelistTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	height uint64,
-) (*solana.Transaction, error) {
+) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
 	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
 	if len(relayedMsg) != 2 {
@@ -348,28 +652,34 @@ func (signer *Signer) prepareWhitelistTx(
 
 	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "publicKeyFromBase58 %s error", relayedMsg[1])
 	}
 
 	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
 	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "findProgramAddress error for seed %s", seed)
 	}
 
 	// sign gateway whitelist message by TSS
 	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
 	}
 
-	// sign the whitelist transaction by relayer key
-	tx, err := signer.signWhitelistTx(ctx, msg)
-	if err != nil {
-		return nil, err
-	}
+	return func() (*Outbound, error) {
+		// sign the whitelist transaction by relayer key
+		inst, err := signer.createWhitelistInstruction(msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating whitelist instruction")
+		}
 
-	return tx, nil
+		tx, err := signer.signTx(ctx, inst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing whitelist instruction")
+		}
+		return &Outbound{Tx: tx}, nil
+	}, nil
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
@@ -431,18 +741,12 @@ func (signer *Signer) SetRelayerBalanceMetrics(ctx context.Context) {
 	metrics.RelayerKeyBalance.WithLabelValues(signer.Chain().Name).Set(solBalance)
 }
 
-// TODO: get rid of below four functions for Solana and Bitcoin
-// https://github.com/zeta-chain/node/issues/2532
-func (signer *Signer) SetZetaConnectorAddress(_ ethcommon.Address) {
-}
-
-func (signer *Signer) SetERC20CustodyAddress(_ ethcommon.Address) {
-}
-
-func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
-	return ethcommon.Address{}
-}
-
-func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
-	return ethcommon.Address{}
+// IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
+// TODO(revamp): move to another package more general for cctx functions
+func IsPendingOutboundFromZetaChain(
+	cctx *types.CrossChainTx,
+	zetacoreClient interfaces.ZetacoreClient,
+) bool {
+	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
+		cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound
 }

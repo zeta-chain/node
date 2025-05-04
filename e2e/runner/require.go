@@ -11,6 +11,8 @@ import (
 
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
+	"github.com/zeta-chain/node/x/observer/types"
 )
 
 // EnsureNoTrackers ensures that there are no trackers left on zetacore
@@ -58,4 +60,49 @@ func ensureZRC20ZeroBalance(r *E2ERunner, zrc20 *zrc20.ZRC20, address ethcommon.
 		balance.Cmp(big.NewInt(0)),
 		fmt.Sprintf("the balance of address %s should be zero on ZRC20: %s", address, zrc20Name),
 	)
+}
+
+// EnsureNoStaleBallots ensures that there are no stale ballots left on the chain.
+func (r *E2ERunner) EnsureNoStaleBallots() {
+	ballotsRes, err := r.ObserverClient.Ballots(r.Ctx, &types.QueryBallotsRequest{})
+	require.NoError(r, err)
+	currentBlockHeight, err := r.Clients.Zetacore.GetBlockHeight(r.Ctx)
+	require.NoError(r, err)
+	emissionsParams, err := r.EmissionsClient.Params(r.Ctx, &emissionstypes.QueryParamsRequest{})
+	require.NoError(r, err)
+	staleBlockStart := currentBlockHeight - emissionsParams.Params.BallotMaturityBlocks
+	if len(ballotsRes.Ballots) < 1 {
+		return
+	}
+
+	firstBallotCreationHeight := int64(0)
+
+	for _, ballot := range ballotsRes.Ballots {
+		if ballot.IsFinalized() {
+			firstBallotCreationHeight = ballot.BallotCreationHeight
+			break
+		}
+	}
+
+	if firstBallotCreationHeight == 0 {
+		return
+	}
+	// Log data for debugging
+	if firstBallotCreationHeight < staleBlockStart {
+		r.Logger.Error(
+			"First finalized ballot creation height: %d is less than stale block start: %d",
+			firstBallotCreationHeight,
+			staleBlockStart,
+		)
+		for _, ballot := range ballotsRes.Ballots {
+			r.Logger.Error(
+				"Ballot: %s Creation Height %d BallotStatus %s\n",
+				ballot.BallotIdentifier,
+				ballot.BallotCreationHeight,
+				ballot.BallotStatus,
+			)
+		}
+		r.Logger.Error("Block Maturity Height: %d", emissionsParams.Params.BallotMaturityBlocks)
+	}
+	require.GreaterOrEqual(r, firstBallotCreationHeight, staleBlockStart, "there should be no stale ballots")
 }

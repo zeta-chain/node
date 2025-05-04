@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -27,7 +27,7 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 		VoterList:            []string{AccAddress(), AccAddress()},
 		Votes:                []types.VoteType{types.VoteType_FailureObservation, types.VoteType_SuccessObservation},
 		ObservationType:      types.ObservationType_EmptyObserverType,
-		BallotThreshold:      sdk.NewDec(1),
+		BallotThreshold:      sdkmath.LegacyNewDec(1),
 		BallotStatus:         types.BallotStatus_BallotInProgress,
 		BallotCreationHeight: r.Int63(),
 	}
@@ -92,10 +92,12 @@ func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 func ChainParams(chainID int64) *types.ChainParams {
 	r := newRandFromSeed(chainID)
 
-	fiftyPercent, err := sdk.NewDecFromStr("0.5")
+	fiftyPercent, err := sdkmath.LegacyNewDecFromStr("0.5")
 	if err != nil {
 		return nil
 	}
+
+	confirmationParams := ConfirmationParams(r)
 
 	return &types.ChainParams{
 		ChainId:           chainID,
@@ -111,13 +113,15 @@ func ChainParams(chainID int64) *types.ChainParams {
 		OutboundScheduleInterval:    Int64InRange(1, 100),
 		OutboundScheduleLookahead:   Int64InRange(1, 500),
 		BallotThreshold:             fiftyPercent,
-		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		MinObserverDelegation:       sdkmath.LegacyNewDec(r.Int63()),
 		IsSupported:                 false,
+		GatewayAddress:              EthAddress().String(),
+		ConfirmationParams:          &confirmationParams,
 	}
 }
 
 func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
-	fiftyPercent := sdk.MustNewDecFromStr("0.5")
+	fiftyPercent := sdkmath.LegacyMustNewDecFromStr("0.5")
 	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
@@ -132,7 +136,7 @@ func ChainParamsFromRand(r *rand.Rand, chainID int64) *types.ChainParams {
 		OutboundScheduleInterval:    Int64InRangeFromRand(r, 1, 100),
 		OutboundScheduleLookahead:   Int64InRangeFromRand(r, 1, 500),
 		BallotThreshold:             fiftyPercent,
-		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		MinObserverDelegation:       sdkmath.LegacyNewDec(r.Int63()),
 		IsSupported:                 true,
 	}
 }
@@ -285,7 +289,7 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 			VoterList:            observerSet,
 			Votes:                VotesSuccessOnly(len(observerSet)),
 			ObservationType:      types.ObservationType_InboundTx,
-			BallotThreshold:      sdk.OneDec(),
+			BallotThreshold:      sdkmath.LegacyOneDec(),
 			BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
 			BallotCreationHeight: 0,
 		}
@@ -317,6 +321,7 @@ func GasPriceIncreaseFlags() types.GasPriceIncreaseFlags {
 		RetryInterval:           1,
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+		RetryIntervalBTC:        2,
 	}
 }
 
@@ -328,6 +333,7 @@ func GasPriceIncreaseFlagsFromRand(r *rand.Rand) types.GasPriceIncreaseFlags {
 		RetryInterval:           time.Duration(r.Intn(maxValue-minValue) + minValue),
 		GasPriceIncreasePercent: 1,
 		MaxPendingCctxs:         100,
+		RetryIntervalBTC:        time.Duration(r.Intn(maxValue-minValue) + minValue),
 	}
 }
 
@@ -335,5 +341,19 @@ func OperationalFlags() types.OperationalFlags {
 	return types.OperationalFlags{
 		RestartHeight:         1,
 		SignerBlockTimeOffset: ptr.Ptr(time.Second),
+	}
+}
+
+func ConfirmationParams(r *rand.Rand) types.ConfirmationParams {
+	randInboundCount := Uint64InRangeFromRand(r, 2, 200)
+	randOutboundCount := Uint64InRangeFromRand(r, 2, 200)
+
+	return types.ConfirmationParams{
+		SafeInboundCount: randInboundCount,
+		// enabled fast inbound confirmation count should be less than safe count
+		FastInboundCount:  Uint64InRange(1, randInboundCount-1),
+		SafeOutboundCount: randOutboundCount,
+		// enabled fast outbound confirmation count should be less than safe count
+		FastOutboundCount: Uint64InRange(1, randOutboundCount-1),
 	}
 }

@@ -23,15 +23,15 @@ const (
 	// we keep the current value for backward compatibility
 	MemStoreKey = "mem_metacore"
 
-	ProtocolFee = 2000000000000000000
-
 	// CCTXIndexLength is the length of a crosschain transaction index
 	CCTXIndexLength          = 66
 	MaxOutboundTrackerHashes = 5
 )
 
+// GetProtocolFee returns the protocol fee for the cross chain transaction
+// It is no longer used, but the function is kept for backward compatibility with the Zeta Conversion Rate query
 func GetProtocolFee() math.Uint {
-	return math.NewUint(ProtocolFee)
+	return math.ZeroUint()
 }
 
 func KeyPrefix(p string) []byte {
@@ -42,6 +42,12 @@ const (
 	// CCTXKey is the key for the cross chain transaction
 	// NOTE: Send is the previous name of CCTX and is kept for backward compatibility
 	CCTXKey = "Send-value-"
+
+	// CounterValueKey is a static key for storing the cctx counter key for ordering
+	CounterValueKey = "ctr-value"
+
+	// CounterIndexKey is the prefix to use for the counter index
+	CounterIndexKey = "ctr-idx-"
 
 	LastBlockHeightKey   = "LastBlockHeight-value-"
 	FinalizedInboundsKey = "FinalizedInbounds-value-"
@@ -74,21 +80,6 @@ func OutboundTrackerKey(
 	key = append(key, []byte("/")...)
 
 	return key
-}
-
-func (m CrossChainTx) LogIdentifierForCCTX() string {
-	if len(m.OutboundParams) == 0 {
-		return fmt.Sprintf("%s-%d", m.InboundParams.Sender, m.InboundParams.SenderChainId)
-	}
-	i := len(m.OutboundParams) - 1
-	outTx := m.OutboundParams[i]
-	return fmt.Sprintf(
-		"%s-%d-%d-%d",
-		m.InboundParams.Sender,
-		m.InboundParams.SenderChainId,
-		outTx.ReceiverChainId,
-		outTx.TssNonce,
-	)
 }
 
 func FinalizedInboundKey(inboundHash string, chainID int64, eventIndex uint64) string {

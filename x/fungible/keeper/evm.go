@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +31,8 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	ccctxerror "github.com/zeta-chain/node/pkg/errors"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -37,8 +40,9 @@ import (
 
 var (
 	BigIntZero                 = big.NewInt(0)
-	ZEVMGasLimitDepositAndCall = big.NewInt(1_000_000)
-	ZEVMGasLimitConnectorCall  = big.NewInt(1_000_000)
+	DefaultGasLimit            = big.NewInt(200_000)
+	ZEVMGasLimitDepositAndCall = big.NewInt(1_500_000)
+	ZEVMGasLimitConnectorCall  = big.NewInt(1_500_000)
 )
 
 // DeployContract deploys a new contract in the ZEVM
@@ -105,6 +109,7 @@ func (k Keeper) DeployZRC20Contract(
 	coinType coin.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
+	liquidityCap *sdkmath.Uint,
 ) (common.Address, error) {
 	chain, found := chains.GetChainFromChainID(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx))
 	if !found {
@@ -162,7 +167,10 @@ func (k Keeper) DeployZRC20Contract(
 	newCoin.Zrc20ContractAddress = contractAddr.Hex()
 	newCoin.ForeignChainId = chain.ChainId
 	newCoin.GasLimit = gasLimit.Uint64()
-	newCoin.LiquidityCap = sdk.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals))
+	if liquidityCap == nil {
+		liquidityCap = ptr.Ptr(sdkmath.NewUint(types.DefaultLiquidityCap).MulUint64(uint64(newCoin.Decimals)))
+	}
+	newCoin.LiquidityCap = *liquidityCap
 	k.SetForeignCoins(ctx, newCoin)
 
 	return contractAddr, nil
@@ -251,7 +259,7 @@ func (k Keeper) DepositZRC20(
 		types.ModuleAddressEVM,
 		contract,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"deposit",
@@ -276,7 +284,7 @@ func (k Keeper) UpdateZRC20ProtocolFlatFee(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"updateProtocolFlatFee",
@@ -300,7 +308,7 @@ func (k Keeper) UpdateZRC20GasLimit(
 		types.ModuleAddressEVM,
 		zrc20Addr,
 		BigIntZero,
-		nil,
+		DefaultGasLimit,
 		true,
 		false,
 		"updateGasLimit",
@@ -308,10 +316,9 @@ func (k Keeper) UpdateZRC20GasLimit(
 	)
 }
 
-// DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
-// callable from fungible module
+// CallDepositAndCall calls the depositAndCall function of the system contract
 // Returns directly results from CallEVM
-func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
+func (k Keeper) CallDepositAndCall(ctx sdk.Context,
 	context systemcontract.ZContext,
 	zrc20Addr common.Address,
 	targetContract common.Address,
@@ -367,12 +374,12 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 
 	zevmConnectorAbi, err := zevmconnectorcontract.ZetaConnectorZEVMMetaData.GetAbi()
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
 	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
 	if err != nil {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
 
 	return k.CallEVM(
@@ -665,26 +672,27 @@ func (k Keeper) CallEVM(
 	if err != nil {
 		return nil, cosmoserrors.Wrap(
 			types.ErrABIPack,
-			cosmoserrors.Wrap(err, "failed to create transaction data").Error(),
+			fmt.Sprintf("failed to create transaction data: %s", err.Error()),
 		)
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf(
-			"contract call failed: method '%s', contract '%s', args: %v",
-			method,
-			contract.Hex(),
-			args,
-		)
-
-		// if it is a revert error then add the revert reason to the error message
+		// create an error message
+		errMessage := ccctxerror.NewZEVMErrorMessage(method, contract, args, types.ErrCallEvmWithData.Error(), err)
+		// if it is a revert error and the revert reason is available, then add it
 		revertErr, ok := err.(*evmtypes.RevertError)
 		if ok {
-			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
+			errMessage.AddRevertReason(revertErr.ErrorData())
 		}
-		return resp, cosmoserrors.Wrap(err, errMes)
+		// Marshall the error message into a JSON string. If it fails, return the string representation of the error message
+		errString, err := errMessage.ToJSON()
+		if err != nil {
+			return resp, fmt.Errorf("json marshalling failed %s,%s", err.Error(), errMessage.String())
+		}
+		// The JSON string already contains all the necessary information we do not need to wrap
+		return resp, errors.New(errString)
 	}
 	return resp, nil
 }

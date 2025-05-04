@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -48,7 +49,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner, err := configureEVM2(r)
 	require.NoError(r, err)
 
-	newRunner.LegacySetupEVM(false)
+	newRunner.LegacySetupEVM(false, false)
 
 	// mint some ERC20
 	newRunner.MintERC20OnEVM(10000)
@@ -60,10 +61,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)
 
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 
 	// setup the gas token
@@ -79,6 +77,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 			"sETH",
 			coin.CoinType_Gas,
 			100000,
+			nil,
 		),
 	)
 	require.NoError(r, err)
@@ -108,10 +107,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deactivate the previous chain
 	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
 	chainParams.IsSupported = false
-	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		chainParams,
-	))
+	err = r.ZetaTxServer.UpdateChainParams(chainParams)
 	require.NoError(r, err)
 
 	// restart ZetaClient to pick up the new chain
@@ -165,6 +161,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		"USDT",
 		18,
 		100000,
+		sdkmath.NewUintFromString("100000000000000000000000000"),
 	))
 	require.NoError(r, err)
 
@@ -185,7 +182,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// deposit ERC20 on ZetaChain
-	txERC20Deposit := newRunner.LegacyDepositERC20()
+	txERC20Deposit := newRunner.DepositERC20Deployer()
 	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// stop mining

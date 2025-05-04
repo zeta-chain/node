@@ -7,9 +7,23 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
+
+func (c *Client) ListPendingCCTX(ctx context.Context, chain chains.Chain) ([]*types.CrossChainTx, uint64, error) {
+	list, total, err := c.Clients.ListPendingCCTX(ctx, chain.ChainId)
+
+	if err == nil {
+		value := float64(total)
+
+		metrics.PendingTxsPerChain.WithLabelValues(chain.Name).Set(value)
+	}
+
+	return list, total, err
+}
 
 // GetAllOutboundTrackerByChain returns all outbound trackers for a chain
 func (c *Client) GetAllOutboundTrackerByChain(

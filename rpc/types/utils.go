@@ -17,6 +17,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -308,6 +309,10 @@ func CheckTxFee(gasPrice *big.Int, gas uint64, feeCap float64) error {
 	if feeCap == 0 {
 		return nil
 	}
+	// Return an error if gasPrice is nil
+	if gasPrice == nil {
+		return errors.New("gasprice is nil")
+	}
 	totalfee := new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas)))
 	// 1 photon in 10^18 aphoton
 	oneToken := new(big.Float).SetInt(big.NewInt(params.Ether))
@@ -322,12 +327,12 @@ func CheckTxFee(gasPrice *big.Int, gas uint64, feeCap float64) error {
 }
 
 // TxExceedBlockGasLimit returns true if the tx exceeds block gas limit.
-func TxExceedBlockGasLimit(res *abci.ResponseDeliverTx) bool {
+func TxExceedBlockGasLimit(res *abci.ExecTxResult) bool {
 	return strings.Contains(res.Log, ExceedBlockGasLimitError)
 }
 
 // TxSuccessOrExceedsBlockGasLimit returns true if the transaction was successful
 // or if it failed with an ExceedBlockGasLimit error
-func TxSuccessOrExceedsBlockGasLimit(res *abci.ResponseDeliverTx) bool {
+func TxSuccessOrExceedsBlockGasLimit(res *abci.ExecTxResult) bool {
 	return res.Code == 0 || TxExceedBlockGasLimit(res)
 }

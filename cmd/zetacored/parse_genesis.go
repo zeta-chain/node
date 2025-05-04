@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"cosmossdk.io/math"
-	"github.com/cometbft/cometbft/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +16,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -24,7 +23,6 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/spf13/cobra"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
@@ -98,20 +96,20 @@ func CmdParseGenesisFile() *cobra.Command {
 			if len(args) == 2 {
 				genesisFilePath = args[1]
 			}
-			genDoc, err := GetGenDoc(genesisFilePath)
+			_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 			if err != nil {
 				return err
 			}
-			importData, err := GetGenDoc(args[0])
+			_, importData, err := genutiltypes.GenesisStateFromGenFile(args[0])
 			if err != nil {
 				return err
 			}
-			err = ImportDataIntoFile(genDoc, importData, cdc, modifyEnabled)
+			err = ImportDataIntoFile(genesis, importData, cdc, modifyEnabled)
 			if err != nil {
 				return err
 			}
 
-			err = genutil.ExportGenesisFile(genDoc, genesisFilePath)
+			err = genutil.ExportGenesisFile(genesis, genesisFilePath)
 			if err != nil {
 				return err
 			}
@@ -124,20 +122,22 @@ func CmdParseGenesisFile() *cobra.Command {
 }
 
 func ImportDataIntoFile(
-	genDoc *types.GenesisDoc,
-	importFile *types.GenesisDoc,
+	gen *genutiltypes.AppGenesis,
+	importFile *genutiltypes.AppGenesis,
 	cdc codec.Codec,
 	modifyEnabled bool,
 ) error {
-	appState, err := genutiltypes.GenesisStateFromGenDoc(*genDoc)
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(gen)
 	if err != nil {
 		return err
 	}
-	importAppState, err := genutiltypes.GenesisStateFromGenDoc(*importFile)
+
+	importAppState, err := genutiltypes.GenesisStateFromAppGenesis(importFile)
 	if err != nil {
 		return err
 	}
-	moduleList := app.InitGenesisModuleList()
+
+	moduleList := app.OrderInitGenesis()
 	for _, m := range moduleList {
 		if Skip[m] {
 			continue
@@ -167,7 +167,7 @@ func ImportDataIntoFile(
 	if err != nil {
 		return fmt.Errorf("failed to marshal application genesis state: %w", err)
 	}
-	genDoc.AppState = appStateJSON
+	gen.AppState = appStateJSON
 
 	return nil
 }
@@ -215,20 +215,4 @@ func ModifyObserverState(
 
 	appState[observertypes.ModuleName] = currentGenStateBz
 	return nil
-}
-
-func GetGenDoc(fp string) (*types.GenesisDoc, error) {
-	path, err := filepath.Abs(fp)
-	if err != nil {
-		return nil, err
-	}
-	jsonBlob, err := os.ReadFile(filepath.Clean(path))
-	if err != nil {
-		return nil, err
-	}
-	genData, err := types.GenesisDocFromJSON(jsonBlob)
-	if err != nil {
-		return nil, err
-	}
-	return genData, nil
 }

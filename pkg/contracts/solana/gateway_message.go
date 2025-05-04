@@ -8,6 +8,31 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
+// NOTE: Following consts and identifier are used in outbounds message hashes for consistency.
+// Instruction specific byte identifiers are used to encode instruction in hash with fixed amount of space.
+const (
+	InstructionWithdraw          byte = 1
+	InstructionWithdrawSplToken  byte = 2
+	InstructionWhitelistSplToken byte = 3
+	InstructionExecute           byte = 5
+	InstructionExecuteSPL        byte = 6
+	InstructionIncrementNonce    byte = 7
+	InstructionExecuteRevert     byte = 8
+	InstructionExecuteSPLRevert  byte = 9
+)
+
+// ExecuteType represents the type of execute operation
+// it is used for withdraw and call and revert
+type ExecuteType uint8
+
+const (
+	ExecuteTypeCall ExecuteType = iota
+	ExecuteTypeRevert
+)
+
+// InstructionIdentifier is used at beginning of message hash to make it project specific.
+var InstructionIdentifier = []byte("ZETACHAIN")
+
 // MsgWithdraw is the message for the Solana gateway withdraw instruction
 type MsgWithdraw struct {
 	// chainID is the chain ID of Solana chain
@@ -61,7 +86,8 @@ func (msg *MsgWithdraw) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("withdraw")...)
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionWithdraw)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
@@ -102,6 +128,247 @@ func (msg *MsgWithdraw) SigV() uint8 {
 
 // Signer returns the signer of the message
 func (msg *MsgWithdraw) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgIncrementNonce is the message for the Solana gateway increment_nonce instruction
+type MsgIncrementNonce struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the increment_nonce
+	nonce uint64
+
+	// amount is the lamports amount for the increment_nonce
+	amount uint64
+
+	// signature is the signature of the message
+	signature [65]byte
+}
+
+// NewMsgIncrementNonce returns a new increment_nonce message
+func NewMsgIncrementNonce(chainID, nonce, amount uint64) *MsgIncrementNonce {
+	return &MsgIncrementNonce{
+		chainID: chainID,
+		nonce:   nonce,
+		amount:  amount,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgIncrementNonce) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgIncrementNonce) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgIncrementNonce) Amount() uint64 {
+	return msg.amount
+}
+
+// Hash packs the increment_nonce message and computes the hash
+func (msg *MsgIncrementNonce) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionIncrementNonce)
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgIncrementNonce) SetSignature(signature [65]byte) *MsgIncrementNonce {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgIncrementNonce) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgIncrementNonce) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgIncrementNonce) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgIncrementNonce) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgExecute is the message for the Solana gateway execute instruction
+type MsgExecute struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the execute
+	nonce uint64
+
+	// amount is the lamports amount for the execute
+	amount uint64
+
+	// To is the recipient address for the execute
+	to solana.PublicKey
+
+	// signature is the signature of the message
+	signature [65]byte
+
+	// Sender is the sender address for the execute
+	sender string
+
+	// Data for execute
+	data []byte
+
+	// executeType indicates if it's a call or revert operation
+	executeType ExecuteType
+
+	// Remaining accounts for arbirtrary program
+	remainingAccounts []*solana.AccountMeta
+}
+
+// NewMsgExecute returns a new execute message
+func NewMsgExecute(
+	chainID, nonce, amount uint64,
+	to solana.PublicKey,
+	sender string,
+	data []byte,
+	executeType ExecuteType,
+	remainingAccounts []*solana.AccountMeta,
+) *MsgExecute {
+	return &MsgExecute{
+		chainID:           chainID,
+		nonce:             nonce,
+		amount:            amount,
+		to:                to,
+		sender:            sender,
+		data:              data,
+		executeType:       executeType,
+		remainingAccounts: remainingAccounts,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgExecute) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgExecute) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgExecute) Amount() uint64 {
+	return msg.amount
+}
+
+// To returns the recipient address of the message
+func (msg *MsgExecute) To() solana.PublicKey {
+	return msg.to
+}
+
+// Sender returns the sender address of the message
+func (msg *MsgExecute) Sender() string {
+	return msg.sender
+}
+
+// Data returns the data of the message
+func (msg *MsgExecute) Data() []byte {
+	return msg.data
+}
+
+// RemainingAccounts returns the remaining accounts of the message
+func (msg *MsgExecute) RemainingAccounts() []*solana.AccountMeta {
+	return msg.remainingAccounts
+}
+
+// ExecuteType returns the type of execute operation
+func (msg *MsgExecute) ExecuteType() ExecuteType {
+	return msg.executeType
+}
+
+// Hash packs the execute message and computes the hash
+func (msg *MsgExecute) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, InstructionIdentifier...)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, InstructionExecute)
+	} else {
+		message = append(message, InstructionExecuteRevert)
+	}
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	message = append(message, msg.to.Bytes()...)
+
+	message = append(message, msg.data...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgExecute) SetSignature(signature [65]byte) *MsgExecute {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgExecute) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgExecute) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgExecute) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgExecute) Signer() (common.Address, error) {
 	msgHash := msg.Hash()
 	msgSig := msg.SigRSV()
 
@@ -189,7 +456,8 @@ func (msg *MsgWithdrawSPL) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("withdraw_spl_token")...)
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionWithdrawSplToken)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
@@ -232,6 +500,184 @@ func (msg *MsgWithdrawSPL) SigV() uint8 {
 
 // Signer returns the signer of the message
 func (msg *MsgWithdrawSPL) Signer() (common.Address, error) {
+	msgHash := msg.Hash()
+	msgSig := msg.SigRSV()
+
+	return RecoverSigner(msgHash[:], msgSig[:])
+}
+
+// MsgExecuteSPL is the message for the Solana gateway execute_spl_token instruction
+type MsgExecuteSPL struct {
+	// chainID is the chain ID of Solana chain
+	chainID uint64
+
+	// Nonce is the nonce for the execute_spl_token
+	nonce uint64
+
+	// amount is the lamports amount for the execute_spl_token
+	amount uint64
+
+	// mintAccount is the address for the spl token
+	mintAccount solana.PublicKey
+
+	// decimals of spl token
+	decimals uint8
+
+	// to is the recipient address for the execute_spl_token
+	to solana.PublicKey
+
+	// recipientAta is the recipient associated token account for the execute_spl_token
+	recipientAta solana.PublicKey
+
+	// signature is the signature of the message
+	signature [65]byte
+
+	// Sender is the sender address for the execute spl
+	sender string
+
+	// Data for execute
+	data []byte
+
+	// executeType indicates if it's a call or revert operation
+	executeType ExecuteType
+
+	// Remaining accounts for arbirtrary program
+	remainingAccounts []*solana.AccountMeta
+}
+
+// NewMsgExecuteSPL returns a new execute spl message
+func NewMsgExecuteSPL(
+	chainID, nonce, amount uint64,
+	decimals uint8,
+	mintAccount, to, toAta solana.PublicKey,
+	sender string,
+	data []byte,
+	executeType ExecuteType,
+	remainingAccounts []*solana.AccountMeta,
+) *MsgExecuteSPL {
+	return &MsgExecuteSPL{
+		chainID:           chainID,
+		nonce:             nonce,
+		amount:            amount,
+		to:                to,
+		recipientAta:      toAta,
+		mintAccount:       mintAccount,
+		decimals:          decimals,
+		sender:            sender,
+		data:              data,
+		executeType:       executeType,
+		remainingAccounts: remainingAccounts,
+	}
+}
+
+// ChainID returns the chain ID of the message
+func (msg *MsgExecuteSPL) ChainID() uint64 {
+	return msg.chainID
+}
+
+// Nonce returns the nonce of the message
+func (msg *MsgExecuteSPL) Nonce() uint64 {
+	return msg.nonce
+}
+
+// Amount returns the amount of the message
+func (msg *MsgExecuteSPL) Amount() uint64 {
+	return msg.amount
+}
+
+// To returns the recipient address of the message
+func (msg *MsgExecuteSPL) To() solana.PublicKey {
+	return msg.to
+}
+
+func (msg *MsgExecuteSPL) RecipientAta() solana.PublicKey {
+	return msg.recipientAta
+}
+
+func (msg *MsgExecuteSPL) MintAccount() solana.PublicKey {
+	return msg.mintAccount
+}
+
+func (msg *MsgExecuteSPL) Decimals() uint8 {
+	return msg.decimals
+}
+
+// Sender returns the sender address of the message
+func (msg *MsgExecuteSPL) Sender() string {
+	return msg.sender
+}
+
+// Data returns the data of the message
+func (msg *MsgExecuteSPL) Data() []byte {
+	return msg.data
+}
+
+// RemainingAccounts returns the remaining accounts of the message
+func (msg *MsgExecuteSPL) RemainingAccounts() []*solana.AccountMeta {
+	return msg.remainingAccounts
+}
+
+// ExecuteType returns the type of execute operation
+func (msg *MsgExecuteSPL) ExecuteType() ExecuteType {
+	return msg.executeType
+}
+
+// Hash packs the execute spl message and computes the hash
+func (msg *MsgExecuteSPL) Hash() [32]byte {
+	var message []byte
+	buff := make([]byte, 8)
+
+	message = append(message, InstructionIdentifier...)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, InstructionExecuteSPL)
+	} else {
+		message = append(message, InstructionExecuteSPLRevert)
+	}
+
+	binary.BigEndian.PutUint64(buff, msg.chainID)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.nonce)
+	message = append(message, buff...)
+
+	binary.BigEndian.PutUint64(buff, msg.amount)
+	message = append(message, buff...)
+
+	message = append(message, msg.mintAccount.Bytes()...)
+
+	message = append(message, msg.recipientAta.Bytes()...)
+
+	message = append(message, msg.data...)
+
+	return crypto.Keccak256Hash(message)
+}
+
+// SetSignature attaches the signature to the message
+func (msg *MsgExecuteSPL) SetSignature(signature [65]byte) *MsgExecuteSPL {
+	msg.signature = signature
+	return msg
+}
+
+// SigRSV returns the full 65-byte [R+S+V] signature
+func (msg *MsgExecuteSPL) SigRSV() [65]byte {
+	return msg.signature
+}
+
+// SigRS returns the 64-byte [R+S] core part of the signature
+func (msg *MsgExecuteSPL) SigRS() [64]byte {
+	var sig [64]byte
+	copy(sig[:], msg.signature[:64])
+	return sig
+}
+
+// SigV returns the V part (recovery ID) of the signature
+func (msg *MsgExecuteSPL) SigV() uint8 {
+	return msg.signature[64]
+}
+
+// Signer returns the signer of the message
+func (msg *MsgExecuteSPL) Signer() (common.Address, error) {
 	msgHash := msg.Hash()
 	msgSig := msg.SigRSV()
 
@@ -294,15 +740,16 @@ func (msg *MsgWhitelist) Hash() [32]byte {
 	var message []byte
 	buff := make([]byte, 8)
 
-	message = append(message, []byte("whitelist_spl_mint")...)
+	message = append(message, InstructionIdentifier...)
+	message = append(message, InstructionWhitelistSplToken)
 
 	binary.BigEndian.PutUint64(buff, msg.chainID)
 	message = append(message, buff...)
 
-	message = append(message, msg.whitelistCandidate.Bytes()...)
-
 	binary.BigEndian.PutUint64(buff, msg.nonce)
 	message = append(message, buff...)
+
+	message = append(message, msg.whitelistCandidate.Bytes()...)
 
 	return crypto.Keccak256Hash(message)
 }

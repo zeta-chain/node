@@ -30,22 +30,19 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	require.Equal(r, receipt.Status, uint64(1))
 
-	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
-
 	// ACT
 	// Deposit 0.01 BTC to withdrawer, this is an arbitrary amount, must be greater than dust amount
-	txHash, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos, withdrawerAddr.Bytes())
+	txHash, err := r.SendToTSSWithMemo(
+		0.01,
+		append(withdrawerAddr.Bytes(), []byte("payload")...),
+	)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
 	// ASSERT
 	// Now we want to make sure the cctx is reverted with expected error message
-
-	// cctx status would be pending revert if using v21 or before
-	cctx := utils.WaitCctxRevertedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrCannotProcessWithdrawal.Error())
 

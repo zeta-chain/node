@@ -20,15 +20,13 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ethante "github.com/zeta-chain/ethermint/app/ante"
 	ethermint "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -37,14 +35,15 @@ import (
 )
 
 type HandlerOptions struct {
-	AccountKeeper          evmtypes.AccountKeeper
-	BankKeeper             evmtypes.BankKeeper
-	IBCKeeper              *ibckeeper.Keeper
+	AccountKeeper evmtypes.AccountKeeper
+	BankKeeper    evmtypes.BankKeeper
+	// TODO: enable back IBC
+	// IBCKeeper              *ibckeeper.Keeper
 	FeeMarketKeeper        FeeMarketKeeper
 	EvmKeeper              EVMKeeper
 	FeegrantKeeper         ante.FeegrantKeeper
-	SignModeHandler        authsigning.SignModeHandler
-	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
+	SignModeHandler        *txsigning.HandlerMap
+	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
 	MaxTxGasWanted         uint64
 	ExtensionOptionChecker ante.ExtensionOptionChecker
 	TxFeeChecker           ante.TxFeeChecker
@@ -76,7 +75,9 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		// Note: signature verification uses EIP instead of the cosmos signature validator
 		ethante.NewLegacyEip712SigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
+		// TODO: enable back IBC
+		// check if this ante handler is needed in non legacy cosmos ante handlers
+		// ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 		ethante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
 }
@@ -165,8 +166,6 @@ func newCosmosAnteHandlerForSystemTx(options HandlerOptions) sdk.AnteHandler {
 	)
 }
 
-var _ GasTx = (*legacytx.StdTx)(nil) // assert StdTx implements GasTx
-
 // GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
 type GasTx interface {
 	sdk.Tx
@@ -209,7 +208,7 @@ func (sud SetUpContextDecorator) AnteHandle(
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
-			case sdk.ErrorOutOfGas:
+			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())

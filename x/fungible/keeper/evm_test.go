@@ -6,26 +6,29 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-
 	"github.com/zeta-chain/protocol-contracts/pkg/erc1967proxy.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
+	"github.com/zeta-chain/node/e2e/contracts/example"
+	"github.com/zeta-chain/node/e2e/contracts/reverter"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/ptr"
 	"github.com/zeta-chain/node/server/config"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/node/x/fungible/keeper"
@@ -198,7 +201,7 @@ func assertExampleBarValue(
 	address common.Address,
 	expected int64,
 ) {
-	exampleABI, err := contracts.ExampleMetaData.GetAbi()
+	exampleABI, err := example.ExampleMetaData.GetAbi()
 	require.NoError(t, err)
 	res, err := k.CallEVM(
 		ctx,
@@ -236,6 +239,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -256,6 +260,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -281,6 +286,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			ptr.Ptr(sdkmath.NewUint(1000)),
 		)
 		require.Error(t, err)
 		require.Empty(t, addr)
@@ -302,6 +308,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			ptr.Ptr(sdkmath.NewUint(2000)),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -316,7 +323,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
-		require.True(t, foreignCoins.LiquidityCap.Equal(sdk.NewUint(types.DefaultLiquidityCap).MulUint64(8)))
+		require.Equal(t, uint64(2000), foreignCoins.LiquidityCap.Uint64())
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
@@ -363,6 +370,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
+			ptr.Ptr(sdkmath.NewUint(2000)),
 		)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
@@ -377,6 +385,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+		require.Equal(t, uint64(2000), foreignCoins.LiquidityCap.Uint64())
 
 		// can get the zrc20 data
 		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
@@ -400,6 +409,32 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, newBalance)
 		require.Equal(t, amount.Int64(), newBalance.Int64())
+	})
+
+	t.Run("can deploy the zrc20 contract with default liquidity cap", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			coin.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+			nil,
+		)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
+
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Greater(t, foreignCoins.LiquidityCap.Uint64(), uint64(0))
 	})
 }
 
@@ -506,7 +541,7 @@ func TestKeeper_DeploySystemContracts(t *testing.T) {
 		err = sdkk.BankKeeper.MintCoins(
 			ctx,
 			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))),
+			sdk.NewCoins(sdk.NewCoin("azeta", sdkmath.NewIntFromBigInt(amount))),
 		)
 		require.NoError(t, err)
 
@@ -527,11 +562,11 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 
 		chainID := getValidChainID(t)
 
-		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		example, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -555,11 +590,11 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
-		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		exampleContract, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
-		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, exampleContract)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -567,24 +602,24 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 				ChainID: big.NewInt(chainID),
 			},
 			zrc20,
-			example,
+			exampleContract,
 			big.NewInt(42),
 			[]byte(""),
 		)
 		require.NoError(t, err)
 		require.False(t, types.IsContractReverted(res, err))
-		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, exampleContract)
 		require.NoError(t, err)
 		require.Equal(t, int64(42), balance.Int64())
 
 		// check onCrossChainCall has been called
-		exampleABI, err := contracts.ExampleMetaData.GetAbi()
+		exampleABI, err := example.ExampleMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err = k.CallEVM(
 			ctx,
 			*exampleABI,
 			types.ModuleAddressEVM,
-			example,
+			exampleContract,
 			big.NewInt(0),
 			nil,
 			false,
@@ -609,11 +644,11 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
 		// Deploy reverter
-		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		reverter, err := k.DeployContract(ctx, reverter.ReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -639,7 +674,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
 
-		res, err := k.DepositZRC20AndCallContract(
+		res, err := k.CallDepositAndCall(
 			ctx,
 			systemcontract.ZContext{
 				Origin:  sample.EthAddress().Bytes(),
@@ -661,10 +696,10 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// Deploy example
-		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		contract, err := k.DeployContract(ctx, example.ExampleMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
-		abi, err := contracts.ExampleMetaData.GetAbi()
+		abi, err := example.ExampleMetaData.GetAbi()
 		require.NoError(t, err)
 
 		// doRevert make contract reverted
@@ -683,7 +718,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.True(t, types.IsContractReverted(res, err))
 
 		// check reason is included for revert error
-		require.ErrorContains(t, err, fmt.Sprintf("reason: %s", utils.ErrHashRevertFoo))
+		require.Contains(t, err.Error(), fmt.Sprintf("\"revert_reason\":\"%s\"", utils.ErrHashRevertFoo))
 
 		res, err = k.CallEVM(
 			ctx,
@@ -730,7 +765,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.False(t, types.IsContractReverted(res, err))
 		require.NotContains(t, err.Error(), "reason:")
 
-		// No revert with successfull call
+		// No revert with successful call
 		res, err = k.CallEVM(
 			ctx,
 			*abi,
@@ -1450,7 +1485,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1474,7 +1509,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -1500,7 +1535,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1517,7 +1552,7 @@ func TestKeeper_CallOnReceiveZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1536,7 +1571,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 		senderAddress := dAppContract
@@ -1558,7 +1593,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -1584,7 +1619,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -1602,7 +1637,7 @@ func TestKeeper_CallOnRevertZevmConnector(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 

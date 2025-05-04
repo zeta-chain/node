@@ -227,6 +227,11 @@ export declare class MsgDeployFungibleCoinZRC20 extends Message<MsgDeployFungibl
    */
   gasLimit: bigint;
 
+  /**
+   * @generated from field: string liquidity_cap = 9;
+   */
+  liquidityCap: string;
+
   constructor(data?: PartialMessage<MsgDeployFungibleCoinZRC20>);
 
   static readonly runtime: typeof proto3;
@@ -562,5 +567,63 @@ export declare class MsgUpdateGatewayContractResponse extends Message<MsgUpdateG
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateGatewayContractResponse;
 
   static equals(a: MsgUpdateGatewayContractResponse | PlainMessage<MsgUpdateGatewayContractResponse> | undefined, b: MsgUpdateGatewayContractResponse | PlainMessage<MsgUpdateGatewayContractResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20Name
+ */
+export declare class MsgUpdateZRC20Name extends Message<MsgUpdateZRC20Name> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string zrc20_address = 2;
+   */
+  zrc20Address: string;
+
+  /**
+   * @generated from field: string name = 3;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string symbol = 4;
+   */
+  symbol: string;
+
+  constructor(data?: PartialMessage<MsgUpdateZRC20Name>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20Name";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20Name;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20Name;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20Name;
+
+  static equals(a: MsgUpdateZRC20Name | PlainMessage<MsgUpdateZRC20Name> | undefined, b: MsgUpdateZRC20Name | PlainMessage<MsgUpdateZRC20Name> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20NameResponse
+ */
+export declare class MsgUpdateZRC20NameResponse extends Message<MsgUpdateZRC20NameResponse> {
+  constructor(data?: PartialMessage<MsgUpdateZRC20NameResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20NameResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20NameResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20NameResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20NameResponse;
+
+  static equals(a: MsgUpdateZRC20NameResponse | PlainMessage<MsgUpdateZRC20NameResponse> | undefined, b: MsgUpdateZRC20NameResponse | PlainMessage<MsgUpdateZRC20NameResponse> | undefined): boolean;
 }
 

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/require"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
@@ -31,7 +32,7 @@ func Test_GetRewards(t *testing.T) {
 		s.mockVMContract.Input = packInputArgs(
 			t,
 			getRewardsMethod,
-			[]interface{}{stakerEVMAddr, validator.GetOperator().String()}...,
+			[]interface{}{stakerEVMAddr, validator.GetOperator()}...,
 		)
 
 		/* ASSERT */
@@ -45,7 +46,7 @@ func Test_GetRewards(t *testing.T) {
 	t.Run("should return the zrc20 rewards list for a staker", func(t *testing.T) {
 		/* ARRANGE */
 		s := newTestSuite(t)
-		s.sdkKeepers.DistributionKeeper.SetFeePool(s.ctx, distrtypes.InitialFeePool())
+		s.sdkKeepers.DistributionKeeper.FeePool.Set(s.ctx, distrtypes.InitialFeePool())
 
 		// Create validator.
 		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
@@ -67,8 +68,10 @@ func Test_GetRewards(t *testing.T) {
 			math.NewInt(100),
 		)
 
+		valAddr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		require.NoError(t, err)
 		err = s.sdkKeepers.DistributionKeeper.Hooks().
-			AfterDelegationModified(s.ctx, stakerCosmosAddr, validator.GetOperator())
+			AfterDelegationModified(s.ctx, stakerCosmosAddr, valAddr)
 		require.NoError(t, err)
 
 		/* Distribute 1000 ZRC20 tokens to the staking contract */
@@ -87,7 +90,7 @@ func Test_GetRewards(t *testing.T) {
 		s.mockVMContract.Input = packInputArgs(
 			t,
 			getRewardsMethod,
-			[]interface{}{stakerEVMAddr, validator.GetOperator().String()}...,
+			[]interface{}{stakerEVMAddr, validator.GetOperator()}...,
 		)
 
 		bytes, err := s.stkContract.Run(s.mockEVM, s.mockVMContract, false)

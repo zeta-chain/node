@@ -7,9 +7,6 @@ import (
 )
 
 const (
-	// MockEVMRPCEndpoint is the endpoint to enable the mock EVM RPC client
-	MockEVMRPCEndpoint = "MockEVMRPCEnabled"
-
 	// TSSAddressEVMMainnet TSSAddressBTCMainnet TSSPubKeyMainnet actual mainnet pub key & addresses
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
@@ -45,6 +42,9 @@ var GatewayAddresses = map[int64]string{
 	// Solana gateway addresses
 	chains.SolanaDevnet.ChainId:  "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 	chains.SolanaMainnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+
+	// stub, will be replaced with real address later
+	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff,0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

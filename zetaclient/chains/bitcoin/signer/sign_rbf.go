@@ -2,15 +2,11 @@ package signer
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
@@ -20,35 +16,25 @@ import (
 // The key points:
 //   - It reuses the stuck tx's inputs and outputs but gives a higher fee to miners.
 //   - Funding the last stuck outbound will be considered as CPFP (child-pays-for-parent) by miners.
-func (signer *Signer) SignRBFTx(
-	ctx context.Context,
-	cctx *types.CrossChainTx,
-	height uint64,
-	lastTx *btcutil.Tx,
-	minRelayFee float64,
-) (*wire.MsgTx, error) {
+func (signer *Signer) SignRBFTx(ctx context.Context, txData *OutboundData, lastTx *btcutil.Tx) (*wire.MsgTx, error) {
 	var (
-		params = cctx.GetCurrentOutboundParam()
-		lf     = map[string]any{
+		lf = map[string]any{
 			logs.FieldMethod: "SignRBFTx",
-			logs.FieldNonce:  params.TssNonce,
+			logs.FieldNonce:  txData.nonce,
 			logs.FieldTx:     lastTx.MsgTx().TxID(),
 		}
 		logger = signer.Logger().Std.With().Fields(lf).Logger()
+
+		isRegnet = signer.rpc.IsRegnet()
+		cctxRate = txData.feeRateLatest
 	)
 
-	var cctxRate int64
-	switch signer.Chain().ChainId {
-	case chains.BitcoinRegtest.ChainId:
-		// hardcode for regnet E2E test, zetacore won't feed it to CCTX
+	// 1. for E2E test in regnet, hardcoded fee rate is used as we can't wait 40 minutes for zetacore to bump the fee rate
+	// 2. for testnet and mainnet, we must wait for zetacore to bump the fee rate before signing the RBF tx
+	if isRegnet {
 		cctxRate = client.FeeRateRegnetRBF
-	default:
-		// parse recent fee rate from CCTX
-		recentRate, err := strconv.ParseInt(params.GasPriorityFee, 10, 64)
-		if err != nil || recentRate <= 0 {
-			return nil, fmt.Errorf("invalid fee rate %s", params.GasPriorityFee)
-		}
-		cctxRate = recentRate
+	} else if !txData.feeRateBumped {
+		return nil, errors.New("fee rate is not bumped by zetacore yet, please hold on")
 	}
 
 	// create fee bumper
@@ -58,7 +44,7 @@ func (signer *Signer) SignRBFTx(
 		signer.Chain(),
 		lastTx,
 		cctxRate,
-		minRelayFee,
+		txData.minRelayFee,
 		logger,
 	)
 	if err != nil {
@@ -66,16 +52,19 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// bump tx fees
-	newTx, additionalFees, newRate, err := fb.BumpTxFee()
+	result, err := fb.BumpTxFee()
 	if err != nil {
 		return nil, errors.Wrap(err, "BumpTxFee failed")
 	}
 	logger.Info().
-		Msgf("BumpTxFee succeed, additional fees: %d sats, rate: %d => %d sat/vB", additionalFees, fb.AvgFeeRate, newRate)
+		Uint64("old_fee_rate", fb.txsAndFees.AvgFeeRate).
+		Uint64("new_fee_rate", result.NewFeeRate).
+		Int64("additional_fees", result.AdditionalFees).
+		Msg("BumpTxFee succeed")
 
 	// collect input amounts for signing
-	inAmounts := make([]int64, len(newTx.TxIn))
-	for i, input := range newTx.TxIn {
+	inAmounts := make([]int64, len(result.NewTx.TxIn))
+	for i, input := range result.NewTx.TxIn {
 		preOut := input.PreviousOutPoint
 		preTx, err := signer.rpc.GetRawTransaction(ctx, &preOut.Hash)
 		if err != nil {
@@ -85,10 +74,10 @@ func (signer *Signer) SignRBFTx(
 	}
 
 	// sign the RBF tx
-	err = signer.SignTx(ctx, newTx, inAmounts, height, params.TssNonce)
+	err = signer.SignTx(ctx, result.NewTx, inAmounts, txData.height, txData.nonce)
 	if err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
 
-	return newTx, nil
+	return result.NewTx, nil
 }

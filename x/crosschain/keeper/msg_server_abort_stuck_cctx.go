@@ -12,7 +12,7 @@ import (
 
 const (
 	// AbortMessage is the message to abort a stuck CCTX
-	AbortMessage = "CCTX aborted with admin cmd"
+	AbortMessage = "cctx aborted through MsgAbortStuckCCTX"
 )
 
 // AbortStuckCCTX aborts a stuck CCTX
@@ -41,7 +41,9 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	// update the status
-	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, AbortMessage, "")
+	k.ProcessAbort(ctx, &cctx, types.StatusMessages{
+		StatusMessage: AbortMessage,
+	})
 
 	// Save out outbound,
 	// We do not need to provide the tss-pubkey as NonceToCctx is not updated / New outbound is not added

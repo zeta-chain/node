@@ -25,7 +25,7 @@ func NewShowTSSCmd() *cobra.Command {
 
 func runShowTSS(_ *cobra.Command, args []string) error {
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], true)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func runShowTSS(_ *cobra.Command, args []string) error {
 	logger := runner.NewLogger(true, color.FgHiCyan, "")
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
@@ -46,7 +46,7 @@ func runShowTSS(_ *cobra.Command, args []string) error {
 		logger,
 	)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 

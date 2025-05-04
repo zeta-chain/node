@@ -13,20 +13,22 @@ option go_package = "github.com/zeta-chain/node/x/emissions/types";
 //    ObserverSlashAmount:         100000000000000000,
 //    BallotMaturityBlocks:        100,
 //    BlockRewardAmount:           9620949074074074074.074070733466756687,
+//    PendingBallotsDeletionBufferBlocks: 144000
 message Params {
   option (gogoproto.goproto_stringer) = false;
   string validator_emission_percentage = 5;
   string observer_emission_percentage = 6;
   string tss_signer_emission_percentage = 7;
   string observer_slash_amount = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   int64 ballot_maturity_blocks = 10;
   string block_reward_amount = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
+  int64 pending_ballots_deletion_buffer_blocks = 12;
 
   // not used. do not edit.
   reserved 1 to 4;
@@ -45,7 +47,7 @@ message LegacyParams {
   string tss_signer_emission_percentage = 7;
   string duration_factor_constant = 8;
   string observer_slash_amount = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   int64 ballot_maturity_blocks = 10;

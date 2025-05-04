@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -12,40 +12,23 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// mempoolTxsInfo is a helper struct to contain mempool txs information
-type mempoolTxsInfo struct {
-	totalTxs   int64
-	totalFees  float64
-	totalVSize int64
-	avgFeeRate int64
-}
-
-func newMempoolTxsInfo(totalTxs int64, totalFees float64, totalVSize int64, avgFeeRate int64) *mempoolTxsInfo {
-	return &mempoolTxsInfo{
-		totalTxs:   totalTxs,
-		totalFees:  totalFees,
-		totalVSize: totalVSize,
-		avgFeeRate: avgFeeRate,
-	}
-}
-
 func Test_NewCPFPFeeBumper(t *testing.T) {
 	tests := []struct {
-		name         string
-		chain        chains.Chain
-		client       *mocks.BitcoinClient
-		tx           *btcutil.Tx
-		cctxRate     int64
-		liveRate     int64
-		minRelayFee  float64
-		memplTxsInfo *mempoolTxsInfo
-		errMsg       string
-		expected     *signer.CPFPFeeBumper
+		name        string
+		chain       chains.Chain
+		client      *mocks.BitcoinClient
+		tx          *btcutil.Tx
+		cctxRate    uint64
+		liveRate    uint64
+		minRelayFee float64
+		txsAndFees  *client.MempoolTxsAndFees
+		errMsg      string
+		expected    *CPFPFeeBumper
 	}{
 		{
 			chain:       chains.BitcoinMainnet,
@@ -55,33 +38,44 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 			cctxRate:    10,
 			liveRate:    12,
 			minRelayFee: 0.00001,
-			memplTxsInfo: newMempoolTxsInfo(
-				2,      // 2 stuck TSS txs
-				0.0001, // total fees 0.0001 BTC
-				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vB
-			),
-			expected: &signer.CPFPFeeBumper{
-				Ctx:         context.Background(),
-				Chain:       chains.BitcoinMainnet,
-				Tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-				MinRelayFee: 0.00001,
-				CCTXRate:    10,
-				LiveRate:    12,
-				TotalTxs:    2,
-				TotalFees:   10000,
-				TotalVSize:  1000,
-				AvgFeeRate:  10,
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   2,     // 2 stuck TSS txs
+				TotalFees:  10000, // total fees 0.0001 BTC
+				TotalVSize: 1000,  // total vsize 1000
+				AvgFeeRate: 10,    // average fee rate 10 sat/vB
+			},
+			expected: &CPFPFeeBumper{
+				ctx:         context.Background(),
+				chain:       chains.BitcoinMainnet,
+				tx:          btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+				minRelayFee: 0.00001,
+				cctxRate:    10,
+				liveRate:    12,
+				txsAndFees: client.MempoolTxsAndFees{
+					TotalTxs:   2,
+					TotalFees:  10000,
+					TotalVSize: 1000,
+					AvgFeeRate: 10,
+				},
+				logger: log.Logger,
 			},
 		},
 		{
-			chain:        chains.BitcoinMainnet,
-			name:         "should fail when mempool txs info fetcher returns error",
-			client:       mocks.NewBitcoinClient(t),
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			liveRate:     12,
-			memplTxsInfo: nil,
-			errMsg:       "unable to fetch mempool txs info",
+			chain:    chains.BitcoinMainnet,
+			name:     "should fail if unable to estimate smart fee",
+			client:   mocks.NewBitcoinClient(t),
+			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			liveRate: 0,
+			errMsg:   "GetEstimatedFeeRate failed",
+		},
+		{
+			chain:      chains.BitcoinMainnet,
+			name:       "should fail if unable to fetch mempool txs info",
+			client:     mocks.NewBitcoinClient(t),
+			tx:         btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
+			liveRate:   12,
+			txsAndFees: nil,
+			errMsg:     "unable to fetch mempool txs info",
 		},
 	}
 
@@ -89,19 +83,21 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// ARRANGE
 			// mock RPC fee rate
-			tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(tt.liveRate, nil)
+			if tt.liveRate > 0 {
+				tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything).Return(tt.liveRate, nil)
+			} else {
+				tt.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything).Return(uint64(0), errors.New("rpc error"))
+			}
 
 			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			if tt.txsAndFees != nil {
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(*tt.txsAndFees, nil)
 			} else {
-				v := int64(0)
-				tt.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Return(v, 0.0, v, v, errors.New("rpc error"))
+				tt.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(client.MempoolTxsAndFees{}, errors.New("rpc error"))
 			}
 
 			// ACT
-			bumper, err := signer.NewCPFPFeeBumper(
+			bumper, err := NewCPFPFeeBumper(
 				context.Background(),
 				tt.client,
 				tt.chain,
@@ -116,7 +112,7 @@ func Test_NewCPFPFeeBumper(t *testing.T) {
 				require.Nil(t, bumper)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
-				bumper.RPC = nil // ignore the RPC
+				bumper.rpc = nil // ignore the RPC
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, bumper)
 			}
@@ -131,82 +127,95 @@ func Test_BumpTxFee(t *testing.T) {
 	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
 	tests := []struct {
-		name            string
-		feeBumper       *signer.CPFPFeeBumper
-		additionalFees  int64
-		expectedNewRate int64
-		expectedNewTx   *wire.MsgTx
-		errMsg          string
+		name      string
+		feeBumper *CPFPFeeBumper
+		expected  BumpResult
+		errMsg    string
 	}{
 		{
 			name: "should bump tx fee successfully",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00001,
-				CCTXRate:    57,
-				LiveRate:    60,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
+			feeBumper: &CPFPFeeBumper{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00001,
+				cctxRate:    55,
+				liveRate:    67,
+				txsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				logger: log.Logger,
 			},
-			additionalFees:  5790,
-			expectedNewRate: 57,
-			expectedNewTx: func() *wire.MsgTx {
-				// deduct additional fees
-				newTx := signer.CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut[2].Value -= 5790
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// deduct additional fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut[2].Value -= 4632
+					return newTx
+				}(),
+				AdditionalFees: 4632, // 579*55 - 27213
+				NewFeeRate:     55,
+			},
 		},
 		{
 			name: "should give up all reserved bump fees",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx: func() *btcutil.Tx {
+			feeBumper: &CPFPFeeBumper{
+				tx: func() *btcutil.Tx {
 					// modify reserved bump fees to barely cover bump fees
 					newTx := msgTx.Copy()
-					newTx.TxOut[2].Value = 5790 + constant.BTCWithdrawalDustAmount - 1
+					newTx.TxOut[2].Value = 57*579 - 27213 + constant.BTCWithdrawalDustAmount - 1 // 6789
 					return btcutil.NewTx(newTx)
 				}(),
-				MinRelayFee: 0.00001,
-				CCTXRate:    57,
-				LiveRate:    60,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
+				minRelayFee: 0.00001,
+				cctxRate:    57,
+				liveRate:    67,
+				txsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				logger: log.Logger,
 			},
-			additionalFees:  5790 + constant.BTCWithdrawalDustAmount - 1, // 6789
-			expectedNewRate: 59,                                          // (27213 + 6789) / 579 ≈ 59
-			expectedNewTx: func() *wire.MsgTx {
-				// give up all reserved bump fees
-				newTx := signer.CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut = newTx.TxOut[:2]
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// give up all reserved bump fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut = newTx.TxOut[:2]
+					return newTx
+				}(),
+				AdditionalFees: 6789, // same as the reserved value in 2nd output
+				NewFeeRate:     59,   // (27213 + 6789) / 579 ≈ 59
+			},
 		},
 		{
-			name: "should cap new gas rate to 'gasRateCap'",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00001,
-				CCTXRate:    101, // > 100
-				LiveRate:    120,
-				TotalFees:   27213,
-				TotalVSize:  579,
-				AvgFeeRate:  47,
+			name: "should set new gas rate to 'gasRateCap'",
+			feeBumper: &CPFPFeeBumper{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00001,
+				cctxRate:    101, // > 100
+				liveRate:    120,
+				txsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  27213,
+					TotalVSize: 579,
+					AvgFeeRate: 47,
+				},
+				logger: log.Logger,
 			},
-			additionalFees:  30687, // (100-47)*579
-			expectedNewRate: 100,
-			expectedNewTx: func() *wire.MsgTx {
-				// deduct additional fees
-				newTx := signer.CopyMsgTxNoWitness(msgTx)
-				newTx.TxOut[2].Value -= 30687
-				return newTx
-			}(),
+			expected: BumpResult{
+				NewTx: func() *wire.MsgTx {
+					// deduct additional fees
+					newTx := CopyMsgTxNoWitness(msgTx)
+					newTx.TxOut[2].Value -= 30687
+					return newTx
+				}(),
+				AdditionalFees: 30687, // (100-47)*579
+				NewFeeRate:     100,
+			},
 		},
 		{
 			name: "should fail if original tx has no reserved bump fees",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx: func() *btcutil.Tx {
+			feeBumper: &CPFPFeeBumper{
+				tx: func() *btcutil.Tx {
 					// remove the change output
 					newTx := msgTx.Copy()
 					newTx.TxOut = newTx.TxOut[:2]
@@ -216,34 +225,18 @@ func Test_BumpTxFee(t *testing.T) {
 			errMsg: "original tx has no reserved bump fees",
 		},
 		{
-			name: "should hold on RBF if CCTX rate is lower than minimum bumpeed rate",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:         btcutil.NewTx(msgTx),
-				CCTXRate:   55, // 56 < 47 * 120%
-				AvgFeeRate: 47,
-			},
-			errMsg: "lower than the min bumped rate",
-		},
-		{
-			name: "should hold on RBF if live rate is much higher than CCTX rate",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:         btcutil.NewTx(msgTx),
-				CCTXRate:   57,
-				LiveRate:   70, // 70 > 57 * 120%
-				AvgFeeRate: 47,
-			},
-			errMsg: "much higher than the cctx rate",
-		},
-		{
 			name: "should hold on RBF if additional fees is lower than min relay fees",
-			feeBumper: &signer.CPFPFeeBumper{
-				Tx:          btcutil.NewTx(msgTx),
-				MinRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
-				CCTXRate:    6,
-				LiveRate:    7,
-				TotalFees:   2895,
-				TotalVSize:  579,
-				AvgFeeRate:  5,
+			feeBumper: &CPFPFeeBumper{
+				tx:          btcutil.NewTx(msgTx),
+				minRelayFee: 0.00002, // min relay fee will be 579vB * 2 = 1158 sats
+				cctxRate:    6,
+				liveRate:    7,
+				txsAndFees: client.MempoolTxsAndFees{
+					TotalFees:  2895,
+					TotalVSize: 579,
+					AvgFeeRate: 5,
+				},
+				logger: log.Logger,
 			},
 			errMsg: "lower than min relay fees",
 		},
@@ -251,106 +244,13 @@ func Test_BumpTxFee(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newTx, additionalFees, newRate, err := tt.feeBumper.BumpTxFee()
+			result, err := tt.feeBumper.BumpTxFee()
 			if tt.errMsg != "" {
-				require.Nil(t, newTx)
-				require.Zero(t, additionalFees)
+				require.Nil(t, result.NewTx)
 				require.ErrorContains(t, err, tt.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedNewTx, newTx)
-				require.Equal(t, tt.additionalFees, additionalFees)
-				require.Equal(t, tt.expectedNewRate, newRate)
-			}
-		})
-	}
-}
-
-func Test_FetchFeeBumpInfo(t *testing.T) {
-	liveRate := int64(12)
-
-	tests := []struct {
-		name         string
-		tx           *btcutil.Tx
-		liveRate     int64
-		memplTxsInfo *mempoolTxsInfo
-		expected     *signer.CPFPFeeBumper
-		errMsg       string
-	}{
-		{
-			name:     "should fetch fee bump info successfully",
-			tx:       btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			liveRate: 12,
-			memplTxsInfo: newMempoolTxsInfo(
-				2,      // 2 stuck TSS txs
-				0.0001, // total fees 0.0001 BTC
-				1000,   // total vsize 1000
-				10,     // average fee rate 10 sat/vB
-			),
-			expected: &signer.CPFPFeeBumper{
-				Tx:         btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-				LiveRate:   12,
-				TotalTxs:   2,
-				TotalFees:  10000,
-				TotalVSize: 1000,
-				AvgFeeRate: 10,
-			},
-		},
-		{
-			name:     "should fail if unable to estimate smart fee",
-			liveRate: 0,
-			errMsg:   "GetEstimatedFeeRate failed",
-		},
-		{
-			name:         "should fail if unable to fetch mempool txs info",
-			liveRate:     12,
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfo: nil,
-			errMsg:       "unable to fetch mempool txs info",
-		},
-		{
-			name:         "should fail on invalid total fees",
-			liveRate:     12,
-			tx:           btcutil.NewTx(wire.NewMsgTx(wire.TxVersion)),
-			memplTxsInfo: newMempoolTxsInfo(2, 21000000.1, 1000, 10), // fee exceeds max BTC supply
-			errMsg:       "cannot convert total fees",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// ARRANGE
-			// mock RPC fee rate
-			client := mocks.NewBitcoinClient(t)
-			if tt.liveRate > 0 {
-				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(liveRate, nil)
-			} else {
-				client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(int64(0), errors.New("rpc error"))
-			}
-
-			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
-			} else {
-				v := int64(0)
-				client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(v, 0.0, v, v, errors.New("rpc error"))
-			}
-
-			// ACT
-			bumper := &signer.CPFPFeeBumper{
-				RPC: client,
-				Tx:  tt.tx,
-			}
-			err := bumper.FetchFeeBumpInfo(log.Logger)
-
-			// ASSERT
-			if tt.errMsg != "" {
-				require.ErrorContains(t, err, tt.errMsg)
-			} else {
-				bumper.RPC = nil // ignore the RPC client
-				require.NoError(t, err)
-				require.Equal(t, tt.expected, bumper)
+				require.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -363,7 +263,7 @@ func Test_CopyMsgTxNoWitness(t *testing.T) {
 		msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
 		// make a non-witness copy
-		copyTx := signer.CopyMsgTxNoWitness(msgTx)
+		copyTx := CopyMsgTxNoWitness(msgTx)
 
 		// make another copy and clear witness data manually
 		newTx := msgTx.Copy()
@@ -377,7 +277,7 @@ func Test_CopyMsgTxNoWitness(t *testing.T) {
 
 	t.Run("should handle nil input", func(t *testing.T) {
 		require.Panics(t, func() {
-			signer.CopyMsgTxNoWitness(nil)
+			CopyMsgTxNoWitness(nil)
 		}, "should panic on nil input")
 	})
 }

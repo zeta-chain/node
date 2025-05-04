@@ -107,10 +107,16 @@ func DistributeObserverRewards(
 	emissionsKeeper keeper.Keeper,
 	params types.Params,
 ) error {
+	// TODO : move the params BallotMaturityBlocks and BufferBlocksUnfinalizedBallots to the observer module
+	// https://github.com/zeta-chain/node/issues/3550
 	var (
-		slashAmount    = params.ObserverSlashAmount
+		slashAmount = params.ObserverSlashAmount
+		// Maturity blocks is used for distribution of rewards and deletion of finalized ballots
+		// and pending ballots at the maturity height, are simply ignored
 		maturityBlocks = params.BallotMaturityBlocks
-		maturedBallots []string
+		// The pendingBallotsDeletionBufferBlocks is a buffer number of blocks which is provided for pending ballots to allow them to be finalized
+		pendingBallotsDeletionBufferBlocks = params.PendingBallotsDeletionBufferBlocks
+		maturedBallots                     []string
 	)
 
 	err := emissionsKeeper.GetBankKeeper().
@@ -143,14 +149,20 @@ func DistributeObserverRewards(
 	// Processing Step 2: Emit the observer emissions
 	keeper.EmitObserverEmissions(ctx, finalDistributionList)
 
-	// Processing Step 3: Delete all matured ballots and the ballot list
-	emissionsKeeper.GetObserverKeeper().ClearMaturedBallotsAndBallotList(ctx, params.BallotMaturityBlocks)
+	// Processing Step 3a: Delete all finalized ballots at `maturityBlocksForFinalizedBallots` height
+	// This step optionally deletes the `BallotListForHeight` if all ballots are finalized and deleted
+	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, maturityBlocks, false)
+
+	// Processing Step 3b: Delete all ballots at the buffered maturity height.
+	// This step deletes all remaining ballots and the `BallotListForHeight`.
+	bufferedMaturityBlocks := maturityBlocks + pendingBallotsDeletionBufferBlocks
+	emissionsKeeper.GetObserverKeeper().ClearFinalizedMaturedBallots(ctx, bufferedMaturityBlocks, true)
 	return nil
 }
 
 // DistributeTSSRewards trasferes the allocated rewards to the Undistributed Tss Rewards Pool.
 // This is done so that the reserves factor is properly calculated in the next block
-func DistributeTSSRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.BankKeeper) error {
+func DistributeTSSRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTSSRewardsPool, coin)
 }
@@ -177,7 +189,7 @@ func distributeRewardsForMaturedBallots(
 	}
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
-		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
+		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
 		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(maturedBallots)))
@@ -217,7 +229,7 @@ func distributeRewardsForMaturedBallots(
 		}
 
 		// Defensive check
-		if rewardPerUnit.GT(sdk.ZeroInt()) {
+		if rewardPerUnit.GT(sdkmath.ZeroInt()) {
 			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardUnits))
 			keeper.AddObserverEmission(ctx, observerAddress.String(), rewardAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{

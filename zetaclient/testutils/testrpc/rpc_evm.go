@@ -24,6 +24,24 @@ func (s *EVMServer) SetBlockNumber(n int) {
 	})
 }
 
+func (s *EVMServer) SetBlockNumberFailure(err error) {
+	s.On("eth_blockNumber", func(_ []any) (any, error) {
+		return hex(0), err
+	})
+}
+
+func (s *EVMServer) MockSendTransaction() {
+	s.On("eth_sendRawTransaction", func(_ []any) (any, error) {
+		return nil, nil
+	})
+}
+
+func (s *EVMServer) SetChainID(n int) {
+	s.On("eth_chainId", func(_ []any) (any, error) {
+		return hex(n), nil
+	})
+}
+
 func hex(v any) string {
 	return fmt.Sprintf("0x%x", v)
 }

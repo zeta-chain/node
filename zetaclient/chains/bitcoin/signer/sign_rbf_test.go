@@ -1,31 +1,33 @@
-package signer_test
+package signer
 
 import (
 	"context"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
+	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/coin"
 )
 
 func Test_SignRBFTx(t *testing.T) {
 	// https://mempool.space/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
 	chain := chains.BitcoinMainnet
-	nonce := uint64(148)
-	cctx := testutils.LoadCctxByNonce(t, chain.ChainId, nonce)
 	txid := "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0"
 	msgTx := testutils.LoadBTCMsgTx(t, TestDataDir, chain.ChainId, txid)
 
-	// inputs
+	// inputs of the transaction
 	type prevTx struct {
 		hash   *chainhash.Hash
 		vout   uint32
@@ -78,89 +80,82 @@ func Test_SignRBFTx(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name         string
-		chain        chains.Chain
-		cctx         *crosschaintypes.CrossChainTx
-		lastTx       *btcutil.Tx
-		preTxs       []prevTx
-		minRelayFee  float64
-		cctxRate     string
-		liveRate     int64
-		memplTxsInfo *mempoolTxsInfo
-		errMsg       string
-		expectedTx   *wire.MsgTx
+		name       string
+		chain      chains.Chain
+		lastTx     *btcutil.Tx
+		preTxs     []prevTx
+		txData     OutboundData
+		liveRate   uint64
+		txsAndFees *client.MempoolTxsAndFees
+		errMsg     string
+		expectedTx *wire.MsgTx
 	}{
 		{
-			name:        "should sign RBF tx successfully",
-			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
-			lastTx:      btcutil.NewTx(msgTx.Copy()),
-			preTxs:      preTxs,
-			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    59, // 59 sat/vB
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			name:     "should sign RBF tx successfully",
+			chain:    chains.BitcoinMainnet,
+			lastTx:   btcutil.NewTx(msgTx.Copy()),
+			preTxs:   preTxs,
+			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
+			liveRate: 59,                         // 59 sat/vB
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			expectedTx: func() *wire.MsgTx {
 				// deduct additional fees
-				newTx := signer.CopyMsgTxNoWitness(msgTx)
+				newTx := CopyMsgTxNoWitness(msgTx)
 				newTx.TxOut[2].Value -= 5790
 				return newTx
 			}(),
 		},
 		{
-			name:        "should return error if latest fee rate is not available",
-			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
-			lastTx:      btcutil.NewTx(msgTx.Copy()),
-			minRelayFee: 0.00001,
-			cctxRate:    "",
-			errMsg:      "invalid fee rate",
+			name:   "should return error if fee rate is not bumped by zetacore yet",
+			chain:  chains.BitcoinMainnet,
+			lastTx: btcutil.NewTx(msgTx.Copy()),
+			txData: mkTxData(t, 0.00001, ""), // empty gas priority fee, not bumped yet
+			errMsg: "fee rate is not bumped by zetacore yet",
 		},
 		{
-			name:         "should return error if unable to create fee bumper",
-			chain:        chains.BitcoinMainnet,
-			cctx:         cctx,
-			lastTx:       btcutil.NewTx(msgTx.Copy()),
-			minRelayFee:  0.00001,
-			cctxRate:     "57",
-			memplTxsInfo: nil,
-			errMsg:       "NewCPFPFeeBumper failed",
+			name:       "should return error if unable to create fee bumper",
+			chain:      chains.BitcoinMainnet,
+			lastTx:     btcutil.NewTx(msgTx.Copy()),
+			txData:     mkTxData(t, 0.00001, "57"),
+			txsAndFees: nil, // no mempool txs info provided
+			errMsg:     "NewCPFPFeeBumper failed",
 		},
 		{
-			name:        "should return error if live rate is too high",
-			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
-			lastTx:      btcutil.NewTx(msgTx.Copy()),
-			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    99, // 99 sat/vB is much higher than ccxt rate
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			name:  "should return error if unable to bump tx fee",
+			chain: chains.BitcoinMainnet,
+			lastTx: func() *btcutil.Tx {
+				txCopy := msgTx.Copy()
+				txCopy.TxOut = txCopy.TxOut[:2] // remove reserved bump fees to cause error
+				return btcutil.NewTx(txCopy)
+			}(),
+			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
+			liveRate: 99,                         // 99 sat/vB is much higher than ccxt rate
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			errMsg: "BumpTxFee failed",
 		},
 		{
-			name:        "should return error if live rate is too high",
-			chain:       chains.BitcoinMainnet,
-			cctx:        cctx,
-			lastTx:      btcutil.NewTx(msgTx.Copy()),
-			minRelayFee: 0.00001,
-			cctxRate:    "57",
-			liveRate:    59, // 59 sat/vB
-			memplTxsInfo: newMempoolTxsInfo(
-				1,          // 1 stuck tx
-				0.00027213, // fees: 0.00027213 BTC
-				579,        // size: 579 vByte
-				47,         // rate: 47 sat/vB
-			),
+			name:     "should return error if unable to get previous tx",
+			chain:    chains.BitcoinMainnet,
+			lastTx:   btcutil.NewTx(msgTx.Copy()),
+			txData:   mkTxData(t, 0.00001, "57"), // 57 sat/vB as cctx rate
+			preTxs:   nil,                        // no previous info provided
+			liveRate: 59,                         // 59 sat/vB
+			txsAndFees: &client.MempoolTxsAndFees{
+				TotalTxs:   1,     // 1 stuck tx
+				TotalFees:  27213, // fees: 0.00027213 BTC
+				TotalVSize: 579,   // size: 579 vByte
+				AvgFeeRate: 47,    // rate: 47 sat/vB
+			},
 			errMsg: "unable to get previous tx",
 		},
 	}
@@ -171,22 +166,21 @@ func Test_SignRBFTx(t *testing.T) {
 			// setup signer
 			s := newTestSuite(t, tt.chain)
 
-			// mock cctx rate
-			tt.cctx.GetCurrentOutboundParam().GasPriorityFee = tt.cctxRate
+			// mock isRegnet
+			s.client.On("IsRegnet").Return(tt.chain.ChainId == chains.BitcoinRegtest.ChainId)
 
 			// mock RPC live fee rate
 			if tt.liveRate > 0 {
 				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(tt.liveRate, nil)
 			} else {
-				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(int64(0), errors.New("rpc error"))
+				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(uint64(0), errors.New("rpc error"))
 			}
 
 			// mock mempool txs information
-			if tt.memplTxsInfo != nil {
-				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).
-					Return(tt.memplTxsInfo.totalTxs, tt.memplTxsInfo.totalFees, tt.memplTxsInfo.totalVSize, tt.memplTxsInfo.avgFeeRate, nil)
+			if tt.txsAndFees != nil {
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Return(*tt.txsAndFees, nil)
 			} else {
-				s.client.On("GetTotalMempoolParentsSizeNFees", mock.Anything, mock.Anything, mock.Anything).Maybe().Return(0, 0.0, 0, 0, "rpc error")
+				s.client.On("GetMempoolTxsAndFees", mock.Anything, mock.Anything).Maybe().Return(client.MempoolTxsAndFees{}, nil)
 			}
 
 			// mock RPC transactions
@@ -218,7 +212,7 @@ func Test_SignRBFTx(t *testing.T) {
 			// ACT
 			// sign tx
 			ctx := context.Background()
-			newTx, err := s.SignRBFTx(ctx, tt.cctx, 1, tt.lastTx, tt.minRelayFee)
+			newTx, err := s.SignRBFTx(ctx, &tt.txData, tt.lastTx)
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
 				return
@@ -235,8 +229,18 @@ func Test_SignRBFTx(t *testing.T) {
 	}
 }
 
-func hashFromTXID(t *testing.T, txid string) *chainhash.Hash {
-	h, err := chainhash.NewHashFromStr(txid)
+// mkTxData creates a new outbound data for testing
+func mkTxData(t *testing.T, minRelayFee float64, latestFeeRate string) OutboundData {
+	net := &chaincfg.MainNetParams
+	cctx := sample.CrossChainTx(t, "0x123")
+	cctx.InboundParams.CoinType = coin.CoinType_Gas
+	cctx.GetCurrentOutboundParam().GasPrice = "1"
+	cctx.GetCurrentOutboundParam().GasPriorityFee = latestFeeRate
+	cctx.GetCurrentOutboundParam().Receiver = sample.BTCAddressP2WPKH(t, sample.Rand(), net).String()
+	cctx.GetCurrentOutboundParam().ReceiverChainId = chains.BitcoinMainnet.ChainId
+	cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
+
+	txData, err := NewOutboundData(cctx, 1, minRelayFee, zerolog.Nop(), zerolog.Nop())
 	require.NoError(t, err)
-	return h
+	return *txData
 }

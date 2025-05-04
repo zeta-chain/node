@@ -26,6 +26,19 @@ const (
 	maxBTCSupply = 21000000.0
 )
 
+// MempoolTxsAndFees contains the information of pending mempool txs and fees
+type MempoolTxsAndFees struct {
+	TotalTxs   int64
+	TotalFees  int64
+	TotalVSize int64
+	AvgFeeRate uint64
+}
+
+// IsRegnet returns true if the chain is regnet
+func (c *Client) IsRegnet() bool {
+	return c.isRegnet
+}
+
 // GetBlockVerboseByStr alias for GetBlockVerbose
 func (c *Client) GetBlockVerboseByStr(ctx context.Context, blockHash string) (*types.GetBlockVerboseTxResult, error) {
 	h, err := strToHash(blockHash)
@@ -119,28 +132,34 @@ func (c *Client) GetRawTransactionResult(ctx context.Context,
 	}
 }
 
-// GetEstimatedFeeRate gets estimated smart fee rate (BTC/Kb) targeting given block confirmation
-func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error) {
+// GetEstimatedFeeRate gets estimated smart fee rate (sat/vB) targeting given block confirmation
+func (c *Client) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (satsPerByte uint64, err error) {
 	// RPC 'EstimateSmartFee' is not available in regnet
-	if regnet {
+	if c.isRegnet {
 		return FeeRateRegnet, nil
 	}
 
 	feeResult, err := c.EstimateSmartFee(ctx, confTarget, &types.EstimateModeEconomical)
-	if err != nil {
+	switch {
+	case err != nil:
 		return 0, errors.Wrap(err, "unable to estimate smart fee")
-	}
-	if feeResult.Errors != nil {
+	case feeResult.Errors != nil:
 		return 0, fmt.Errorf("fee result contains errors: %s", feeResult.Errors)
-	}
-	if feeResult.FeeRate == nil {
+	case feeResult.FeeRate == nil:
 		return 0, errors.New("nil fee rate")
 	}
+
 	feeRate := *feeResult.FeeRate
 	if feeRate <= 0 || feeRate >= maxBTCSupply {
 		return 0, fmt.Errorf("invalid fee rate: %f", feeRate)
 	}
-	return common.FeeRateToSatPerByte(feeRate), nil
+
+	feeRateUint, err := common.FeeRateToSatPerByte(feeRate)
+	if err != nil {
+		return 0, errors.Wrapf(err, "invalid fee rate: %f", feeRate)
+	}
+
+	return feeRateUint, nil
 }
 
 // GetTransactionFeeAndRate gets the transaction fee and rate for a given tx result
@@ -194,9 +213,8 @@ func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *types.
 	return fee, feeRate, nil
 }
 
-// Healthcheck / checks the RPC status of the bitcoin chain. Returns the latest block timestamp
-func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error) {
-	// 1. Query latest block header
+// Healthcheck returns the latest block timestamp
+func (c *Client) Healthcheck(ctx context.Context) (time.Time, error) {
 	bn, err := c.GetBlockCount(ctx)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "unable to get block count")
@@ -212,82 +230,78 @@ func (c *Client) Healthcheck(ctx context.Context, tssAddress btcutil.Address) (t
 		return time.Time{}, errors.Wrap(err, "unable to get block header")
 	}
 
-	// 2. Query utxos owned by TSS address
-	res, err := c.ListUnspentMinMaxAddresses(ctx, 0, 1000000, []btcutil.Address{tssAddress})
-	switch {
-	case err != nil:
-		return time.Time{}, errors.Wrap(err, "unable to list TSS UTXOs")
-	case len(res) == 0:
-		return time.Time{}, errors.New("no UTXOs found for TSS")
-	}
-
 	return header.Timestamp, nil
 }
 
-// GetTotalMempoolParentsSizeNFees returns the information of all pending parent txs of a given tx (inclusive)
+// GetMempoolTxsAndFees returns the information of all pending parent txs and fees of a given tx (inclusive)
 //
 // A parent tx is defined as:
 //   - a tx that is also pending in the mempool
 //   - a tx that has its first output spent by the child as first input
-//
-// Returns: (totalTxs, totalFees, totalVSize, error)
-func (c *Client) GetTotalMempoolParentsSizeNFees(
+func (c *Client) GetMempoolTxsAndFees(
 	ctx context.Context,
 	childHash string,
-	timeout time.Duration,
-) (int64, float64, int64, int64, error) {
-	var (
-		totalTxs   int64
-		totalFees  float64
-		totalVSize int64
-		avgFeeRate int64
-	)
+) (txsAndFees MempoolTxsAndFees, err error) {
+	totalFeesFloat := float64(0)
 
 	// loop through all parents
-	startTime := time.Now()
 	parentHash := childHash
 	for {
 		memplEntry, err := c.GetMempoolEntry(ctx, parentHash)
 		if err != nil {
-			if strings.Contains(err.Error(), "Transaction not in mempool") {
+			if IsTxNotInMempoolError(err) {
 				// not a mempool tx, stop looking for parents
 				break
 			}
-			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
+			return txsAndFees, errors.Wrapf(err, "unable to get mempool entry for tx %s", parentHash)
 		}
 
 		// accumulate fees and vsize
-		totalTxs++
-		totalFees += memplEntry.Fee
-		totalVSize += int64(memplEntry.VSize)
+		txsAndFees.TotalTxs++
+		totalFeesFloat += memplEntry.Fee
+		txsAndFees.TotalVSize += int64(memplEntry.VSize)
 
 		// find the parent tx
 		tx, err := c.GetRawTransactionByStr(ctx, parentHash)
 		if err != nil {
-			return 0, 0, 0, 0, errors.Wrapf(err, "unable to get tx %s", parentHash)
+			return txsAndFees, errors.Wrapf(err, "unable to get tx %s", parentHash)
 		}
 		parentHash = tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
 
 		// check timeout to avoid infinite loop
-		if time.Since(startTime) > timeout {
-			return 0, 0, 0, 0, errors.Errorf("timeout reached on %dth tx: %s", totalTxs, parentHash)
+		if deadline, ok := ctx.Deadline(); ok {
+			if time.Now().After(deadline) {
+				return txsAndFees, errors.Errorf("timeout reached on %dth tx: %s", txsAndFees.TotalTxs, parentHash)
+			}
 		}
 	}
 
 	// no pending tx found
-	if totalTxs == 0 {
-		return 0, 0, 0, 0, errors.Errorf("given tx is not pending: %s", childHash)
+	if txsAndFees.TotalTxs == 0 {
+		return txsAndFees, errors.Errorf("given tx is not pending: %s", childHash)
+	}
+
+	// convert total fees to satoshis
+	txsAndFees.TotalFees, err = common.GetSatoshis(totalFeesFloat)
+	if err != nil {
+		return txsAndFees, errors.Wrapf(err, "invalid total fees: %f", totalFeesFloat)
 	}
 
 	// sanity check, should never happen
-	if totalFees < 0 || totalVSize <= 0 {
-		return 0, 0, 0, 0, errors.Errorf("invalid result: totalFees %f, totalVSize %d", totalFees, totalVSize)
+	if txsAndFees.TotalVSize <= 0 {
+		return txsAndFees, errors.Errorf("invalid totalVSize %d", txsAndFees.TotalVSize)
 	}
 
 	// calculate the average fee rate
-	avgFeeRate = int64(math.Ceil(totalFees / float64(totalVSize)))
+	// #nosec G115 always positive
+	txsAndFees.AvgFeeRate = uint64(math.Ceil(totalFeesFloat / float64(txsAndFees.TotalVSize)))
 
-	return totalTxs, totalFees, totalVSize, avgFeeRate, nil
+	return txsAndFees, nil
+}
+
+// IsTxNotInMempoolError checks if the given error is due to the transaction not being in the mempool.
+func IsTxNotInMempoolError(err error) bool {
+	return strings.Contains(err.Error(), "Transaction not in mempool")
 }
 
 func strToHash(s string) (*chainhash.Hash, error) {

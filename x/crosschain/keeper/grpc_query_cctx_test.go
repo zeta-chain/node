@@ -2,8 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -198,13 +201,13 @@ func TestKeeper_ZetaAccounting(t *testing.T) {
 	t.Run("should return zeta accounting if found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{
-			AbortedZetaAmount: sdk.NewUint(100),
+			AbortedZetaAmount: sdkmath.NewUint(100),
 		})
 
 		res, err := k.ZetaAccounting(ctx, nil)
 		require.NoError(t, err)
 		require.Equal(t, &types.QueryZetaAccountingResponse{
-			AbortedZetaAmount: sdk.NewUint(100).String(),
+			AbortedZetaAmount: sdkmath.NewUint(100).String(),
 		}, res)
 	})
 }
@@ -290,6 +293,18 @@ func TestKeeper_CctxByNonce(t *testing.T) {
 	})
 }
 
+func assertCctxIndexEqual(t *testing.T, expectedCctxs []*types.CrossChainTx, cctxs []*types.CrossChainTx) {
+	t.Helper()
+	require.Equal(t, len(expectedCctxs), len(cctxs), "slice lengths not equal")
+	for i, expectedCctx := range expectedCctxs {
+		require.Equal(t, expectedCctx.Index, cctxs[i].Index, "index missmatch at %v", i)
+	}
+}
+
+func sortByIndex(l *types.CrossChainTx, r *types.CrossChainTx) int {
+	return strings.Compare(l.Index, r.Index)
+}
+
 func TestKeeper_CctxAll(t *testing.T) {
 	t.Run("empty request", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -324,5 +339,48 @@ func TestKeeper_CctxAll(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Len(t, res.CrossChainTx, testPageSize)
+	})
+
+	t.Run("basic descending ordering", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		createdCctx := createCctxWithNonceRange(t, ctx, *k, 0, 10, chainID, tss, zk)
+
+		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{})
+		require.NoError(t, err)
+		slices.Reverse(createdCctx)
+		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
+
+		// also assert unordered query return same number of results
+		resUnordered, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Unordered: true,
+		})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, len(resUnordered.CrossChainTx))
+	})
+
+	t.Run("basic ascending ordering", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		createdCctx := createCctxWithNonceRange(t, ctx, *k, 0, 10, chainID, tss, zk)
+
+		res, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Pagination: &query.PageRequest{
+				Reverse: true,
+			},
+		})
+		require.NoError(t, err)
+		assertCctxIndexEqual(t, createdCctx, res.CrossChainTx)
+
+		// also assert unordered query return same number of results
+		resUnordered, err := k.CctxAll(ctx, &types.QueryAllCctxRequest{
+			Unordered: true,
+		})
+		require.NoError(t, err)
+		require.Len(t, res.CrossChainTx, len(resUnordered.CrossChainTx))
 	})
 }

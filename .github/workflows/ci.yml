@@ -20,31 +20,15 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "false"
+          go-version: '1.23'
       
       - name: Test
         uses: nick-fields/retry@v3
@@ -70,7 +54,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
-          make install
+          make install install-zetae2e
           cp "$HOME"/go/bin/* ./
           chmod a+x ./zetacored
           ./zetacored version
@@ -88,13 +72,20 @@ jobs:
           name: zetaclientd
           path: ~/go/bin/zetaclientd
           retention-days: 30
+
+      - name: Upload zetae2e
+        uses: actions/upload-artifact@v4
+        with:
+          name: zetae2e
+          path: ~/go/bin/zetae2e
+          retention-days: 90
       
       - name: Clean Up Workspace
         if: always()
         shell: bash
         run: rm -rf *
   rpcimportable:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     # do not run this on forks as they are not installable
     # it will still be check in the merge queue in this case

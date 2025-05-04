@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"time"
 
+	tmlog "cosmossdk.io/log"
 	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -135,5 +135,5 @@ func Listen(addr string, config *config.Config) (net.Listener, error) {
 	if config.JSONRPC.MaxOpenConnections > 0 {
 		ln = netutil.LimitListener(ln, config.JSONRPC.MaxOpenConnections)
 	}
-	return ln, err
+	return ln, nil
 }

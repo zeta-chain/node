@@ -12,7 +12,7 @@ import (
 func RunnerFromConfig(
 	ctx context.Context,
 	name string,
-	ctxCancel context.CancelFunc,
+	ctxCancel context.CancelCauseFunc,
 	conf config.Config,
 	account config.Account,
 	logger *runner.Logger,
@@ -31,7 +31,6 @@ func RunnerFromConfig(
 		ctxCancel,
 		account,
 		e2eClients,
-
 		logger,
 		opts...,
 	)
@@ -58,6 +57,17 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.Solana.GatewayProgramID = config.DoubleQuotedString(r.GatewayProgram.String())
 	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
 
+	conf.Contracts.TON.GatewayAccountID = config.DoubleQuotedString(r.TONGateway.ToRaw())
+
+	if r.SuiGateway != nil {
+		conf.Contracts.Sui.GatewayPackageID = config.DoubleQuotedString(r.SuiGateway.PackageID())
+		conf.Contracts.Sui.GatewayObjectID = config.DoubleQuotedString(r.SuiGateway.ObjectID())
+	}
+
+	conf.Contracts.Sui.FungibleTokenCoinType = config.DoubleQuotedString(r.SuiTokenCoinType)
+	conf.Contracts.Sui.FungibleTokenTreasuryCap = config.DoubleQuotedString(r.SuiTokenTreasuryCap)
+	conf.Contracts.Sui.Example = r.SuiExample
+
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
 	conf.Contracts.EVM.CustodyAddr = config.DoubleQuotedString(r.ERC20CustodyAddr.Hex())
@@ -73,6 +83,9 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.SOLZRC20Addr = config.DoubleQuotedString(r.SOLZRC20Addr.Hex())
 	conf.Contracts.ZEVM.SPLZRC20Addr = config.DoubleQuotedString(r.SPLZRC20Addr.Hex())
 	conf.Contracts.ZEVM.TONZRC20Addr = config.DoubleQuotedString(r.TONZRC20Addr.Hex())
+	conf.Contracts.ZEVM.SUIZRC20Addr = config.DoubleQuotedString(r.SUIZRC20Addr.Hex())
+	conf.Contracts.ZEVM.SuiTokenZRC20Addr = config.DoubleQuotedString(r.SuiTokenZRC20Addr.Hex())
+
 	conf.Contracts.ZEVM.UniswapFactoryAddr = config.DoubleQuotedString(r.UniswapV2FactoryAddr.Hex())
 	conf.Contracts.ZEVM.UniswapRouterAddr = config.DoubleQuotedString(r.UniswapV2RouterAddr.Hex())
 	conf.Contracts.ZEVM.ConnectorZEVMAddr = config.DoubleQuotedString(r.ConnectorZEVMAddr.Hex())

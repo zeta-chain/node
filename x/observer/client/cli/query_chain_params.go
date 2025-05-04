@@ -20,7 +20,7 @@ func CmdGetChainParamsForChain() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ func CmdGetChainParams() *cobra.Command {
 		Short: "Query GetChainParams",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}

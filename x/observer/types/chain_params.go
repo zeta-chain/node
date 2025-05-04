@@ -4,19 +4,34 @@ import (
 	"fmt"
 	"strings"
 
-	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkmath "cosmossdk.io/math"
 	ethchains "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
 var (
-	DefaultMinObserverDelegation = sdk.MustNewDecFromStr("1000000000000000000000")
-	DefaultBallotThreshold       = sdk.MustNewDecFromStr("0.66")
+	DefaultMinObserverDelegation = sdkmath.LegacyMustNewDecFromStr("1000000000000000000000")
+	DefaultBallotThreshold       = sdkmath.LegacyMustNewDecFromStr("0.66")
 )
+
+// Validate checks that the ConfirmationParams is valid
+func (cp ConfirmationParams) Validate() error {
+	switch {
+	case cp.SafeInboundCount == 0:
+		return errors.New("SafeInboundCount must be greater than 0")
+	case cp.FastInboundCount > cp.SafeInboundCount:
+		return errors.New("FastInboundCount must be less than or equal to SafeInboundCount")
+	case cp.SafeOutboundCount == 0:
+		return errors.New("SafeOutboundCount must be greater than 0")
+	case cp.FastOutboundCount > cp.SafeOutboundCount:
+		return errors.New("FastOutboundCount must be less than or equal to SafeOutboundCount")
+	default:
+		return nil
+	}
+}
 
 // Validate checks all chain params correspond to a chain and there is no duplicate chain id
 func (cpl ChainParamsList) Validate() error {
@@ -31,7 +46,7 @@ func (cpl ChainParamsList) Validate() error {
 
 	// validate the chain params and check for duplicates
 	for _, chainParam := range cpl.ChainParams {
-		if err := ValidateChainParams(chainParam); err != nil {
+		if err := chainParam.Validate(); err != nil {
 			return err
 		}
 
@@ -46,84 +61,128 @@ func (cpl ChainParamsList) Validate() error {
 	return nil
 }
 
-// ValidateChainParams performs some basic checks on chain params
-func ValidateChainParams(params *ChainParams) error {
-	if params == nil {
-		return fmt.Errorf("chain params cannot be nil")
+// Validate performs basic checks on chain params
+func (cp ChainParams) Validate() error {
+	// don't validate ZetaChain params, because the validation will fail on existing params in the store
+	// we might remove the ZetaChain params in the future, this is TBD
+	if chains.IsZetaChain(cp.ChainId, nil) {
+		return nil
 	}
 
-	if chains.IsZetaChain(params.ChainId, nil) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidChainID, "zeta chain cannot have observer chain parameters")
+	// validate confirmation counts
+	// TODO: ensure 'ConfirmationCount === 0' in the chain params update msg after migration (no other values allowed)
+	// zetaclient will unconditionally use 'ConfirmationParams' fields in the future
+	// https://github.com/zeta-chain/node/issues/3466
+	if cp.ConfirmationCount == 0 {
+		return errors.New("ConfirmationCount must be greater than 0")
+	}
+	if cp.ConfirmationParams == nil {
+		return errors.New("confirmation params cannot be nil")
+	}
+	if err := cp.ConfirmationParams.Validate(); err != nil {
+		return errors.Wrap(err, "invalid confirmation params")
 	}
 
-	if params.ConfirmationCount == 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
+	// validate tickers and intervals
+	if cp.GasPriceTicker <= 0 || cp.GasPriceTicker > 300 {
+		return fmt.Errorf("GasPriceTicker %d out of range", cp.GasPriceTicker)
 	}
-	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
+	if cp.InboundTicker <= 0 || cp.InboundTicker > 300 {
+		return fmt.Errorf("InboundTicker %d out of range", cp.InboundTicker)
 	}
-	if params.InboundTicker <= 0 || params.InboundTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InboundTicker %d out of range", params.InboundTicker)
+	if cp.OutboundTicker <= 0 || cp.OutboundTicker > 300 {
+		return fmt.Errorf("OutboundTicker %d out of range", cp.OutboundTicker)
 	}
-	if params.OutboundTicker <= 0 || params.OutboundTicker > 300 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTicker %d out of range", params.OutboundTicker)
-	}
-	if params.OutboundScheduleInterval == 0 || params.OutboundScheduleInterval > 100 { // 600 secs
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.OutboundScheduleInterval == 0 || cp.OutboundScheduleInterval > 100 { // 600 secs
+		return fmt.Errorf(
+
 			"OutboundScheduleInterval %d out of range",
-			params.OutboundScheduleInterval,
+			cp.OutboundScheduleInterval,
 		)
 	}
-	if params.OutboundScheduleLookahead == 0 || params.OutboundScheduleLookahead > 500 { // 500 cctxs
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.OutboundScheduleLookahead == 0 || cp.OutboundScheduleLookahead > 500 { // 500 cctxs
+		return fmt.Errorf(
+
 			"OutboundScheduleLookahead %d out of range",
-			params.OutboundScheduleLookahead,
+			cp.OutboundScheduleLookahead,
 		)
 	}
 
 	// if WatchUtxoTicker defined, check validity
-	if params.WatchUtxoTicker > 300 {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.WatchUtxoTicker > 300 {
+		return fmt.Errorf(
+
 			"WatchUtxoTicker %d out of range",
-			params.WatchUtxoTicker,
+			cp.WatchUtxoTicker,
 		)
 	}
 
 	// if contract addresses are defined, check validity
-	if params.ZetaTokenContractAddress != "" && !validChainContractAddress(params.ZetaTokenContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.ZetaTokenContractAddress != "" && !validChainContractAddress(cp.ZetaTokenContractAddress) {
+		return fmt.Errorf(
+
 			"invalid ZetaTokenContractAddress %s",
-			params.ZetaTokenContractAddress,
+			cp.ZetaTokenContractAddress,
 		)
 	}
-	if params.ConnectorContractAddress != "" && !validChainContractAddress(params.ConnectorContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.ConnectorContractAddress != "" && !validChainContractAddress(cp.ConnectorContractAddress) {
+		return fmt.Errorf(
+
 			"invalid ConnectorContractAddress %s",
-			params.ConnectorContractAddress,
+			cp.ConnectorContractAddress,
 		)
 	}
-	if params.Erc20CustodyContractAddress != "" && !validChainContractAddress(params.Erc20CustodyContractAddress) {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
+	if cp.Erc20CustodyContractAddress != "" && !validChainContractAddress(cp.Erc20CustodyContractAddress) {
+		return fmt.Errorf(
+
 			"invalid Erc20CustodyContractAddress %s",
-			params.Erc20CustodyContractAddress,
+			cp.Erc20CustodyContractAddress,
 		)
 	}
 
-	if params.BallotThreshold.IsNil() || params.BallotThreshold.GT(sdk.OneDec()) {
+	if cp.BallotThreshold.IsNil() || cp.BallotThreshold.GT(sdkmath.LegacyOneDec()) {
 		return ErrParamsThreshold
 	}
 
-	if params.MinObserverDelegation.IsNil() {
+	if cp.MinObserverDelegation.IsNil() {
 		return ErrParamsMinObserverDelegation
 	}
 
 	return nil
+}
+
+// IsInboundFastConfirmationEnabled returns true if fast inbound confirmation is enabled.
+func (cp ChainParams) IsInboundFastConfirmationEnabled() bool {
+	return cp.ConfirmationParams.FastInboundCount > 0 &&
+		cp.ConfirmationParams.FastInboundCount < cp.ConfirmationParams.SafeInboundCount
+}
+
+// InboundConfirmationSafe returns the safe number of confirmation for inbound observation.
+func (cp ChainParams) InboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// InboundConfirmationFast returns the fast number of confirmation for inbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) InboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastInboundCount > 0 {
+		return cp.ConfirmationParams.FastInboundCount
+	}
+	return cp.ConfirmationParams.SafeInboundCount
+}
+
+// OutboundConfirmationSafe returns the safe number of confirmation for outbound observation.
+func (cp ChainParams) OutboundConfirmationSafe() uint64 {
+	return cp.ConfirmationParams.SafeOutboundCount
+}
+
+// OutboundConfirmationFast returns the fast number of confirmation for outbound observation.
+// It falls back to safe confirmation count if fast mode is disabled.
+func (cp ChainParams) OutboundConfirmationFast() uint64 {
+	if cp.ConfirmationParams.FastOutboundCount > 0 {
+		return cp.ConfirmationParams.FastOutboundCount
+	}
+	return cp.ConfirmationParams.SafeOutboundCount
 }
 
 func validChainContractAddress(address string) bool {
@@ -168,6 +227,12 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
@@ -186,6 +251,12 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  14,
+			FastInboundCount:  14,
+			SafeOutboundCount: 14,
+			FastOutboundCount: 14,
+		},
 	}
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
@@ -204,6 +275,12 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
@@ -223,6 +300,12 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
@@ -241,6 +324,12 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  6,
+			FastInboundCount:  6,
+			SafeOutboundCount: 6,
+			FastOutboundCount: 6,
+		},
 	}
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
@@ -259,6 +348,12 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  12,
+			FastInboundCount:  12,
+			SafeOutboundCount: 12,
+			FastOutboundCount: 12,
+		},
 	}
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
@@ -277,6 +372,12 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  2,
+			FastInboundCount:  2,
+			SafeOutboundCount: 2,
+			FastOutboundCount: 2,
+		},
 	}
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
@@ -295,6 +396,12 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -314,6 +421,13 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 		GatewayAddress:              "0xF0deebCB0E9C829519C4baa794c5445171973826",
+		ConfirmationParams: &ConfirmationParams{
+			SafeInboundCount:  1,
+			FastInboundCount:  1,
+			SafeOutboundCount: 1,
+			FastOutboundCount: 1,
+		},
+		DisableTssBlockScan: true,
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
@@ -351,5 +465,19 @@ func ChainParamsEqual(params1, params2 ChainParams) bool {
 		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
 		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
 		params1.IsSupported == params2.IsSupported &&
-		params1.GatewayAddress == params2.GatewayAddress
+		params1.GatewayAddress == params2.GatewayAddress &&
+		confirmationParamsEqual(params1.ConfirmationParams, params2.ConfirmationParams) &&
+		params1.DisableTssBlockScan == params2.DisableTssBlockScan
+}
+
+// confirmationParamsEqual returns true if two confirmation params are equal
+func confirmationParamsEqual(a, b *ConfirmationParams) bool {
+	if a == b {
+		return true
+	}
+	if (a == nil) || (b == nil) {
+		return false
+	}
+
+	return *a == *b
 }

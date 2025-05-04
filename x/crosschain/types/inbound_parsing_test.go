@@ -33,7 +33,7 @@ func TestNewWithdrawalInbound(t *testing.T) {
 	//	_, err := types.NewWithdrawalInbound(
 	//		ctx,
 	//		sample.EthAddress().Hex(),
-	//		fc.CoinType,
+	//		fc.FungibleTokenCoinType,
 	//		fc.Asset,
 	//		nil,
 	//		chains.GoerliLocalnet,
@@ -73,7 +73,7 @@ func TestNewWithdrawAndCallInbound(t *testing.T) {
 	//	_, err := types.NewWithdrawAndCallInbound(
 	//		ctx,
 	//		sample.EthAddress().Hex(),
-	//		fc.CoinType,
+	//		fc.FungibleTokenCoinType,
 	//		fc.Asset,
 	//		nil,
 	//		chains.GoerliLocalnet,

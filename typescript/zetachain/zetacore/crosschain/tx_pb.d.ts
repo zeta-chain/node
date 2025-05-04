@@ -8,7 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../pkg/coin/coin_pb.js";
 import type { Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
-import type { CallOptions, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
+import type { CallOptions, ConfirmationMode, InboundStatus, ProtocolContractVersion, RevertOptions } from "./cross_chain_tx_pb.js";
 import type { RateLimiterFlags } from "./rate_limiter_flags_pb.js";
 
 /**
@@ -113,6 +113,10 @@ export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAdd
 }
 
 /**
+ * MsgAddInboundTracker defines a message to add an inbound tracker.
+ * The index used for the saving the tracker to the store is of the format
+ * <chain_id>-<tx_hash>
+ *
  * @generated from message zetachain.zetacore.crosschain.MsgAddInboundTracker
  */
 export declare class MsgAddInboundTracker extends Message<MsgAddInboundTracker> {
@@ -189,6 +193,63 @@ export declare class MsgAddInboundTrackerResponse extends Message<MsgAddInboundT
 }
 
 /**
+ * MsgRemoveInboundTracker defines a message to remove an inbound tracker.
+ * The index used for the fetching the tracker to the store is of the format
+ * <chain_id>-<tx_hash>
+ *
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveInboundTracker
+ */
+export declare class MsgRemoveInboundTracker extends Message<MsgRemoveInboundTracker> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string tx_hash = 3;
+   */
+  txHash: string;
+
+  constructor(data?: PartialMessage<MsgRemoveInboundTracker>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveInboundTracker";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveInboundTracker;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveInboundTracker;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveInboundTracker;
+
+  static equals(a: MsgRemoveInboundTracker | PlainMessage<MsgRemoveInboundTracker> | undefined, b: MsgRemoveInboundTracker | PlainMessage<MsgRemoveInboundTracker> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgRemoveInboundTrackerResponse
+ */
+export declare class MsgRemoveInboundTrackerResponse extends Message<MsgRemoveInboundTrackerResponse> {
+  constructor(data?: PartialMessage<MsgRemoveInboundTrackerResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRemoveInboundTrackerResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveInboundTrackerResponse;
+
+  static equals(a: MsgRemoveInboundTrackerResponse | PlainMessage<MsgRemoveInboundTrackerResponse> | undefined, b: MsgRemoveInboundTrackerResponse | PlainMessage<MsgRemoveInboundTrackerResponse> | undefined): boolean;
+}
+
+/**
  * TODO: https://github.com/zeta-chain/node/issues/3083
  *
  * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
@@ -228,6 +289,11 @@ export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
    * @generated from field: int64 gas_limit = 7;
    */
   gasLimit: bigint;
+
+  /**
+   * @generated from field: string liquidity_cap = 8;
+   */
+  liquidityCap: string;
 
   constructor(data?: PartialMessage<MsgWhitelistERC20>);
 
@@ -542,6 +608,11 @@ export declare class MsgVoteOutbound extends Message<MsgVoteOutbound> {
    */
   coinType: CoinType;
 
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 13;
+   */
+  confirmationMode: ConfirmationMode;
+
   constructor(data?: PartialMessage<MsgVoteOutbound>);
 
   static readonly runtime: typeof proto3;
@@ -683,6 +754,20 @@ export declare class MsgVoteInbound extends Message<MsgVoteInbound> {
    * @generated from field: bool is_cross_chain_call = 19;
    */
   isCrossChainCall: boolean;
+
+  /**
+   * status of the inbound observation
+   *
+   * @generated from field: zetachain.zetacore.crosschain.InboundStatus status = 20;
+   */
+  status: InboundStatus;
+
+  /**
+   * confirmation mode used for the inbound
+   *
+   * @generated from field: zetachain.zetacore.crosschain.ConfirmationMode confirmation_mode = 21;
+   */
+  confirmationMode: ConfirmationMode;
 
   constructor(data?: PartialMessage<MsgVoteInbound>);
 

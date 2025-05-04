@@ -73,7 +73,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
 		&bind.CallOpts{},
 		r.BTCZRC20Addr,
-		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
 	)
 	require.NoError(r, err)
 
@@ -88,10 +88,6 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// check the cctx status
 	utils.RequireCCTXStatus(r, cctx1, types.CctxStatus_OutboundMined)
 
-	// mine 10 blocks to confirm the outbound tx
-	_, err = r.GenerateToAddressIfLocalBitcoin(10, r.BTCDeployerAddress)
-	require.NoError(r, err)
-
 	// cctx1 index acts like the inboundHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInboundHash(r.Ctx, cctx1.Index, r.CctxClient, r.Logger, r.CctxTimeout)
 
@@ -102,8 +98,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	// list deployer utxos
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
+	utxos := r.ListUTXOs()
 
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
@@ -114,7 +109,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[0:1], memo)
+	txID, err := r.SendToTSSWithMemo(0.01, memo)
 	require.NoError(r, err)
 
 	cctx3 := utils.WaitCctxMinedByInboundHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -143,9 +138,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		r.Logger.Info("memo length %d", len(memo))
 
 		amount := 0.1
-		utxos, err = r.ListDeployerUTXOs()
-		require.NoError(r, err)
-		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
+		txid, err := r.SendToTSSWithMemo(amount, memo)
 		require.NoError(r, err)
 
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)

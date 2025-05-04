@@ -3,7 +3,7 @@ package orchestrator
 import (
 	"context"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -21,6 +21,7 @@ type Zetacore interface {
 	GetChainParams(ctx context.Context) ([]*observertypes.ChainParams, error)
 	GetTSS(ctx context.Context) (observertypes.TSS, error)
 	GetKeyGen(ctx context.Context) (observertypes.Keygen, error)
+	GetOperationalFlags(ctx context.Context) (observertypes.OperationalFlags, error)
 }
 
 var ErrUpgradeRequired = errors.New("upgrade required")
@@ -54,7 +55,12 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 
 	crosschainFlags, err := zc.GetCrosschainFlags(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to fetch crosschain flags from zetacore")
+		return errors.Wrap(err, "unable to fetch crosschain flags")
+	}
+
+	operationalFlags, err := zc.GetOperationalFlags(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to fetch operational flags")
 	}
 
 	freshParams := make(map[int64]*observertypes.ChainParams, len(chainParams))
@@ -73,7 +79,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 			continue
 		}
 
-		if err = observertypes.ValidateChainParams(cp); err != nil {
+		if err := cp.Validate(); err != nil {
 			logger.Warn().Err(err).Int64("chain.id", cp.ChainId).Msg("Skipping invalid chain params")
 			continue
 		}
@@ -86,6 +92,7 @@ func UpdateAppContext(ctx context.Context, app *zctx.AppContext, zc Zetacore, lo
 		additionalChains,
 		freshParams,
 		crosschainFlags,
+		operationalFlags,
 	)
 }
 

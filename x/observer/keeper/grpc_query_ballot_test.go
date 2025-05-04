@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -151,7 +152,7 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
 				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot
@@ -176,7 +177,7 @@ func TestKeeper_BallotByIdentifier(t *testing.T) {
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
 				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot
@@ -223,8 +224,8 @@ func TestKeeper_Ballots(t *testing.T) {
 				VoterList:            []string{sample.AccAddress()},
 				Votes:                []types.VoteType{types.VoteType_SuccessObservation},
 				BallotStatus:         types.BallotStatus_BallotInProgress,
-				BallotCreationHeight: 1,
-				BallotThreshold:      sdk.MustNewDecFromStr("0.5"),
+				BallotCreationHeight: 1 + int64(i),
+				BallotThreshold:      sdkmath.LegacyMustNewDecFromStr("0.5"),
 			}
 			k.SetBallot(ctx, &ballot)
 			ballots[i] = ballot
@@ -233,5 +234,10 @@ func TestKeeper_Ballots(t *testing.T) {
 		res, err := k.Ballots(wctx, &types.QueryBallotsRequest{})
 		require.NoError(t, err)
 		require.ElementsMatch(t, ballots, res.Ballots)
+
+		firstBallotCreationHeight := res.Ballots[0].BallotCreationHeight
+		for _, ballot := range res.Ballots {
+			require.GreaterOrEqual(t, ballot.BallotCreationHeight, firstBallotCreationHeight)
+		}
 	})
 }

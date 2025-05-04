@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
-func AzetaPerZeta() sdk.Dec {
-	return sdk.NewDec(1e18)
+func AzetaPerZeta() sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDec(1e18)
 }
 
 func GetCoinType(coin string) (CoinType, error) {
@@ -26,15 +26,21 @@ func GetCoinType(coin string) (CoinType, error) {
 	return CoinType(coinInt), nil
 }
 
-func GetAzetaDecFromAmountInZeta(zetaAmount string) (sdk.Dec, error) {
-	zetaDec, err := sdk.NewDecFromStr(zetaAmount)
+func GetAzetaDecFromAmountInZeta(zetaAmount string) (sdkmath.LegacyDec, error) {
+	zetaDec, err := sdkmath.LegacyNewDecFromStr(zetaAmount)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdkmath.LegacyDec{}, err
 	}
-	zetaToAzetaConvertionFactor := sdk.NewDecFromInt(sdk.NewInt(1000000000000000000))
+	zetaToAzetaConvertionFactor := sdkmath.LegacyNewDecFromInt(sdkmath.NewInt(1000000000000000000))
 	return zetaDec.Mul(zetaToAzetaConvertionFactor), nil
 }
 
 func (c CoinType) SupportsRefund() bool {
+	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
+}
+
+// IsAsset returns true if the coin type represents transport of asset.
+// CoinType_Cmd and CoinType_NoAssetCall are not transport of asset.
+func (c CoinType) IsAsset() bool {
 	return c == CoinType_ERC20 || c == CoinType_Gas || c == CoinType_Zeta
 }

@@ -1,8 +1,8 @@
-package observer_test
+package observer
 
 import (
 	"context"
-	"math/big"
+	"errors"
 	"os"
 	"strconv"
 	"testing"
@@ -11,7 +11,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -20,12 +19,13 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
@@ -140,18 +140,20 @@ func Test_NewObserver(t *testing.T) {
 				defer tt.after()
 			}
 
-			// create observer
-			ob, err := observer.NewObserver(
+			baseObserver, err := base.NewObserver(
 				tt.chain,
-				tt.btcClient,
 				tt.chainParams,
 				tt.coreClient,
 				tt.tss,
+				100,
+				tt.ts,
 				database,
 				tt.logger,
-				tt.ts,
 			)
+			require.NoError(t, err)
 
+			// create observer
+			ob, err := New(tt.chain, baseObserver, tt.btcClient)
 			if tt.errorMessage != "" {
 				require.ErrorContains(t, err, tt.errorMessage)
 				require.Nil(t, ob)
@@ -167,7 +169,7 @@ func Test_NewObserver(t *testing.T) {
 func Test_BlockCache(t *testing.T) {
 	t.Run("should add and get block from cache", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// feed block hash, header and block to btc client
 		hash := sample.BtcHash()
@@ -191,7 +193,7 @@ func Test_BlockCache(t *testing.T) {
 	})
 	t.Run("should fail if stored type is not BlockNHeader", func(t *testing.T) {
 		// create observer
-		ob := newTestSuite(t, chains.BitcoinMainnet, "")
+		ob := newTestSuite(t, chains.BitcoinMainnet)
 
 		// add a string to cache
 		blockNumber := int64(100)
@@ -204,74 +206,44 @@ func Test_BlockCache(t *testing.T) {
 	})
 }
 
-func Test_SetPendingNonce(t *testing.T) {
-	// create observer
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
-
-	// ensure pending nonce is 0
-	require.Zero(t, ob.GetPendingNonce())
-
-	// set and get pending nonce
-	nonce := uint64(100)
-	ob.SetPendingNonce(nonce)
-	require.Equal(t, nonce, ob.GetPendingNonce())
-}
-
-func TestConfirmationThreshold(t *testing.T) {
-	chain := chains.BitcoinMainnet
-	ob := newTestSuite(t, chain, "")
-
-	t.Run("should return confirmations in chain param", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(t, int64(3), ob.ConfirmationsThreshold(big.NewInt(1000)))
-	})
-
-	t.Run("should return big value confirmations", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
-		require.Equal(
-			t,
-			int64(observer.BigValueConfirmationCount),
-			ob.ConfirmationsThreshold(big.NewInt(observer.BigValueSats)),
-		)
-	})
-
-	t.Run("big value confirmations is the upper cap", func(t *testing.T) {
-		ob.SetChainParams(observertypes.ChainParams{ConfirmationCount: observer.BigValueConfirmationCount + 1})
-		require.Equal(t, int64(observer.BigValueConfirmationCount), ob.ConfirmationsThreshold(big.NewInt(1000)))
-	})
-}
-
 func Test_SetLastStuckOutbound(t *testing.T) {
 	// create observer and example stuck tx
-	ob := newTestSuite(t, chains.BitcoinMainnet, "")
-	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
+	ob := newTestSuite(t, chains.BitcoinMainnet)
+	btcTx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
 
 	// STEP 1
-	// initial stuck outbound is nil
-	require.Nil(t, ob.GetLastStuckOutbound())
+	// initial stuck outbound does not exist
+	_, found := ob.LastStuckOutbound()
+	require.False(t, found)
 
 	// STEP 2
 	// set stuck outbound
-	stuckTx := observer.NewLastStuckOutbound(100, tx, 30*time.Minute)
-	ob.SetLastStuckOutbound(stuckTx)
+	stuckTx := NewLastStuckOutbound(100, btcTx, 30*time.Minute)
+	ob.setLastStuckOutbound(stuckTx)
 
 	// retrieve stuck outbound
-	require.Equal(t, stuckTx, ob.GetLastStuckOutbound())
+	tx, found := ob.LastStuckOutbound()
+	require.True(t, found)
+	require.Equal(t, stuckTx, tx)
 
 	// STEP 3
 	// update stuck outbound
-	stuckTxUpdate := observer.NewLastStuckOutbound(101, tx, 40*time.Minute)
-	ob.SetLastStuckOutbound(stuckTxUpdate)
+	stuckTxUpdate := NewLastStuckOutbound(101, btcTx, 40*time.Minute)
+	ob.setLastStuckOutbound(stuckTxUpdate)
 
 	// retrieve updated stuck outbound
-	require.Equal(t, stuckTxUpdate, ob.GetLastStuckOutbound())
+	tx, found = ob.LastStuckOutbound()
+	require.True(t, found)
+	require.Equal(t, stuckTxUpdate, tx)
 
 	// STEP 4
 	// clear stuck outbound
-	ob.SetLastStuckOutbound(nil)
+	ob.setLastStuckOutbound(nil)
 
 	// stuck outbound should be nil
-	require.Nil(t, ob.GetLastStuckOutbound())
+	tx, found = ob.LastStuckOutbound()
+	require.False(t, found)
+	require.Nil(t, tx)
 }
 
 func TestSubmittedTx(t *testing.T) {
@@ -293,7 +265,7 @@ func TestSubmittedTx(t *testing.T) {
 }
 
 type testSuite struct {
-	*observer.Observer
+	*Observer
 
 	ctx      context.Context
 	client   *mocks.BitcoinClient
@@ -301,16 +273,28 @@ type testSuite struct {
 	db       *db.DB
 }
 
-func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
-	ctx := context.Background()
+type testSuiteOpts struct {
+	dbPath string
+}
+
+type opt func(t *testSuiteOpts)
+
+// withDatabasePath is an option to set custom db path
+func withDatabasePath(dbPath string) opt {
+	return func(t *testSuiteOpts) { t.dbPath = dbPath }
+}
+
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
+	// create test suite with options
+	var testOpts testSuiteOpts
+	for _, opt := range opts {
+		opt(&testOpts)
+	}
 
 	require.True(t, chain.IsBitcoinChain())
-
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 
 	client := mocks.NewBitcoinClient(t)
-	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
-
 	zetacore := mocks.NewZetacoreClient(t)
 
 	var tss interfaces.TSSSigner
@@ -320,39 +304,55 @@ func newTestSuite(t *testing.T, chain chains.Chain, dbPath string) *testSuite {
 		tss = mocks.NewTSS(t).FakePubKey(testutils.TSSPubkeyAthens3)
 	}
 
-	// create test database
-	var err error
-	var database *db.DB
-	if dbPath == "" {
-		database, err = db.NewFromSqliteInMemory(true)
-	} else {
-		database, err = db.NewFromSqlite(dbPath, "test.db", true)
-		t.Cleanup(func() { os.RemoveAll(dbPath) })
-	}
-	require.NoError(t, err)
-
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
-	// create observer
-	ob, err := observer.NewObserver(
+	var database *db.DB
+	var err error
+	if testOpts.dbPath == "" {
+		database, err = db.NewFromSqliteInMemory(true)
+		require.NoError(t, err)
+	} else {
+		database, err = db.NewFromSqlite(testOpts.dbPath, "test.db", true)
+		require.NoError(t, err)
+		t.Cleanup(func() { os.RemoveAll(testOpts.dbPath) })
+	}
+
+	client.On("GetBlockCount", mock.Anything).Maybe().Return(int64(100), nil).Maybe()
+
+	baseObserver, err := base.NewObserver(
 		chain,
-		client,
 		chainParams,
 		zetacore,
 		tss,
-		database,
-		logger,
+		100,
 		&metrics.TelemetryServer{},
+		database,
+		baseLogger,
 	)
 	require.NoError(t, err)
 
-	return &testSuite{
-		ctx:      ctx,
-		Observer: ob,
+	ob, err := New(chain, baseObserver, client)
+	require.NoError(t, err)
+
+	ts := &testSuite{
+		ctx:      context.Background(),
 		client:   client,
 		zetacore: zetacore,
 		db:       database,
+		Observer: ob,
 	}
+
+	ts.zetacore.
+		On("GetCctxByNonce", mock.Anything, mock.Anything, mock.Anything).
+		Return(ts.mockGetCCTXByNonce).
+		Maybe()
+
+	return ts
+}
+
+func (ts *testSuite) mockGetCCTXByNonce(_ context.Context, chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	// implement custom logic here if needed (e.g. mock)
+	return nil, errors.New("not implemented")
 }

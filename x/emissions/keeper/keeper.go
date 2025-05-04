@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/emissions/types"
@@ -13,7 +13,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc              codec.BinaryCodec
+		cdc              codec.Codec
 		storeKey         storetypes.StoreKey
 		memKey           storetypes.StoreKey
 		feeCollectorName string
@@ -28,7 +28,7 @@ type (
 )
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
 	feeCollectorName string,
@@ -55,7 +55,7 @@ func NewKeeper(
 	}
 }
 
-func (k Keeper) GetCodec() codec.BinaryCodec {
+func (k Keeper) GetCodec() codec.Codec {
 	return k.cdc
 }
 

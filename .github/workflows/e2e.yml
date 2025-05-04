@@ -23,7 +23,7 @@ on:
         type: boolean
         default: false
 
-concurrency: 
+concurrency:
   group: e2e-${{ github.head_ref || github.sha }}
   cancel-in-progress: true
 
@@ -67,7 +67,7 @@ jobs:
           key: cache-${{ hashFiles('go.sum') }}
 
       - name: Inject go cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@61bd187f75f25d38e056fdd48506fac777c6ebec
         with:
           cache-map: |
             {
@@ -115,11 +115,15 @@ jobs:
       UPGRADE_LIGHT_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS }}
       UPGRADE_IMPORT_MAINNET_TESTS: ${{ steps.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS }}
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
+      ADMIN_UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS }}
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
+      PERFORMANCE_TESTS_1K: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
+      STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
       SOLANA_TESTS: ${{ steps.matrix-conditionals.outputs.SOLANA_TESTS }}
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
+      SUI_TESTS: ${{ steps.matrix-conditionals.outputs.SUI_TESTS }}
       LEGACY_TESTS: ${{ steps.matrix-conditionals.outputs.LEGACY_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
@@ -147,17 +151,22 @@ jobs:
               core.setOutput('UPGRADE_LIGHT_TESTS', labels.includes('UPGRADE_LIGHT_TESTS'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', labels.includes('UPGRADE_IMPORT_MAINNET_TESTS'));
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
+              core.setOutput('ADMIN_UPGRADE_TESTS', labels.includes('ADMIN_UPGRADE_TESTS'));
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
+              core.setOutput('PERFORMANCE_TESTS_1K', labels.includes('PERFORMANCE_TESTS_1K'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
+              core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
               core.setOutput('SOLANA_TESTS', labels.includes('SOLANA_TESTS'));
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
+              core.setOutput('SUI_TESTS', labels.includes('SUI_TESTS'));
               core.setOutput('LEGACY_TESTS', labels.includes('LEGACY_TESTS'));
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
               core.setOutput('DEFAULT_TESTS', true);
-              core.setOutput('UPGRADE_LIGHT_TESTS', true);
+              core.setOutput('UPGRADE_TESTS', true);
+              core.setOutput('ADMIN_UPGRADE_TESTS', true);
 
               // conditional tests based on PR labels
               const commit_message = context.payload.merge_group.head_commit.message;
@@ -177,10 +186,12 @@ jobs:
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
               core.setOutput('ADMIN_TESTS', true);
+              core.setOutput('ADMIN_UPGRADE_TESTS', true);
               core.setOutput('PERFORMANCE_TESTS', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
+              core.setOutput('SUI_TESTS', true);
               core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'schedule') {
               core.setOutput('DEFAULT_TESTS', true);
@@ -188,11 +199,14 @@ jobs:
               core.setOutput('UPGRADE_LIGHT_TESTS', true);
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
               core.setOutput('ADMIN_TESTS', true);
-              core.setOutput('PERFORMANCE_TESTS', true);
+              core.setOutput('ADMIN_UPGRADE_TESTS', true);
+              core.setOutput('PERFORMANCE_TESTS_1K', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
+              core.setOutput('STAKING_TESTS', true);
               core.setOutput('SOLANA_TESTS', true);
               core.setOutput('TON_TESTS', true);
+              core.setOutput('SUI_TESTS', true);
               core.setOutput('LEGACY_TESTS', true);
             } else if (context.eventName === 'workflow_dispatch') {
               const makeTargets = context.payload.inputs['make-targets'].split(',');
@@ -201,11 +215,15 @@ jobs:
               core.setOutput('UPGRADE_LIGHT_TESTS', makeTargets.includes('upgrade-test-light'));
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', makeTargets.includes('upgrade-import-mainnet-test'));
               core.setOutput('ADMIN_TESTS', makeTargets.includes('admin-test'));
+              core.setOutput('ADMIN_UPGRADE_TESTS', makeTargets.includes('admin-upgrade-test'));
               core.setOutput('PERFORMANCE_TESTS', makeTargets.includes('performance-test'));
+              core.setOutput('PERFORMANCE_TESTS_1K', makeTargets.includes('performance-test-1k'));
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
+              core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
               core.setOutput('SOLANA_TESTS', makeTargets.includes('solana-test'));
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
+              core.setOutput('SUI_TESTS', makeTargets.includes('sui-test'));
               core.setOutput('LEGACY_TESTS', makeTargets.includes('legacy-test'));
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
@@ -220,43 +238,57 @@ jobs:
       matrix:
         include:
           - make-target: "start-e2e-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.DEFAULT_TESTS == 'true' }}
           - make-target: "start-e2e-consensus-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.CONSENSUS_TESTS == 'true' }}
           - make-target: "start-upgrade-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_TESTS == 'true' }}
           - make-target: "start-upgrade-test-light"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_LIGHT_TESTS == 'true' }}
           - make-target: "start-upgrade-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.UPGRADE_IMPORT_MAINNET_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-admin-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_TESTS == 'true' }}
+          - make-target: "start-upgrade-test-admin"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS == 'true' }}
+            timeout-minutes: 40
           - make-target: "start-e2e-performance-test"
-            runs-on: buildjet-4vcpu-ubuntu-2204
+            runs-on: buildjet-8vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
+          - make-target: "start-e2e-performance-test-1k"
+            runs-on: buildjet-8vcpu-ubuntu-2204
+            run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K == 'true' }}
+            timeout-minutes: 60
           - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-tss-migration-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TSS_MIGRATION_TESTS == 'true' }}
             timeout-minutes: 40
+          - make-target: "start-staking-test"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.STAKING_TESTS == 'true' }}
           - make-target: "start-solana-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.SOLANA_TESTS == 'true' }}
           - make-target: "start-ton-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.TON_TESTS == 'true' }}
+          - make-target: "start-sui-test"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.SUI_TESTS == 'true' }}
           - make-target: "start-legacy-test"
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
@@ -319,6 +351,25 @@ jobs:
               body: JSON.stringify({text: msg}),
             });
 
+      - name: Add MERGE_FAILED label if merge queue failed
+        uses: actions/github-script@v7
+        if: ${{ github.event_name == 'merge_group' && needs.e2e.result == 'failure' }}
+        with:
+          script: |
+            const commit_message = context.payload.merge_group.head_commit.message;
+            const pr_match = commit_message.split('\n')[0].match(/\(#(\d+)\)$/);
+            if (!pr_match) {
+              console.error("unable to extract PR number from mergequeue commit message");
+              return;
+            }
+            const pr_number = pr_match[1];
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_number,
+              labels: ['MERGE_FAILED']
+            });
 
       - run: |
           result="${{ needs.build-zetanode.result }}"

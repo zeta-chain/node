@@ -43,6 +43,7 @@ message MsgDeployFungibleCoinZRC20 {
 	string symbol = 6;
 	pkg.coin.CoinType coin_type = 7;
 	int64 gas_limit = 8;
+	string liquidity_cap = 9;
 }
 ```
 
@@ -148,6 +149,19 @@ UpdateGatewayContract updates the zevm gateway contract used by the ZetaChain pr
 message MsgUpdateGatewayContract {
 	string creator = 1;
 	string new_gateway_contract_address = 2;
+}
+```
+
+## MsgUpdateZRC20Name
+
+UpdateZRC20Name updates the name and/or the symbol of a zrc20 token
+
+```proto
+message MsgUpdateZRC20Name {
+	string creator = 1;
+	string zrc20_address = 2;
+	string name = 3;
+	string symbol = 4;
 }
 ```
 

@@ -3,7 +3,7 @@ package observer
 
 import (
 	"context"
-	"math/big"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -16,16 +16,13 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 type RPC interface {
-	Healthcheck(ctx context.Context, tssAddress btcutil.Address) (time.Time, error)
+	Healthcheck(ctx context.Context) (time.Time, error)
 
 	GetBlockCount(ctx context.Context) (int64, error)
 	GetBlockHash(ctx context.Context, blockHeight int64) (*hash.Hash, error)
@@ -41,7 +38,7 @@ type RPC interface {
 	) (btcjson.TxRawResult, error)
 	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
 
 	EstimateSmartFee(
@@ -62,9 +59,6 @@ type RPC interface {
 }
 
 const (
-	// btcBlocksPerDay represents Bitcoin blocks per days for LRU block cache size
-	btcBlocksPerDay = 144
-
 	// RegnetStartBlock is the hardcoded start block for regnet
 	RegnetStartBlock = 100
 
@@ -93,7 +87,7 @@ type BTCBlockNHeader struct {
 // Observer is the Bitcoin chain observer
 type Observer struct {
 	// base.Observer implements the base chain observer
-	base.Observer
+	*base.Observer
 
 	// netParams contains the Bitcoin network parameters
 	netParams *chaincfg.Params
@@ -128,32 +122,8 @@ type Observer struct {
 	logger Logger
 }
 
-// NewObserver returns a new Bitcoin chain observer
-func NewObserver(
-	chain chains.Chain,
-	rpc RPC,
-	chainParams observertypes.ChainParams,
-	zetacoreClient interfaces.ZetacoreClient,
-	tss interfaces.TSSSigner,
-	database *db.DB,
-	logger base.Logger,
-	ts *metrics.TelemetryServer,
-) (*Observer, error) {
-	// create base observer
-	baseObserver, err := base.NewObserver(
-		chain,
-		chainParams,
-		zetacoreClient,
-		tss,
-		btcBlocksPerDay,
-		ts,
-		database,
-		logger,
-	)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create base observer")
-	}
-
+// New BTC Observer constructor.
+func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, error) {
 	// get the bitcoin network params
 	netParams, err := chains.BitcoinNetParamsFromChainID(chain.ChainId)
 	if err != nil {
@@ -162,7 +132,7 @@ func NewObserver(
 
 	// create bitcoin observer
 	ob := &Observer{
-		Observer:          *baseObserver,
+		Observer:          baseObserver,
 		netParams:         netParams,
 		rpc:               rpc,
 		utxos:             []btcjson.ListUnspentResult{},
@@ -186,7 +156,7 @@ func NewObserver(
 	}
 
 	// load broadcasted transactions
-	if err = ob.LoadBroadcastedTxMap(); err != nil {
+	if err = ob.loadBroadcastedTxMap(); err != nil {
 		return nil, errors.Wrap(err, "unable to load broadcasted tx map")
 	}
 
@@ -201,24 +171,10 @@ func (ob *Observer) GetPendingNonce() uint64 {
 	return ob.pendingNonce
 }
 
-// SetPendingNonce sets the artificial pending nonce
-func (ob *Observer) SetPendingNonce(nonce uint64) {
+func (ob *Observer) setPendingNonce(nonce uint64) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 	ob.pendingNonce = nonce
-}
-
-// ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
-func (ob *Observer) ConfirmationsThreshold(amount *big.Int) int64 {
-	if amount.Cmp(big.NewInt(BigValueSats)) >= 0 {
-		return BigValueConfirmationCount
-	}
-	if BigValueConfirmationCount < ob.ChainParams().ConfirmationCount {
-		return BigValueConfirmationCount
-	}
-
-	// #nosec G115 always in range
-	return int64(ob.ChainParams().ConfirmationCount)
 }
 
 // GetBlockByNumberCached gets cached block (and header) by block number
@@ -254,15 +210,16 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 	return blockNheader, nil
 }
 
-// GetLastStuckOutbound returns the last stuck outbound tx information
-func (ob *Observer) GetLastStuckOutbound() *LastStuckOutbound {
+// LastStuckOutbound returns the last stuck outbound tx information
+func (ob *Observer) LastStuckOutbound() (tx *LastStuckOutbound, found bool) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
-	return ob.lastStuckTx
+
+	return ob.lastStuckTx, ob.lastStuckTx != nil
 }
 
-// SetLastStuckOutbound sets the information of last stuck outbound
-func (ob *Observer) SetLastStuckOutbound(stuckTx *LastStuckOutbound) {
+// setLastStuckOutbound sets the information of last stuck outbound
+func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
 
@@ -289,6 +246,7 @@ func (ob *Observer) SetLastStuckOutbound(stuckTx *LastStuckOutbound) {
 func (ob *Observer) IsTSSTransaction(txid string) bool {
 	ob.Mu().Lock()
 	defer ob.Mu().Unlock()
+
 	_, found := ob.tssOutboundHashes[txid]
 	return found
 }
@@ -303,6 +261,50 @@ func (ob *Observer) GetBroadcastedTx(nonce uint64) (string, bool) {
 	return txHash, found
 }
 
+// CheckRPCStatus checks the RPC status of the Bitcoin chain
+func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
+	if !ob.isNodeEnabled() {
+		return nil
+	}
+
+	blockTime, err := ob.rpc.Healthcheck(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to check rpc health")
+	}
+
+	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
+
+	return nil
+}
+
 func (ob *Observer) isNodeEnabled() bool {
 	return ob.nodeEnabled.Load()
+}
+
+// updateLastBlock is a helper function to update the last block number.
+// Note: keep last block up-to-date helps to avoid inaccurate confirmation.
+func (ob *Observer) updateLastBlock(ctx context.Context) error {
+	blockNumber, err := ob.rpc.GetBlockCount(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "error getting block number")
+	}
+	if blockNumber < 0 {
+		return fmt.Errorf("block number is negative: %d", blockNumber)
+	}
+
+	// 0 will be returned if the node is not synced
+	if blockNumber == 0 {
+		ob.nodeEnabled.Store(false)
+		ob.Logger().Chain.Debug().Err(err).Msg("Bitcoin node is not enabled")
+		return nil
+	}
+	ob.nodeEnabled.Store(true)
+
+	// #nosec G115 checked positive
+	if uint64(blockNumber) < ob.LastBlock() {
+		return fmt.Errorf("block number should not decrease: current %d last %d", blockNumber, ob.LastBlock())
+	}
+	ob.WithLastBlock(uint64(blockNumber))
+
+	return nil
 }

@@ -4,16 +4,17 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
-	observerTypes "github.com/zeta-chain/node/x/observer/types"
 )
+
+var TypeMsgDeploySystemContracts = sdk.MsgTypeURL(&types.MsgDeploySystemContracts{})
 
 // Simulation operation weights constants
 // Operation weights are used by the simulation program to simulate the weight of different operations.
@@ -36,10 +37,10 @@ const (
 // DeployedSystemContracts Use a flag to ensure that the system contracts are deployed only once
 // https://github.com/zeta-chain/node/issues/3102
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper) simulation.WeightedOperations {
+	appParams simtypes.AppParams, k keeper.Keeper) simulation.WeightedOperations {
 	var weightMsgDeploySystemContracts int
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeploySystemContracts, &weightMsgDeploySystemContracts, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeploySystemContracts, &weightMsgDeploySystemContracts, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeploySystemContracts = DefaultWeightMsgDeploySystemContracts
 		})
@@ -56,45 +57,20 @@ func WeightedOperations(
 func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policies, found := k.GetAuthorityKeeper().GetPolicies(ctx)
-		if !found {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgDeploySystemContracts,
-				"policies object not found",
-			), nil, nil
-		}
-		if len(policies.Items) == 0 {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgDeploySystemContracts,
-				"no policies found",
-			), nil, nil
-		}
-		admin := policies.Items[0].Address
-
-		address, err := observerTypes.GetOperatorAddressFromAccAddress(admin)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgDeploySystemContracts,
-				"unable to get operator address",
-			), nil, err
-		}
-		simAccount, found := simtypes.FindAccount(accounts, address)
-		if !found {
-			return simtypes.NoOpMsg(
-				types.ModuleName,
-				types.TypeMsgDeploySystemContracts,
-				"sim account for admin address not found",
-			), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeploySystemContracts, err.Error()), nil, nil
 		}
 
-		msg := types.MsgDeploySystemContracts{Creator: admin}
+		msg := types.MsgDeploySystemContracts{Creator: policyAccount.Address.String()}
 
 		err = msg.ValidateBasic()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "failed to validate basic msg"), nil, err
+			return simtypes.NoOpMsg(
+				types.ModuleName,
+				TypeMsgDeploySystemContracts,
+				"failed to validate basic msg",
+			), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
@@ -103,14 +79,13 @@ func SimulateMsgDeploySystemContracts(k keeper.Keeper) simtypes.Operation {
 			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           &msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
-			SimAccount:    simAccount,
+			SimAccount:    policyAccount,
 			AccountKeeper: k.GetAuthKeeper(),
 			Bankkeeper:    k.GetBankKeeper(),
 			ModuleName:    types.ModuleName,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

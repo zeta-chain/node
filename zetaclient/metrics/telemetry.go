@@ -145,11 +145,18 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 }
 
 // SetNumberOfUTXOs sets number of UTXOs in telemetry and metrics
-func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
+func (t *TelemetryServer) SetNumberOfUTXOs(chain chains.Chain, numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
-	NumberOfUTXO.Set(float64(numberOfUTXOs))
+	NumberOfUTXO.WithLabelValues(chain.Name).Set(float64(numberOfUTXOs))
 	t.mu.Unlock()
+}
+
+// GetNumberOfUTXOs returns number of UTXOs
+func (t *TelemetryServer) GetNumberOfUTXOs() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.status.BTCNumberOfUTXOs
 }
 
 // AddFeeEntry adds fee entry

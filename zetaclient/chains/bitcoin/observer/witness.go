@@ -11,7 +11,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
+	"github.com/zeta-chain/node/zetaclient/logs"
+)
+
+const (
+	// noMemoFound is a placeholder to indicates no memo is found in Bitcoin inbound
+	noMemoFound = "no memo found"
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
@@ -27,17 +34,22 @@ func GetBtcEventWithWitness(
 	netParams *chaincfg.Params,
 	feeCalculator common.DepositorFeeCalculator,
 ) (*BTCInboundEvent, error) {
+	lf := map[string]any{
+		logs.FieldMethod: "GetBtcEventWithWitness",
+		logs.FieldTx:     tx.Txid,
+	}
+
 	if len(tx.Vout) < 1 {
-		logger.Debug().Msgf("no output %s", tx.Txid)
+		logger.Debug().Fields(lf).Msg("no output")
 		return nil, nil
 	}
 	if len(tx.Vin) == 0 {
-		logger.Debug().Msgf("no input found for inbound: %s", tx.Txid)
+		logger.Debug().Fields(lf).Msg("no input found for inbound")
 		return nil, nil
 	}
 
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
-		logger.Debug().Msgf("irrelevant recipient %s for tx %s, err: %s", tx.Vout[0].ScriptPubKey.Hex, tx.Txid, err)
+		logger.Debug().Err(err).Fields(lf).Msgf("irrelevant recipient: %s", tx.Vout[0].ScriptPubKey.Hex)
 		return nil, nil
 	}
 
@@ -47,26 +59,29 @@ func GetBtcEventWithWitness(
 		return nil, errors.Wrapf(err, "error calculating depositor fee for inbound %s", tx.Txid)
 	}
 
-	isAmountValid, amount := isValidAmount(tx.Vout[0].Value, depositorFee)
-	if !isAmountValid {
-		logger.Info().
-			Msgf("GetBtcEventWithWitness: btc deposit amount %v in txid %s is less than depositor fee %v", tx.Vout[0].Value, tx.Txid, depositorFee)
-		return nil, nil
+	// deduct depositor fee
+	// to allow developers to track failed deposit caused by insufficient depositor fee,
+	// the error message will be forwarded to zetacore to register a failed CCTX
+	status := types.InboundStatus_SUCCESS
+	amount, err := DeductDepositorFee(tx.Vout[0].Value, depositorFee)
+	if err != nil {
+		amount = 0
+		status = types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE
+		logger.Error().Err(err).Fields(lf).Msgf("unable to deduct depositor fee")
 	}
 
 	// Try to extract the memo from the BTC txn. First try to extract from OP_RETURN
-	// if not found then try to extract from inscription. Return nil if the above two
-	// cannot find the memo.
+	// if not found then try to extract from inscription. If no memo is provided,
+	// set the 'noMemoFound' placeholder to indicate the inbound requires a revert.
 	var memo []byte
 	if candidate := tryExtractOpRet(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().
-			Msgf("GetBtcEventWithWitness: found OP_RETURN memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Debug().Fields(lf).Msgf("found OP_RETURN memo: %s", hex.EncodeToString(memo))
 	} else if candidate = tryExtractInscription(tx, logger); candidate != nil {
 		memo = candidate
-		logger.Debug().Msgf("GetBtcEventWithWitness: found inscription memo %s in tx %s", hex.EncodeToString(memo), tx.Txid)
+		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
 	} else {
-		return nil, nil
+		memo = []byte(noMemoFound)
 	}
 
 	// event found, get sender address
@@ -89,6 +104,7 @@ func GetBtcEventWithWitness(
 		MemoBytes:    memo,
 		BlockNumber:  blockNumber,
 		TxHash:       tx.Txid,
+		Status:       status,
 	}, nil
 }
 
@@ -173,14 +189,13 @@ func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte
 	return nil
 }
 
-func isValidAmount(
-	incoming float64,
-	minimal float64,
-) (bool, float64) {
-	if incoming < minimal {
-		return false, 0
+// DeductDepositorFee returns the inbound amount after deducting the depositor fee.
+// returns an error if the deposited amount is lower than the depositor fee.
+func DeductDepositorFee(deposited, depositorFee float64) (float64, error) {
+	if deposited < depositorFee {
+		return 0, fmt.Errorf("deposited amount %v is less than depositor fee %v", deposited, depositorFee)
 	}
-	return true, incoming - minimal
+	return deposited - depositorFee, nil
 }
 
 func isValidRecipient(

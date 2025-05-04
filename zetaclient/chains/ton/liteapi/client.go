@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
-	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 )
 
 // Client extends liteapi.Client with some high-level tools
@@ -39,15 +40,21 @@ func New(client *liteapi.Client) *Client {
 
 // NewFromSource creates a new client from a URL or a file path.
 func NewFromSource(ctx context.Context, urlOrPath string) (*Client, error) {
-	cfg, err := zetaton.ConfigFromSource(ctx, urlOrPath)
+	cfg, err := config.FromSource(ctx, urlOrPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get config")
 	}
 
+	// most likely, cfg would contain a single lite server (or a small group)
+	// thus we want several connection per lite-server to speed up the requests
+	const workers = 8
+
 	client, err := liteapi.NewClient(
 		liteapi.WithConfigurationFile(*cfg),
-		liteapi.WithDetectArchiveNodes(),
+		liteapi.WithMaxConnectionsNumber(len(cfg.LiteServers)),
+		liteapi.WithWorkersPerConnection(workers),
 	)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create client")
 	}
@@ -208,6 +215,25 @@ func (c *Client) GetTransaction(
 	}
 
 	return txs[0], nil
+}
+
+// HealthCheck returns the last block time of the TON chain.
+func (c *Client) HealthCheck(ctx context.Context) (time.Time, error) {
+	mc, err := c.GetMasterchainInfo(ctx)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "failed to get masterchain info")
+	}
+
+	blockID := mc.Last.ToBlockIdExt()
+	block, err := c.GetBlockHeader(ctx, blockID, 0)
+	switch {
+	case err != nil:
+		return time.Time{}, errors.Wrap(err, "failed to get masterchain block header")
+	case block.NotMaster:
+		return time.Time{}, errors.Errorf("block %q is not a master block", blockID.BlockID.String())
+	}
+
+	return time.Unix(int64(block.GenUtime), 0).UTC(), nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction

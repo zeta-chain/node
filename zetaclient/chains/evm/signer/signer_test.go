@@ -9,22 +9,19 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
-	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
+	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/evm/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -37,75 +34,49 @@ var (
 
 type testSuite struct {
 	*Signer
-	tss    *mocks.TSS
-	client *mocks.EVMRPCClient
+	tss       *mocks.TSS
+	evmServer *testrpc.EVMServer
+	client    *client.Client
 }
 
 func newTestSuite(t *testing.T) *testSuite {
 	ctx := context.Background()
-	chain := chains.BscMainnet
-	tss := mocks.NewTSS(t)
-	logger := zerolog.New(zerolog.NewTestWriter(t))
 
-	s, err := NewSigner(
-		ctx,
-		chain,
-		tss,
-		base.Logger{Std: logger, Compliance: logger},
-		testutils.MockEVMRPCEndpoint,
+	chain := chains.BscMainnet
+
+	evmServer := testrpc.NewEVMServer(t)
+
+	evmServer.SetChainID(int(chain.ChainId))
+	evmServer.MockSendTransaction()
+
+	evmClient, err := client.NewFromEndpoint(ctx, evmServer.Endpoint)
+	require.NoError(t, err)
+
+	tss := mocks.NewTSS(t)
+
+	logger := testlog.New(t)
+
+	baseSigner := base.NewSigner(chain, tss, base.Logger{Std: logger.Logger, Compliance: logger.Logger})
+
+	s, err := New(
+		baseSigner,
+		evmClient,
 		ConnectorAddress,
 		ERC20CustodyAddress,
 		sample.EthAddress(),
 	)
 	require.NoError(t, err)
 
-	client, ok := s.client.(*mocks.EVMRPCClient)
-	require.True(t, ok)
-
 	return &testSuite{
-		Signer: s,
-		tss:    tss,
-		client: client,
+		Signer:    s,
+		tss:       tss,
+		evmServer: evmServer,
+		client:    evmClient,
 	}
 }
 
-// getNewEvmChainObserver creates a new EVM chain observer for testing
-func getNewEvmChainObserver(t *testing.T, tss interfaces.TSSSigner) (*observer.Observer, error) {
-	ctx := context.Background()
-
-	// use default mock TSS if not provided
-	if tss == nil {
-		tss = mocks.NewTSS(t)
-	}
-
-	// prepare mock arguments to create observer
-	evmClient := mocks.NewEVMRPCClient(t)
-	evmClient.On("BlockNumber", mock.Anything).Return(uint64(1000), nil)
-	evmJSONRPCClient := mocks.NewMockJSONRPCClient()
-	params := mocks.MockChainParams(chains.BscMainnet.ChainId, 10)
-	logger := base.Logger{}
-	ts := &metrics.TelemetryServer{}
-
-	database, err := db.NewFromSqliteInMemory(true)
-	require.NoError(t, err)
-
-	return observer.NewObserver(
-		ctx,
-		chains.BscMainnet,
-		evmClient,
-		evmJSONRPCClient,
-		params,
-		mocks.NewZetacoreClient(t),
-		tss,
-		database,
-		logger,
-		ts,
-	)
-}
-
-func getNewOutboundProcessor() *outboundprocessor.Processor {
-	logger := zerolog.Logger{}
-	return outboundprocessor.NewProcessor(logger)
+func (ts *testSuite) EvmSigner() ethtypes.Signer {
+	return ts.client.Signer
 }
 
 func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
@@ -171,12 +142,6 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 	// Setup evm signer
 	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
-	processor := getNewOutboundProcessor()
-	mockObserver, err := getNewEvmChainObserver(t, nil)
-	require.NoError(t, err)
-
-	// Attach mock EVM client to the signer
-	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	// Test with mock client that has keys
 	client := mocks.NewZetacoreClient(t).
@@ -184,7 +149,7 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
 
-	evmSigner.TryProcessOutbound(ctx, cctx, processor, "123", mockObserver, client, 123)
+	evmSigner.TryProcessOutbound(ctx, cctx, client, 123)
 
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
@@ -202,9 +167,6 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
-
-	// Attach mock EVM evmClient to the signer
-	evmSigner.client.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
@@ -227,17 +189,6 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	})
 }
 
-func TestSigner_getEVMRPC(t *testing.T) {
-	ctx := context.Background()
-
-	t.Run("getEVMRPC error dialing", func(t *testing.T) {
-		client, signer, err := getEVMRPC(ctx, "invalidEndpoint")
-		require.Nil(t, client)
-		require.Nil(t, signer)
-		require.Error(t, err)
-	})
-}
-
 func TestSigner_SignerErrorMsg(t *testing.T) {
 	cctx := getCCTX(t)
 
@@ -257,6 +208,7 @@ func makeCtx(t *testing.T) context.Context {
 			chains.BscMainnet.ChainId: &bscParams,
 		},
 		observertypes.CrosschainFlags{},
+		observertypes.OperationalFlags{},
 	)
 	require.NoError(t, err, "unable to update app context")
 

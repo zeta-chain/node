@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -13,24 +14,18 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -43,8 +38,6 @@ const (
 )
 
 var (
-	_ interfaces.ChainSigner = (*Signer)(nil)
-
 	// zeroValue is for outbounds that carry no ETH (gas token) value
 	zeroValue = big.NewInt(0)
 )
@@ -54,10 +47,7 @@ type Signer struct {
 	*base.Signer
 
 	// client is the EVM RPC client to interact with the EVM chain
-	client interfaces.EVMRPCClient
-
-	// ethSigner encapsulates EVM transaction signature handling
-	ethSigner ethtypes.Signer
+	client *client.Client
 
 	// zetaConnectorAddress is the address of the ZetaConnector contract
 	zetaConnectorAddress ethcommon.Address
@@ -69,30 +59,17 @@ type Signer struct {
 	gatewayAddress ethcommon.Address
 }
 
-// NewSigner creates a new EVM signer
-func NewSigner(
-	ctx context.Context,
-	chain chains.Chain,
-	tss interfaces.TSSSigner,
-	logger base.Logger,
-	endpoint string,
+// New Signer constructor
+func New(
+	baseSigner *base.Signer,
+	client *client.Client,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	gatewayAddress ethcommon.Address,
 ) (*Signer, error) {
-	// create base signer
-	baseSigner := base.NewSigner(chain, tss, logger)
-
-	// create EVM client
-	client, ethSigner, err := getEVMRPC(ctx, endpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create EVM client")
-	}
-
 	return &Signer{
 		Signer:               baseSigner,
 		client:               client,
-		ethSigner:            ethSigner,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
 		gatewayAddress:       gatewayAddress,
@@ -188,7 +165,7 @@ func (signer *Signer) Sign(
 		return nil, nil, nil, err
 	}
 
-	hashBytes := signer.ethSigner.Hash(tx).Bytes()
+	hashBytes := signer.client.Hash(tx).Bytes()
 
 	sig, err := signer.TSS().Sign(ctx, hashBytes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
@@ -203,7 +180,7 @@ func (signer *Signer) Sign(
 
 	addr := crypto.PubkeyToAddress(*pubk)
 	signer.Logger().Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+	signedTX, err := tx.WithSignature(signer.client.Signer, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -261,17 +238,23 @@ func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) e
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *crosschaintypes.CrossChainTx,
-	outboundProc *outboundprocessor.Processor,
-	outboundID string,
-	_ interfaces.ChainObserver,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
-		outboundProc.EndTryProcess(outboundID)
+		signer.MarkOutbound(outboundID, false)
 		if r := recover(); r != nil {
-			signer.Logger().Std.Error().Msgf("TryProcessOutbound: %s, caught panic error: %v", cctx.Index, r)
+			signer.Logger().
+				Std.Error().
+				Str(logs.FieldMethod, "TryProcessOutbound").
+				Str(logs.FieldCctx, cctx.Index).
+				Interface("panic", r).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("caught panic error")
 		}
 	}()
 
@@ -333,12 +316,7 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	logger.Info().Msgf(
-		"Key-sign success: %d => %d, nonce %d",
-		cctx.InboundParams.SenderChainId,
-		toChain.ID(),
-		cctx.GetCurrentOutboundParam().TssNonce,
-	)
+	logger.Info().Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).Msg("key-sign success")
 
 	// Broadcast Signed Tx
 	signer.BroadcastOutbound(ctx, tx, cctx, logger, myID, zetacoreClient, txData)
@@ -355,7 +333,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	zetacoreClient interfaces.ZetacoreClient,
 	toChain zctx.Chain,
 ) (*ethtypes.Transaction, error) {
-	if compliance.IsCctxRestricted(cctx) {
+	if compliance.IsCCTXRestricted(cctx) {
 		// restricted cctx
 		compliance.PrintComplianceLog(
 			logger,
@@ -389,7 +367,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)
-	} else if IsSenderZetaChain(cctx, zetacoreClient) {
+	} else if IsPendingOutboundFromZetaChain(cctx, zetacoreClient) {
 		switch cctx.InboundParams.CoinType {
 		case coin.CoinType_Gas:
 			logger.Info().Msgf(
@@ -539,15 +517,9 @@ func (signer *Signer) BroadcastOutbound(
 	}
 }
 
-// EvmSigner returns the EVM signer object for the signer
-func (signer *Signer) EvmSigner() ethtypes.Signer {
-	// TODO(revamp): rename field into evmSigner
-	return signer.ethSigner
-}
-
-// IsSenderZetaChain checks if the sender chain is ZetaChain
+// IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
 // TODO(revamp): move to another package more general for cctx functions
-func IsSenderZetaChain(
+func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
@@ -562,33 +534,4 @@ func ErrorMsg(cctx *crosschaintypes.CrossChainTx) string {
 		cctx.GetCurrentOutboundParam().TssNonce,
 		cctx.GetCurrentOutboundParam().ReceiverChainId,
 	)
-}
-
-// getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(ctx context.Context, endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
-	if endpoint == testutils.MockEVMRPCEndpoint {
-		chainID := big.NewInt(chains.BscMainnet.ChainId)
-		ethSigner := ethtypes.NewLondonSigner(chainID)
-		client := &mocks.EVMRPCClient{}
-		return client, ethSigner, nil
-	}
-	httpClient, err := metrics.GetInstrumentedHTTPClient(endpoint)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get instrumented HTTP client")
-	}
-
-	rpcClient, err := ethrpc.DialHTTPWithClient(endpoint, httpClient)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "unable to dial EVM client (endpoint %q)", endpoint)
-	}
-	client := ethclient.NewClient(rpcClient)
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get chain ID")
-	}
-
-	ethSigner := ethtypes.LatestSignerForChainID(chainID)
-
-	return client, ethSigner, nil
 }

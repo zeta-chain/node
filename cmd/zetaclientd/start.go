@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/graceful"
@@ -58,6 +59,15 @@ func Start(_ *cobra.Command, _ []string) error {
 	appContext := zctx.New(cfg, passes.relayerKeys(), logger.Std)
 	ctx := zctx.WithAppContext(context.Background(), appContext)
 
+	err = config.LoadRestrictedAddressesConfig(cfg, globalOpts.ZetacoreHome)
+	if err != nil {
+		logger.Std.Err(err).Msg("loading restricted addresses config")
+	} else {
+		bg.Work(ctx, func(ctx context.Context) error {
+			return config.WatchRestrictedAddressesConfig(ctx, cfg, globalOpts.ZetacoreHome, logger.Std)
+		}, bg.WithName("watch_restricted_addresses_config"), bg.WithLogger(logger.Std))
+	}
+
 	telemetry, err := startTelemetry(ctx, cfg)
 	if err != nil {
 		return errors.Wrap(err, "unable to start telemetry")
@@ -77,7 +87,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to update app context")
 	}
 
-	log.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
+	log.Debug().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	granteePubKeyBech32, err := resolveObserverPubKeyBech32(cfg, passes.hotkey)
 	if err != nil {
@@ -130,58 +140,24 @@ func Start(_ *cobra.Command, _ []string) error {
 		graceful.ShutdownNow()
 	})
 
-	// CreateSignerMap: This creates a map of all signers for each chain.
-	// Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := orchestrator.CreateSignerMap(ctx, tss, logger)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to create signer map")
-		return err
-	}
-
-	// Creates a map of all chain observers for each chain.
-	// Each chain observer is responsible for observing events on the chain and processing them.
-	observerMap, err := orchestrator.CreateChainObserverMap(ctx, zetacoreClient, tss, dbPath, logger, telemetry)
-	if err != nil {
-		return errors.Wrap(err, "unable to create chain observer map")
-	}
-
 	// Orchestrator wraps the zetacore client and adds the observers and signer maps to it.
 	// This is the high level object used for CCTX interactions
 	// It also handles background configuration updates from zetacore
-	maestro, err := orchestrator.New(
-		ctx,
-		zetacoreClient,
-		signerMap,
-		observerMap,
-		tss,
-		dbPath,
-		logger,
-		telemetry,
-	)
-	if err != nil {
-		return errors.Wrap(err, "unable to create orchestrator")
-	}
-
-	taskScheduler := scheduler.New(logger.Std)
-	maestroV2Deps := &orchestrator.Dependencies{
+	taskScheduler := scheduler.New(logger.Std, 0)
+	maestroDeps := &orchestrator.Dependencies{
 		Zetacore:  zetacoreClient,
 		TSS:       tss,
 		DBPath:    dbPath,
 		Telemetry: telemetry,
 	}
 
-	maestroV2, err := orchestrator.NewV2(taskScheduler, maestroV2Deps, logger)
+	maestro, err := orchestrator.NewV2(taskScheduler, maestroDeps, logger)
 	if err != nil {
 		return errors.Wrap(err, "unable to create orchestrator V2")
 	}
 
 	// Start orchestrator with all observers and signers
 	graceful.AddService(ctx, maestro)
-
-	// Start orchestrator V2
-	// V2 will co-exist with V1 until all types of chains will be refactored (BTC, EVM, SOL, TON).
-	// (currently it's only BTC)
-	graceful.AddService(ctx, maestroV2)
 
 	// Block current routine until a shutdown signal is received
 	graceful.WaitForShutdown()

@@ -37,7 +37,7 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	}
 
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], true)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(false, color.FgHiYellow, "")
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	// initialize deployer runner with config
 	r, err := zetae2econfig.RunnerFromConfig(
@@ -58,11 +58,11 @@ func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 		logger,
 	)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 
-	addr, privKey := r.GetBtcAddress()
+	addr, privKey := r.GetBtcKeypair()
 
 	logger.Print("* BTC address: %s", addr.EncodeAddress())
 	if showPrivKey {

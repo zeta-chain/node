@@ -4,14 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 
-	cosmosmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/pkg/memo"
@@ -47,6 +44,9 @@ type BTCInboundEvent struct {
 
 	// TxHash is the hash of the inbound
 	TxHash string
+
+	// Status is the status of the inbound event
+	Status crosschaintypes.InboundStatus
 }
 
 // Category returns the category of the inbound event
@@ -72,10 +72,11 @@ func (event *BTCInboundEvent) Category() clienttypes.InboundCategory {
 		return clienttypes.InboundCategoryDonation
 	}
 
-	return clienttypes.InboundCategoryGood
+	return clienttypes.InboundCategoryProcessable
 }
 
 // DecodeMemoBytes decodes the contained memo bytes as either standard or legacy memo
+// It updates the event object with the decoded data
 func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	var (
 		err            error
@@ -83,6 +84,12 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		memoStd        *memo.InboundMemo
 		receiver       ethcommon.Address
 	)
+
+	// skip decoding if no memo is found, returning error to revert the inbound
+	if bytes.Equal(event.MemoBytes, []byte(noMemoFound)) {
+		event.MemoBytes = []byte{}
+		return errors.New("no memo found in inbound")
+	}
 
 	// skip decoding donation tx as it won't go through zetacore
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
@@ -112,11 +119,14 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		event.MemoStd = memoStd
 		receiver = memoStd.Receiver
 	} else {
-		parsedAddress, _, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
+		parsedAddress, payload, err := memo.DecodeLegacyMemoHex(hex.EncodeToString(event.MemoBytes))
 		if err != nil { // unreachable code
 			return errors.Wrap(err, "invalid legacy memo")
 		}
 		receiver = parsedAddress
+
+		// update the memo bytes to only contain the data
+		event.MemoBytes = payload
 	}
 
 	// ensure the receiver is valid
@@ -156,7 +166,7 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 	logFields := map[string]any{logs.FieldTx: event.TxHash}
 
 	switch category := event.Category(); category {
-	case clienttypes.InboundCategoryGood:
+	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
 		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
@@ -169,69 +179,4 @@ func (ob *Observer) IsEventProcessable(event BTCInboundEvent) bool {
 		ob.Logger().Inbound.Error().Fields(logFields).Msgf("unreachable code got InboundCategory: %v", category)
 		return false
 	}
-}
-
-// NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo
-func (ob *Observer) NewInboundVoteFromLegacyMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
-	message := hex.EncodeToString(event.MemoBytes)
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
-	)
-}
-
-// NewInboundVoteFromStdMemo creates a MsgVoteInbound message for inbound that uses standard memo
-// TODO: upgrade to ProtocolContractVersion_V2 and enable more options
-// https://github.com/zeta-chain/node/issues/2711
-func (ob *Observer) NewInboundVoteFromStdMemo(
-	event *BTCInboundEvent,
-	amountSats *big.Int,
-) *crosschaintypes.MsgVoteInbound {
-	// inject the 'revertAddress' specified in the memo, so that
-	// zetacore will create a revert outbound that points to the custom revert address.
-	revertOptions := crosschaintypes.RevertOptions{
-		RevertAddress: event.MemoStd.RevertOptions.RevertAddress,
-	}
-
-	// make a legacy message so that zetacore can process it as V1
-	msgBytes := append(event.MemoStd.Receiver.Bytes(), event.MemoStd.Payload...)
-	message := hex.EncodeToString(msgBytes)
-
-	return crosschaintypes.NewMsgVoteInbound(
-		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
-		event.FromAddress,
-		ob.Chain().ChainId,
-		event.FromAddress,
-		event.ToAddress,
-		ob.ZetacoreClient().Chain().ChainId,
-		cosmosmath.NewUintFromBigInt(amountSats),
-		message,
-		event.TxHash,
-		event.BlockNumber,
-		0,
-		coin.CoinType_Gas,
-		"",
-		0,
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
-		crosschaintypes.WithRevertOptions(revertOptions),
-	)
 }

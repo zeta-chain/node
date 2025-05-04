@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "@type": "/zetachain.zetacore.emissions.MsgUpdateParams",
+      "params": {
+        "validatorEmissionPercentage": "0.50",
+        "observerEmissionPercentage": "0.25",
+        "tssSignerEmissionPercentage": "0.25",
+        "observerSlashAmount": "100000000000000000",
+        "ballotMaturityBlocks": 101,
+        "blockRewardAmount": "9620949074074074074.074070733466756687",
+        "pendingBallotsDeletionBufferBlocks": 145222
+      },
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
+    }
+  ],
+  "metadata": "test proposal",
+  "deposit": "100000000azeta",
+  "title": "emissions param change",
+  "summary": "emissions param change",
+  "min_version": "v29.0.0"
+}

@@ -16,7 +16,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	zetaton "github.com/zeta-chain/node/zetaclient/chains/ton"
+	zetatonconfig "github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -75,7 +75,7 @@ func TestClient(t *testing.T) {
 		})
 	})
 
-	t.Run("GetTransactionsUntil", func(t *testing.T) {
+	t.Run("GetTransactionsSince", func(t *testing.T) {
 		// ARRANGE
 		// Given sample account id (dev wallet)
 		// https://tonviewer.com/UQCVlMcZ7EyV9maDsvscoLCd5KQfb7CHukyNJluWpMzlD0vr?section=transactions
@@ -168,16 +168,28 @@ func TestClient(t *testing.T) {
 		t.Logf("Masterchain block #%d is generated at %q (%s ago)", block.SeqNo, blockTime, since.String())
 	})
 
+	t.Run("HealthCheck", func(t *testing.T) {
+		// ACT
+		blockTime, err := client.HealthCheck(ctx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check that block was generated less than 20 seconds ago
+		since := time.Since(blockTime)
+		require.LessOrEqual(t, since, 20*time.Second)
+	})
+
 	t.Run("GetGasConfig", func(t *testing.T) {
 		// ACT #1
-		gas, err := zetaton.FetchGasConfig(ctx, client)
+		gas, err := zetatonconfig.FetchGasConfig(ctx, client)
 
 		// ASSERT #1
 		require.NoError(t, err)
 		require.NotEmpty(t, gas)
 
 		// ACT #2
-		gasPrice, err := zetaton.ParseGasPrice(gas)
+		gasPrice, err := zetatonconfig.ParseGasPrice(gas)
 
 		// ASSERT #2
 		require.NoError(t, err)

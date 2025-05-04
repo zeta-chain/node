@@ -1,6 +1,7 @@
 package chains_test
 
 import (
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"testing"
 
 	"github.com/zeta-chain/node/testutil/sample"
@@ -73,7 +74,7 @@ func TestChain_Validate(t *testing.T) {
 			chain: chains.Chain{
 				ChainId:     42,
 				Name:        "foo",
-				Network:     chains.Network_worldchain + 1,
+				Network:     chains.Network_sui + 1,
 				NetworkType: chains.NetworkType_testnet,
 				Vm:          chains.Vm_evm,
 				Consensus:   chains.Consensus_op_stack,
@@ -101,7 +102,7 @@ func TestChain_Validate(t *testing.T) {
 				Name:        "foo",
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
-				Vm:          chains.Vm_tvm + 1,
+				Vm:          chains.Vm_mvm_sui + 1,
 				Consensus:   chains.Consensus_op_stack,
 				IsExternal:  true,
 			},
@@ -115,7 +116,7 @@ func TestChain_Validate(t *testing.T) {
 				Network:     chains.Network_base,
 				NetworkType: chains.NetworkType_devnet,
 				Vm:          chains.Vm_evm,
-				Consensus:   chains.Consensus_arbitrum_nitro + 1,
+				Consensus:   chains.Consensus_sui_consensus + 1,
 				IsExternal:  true,
 			},
 			errStr: "invalid consensus",
@@ -313,6 +314,10 @@ func TestIsZetaChain(t *testing.T) {
 func TestDecodeAddressFromChainID(t *testing.T) {
 	ethAddr := sample.EthAddress()
 
+	suiSample := "0x2a4c5a97b561ac5b38edc4b4e9b2c183c57b56df5b1ea2f1c6f2e4a44b92d59f"
+	suiExpected, err := sui.EncodeAddress(suiSample)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name    string
 		chainID int64
@@ -350,6 +355,18 @@ func TestDecodeAddressFromChainID(t *testing.T) {
 			// human friendly address should be always represented in raw format
 			addr: "EQB3ncyBUTjZUA5EnFKR5_EnOMI9V1tTEAAPaiU71gc4TiUt",
 			want: []byte("0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e"),
+		},
+		{
+			name:    "Sui",
+			chainID: chains.SuiMainnet.ChainId,
+			addr:    suiSample,
+			want:    suiExpected,
+		},
+		{
+			name:    "Sui - invalid",
+			chainID: chains.SuiMainnet.ChainId,
+			addr:    suiSample + "aa",
+			wantErr: true,
 		},
 		{
 			name:    "Non-supported chain",

@@ -127,7 +127,7 @@ func TestBeginBlocker(t *testing.T) {
 		})
 		// Over funding the emission pool to avoid any errors due to truncated values
 		blockRewards := emissionstypes.BlockReward
-		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdkmath.NewInt(2))
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
@@ -149,7 +149,7 @@ func TestBeginBlocker(t *testing.T) {
 		})
 		// Over funding the emission pool to avoid any errors due to truncated values
 		blockRewards := emissionstypes.BlockReward
-		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdkmath.NewInt(2))
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
@@ -177,7 +177,7 @@ func TestBeginBlocker(t *testing.T) {
 
 		// Over funding the emission pool to avoid any errors due to truncated values
 		blockRewards := emissionstypes.BlockReward
-		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(2))
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdkmath.NewInt(2))
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 		bankMock := keepertest.GetEmissionsBankMock(t, k)
 		bankMock.On("GetBalance",
@@ -224,7 +224,7 @@ func TestBeginBlocker(t *testing.T) {
 
 		// Fund the emission pool to start the emission process
 		blockRewards := emissionstypes.BlockReward
-		totalRewardAmount := blockRewards.TruncateInt().Mul(sdk.NewInt(int64(numberOfTestBlocks)))
+		totalRewardAmount := blockRewards.TruncateInt().Mul(sdkmath.NewInt(int64(numberOfTestBlocks)))
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalRewardAmount))
 
 		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
@@ -282,7 +282,7 @@ func TestBeginBlocker(t *testing.T) {
 				Add(sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount)
 			// require we are always under the max limit of block rewards
 			require.True(t, totalRewardCoins.AmountOf(config.BaseDenom).
-				Sub(totalDistributedTillCurrentBlock).GTE(sdk.ZeroInt()))
+				Sub(totalDistributedTillCurrentBlock).GTE(sdkmath.ZeroInt()))
 
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 		}
@@ -294,9 +294,9 @@ func TestBeginBlocker(t *testing.T) {
 
 		// We can simplify the calculation as the rewards are distributed equally among all the observers
 		rewardPerUnit := observerRewardsForABlock.Quo(
-			sdk.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))),
+			sdkmath.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))),
 		)
-		emissionAmount := rewardPerUnit.Mul(sdk.NewInt(int64(len(ballotList))))
+		emissionAmount := rewardPerUnit.Mul(sdkmath.NewInt(int64(len(ballotList))))
 
 		// 2 . Assert ballots and ballot list are deleted on maturity
 		require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), 0)
@@ -313,19 +313,19 @@ func TestBeginBlocker(t *testing.T) {
 
 		// Check pool balances after the distribution
 		feeCollectorBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
-		require.Equal(t, feeCollectorBalance, validatorRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))))
+		require.Equal(t, feeCollectorBalance, validatorRewardsForABlock.Mul(sdkmath.NewInt(int64(numberOfTestBlocks))))
 
 		tssPoolBalances := sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount
 		require.Equal(
 			t,
-			tssSignerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(),
+			tssSignerRewardsForABlock.Mul(sdkmath.NewInt(int64(numberOfTestBlocks))).String(),
 			tssPoolBalances.String(),
 		)
 
 		observerPoolBalances := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount
 		require.Equal(
 			t,
-			observerRewardsForABlock.Mul(sdk.NewInt(int64(numberOfTestBlocks))).String(),
+			observerRewardsForABlock.Mul(sdkmath.NewInt(int64(numberOfTestBlocks))).String(),
 			observerPoolBalances.String(),
 		)
 	})
@@ -364,6 +364,29 @@ func TestDistributeObserverRewards(t *testing.T) {
 				observerSet.ObserverList[3]: 125,
 			},
 			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
+			slashAmount:     sdkmath.NewInt(25),
+			rewardsPerBlock: emissionstypes.BlockReward,
+		},
+		{
+			name: "no rewards if ballot is not finalized,irrespective of votes",
+			votes: [][]observertypes.VoteType{
+				{
+					observertypes.VoteType_NotYetVoted,
+					observertypes.VoteType_NotYetVoted,
+					observertypes.VoteType_SuccessObservation,
+					observertypes.VoteType_FailureObservation,
+				},
+			},
+			observerStartingEmissions: sdkmath.NewInt(100),
+			// total reward units would be 4 as all votes match the ballot status
+			totalRewardsForBlock: sdkmath.NewInt(0),
+			expectedRewards: map[string]int64{
+				observerSet.ObserverList[0]: 100,
+				observerSet.ObserverList[1]: 100,
+				observerSet.ObserverList[2]: 100,
+				observerSet.ObserverList[3]: 100,
+			},
+			ballotStatus:    observertypes.BallotStatus_BallotInProgress,
 			slashAmount:     sdkmath.NewInt(25),
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
@@ -509,7 +532,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			},
 			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
-			rewardsPerBlock: sdk.NewDec(1).NegMut(),
+			rewardsPerBlock: sdkmath.LegacyNewDec(1).NegMut(),
 		},
 		{
 			name: "no rewards if block reward is zero",
@@ -532,11 +555,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 			},
 			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
-			rewardsPerBlock: sdk.ZeroDec(),
+			rewardsPerBlock: sdkmath.LegacyZeroDec(),
 		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
 			// Keeper initialization
 			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
 			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
@@ -581,10 +605,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 			})
 			ctx = ctx.WithBlockHeight(100)
 
+			// Act
 			// Distribute the rewards and check if the rewards are distributed correctly
 			err = emissions.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, params)
-			require.NoError(t, err)
 
+			// Assert
+			require.NoError(t, err)
 			for i, observer := range observerSet.ObserverList {
 				observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
 				require.True(t, found, "withdrawable emission not found for observer %d", i)
@@ -596,6 +622,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 					i,
 				)
 			}
+			if tc.ballotStatus != observertypes.BallotStatus_BallotInProgress {
+				require.Len(t, zk.ObserverKeeper.GetAllBallots(ctx), 0)
+				_, found := zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
+				require.False(t, found)
+			}
+
 		})
 	}
 }

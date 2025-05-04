@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
@@ -65,7 +66,7 @@ func TestBroadcast(t *testing.T) {
 				WithPayload(feemarkettypes.QueryParamsRequest{}).
 				Return(feemarkettypes.QueryParamsResponse{
 					Params: feemarkettypes.Params{
-						BaseFee: types.NewInt(23455),
+						BaseFee: sdkmath.NewInt(23455),
 					},
 				})
 		},
@@ -79,7 +80,7 @@ func TestBroadcast(t *testing.T) {
 	t.Run("broadcast success", func(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
-			withTendermint(mocks.NewSDKClientWithErr(t, nil, 0)),
+			withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
@@ -93,7 +94,7 @@ func TestBroadcast(t *testing.T) {
 	t.Run("broadcast failed", func(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
-			withTendermint(
+			withCometBFT(
 				mocks.NewSDKClientWithErr(t, errors.New("account sequence mismatch, expected 5 got 4"), 32),
 			),
 		)

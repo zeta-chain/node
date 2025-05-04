@@ -17,7 +17,7 @@ func CmdBallotByIdentifier() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqVoteIdentifier := args[0]
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -48,7 +48,7 @@ func CmdAllBallots() *cobra.Command {
 		Short: "Query all ballots",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -72,5 +72,6 @@ func CmdAllBallots() *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
 	return cmd
 }

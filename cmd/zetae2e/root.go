@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/node/cmd/zetae2e/local"
 )
 
-var asciiArt = `
+const banner = `
          _             ____      
  _______| |_ __ _  ___|___ \ ___ 
 |_  / _ \ __/ _  |/ _ \ __) / _ \
@@ -17,7 +17,7 @@ var asciiArt = `
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zetae2e",
-		Short: asciiArt,
+		Short: banner,
 	}
 	cmd.AddCommand(
 		NewRunCmd(),
@@ -29,6 +29,7 @@ func NewRootCmd() *cobra.Command {
 		NewStressTestCmd(),
 		NewInitCmd(),
 		NewSetupBitcoinCmd(),
+		NewPopulateAddressesCmd(),
 	)
 
 	return cmd

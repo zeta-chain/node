@@ -1,0 +1,81 @@
+{
+    "blockTime": 1742928959,
+    "meta": {
+        "computeUnitsConsumed": 8266,
+        "err": null,
+        "fee": 12000,
+        "innerInstructions": [],
+        "loadedAddresses": {
+            "readonly": [],
+            "writable": []
+        },
+        "logMessages": [
+            "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+            "Program ComputeBudget111111111111111111111111111111 success",
+            "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+            "Program ComputeBudget111111111111111111111111111111 success",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d invoke [1]",
+            "Program log: Instruction: Call",
+            "Program log: Call executed: receiver = [158, 105, 50, 187, 142, 99, 194, 27, 76, 30, 35, 70, 206, 172, 18, 202, 14, 144, 176, 207], message = [104, 101, 108, 108, 111], revert options = None",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d consumed 7966 of 69700 compute units",
+            "Program 94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d success"
+        ],
+        "postBalances": [
+            999949029240,
+            1,
+            1141440
+        ],
+        "postTokenBalances": [],
+        "preBalances": [
+            999949041240,
+            1,
+            1141440
+        ],
+        "preTokenBalances": [],
+        "rewards": [],
+        "status": {
+            "Ok": null
+        }
+    },
+    "slot": 939,
+    "transaction": {
+        "message": {
+            "accountKeys": [
+                "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ",
+                "ComputeBudget111111111111111111111111111111",
+                "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
+            ],
+            "header": {
+                "numReadonlySignedAccounts": 0,
+                "numReadonlyUnsignedAccounts": 2,
+                "numRequiredSignatures": 1
+            },
+            "instructions": [
+                {
+                    "accounts": [],
+                    "data": "GxCz7R",
+                    "programIdIndex": 1,
+                    "stackHeight": null
+                },
+                {
+                    "accounts": [],
+                    "data": "3gJqkocMWaMm",
+                    "programIdIndex": 1,
+                    "stackHeight": null
+                },
+                {
+                    "accounts": [
+                        0
+                    ],
+                    "data": "Tq7HQNyA7K5o31AWpbtFo6V4MrEdUnbxJate1uWoXS9UonVbFgsZ",
+                    "programIdIndex": 2,
+                    "stackHeight": null
+                }
+            ],
+            "recentBlockhash": "Bz3sRPeDFKAibC6BtmcACfHGatGP4qkKDF84sHFsoLNK"
+        },
+        "signatures": [
+            "5MiGNYQGLfeNf7SYGbR9Rocs2Bya3pDaL3c78CYK5mBHqfbNdDyv4UwGYZFQHrmuo8GZh8rSWYaapoTiKZjE5jsZ"
+        ]
+    }
+}

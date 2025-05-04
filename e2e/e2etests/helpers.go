@@ -3,11 +3,14 @@ package e2etests
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
@@ -26,7 +29,7 @@ func randomPayload(r *runner.E2ERunner) string {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	// call approve and withdraw on ZRC20 contract
+	// approve and withdraw on ZRC20 contract
 	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
 
 	// mine blocks if testing on regnet
@@ -64,11 +67,25 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 // approveAndWithdrawBTCZRC20 is a helper function to call 'approve' and 'withdraw' on BTCZRC20 contract
 func approveAndWithdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *ethtypes.Receipt {
+	// ensure enough balance to cover the withdrawal
+	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
+	require.NoError(r, err)
+	minimumAmount := new(big.Int).Add(amount, gasFee)
+	currentBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	require.Greater(
+		r,
+		currentBalance.Int64(),
+		minimumAmount.Int64(),
+		"current balance must be greater than amount + gasFee",
+	)
+
+	// approve more to cover withdraw fee
 	tx, err := r.BTCZRC20.Approve(
 		r.ZEVMAuth,
 		r.BTCZRC20Addr,
 		big.NewInt(amount.Int64()*2),
-	) // approve more to cover withdraw fee
+	)
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -92,4 +109,10 @@ func bigAdd(x *big.Int, y *big.Int) *big.Int {
 // bigSub is shorthand for new(big.Int).Sub(x, y)
 func bigSub(x *big.Int, y *big.Int) *big.Int {
 	return new(big.Int).Sub(x, y)
+}
+
+func formatDuration(d time.Duration) string {
+	minutes := int(d.Minutes())
+	seconds := d.Seconds() - float64(minutes*60)
+	return fmt.Sprintf("%dm%.1fs", minutes, seconds)
 }

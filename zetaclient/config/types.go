@@ -55,6 +55,11 @@ type SolanaConfig struct {
 	Endpoint string `mask:"filled"`
 }
 
+// SuiConfig is the config for Sui chain
+type SuiConfig struct {
+	Endpoint string `mask:"filled"`
+}
+
 // TONConfig is the config for TON chain
 type TONConfig struct {
 	// Can be either URL of local file path
@@ -63,7 +68,8 @@ type TONConfig struct {
 
 // ComplianceConfig is the config for compliance
 type ComplianceConfig struct {
-	LogPath             string   `json:"LogPath"`
+	LogPath string `json:"LogPath"`
+	// Deprecated: use the separate restricted addresses config
 	RestrictedAddresses []string `json:"RestrictedAddresses" mask:"zero"`
 }
 
@@ -71,24 +77,25 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer                string         `json:"Peer"`
-	PublicIP            string         `json:"PublicIP"`
-	LogFormat           string         `json:"LogFormat"`
-	LogLevel            int8           `json:"LogLevel"`
-	LogSampler          bool           `json:"LogSampler"`
-	PreParamsPath       string         `json:"PreParamsPath"`
-	ZetaCoreHome        string         `json:"ZetaCoreHome"`
-	ChainID             string         `json:"ChainID"`
-	ZetaCoreURL         string         `json:"ZetaCoreURL"`
-	AuthzGranter        string         `json:"AuthzGranter"`
-	AuthzHotkey         string         `json:"AuthzHotkey"`
-	P2PDiagnostic       bool           `json:"P2PDiagnostic"`
-	ConfigUpdateTicker  uint64         `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker uint64         `json:"P2PDiagnosticTicker"`
-	TssPath             string         `json:"TssPath"`
-	TestTssKeysign      bool           `json:"TestTssKeysign"`
-	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
-	RelayerKeyPath      string         `json:"RelayerKeyPath"`
+	Peer                    string         `json:"Peer"`
+	PublicIP                string         `json:"PublicIP"`
+	LogFormat               string         `json:"LogFormat"`
+	LogLevel                int8           `json:"LogLevel"`
+	LogSampler              bool           `json:"LogSampler"`
+	PreParamsPath           string         `json:"PreParamsPath"`
+	ZetaCoreHome            string         `json:"ZetaCoreHome"`
+	ChainID                 string         `json:"ChainID"`
+	ZetaCoreURL             string         `json:"ZetaCoreURL"`
+	AuthzGranter            string         `json:"AuthzGranter"`
+	AuthzHotkey             string         `json:"AuthzHotkey"`
+	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
+	ConfigUpdateTicker      uint64         `json:"ConfigUpdateTicker"`
+	P2PDiagnosticTicker     uint64         `json:"P2PDiagnosticTicker"`
+	TssPath                 string         `json:"TssPath"`
+	TSSMaxPendingSignatures uint64         `json:"TSSMaxPendingSignatures"`
+	TestTssKeysign          bool           `json:"TestTssKeysign"`
+	KeyringBackend          KeyringBackend `json:"KeyringBackend"`
+	RelayerKeyPath          string         `json:"RelayerKeyPath"`
 
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
@@ -96,6 +103,7 @@ type Config struct {
 	// Deprecated: the 'BitcoinConfig' will be removed once the 'BTCChainConfigs' is fully adopted
 	BitcoinConfig BTCConfig    `json:"BitcoinConfig"`
 	SolanaConfig  SolanaConfig `json:"SolanaConfig"`
+	SuiConfig     SuiConfig    `json:"SuiConfig"`
 	TONConfig     TONConfig    `json:"TONConfig"`
 
 	// compliance config
@@ -147,6 +155,14 @@ func (c Config) GetSolanaConfig() (SolanaConfig, bool) {
 	defer c.mu.RUnlock()
 
 	return c.SolanaConfig, c.SolanaConfig != (SolanaConfig{})
+}
+
+// GetSuiConfig returns the Sui config
+func (c Config) GetSuiConfig() (SuiConfig, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.SuiConfig, c.SuiConfig != (SuiConfig{})
 }
 
 // GetTONConfig returns the TONConfig and a bool indicating if it's present.

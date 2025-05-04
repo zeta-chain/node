@@ -32,9 +32,17 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		t.Skip("skipping live test")
 	}
 
-	LiveTest_RBFTransaction(t)
-	LiveTest_RBFTransaction_Chained_CPFP(t)
-	LiveTest_PendingMempoolTx(t)
+	t.Run("RBFTransaction", func(t *testing.T) {
+		Run_RBFTransaction(t)
+	})
+
+	t.Run("RBFTransaction_Chained_CPFP", func(t *testing.T) {
+		Run_RBFTransaction_Chained_CPFP(t)
+	})
+
+	t.Run("PendingMempoolTx", func(t *testing.T) {
+		Run_PendingMempoolTx(t)
+	})
 }
 
 // setupRBFTest initializes the test suite, privateKey, sender, receiver
@@ -71,7 +79,7 @@ func setupRBFTest(t *testing.T) (*testSuite, *secp256k1.PrivateKey, btcutil.Addr
 	return ts, privKey, sender, to
 }
 
-func LiveTest_RBFTransaction(t *testing.T) {
+func Run_RBFTransaction(t *testing.T) {
 	// setup test
 	ts, privKey, sender, to := setupRBFTest(t)
 
@@ -131,7 +139,7 @@ func LiveTest_RBFTransaction(t *testing.T) {
 	// two rules to satisfy:
 	//   - feeTx3 >= feeTx1 + feeTx2
 	//   - additionalFees >= vSizeTx3 * minRelayFeeRate
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	minRelayFeeRate := int64(1)
 	feeRateIncrease := minRelayFeeRate
 	sizeTx3 := mempool.GetTxVirtualSize(rawTx1)
@@ -163,7 +171,7 @@ func LiveTest_RBFTransaction(t *testing.T) {
 }
 
 // Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
-func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
+func Run_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
 	ts, privKey, sender, to := setupRBFTest(t)
 
@@ -241,7 +249,7 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// two rules to satisfy:
 	//   - feeTx4 >= feeTx3
 	//   - additionalFees >= vSizeTx4 * minRelayFeeRate
-	// see: https://github.com/bitcoin/bitcoin/blob/master/src/policy/rbf.cpp#L166-L183
+	// see: https://github.com/bitcoin/bitcoin/blob/5b8046a6e893b7fad5a93631e6d1e70db31878af/src/policy/rbf.cpp#L166-L183
 	minRelayFeeRate := int64(1)
 	feeRateIncrease := minRelayFeeRate
 	additionalFees := (mempool.GetTxVirtualSize(rawTx3) + 1) * feeRateIncrease
@@ -269,7 +277,7 @@ func LiveTest_RBFTransaction_Chained_CPFP(t *testing.T) {
 	fmt.Println("tx1 dropped")
 }
 
-func LiveTest_PendingMempoolTx(t *testing.T) {
+func Run_PendingMempoolTx(t *testing.T) {
 	// network to use
 	config := config.BTCConfig{
 		RPCHost:   os.Getenv(common.EnvBtcRPCMainnet),

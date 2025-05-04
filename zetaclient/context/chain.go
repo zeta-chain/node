@@ -3,11 +3,11 @@ package context
 import (
 	"cmp"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	observer "github.com/zeta-chain/node/x/observer/types"
@@ -172,6 +172,10 @@ func (c Chain) IsBitcoin() bool {
 
 func (c Chain) IsSolana() bool {
 	return chains.IsSolanaChain(c.ID(), c.registry.additionalChains)
+}
+
+func (c Chain) IsSui() bool {
+	return chains.IsSuiChain(c.ID(), c.registry.additionalChains)
 }
 
 func (c Chain) IsTON() bool {

@@ -37,11 +37,11 @@ var (
 		Help:      "Count of getLogs per chain",
 	}, []string{"chain"})
 
-	// GetBlockByNumberPerChain is a counter that contains the number of getBlockByNumber per chain
-	GetBlockByNumberPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
+	// GetBlockNumberPerChain is a counter that contains the number of getBlockNumber per chain
+	GetBlockNumberPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: ZetaClientNamespace,
-		Name:      "rpc_getBlockByNumber_count",
-		Help:      "Count of getLogs per chain",
+		Name:      "rpc_getBlockNumber_count",
+		Help:      "Count of blockNumber per chain",
 	}, []string{"chain"})
 
 	// TSSNodeBlamePerPubKey is a counter that contains the number of tss node blame per pubkey
@@ -66,11 +66,11 @@ var (
 	})
 
 	// NumberOfUTXO is a gauge that contains the number of UTXOs
-	NumberOfUTXO = promauto.NewGauge(prometheus.GaugeOpts{
+	NumberOfUTXO = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: ZetaClientNamespace,
 		Name:      "utxo_number",
 		Help:      "Number of UTXOs",
-	})
+	}, []string{"chain"})
 
 	// LastScannedBlockNumber is a gauge that contains the last scanned block number per chain
 	LastScannedBlockNumber = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -287,4 +287,11 @@ func GetInstrumentedHTTPClient(endpoint string) (*http.Client, error) {
 	return &http.Client{
 		Transport: transport,
 	}, nil
+}
+
+// ReportBlockLatency records the latency between the current time
+// an the latest block time for a chain as a metric
+func ReportBlockLatency(chainName string, latestBlockTime time.Time) {
+	elapsedTime := time.Since(latestBlockTime)
+	LatestBlockLatency.WithLabelValues(chainName).Set(elapsedTime.Seconds())
 }

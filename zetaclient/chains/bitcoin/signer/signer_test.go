@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -13,32 +13,31 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/testutil/sample"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/metrics"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 // the relative path to the testdata directory
 var TestDataDir = "../../../"
 
 type testSuite struct {
-	*signer.Signer
+	*Signer
+	observer       *observer.Observer
 	tss            *mocks.TSS
 	client         *mocks.BitcoinClient
 	zetacoreClient *mocks.ZetacoreClient
@@ -63,35 +62,23 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 		WithZetaChain()
 
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
 	// create signer
-	signer := signer.New(
-		chain,
-		tss,
-		rpcClient,
-		logger,
-	)
+	baseSigner := base.NewSigner(chain, tss, baseLogger)
+	signer := New(baseSigner, rpcClient)
 
-	return &testSuite{
+	// create test suite and observer
+	suite := &testSuite{
 		Signer:         signer,
 		tss:            tss,
 		client:         rpcClient,
 		zetacoreClient: zetacoreClient,
 	}
-}
+	suite.createObserver(t)
 
-func Test_NewSigner(t *testing.T) {
-	// test private key with EVM address
-	// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
-	// BTC testnet: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
-	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
-	privateKey, err := crypto.HexToECDSA(skHex)
-	require.NoError(t, err)
-	tss := mocks.NewTSSFromPrivateKey(t, privateKey)
-	signer := signer.New(chains.BitcoinMainnet, tss, mocks.NewBitcoinClient(t), base.DefaultLogger())
-	require.NotNil(t, signer)
+	return suite
 }
 
 func Test_BroadcastOutbound(t *testing.T) {
@@ -110,23 +97,17 @@ func Test_BroadcastOutbound(t *testing.T) {
 			nonce: uint64(148),
 		},
 		{
-			name:  "should successfully broadcast and include RBF outbound",
-			chain: chains.BitcoinMainnet,
-			nonce: uint64(148),
-			rbfTx: true,
+			name:      "should skip broadcasting RBF tx if nonce is outdated",
+			chain:     chains.BitcoinMainnet,
+			nonce:     uint64(148),
+			rbfTx:     true,
+			skipRBFTx: true,
 		},
 		{
 			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
 			chain:       chains.BitcoinMainnet,
 			nonce:       uint64(148),
 			failTracker: true,
-		},
-		{
-			name:      "should skip broadcasting RBF tx",
-			chain:     chains.BitcoinMainnet,
-			nonce:     uint64(148),
-			rbfTx:     true,
-			skipRBFTx: true,
 		},
 	}
 
@@ -135,7 +116,6 @@ func Test_BroadcastOutbound(t *testing.T) {
 			// ARRANGE
 			// setup signer and observer
 			s := newTestSuite(t, tt.chain)
-			observer := s.getNewObserver(t)
 
 			// load tx and result
 			chainID := tt.chain.ChainId
@@ -155,18 +135,19 @@ func Test_BroadcastOutbound(t *testing.T) {
 			if tt.failTracker {
 				s.zetacoreClient.WithPostOutboundTracker("")
 			} else {
-				s.zetacoreClient.WithPostOutboundTracker("0x123")
+				s.zetacoreClient.WithPostOutboundTracker("ABC")
 			}
 
 			// mock the previous tx as included
 			// this is necessary to allow the 'checkTSSVin' function to pass
-			observer.SetIncludedTx(tt.nonce-1, &btcjson.GetTransactionResult{
+			s.observer.SetIncludedTx(tt.nonce-1, &btcjson.GetTransactionResult{
 				TxID: rawResult.Vin[0].Txid,
 			})
 
-			// set a higher pending nonce so the RBF tx is not the last tx
+			// increment pending nonce to 'nonce+2' to simulate an outdated RBF tx nonce
+			// including tx 'nonce+1' will increment the pending nonce to 'nonce+2'
 			if tt.rbfTx && tt.skipRBFTx {
-				observer.SetPendingNonce(tt.nonce + 2)
+				s.observer.SetIncludedTx(tt.nonce+1, &btcjson.GetTransactionResult{TxID: "DEF"})
 			}
 
 			// ACT
@@ -177,13 +158,13 @@ func Test_BroadcastOutbound(t *testing.T) {
 				tt.nonce,
 				tt.rbfTx,
 				cctx,
-				observer,
+				s.observer,
 				s.zetacoreClient,
 			)
 
 			// ASSERT
 			// check if outbound is included
-			gotResult := observer.GetIncludedTx(tt.nonce)
+			gotResult := s.observer.GetIncludedTx(tt.nonce)
 			if tt.skipRBFTx {
 				require.Nil(t, gotResult)
 			} else {
@@ -369,26 +350,16 @@ func makeCtx(t *testing.T) context.Context {
 		map[int64]*observertypes.ChainParams{
 			chain.ChainId: &btcParams,
 		},
-		observertypes.CrosschainFlags{},
+		*sample.CrosschainFlags(),
+		sample.OperationalFlags(),
 	)
 	require.NoError(t, err, "unable to update app context")
 
 	return zctx.WithAppContext(context.Background(), app)
 }
 
-// getCCTX returns a CCTX for testing
-func getCCTX(t *testing.T) *crosschaintypes.CrossChainTx {
-	return testutils.LoadCctxByNonce(t, 8332, 148)
-}
-
-// getNewOutboundProcessor creates a new outbound processor for testing
-func getNewOutboundProcessor() *outboundprocessor.Processor {
-	logger := zerolog.Logger{}
-	return outboundprocessor.NewProcessor(logger)
-}
-
-// getNewObserver creates a new BTC chain observer for testing
-func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
+// createObserver creates a new BTC chain observer for test suite
+func (s *testSuite) createObserver(t *testing.T) {
 	// prepare mock arguments to create observer
 	params := mocks.MockChainParams(s.Chain().ChainId, 2)
 	ts := &metrics.TelemetryServer{}
@@ -398,19 +369,19 @@ func (s *testSuite) getNewObserver(t *testing.T) *observer.Observer {
 	require.NoError(t, err)
 
 	// create logger
-	testLogger := zerolog.New(zerolog.NewTestWriter(t))
-	logger := base.Logger{Std: testLogger, Compliance: testLogger}
+	logger := testlog.New(t)
+	baseLogger := base.Logger{Std: logger.Logger, Compliance: logger.Logger}
 
-	ob, err := observer.NewObserver(
-		s.Chain(),
-		s.client,
-		params,
-		s.zetacoreClient,
-		s.tss,
-		database,
-		logger,
-		ts,
-	)
+	// create observer
+	baseObserver, err := base.NewObserver(s.Chain(), params, s.zetacoreClient, s.tss, 100, ts, database, baseLogger)
 	require.NoError(t, err)
-	return ob
+
+	s.observer, err = observer.New(s.Chain(), baseObserver, s.client)
+	require.NoError(t, err)
+}
+
+func hashFromTXID(t *testing.T, txid string) *chainhash.Hash {
+	h, err := chainhash.NewHashFromStr(txid)
+	require.NoError(t, err)
+	return h
 }

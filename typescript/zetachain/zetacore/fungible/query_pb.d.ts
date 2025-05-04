@@ -111,6 +111,65 @@ export declare class QueryAllForeignCoinsResponse extends Message<QueryAllForeig
 }
 
 /**
+ * QueryGetForeignCoinsFromAssetRequest defines the request type for the
+ * ForeignCoinsFromAsset RPC method.
+ *
+ * @generated from message zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetRequest
+ */
+export declare class QueryGetForeignCoinsFromAssetRequest extends Message<QueryGetForeignCoinsFromAssetRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string asset = 2;
+   */
+  asset: string;
+
+  constructor(data?: PartialMessage<QueryGetForeignCoinsFromAssetRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetForeignCoinsFromAssetRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetForeignCoinsFromAssetRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetForeignCoinsFromAssetRequest;
+
+  static equals(a: QueryGetForeignCoinsFromAssetRequest | PlainMessage<QueryGetForeignCoinsFromAssetRequest> | undefined, b: QueryGetForeignCoinsFromAssetRequest | PlainMessage<QueryGetForeignCoinsFromAssetRequest> | undefined): boolean;
+}
+
+/**
+ * QueryGetForeignCoinsFromAssetResponse defines the response type for the
+ * ForeignCoinsFromAsset RPC method.
+ *
+ * @generated from message zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetResponse
+ */
+export declare class QueryGetForeignCoinsFromAssetResponse extends Message<QueryGetForeignCoinsFromAssetResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.fungible.ForeignCoins foreignCoins = 1;
+   */
+  foreignCoins?: ForeignCoins;
+
+  constructor(data?: PartialMessage<QueryGetForeignCoinsFromAssetResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetForeignCoinsFromAssetResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetForeignCoinsFromAssetResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetForeignCoinsFromAssetResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetForeignCoinsFromAssetResponse;
+
+  static equals(a: QueryGetForeignCoinsFromAssetResponse | PlainMessage<QueryGetForeignCoinsFromAssetResponse> | undefined, b: QueryGetForeignCoinsFromAssetResponse | PlainMessage<QueryGetForeignCoinsFromAssetResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.fungible.QueryGetSystemContractRequest
  */
 export declare class QueryGetSystemContractRequest extends Message<QueryGetSystemContractRequest> {

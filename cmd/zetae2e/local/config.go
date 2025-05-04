@@ -21,5 +21,5 @@ func GetConfig(cmd *cobra.Command) (config.Config, error) {
 		return config.Config{}, err
 	}
 
-	return config.ReadConfig(configFile)
+	return config.ReadConfig(configFile, true)
 }

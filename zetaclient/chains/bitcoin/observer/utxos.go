@@ -29,19 +29,13 @@ type SelectedUTXOs struct {
 
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
 func (ob *Observer) FetchUTXOs(ctx context.Context) error {
-	defer func() {
-		if err := recover(); err != nil {
-			ob.logger.UTXOs.Error().Msgf("BTC FetchUTXOs: caught panic error: %v", err)
-		}
-	}()
-
 	// this is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
 
 	// list all unspent UTXOs (160ms)
 	tssAddr, err := ob.TSS().PubKey().AddressBTC(ob.Chain().ChainId)
 	if err != nil {
-		return fmt.Errorf("error getting bitcoin tss address")
+		return err
 	}
 	utxos, err := ob.rpc.ListUnspentMinMaxAddresses(ctx, 0, 9999999, []btcutil.Address{tssAddr})
 	if err != nil {
@@ -75,8 +69,8 @@ func (ob *Observer) FetchUTXOs(ctx context.Context) error {
 		utxosFiltered = append(utxosFiltered, utxo)
 	}
 
+	ob.TelemetryServer().SetNumberOfUTXOs(ob.Chain(), len(utxosFiltered))
 	ob.Mu().Lock()
-	ob.TelemetryServer().SetNumberOfUTXOs(len(utxosFiltered))
 	ob.utxos = utxosFiltered
 	ob.Mu().Unlock()
 	return nil
@@ -98,7 +92,6 @@ func (ob *Observer) SelectUTXOs(
 	utxosToSpend uint16,
 	nonce uint64,
 	consolidateRank uint16,
-	test bool,
 ) (SelectedUTXOs, error) {
 	idx := -1
 	if nonce == 0 {
@@ -107,7 +100,7 @@ func (ob *Observer) SelectUTXOs(
 		defer ob.Mu().Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
-		preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1, test)
+		preTxid, err := ob.getOutboundHashByNonce(ctx, nonce-1)
 		if err != nil {
 			return SelectedUTXOs{}, err
 		}

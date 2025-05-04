@@ -55,8 +55,10 @@ var (
 		1156,
 		"migration tx from an old tss address detected",
 	)
-	ErrValidatingInbound       = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
-	ErrInvalidGasLimit         = errorsmod.Register(ModuleName, 1158, "invalid gas limit")
-	ErrUnableToSetOutboundInfo = errorsmod.Register(ModuleName, 1159, "unable to set outbound info")
-	ErrCCTXAlreadyFinalized    = errorsmod.Register(ModuleName, 1160, "cctx already finalized")
+	ErrValidatingInbound           = errorsmod.Register(ModuleName, 1157, "unable to validate inbound")
+	ErrInvalidGasLimit             = errorsmod.Register(ModuleName, 1158, "invalid gas limit")
+	ErrUnableToSetOutboundInfo     = errorsmod.Register(ModuleName, 1159, "unable to set outbound info")
+	ErrCCTXAlreadyFinalized        = errorsmod.Register(ModuleName, 1160, "cctx already finalized")
+	ErrUnableToParseCCTXIndexBytes = errorsmod.Register(ModuleName, 1161, "unable to parse cctx index bytes")
+	ErrInvalidPriorityFee          = errorsmod.Register(ModuleName, 1162, "invalid priority fee")
 )

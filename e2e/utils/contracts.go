@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 )
 
 const (
@@ -19,17 +19,19 @@ func MustHaveCalledExampleContract(
 	t require.TestingT,
 	contract *testcontract.Example,
 	amount *big.Int,
+	sender []byte,
 ) {
 	bar, err := contract.Bar(&bind.CallOpts{})
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		bar.Cmp(amount),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		amount.String(),
+		amount.Uint64(),
+		bar.Uint64(),
 	)
+
+	actualSender, err := contract.LastSender(&bind.CallOpts{})
+	require.NoError(t, err)
+	require.EqualValues(t, sender, actualSender)
 }
 
 // MustHaveCalledExampleContractWithMsg checks if the contract has been called correctly with correct amount and msg
@@ -38,19 +40,21 @@ func MustHaveCalledExampleContractWithMsg(
 	contract *testcontract.Example,
 	amount *big.Int,
 	msg []byte,
+	sender []byte,
 ) {
 	bar, err := contract.Bar(&bind.CallOpts{})
 	require.NoError(t, err)
 	require.Equal(
 		t,
-		0,
-		bar.Cmp(amount),
-		"cross-chain call failed bar value %s should be equal to amount %s",
-		bar.String(),
-		amount.String(),
+		amount.Uint64(),
+		bar.Uint64(),
 	)
 
 	lastMsg, err := contract.LastMessage(&bind.CallOpts{})
 	require.NoError(t, err)
 	require.Equal(t, string(msg), string(lastMsg))
+
+	actualSender, err := contract.LastSender(&bind.CallOpts{})
+	require.NoError(t, err)
+	require.EqualValues(t, sender, actualSender)
 }

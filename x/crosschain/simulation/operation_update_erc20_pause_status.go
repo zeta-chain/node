@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/zeta-chain/node/pkg/chains"
+	zetasimulation "github.com/zeta-chain/node/testutil/simulation"
 	"github.com/zeta-chain/node/x/crosschain/keeper"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
@@ -18,9 +19,9 @@ import (
 func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simtypes.Account, _ string,
 	) (OperationMsg simtypes.OperationMsg, futureOps []simtypes.FutureOperation, err error) {
-		policyAccount, err := GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
+		policyAccount, err := zetasimulation.GetPolicyAccount(ctx, k.GetAuthorityKeeper(), accounts)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeUpdateERC20CustodyPauseStatus, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgUpdateERC20CustodyPauseStatus, err.Error()), nil, nil
 		}
 
 		authAccount := k.GetAuthKeeper().GetAccount(ctx, policyAccount.Address)
@@ -30,7 +31,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if len(supportedChains) == 0 {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"no supported chains found",
 			), nil, nil
 		}
@@ -44,7 +45,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"no chain nonces found",
 			), nil, nil
 		}
@@ -53,7 +54,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"no TSS found",
 			), nil, nil
 		}
@@ -62,7 +63,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"no chain params found",
 			), nil, nil
 		}
@@ -70,7 +71,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if !found {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"no median gas values found",
 			), nil, nil
 		}
@@ -80,7 +81,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if priorityFee.GT(medianGasPrice) {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				types.TypeUpdateERC20CustodyPauseStatus,
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"priorityFee is greater than median gasPrice",
 			), nil, nil
 		}
@@ -95,7 +96,7 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName,
-				msg.Type(),
+				TypeMsgUpdateERC20CustodyPauseStatus,
 				"unable to validate MsgUpdateERC20CustodyPauseStatus msg",
 			), nil, err
 		}
@@ -106,7 +107,6 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             &msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      policyAccount,
 			AccountKeeper:   k.GetAuthKeeper(),
@@ -115,6 +115,6 @@ func SimulateUpdateERC20CustodyPauseStatus(k keeper.Keeper) simtypes.Operation {
 			CoinsSpentInMsg: spendable,
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		return zetasimulation.GenAndDeliverTxWithRandFees(txCtx, true)
 	}
 }

@@ -6,6 +6,16 @@ import "fmt"
 // It takes a E2ERunner as an argument
 type E2ETestFunc func(*E2ERunner, []string)
 
+type E2ETestOpt func(*E2ETest)
+
+// WithMinimumVersion sets a minimum zetacored version that is required to run the test.
+// The test will be skipped if the minimum version is not satisfied.
+func WithMinimumVersion(version string) E2ETestOpt {
+	return func(t *E2ETest) {
+		t.MinimumVersion = version
+	}
+}
+
 // E2ETest represents a E2E test with a name, args, description and test func
 type E2ETest struct {
 	Name           string
@@ -13,17 +23,27 @@ type E2ETest struct {
 	Args           []string
 	ArgsDefinition []ArgDefinition
 	E2ETest        E2ETestFunc
+	MinimumVersion string
 }
 
 // NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description string, argsDefinition []ArgDefinition, e2eTestFunc E2ETestFunc) E2ETest {
-	return E2ETest{
+func NewE2ETest(
+	name, description string,
+	argsDefinition []ArgDefinition,
+	e2eTestFunc E2ETestFunc,
+	opts ...E2ETestOpt,
+) E2ETest {
+	test := E2ETest{
 		Name:           name,
 		Description:    description,
 		ArgsDefinition: argsDefinition,
 		E2ETest:        e2eTestFunc,
 		Args:           []string{},
 	}
+	for _, opt := range opts {
+		opt(&test)
+	}
+	return test
 }
 
 // ArgDefinition defines a structure for holding an argument's description along with it's default value.
@@ -83,12 +103,16 @@ func (r *E2ERunner) GetE2ETestsToRunByConfig(
 		if !found {
 			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
 		}
-		e2eTestToRun := NewE2ETest(
-			e2eTest.Name,
-			e2eTest.Description,
-			e2eTest.ArgsDefinition,
-			e2eTest.E2ETest,
-		)
+		if r.TestFilter != nil && !r.TestFilter.MatchString(e2eTest.Name) {
+			continue
+		}
+		e2eTestToRun := E2ETest{
+			Name:           e2eTest.Name,
+			Description:    e2eTest.Description,
+			ArgsDefinition: e2eTest.ArgsDefinition,
+			E2ETest:        e2eTest.E2ETest,
+			MinimumVersion: e2eTest.MinimumVersion,
+		}
 		// update e2e test args
 		e2eTestToRun.Args = testSpec.Args
 		tests = append(tests, e2eTestToRun)

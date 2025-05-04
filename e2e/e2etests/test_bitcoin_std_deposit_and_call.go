@@ -5,19 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/memo"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabitcoin "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
-	// start mining blocks if local bitcoin
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// parse amount to deposit
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
@@ -40,7 +36,7 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 
 	// deposit BTC with standard memo
-	txHash := r.DepositBTCWithAmount(amount, memo)
+	txHash := r.DepositBTCWithExactAmount(amount, memo)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -50,5 +46,10 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check if example contract has been called, 'bar' value should be set to amount
 	amountSats, err := zetabitcoin.GetSatoshis(amount)
 	require.NoError(r, err)
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amountSats))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(amountSats),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
+	)
 }

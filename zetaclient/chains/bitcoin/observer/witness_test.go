@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -11,10 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -30,14 +30,14 @@ func TestParseScriptFromWitness(t *testing.T) {
 		}
 		expected := "20888269c4f0b7f6fe95d0cba364e2b1b879d9b00735d19cfab4b8d87096ce2b3cac00634d0802000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004c50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000068"
 
-		script := observer.ParseScriptFromWitness(witness[:], log.Logger)
+		script := ParseScriptFromWitness(witness[:], log.Logger)
 		require.NotNil(t, script)
 		require.Equal(t, hex.EncodeToString(script), expected)
 	})
 
 	t.Run("no witness", func(t *testing.T) {
 		witness := [0]string{}
-		script := observer.ParseScriptFromWitness(witness[:], log.Logger)
+		script := ParseScriptFromWitness(witness[:], log.Logger)
 		require.Nil(t, script)
 	})
 
@@ -45,7 +45,7 @@ func TestParseScriptFromWitness(t *testing.T) {
 		witness := [1]string{
 			"134896c42cd95680b048845847c8054756861ffab7d4abab72f6508d67d1ec0c590287ec2161dd7884983286e1cd56ce65c08a24ee0476ede92678a93b1b180c",
 		}
-		script := observer.ParseScriptFromWitness(witness[:], log.Logger)
+		script := ParseScriptFromWitness(witness[:], log.Logger)
 		require.Nil(t, script)
 	})
 }
@@ -76,7 +76,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		tx.Vin[0].Vout = 2
 
 		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
-		eventExpected := &observer.BTCInboundEvent{
+		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
 			Value:        tx.Vout[0].Value - depositorFee,
@@ -90,7 +90,90 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
+	})
+
+	t.Run("it's ok if no memo provided", func(t *testing.T) {
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+
+		// mock up the input
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		// mock up the output
+		// remove OP_RETURN output to simulate no memo provided
+		tx.Vout[1] = tx.Vout[2]
+		tx.Vout = tx.Vout[:2]
+
+		eventExpected := &BTCInboundEvent{
+			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:    tssAddress,
+			Value:        tx.Vout[0].Value - depositorFee,
+			DepositorFee: depositorFee,
+			MemoBytes:    []byte("no memo found"),
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
+		}
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
+		// get BTC event
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpcClient,
+			*tx,
+			tssAddress,
+			blockNumber,
+			log.Logger,
+			net,
+			feeCalculator,
+		)
+		require.NoError(t, err)
+		require.Equal(t, eventExpected, event)
+	})
+
+	t.Run("should return failed status if amount is less than depositor fee", func(t *testing.T) {
+		// load tx and modify amount to less than depositor fee
+		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
+		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
+
+		// mock up the input
+		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
+		preHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
+		tx.Vin[0].Txid = preHash
+		tx.Vin[0].Vout = 2
+
+		memo, _ := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
+		eventExpected := &BTCInboundEvent{
+			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
+			ToAddress:    tssAddress,
+			Value:        0.0,
+			DepositorFee: depositorFee,
+			MemoBytes:    memo,
+			BlockNumber:  blockNumber,
+			TxHash:       tx.Txid,
+			Status:       types.InboundStatus_INSUFFICIENT_DEPOSITOR_FEE,
+		}
+
+		// load previous raw tx so so mock rpc client can return it
+		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
+
+		// get BTC event
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -118,7 +201,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		eventExpected := &observer.BTCInboundEvent{
+		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
 			Value:        tx.Vout[0].Value - depositorFee,
@@ -129,7 +212,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		}
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -160,7 +243,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		memo, _ := hex.DecodeString(
 			"72f080c854647755d0d9e6f6821f6931f855b9acffd53d87433395672756d58822fd143360762109ab898626556b1c3b8d3096d2361f1297df4a41c1b429471a9aa2fc9be5f27c13b3863d6ac269e4b587d8389f8fd9649859935b0d48dea88cdb40f20c",
 		)
-		eventExpected := &observer.BTCInboundEvent{
+		eventExpected := &BTCInboundEvent{
 			FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 			ToAddress:    tssAddress,
 			Value:        tx.Vout[0].Value - depositorFee,
@@ -171,7 +254,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		}
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -192,7 +275,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -212,7 +295,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -226,27 +309,6 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.Nil(t, event)
 	})
 
-	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
-		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
-		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
-
-		// get BTC event
-		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEventWithWitness(
-			ctx,
-			rpcClient,
-			*tx,
-			tssAddress,
-			blockNumber,
-			log.Logger,
-			net,
-			feeCalculator,
-		)
-		require.NoError(t, err)
-		require.Nil(t, event)
-	})
-
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx
 		tx := testutils.LoadBTCInboundRawResult(t, TestDataDir, chain.ChainId, txHash, false)
@@ -256,7 +318,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -291,7 +353,7 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(btcutil.NewTx(msgTx), nil)
 
 		// get BTC event
-		event, err := observer.GetBtcEventWithWitness(
+		event, err := GetBtcEventWithWitness(
 			ctx,
 			rpcClient,
 			*tx,
@@ -304,4 +366,47 @@ func TestGetBtcEventWithWitness(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, event)
 	})
+}
+
+func Test_DeductDepositorFee(t *testing.T) {
+	tests := []struct {
+		name         string
+		deposited    float64
+		depositorFee float64
+		expected     float64
+		errMsg       string
+	}{
+		{
+			name:         "deduct depositor fee successfully",
+			deposited:    0.012,
+			depositorFee: 0.002,
+			expected:     0.01,
+		},
+		{
+			name:         "remaining zero amount after deduction",
+			deposited:    0.012,
+			depositorFee: 0.012,
+			expected:     0,
+		},
+		{
+			name:         "fail if deposited amount is lower than depositor fee",
+			deposited:    0.012,
+			depositorFee: 0.013,
+			expected:     0,
+			errMsg:       "less than depositor fee",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := DeductDepositorFee(tt.deposited, tt.depositorFee)
+			require.Equal(t, tt.expected, result)
+
+			if tt.errMsg != "" {
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
 }

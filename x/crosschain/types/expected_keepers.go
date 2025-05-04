@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
@@ -19,20 +19,20 @@ import (
 )
 
 type StakingKeeper interface {
-	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
+	GetAllValidators(ctx context.Context) (validators []stakingtypes.Validator, err error)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 type ObserverKeeper interface {
@@ -151,7 +151,7 @@ type FungibleKeeper interface {
 		protocolContractVersion ProtocolContractVersion,
 		isCrossChainCall bool,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
-	ProcessV2RevertDeposit(
+	ProcessRevert(
 		ctx sdk.Context,
 		inboundSender string,
 		amount *big.Int,
@@ -160,6 +160,17 @@ type FungibleKeeper interface {
 		asset string,
 		revertAddress ethcommon.Address,
 		callOnRevert bool,
+		revertMessage []byte,
+	) (*evmtypes.MsgEthereumTxResponse, error)
+	ProcessAbort(
+		ctx sdk.Context,
+		inboundSender string,
+		amount *big.Int,
+		outgoing bool,
+		chainID int64,
+		coinType coin.CoinType,
+		asset string,
+		abortAddress ethcommon.Address,
 		revertMessage []byte,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
@@ -202,6 +213,7 @@ type FungibleKeeper interface {
 		coinType coin.CoinType,
 		erc20Contract string,
 		gasLimit *big.Int,
+		liquidityCap *sdkmath.Uint,
 	) (ethcommon.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error

@@ -3,11 +3,13 @@ package zetachain.zetacore.fungible;
 
 import "gogoproto/gogo.proto";
 import "zetachain/zetacore/pkg/coin/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/zeta-chain/node/x/fungible/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc DeploySystemContracts(MsgDeploySystemContracts)
       returns (MsgDeploySystemContractsResponse);
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20)
@@ -26,9 +28,13 @@ service Msg {
   rpc UnpauseZRC20(MsgUnpauseZRC20) returns (MsgUnpauseZRC20Response);
   rpc UpdateGatewayContract(MsgUpdateGatewayContract)
       returns (MsgUpdateGatewayContractResponse);
+  rpc UpdateZRC20Name(MsgUpdateZRC20Name) returns (MsgUpdateZRC20NameResponse);
 }
 
-message MsgDeploySystemContracts { string creator = 1; }
+message MsgDeploySystemContracts {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+}
 
 message MsgDeploySystemContractsResponse {
   string uniswapV2Factory = 1;
@@ -39,14 +45,15 @@ message MsgDeploySystemContractsResponse {
 }
 
 message MsgUpdateZRC20WithdrawFee {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string zrc20_address = 2; // zrc20 address
   string new_withdraw_fee = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
   string new_gas_limit = 7 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -54,6 +61,7 @@ message MsgUpdateZRC20WithdrawFee {
 message MsgUpdateZRC20WithdrawFeeResponse {}
 
 message MsgUpdateSystemContract {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string new_system_contract_address = 2;
 }
@@ -61,6 +69,7 @@ message MsgUpdateSystemContract {
 message MsgUpdateSystemContractResponse {}
 
 message MsgDeployFungibleCoinZRC20 {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string ERC20 = 2;
   int64 foreign_chain_id = 3;
@@ -69,11 +78,16 @@ message MsgDeployFungibleCoinZRC20 {
   string symbol = 6;
   pkg.coin.CoinType coin_type = 7;
   int64 gas_limit = 8;
+  string liquidity_cap = 9 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = true
+  ];
 }
 
 message MsgDeployFungibleCoinZRC20Response { string address = 1; }
 
 message MsgRemoveForeignCoin {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string zrc20_address = 2;
 }
@@ -81,6 +95,7 @@ message MsgRemoveForeignCoin {
 message MsgRemoveForeignCoinResponse {}
 
 message MsgUpdateContractBytecode {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string contract_address = 2;
   string new_code_hash = 3;
@@ -89,10 +104,11 @@ message MsgUpdateContractBytecode {
 message MsgUpdateContractBytecodeResponse {}
 
 message MsgUpdateZRC20LiquidityCap {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string zrc20_address = 2;
   string liquidity_cap = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -100,6 +116,7 @@ message MsgUpdateZRC20LiquidityCap {
 message MsgUpdateZRC20LiquidityCapResponse {}
 
 message MsgPauseZRC20 {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   repeated string zrc20_addresses = 2;
 }
@@ -107,6 +124,7 @@ message MsgPauseZRC20 {
 message MsgPauseZRC20Response {}
 
 message MsgUnpauseZRC20 {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   repeated string zrc20_addresses = 2;
 }
@@ -114,8 +132,19 @@ message MsgUnpauseZRC20 {
 message MsgUnpauseZRC20Response {}
 
 message MsgUpdateGatewayContract {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string new_gateway_contract_address = 2;
 }
 
 message MsgUpdateGatewayContractResponse {}
+
+message MsgUpdateZRC20Name {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string zrc20_address = 2;
+  string name = 3;
+  string symbol = 4;
+}
+
+message MsgUpdateZRC20NameResponse {}

@@ -5,7 +5,7 @@ smart contracts and messaging between any blockchain.
 
 ## Prerequisites
 
-- [Go](https://golang.org/doc/install) 1.22
+- [Go](https://golang.org/doc/install) 1.23
 - [Docker](https://docs.docker.com/install/) and
   [Docker Compose](https://docs.docker.com/compose/install/) (optional, for
   running tests locally)
@@ -33,6 +33,7 @@ In addition to the blockchain codebase, ZetaChain’s architecture includes a se
 * [ZetaChain EVM and EVM connected chains](https://github.com/zeta-chain/protocol-contracts)
 * [Solana connected chains (SVM)](https://github.com/zeta-chain/protocol-contracts-solana)
 * [TON connected chains (TVM)](https://github.com/zeta-chain/protocol-contracts-ton)
+* [Sui connected chains (Sui's MVM)](https://github.com/zeta-chain/protocol-contracts-sui)
 
 These repositories contain the necessary code and tools to deploy, interact with, and extend the functionality of ZetaChain’s cross-chain protocol on each respective blockchain network.
 

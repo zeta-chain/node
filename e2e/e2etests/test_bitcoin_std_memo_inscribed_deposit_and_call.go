@@ -5,19 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/memo"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []string) {
-	// Start mining blocks
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send and fee rate
 	require.Len(r, args, 2)
 	amount := utils.ParseFloat(r, args[0])
@@ -44,7 +40,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 
 	// ACT
 	// Send BTC to TSS address with memo
-	txHash, depositAmount := r.InscribeToTSSFromDeployerWithMemo(amount, memoBytes, int64(feeRate))
+	txHash, depositAmount, commitAddress := r.InscribeToTSSWithMemo(amount, memoBytes, int64(feeRate))
 
 	// ASSERT
 	// wait for the cctx to be mined
@@ -56,5 +52,10 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	depositFeeSats, err := common.GetSatoshis(common.DefaultDepositorFee)
 	require.NoError(r, err)
 	receiveAmount := depositAmount - depositFeeSats
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(receiveAmount))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(receiveAmount),
+		[]byte(commitAddress),
+	)
 }

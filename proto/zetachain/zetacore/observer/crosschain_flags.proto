@@ -19,6 +19,10 @@ message GasPriceIncreaseFlags {
   // Maximum number of pending crosschain transactions to check for gas price
   // increase
   uint32 maxPendingCctxs = 5;
+
+  // Retry interval for Bitcoin chain pending cctx gas price increase
+  google.protobuf.Duration retryIntervalBTC = 6
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 }
 
 message CrosschainFlags {

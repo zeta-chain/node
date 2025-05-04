@@ -45,7 +45,12 @@ func (signer *Signer) SignWithdrawTx(
 	ob *observer.Observer,
 ) (*wire.MsgTx, error) {
 	nonceMark := chains.NonceMarkAmount(txData.nonce)
-	estimateFee := float64(txData.feeRate*common.OutboundBytesMax) / 1e8
+
+	// we don't know how many UTXOs will be used beforehand, so we do
+	// a conservative estimation using the maximum size of the outbound tx:
+	// estimateFee = feeRate * maxTxSize
+	// #nosec G115 always in range
+	estimateFee := float64(int64(txData.feeRate)*common.OutboundBytesMax) / 1e8
 	totalAmount := txData.amount + estimateFee + reservedRBFFees + float64(nonceMark)*1e-8
 
 	// refreshing UTXO list before TSS keysign is important:
@@ -57,7 +62,7 @@ func (signer *Signer) SignWithdrawTx(
 	// 2. RBF requires a higher fee rate than the original tx, otherwise it will fail.
 	err := ob.FetchUTXOs(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "FetchUTXOs failed")
+		return nil, errors.Wrapf(err, "FetchUTXOs failed for nonce %d", txData.nonce)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -67,7 +72,6 @@ func (signer *Signer) SignWithdrawTx(
 		MaxNoOfInputsPerTx,
 		txData.nonce,
 		consolidationRank,
-		false,
 	)
 	if err != nil {
 		return nil, err
@@ -75,7 +79,7 @@ func (signer *Signer) SignWithdrawTx(
 
 	// build tx and add inputs
 	tx := wire.NewMsgTx(wire.TxVersion)
-	inAmounts, err := signer.AddTxInputs(tx, selected.UTXOs)
+	inAmounts, err := AddTxInputs(tx, selected.UTXOs)
 	if err != nil {
 		return nil, err
 	}
@@ -86,42 +90,32 @@ func (signer *Signer) SignWithdrawTx(
 	if err != nil {
 		return nil, err
 	}
-	if txData.txSize < common.BtcOutboundBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
-		signer.Logger().Std.Info().
-			Msgf("txSize %d is less than BtcOutboundBytesWithdrawer %d for nonce %d", txData.txSize, txSize, txData.nonce)
-	}
-	if txSize < common.OutboundBytesMin { // outbound shouldn't be blocked by low sizeLimit
-		signer.Logger().Std.Warn().
-			Msgf("txSize %d is less than outboundBytesMin %d; use outboundBytesMin", txSize, common.OutboundBytesMin)
-		txSize = common.OutboundBytesMin
-	}
-	if txSize > common.OutboundBytesMax { // in case of accident
-		signer.Logger().Std.Warn().
-			Msgf("txSize %d is greater than outboundBytesMax %d; use outboundBytesMax", txSize, common.OutboundBytesMax)
+	logger := signer.Logger().Std.With().Uint64("tx.nonce", txData.nonce).Int64("tx.size", txSize).Logger()
+	if txSize > common.OutboundBytesMax {
+		// in case of accident
+		logger.Warn().Msg("tx size is greater than outboundBytesMax")
 		txSize = common.OutboundBytesMax
 	}
 
 	// fee calculation
-	// #nosec G115 always in range (checked above)
-	fees := txSize * txData.feeRate
-	signer.Logger().
-		Std.Info().
-		Msgf("bitcoin outbound nonce %d feeRate %d size %d fees %d consolidated %d utxos of value %v",
-			txData.nonce, txData.feeRate, txSize, fees, selected.ConsolidatedUTXOs, selected.ConsolidatedValue)
+	// #nosec G115 always in range
+	fees := txSize * int64(txData.feeRate)
 
 	// add tx outputs
 	inputValue := selected.Value
-	err = signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx)
-	if err != nil {
+	if err := signer.AddWithdrawTxOutputs(tx, txData.to, inputValue, txData.amountSats, nonceMark, fees, txData.cancelTx); err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
+	signer.Logger().
+		Std.Info().
+		Uint64("tx.rate", txData.feeRate).
+		Int64("tx.fees", fees).
+		Uint16("tx.consolidated_utxos", selected.ConsolidatedUTXOs).
+		Float64("tx.consolidated_value", selected.ConsolidatedValue).
+		Msg("signing bitcoin outbound")
 
 	// sign the tx
-	err = signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce)
-	if err != nil {
+	if err := signer.SignTx(ctx, tx, inAmounts, txData.height, txData.nonce); err != nil {
 		return nil, errors.Wrap(err, "SignTx failed")
 	}
 
@@ -129,7 +123,7 @@ func (signer *Signer) SignWithdrawTx(
 }
 
 // AddTxInputs adds the inputs to the tx and returns input amounts
-func (signer *Signer) AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, error) {
+func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, error) {
 	amounts := make([]int64, len(utxos))
 	for i, utxo := range utxos {
 		hash, err := chainhash.NewHashFromStr(utxo.TxID)
@@ -161,6 +155,9 @@ func (signer *Signer) AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentRes
 // 1st output: the nonce-mark btc to TSS itself
 // 2nd output: the payment to the recipient
 // 3rd output: the remaining btc to TSS itself
+//
+// Note: float64 is used for for 'inputValue' because UTXOs struct uses float64.
+// But we need to use 'int64' for the outputs because NewTxOut expects int64.
 func (signer *Signer) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,
 	to btcutil.Address,
@@ -189,7 +186,7 @@ func (signer *Signer) AddWithdrawTxOutputs(
 	}
 
 	// 1st output: the nonce-mark btc to TSS self
-	payToSelfScript, err := signer.TSSToPkScript()
+	payToSelfScript, err := signer.TSS().PubKey().BTCPayToAddrScript(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -225,7 +222,7 @@ func (signer *Signer) SignTx(
 	height uint64,
 	nonce uint64,
 ) error {
-	pkScript, err := signer.TSSToPkScript()
+	pkScript, err := signer.TSS().PubKey().BTCPayToAddrScript(signer.Chain().ChainId)
 	if err != nil {
 		return err
 	}
@@ -244,9 +241,12 @@ func (signer *Signer) SignTx(
 	// sign the tx with TSS
 	sig65Bs, err := signer.TSS().SignBatch(ctx, witnessHashes, height, nonce, signer.Chain().ChainId)
 	if err != nil {
-		return fmt.Errorf("SignBatch failed: %v", err)
+		return errors.Wrap(err, "SignBatch failed")
 	}
 
+	// add witnesses to the tx
+	pkCompressed := signer.TSS().PubKey().Bytes(true)
+	hashType := txscript.SigHashAll
 	for ix := range tx.TxIn {
 		sig65B := sig65Bs[ix]
 		R := &btcec.ModNScalar{}
@@ -255,8 +255,6 @@ func (signer *Signer) SignTx(
 		S.SetBytes((*[32]byte)(sig65B[32:64]))
 		sig := btcecdsa.NewSignature(R, S)
 
-		pkCompressed := signer.TSS().PubKey().Bytes(true)
-		hashType := txscript.SigHashAll
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(hashType)), pkCompressed}
 		tx.TxIn[ix].Witness = txWitness
 	}

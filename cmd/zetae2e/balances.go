@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,12 +28,13 @@ func NewBalancesCmd() *cobra.Command {
 		false,
 		"skip the BTC network",
 	)
+	registerERC20Flags(cmd)
 	return cmd
 }
 
 func runBalances(cmd *cobra.Command, args []string) error {
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], true)
 	if err != nil {
 		return err
 	}
@@ -46,7 +48,13 @@ func runBalances(cmd *cobra.Command, args []string) error {
 	logger := runner.NewLogger(false, color.FgHiCyan, "")
 
 	// initialize context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
+	defer cancel(nil)
+
+	err = processZRC20Flags(cmd, &conf)
+	if err != nil {
+		return fmt.Errorf("process ZRC20 flags: %w", err)
+	}
 
 	// initialize deployer runner with config
 	r, err := zetae2econfig.RunnerFromConfig(
@@ -58,13 +66,13 @@ func runBalances(cmd *cobra.Command, args []string) error {
 		logger,
 	)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 
 	balances, err := r.GetAccountBalances(skipBTC)
 	if err != nil {
-		cancel()
+		cancel(err)
 		return err
 	}
 	r.PrintAccountBalances(balances)

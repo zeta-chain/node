@@ -11,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 // MaxMessageLength is the maximum length of a message in a cctx
@@ -45,6 +46,14 @@ func WithEVMRevertOptions(revertOptions gatewayevm.RevertOptions) InboundVoteOpt
 	}
 }
 
+// WithSOLRevertOptions sets the revert options for the inbound vote message (SOL format)
+// the function convert the type from solana instruction to type defined in proto
+func WithSOLRevertOptions(revertOptions solana.RevertOptions) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.RevertOptions = NewRevertOptionsFromSOL(revertOptions)
+	}
+}
+
 // WithCrossChainCall sets the cross chain call to true for the inbound vote message
 func WithCrossChainCall(isCrossChainCall bool) InboundVoteOption {
 	return func(msg *MsgVoteInbound) {
@@ -68,9 +77,11 @@ func NewMsgVoteInbound(
 	gasLimit uint64,
 	coinType coin.CoinType,
 	asset string,
-	eventIndex uint,
+	eventIndex uint64,
 	protocolContractVersion ProtocolContractVersion,
 	isArbitraryCall bool,
+	status InboundStatus,
+	confirmationMode ConfirmationMode,
 	options ...InboundVoteOption,
 ) *MsgVoteInbound {
 	msg := &MsgVoteInbound{
@@ -90,10 +101,12 @@ func NewMsgVoteInbound(
 		},
 		CoinType:                coinType,
 		Asset:                   asset,
-		EventIndex:              uint64(eventIndex),
+		EventIndex:              eventIndex,
 		ProtocolContractVersion: protocolContractVersion,
 		RevertOptions:           NewEmptyRevertOptions(),
 		IsCrossChainCall:        false,
+		Status:                  status,
+		ConfirmationMode:        confirmationMode,
 	}
 
 	for _, option := range options {
@@ -151,4 +164,26 @@ func (msg *MsgVoteInbound) Digest() string {
 	m.InboundBlockHeight = 0
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
+}
+
+// EligibleForFastConfirmation determines if the inbound msg is eligible for fast confirmation
+func (msg *MsgVoteInbound) EligibleForFastConfirmation() bool {
+	// only asset CoinType is eligible for fast confirmation
+	if !msg.CoinType.IsAsset() {
+		return false
+	}
+
+	switch msg.ProtocolContractVersion {
+	case ProtocolContractVersion_V1:
+		// msg using protocol contract version V1 is not eligible for fast confirmation because:
+		// 1. whether the receiver address is a contract or not is unknown
+		// 2. it can be a depositAndCall (Gas or ZRC20) with empty payload
+		// 3. it can be a message passing (CoinType_Zeta) calls 'onReceive'
+		return false
+	case ProtocolContractVersion_V2:
+		// in protocol contract version V2, simple deposit is distinguished from depositAndCall/NoAssetCall
+		return !msg.IsCrossChainCall
+	default:
+		return false
+	}
 }

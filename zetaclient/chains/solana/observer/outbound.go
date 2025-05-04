@@ -2,6 +2,7 @@ package observer
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"math/big"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -17,59 +17,35 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// WatchOutbound watches solana chain for outgoing txs status
-// TODO(revamp): move ticker function to ticker file
-func (ob *Observer) WatchOutbound(ctx context.Context) error {
-	// get app context
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
+var (
+	gasOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionWithdraw(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecute(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteRevert(inst)
+		},
 	}
 
-	// create outbound ticker based on chain params
-	chainID := ob.Chain().ChainId
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("Solana_WatchOutbound_%d", chainID),
-		ob.ChainParams().OutboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Outbound.Error().Err(err).Msg("error creating ticker")
-		return err
+	splOutboundParsers = []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error){
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionWithdrawSPL(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteSPL(inst)
+		},
+		func(inst solana.CompiledInstruction) (contracts.OutboundInstruction, error) {
+			return contracts.ParseInstructionExecuteSPLRevert(inst)
+		},
 	}
-
-	ob.Logger().Outbound.Info().Msgf("WatchOutbound started for chain %d", chainID)
-	sampledLogger := ob.Logger().Outbound.Sample(&zerolog.BasicSampler{N: 10})
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsOutboundObservationEnabled() {
-				sampledLogger.Info().Msgf("WatchOutbound: outbound observation is disabled for chain %d", chainID)
-				continue
-			}
-
-			// process outbound trackers
-			err := ob.ProcessOutboundTrackers(ctx)
-			if err != nil {
-				ob.Logger().
-					Outbound.Error().
-					Err(err).
-					Msgf("WatchOutbound: error ProcessOutboundTrackers for chain %d", chainID)
-			}
-
-			ticker.UpdateInterval(ob.ChainParams().OutboundTicker, ob.Logger().Outbound)
-		case <-ob.StopChannel():
-			ob.Logger().Outbound.Info().Msgf("WatchOutbound: watcher stopped for chain %d", chainID)
-			return nil
-		}
-	}
-}
+)
 
 // ProcessOutboundTrackers processes Solana outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
@@ -160,9 +136,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// status was already verified as successful in CheckFinalizedTx
 	outboundStatus := chains.ReceiveStatus_success
+	if inst.InstructionDiscriminator() == contracts.DiscriminatorIncrementNonce {
+		outboundStatus = chains.ReceiveStatus_failed
+	}
 
 	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
+	if compliance.IsCCTXRestricted(cctx) {
 		// use cctx's amount to bypass the amount check in zetacore
 		outboundAmount = cctx.GetCurrentOutboundParam().Amount.BigInt()
 	}
@@ -196,9 +175,13 @@ func (ob *Observer) PostVoteOutbound(
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
 	// and the vote msg won't trigger ZEVM interaction
 	const (
-		gasLimit      = zetacore.PostVoteOutboundGasLimit
-		retryGasLimit = 0
+		gasLimit = zetacore.PostVoteOutboundGasLimit
 	)
+
+	retryGasLimit := zetacore.PostVoteOutboundRetryGasLimit
+	if msg.Status == chains.ReceiveStatus_failed {
+		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
+	}
 
 	// post vote to zetacore
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
@@ -249,6 +232,7 @@ func (ob *Observer) CreateMsgVoteOutbound(
 		ob.Chain().ChainId,
 		nonce,
 		coinType,
+		crosschaintypes.ConfirmationMode_SAFE,
 	)
 }
 
@@ -322,6 +306,22 @@ func (ob *Observer) CheckFinalizedTx(
 	return txResult, true
 }
 
+// parseInstructionWith attempts to parse an instruction using a list of parsers
+func parseInstructionWith(
+	instruction solana.CompiledInstruction,
+	parsers []func(solana.CompiledInstruction) (contracts.OutboundInstruction, error),
+) (contracts.OutboundInstruction, error) {
+	errs := make([]error, 0, len(parsers))
+	for _, parser := range parsers {
+		inst, err := parser(instruction)
+		if err == nil {
+			return inst, nil
+		}
+		errs = append(errs, err)
+	}
+	return nil, errors.Wrap(stderrors.Join(errs...), "failed to parse instruction")
+}
+
 // ParseGatewayInstruction parses the outbound instruction from tx result
 func ParseGatewayInstruction(
 	txResult *rpc.GetTransactionResult,
@@ -334,13 +334,33 @@ func ParseGatewayInstruction(
 		return nil, errors.Wrap(err, "error unmarshaling transaction")
 	}
 
-	// there should be only one single instruction ('withdraw' or 'withdraw_spl_token')
-	if len(tx.Message.Instructions) != 1 {
-		return nil, fmt.Errorf("want 1 instruction, got %d", len(tx.Message.Instructions))
+	// validate instruction count
+	// if there are 2 instructions, first one can only be optional compute budget instruction
+	instructionCount := len(tx.Message.Instructions)
+	if instructionCount < 1 || instructionCount > 2 {
+		return nil, fmt.Errorf("unexpected number of instructions: %d", instructionCount)
 	}
-	instruction := tx.Message.Instructions[0]
 
-	// get the program ID
+	// get gateway instruction
+	instruction := tx.Message.Instructions[instructionCount-1]
+
+	// if there are two instructions, validate the first one program is compute budget
+	if instructionCount == 2 {
+		budgetProgramID, err := tx.Message.Program(tx.Message.Instructions[0].ProgramIDIndex)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve program ID")
+		}
+
+		if !budgetProgramID.Equals(solana.ComputeBudget) {
+			return nil, fmt.Errorf(
+				"programID %s is not matching compute budget id %s",
+				budgetProgramID,
+				solana.ComputeBudget,
+			)
+		}
+	}
+
+	// validate gateway instruction program
 	programID, err := tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting program ID")
@@ -351,14 +371,22 @@ func ParseGatewayInstruction(
 		return nil, fmt.Errorf("programID %s is not matching gatewayID %s", programID, gatewayID)
 	}
 
-	// parse the instruction as a 'withdraw' or 'withdraw_spl_token'
+	// first check if it was simple nonce increment instruction, which indicates that outbound failed
+	inst, err := contracts.ParseInstructionIncrementNonce(instruction)
+	if err == nil {
+		return inst, nil
+	}
+
+	// parse the outbound instruction
 	switch coinType {
 	case coin.CoinType_Gas:
-		return contracts.ParseInstructionWithdraw(instruction)
+		return parseInstructionWith(instruction, gasOutboundParsers)
+	case coin.CoinType_ERC20:
+		return parseInstructionWith(instruction, splOutboundParsers)
 	case coin.CoinType_Cmd:
 		return contracts.ParseInstructionWhitelist(instruction)
-	case coin.CoinType_ERC20:
-		return contracts.ParseInstructionWithdrawSPL(instruction)
+	case coin.CoinType_NoAssetCall:
+		return contracts.ParseInstructionExecute(instruction)
 	default:
 		return nil, fmt.Errorf("unsupported outbound coin type %s", coinType)
 	}

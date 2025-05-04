@@ -14,10 +14,15 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 )
+
+// Connected programs used to test sol and spl withdraw and call
+var ConnectedProgramID = solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
+var ConnectedSPLProgramID = solana.MustPublicKeyFromBase58("8iUjRRhUCn8BjrvsWPfj8mguTe9L81ES4oAUApiF8JFC")
 
 // ComputePdaAddress computes the PDA address for the gateway program
 func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
@@ -25,7 +30,7 @@ func (r *E2ERunner) ComputePdaAddress() solana.PublicKey {
 	pdaComputed, bump, err := solana.FindProgramAddress([][]byte{seed}, r.GatewayProgram)
 	require.NoError(r, err)
 
-	r.Logger.Info("computed pda: %s, bump %d\n", pdaComputed, bump)
+	r.Logger.Info("computed pda for gateway program: %s, bump %d\n", pdaComputed, bump)
 
 	return pdaComputed
 }
@@ -36,6 +41,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 	receiver ethcommon.Address,
 	data []byte,
 	amount uint64,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Instruction {
 	var err error
 	var depositData []byte
@@ -44,6 +50,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 			Discriminator: solanacontract.DiscriminatorDeposit,
 			Amount:        amount,
 			Receiver:      receiver,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	} else {
@@ -52,6 +59,7 @@ func (r *E2ERunner) CreateDepositInstruction(
 			Amount:        amount,
 			Receiver:      receiver,
 			Memo:          data,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	}
@@ -63,6 +71,28 @@ func (r *E2ERunner) CreateDepositInstruction(
 			solana.Meta(signer).WRITE().SIGNER(),
 			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(solana.SystemProgramID),
+		},
+	}
+}
+
+// CreateSOLCallInstruction creates a 'call' instruction
+func (r *E2ERunner) CreateSOLCallInstruction(
+	signer solana.PublicKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Instruction {
+	callData, err := borsh.Serialize(solanacontract.CallInstructionParams{
+		Discriminator: solanacontract.DiscriminatorCall,
+		Receiver:      receiver,
+		Memo:          data,
+	})
+	require.NoError(r, err)
+
+	return &solana.GenericInstruction{
+		ProgID:    r.GatewayProgram,
+		DataBytes: callData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
 		},
 	}
 }
@@ -80,10 +110,10 @@ func (r *E2ERunner) CreateWhitelistSPLMintInstruction(
 		ProgID:    r.GatewayProgram,
 		DataBytes: data,
 		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
 			solana.Meta(whitelistEntry).WRITE(),
 			solana.Meta(whitelistCandidate),
-			solana.Meta(r.ComputePdaAddress()).WRITE(),
-			solana.Meta(signer).WRITE().SIGNER(),
 			solana.Meta(solana.SystemProgramID),
 		},
 	}
@@ -99,6 +129,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 	to solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Instruction {
 	var err error
 	var depositSPLData []byte
@@ -107,6 +138,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 			Discriminator: solanacontract.DiscriminatorDepositSPL,
 			Amount:        amount,
 			Receiver:      receiver,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	} else {
@@ -115,6 +147,7 @@ func (r *E2ERunner) CreateDepositSPLInstruction(
 			Amount:        amount,
 			Receiver:      receiver,
 			Memo:          data,
+			RevertOptions: revertOptions,
 		})
 		require.NoError(r, err)
 	}
@@ -212,6 +245,7 @@ func (r *E2ERunner) SPLDepositAndCall(
 	mintAccount solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Signature {
 	// ata for pda
 	pda := r.ComputePdaAddress()
@@ -234,9 +268,10 @@ func (r *E2ERunner) SPLDepositAndCall(
 		pdaAta,
 		receiver,
 		data,
+		revertOptions,
 	)
 
-	limit := computebudget.NewSetComputeUnitLimitInstruction(50000).Build() // 50k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(500000).Build() // 500k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
@@ -342,7 +377,7 @@ func (r *E2ERunner) DeploySPL(privateKey *solana.PrivateKey, whitelist bool) *so
 	return mintAccount
 }
 
-// BroadcastTxSync broadcasts a transaction once and checks if it's confirmed
+// BroadcastTxSyncOnce broadcasts a transaction once and checks if it's confirmed
 func (r *E2ERunner) BroadcastTxSyncOnce(tx *solana.Transaction) (solana.Signature, *rpc.GetTransactionResult, bool) {
 	// broadcast the transaction
 	r.Logger.Info("Broadcast once start")
@@ -398,6 +433,7 @@ func (r *E2ERunner) BroadcastTxSync(tx *solana.Transaction) (solana.Signature, *
 
 		if isConfirmed {
 			r.Logger.Info("Tx broadcasted and confirmed")
+			require.Nil(r, out.Meta.Err, out.Meta.LogMessages)
 			return sig, out
 		}
 
@@ -412,6 +448,7 @@ func (r *E2ERunner) SOLDepositAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Signature {
 	// if signer is not provided, use the runner account as default
 	if signerPrivKey == nil {
@@ -420,10 +457,10 @@ func (r *E2ERunner) SOLDepositAndCall(
 	}
 
 	// create 'deposit' instruction
-	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64())
+	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64(), revertOptions)
 
 	// create and sign the transaction
-	limit := computebudget.NewSetComputeUnitLimitInstruction(50000).Build() // 50k compute unit limit
+	limit := computebudget.NewSetComputeUnitLimitInstruction(500000).Build() // 500k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
 		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
 	signedTx := r.CreateSignedTransaction(
@@ -439,6 +476,38 @@ func (r *E2ERunner) SOLDepositAndCall(
 	return sig
 }
 
+// SOLCall calls a contract on zevm
+func (r *E2ERunner) SOLCall(
+	signerPrivKey *solana.PrivateKey,
+	receiver ethcommon.Address,
+	data []byte,
+) solana.Signature {
+	// if signer is not provided, use the runner account as default
+	if signerPrivKey == nil {
+		privkey := r.GetSolanaPrivKey()
+		signerPrivKey = &privkey
+	}
+
+	// create 'call' instruction
+	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data)
+
+	// create and sign the transaction
+	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().
+		SetMicroLamports(100000).Build() // 0.1 lamports per compute unit
+	signedTx := r.CreateSignedTransaction(
+		[]solana.Instruction{limit, feesInit, instruction},
+		*signerPrivKey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	sig, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("call logs: %v", out.Meta.LogMessages)
+
+	return sig
+}
+
 // WithdrawSOLZRC20 withdraws an amount of ZRC20 SOL tokens
 func (r *E2ERunner) WithdrawSOLZRC20(
 	to solana.PublicKey,
@@ -446,19 +515,122 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	approveAmount *big.Int,
 ) *ethtypes.Transaction {
 	// approve
-	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.SOLZRC20Addr, approveAmount)
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.SOLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
+	tx, err = r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte(to.String()),
+		amount,
+		r.SOLZRC20Addr,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// WithdrawAndCallSOLZRC20 withdraws an amount of ZRC20 SOL tokens and calls program on solana
+func (r *E2ERunner) WithdrawAndCallSOLZRC20(
+	to solana.PublicKey,
+	amount *big.Int,
+	approveAmount *big.Int,
+	data []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// approve
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+
+	// create encoded msg
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
+	require.NoError(r, err)
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
+	// withdraw
+	tx, err = r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		[]byte(to.String()),
+		amount,
+		r.SOLZRC20Addr,
+		msgEncoded,
+		gatewayzevm.CallOptions{GasLimit: big.NewInt(250000)},
+		revertOptions,
+	)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+
+	// wait for tx receipt
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw_and_call")
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// CallSOLZRC20 calls program on solana
+func (r *E2ERunner) CallSOLZRC20(
+	to solana.PublicKey,
+	approveAmount *big.Int,
+	data []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// approve
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+
+	// create encoded msg
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
+	require.NoError(r, err)
+
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
+	// call
+	tx, err = r.GatewayZEVM.Call(
+		r.ZEVMAuth,
+		[]byte(to.String()),
+		r.SOLZRC20Addr,
+		msgEncoded,
+		gatewayzevm.CallOptions{GasLimit: big.NewInt(250000)},
+		revertOptions,
+	)
+	require.NoError(r, err)
+	utils.RequireTxSuccessful(r, receipt, "withdraw_and_call")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	return tx
@@ -484,6 +656,70 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+
+	return tx
+}
+
+// WithdrawAndCallSPLZRC20 withdraws an amount of ZRC20 SPL tokens and calls program on solana
+func (r *E2ERunner) WithdrawAndCallSPLZRC20(
+	to solana.PublicKey,
+	amount *big.Int,
+	approveAmount *big.Int,
+	data []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// approve
+	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+	tx, err = r.SPLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	require.NoError(r, err)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "approve")
+
+	// create encoded msg
+	connected := solana.MustPublicKeyFromBase58(ConnectedSPLProgramID.String())
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
+	require.NoError(r, err)
+
+	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
+	randomWalletAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), r.GetSolanaPrivKey().PublicKey(), r.SPLAddr)
+
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(connectedPdaAta.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.SPLAddr), IsWritable: false},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(randomWalletAta), IsWritable: true},
+			{PublicKey: [32]byte(solana.TokenProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: data,
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
+	// withdraw
+	tx, err = r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		[]byte(to.String()),
+		amount,
+		r.SPLZRC20Addr,
+		msgEncoded,
+		gatewayzevm.CallOptions{GasLimit: big.NewInt(250000)},
+		revertOptions,
+	)
+	require.NoError(r, err)
+	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+
+	// wait for tx receipt
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt, "withdraw_and_call")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	return tx

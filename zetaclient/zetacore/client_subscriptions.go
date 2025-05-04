@@ -2,6 +2,7 @@ package zetacore
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/errors"
 	ctypes "github.com/cometbft/cometbft/types"
@@ -22,17 +23,20 @@ func (c *Client) NewBlockSubscriber(ctx context.Context) (chan ctypes.EventDataN
 	blocksChan := make(chan ctypes.EventDataNewBlock)
 
 	go func() {
-		consumer := blockSubscriber.Add()
+		consumer, closeConsumer := blockSubscriber.Add()
 
 		for {
 			select {
-			case <-ctx.Done():
-				// fixme: MEMORY LEAK: this might be dangerous because the consumer is not closed.
-				// Fanout will spawn "zombie" goroutines to push to the chan, but nobody is reading from it,
-				// Will be addressed in future orchestrator V2 PRs (not urgent as of now)
-				return
 			case block := <-consumer:
 				blocksChan <- block
+			case <-time.After(time.Second * 10):
+				// the subscription should automatically reconnect after zetacore
+				// restart, but we should log this just in case that logic is not
+				// working
+				c.logger.Warn().Msg("Block subscriber: no blocks after 10 seconds")
+			case <-ctx.Done():
+				closeConsumer()
+				return
 			}
 		}
 	}()
@@ -43,15 +47,15 @@ func (c *Client) NewBlockSubscriber(ctx context.Context) (chan ctypes.EventDataN
 // resolveBlockSubscriber returns the block subscriber channel
 // or subscribes to it for the first time.
 func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlock], error) {
-	// noop
-	if blocksFanout := c.blockFanOutThreadSafe(); blocksFanout != nil {
-		c.logger.Info().Msg("Resolved existing block subscriber")
-		return blocksFanout, nil
-	}
-
 	// we need this lock to prevent 2 Subscribe calls at the same time
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	// noop
+	if c.blocksFanout != nil {
+		c.logger.Info().Msg("Resolved existing block subscriber")
+		return c.blocksFanout, nil
+	}
 
 	c.logger.Info().Msg("Subscribing to block events")
 
@@ -75,7 +79,7 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 				continue
 			}
 
-			c.logger.Info().Int64("height", newBlockEvent.Block.Height).Msg("Received new block event")
+			c.logger.Debug().Int64("height", newBlockEvent.Block.Height).Msg("Received new block event")
 
 			blockChan <- newBlockEvent
 		}
@@ -83,17 +87,10 @@ func (c *Client) resolveBlockSubscriber() (*fanout.FanOut[ctypes.EventDataNewBlo
 
 	// Create a fanout
 	// It allows a "global" chan (i.e. blockChan) to stream to multiple consumers independently.
-	fo := fanout.New[ctypes.EventDataNewBlock](blockChan, fanout.DefaultBuffer)
+	fo := fanout.New(blockChan, fanout.DefaultBuffer)
 	fo.Start()
 
 	c.blocksFanout = fo
 
 	return fo, nil
-}
-
-func (c *Client) blockFanOutThreadSafe() *fanout.FanOut[ctypes.EventDataNewBlock] {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	return c.blocksFanout
 }

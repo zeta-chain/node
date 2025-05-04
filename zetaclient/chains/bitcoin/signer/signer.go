@@ -5,42 +5,40 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"runtime/debug"
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
+	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
-	"github.com/zeta-chain/node/zetaclient/outboundprocessor"
 )
 
 const (
-	// broadcastBackoff is the initial backoff duration for retrying broadcast
-	broadcastBackoff = 1000 * time.Millisecond
+	// broadcastBackoff is the backoff duration for retrying broadcast
+	broadcastBackoff = time.Second * 6
 
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
-	broadcastRetries = 5
+	broadcastRetries = 10
 )
 
 type RPC interface {
+	IsRegnet() bool
 	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64, regnet bool) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
-	GetTotalMempoolParentsSizeNFees(
-		ctx context.Context,
-		childHash string,
-		timeout time.Duration,
-	) (int64, float64, int64, int64, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string) (client.MempoolTxsAndFees, error)
 }
 
 // Signer deals with signing & broadcasting BTC transactions.
@@ -50,11 +48,8 @@ type Signer struct {
 }
 
 // New creates a new Bitcoin signer
-func New(chain chains.Chain, tss interfaces.TSSSigner, rpc RPC, logger base.Logger) *Signer {
-	return &Signer{
-		Signer: base.NewSigner(chain, tss, logger),
-		rpc:    rpc,
-	}
+func New(baseSigner *base.Signer, rpc RPC) *Signer {
+	return &Signer{Signer: baseSigner, rpc: rpc}
 }
 
 // Broadcast sends the signed transaction to the network
@@ -77,35 +72,32 @@ func (signer *Signer) Broadcast(ctx context.Context, signedTx *wire.MsgTx) error
 	return nil
 }
 
-// TSSToPkScript returns the TSS pkScript
-func (signer *Signer) TSSToPkScript() ([]byte, error) {
-	tssAddrP2WPKH, err := signer.TSS().PubKey().AddressBTC(signer.Chain().ChainId)
-	if err != nil {
-		return nil, err
-	}
-	return txscript.PayToAddrScript(tssAddrP2WPKH)
-}
-
 // TryProcessOutbound signs and broadcasts a BTC transaction from a new outbound
 func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
-	outboundProcessor *outboundprocessor.Processor,
-	outboundID string,
 	observer *observer.Observer,
 	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
+	outboundID := base.OutboundIDFromCCTX(cctx)
+	signer.MarkOutbound(outboundID, true)
+
 	// end outbound process on panic
 	defer func() {
-		outboundProcessor.EndTryProcess(outboundID)
+		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
-			signer.Logger().Std.Error().Msgf("BTC TryProcessOutbound: %s, caught panic error: %v", cctx.Index, err)
+			signer.Logger().
+				Std.Error().
+				Str(logs.FieldMethod, "TryProcessOutbound").
+				Str(logs.FieldCctx, cctx.Index).
+				Interface("panic", err).
+				Str("stack_trace", string(debug.Stack())).
+				Msg("caught panic error")
 		}
 	}()
 
 	// prepare logger
-	chain := signer.Chain()
 	params := cctx.GetCurrentOutboundParam()
 	lf := map[string]any{
 		logs.FieldMethod: "TryProcessOutbound",
@@ -113,15 +105,16 @@ func (signer *Signer) TryProcessOutbound(
 		logs.FieldNonce:  params.TssNonce,
 	}
 	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
-	if err == nil {
-		lf["signer"] = signerAddress.String()
+	if err != nil {
+		return
 	}
+	lf["signer"] = signerAddress.String()
 	logger := signer.Logger().Std.With().Fields(lf).Logger()
 
 	// query network info to get minRelayFee (typically 1000 satoshis)
 	networkInfo, err := signer.rpc.GetNetworkInfo(ctx)
 	if err != nil {
-		logger.Error().Err(err).Msgf("failed get bitcoin network info")
+		logger.Error().Err(err).Msg("failed get bitcoin network info")
 		return
 	}
 	minRelayFee := networkInfo.RelayFee
@@ -130,30 +123,21 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
+	// setup outbound data
+	txData, err := NewOutboundData(cctx, height, minRelayFee, logger, signer.Logger().Compliance)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
+		return
+	}
+
 	var (
-		rbfTx    = false
-		signedTx *wire.MsgTx
-		stuckTx  = observer.GetLastStuckOutbound()
+		signedTx       *wire.MsgTx
+		stuckTx, found = observer.LastStuckOutbound()
+		rbfTx          = found && stuckTx.Nonce == txData.nonce
 	)
 
 	// sign outbound
-	if stuckTx != nil && params.TssNonce == stuckTx.Nonce {
-		// sign RBF tx
-		rbfTx = true
-		signedTx, err = signer.SignRBFTx(ctx, cctx, height, stuckTx.Tx, minRelayFee)
-		if err != nil {
-			logger.Error().Err(err).Msg("SignRBFTx failed")
-			return
-		}
-		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
-	} else {
-		// setup outbound data
-		txData, err := NewOutboundData(cctx, chain.ChainId, height, minRelayFee, logger, signer.Logger().Compliance)
-		if err != nil {
-			logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
-			return
-		}
-
+	if !rbfTx {
 		// sign withdraw tx
 		signedTx, err = signer.SignWithdrawTx(ctx, txData, observer)
 		if err != nil {
@@ -161,6 +145,14 @@ func (signer *Signer) TryProcessOutbound(
 			return
 		}
 		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignWithdrawTx succeed")
+	} else {
+		// sign RBF tx
+		signedTx, err = signer.SignRBFTx(ctx, txData, stuckTx.Tx)
+		if err != nil {
+			logger.Error().Err(err).Msg("SignRBFTx failed")
+			return
+		}
+		logger.Info().Str(logs.FieldTx, signedTx.TxID()).Msg("SignRBFTx succeed")
 	}
 
 	// broadcast signed outbound
@@ -180,53 +172,50 @@ func (signer *Signer) BroadcastOutbound(
 	txHash := tx.TxID()
 
 	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "broadcastOutbound",
-		logs.FieldNonce:  nonce,
-		logs.FieldTx:     txHash,
-		logs.FieldCctx:   cctx.Index,
-	}
-	logger := signer.Logger().Std
+	logger := signer.Logger().Std.With().
+		Str(logs.FieldMethod, "BroadcastOutbound").
+		Uint64(logs.FieldNonce, nonce).
+		Str(logs.FieldTx, txHash).
+		Str(logs.FieldCctx, cctx.Index).
+		Logger()
 
-	// double check to ensure the tx being replaced is still the last outbound
+	// double check to ensure the tx being replaced is still the last outbound.
+	// when CCTX gets stuck at nonce 'N', the pending nonce will stop incrementing
+	// and stay at 'N' or 'N+1' (at most).
 	if rbfTx && ob.GetPendingNonce() > nonce+1 {
-		logger.Warn().Fields(lf).Msgf("RBF tx nonce is outdated, skipping broadcasting")
+		logger.Warn().Msgf("RBF tx nonce is outdated, skipping broadcasting")
 		return
 	}
 
-	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
-	backOff := broadcastBackoff
-	for i := 0; i < broadcastRetries; i++ {
-		time.Sleep(backOff)
+	// try broacasting tx with backoff in case of RPC error
+	broadcast := func() error {
+		return retry.Retry(signer.Broadcast(ctx, tx))
+	}
 
-		// broadcast tx
-		err := signer.Broadcast(ctx, tx)
-		if err != nil {
-			logger.Warn().Err(err).Fields(lf).Msgf("broadcasting Bitcoin outbound, retry %d", i)
-			backOff *= 2
-			continue
-		}
-		logger.Info().Fields(lf).Msg("broadcasted Bitcoin outbound successfully")
+	bo := backoff.NewConstantBackOff(broadcastBackoff)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, broadcastRetries)
+	if err := retry.DoWithBackoff(broadcast, boWithMaxRetries); err != nil {
+		logger.Error().Err(err).Msgf("unable to broadcast Bitcoin outbound")
+	}
+	logger.Info().Msg("broadcasted Bitcoin outbound successfully")
 
-		// save tx local db
-		ob.SaveBroadcastedTx(txHash, nonce)
+	// save tx local db and ignore db error.
+	// db error is not critical and should not block outbound tracker.
+	if err := ob.SaveBroadcastedTx(txHash, nonce); err != nil {
+		logger.Error().Err(err).Msg("unable to save broadcasted Bitcoin outbound")
+	}
 
-		// add tx to outbound tracker so that all observers know about it
-		zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
-		if err != nil {
-			logger.Err(err).Fields(lf).Msg("unable to add Bitcoin outbound tracker")
-		} else {
-			lf[logs.FieldZetaTx] = zetaHash
-			logger.Info().Fields(lf).Msg("add Bitcoin outbound tracker successfully")
-		}
+	// add tx to outbound tracker so that all observers know about it
+	zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
+	if err != nil {
+		logger.Err(err).Msg("unable to add Bitcoin outbound tracker")
+	} else {
+		logger.Info().Str(logs.FieldZetaTx, zetaHash).Msg("add Bitcoin outbound tracker successfully")
+	}
 
-		// try including this outbound as early as possible
-		_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)
-		if included {
-			logger.Info().Fields(lf).Msg("included newly broadcasted Bitcoin outbound")
-		}
-
-		// successful broadcast; no need to retry
-		break
+	// try including this outbound as early as possible, no need to wait for outbound tracker
+	_, included := ob.TryIncludeOutbound(ctx, cctx, txHash)
+	if included {
+		logger.Info().Msg("included newly broadcasted Bitcoin outbound")
 	}
 }

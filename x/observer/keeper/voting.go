@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
@@ -25,7 +23,9 @@ func (k Keeper) AddVoteToBallot(
 	if err != nil {
 		return ballot, err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot identifier %s", address, ballot.BallotIdentifier))
+	ctx.Logger().Debug("vote added",
+		"voter", address,
+		"ballot_identifier", ballot.BallotIdentifier)
 	k.SetBallot(ctx, &ballot)
 	return ballot, nil
 }
@@ -96,9 +96,9 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 	if err != nil {
 		return err
 	}
-	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
-	if !found {
-		return types.ErrNotValidator
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if err != nil {
+		return err
 	}
 
 	if validator.Jailed || !validator.IsBonded() {
@@ -112,9 +112,9 @@ func (k Keeper) IsOperatorTombstoned(ctx sdk.Context, creator string) (bool, err
 	if err != nil {
 		return false, err
 	}
-	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
-	if !found {
-		return false, types.ErrNotValidator
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if err != nil {
+		return false, err
 	}
 
 	consAddress, err := validator.GetConsAddr()
@@ -133,13 +133,13 @@ func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) 
 	if err != nil {
 		return err
 	}
-	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
-	if !found {
-		return errors.Wrapf(types.ErrNotValidator, "validator : %s", valAddress)
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if err != nil {
+		return errors.Wrapf(err, "validator : %s", valAddress)
 	}
 
-	delegation, found := k.stakingKeeper.GetDelegation(ctx, selfdelAddr, valAddress)
-	if !found {
+	delegation, err := k.stakingKeeper.GetDelegation(ctx, selfdelAddr, valAddress)
+	if err != nil {
 		return errors.Wrapf(types.ErrSelfDelegation, "self delegation : %s , valAddres : %s", selfdelAddr, valAddress)
 	}
 

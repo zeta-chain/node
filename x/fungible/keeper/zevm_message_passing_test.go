@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
 	"math/big"
 	"testing"
 
 	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
@@ -13,7 +16,6 @@ import (
 	"github.com/zeta-chain/ethermint/x/evm/statedb"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	"github.com/zeta-chain/node/testutil/contracts"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -25,7 +27,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -47,7 +49,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -148,7 +150,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		errorMint := errors.New("", 10, "error minting coins")
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
@@ -161,7 +163,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 			data,
 			cctxIndexBytes,
 		)
-		require.ErrorIs(t, err, errorMint)
+		require.ErrorContains(t, err, errorMint.Error())
 	})
 }
 
@@ -171,7 +173,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		dAppContract, err := k.DeployContract(ctx, contracts.DappMetaData)
+		dAppContract, err := k.DeployContract(ctx, dapp.DappMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 
@@ -195,7 +197,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		dappAbi, err := contracts.DappMetaData.GetAbi()
+		dappAbi, err := dapp.DappMetaData.GetAbi()
 		require.NoError(t, err)
 		res, err := k.CallEVM(
 			ctx,
@@ -301,7 +303,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		require.NoError(t, err)
 		errorMint := errors.New("", 101, "error minting coins")
 		bankMock.On("GetSupply", ctx, mock.Anything, mock.Anything).
-			Return(sdk.NewCoin(config.BaseDenom, sdk.NewInt(0))).
+			Return(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(0))).
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
@@ -322,7 +324,7 @@ func TestKeeper_ZEVMRevertAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		dAppContract, err := k.DeployContract(ctx, contracts.DappReverterMetaData)
+		dAppContract, err := k.DeployContract(ctx, dappreverter.DappReverterMetaData)
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, dAppContract)
 

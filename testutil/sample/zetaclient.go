@@ -11,6 +11,7 @@ const (
 	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
 	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 	RestrictedSolAddressTest = "9fA4vYZfCa9k9UHjnvYCk4YoipsooapGciKMgaTBw9UH"
+	RestrictedSuiAddressTest = "0x14454c46e2ac4603adaa15df30e5dbf7662c3177db4b83c326bed5663d25d1bd"
 )
 
 // InboundEvent returns a sample InboundEvent.
@@ -39,6 +40,7 @@ func ComplianceConfig() config.ComplianceConfig {
 			RestrictedEVMAddressTest,
 			RestrictedBtcAddressTest,
 			RestrictedSolAddressTest,
+			RestrictedSuiAddressTest,
 		},
 	}
 }

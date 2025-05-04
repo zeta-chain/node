@@ -15,10 +15,6 @@ import (
 
 // TestBitcoinDepositAndCallRevertWithDust sends a Bitcoin deposit that reverts with a dust amount in the revert outbound.
 func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	require.Len(r, args, 0)
 
 	// 0.002 BTC is consumed in a deposit and revert, the dust is set to 1000 satoshis in the protocol
@@ -31,17 +27,14 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	)
 	amount := depositAmount + zetabitcoin.DefaultDepositorFee
 
-	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
-
 	// ACT
 	// Send BTC to TSS address with a dummy memo
 	// zetacore should revert cctx if call is made on a non-existing address
 	nonExistReceiver := sample.EthAddress()
 	anyMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos, anyMemo)
+
+	// One UTXO is enough to cover the deposit amount
+	txHash, err := r.SendToTSSWithMemo(amount, anyMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
@@ -52,5 +45,8 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	cctx := utils.WaitCctxAbortedByInboundHash(r.Ctx, r, txHash.String(), r.CctxClient)
 
 	require.True(r, cctx.GetCurrentOutboundParam().Amount.Uint64() < constant.BTCWithdrawalDustAmount)
-	require.True(r, strings.Contains(cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrInvalidWithdrawalAmount.Error()))
+	require.True(
+		r,
+		strings.Contains(cctx.CctxStatus.ErrorMessageRevert, crosschaintypes.ErrInvalidWithdrawalAmount.Error()),
+	)
 }

@@ -13,7 +13,7 @@ GOFLAGS := ""
 GOPATH ?= '$(HOME)/go'
 
 # common goreaser command definition
-GOLANG_CROSS_VERSION ?= v1.23.3@sha256:380420abb74844aaebca5bf9e2d00b1d7c78f59ce9e6d47cdb3276281702ca23
+GOLANG_CROSS_VERSION ?= v1.22.7@sha256:24b2d75007f0ec8e35d01f3a8efa40c197235b200a1a91422d78b851f67ecce4
 GORELEASER := $(DOCKER) run \
 	--rm \
 	--privileged \
@@ -46,6 +46,7 @@ export DOCKER_BUILDKIT := 1
 # parameters for localnet docker compose files
 # set defaults to empty to prevent docker warning
 export E2E_ARGS := $(E2E_ARGS)
+export CI := $(CI)
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -235,6 +236,10 @@ start-localnet-skip-build:
 stop-localnet:
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile all down --remove-orphans
 
+# delete any volume ending in persist
+clear-localnet-persistence:
+	$(DOCKER) volume rm $$($(DOCKER) volume ls -qf "label=localnet=true")
+
 ###############################################################################
 ###                         E2E tests               						###
 ###############################################################################
@@ -270,14 +275,24 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-staking-test: e2e-images
+	@echo "--> Starting e2e staking test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-staking" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
 start-e2e-admin-test: e2e-images
 	@echo "--> Starting e2e admin test"
-	export E2E_ARGS="--skip-regular --test-admin" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile eth2 up -d
 
 start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="--test-performance" && \
+	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-e2e-performance-test-1k: e2e-images solana
+	@echo "--> Starting e2e performance test"
+	export E2E_ARGS="--test-performance --iterations=1000" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
@@ -290,7 +305,7 @@ start-e2e-consensus-test: e2e-images
 	@echo "--> Starting e2e consensus test"
 	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
 	export ZETACORE1_PLATFORM=linux/amd64 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d 
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-stress-test: e2e-images
 	@echo "--> Starting stress test"
@@ -299,22 +314,27 @@ start-stress-test: e2e-images
 start-tss-migration-test: e2e-images
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="--test-tss-migration" && \
+	export E2E_ARGS="${E2E_ARGS} --test-tss-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
-	export E2E_ARGS="--skip-regular --test-solana" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
 start-ton-test: e2e-images
 	@echo "--> Starting TON test"
-	export E2E_ARGS="--skip-regular --test-ton" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-ton" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile ton up -d
+
+start-sui-test: e2e-images
+	@echo "--> Starting sui test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-sui" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile sui up -d
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
-	export E2E_ARGS="--skip-regular --test-legacy" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -327,7 +347,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v24' \
+		--build-arg OLD_VERSION='release/v29' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -336,18 +356,19 @@ else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v24.0.0' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v29.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
 .PHONY: zetanode-upgrade
 endif
 
-start-upgrade-test: zetanode-upgrade
+start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
+	export E2E_ARGS="--test-solana" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
@@ -359,7 +380,7 @@ start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
-	export E2E_ARGS="--skip-regular --test-admin" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-admin" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-import-mainnet-test: zetanode-upgrade
@@ -409,7 +430,7 @@ test-sim-fullappsimulation:
 	$(call run-sim-test,"TestFullAppSimulation",TestFullAppSimulation,100,200,30m)
 
 test-sim-import-export:
-	$(call run-sim-test,"test-import-export",TestAppImportExport,100,200,30m)
+	$(call run-sim-test,"test-import-export",TestAppImportExport,50,100,30m)
 
 test-sim-after-import:
 	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,100,200,30m)
@@ -429,12 +450,6 @@ test-sim-import-export-long: runsim
 test-sim-after-import-long: runsim
 	@echo "Running application simulation-after-import. This may take several minute"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestAppSimulationAfterImport
-
-# Use to run all simulation tests quickly (for example, before a creating a PR)
-test-sim-quick:
-	$(call run-sim-test,"test-full-app-sim",TestFullAppSimulation,10,20,30m)
-	$(call run-sim-test,"test-import-export",TestAppImportExport,10,20,30m)
-	$(call run-sim-test,"test-sim-after-import",TestAppSimulationAfterImport,10,20,30m)
 
 .PHONY: \
 test-sim-nondeterminism \
@@ -467,16 +482,6 @@ release:
 ###############################################################################
 ###                     Local Mainnet Development                           ###
 ###############################################################################
-
-#BTC
-start-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
-
-stop-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down
-
-clean-bitcoin-node-mainnet:
-	cd contrib/rpc/bitcoind-mainnet && DOCKER_TAG=$(DOCKER_TAG) docker-compose down -v
 
 #ETHEREUM
 start-eth-node-mainnet:

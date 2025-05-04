@@ -9,65 +9,6 @@
 
 /usr/sbin/sshd
 
-# This function add authz observer authorizations for inbound/outbound votes and tracker messages
-# These messages have been renamed for v17: https://github.com/zeta-chain/node/blob/refactor/rename-outbound-inbound/docs/releases/v17_breaking_changes.md#inbound-and-outtx-renaming
-# There if the genesis is generated with a v16 binary for the upgrade tests, it will not contains authorizations for new messages
-# This function will add the missing authorizations to the genesis file
-# TODO: Remove this function when v17 is released
-# https://github.com/zeta-chain/node/issues/2196
-add_v17_message_authorizations() {
-    # Path to the JSON file
-    json_file="/root/.zetacored/config/genesis.json"
-
-    # Using jq to parse JSON, create new entries, and append them to the authorization array
-    jq '
-        # Store the nodeAccountList array
-        .app_state.observer.nodeAccountList as $list |
-
-        # Iterate over the stored list to construct new objects and append to the authorization array
-        .app_state.authz.authorization += [
-            $list[] |
-            {
-                "granter": .operator,
-                "grantee": .granteeAddress,
-                "authorization": {
-                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.crosschain.MsgVoteInbound"
-                },
-                "expiration": null
-            },
-            {
-                "granter": .operator,
-                "grantee": .granteeAddress,
-                "authorization": {
-                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.crosschain.MsgVoteOutbound"
-                },
-                "expiration": null
-            },
-            {
-                "granter": .operator,
-                "grantee": .granteeAddress,
-                "authorization": {
-                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.crosschain.MsgAddOutboundTracker"
-                },
-                "expiration": null
-            },
-            {
-                "granter": .operator,
-                "grantee": .granteeAddress,
-                "authorization": {
-                    "@type": "/cosmos.authz.v1beta1.GenericAuthorization",
-                    "msg": "/zetachain.zetacore.crosschain.MsgAddInboundTracker"
-                },
-                "expiration": null
-            }
-        ]
-    ' $json_file > temp.json && mv temp.json $json_file
-}
-
-
 add_emissions_withdraw_authorizations() {
 
     config_file="/root/config.yml"
@@ -114,7 +55,33 @@ add_emissions_withdraw_authorizations() {
      mv temp.json "$json_file"
 }
 
+# 10 million zeta
+DEFAULT_FUND_AMOUNT="10000000000000000000000000azeta"
 
+# Funds an individual account
+fund_account() {
+  local name=$1
+  local account=$2
+  local amount=${3:-$DEFAULT_FUND_AMOUNT}
+
+  echo "Funding $name ($account) with $amount"
+
+  zetacored add-genesis-account "$account" "$amount"
+}
+
+# Funds most accounts automatically
+fund_accounts_auto() {
+  # Fund the default account first
+  local default_address=$(yq -r '.default_account.bech32_address' /root/config.yml)
+  fund_account "default_account" "$default_address"
+  
+  # Get all additional accounts and fund them
+  local accounts=$(yq -r '.additional_accounts | keys | sort | .[]' /root/config.yml)
+  for account_key in $accounts; do
+    local address=$(yq -r ".additional_accounts.$account_key.bech32_address" /root/config.yml)
+    fund_account "$account_key" "$address"
+  done
+}
 
 # create keys
 CHAINID="athens_101-1"
@@ -161,7 +128,7 @@ then
   # Init a new node to generate genesis file .
   # Copy config files from existing folders which get copied via Docker Copy when building images
   mkdir -p ~/.backup/config
-  zetacored init Zetanode-Localnet --chain-id=$CHAINID
+  zetacored init Zetanode-Localnet --chain-id=$CHAINID --default-denom azeta
   rm -rf ~/.zetacored/config/app.toml
   rm -rf ~/.zetacored/config/client.toml
   rm -rf ~/.zetacored/config/config.toml
@@ -222,7 +189,7 @@ then
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* zetaclient0:~/.zetacored/keyring-file/
 
-# 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
+  # 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
   for NODE in "${NODELIST[@]}"; do
     INDEX=${NODE:0-1}
     ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/
@@ -236,7 +203,7 @@ then
   ssh zetaclient0 mkdir -p ~/.zetacored/
   scp ~/.zetacored/os_info/os.json zetaclient0:/root/.zetacored/os.json
 
-# 2. Add the observers, authorizations, required params and accounts to the genesis.json
+  # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list --keygen-block 25
 
@@ -246,92 +213,50 @@ then
       exit 1
   fi
 
-  # Check for the existence of "AddToOutTxTracker" string in the genesis file
-  # If this message is found in the genesis, it means add-observer-list has been run with the v16 binary for upgrade tests
-  # In this case, we need to add authorizations for the new v17 messages to the genesis file
-  # TODO: Remove this function when v17 is released
-  # https://github.com/zeta-chain/node/issues/2196
-  if jq -e 'tostring | contains("AddToOutTxTracker")' "/root/.zetacored/config/genesis.json" > /dev/null; then
-    add_v17_message_authorizations
-  fi
+  # Update governance and other chain parameters for localnet
+  jq '
+    .app_state.gov.params.voting_period="30s" |
+    .app_state.gov.params.quorum="0.1" |
+    .app_state.gov.params.threshold="0.1" |
+    .app_state.gov.params.expedited_voting_period = "10s" |
+    .app_state.gov.deposit_params.min_deposit[0].denom = "azeta" |
+    .app_state.gov.params.min_deposit[0].denom = "azeta" |
+    .app_state.staking.params.bond_denom = "azeta" |
+    .app_state.crisis.constant_fee.denom = "azeta" |
+    .app_state.mint.params.mint_denom = "azeta" |
+    .app_state.evm.params.evm_denom = "azeta" |
+    .app_state.emissions.params.ballot_maturity_blocks = "30" |
+    .app_state.staking.params.unbonding_time = "10s" |
+    .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
+    .consensus.params.block.max_gas = "500000000"
+  ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
+    && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="500000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["feemarket"]["params"]["min_gas_price"]="10000000000.0000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-
-  # set governance parameters in new params module for sdk v0.47+
-  # these parameters will normally be migrated but is needed for localnet genesis
-  # set the parameters only if params field is defined in gov
-  # in the case of sdk v0.46 during upgrade test, the params field is not defined
-  if jq -e '.app_state.gov | has("params")' "$HOME/.zetacored/config/genesis.json" > /dev/null; then
-    cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-    cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  fi
-
-# set admin account
-  zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
+  # set admin account
+  admin_amount=100000000000000000000000000azeta # DEFAULT_FUND_AMOUNT * 10
+  fund_account localnet_gov_admin zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh $admin_amount
 
   emergency_policy=$(yq -r '.policy_accounts.emergency_policy_account.bech32_address' /root/config.yml)
   admin_policy=$(yq -r '.policy_accounts.admin_policy_account.bech32_address' /root/config.yml)
   operational_policy=$(yq -r '.policy_accounts.operational_policy_account.bech32_address' /root/config.yml)
 
-  zetacored add-genesis-account "$emergency_policy" 100000000000000000000000000azeta
-  zetacored add-genesis-account "$admin_policy" 100000000000000000000000000azeta
-  zetacored add-genesis-account "$operational_policy" 100000000000000000000000000azeta
+  fund_account emergency_policy "$emergency_policy" $admin_amount
+  fund_account admin_policy "$admin_policy" $admin_amount
+  fund_account operational_policy "$operational_policy" $admin_amount
 
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$emergency_policy" '.app_state["authority"]["policies"]["items"][0]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$operational_policy" '.app_state["authority"]["policies"]["items"][1]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq --arg address "$admin_policy" '.app_state["authority"]["policies"]["items"][2]["address"] = $address' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  jq --arg emergency "$emergency_policy" \
+    --arg operational "$operational_policy" \
+    --arg admin "$admin_policy" '
+      .app_state.authority.policies.items[0].address = $emergency |
+      .app_state.authority.policies.items[1].address = $operational |
+      .app_state.authority.policies.items[2].address = $admin
+  ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
+    && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
 
-# give balance to runner accounts to deploy contracts directly on zEVM
-# default account
-  address=$(yq -r '.default_account.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# legacy erc20 tester
-  address=$(yq -r '.additional_accounts.user_legacy_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# legacy zeta tester
-  address=$(yq -r '.additional_accounts.user_legacy_zeta.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# legacy ethers tester
-  address=$(yq -r '.additional_accounts.user_legacy_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# bitcoin deposit tester
-  address=$(yq -r '.additional_accounts.user_bitcoin_deposit.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# bitcoin withdraw tester
-  address=$(yq -r '.additional_accounts.user_bitcoin_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# solana tester
-  address=$(yq -r '.additional_accounts.user_solana.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# migration tester
-  address=$(yq -r '.additional_accounts.user_migration.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# precompile tester
-  address=$(yq -r '.additional_accounts.user_precompile.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# ether tester
-  address=$(yq -r '.additional_accounts.user_ether.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# erc20 tester
-  address=$(yq -r '.additional_accounts.user_erc20.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# ether revert tester
-  address=$(yq -r '.additional_accounts.user_ether_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# erc20 revert tester
-  address=$(yq -r '.additional_accounts.user_erc20_revert.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
-# emissions withdraw tester
-  address=$(yq -r '.additional_accounts.user_emissions_withdraw.bech32_address' /root/config.yml)
-  zetacored add-genesis-account "$address" 100000000000000000000000000azeta
+  # Automatically fund most of the accounts
+  fund_accounts_auto
 
-# 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
+  # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
   # Copy host gentx to other nodes
   for NODE in "${NODELIST[@]}"; do
@@ -353,13 +278,6 @@ then
     echo "Importing data"
     zetacored parse-genesis-file /root/genesis_data/exported-genesis.json
   fi
-
-# Update governance voting parameters for localnet
-# this allows for quick upgrades and using more than two nodes
-  jq '.app_state["gov"]["params"]["voting_period"]="100s" |
-    .app_state["gov"]["params"]["quorum"]="0.1" |
-    .app_state["gov"]["params"]["threshold"]="0.1"' \
-  $HOME/.zetacored/config/genesis.json > tmp.json && mv tmp.json $HOME/.zetacored/config/genesis.json
 
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs

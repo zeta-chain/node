@@ -14,10 +14,6 @@ import (
 )
 
 func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
-	// start mining blocks if local bitcoin
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// parse amount to deposit
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
@@ -40,7 +36,7 @@ func TestBitcoinStdMemoDeposit(r *runner.E2ERunner, args []string) {
 	}
 
 	// deposit BTC with standard memo
-	txHash := r.DepositBTCWithAmount(amount, memo)
+	txHash := r.DepositBTCWithExactAmount(amount, memo)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)

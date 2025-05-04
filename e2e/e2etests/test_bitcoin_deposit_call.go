@@ -5,27 +5,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	testcontract "github.com/zeta-chain/node/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 )
 
 func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + common.DefaultDepositorFee
-
-	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -36,7 +27,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// Send BTC to TSS address with a dummy memo
 	data := []byte("hello satoshi")
 	memo := append(contractAddr.Bytes(), data...)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos, memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, memo)
 	require.NoError(r, err)
 
 	// wait for the cctx to be mined
@@ -47,5 +38,10 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check if example contract has been called, 'bar' value should be set to amount
 	amountSats, err := common.GetSatoshis(amount)
 	require.NoError(r, err)
-	utils.MustHaveCalledExampleContract(r, contract, big.NewInt(amountSats))
+	utils.MustHaveCalledExampleContract(
+		r,
+		contract,
+		big.NewInt(amountSats),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
+	)
 }

@@ -13,24 +13,15 @@ import (
 )
 
 func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
-	// Given "Live" BTC network
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
 	// Given amount to send
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
-	// Given a list of UTXOs
-	utxos, err := r.ListDeployerUTXOs()
-	require.NoError(r, err)
-	require.NotEmpty(r, utxos)
-
 	// ACT
 	// Send BTC to TSS address with donation message
 	memo := []byte(constant.DonationMessage)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos, memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, memo)
 	require.NoError(r, err)
 
 	// ASSERT after 4 Zeta blocks

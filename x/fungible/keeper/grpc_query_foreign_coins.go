@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
@@ -61,4 +61,22 @@ func (k Keeper) ForeignCoins(
 	}
 
 	return &types.QueryGetForeignCoinsResponse{ForeignCoins: val}, nil
+}
+
+// ForeignCoinsFromAsset returns the foreign coin for a given asset and chain id
+func (k Keeper) ForeignCoinsFromAsset(
+	c context.Context,
+	req *types.QueryGetForeignCoinsFromAssetRequest,
+) (*types.QueryGetForeignCoinsFromAssetResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	fCoin, found := k.GetForeignCoinFromAsset(ctx, req.Asset, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	return &types.QueryGetForeignCoinsFromAssetResponse{ForeignCoins: fCoin}, nil
 }

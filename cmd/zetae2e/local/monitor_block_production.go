@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -12,12 +11,11 @@ import (
 	"github.com/zeta-chain/node/e2e/config"
 )
 
-// monitorBlockProductionExit calls monitorBlockProduction and exits upon any error
-func monitorBlockProductionExit(ctx context.Context, conf config.Config) {
+// monitorBlockProductionCancel calls monitorBlockProduction and exits upon any error
+func monitorBlockProductionCancel(ctx context.Context, cancel context.CancelCauseFunc, conf config.Config) {
 	err := monitorBlockProduction(ctx, conf)
 	if err != nil {
-		fmt.Printf("❌ block monitor: %v\n", err)
-		os.Exit(2)
+		cancel(err)
 	}
 }
 
@@ -46,7 +44,7 @@ func monitorBlockProduction(ctx context.Context, conf config.Config) error {
 				return fmt.Errorf("expecting new block event, got %T", event.Data)
 			}
 			latestNewBlockEvent = newBlockEvent
-		case <-time.After(5 * time.Second):
+		case <-time.After(10 * time.Second):
 			return fmt.Errorf("timed out waiting for new block (last block %d)", latestNewBlockEvent.Block.Height)
 		case <-ctx.Done():
 			return nil

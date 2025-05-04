@@ -18,10 +18,11 @@ package filters
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -30,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
@@ -353,6 +355,8 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 		return &rpc.Subscription{}, err
 	}
 
+	// TODO: use events
+	baseFee := big.NewInt(params.InitialBaseFee)
 	go func(headersCh <-chan coretypes.ResultEvent) {
 		defer cancelSubs()
 
@@ -369,8 +373,6 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
-
-				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
 
 				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
 				if err != nil {
@@ -609,7 +611,7 @@ func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit filters.FilterCrit
 		return nil, err
 	}
 
-	return returnLogs(logs), err
+	return returnLogs(logs), nil
 }
 
 // UninstallFilter removes the filter with the given filter id.

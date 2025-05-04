@@ -26,6 +26,26 @@ enum TxFinalizationStatus {
   Finalized = 1;    // the corresponding tx is finalized but not executed yet
   Executed = 2;     // the corresponding tx is executed
 }
+
+enum ConfirmationMode {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SAFE = 0; // an inbound/outbound is confirmed using safe confirmation count
+  FAST = 1; // an inbound/outbound is confirmed using fast confirmation count
+}
+
+// InboundStatus represents the status of an observed inbound
+enum InboundStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  SUCCESS = 0;
+  // this field is specifically for Bitcoin when the deposit amount is less than
+  // depositor fee
+  INSUFFICIENT_DEPOSITOR_FEE = 1;
+  // the receiver address parsed from the inbound is invalid
+  INVALID_RECEIVER_ADDRESS = 2;
+  // parse memo is invalid
+  INVALID_MEMO = 3;
+}
+
 message InboundParams {
   string sender = 1; // this address is the immediate contract/EOA that calls
   // the Connector.send()
@@ -35,7 +55,7 @@ message InboundParams {
   string asset =
       5; // for ERC20 coin type, the asset is an address of the ERC20 contract
   string amount = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
   string observed_hash = 7;
@@ -47,13 +67,22 @@ message InboundParams {
   // this field describes if a smart contract call should be made for a inbound
   // with assets only used for protocol contract version 2
   bool is_cross_chain_call = 12;
+
+  // status of the inbound observation
+  InboundStatus status = 20;
+
+  // confirmation mode used for the inbound
+  ConfirmationMode confirmation_mode = 21;
+
+  // not used. do not edit.
+  reserved 13 to 19;
 }
 
 message ZetaAccounting {
   // aborted_zeta_amount stores the total aborted amount for cctx of coin-type
   // ZETA
   string aborted_zeta_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -68,7 +97,7 @@ message OutboundParams {
   int64 receiver_chainId = 2;
   pkg.coin.CoinType coin_type = 3;
   string amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
   uint64 tss_nonce = 5;
@@ -83,7 +112,7 @@ message OutboundParams {
   uint64 observed_external_height = 10;
   uint64 gas_used = 20;
   string effective_gas_price = 21 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   uint64 effective_gas_limit = 22;
@@ -91,6 +120,9 @@ message OutboundParams {
   TxFinalizationStatus tx_finalization_status = 12;
 
   CallOptions call_options = 24;
+
+  // confirmation mode used for the outbound
+  ConfirmationMode confirmation_mode = 25;
 
   // not used. do not edit.
   reserved 13 to 19;
@@ -108,6 +140,11 @@ message Status {
   bool isAbortRefunded = 4;
   // when the CCTX was created. only populated on new transactions.
   int64 created_timestamp = 5;
+  // error_message_revert carries information about the revert outbound tx ,
+  // which is created if the first outbound tx fails
+  string error_message_revert = 7;
+  // error_message_abort carries information when aborting the CCTX fails
+  string error_message_abort = 8;
 }
 
 // ProtocolContractVersion represents the version of the protocol contract used
@@ -125,7 +162,7 @@ message RevertOptions {
   string abort_address = 3;
   bytes revert_message = 4;
   string revert_gas_limit = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
   ];
 }
@@ -134,7 +171,7 @@ message CrossChainTx {
   string creator = 1;
   string index = 2;
   string zeta_fees = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"zeta_fees\""
   ];

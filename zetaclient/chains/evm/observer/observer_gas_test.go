@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -24,11 +24,11 @@ func TestPostGasPrice(t *testing.T) {
 		observer := newTestSuite(t)
 
 		// Given empty baseFee from RPC
-		observer.evmClient.On("HeaderByNumber", anything, anything).Return(&ethtypes.Header{BaseFee: nil}, nil)
+		observer.evmMock.On("HeaderByNumber", anything, anything).Return(&ethtypes.Header{BaseFee: nil}, nil)
 
 		// Given gasPrice and priorityFee from RPC
-		observer.evmClient.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
-		observer.evmClient.On("SuggestGasTipCap", anything).Return(big.NewInt(0), nil)
+		observer.evmMock.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		observer.evmMock.On("SuggestGasTipCap", anything).Return(big.NewInt(0), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)
@@ -60,12 +60,12 @@ func TestPostGasPrice(t *testing.T) {
 		observer := newTestSuite(t)
 
 		// Given 1 gwei baseFee from RPC
-		observer.evmClient.On("HeaderByNumber", anything, anything).
+		observer.evmMock.On("HeaderByNumber", anything, anything).
 			Return(&ethtypes.Header{BaseFee: big.NewInt(gwei)}, nil)
 
 		// Given gasPrice and priorityFee from RPC
-		observer.evmClient.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
-		observer.evmClient.On("SuggestGasTipCap", anything).Return(big.NewInt(2*gwei), nil)
+		observer.evmMock.On("SuggestGasPrice", anything).Return(big.NewInt(3*gwei), nil)
+		observer.evmMock.On("SuggestGasTipCap", anything).Return(big.NewInt(2*gwei), nil)
 
 		// Given mock collector for zetacore call
 		// PostVoteGasPrice(ctx, chain, gasPrice, priorityFee, blockNum)

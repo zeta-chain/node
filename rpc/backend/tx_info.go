@@ -233,18 +233,13 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		status = hexutil.Uint(ethtypes.ReceiptStatusSuccessful)
 	}
 
-	chainID, err := b.ChainID()
-	if err != nil {
-		return nil, err
-	}
-
 	var from common.Address
 	if additional != nil {
 		from = common.HexToAddress(ethMsg.From)
 	} else if ethMsg.Data != nil {
-		from, err = ethMsg.GetSender(chainID.ToInt())
+		from, err = ethMsg.GetSender(b.chainID)
 		if err != nil {
-			return nil, err
+			b.logger.Debug("failed to parse from field", "hash", hexTx, "error", err.Error())
 		}
 	} else {
 		return nil, errors.New("failed to parse receipt")

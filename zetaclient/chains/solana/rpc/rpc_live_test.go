@@ -19,14 +19,28 @@ func Test_SolanaRPCLive(t *testing.T) {
 		return
 	}
 
-	LiveTest_GetTransactionWithVersion(t)
-	LiveTest_GetFirstSignatureForAddress(t)
-	LiveTest_GetSignaturesForAddressUntil(t)
-	LiveTest_GetSignaturesForAddressUntil_Version0(t)
-	LiveTest_CheckRPCStatus(t)
+	t.Run("GetTransactionWithVersion", func(t *testing.T) {
+		Run_GetTransactionWithVersion(t)
+	})
+
+	t.Run("GetFirstSignatureForAddress", func(t *testing.T) {
+		Run_GetFirstSignatureForAddress(t)
+	})
+
+	t.Run("GetSignaturesForAddressUntil", func(t *testing.T) {
+		Run_GetSignaturesForAddressUntil(t)
+	})
+
+	t.Run("GetSignaturesForAddressUntil_Version0", func(t *testing.T) {
+		Run_GetSignaturesForAddressUntil_Version0(t)
+	})
+
+	t.Run("HealthCheck", func(t *testing.T) {
+		Run_HealthCheck(t)
+	})
 }
 
-func LiveTest_GetTransactionWithVersion(t *testing.T) {
+func Run_GetTransactionWithVersion(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -44,7 +58,7 @@ func LiveTest_GetTransactionWithVersion(t *testing.T) {
 	})
 }
 
-func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
+func Run_GetFirstSignatureForAddress(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -60,7 +74,7 @@ func LiveTest_GetFirstSignatureForAddress(t *testing.T) {
 	require.Equal(t, actualSig, sig.String())
 }
 
-func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
+func Run_GetSignaturesForAddressUntil(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -83,7 +97,7 @@ func LiveTest_GetSignaturesForAddressUntil(t *testing.T) {
 	}
 }
 
-func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
+func Run_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
@@ -99,12 +113,12 @@ func LiveTest_GetSignaturesForAddressUntil_Version0(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func LiveTest_CheckRPCStatus(t *testing.T) {
+func Run_HealthCheck(t *testing.T) {
 	// create a Solana devnet RPC client
 	client := solanarpc.New(solanarpc.DevNet_RPC)
 
 	// check the RPC status
 	ctx := context.Background()
-	_, err := rpc.CheckRPCStatus(ctx, client, false)
+	_, err := rpc.HealthCheck(ctx, client)
 	require.NoError(t, err)
 }

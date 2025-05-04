@@ -2,10 +2,12 @@ package e2etests
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -26,11 +28,24 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// create a wait group to wait for all the deposits to complete
 	var eg errgroup.Group
 
+	revertOptions := gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
+
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		hash := r.LegacyDepositEtherWithAmount(depositAmount)
+		tx := r.ETHDeposit(
+			r.EVMAddress(),
+			depositAmount,
+			revertOptions,
+			false,
+		)
+		hash := tx.Hash()
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
+
+		// slow down submitting transactions a bit.
+		// submitting them as fast as possible does actually work.
+		// but we want to ensure the workload is a bit more representative.
+		time.Sleep(time.Millisecond * 500)
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
 	}

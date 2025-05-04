@@ -1,12 +1,14 @@
 package base_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
@@ -21,6 +23,8 @@ import (
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -35,11 +39,36 @@ type testSuite struct {
 	zetacore *mocks.ZetacoreClient
 }
 
+type testSuiteOpts struct {
+	ConfirmationParams *observertypes.ConfirmationParams
+}
+
+type opt func(t *testSuiteOpts)
+
+// withConfirmationParams is an option to set custom confirmation params
+func withConfirmationParams(confParams observertypes.ConfirmationParams) opt {
+	return func(t *testSuiteOpts) {
+		t.ConfirmationParams = &confParams
+	}
+}
+
 // newTestSuite creates a new observer for testing
-func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
+func newTestSuite(t *testing.T, chain chains.Chain, opts ...opt) *testSuite {
+	// create test suite with options
+	var testOpts testSuiteOpts
+	for _, opt := range opts {
+		opt(&testOpts)
+	}
+
 	// constructor parameters
 	chainParams := *sample.ChainParams(chain.ChainId)
-	chainParams.ConfirmationCount = defaultConfirmationCount
+	chainParams.ConfirmationParams = &observertypes.ConfirmationParams{
+		SafeInboundCount:  defaultConfirmationCount,
+		SafeOutboundCount: defaultConfirmationCount,
+	}
+	if testOpts.ConfirmationParams != nil {
+		chainParams.ConfirmationParams = testOpts.ConfirmationParams
+	}
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	tss := mocks.NewTSS(t)
 
@@ -241,51 +270,6 @@ func TestTSSAddressString(t *testing.T) {
 			default:
 				t.Fail()
 			}
-		})
-	}
-}
-
-func TestIsBlockConfirmed(t *testing.T) {
-	tests := []struct {
-		name      string
-		chain     chains.Chain
-		block     uint64
-		lastBlock uint64
-		confirmed bool
-	}{
-		{
-			name:      "should confirm block 100 when confirmation arrives 2",
-			chain:     chains.BitcoinMainnet,
-			block:     100,
-			lastBlock: 101, // got 2 confirmations
-			confirmed: true,
-		},
-		{
-			name:      "should not confirm block 100 when confirmation < 2",
-			chain:     chains.BitcoinMainnet,
-			block:     100,
-			lastBlock: 100, // got 1 confirmation, need one more
-			confirmed: false,
-		},
-		{
-			name:      "should confirm block 100 when confirmation arrives 2",
-			chain:     chains.Ethereum,
-			block:     100,
-			lastBlock: 99, // last block lagging behind, need to wait
-			confirmed: false,
-		},
-	}
-
-	// run tests
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// create observer
-			ob := newTestSuite(t, tt.chain)
-			ob.Observer.WithLastBlock(tt.lastBlock)
-
-			// check if block is confirmed
-			confirmed := ob.IsBlockConfirmed(tt.block)
-			require.Equal(t, tt.confirmed, confirmed)
 		})
 	}
 }
@@ -541,6 +525,7 @@ func TestPostVoteInbound(t *testing.T) {
 
 		// post vote inbound
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		ob.zetacore.MockGetCctxByHash(errors.New("not found"))
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Equal(t, "sampleBallotIndex", ballot)
@@ -553,11 +538,63 @@ func TestPostVoteInbound(t *testing.T) {
 		// create sample message with long Message
 		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
 		msg.Message = strings.Repeat("1", crosschaintypes.MaxMessageLength+1)
+		ob.zetacore.MockGetCctxByHash(errors.New("not found"))
 
 		// post vote inbound
 		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
 		require.NoError(t, err)
 		require.Empty(t, ballot)
+	})
+
+	t.Run("should not post vote cctx already exists and ballot is not found", func(t *testing.T) {
+		//Arrange
+		// create observer
+		ob := newTestSuite(t, chains.Ethereum)
+
+		ob.zetacore.WithPostVoteInbound("", "sampleBallotIndex")
+		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+
+		ob.zetacore.MockGetCctxByHash(nil)
+		ob.zetacore.MockGetBallotByID(msg.Digest(), status.Error(codes.NotFound, "not found ballot"))
+
+		var logBuffer bytes.Buffer
+		consoleWriter := zerolog.ConsoleWriter{Out: &logBuffer}
+		logger := zerolog.New(consoleWriter)
+		ob.Observer.Logger().Inbound = logger
+
+		// Act
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		// Assert
+		require.NoError(t, err)
+		require.Equal(t, ballot, msg.Digest())
+
+		logOutput := logBuffer.String()
+		require.Contains(t, logOutput, "inbound detected: cctx exists but the ballot does not")
+	})
+
+	t.Run("should post vote cctx already exists but ballot is found", func(t *testing.T) {
+		//Arrange
+		// create observer
+		ob := newTestSuite(t, chains.Ethereum)
+
+		msg := sample.InboundVote(coin.CoinType_Gas, chains.Ethereum.ChainId, chains.ZetaChainMainnet.ChainId)
+		ob.zetacore.WithPostVoteInbound(sample.ZetaIndex(t), msg.Digest())
+		ob.zetacore.MockGetCctxByHash(nil)
+		ob.zetacore.MockGetBallotByID(msg.Digest(), nil)
+
+		var logBuffer bytes.Buffer
+		consoleWriter := zerolog.ConsoleWriter{Out: &logBuffer}
+		logger := zerolog.New(consoleWriter)
+		ob.Observer.Logger().Inbound = logger
+
+		// Act
+		ballot, err := ob.PostVoteInbound(context.TODO(), &msg, 100000)
+		// Assert
+		require.NoError(t, err)
+		require.Equal(t, ballot, msg.Digest())
+
+		logOutput := logBuffer.String()
+		require.Contains(t, logOutput, "inbound detected: vote posted")
 	})
 }
 

@@ -3,7 +3,6 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
@@ -16,7 +15,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
-	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -26,45 +24,6 @@ const (
 	// MaxSignaturesPerTicker is the maximum number of signatures to process on a ticker
 	MaxSignaturesPerTicker = 100
 )
-
-// WatchInbound watches Solana chain for inbounds on a ticker.
-func (ob *Observer) WatchInbound(ctx context.Context) error {
-	app, err := zctx.FromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	ticker, err := clienttypes.NewDynamicTicker(
-		fmt.Sprintf("Solana_WatchInbound_%d", ob.Chain().ChainId),
-		ob.ChainParams().InboundTicker,
-	)
-	if err != nil {
-		ob.Logger().Inbound.Error().Err(err).Msg("error creating ticker")
-		return err
-	}
-	defer ticker.Stop()
-
-	ob.Logger().Inbound.Info().Msgf("WatchInbound started for chain %d", ob.Chain().ChainId)
-	sampledLogger := ob.Logger().Inbound.Sample(&zerolog.BasicSampler{N: 10})
-
-	for {
-		select {
-		case <-ticker.C():
-			if !app.IsInboundObservationEnabled() {
-				sampledLogger.Info().
-					Msgf("WatchInbound: inbound observation is disabled for chain %d", ob.Chain().ChainId)
-				continue
-			}
-			err := ob.ObserveInbound(ctx)
-			if err != nil {
-				ob.Logger().Inbound.Err(err).Msg("WatchInbound: observeInbound error")
-			}
-		case <-ob.StopChannel():
-			ob.Logger().Inbound.Info().Msgf("WatchInbound stopped for chain %d", ob.Chain().ChainId)
-			return nil
-		}
-	}
-}
 
 // ObserveInbound observes the Solana chain for inbounds and post votes to zetacore.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
@@ -101,7 +60,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			ob.WithLastBlockScanned(lastSlot)
 		}
 	} else {
-		ob.Logger().Inbound.Info().Msgf("ObserveInbound: got %d signatures for chain %d", len(signatures), chainID)
+		ob.Logger().Inbound.Info().
+			Str(logs.FieldMethod, "ObserveInbound").
+			Int("signatures", len(signatures)).
+			Int64(logs.FieldChain, chainID).
+			Msg("got wrong amount of signatures")
 	}
 
 	// loop signature from oldest to latest to filter inbound events
@@ -157,7 +120,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 // FilterInboundEventsAndVote filters inbound events from a txResult and post a vote.
 func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
 	// filter inbound events from txResult
-	events, err := ob.FilterInboundEvents(txResult)
+	events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 	if err != nil {
 		return errors.Wrapf(err, "error FilterInboundEvent")
 	}
@@ -181,7 +144,12 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 //   - takes at one event (the first) per token (SOL or SPL) per transaction.
 //   - takes at most two events (one SOL + one SPL) per transaction.
 //   - ignores exceeding events.
-func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
+func FilterInboundEvents(
+	txResult *rpc.GetTransactionResult,
+	gatewayID solana.PublicKey,
+	senderChainID int64,
+	logger zerolog.Logger,
+) ([]*clienttypes.InboundEvent, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -196,6 +164,7 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 	// create event array to collect all events in the transaction
 	seenDeposit := false
 	seenDepositSPL := false
+	seenCall := false
 	events := make([]*clienttypes.InboundEvent, 0)
 
 	// loop through instruction list to filter the 1st valid event
@@ -203,14 +172,16 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
-			ob.Logger().
-				Inbound.Err(err).
-				Msgf("no program found at index %d for sig %s", instruction.ProgramIDIndex, tx.Signatures[0])
+			logger.Err(err).
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Uint16("index", instruction.ProgramIDIndex).
+				Msg("no program found")
 			continue
 		}
 
 		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(ob.gatewayID) {
+		if !programPk.Equals(gatewayID) {
 			continue
 		}
 
@@ -222,24 +193,32 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
-					Sender:        deposit.Sender,
-					Receiver:      "", // receiver will be pulled out from memo later
-					TxOrigin:      deposit.Sender,
-					Amount:        deposit.Amount,
-					Memo:          deposit.Memo,
-					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:        tx.Signatures[0].String(),
-					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:      coin.CoinType_Gas,
-					Asset:         deposit.Asset,
+					SenderChainID:    senderChainID,
+					Sender:           deposit.Sender,
+					Receiver:         deposit.Receiver,
+					TxOrigin:         deposit.Sender,
+					Amount:           deposit.Amount,
+					Memo:             deposit.Memo,
+					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_Gas,
+					Asset:            deposit.Asset,
+					IsCrossChainCall: deposit.IsCrossChainCall,
+					RevertOptions:    deposit.RevertOptions,
 				})
-				ob.Logger().Inbound.Info().
-					Msgf("FilterInboundEvents: deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("deposit detected")
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
-				Msgf("FilterInboundEvents: multiple deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple deposits detected")
 		}
 
 		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
@@ -250,24 +229,67 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 			} else if deposit != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID: ob.Chain().ChainId,
-					Sender:        deposit.Sender,
-					Receiver:      "", // receiver will be pulled out from memo later
-					TxOrigin:      deposit.Sender,
-					Amount:        deposit.Amount,
-					Memo:          deposit.Memo,
-					BlockNumber:   deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:        tx.Signatures[0].String(),
-					Index:         0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:      coin.CoinType_ERC20,
-					Asset:         deposit.Asset,
+					SenderChainID:    senderChainID,
+					Sender:           deposit.Sender,
+					Receiver:         deposit.Receiver,
+					TxOrigin:         deposit.Sender,
+					Amount:           deposit.Amount,
+					Memo:             deposit.Memo,
+					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_ERC20,
+					Asset:            deposit.Asset,
+					IsCrossChainCall: deposit.IsCrossChainCall,
+					RevertOptions:    deposit.RevertOptions,
 				})
-				ob.Logger().Inbound.Info().
-					Msgf("FilterInboundEvents: SPL deposit detected in sig %s instruction %d", tx.Signatures[0], i)
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("SPL deposit detected")
 			}
 		} else {
-			ob.Logger().Inbound.Warn().
-				Msgf("FilterInboundEvents: multiple SPL deposits detected in sig %s instruction %d", tx.Signatures[0], i)
+			logger.Warn().
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple SPL deposits detected")
+		}
+
+		// try parsing the instruction as a 'call' if not seen yet
+		if !seenCall {
+			call, err := solanacontracts.ParseInboundAsCall(tx, i, txResult.Slot)
+			if err != nil {
+				return nil, errors.Wrap(err, "error ParseInboundAsCall")
+			} else if call != nil {
+				seenCall = true
+				events = append(events, &clienttypes.InboundEvent{
+					SenderChainID:    senderChainID,
+					Sender:           call.Sender,
+					Receiver:         call.Receiver,
+					TxOrigin:         call.Sender,
+					Amount:           call.Amount,
+					Memo:             call.Memo,
+					BlockNumber:      call.Slot, // instead of using block, Solana explorer uses slot for indexing
+					TxHash:           tx.Signatures[0].String(),
+					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					CoinType:         coin.CoinType_NoAssetCall,
+					Asset:            call.Asset,
+					IsCrossChainCall: call.IsCrossChainCall,
+					RevertOptions:    call.RevertOptions,
+				})
+				logger.Info().
+					Str(logs.FieldMethod, "FilterInboundEvents").
+					Str("signature", tx.Signatures[0].String()).
+					Int("instruction", i).
+					Msg("call detected")
+			}
+		} else {
+			logger.Warn().
+				Str(logs.FieldMethod, "FilterInboundEvents").
+				Str("signature", tx.Signatures[0].String()).
+				Int("instruction", i).
+				Msg("multiple calls detected")
 		}
 	}
 
@@ -276,22 +298,14 @@ func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
 func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent) *crosschaintypes.MsgVoteInbound {
-	// prepare logger fields
-	lf := map[string]any{
-		logs.FieldMethod: "BuildInboundVoteMsgFromEvent",
-		logs.FieldTx:     event.TxHash,
-	}
-
-	// decode event memo bytes to get the receiver
-	err := event.DecodeMemo()
-	if err != nil {
-		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.Memo))
-		return nil
-	}
-
 	// check if the event is processable
 	if !ob.IsEventProcessable(*event) {
 		return nil
+	}
+
+	options := []crosschaintypes.InboundVoteOption{crosschaintypes.WithCrossChainCall(event.IsCrossChainCall)}
+	if event.RevertOptions != nil {
+		options = append(options, crosschaintypes.WithSOLRevertOptions(*event.RevertOptions))
 	}
 
 	// create inbound vote message
@@ -310,8 +324,11 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		event.CoinType,
 		event.Asset,
 		0, // not a smart contract call
-		crosschaintypes.ProtocolContractVersion_V1,
-		false, // not relevant for v1
+		crosschaintypes.ProtocolContractVersion_V2,
+		false, // not used
+		crosschaintypes.InboundStatus_SUCCESS,
+		crosschaintypes.ConfirmationMode_SAFE,
+		options...,
 	)
 }
 
@@ -320,17 +337,17 @@ func (ob *Observer) IsEventProcessable(event clienttypes.InboundEvent) bool {
 	logFields := map[string]any{logs.FieldTx: event.TxHash}
 
 	switch category := event.Category(); category {
-	case clienttypes.InboundCategoryGood:
+	case clienttypes.InboundCategoryProcessable:
 		return true
 	case clienttypes.InboundCategoryDonation:
-		ob.Logger().Inbound.Info().Fields(logFields).Msgf("thank you rich folk for your donation!")
+		ob.Logger().Inbound.Info().Fields(logFields).Msg("thank you rich folk for your donation!")
 		return false
 	case clienttypes.InboundCategoryRestricted:
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,
 			false, ob.Chain().ChainId, event.TxHash, event.Sender, event.Receiver, event.CoinType.String())
 		return false
 	default:
-		ob.Logger().Inbound.Error().Msgf("unreachable code got InboundCategory: %v", category)
+		ob.Logger().Inbound.Error().Interface("category", category).Msg("unreachable code, got InboundCategory")
 		return false
 	}
 }

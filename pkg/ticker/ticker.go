@@ -167,8 +167,8 @@ func (t *Ticker) SetInterval(interval time.Duration) {
 	}
 
 	t.logger.Info().
-		Dur("ticker.old_interval", t.interval).
-		Dur("ticker.new_interval", interval).
+		Float64("ticker.old_interval", t.interval.Seconds()).
+		Float64("ticker.new_interval", interval.Seconds()).
 		Msg("Changing interval")
 
 	t.interval = interval
