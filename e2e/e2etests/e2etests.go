@@ -342,7 +342,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "14000"},
 		},
 		TestETHWithdrawAndCall,
 	),
