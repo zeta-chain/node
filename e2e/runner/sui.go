@@ -93,7 +93,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(21000),
+			GasLimit:        big.NewInt(25000),
 		},
 		revertOptions,
 	)
