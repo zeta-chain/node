@@ -53,5 +53,4 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	// The recipient balance should be increased by the expected deposit amount
 	amountIncreased := bigSub(balanceAfter, balanceBefore)
 	require.Equal(r, expectedDeposit.Uint64(), amountIncreased.Uint64())
-
 }
