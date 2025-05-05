@@ -145,6 +145,7 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 //   - takes at least one event (the first) per token (SOL or SPL or call) per transaction.
 //   - takes at most 3 events (one SOL + one SPL + one call) per transaction.
 //   - ignores exceeding events.
+//   - assigns indices based on instruction position in the transaction
 func FilterInboundEvents(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
@@ -169,7 +170,7 @@ func FilterInboundEvents(
 	events := make([]*clienttypes.InboundEvent, 0)
 
 	// helper to parse any instruction
-	parseInstruction := func(instruction solana.CompiledInstruction, location string) error {
+	parseInstruction := func(instruction solana.CompiledInstruction, location string, instructionIndex uint32) error {
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
@@ -202,9 +203,9 @@ func FilterInboundEvents(
 					TxOrigin:         deposit.Sender,
 					Amount:           deposit.Amount,
 					Memo:             deposit.Memo,
-					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
+					BlockNumber:      deposit.Slot,
 					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					Index:            instructionIndex,
 					CoinType:         coin.CoinType_Gas,
 					Asset:            deposit.Asset,
 					IsCrossChainCall: deposit.IsCrossChainCall,
@@ -214,6 +215,7 @@ func FilterInboundEvents(
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Str("location", location).
+					Uint32("instructionIndex", instructionIndex).
 					Msg("deposit detected")
 				return nil
 			}
@@ -240,9 +242,9 @@ func FilterInboundEvents(
 					TxOrigin:         depositSPL.Sender,
 					Amount:           depositSPL.Amount,
 					Memo:             depositSPL.Memo,
-					BlockNumber:      depositSPL.Slot, // instead of using block, Solana explorer uses slot for indexing
+					BlockNumber:      depositSPL.Slot,
 					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					Index:            instructionIndex,
 					CoinType:         coin.CoinType_ERC20,
 					Asset:            depositSPL.Asset,
 					IsCrossChainCall: depositSPL.IsCrossChainCall,
@@ -252,11 +254,13 @@ func FilterInboundEvents(
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Str("location", location).
+					Uint32("instructionIndex", instructionIndex).
 					Msg("SPL deposit detected")
 				return nil
 			}
 		} else {
 			logger.Warn().
+				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
 				Str("location", location).
 				Msg("multiple SPL deposits detected")
@@ -277,9 +281,9 @@ func FilterInboundEvents(
 					TxOrigin:         call.Sender,
 					Amount:           call.Amount,
 					Memo:             call.Memo,
-					BlockNumber:      call.Slot, // instead of using block, Solana explorer uses slot for indexing
+					BlockNumber:      call.Slot,
 					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
+					Index:            instructionIndex,
 					CoinType:         coin.CoinType_NoAssetCall,
 					Asset:            call.Asset,
 					IsCrossChainCall: call.IsCrossChainCall,
@@ -289,6 +293,7 @@ func FilterInboundEvents(
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Str("location", location).
+					Uint32("instructionIndex", instructionIndex).
 					Msg("call detected")
 				return nil
 			}
@@ -305,8 +310,7 @@ func FilterInboundEvents(
 
 	// parse top-level instructions
 	for i, instruction := range tx.Message.Instructions {
-		err := parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i))
-		if err != nil {
+		if err := parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i), uint32(i)); err != nil {
 			return nil, err
 		}
 	}
@@ -315,8 +319,10 @@ func FilterInboundEvents(
 	if txResult.Meta != nil && txResult.Meta.InnerInstructions != nil {
 		for _, inner := range txResult.Meta.InnerInstructions {
 			for j, instruction := range inner.Instructions {
-				err := parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index))
-				if err != nil {
+				// For inner instructions, we use the outer instruction index as the base
+				// and add the inner instruction index to ensure uniqueness
+				instructionIndex := uint32(inner.Index) + uint32(j)
+				if err := parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index), instructionIndex); err != nil {
 					return nil, err
 				}
 			}
@@ -353,7 +359,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		0,
 		event.CoinType,
 		event.Asset,
-		0, // not a smart contract call
+		uint64(event.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not used
 		crosschaintypes.InboundStatus_SUCCESS,
