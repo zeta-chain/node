@@ -9,12 +9,13 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSuiWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm gateway with SUI token.
 // The outbound is rejected by the connected module due to invalid payload (invalid address),
-// and 'onRevert' is called instead to handle the revert.
+// and the 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
@@ -23,8 +24,10 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
-	// create the special revert payload for 'on_call'
-	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert()
+	// create the payload for 'on_call' with invalid address
+	// taking the first 10 letters to form an invalid payload
+	invalidAddress := sample.SuiAddress(r)[:10]
+	invalidPayloadOnCall, err := r.SuiCreateExampleWACPayload(invalidAddress)
 	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)
@@ -44,7 +47,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	tx := r.SuiWithdrawAndCallSUI(
 		targetPackageID,
 		amount,
-		revertPayloadOnCall,
+		invalidPayloadOnCall,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

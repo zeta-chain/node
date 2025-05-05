@@ -93,7 +93,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(20000),
+			GasLimit:        big.NewInt(21000),
 		},
 		revertOptions,
 	)
@@ -274,7 +274,8 @@ func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, erro
 		r.SuiExample.ClockID.String(),
 	}
 
-	// the 'on_call' function will revert on this special message
+	// the 'on_call' method of the "connected" contract specifically throws an error
+	// for this message to trigger "tx revert" test case
 	message := []byte(onCallRevertMessage)
 
 	return sui.NewCallPayload(argumentTypes, objects, message), nil

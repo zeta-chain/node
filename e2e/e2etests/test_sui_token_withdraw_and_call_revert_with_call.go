@@ -13,8 +13,8 @@ import (
 )
 
 // TestSuiTokenWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm gateway with fungible token.
-// The outbound is rejected by the connected module due to invalid payload (invalid address),
-// and 'onRevert' is called instead to handle the revert.
+// The outbound is rejected by the connected module due to the special payload message "revert" and the
+// 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
