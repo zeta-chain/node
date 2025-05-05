@@ -167,13 +167,13 @@ func TestPrecompilesDistributeAndClaim(r *runner.E2ERunner, args []string) {
 	rewards, err = distrContract.GetRewards(&bind.CallOpts{}, staker, validatorAddr)
 	require.NoError(r, err)
 	require.GreaterOrEqual(r, len(rewards), 2)
+
 	found := false
 	availableRewards := big.NewInt(0)
 	for _, coin := range rewards {
 		if strings.Contains(coin.Denom, config.ZRC20DenomPrefix) {
 			found = true
-			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-			availableRewards = new(big.Int).Div(coin.Amount, divisor)
+			availableRewards = coin.Amount
 			break
 		}
 	}

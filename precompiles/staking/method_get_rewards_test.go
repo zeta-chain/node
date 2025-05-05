@@ -78,10 +78,10 @@ func Test_GetRewards(t *testing.T) {
 		distributeZRC20(t, s, big.NewInt(1000))
 
 		// TODO: Simulate a distribution of rewards.
-		// emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
-		// staking.BeginBlocker(s.ctx, &s.sdkKeepers.StakingKeeper)
-		// distribution.BeginBlocker(s.ctx, abci.RequestBeginBlock{}, s.sdkKeepers.DistributionKeeper)
-		// s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+		//emissions.BeginBlocker(s.ctx, *s.sdkKeepers.EmissionsKeeper)
+		//staking.BeginBlocker(s.ctx, &s.sdkKeepers.StakingKeeper)
+		//distribution.BeginBlocker(s.ctx, abci.RequestBeginBlock{}, s.sdkKeepers.DistributionKeeper)
+		//s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 		/* ACT */
 		// Call getRewards.

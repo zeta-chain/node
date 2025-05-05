@@ -172,8 +172,7 @@ func TestPrecompilesDistributeAndClaimThroughContract(r *runner.E2ERunner, args 
 	for _, coin := range rewards {
 		if strings.Contains(coin.Denom, config.ZRC20DenomPrefix) {
 			found = true
-			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-			availableRewards = new(big.Int).Div(coin.Amount, divisor)
+			availableRewards = coin.Amount
 			break
 		}
 	}

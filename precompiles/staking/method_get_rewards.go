@@ -72,7 +72,7 @@ func (c *Contract) getRewards(
 	for _, coin := range coins {
 		rewards = append(rewards, DecCoin{
 			Denom:  coin.Denom,
-			Amount: coin.Amount.BigInt(),
+			Amount: coin.Amount.TruncateInt().BigInt(),
 		})
 	}
 
