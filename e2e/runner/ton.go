@@ -204,8 +204,7 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 	amount *big.Int,
 	approveAmount *big.Int,
 ) *ethtypes.Transaction {
-
-	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
+	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
