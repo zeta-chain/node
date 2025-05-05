@@ -3,7 +3,6 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/gagliardetto/solana-go"
@@ -11,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/coin"
-	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -152,184 +149,16 @@ func FilterInboundEvents(
 	senderChainID int64,
 	logger zerolog.Logger,
 ) ([]*clienttypes.InboundEvent, error) {
-	// unmarshal transaction
-	tx, err := txResult.Transaction.GetTransaction()
+	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling transaction")
+		return nil, err
 	}
 
-	// there should be at least one instruction and one account, otherwise skip
-	if len(tx.Message.Instructions) == 0 {
-		return nil, nil
+	if err := parser.Parse(); err != nil {
+		return nil, err
 	}
 
-	// create event array to collect all events in the transaction
-	seenDeposit := false
-	seenDepositSPL := false
-	seenCall := false
-	events := make([]*clienttypes.InboundEvent, 0)
-
-	// helper to parse any instruction
-	parseInstruction := func(instruction solana.CompiledInstruction, location string, instructionIndex uint32) error {
-		// get the program ID
-		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
-		if err != nil {
-			logger.Err(err).
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Str("location", location).
-				Uint16("index", instruction.ProgramIDIndex).
-				Msg("no program found")
-			return nil
-		}
-
-		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(gatewayID) {
-			return nil
-		}
-
-		// try parsing the instruction as a 'deposit' if not seen yet
-		if !seenDeposit {
-			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
-			if err != nil {
-				return errors.Wrap(err, "error ParseInboundAsDeposit")
-			}
-			if deposit != nil {
-				seenDeposit = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           deposit.Sender,
-					Receiver:         deposit.Receiver,
-					TxOrigin:         deposit.Sender,
-					Amount:           deposit.Amount,
-					Memo:             deposit.Memo,
-					BlockNumber:      deposit.Slot,
-					TxHash:           tx.Signatures[0].String(),
-					Index:            instructionIndex,
-					CoinType:         coin.CoinType_Gas,
-					Asset:            deposit.Asset,
-					IsCrossChainCall: deposit.IsCrossChainCall,
-					RevertOptions:    deposit.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Str("location", location).
-					Uint32("instructionIndex", instructionIndex).
-					Msg("deposit detected")
-				return nil
-			}
-		} else {
-			logger.Warn().
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Str("location", location).
-				Msg("multiple deposits detected")
-		}
-
-		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
-		if !seenDepositSPL {
-			depositSPL, err := solanacontracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
-			if err != nil {
-				return errors.Wrap(err, "error ParseInboundAsDepositSPL")
-			}
-			if depositSPL != nil {
-				seenDepositSPL = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           depositSPL.Sender,
-					Receiver:         depositSPL.Receiver,
-					TxOrigin:         depositSPL.Sender,
-					Amount:           depositSPL.Amount,
-					Memo:             depositSPL.Memo,
-					BlockNumber:      depositSPL.Slot,
-					TxHash:           tx.Signatures[0].String(),
-					Index:            instructionIndex,
-					CoinType:         coin.CoinType_ERC20,
-					Asset:            depositSPL.Asset,
-					IsCrossChainCall: depositSPL.IsCrossChainCall,
-					RevertOptions:    depositSPL.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Str("location", location).
-					Uint32("instructionIndex", instructionIndex).
-					Msg("SPL deposit detected")
-				return nil
-			}
-		} else {
-			logger.Warn().
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Str("location", location).
-				Msg("multiple SPL deposits detected")
-		}
-
-		// try parsing the instruction as a 'call' if not seen yet
-		if !seenCall {
-			call, err := solanacontracts.ParseInboundAsCall(tx, instruction, txResult.Slot)
-			if err != nil {
-				return errors.Wrap(err, "error ParseInboundAsCall")
-			}
-			if call != nil {
-				seenCall = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           call.Sender,
-					Receiver:         call.Receiver,
-					TxOrigin:         call.Sender,
-					Amount:           call.Amount,
-					Memo:             call.Memo,
-					BlockNumber:      call.Slot,
-					TxHash:           tx.Signatures[0].String(),
-					Index:            instructionIndex,
-					CoinType:         coin.CoinType_NoAssetCall,
-					Asset:            call.Asset,
-					IsCrossChainCall: call.IsCrossChainCall,
-					RevertOptions:    call.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Str("location", location).
-					Uint32("instructionIndex", instructionIndex).
-					Msg("call detected")
-				return nil
-			}
-		} else {
-			logger.Warn().
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Str("location", location).
-				Msg("multiple calls detected")
-		}
-
-		return nil
-	}
-
-	// parse top-level instructions
-	for i, instruction := range tx.Message.Instructions {
-		if err := parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i), uint32(i)); err != nil {
-			return nil, err
-		}
-	}
-
-	// parse inner instructions
-	if txResult.Meta != nil && txResult.Meta.InnerInstructions != nil {
-		for _, inner := range txResult.Meta.InnerInstructions {
-			for j, instruction := range inner.Instructions {
-				// For inner instructions, we use the outer instruction index as the base
-				// and add the inner instruction index to ensure uniqueness
-				instructionIndex := uint32(inner.Index) + uint32(j)
-				if err := parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index), instructionIndex); err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-
-	return events, nil
+	return parser.GetEvents(), nil
 }
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
