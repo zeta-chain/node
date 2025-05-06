@@ -490,16 +490,16 @@ func (signer *Signer) BroadcastOutbound(
 
 	// try broacasting tx with backoff to tolerate RPC error
 	broadcast := func() error {
-		// get latest TSS account nonce
-		latestNonce, err := signer.client.NonceAt(ctx, signer.TSS().PubKey().AddressEVM(), nil)
+		// get latest TSS account pending nonce
+		pendingNonce, err := signer.client.PendingNonceAt(ctx, signer.TSS().PubKey().AddressEVM())
 		if err != nil {
 			return errors.Wrap(err, "unable to get latest TSS account nonce")
 		}
 
 		// if TSS nonce is higher than CCTX nonce, there is no need to broadcast
 		// this avoids foreseeable "nonce too low" error and unnecessary tracker report
-		if latestNonce > cctx.GetCurrentOutboundParam().TssNonce {
-			logger.Info().Uint64("tss_nonce", latestNonce).Msg("cctx nonce is too low, skip broadcasting tx")
+		if pendingNonce > cctx.GetCurrentOutboundParam().TssNonce {
+			logger.Info().Uint64("tss_nonce", pendingNonce).Msg("cctx nonce is too low, skip broadcasting tx")
 			return nil
 		}
 
