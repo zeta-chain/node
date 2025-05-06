@@ -342,6 +342,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCall,
 	),
@@ -350,6 +351,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract with no message content",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCallNoMessage,
 	),
@@ -382,6 +384,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM, revert, then abort with onAbort, check onAbort can created cctx",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
