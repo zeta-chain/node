@@ -490,7 +490,7 @@ func (signer *Signer) BroadcastOutbound(
 		nonce        = cctx.GetCurrentOutboundParam().TssNonce
 	)
 
-	// broadcast transaction with backoff to tolerate RPC error
+	// define broadcast function
 	broadcast := func() error {
 		// get latest TSS account pending nonce
 		pendingNonce, err := signer.client.PendingNonceAt(ctx, signer.TSS().PubKey().AddressEVM())
@@ -526,6 +526,7 @@ func (signer *Signer) BroadcastOutbound(
 		return nil
 	}
 
+	// broadcast transaction with backoff to tolerate RPC error
 	bo := backoff.NewConstantBackOff(broadcastBackoff)
 	boWithMaxRetries := backoff.WithMaxRetries(bo, broadcastRetries)
 	if err := retry.DoWithBackoff(broadcast, boWithMaxRetries); err != nil {
