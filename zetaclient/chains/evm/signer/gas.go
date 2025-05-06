@@ -14,7 +14,7 @@ import (
 // maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
 const maxGasLimit = 2_500_000
 
-const gasTransferGasLimit = 21_000
+// contractCallMinGasLimit is the minimum gas limit for contract calls to prevent intrinsic low gas limit error
 const contractCallMinGasLimit = 100_000
 
 // Gas represents gas parameters for EVM transactions.
