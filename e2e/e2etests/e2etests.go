@@ -61,6 +61,7 @@ const (
 	 * Solana tests
 	 */
 	TestSolanaDepositName                                 = "solana_deposit"
+	TestSolanaDepositThroughProgramName                   = "solana_deposit_through_program"
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
 	TestZEVMToSolanaCallName                              = "zevm_to_solana_call"
@@ -572,6 +573,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "24000000"},
 		},
 		TestSolanaDeposit,
+	),
+	runner.NewE2ETest(
+		TestSolanaDepositThroughProgramName,
+		"deposit SOL into ZEVM through example connected program",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "24000000"},
+		},
+		TestSolanaDepositThroughProgram,
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawName,
