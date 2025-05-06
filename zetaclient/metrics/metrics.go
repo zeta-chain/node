@@ -199,6 +199,13 @@ var (
 		[]string{"status", "task_group", "task_name"},
 	)
 
+	// NumTrackerReporters is a gauge that tracks the number of active tracker reporters
+	NumTrackerReporters = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "num_tracker_reporters",
+		Help:      "The number of active tracker reporters",
+	})
+
 	RPCClientCounter = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: ZetaClientNamespace,

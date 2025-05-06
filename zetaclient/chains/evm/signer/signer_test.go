@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
@@ -178,7 +177,6 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 			tx,
 			cctx,
 			zerolog.Logger{},
-			sdktypes.AccAddress{},
 			mocks.NewZetacoreClient(t),
 			txData,
 		)

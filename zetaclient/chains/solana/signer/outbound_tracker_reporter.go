@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/node/pkg/bg"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // reportToOutboundTracker launch a go routine with timeout to check for tx confirmation;
@@ -40,7 +41,10 @@ func (signer *Signer) reportToOutboundTracker(
 
 	// launch a goroutine to monitor tx confirmation status
 	bg.Work(ctx, func(ctx context.Context) error {
+		metrics.NumTrackerReporters.Add(1)
+
 		defer func() {
+			metrics.NumTrackerReporters.Sub(1)
 			signer.Signer.ClearBeingReportedFlag(txSig.String())
 		}()
 

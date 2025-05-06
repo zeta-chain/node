@@ -10,11 +10,15 @@ import (
 
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // reportOutboundTracker queries the tx and sends its digest to the outbound tracker
 // for further processing by the Observer.
 func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest string) error {
+	metrics.NumTrackerReporters.Add(1)
+	defer metrics.NumTrackerReporters.Sub(1)
+
 	// approx Sui checkpoint interval
 	const interval = 3 * time.Second
 
