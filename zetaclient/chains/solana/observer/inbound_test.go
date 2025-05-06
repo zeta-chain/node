@@ -90,7 +90,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 			Memo:             []byte{},
 			BlockNumber:      txResult.Slot,
 			TxHash:           txHash,
-			Index:            2, // after 2 compute budget
+			Index:            0,
 			CoinType:         coin.CoinType_Gas,
 			Asset:            "", // no asset for gas token SOL
 			IsCrossChainCall: false,
@@ -117,7 +117,7 @@ func Test_FilterInboundEvents(t *testing.T) {
 			Memo:             []byte{},
 			BlockNumber:      txResultInner.Slot,
 			TxHash:           txHashInner,
-			Index:            2, // 2 + 0 (index 0 instruction of 2nd outer instruction, after 2 compute budget)
+			Index:            0,
 			CoinType:         coin.CoinType_Gas,
 			Asset:            "", // no asset for gas token SOL
 			IsCrossChainCall: false,

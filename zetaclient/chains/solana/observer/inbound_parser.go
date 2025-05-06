@@ -26,6 +26,7 @@ type InboundEventParser struct {
 	seenDepositSPL bool
 	seenCall       bool
 	events         []*clienttypes.InboundEvent
+	eventIndex     uint32
 }
 
 // NewInboundEventParser creates a new InboundEventParser
@@ -47,15 +48,12 @@ func NewInboundEventParser(
 		tx:            tx,
 		txResult:      txResult,
 		events:        make([]*clienttypes.InboundEvent, 0),
+		eventIndex:    0,
 	}, nil
 }
 
 // parseInstruction parses a single instruction and adds any detected events
-func (p *InboundEventParser) parseInstruction(
-	instruction solana.CompiledInstruction,
-	location string,
-	instructionIndex uint32,
-) error {
+func (p *InboundEventParser) parseInstruction(instruction solana.CompiledInstruction, location string) error {
 	// get the program ID
 	programPk, err := p.tx.Message.Program(instruction.ProgramIDIndex)
 	if err != nil {
@@ -90,17 +88,18 @@ func (p *InboundEventParser) parseInstruction(
 				Memo:             deposit.Memo,
 				BlockNumber:      deposit.Slot,
 				TxHash:           p.tx.Signatures[0].String(),
-				Index:            instructionIndex,
+				Index:            p.eventIndex,
 				CoinType:         coin.CoinType_Gas,
 				Asset:            deposit.Asset,
 				IsCrossChainCall: deposit.IsCrossChainCall,
 				RevertOptions:    deposit.RevertOptions,
 			})
+			p.eventIndex++
 			p.logger.Info().
 				Str(logs.FieldMethod, "parseInstruction").
 				Str("signature", p.tx.Signatures[0].String()).
 				Str("location", location).
-				Uint32("instructionIndex", instructionIndex).
+				Uint32("eventIndex", p.eventIndex-1).
 				Msg("deposit detected")
 			return nil
 		}
@@ -129,17 +128,18 @@ func (p *InboundEventParser) parseInstruction(
 				Memo:             depositSPL.Memo,
 				BlockNumber:      depositSPL.Slot,
 				TxHash:           p.tx.Signatures[0].String(),
-				Index:            instructionIndex,
+				Index:            p.eventIndex,
 				CoinType:         coin.CoinType_ERC20,
 				Asset:            depositSPL.Asset,
 				IsCrossChainCall: depositSPL.IsCrossChainCall,
 				RevertOptions:    depositSPL.RevertOptions,
 			})
+			p.eventIndex++
 			p.logger.Info().
 				Str(logs.FieldMethod, "parseInstruction").
 				Str("signature", p.tx.Signatures[0].String()).
 				Str("location", location).
-				Uint32("instructionIndex", instructionIndex).
+				Uint32("eventIndex", p.eventIndex-1).
 				Msg("SPL deposit detected")
 			return nil
 		}
@@ -168,17 +168,18 @@ func (p *InboundEventParser) parseInstruction(
 				Memo:             call.Memo,
 				BlockNumber:      call.Slot,
 				TxHash:           p.tx.Signatures[0].String(),
-				Index:            instructionIndex,
+				Index:            p.eventIndex,
 				CoinType:         coin.CoinType_NoAssetCall,
 				Asset:            call.Asset,
 				IsCrossChainCall: call.IsCrossChainCall,
 				RevertOptions:    call.RevertOptions,
 			})
+			p.eventIndex++
 			p.logger.Info().
 				Str(logs.FieldMethod, "parseInstruction").
 				Str("signature", p.tx.Signatures[0].String()).
 				Str("location", location).
-				Uint32("instructionIndex", instructionIndex).
+				Uint32("eventIndex", p.eventIndex-1).
 				Msg("call detected")
 			return nil
 		}
@@ -202,7 +203,7 @@ func (p *InboundEventParser) Parse() error {
 
 	// parse top-level instructions
 	for i, instruction := range p.tx.Message.Instructions {
-		if err := p.parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i), uint32(i)); err != nil {
+		if err := p.parseInstruction(instruction, fmt.Sprintf("top-level instruction %d", i)); err != nil {
 			return err
 		}
 	}
@@ -211,10 +212,7 @@ func (p *InboundEventParser) Parse() error {
 	if p.txResult.Meta != nil && p.txResult.Meta.InnerInstructions != nil {
 		for _, inner := range p.txResult.Meta.InnerInstructions {
 			for j, instruction := range inner.Instructions {
-				// For inner instructions, we use the outer instruction index as the base
-				// and add the inner instruction index to ensure uniqueness
-				instructionIndex := uint32(inner.Index) + uint32(j)
-				if err := p.parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index), instructionIndex); err != nil {
+				if err := p.parseInstruction(instruction, fmt.Sprintf("inner instruction %d (outer %d)", j, inner.Index)); err != nil {
 					return err
 				}
 			}
