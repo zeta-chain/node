@@ -273,7 +273,10 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 				continue
 			}
 
-			r.Logger.Info("tonWaitForInboundCCTX: Found matching transaction, hash: %s", liteapi.TransactionToHashString(tx))
+			r.Logger.Info(
+				"tonWaitForInboundCCTX: Found matching transaction, hash: %s",
+				liteapi.TransactionToHashString(tx),
+			)
 
 			// Get the CCTX by inbound hash
 			cctx := utils.WaitCctxMinedByInboundHash(
@@ -284,7 +287,11 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 				r.CctxTimeout,
 			)
 
-			r.Logger.Info("tonWaitForInboundCCTX: Got CCTX with status: %s, requiring: %s", cctx.CctxStatus.Status.String(), status.String())
+			r.Logger.Info(
+				"tonWaitForInboundCCTX: Got CCTX with status: %s, requiring: %s",
+				cctx.CctxStatus.Status.String(),
+				status.String(),
+			)
 
 			// Verify the status matches what we expect
 			utils.RequireCCTXStatus(r, cctx, status)
