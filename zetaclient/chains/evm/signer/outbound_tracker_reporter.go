@@ -41,10 +41,10 @@ func (signer *Signer) reportToOutboundTracker(
 
 	// launch a goroutine to monitor tx confirmation status
 	bg.Work(ctx, func(ctx context.Context) error {
-		metrics.NumTrackerReporters.Add(1)
+		metrics.NumTrackerReporters.WithLabelValues(signer.Chain().Name).Inc()
 
 		defer func() {
-			metrics.NumTrackerReporters.Sub(1)
+			metrics.NumTrackerReporters.WithLabelValues(signer.Chain().Name).Dec()
 			signer.ClearBeingReportedFlag(outboundHash)
 		}()
 

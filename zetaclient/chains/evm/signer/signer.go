@@ -320,7 +320,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	// attach tx hash to logger and print log
 	logger = logger.With().Str(logs.FieldTx, tx.Hash().Hex()).Logger()
-	logger.Info().Msg("key-sign success")
+	logger.Info().Msg("Successful keysign")
 
 	// Broadcast Signed Tx
 	signer.BroadcastOutbound(ctx, tx, cctx, logger, zetacoreClient, txData)
@@ -485,10 +485,12 @@ func (signer *Signer) BroadcastOutbound(
 		return
 	}
 
-	// broadcast transaction
-	outboundHash := tx.Hash().Hex()
+	var (
+		outboundHash = tx.Hash().Hex()
+		nonce        = cctx.GetCurrentOutboundParam().TssNonce
+	)
 
-	// try broacasting tx with backoff to tolerate RPC error
+	// broadcast transaction with backoff to tolerate RPC error
 	broadcast := func() error {
 		// get latest TSS account pending nonce
 		pendingNonce, err := signer.client.PendingNonceAt(ctx, signer.TSS().PubKey().AddressEVM())
@@ -498,30 +500,25 @@ func (signer *Signer) BroadcastOutbound(
 
 		// if TSS nonce is higher than CCTX nonce, there is no need to broadcast
 		// this avoids foreseeable "nonce too low" error and unnecessary tracker report
-		if pendingNonce > cctx.GetCurrentOutboundParam().TssNonce {
+		if pendingNonce > nonce {
 			logger.Info().Uint64("tss_nonce", pendingNonce).Msg("cctx nonce is too low, skip broadcasting tx")
 			return nil
 		}
 
 		// broadcast success, report to tracker
 		if err = signer.broadcast(ctx, tx); err == nil {
-			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
+			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
 			return nil
 		}
 
 		// handle different broadcast errors
-		retry, report := zetacore.HandleBroadcastError(
-			err,
-			cctx.GetCurrentOutboundParam().TssNonce,
-			toChain.ID(),
-			outboundHash,
-		)
+		retry, report := zetacore.HandleBroadcastError(err, nonce, toChain.ID(), outboundHash)
 		if report {
-			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
+			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
 			return nil
 		}
 		if retry {
-			return errors.New("unable to broadcast tx, retrying")
+			return errors.Wrap(err, "unable to broadcast tx, retrying")
 		}
 
 		// no re-broadcast, no report, stop retry

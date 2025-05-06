@@ -27,8 +27,8 @@ func (s *Signer) trackOutbound(
 	w *toncontracts.Withdrawal,
 	prevState tlb.ShardAccount,
 ) error {
-	metrics.NumTrackerReporters.Add(1)
-	defer metrics.NumTrackerReporters.Sub(1)
+	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
+	defer metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Dec()
 
 	const (
 		timeout = 60 * time.Second
