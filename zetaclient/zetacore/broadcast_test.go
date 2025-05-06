@@ -26,7 +26,7 @@ func TestHandleBroadcastError(t *testing.T) {
 		report bool
 	}
 	testCases := map[error]response{
-		errors.New("nonce too low"):                       {retry: false, report: false},
+		errors.New("nonce too low"):                       {retry: false, report: true},
 		errors.New("replacement transaction underpriced"): {retry: false, report: false},
 		errors.New("already known"):                       {retry: false, report: true},
 		errors.New(""):                                    {retry: true, report: false},
