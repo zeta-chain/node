@@ -305,7 +305,7 @@ func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.
 }
 
 // GetObjectParsedData queries the parsed data of an object.
-func (c *Client) GetObjectParsedData(ctx context.Context, objectID string) (data models.SuiParsedData, err error) {
+func (c *Client) GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error) {
 	resp, err := c.SuiGetObject(ctx, models.SuiGetObjectRequest{
 		ObjectId: objectID,
 		Options:  models.SuiObjectDataOptions{ShowContent: true},
@@ -313,13 +313,13 @@ func (c *Client) GetObjectParsedData(ctx context.Context, objectID string) (data
 
 	switch {
 	case err != nil:
-		return data, errors.Wrap(err, "unable to get gateway object")
+		return models.SuiParsedData{}, errors.Wrap(err, "unable to get gateway object")
 	case resp.Error != nil:
-		return data, errors.Wrapf(err, "gateway object response error: %s", resp.Error.Error)
+		return models.SuiParsedData{}, fmt.Errorf("gateway object response error: %s", resp.Error.Error)
 	case resp.Data == nil:
-		return data, errors.New("gateway object data is nil")
+		return models.SuiParsedData{}, errors.New("gateway object data is nil")
 	case resp.Data.Content == nil:
-		return data, errors.New("gateway object content is nil")
+		return models.SuiParsedData{}, errors.New("gateway object content is nil")
 	default:
 		return *resp.Data.Content, nil
 	}

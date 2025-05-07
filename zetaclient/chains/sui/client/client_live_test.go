@@ -190,12 +190,26 @@ func TestClientLive(t *testing.T) {
 		ts := newTestSuite(t, RPCTestnet)
 
 		// ACT
-		objectID := "0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700"
-		data, err := ts.GetObjectParsedData(ts.ctx, objectID)
+		// use testnet gateway object for testing
+		gatewayID := "0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700"
+		data, err := ts.GetObjectParsedData(ts.ctx, gatewayID)
 
 		// ASSERT
 		require.NoError(t, err)
 		require.NotEmpty(t, data.Fields)
+	})
+
+	t.Run("GetObjectParsedData failed", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// ACT
+		nonExistentID := "0x674d2b7396f2484dda53249ab5e4d4dee304e93a0037fd5d5d86aabd029fae98"
+		data, err := ts.GetObjectParsedData(ts.ctx, nonExistentID)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Empty(t, data)
 	})
 }
 
