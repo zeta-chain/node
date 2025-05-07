@@ -166,9 +166,6 @@ func Test_SignRBFTx(t *testing.T) {
 			// setup signer
 			s := newTestSuite(t, tt.chain)
 
-			// mock isRegnet
-			s.client.On("IsRegnet").Return(tt.chain.ChainId == chains.BitcoinRegtest.ChainId)
-
 			// mock RPC live fee rate
 			if tt.liveRate > 0 {
 				s.client.On("GetEstimatedFeeRate", mock.Anything, mock.Anything, mock.Anything).Return(tt.liveRate, nil)

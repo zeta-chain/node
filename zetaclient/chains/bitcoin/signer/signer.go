@@ -15,12 +15,12 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -33,7 +33,6 @@ const (
 )
 
 type RPC interface {
-	IsRegnet() bool
 	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
@@ -44,12 +43,17 @@ type RPC interface {
 // Signer deals with signing & broadcasting BTC transactions.
 type Signer struct {
 	*base.Signer
-	rpc RPC
+	rpc      RPC
+	isRegnet bool
 }
 
 // New creates a new Bitcoin signer
 func New(baseSigner *base.Signer, rpc RPC) *Signer {
-	return &Signer{Signer: baseSigner, rpc: rpc}
+	return &Signer{
+		Signer:   baseSigner,
+		rpc:      rpc,
+		isRegnet: chains.IsBitcoinRegnet(baseSigner.Chain().ChainId),
+	}
 }
 
 // Broadcast sends the signed transaction to the network
@@ -77,7 +81,6 @@ func (signer *Signer) TryProcessOutbound(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	observer *observer.Observer,
-	zetacoreClient interfaces.ZetacoreClient,
 	height uint64,
 ) {
 	outboundID := base.OutboundIDFromCCTX(cctx)
@@ -104,7 +107,7 @@ func (signer *Signer) TryProcessOutbound(
 		logs.FieldCctx:   cctx.Index,
 		logs.FieldNonce:  params.TssNonce,
 	}
-	signerAddress, err := zetacoreClient.GetKeys().GetAddress()
+	signerAddress, err := observer.ZetacoreClient().GetKeys().GetAddress()
 	if err != nil {
 		return
 	}
@@ -156,7 +159,7 @@ func (signer *Signer) TryProcessOutbound(
 	}
 
 	// broadcast signed outbound
-	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, rbfTx, cctx, observer, zetacoreClient)
+	signer.BroadcastOutbound(ctx, signedTx, params.TssNonce, rbfTx, cctx, observer)
 }
 
 // BroadcastOutbound sends the signed transaction to the Bitcoin network
@@ -167,7 +170,6 @@ func (signer *Signer) BroadcastOutbound(
 	rbfTx bool,
 	cctx *types.CrossChainTx,
 	ob *observer.Observer,
-	zetacoreClient interfaces.ZetacoreClient,
 ) {
 	txHash := tx.TxID()
 
@@ -206,7 +208,7 @@ func (signer *Signer) BroadcastOutbound(
 	}
 
 	// add tx to outbound tracker so that all observers know about it
-	zetaHash, err := zetacoreClient.PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
+	zetaHash, err := ob.ZetacoreClient().PostOutboundTracker(ctx, ob.Chain().ChainId, nonce, txHash)
 	if err != nil {
 		logger.Err(err).Msg("unable to add Bitcoin outbound tracker")
 	} else {

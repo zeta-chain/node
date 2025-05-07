@@ -3,7 +3,6 @@ package observer
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
@@ -18,86 +17,108 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
-func Test_NewLastStuckOutbound(t *testing.T) {
-	nonce := uint64(1)
-	tx := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
-	stuckFor := 30 * time.Minute
-	stuckOutbound := NewLastStuckOutbound(nonce, tx, stuckFor)
+func TestObserveMempool(t *testing.T) {
+	var (
+		sampleTx1 = btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
+		sampleTx2 = btcutil.NewTx(wire.NewMsgTx(2))
+	)
 
-	require.Equal(t, nonce, stuckOutbound.Nonce)
-	require.Equal(t, tx, stuckOutbound.Tx)
-	require.Equal(t, stuckFor, stuckOutbound.StuckFor)
-}
+	txFinder := func(tx *btcutil.Tx, nonce uint64, errMsg string) pendingTxFinder {
+		return func(ctx context.Context) (*btcutil.Tx, uint64, error) {
+			var err error
+			if errMsg != "" {
+				err = errors.New(errMsg)
+			}
 
-func Test_FefreshLastStuckOutbound(t *testing.T) {
-	sampleTx1 := btcutil.NewTx(wire.NewMsgTx(wire.TxVersion))
-	sampleTx2 := btcutil.NewTx(wire.NewMsgTx(2))
+			return tx, nonce, err
+		}
+	}
 
-	tests := []struct {
-		name       string
-		txFinder   PendingTxFinder
-		txChecker  StuckTxChecker
-		oldStuckTx *LastStuckOutbound
-		expectedTx *LastStuckOutbound
-		errMsg     string
+	mockStuckRPC := func(stuck bool, stuckFor time.Duration, errMsg string) func(ts *testSuite) {
+		var err error
+		if errMsg != "" {
+			err = errors.New(errMsg)
+		}
+
+		return func(ts *testSuite) {
+			ts.client.
+				On("IsTxStuckInMempool", mock.Anything, mock.Anything, mock.Anything).
+				Maybe().
+				Return(stuck, stuckFor, err)
+		}
+	}
+
+	for _, tt := range []struct {
+		name        string
+		txFinder    pendingTxFinder
+		txChecker   func(ts *testSuite)
+		oldStuckTx  *LastStuckOutbound
+		expectedTx  *LastStuckOutbound
+		errContains string
 	}{
 		{
 			name:       "should set last stuck tx successfully",
-			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
-			txChecker:  makeStuckTxChecker(true, 30*time.Minute, ""),
+			txFinder:   txFinder(sampleTx1, 1, ""),
+			txChecker:  mockStuckRPC(true, 30*time.Minute, ""),
 			oldStuckTx: nil,
-			expectedTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			expectedTx: newLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 		},
 		{
 			name:       "should update last stuck tx successfully",
-			txFinder:   makePendingTxFinder(sampleTx2, 2, ""),
-			txChecker:  makeStuckTxChecker(true, 40*time.Minute, ""),
-			oldStuckTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
-			expectedTx: NewLastStuckOutbound(2, sampleTx2, 40*time.Minute),
+			txFinder:   txFinder(sampleTx2, 2, ""),
+			txChecker:  mockStuckRPC(true, 40*time.Minute, ""),
+			oldStuckTx: newLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			expectedTx: newLastStuckOutbound(2, sampleTx2, 40*time.Minute),
 		},
 		{
 			name:       "should clear last stuck tx successfully",
-			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
-			txChecker:  makeStuckTxChecker(false, 1*time.Minute, ""),
-			oldStuckTx: NewLastStuckOutbound(1, sampleTx1, 30*time.Minute),
+			txFinder:   txFinder(sampleTx1, 1, ""),
+			txChecker:  mockStuckRPC(false, 1*time.Minute, ""),
+			oldStuckTx: newLastStuckOutbound(1, sampleTx1, 30*time.Minute),
 			expectedTx: nil,
 		},
 		{
 			name:       "do nothing if unable to find last pending tx",
-			txFinder:   makePendingTxFinder(nil, 0, "txFinder failed"),
+			txFinder:   txFinder(nil, 0, "txFinder failed"),
 			expectedTx: nil,
 		},
 		{
-			name:       "should return error if txChecker failed",
-			txFinder:   makePendingTxFinder(sampleTx1, 1, ""),
-			txChecker:  makeStuckTxChecker(false, 0, "txChecker failed"),
-			expectedTx: nil,
-			errMsg:     "cannot determine",
+			name:        "should return error if txChecker failed",
+			txFinder:    txFinder(sampleTx1, 1, ""),
+			txChecker:   mockStuckRPC(false, 0, "txChecker failed"),
+			errContains: "cannot determine",
 		},
-	}
-
-	for _, tt := range tests {
+	} {
 		t.Run(tt.name, func(t *testing.T) {
-			// create observer
-			ob := newTestSuite(t, chains.BitcoinMainnet)
-
-			// setup old stuck tx
-			if tt.oldStuckTx != nil {
-				ob.setLastStuckOutbound(tt.oldStuckTx)
-			}
-
-			// refresh
+			// ARRANGE
 			ctx := context.Background()
-			err := ob.RefreshLastStuckOutbound(ctx, tt.txFinder, tt.txChecker)
+			ts := newTestSuite(t, chains.BitcoinMainnet)
 
-			if tt.errMsg == "" {
-				require.NoError(t, err)
-			} else {
-				require.ErrorContains(t, err, tt.errMsg)
+			if tt.txFinder != nil {
+				ctx = withPendingTxFinder(ctx, tt.txFinder)
 			}
 
-			// check
-			stuckTx, _ := ob.LastStuckOutbound()
+			if tt.txChecker != nil {
+				tt.txChecker(ts)
+			}
+
+			if tt.oldStuckTx != nil {
+				ts.setLastStuckOutbound(tt.oldStuckTx)
+			}
+
+			// ACT
+			err := ts.ObserveMempool(ctx)
+
+			// ASSERT
+			if tt.errContains != "" {
+				require.ErrorContains(t, err, tt.errContains)
+				return
+			}
+
+			require.NoError(t, err)
+
+			// mimic access from Signer's side.
+			stuckTx, _ := ts.LastStuckOutbound()
 			require.Equal(t, tt.expectedTx, stuckTx)
 		})
 	}
@@ -208,7 +229,7 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			failMempool:   true,
 			expectedTx:    nil,
 			expectedNonce: 0,
-			errMsg:        "last tx is not in mempool",
+			errMsg:        "not in mempool",
 		},
 		{
 			name:         "return error if FetchUTXOs failed",
@@ -223,7 +244,7 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			includeTx:     false,
 			expectedTx:    nil,
 			expectedNonce: 0,
-			errMsg:        "FetchUTXOs failed",
+			errMsg:        "unable to fetch UTXOs: failed",
 		},
 		{
 			name:         "return error if unable to find nonce-mark UTXO",
@@ -312,7 +333,7 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			}
 
 			ctx := context.Background()
-			lastTx, lastNonce, err := GetLastPendingOutbound(ctx, ob.Observer)
+			lastTx, lastNonce, err := ob.getLastPendingOutbound(ctx)
 
 			if tt.errMsg != "" {
 				require.ErrorContains(t, err, tt.errMsg)
@@ -325,100 +346,6 @@ func Test_GetLastPendingOutbound(t *testing.T) {
 			require.Equal(t, tt.expectedTx, lastTx)
 			require.Equal(t, tt.expectedNonce, lastNonce)
 		})
-	}
-}
-
-func Test_GetStuckTxCheck(t *testing.T) {
-	tests := []struct {
-		name      string
-		chainID   int64
-		txChecker StuckTxChecker
-	}{
-		{
-			name:      "should return 3 blocks for Bitcoin mainnet",
-			chainID:   chains.BitcoinMainnet.ChainId,
-			txChecker: IsTxStuckInMempool,
-		},
-		{
-			name:      "should return 3 blocks for Bitcoin testnet4",
-			chainID:   chains.BitcoinTestnet.ChainId,
-			txChecker: IsTxStuckInMempool,
-		},
-		{
-			name:      "should return 3 blocks for Bitcoin Signet",
-			chainID:   chains.BitcoinSignetTestnet.ChainId,
-			txChecker: IsTxStuckInMempool,
-		},
-		{
-			name:      "should return 10 blocks for Bitcoin regtest",
-			chainID:   chains.BitcoinRegtest.ChainId,
-			txChecker: IsTxStuckInMempoolRegnet,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			txChecker := GetStuckTxChecker(tt.chainID)
-			require.Equal(t, reflect.ValueOf(tt.txChecker).Pointer(), reflect.ValueOf(txChecker).Pointer())
-		})
-	}
-}
-
-func Test_GetFeeBumpWaitBlocks(t *testing.T) {
-	tests := []struct {
-		name               string
-		chainID            int64
-		expectedWaitBlocks int64
-	}{
-		{
-			name:               "should return wait blocks for Bitcoin mainnet",
-			chainID:            chains.BitcoinMainnet.ChainId,
-			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
-		},
-		{
-			name:               "should return wait blocks for Bitcoin testnet4",
-			chainID:            chains.BitcoinTestnet.ChainId,
-			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
-		},
-		{
-			name:               "should return wait blocks for Bitcoin signet",
-			chainID:            chains.BitcoinSignetTestnet.ChainId,
-			expectedWaitBlocks: PendingTxFeeBumpWaitBlocks,
-		},
-		{
-			name:               "should return wait blocks for Bitcoin regtest",
-			chainID:            chains.BitcoinRegtest.ChainId,
-			expectedWaitBlocks: PendingTxFeeBumpWaitBlocksRegnet,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			blocks := GetFeeBumpWaitBlocks(tt.chainID)
-			require.Equal(t, tt.expectedWaitBlocks, blocks)
-		})
-	}
-}
-
-// makePendingTxFinder is a helper function to create a mock pending tx finder
-func makePendingTxFinder(tx *btcutil.Tx, nonce uint64, errMsg string) PendingTxFinder {
-	var err error
-	if errMsg != "" {
-		err = errors.New(errMsg)
-	}
-	return func(_ context.Context, _ *Observer) (*btcutil.Tx, uint64, error) {
-		return tx, nonce, err
-	}
-}
-
-// makeStuckTxChecker is a helper function to create a mock stuck tx checker
-func makeStuckTxChecker(stuck bool, stuckFor time.Duration, errMsg string) StuckTxChecker {
-	var err error
-	if errMsg != "" {
-		err = errors.New(errMsg)
-	}
-	return func(_ context.Context, _ RPC, _ string, _ int64) (bool, time.Duration, error) {
-		return stuck, stuckFor, err
 	}
 }
 
@@ -440,4 +367,8 @@ func mockAndRefreshPendingNonce(t *testing.T, s *testSuite, txid string, nonce u
 	// fetch utxos and refresh pending nonce
 	err := s.FetchUTXOs(ctx)
 	require.NoError(t, err)
+}
+
+func withPendingTxFinder(ctx context.Context, fn pendingTxFinder) context.Context {
+	return context.WithValue(ctx, pendingTxFinderKey{}, fn)
 }

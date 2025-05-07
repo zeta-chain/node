@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"time"
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -77,6 +78,7 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 	return &bh, nil
 }
 
+// GetRawMempool fetches all mempool transaction hashes.
 func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
 	cmd := types.NewGetRawMempoolCmd(types.Bool(false))
 
@@ -101,6 +103,7 @@ func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
 	return txHashes, nil
 }
 
+// GetMempoolEntry fetches the mempool entry for the given transaction hash.
 func (c *Client) GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error) {
 	cmd := types.NewGetMempoolEntryCmd(txHash)
 
@@ -215,6 +218,50 @@ func (c *Client) EstimateSmartFee(
 	}
 
 	return unmarshalPtr[types.EstimateSmartFeeResult](out)
+}
+
+// IsTxStuckInMempool checks if the transaction is stuck in the mempool.
+//
+// A pending tx with 'confirmations == 0' will be considered stuck due to excessive pending time.
+func (c *Client) IsTxStuckInMempool(
+	ctx context.Context,
+	txHash string,
+	maxWaitBlocks int64,
+) (stuck bool, pendingFor time.Duration, err error) {
+	lastBlock, err := c.GetBlockCount(ctx)
+	if err != nil {
+		return false, 0, errors.Wrap(err, "GetBlockCount failed")
+	}
+
+	entry, err := c.GetMempoolEntry(ctx, txHash)
+	if err != nil {
+		// not a mempool tx, of course not stuck
+		if isTxNotInMempoolError(err) {
+			return false, 0, nil
+		}
+
+		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
+	}
+
+	const blockTimeBTC = 10 * time.Minute
+
+	// is the tx pending for too long?
+	pendingFor = time.Since(time.Unix(entry.Time, 0))
+	maxPendingFor := blockTimeBTC * time.Duration(maxWaitBlocks)
+	pendingDeadline := entry.Height + maxWaitBlocks
+
+	// the block mining is frozen in Regnet for E2E test
+	if c.isRegnet {
+		maxPendingFor := time.Second * time.Duration(maxWaitBlocks)
+
+		stuck = pendingFor > maxPendingFor && entry.Height == lastBlock
+
+		return stuck, pendingFor, nil
+	}
+
+	stuck = pendingFor > maxPendingFor && lastBlock > pendingDeadline
+
+	return stuck, pendingFor, nil
 }
 
 func (c *Client) ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error) {

@@ -18,7 +18,6 @@ import (
 //go:generate mockery --name client --structname BitcoinClient --filename bitcoin_client.go --output ../../../testutils/mocks
 type client interface {
 	Ping(ctx context.Context) error
-	IsRegnet() bool
 	Healthcheck(ctx context.Context) (time.Time, error)
 	GetNetworkInfo(ctx context.Context) (*types.GetNetworkInfoResult, error)
 
@@ -43,6 +42,13 @@ type client interface {
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
+
+	IsTxStuckInMempool(
+		ctx context.Context,
+		txHash string,
+		maxWaitBlocks int64,
+	) (stuck bool, pendingFor time.Duration, err error)
+
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,

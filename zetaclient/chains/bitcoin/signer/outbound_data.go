@@ -82,7 +82,7 @@ func NewOutboundData(
 	if params.GasPriorityFee != "" {
 		gasPriorityFee, err := strconv.ParseUint(params.GasPriorityFee, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid gas priority fee %s", params.GasPriorityFee)
+			return nil, errors.Wrapf(err, "invalid gas priority fee %s", params.GasPriorityFee)
 		}
 
 		if gasPriorityFee > 0 {
