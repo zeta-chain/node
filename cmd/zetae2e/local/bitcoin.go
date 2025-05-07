@@ -61,7 +61,7 @@ func startBitcoinTests(
 		e2etests.TestBitcoinWithdrawRestrictedName,
 		// to run RBF test, change the constant 'minTxConfirmations' to 1 in the Bitcoin observer
 		// https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
-		e2etests.TestBitcoinWithdrawRBFName,
+		//e2etests.TestBitcoinWithdrawRBFName,
 	}
 
 	if !light {
