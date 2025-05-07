@@ -204,12 +204,12 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
-	// Now perform the withdrawal
+	// Perform the withdrawal
 	tx, err = r.TONZRC20.Withdraw(r.ZEVMAuth, []byte(to.ToRaw()), amount)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
-	// wait for tx receipt
+	// ait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
