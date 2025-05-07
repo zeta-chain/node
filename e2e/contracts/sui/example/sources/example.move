@@ -3,6 +3,10 @@ module example::connected;
 use sui::address::from_bytes;
 use sui::coin::Coin;
 
+// ENonceMismatch is a fabricated nonce mismatch error code emitted from the on_call function
+// zetaclient should be able to differentiate this error from real withdraw_impl nonce mismatch
+const ENonceMismatch: u64 = 3;
+
 // stub for shared objects
 public struct GlobalConfig has key {
     id: UID,
@@ -55,6 +59,11 @@ public entry fun on_call<SOURCE_COIN>(
     data: vector<u8>,
     _ctx: &mut TxContext,
 ) {
+    // check if the message is "revert" and revert with faked ENonceMismatch if so
+    if (data == b"revert") {
+        assert!(false, ENonceMismatch);
+    };
+
     let receiver = decode_receiver(data);
 
     // transfer the coins to the provided address
