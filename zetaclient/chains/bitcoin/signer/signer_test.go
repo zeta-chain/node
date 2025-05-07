@@ -159,7 +159,6 @@ func Test_BroadcastOutbound(t *testing.T) {
 				tt.rbfTx,
 				cctx,
 				s.observer,
-				s.zetacoreClient,
 			)
 
 			// ASSERT

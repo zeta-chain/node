@@ -190,7 +190,6 @@ func (b *Bitcoin) scheduleCCTX(ctx context.Context) error {
 				ctx,
 				cctx,
 				b.observer,
-				b.observer.ZetacoreClient(),
 				zetaHeight,
 			)
 		}
