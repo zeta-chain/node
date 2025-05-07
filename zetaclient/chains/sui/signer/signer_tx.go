@@ -288,7 +288,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 	isRetryable, err := sui.IsRetryableExecutionError(res.Effects.Status.Error)
 	switch {
 	case err != nil:
-		return "", errors.Wrapf(err, "unable to check tx execution status error code: %s", res.Effects.Status.Error)
+		return "", errors.Wrapf(err, "unable to check tx execution status error: %s", res.Effects.Status.Error)
 	case isRetryable:
 		return "", fmt.Errorf("tx execution status failed, retry later: %s", res.Effects.Status.Error)
 	default:

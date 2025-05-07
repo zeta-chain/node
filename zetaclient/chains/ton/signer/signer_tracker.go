@@ -11,6 +11,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // trackOutbound tracks sent external message and records it as outboundTracker.
@@ -26,6 +27,9 @@ func (s *Signer) trackOutbound(
 	w *toncontracts.Withdrawal,
 	prevState tlb.ShardAccount,
 ) error {
+	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
+	defer metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Dec()
+
 	const (
 		timeout = 60 * time.Second
 		tick    = time.Second

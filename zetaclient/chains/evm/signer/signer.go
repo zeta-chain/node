@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cenkalti/backoff/v4"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
@@ -31,7 +32,7 @@ import (
 
 const (
 	// broadcastBackoff is the initial backoff duration for retrying broadcast
-	broadcastBackoff = 1000 * time.Millisecond
+	broadcastBackoff = time.Second * 6
 
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	broadcastRetries = 5
@@ -269,6 +270,7 @@ func (signer *Signer) TryProcessOutbound(
 			Str(logs.FieldCctx, cctx.Index).
 			Str("cctx.receiver", params.Receiver).
 			Str("cctx.amount", params.Amount.String()).
+			Str("signer", myID.String()).
 			Logger()
 	)
 	logger.Info().Msgf("TryProcessOutbound")
@@ -316,10 +318,12 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
-	logger.Info().Uint64("outbound.nonce", cctx.GetCurrentOutboundParam().TssNonce).Msg("key-sign success")
+	// attach tx hash to logger and print log
+	logger = logger.With().Str(logs.FieldTx, tx.Hash().Hex()).Logger()
+	logger.Info().Msg("Successful keysign")
 
 	// Broadcast Signed Tx
-	signer.BroadcastOutbound(ctx, tx, cctx, logger, myID, zetacoreClient, txData)
+	signer.BroadcastOutbound(ctx, tx, cctx, logger, zetacoreClient, txData)
 }
 
 // SignOutboundFromCCTX signs an outbound transaction from a given cctx
@@ -458,7 +462,6 @@ func (signer *Signer) BroadcastOutbound(
 	tx *ethtypes.Transaction,
 	cctx *crosschaintypes.CrossChainTx,
 	logger zerolog.Logger,
-	myID sdk.AccAddress,
 	zetacoreClient interfaces.ZetacoreClient,
 	txData *OutboundData,
 ) {
@@ -482,45 +485,62 @@ func (signer *Signer) BroadcastOutbound(
 		return
 	}
 
-	// broadcast transaction
-	outboundHash := tx.Hash().Hex()
+	var (
+		outboundHash = tx.Hash().Hex()
+		nonce        = cctx.GetCurrentOutboundParam().TssNonce
+	)
 
-	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s) in case of RPC error
-	backOff := broadcastBackoff
-	for i := 0; i < broadcastRetries; i++ {
-		time.Sleep(backOff)
-		err := signer.broadcast(ctx, tx)
+	// define broadcast function
+	broadcast := func() error {
+		// get latest TSS account pending nonce
+		pendingNonce, err := signer.client.PendingNonceAt(ctx, signer.TSS().PubKey().AddressEVM())
 		if err != nil {
-			log.Warn().
-				Err(err).
-				Msgf("BroadcastOutbound: error broadcasting tx %s on chain %d nonce %d retry %d signer %s",
-					outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, i, myID)
-			retry, report := zetacore.HandleBroadcastError(
-				err,
-				cctx.GetCurrentOutboundParam().TssNonce,
-				toChain.ID(),
-				outboundHash,
-			)
-			if report {
-				signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
-			}
-			if !retry {
-				break
-			}
-			backOff *= 2
-			continue
+			return errors.Wrap(err, "unable to get latest TSS account nonce")
 		}
-		logger.Info().Msgf("BroadcastOutbound: broadcasted tx %s on chain %d nonce %d signer %s",
-			outboundHash, toChain.ID(), cctx.GetCurrentOutboundParam().TssNonce, myID)
-		signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), tx.Nonce(), outboundHash, logger)
-		break // successful broadcast; no need to retry
+
+		// if TSS nonce is higher than CCTX nonce, there is no need to broadcast
+		// this avoids foreseeable "nonce too low" error and unnecessary tracker report
+		if pendingNonce > nonce {
+			logger.Info().Uint64("tss_nonce", pendingNonce).Msg("cctx nonce is too low, skip broadcasting tx")
+			return nil
+		}
+
+		// broadcast success, report to tracker
+		if err = signer.broadcast(ctx, tx); err == nil {
+			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
+			return nil
+		}
+
+		// handle different broadcast errors
+		retry, report := zetacore.HandleBroadcastError(err, nonce, toChain.ID(), outboundHash)
+		if report {
+			signer.reportToOutboundTracker(ctx, zetacoreClient, toChain.ID(), nonce, outboundHash, logger)
+			return nil
+		}
+		if retry {
+			return errors.Wrap(err, "unable to broadcast tx, retrying")
+		}
+
+		// no re-broadcast, no report, stop retry
+		// e.g. "replacement transaction underpriced"
+		return nil
 	}
+
+	// broadcast transaction with backoff to tolerate RPC error
+	bo := backoff.NewConstantBackOff(broadcastBackoff)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, broadcastRetries)
+	if err := retry.DoWithBackoff(broadcast, boWithMaxRetries); err != nil {
+		logger.Error().Err(err).Msgf("unable to broadcast EVM outbound")
+	}
+
+	logger.Info().Msg("broadcasted EVM outbound")
 }
 
 // IsPendingOutboundFromZetaChain checks if the sender chain is ZetaChain and if status is PendingOutbound
 // TODO(revamp): move to another package more general for cctx functions
 func IsPendingOutboundFromZetaChain(
 	cctx *crosschaintypes.CrossChainTx,
+
 	zetacoreClient interfaces.ZetacoreClient,
 ) bool {
 	return cctx.InboundParams.SenderChainId == zetacoreClient.Chain().ChainId &&
