@@ -461,6 +461,36 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositName,
 		}
 
+		if !deployerRunner.IsRunningUpgrade() {
+			solanaTests = append(solanaTests, []string{
+				e2etests.TestSolanaDepositAndCallName,
+				e2etests.TestSolanaWithdrawAndCallName,
+				e2etests.TestZEVMToSolanaCallName,
+				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallName,
+				e2etests.TestSolanaDepositAndCallRevertWithCallThatRevertsName,
+				e2etests.TestSolanaDepositAndCallRevertWithDustName,
+				e2etests.TestSolanaDepositRestrictedName,
+				e2etests.TestSolanaToZEVMCallName,
+				e2etests.TestSolanaWithdrawRestrictedName,
+			}...)
+
+			splTests = append(splTests, []string{
+				e2etests.TestSPLDepositAndCallName,
+				e2etests.TestSPLDepositAndCallRevertName,
+				e2etests.TestSPLDepositAndCallRevertWithCallName,
+				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
+				e2etests.TestSPLWithdrawName,
+				e2etests.TestSPLWithdrawAndCallName,
+				e2etests.TestSPLWithdrawAndCallRevertName,
+				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+				// TODO move under admin tests
+				// https://github.com/zeta-chain/node/issues/3085
+				e2etests.TestSolanaWhitelistSPLName,
+			}...)
+		}
+
 		eg.Go(
 			solanaTestRoutine(
 				conf,
