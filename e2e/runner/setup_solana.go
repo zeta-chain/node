@@ -237,11 +237,6 @@ func (r *E2ERunner) UpdateSolanaTss(gatewayID, deployerPrivateKey string) {
 	// get deployer account balance
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
 	require.NoError(r, err)
-	bal, err := r.SolanaClient.GetBalance(r.Ctx, privkey.PublicKey(), rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-	r.Logger.Info("deployer address: %s, balance: %f SOL", privkey.PublicKey().String(), float64(bal.Value)/1e9)
-
-	// compute the gateway PDA address
 	pdaComputed := r.ComputePdaAddress()
 
 	// create 'initialize' instruction
@@ -272,12 +267,11 @@ func (r *E2ERunner) UpdateSolanaTss(gatewayID, deployerPrivateKey string) {
 	})
 	require.NoError(r, err)
 
-	// deserialize the PDA info
 	pda := solanacontracts.PdaInfo{}
 	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
 	require.NoError(r, err)
 	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
 
-	// check the TSS address
+	// verify updated TSS address
 	require.Equal(r, r.TSSAddress, tssAddress, "TSS address mismatch")
 }
