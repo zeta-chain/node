@@ -75,6 +75,36 @@ func (r *E2ERunner) CreateDepositInstruction(
 	}
 }
 
+// CreateDepositInstructionThroughProgram creates a 'trigger_deposit' instruction for connected example program
+func (r *E2ERunner) CreateDepositInstructionThroughProgram(
+	signer solana.PublicKey,
+	receiver ethcommon.Address,
+	amount uint64,
+	revertOptions *solanacontract.RevertOptions,
+) solana.Instruction {
+	triggerDepositDiscriminator := [8]byte{154, 34, 24, 72, 18, 230, 27, 82}
+	var err error
+	var depositData []byte
+	depositData, err = borsh.Serialize(solanacontract.DepositInstructionParams{
+		Discriminator: triggerDepositDiscriminator,
+		Amount:        amount,
+		Receiver:      receiver,
+		RevertOptions: revertOptions,
+	})
+	require.NoError(r, err)
+
+	return &solana.GenericInstruction{
+		ProgID:    ConnectedProgramID,
+		DataBytes: depositData,
+		AccountValues: []*solana.AccountMeta{
+			solana.Meta(signer).WRITE().SIGNER(),
+			solana.Meta(r.ComputePdaAddress()).WRITE(),
+			solana.Meta(r.GatewayProgram),
+			solana.Meta(solana.SystemProgramID),
+		},
+	}
+}
+
 // CreateSOLCallInstruction creates a 'call' instruction
 func (r *E2ERunner) CreateSOLCallInstruction(
 	signer solana.PublicKey,
@@ -459,6 +489,37 @@ func (r *E2ERunner) SOLDepositAndCall(
 	// create 'deposit' instruction
 	instruction := r.CreateDepositInstruction(signerPrivKey.PublicKey(), receiver, data, amount.Uint64(), revertOptions)
 
+	return r.solDepositAndCall(signerPrivKey, instruction)
+}
+
+// SOLDepositAndCallThroughProgram deposits an amount of ZRC20 SOL tokens (in lamports) through program
+func (r *E2ERunner) SOLDepositAndCallThroughProgram(
+	signerPrivKey *solana.PrivateKey,
+	receiver ethcommon.Address,
+	amount *big.Int,
+	revertOptions *solanacontract.RevertOptions,
+) solana.Signature {
+	// if signer is not provided, use the runner account as default
+	if signerPrivKey == nil {
+		privkey := r.GetSolanaPrivKey()
+		signerPrivKey = &privkey
+	}
+
+	// create 'deposit' instruction
+	instruction := r.CreateDepositInstructionThroughProgram(
+		signerPrivKey.PublicKey(),
+		receiver,
+		amount.Uint64(),
+		revertOptions,
+	)
+
+	return r.solDepositAndCall(signerPrivKey, instruction)
+}
+
+func (r *E2ERunner) solDepositAndCall(
+	signerPrivKey *solana.PrivateKey,
+	instruction solana.Instruction,
+) solana.Signature {
 	// create and sign the transaction
 	limit := computebudget.NewSetComputeUnitLimitInstruction(500000).Build() // 500k compute unit limit
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().

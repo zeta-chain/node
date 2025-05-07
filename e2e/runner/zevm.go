@@ -128,6 +128,7 @@ func (r *E2ERunner) ETHWithdrawAndCall(
 	amount *big.Int,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
+	gasLimit *big.Int,
 ) *ethtypes.Transaction {
 	tx, err := r.GatewayZEVM.WithdrawAndCall0(
 		r.ZEVMAuth,

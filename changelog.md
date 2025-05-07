@@ -23,6 +23,7 @@
 * [3807](https://github.com/zeta-chain/node/pull/3807) - integrate ZEVM to Solana call
 * [3826](https://github.com/zeta-chain/node/pull/3826) - add global tss signature rate-limiter to zetaclient
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
+* [3839](https://github.com/zeta-chain/node/pull/3839) - parse Solana inbounds from inner instructions
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 
 ### Refactor
@@ -30,6 +31,7 @@
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 * [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
+* [3848g](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
 
 ### Fixes
 
