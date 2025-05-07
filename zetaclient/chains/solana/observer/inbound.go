@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/zeta-chain/node/pkg/coin"
-	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	solanarpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
@@ -141,159 +139,26 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 
 // FilterInboundEvents filters inbound events from a tx result.
 // Note: for consistency with EVM chains, this method
-//   - takes at one event (the first) per token (SOL or SPL) per transaction.
-//   - takes at most two events (one SOL + one SPL) per transaction.
+//   - takes at least one event (the first) per token (SOL or SPL or call) per transaction.
+//   - takes at most 3 events (one SOL + one SPL + one call) per transaction.
 //   - ignores exceeding events.
+//   - assigns indices based on instruction position in the transaction
 func FilterInboundEvents(
 	txResult *rpc.GetTransactionResult,
 	gatewayID solana.PublicKey,
 	senderChainID int64,
 	logger zerolog.Logger,
 ) ([]*clienttypes.InboundEvent, error) {
-	// unmarshal transaction
-	tx, err := txResult.Transaction.GetTransaction()
+	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling transaction")
+		return nil, err
 	}
 
-	// there should be at least one instruction and one account, otherwise skip
-	if len(tx.Message.Instructions) <= 0 {
-		return nil, nil
+	if err := parser.Parse(); err != nil {
+		return nil, err
 	}
 
-	// create event array to collect all events in the transaction
-	seenDeposit := false
-	seenDepositSPL := false
-	seenCall := false
-	events := make([]*clienttypes.InboundEvent, 0)
-
-	// loop through instruction list to filter the 1st valid event
-	for i, instruction := range tx.Message.Instructions {
-		// get the program ID
-		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
-		if err != nil {
-			logger.Err(err).
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Uint16("index", instruction.ProgramIDIndex).
-				Msg("no program found")
-			continue
-		}
-
-		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(gatewayID) {
-			continue
-		}
-
-		// try parsing the instruction as a 'deposit' if not seen yet
-		if !seenDeposit {
-			deposit, err := solanacontracts.ParseInboundAsDeposit(tx, i, txResult.Slot)
-			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsDeposit")
-			} else if deposit != nil {
-				seenDeposit = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           deposit.Sender,
-					Receiver:         deposit.Receiver,
-					TxOrigin:         deposit.Sender,
-					Amount:           deposit.Amount,
-					Memo:             deposit.Memo,
-					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:         coin.CoinType_Gas,
-					Asset:            deposit.Asset,
-					IsCrossChainCall: deposit.IsCrossChainCall,
-					RevertOptions:    deposit.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
-					Msg("deposit detected")
-			}
-		} else {
-			logger.Warn().
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
-				Msg("multiple deposits detected")
-		}
-
-		// try parsing the instruction as a 'deposit_spl_token' if not seen yet
-		if !seenDepositSPL {
-			deposit, err := solanacontracts.ParseInboundAsDepositSPL(tx, i, txResult.Slot)
-			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsDepositSPL")
-			} else if deposit != nil {
-				seenDepositSPL = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           deposit.Sender,
-					Receiver:         deposit.Receiver,
-					TxOrigin:         deposit.Sender,
-					Amount:           deposit.Amount,
-					Memo:             deposit.Memo,
-					BlockNumber:      deposit.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:         coin.CoinType_ERC20,
-					Asset:            deposit.Asset,
-					IsCrossChainCall: deposit.IsCrossChainCall,
-					RevertOptions:    deposit.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
-					Msg("SPL deposit detected")
-			}
-		} else {
-			logger.Warn().
-				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
-				Msg("multiple SPL deposits detected")
-		}
-
-		// try parsing the instruction as a 'call' if not seen yet
-		if !seenCall {
-			call, err := solanacontracts.ParseInboundAsCall(tx, i, txResult.Slot)
-			if err != nil {
-				return nil, errors.Wrap(err, "error ParseInboundAsCall")
-			} else if call != nil {
-				seenCall = true
-				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
-					Sender:           call.Sender,
-					Receiver:         call.Receiver,
-					TxOrigin:         call.Sender,
-					Amount:           call.Amount,
-					Memo:             call.Memo,
-					BlockNumber:      call.Slot, // instead of using block, Solana explorer uses slot for indexing
-					TxHash:           tx.Signatures[0].String(),
-					Index:            0, // hardcode to 0 for Solana, not a EVM smart contract call
-					CoinType:         coin.CoinType_NoAssetCall,
-					Asset:            call.Asset,
-					IsCrossChainCall: call.IsCrossChainCall,
-					RevertOptions:    call.RevertOptions,
-				})
-				logger.Info().
-					Str(logs.FieldMethod, "FilterInboundEvents").
-					Str("signature", tx.Signatures[0].String()).
-					Int("instruction", i).
-					Msg("call detected")
-			}
-		} else {
-			logger.Warn().
-				Str(logs.FieldMethod, "FilterInboundEvents").
-				Str("signature", tx.Signatures[0].String()).
-				Int("instruction", i).
-				Msg("multiple calls detected")
-		}
-	}
-
-	return events, nil
+	return parser.GetEvents(), nil
 }
 
 // BuildInboundVoteMsgFromEvent builds a MsgVoteInbound from an inbound event
@@ -323,7 +188,7 @@ func (ob *Observer) BuildInboundVoteMsgFromEvent(event *clienttypes.InboundEvent
 		0,
 		event.CoinType,
 		event.Asset,
-		0, // not a smart contract call
+		uint64(event.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false, // not used
 		crosschaintypes.InboundStatus_SUCCESS,
