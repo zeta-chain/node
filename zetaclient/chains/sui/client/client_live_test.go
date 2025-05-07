@@ -12,6 +12,7 @@ import (
 
 const (
 	RPCMainnet = "https://sui-mainnet.public.blastapi.io"
+	RPCTestnet = "https://sui-testnet.public.blastapi.io"
 )
 
 func TestClientLive(t *testing.T) {
@@ -182,6 +183,19 @@ func TestClientLive(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 		require.Equal(t, TxStatusFailure, res.Effects.Status.Status)
+	})
+
+	t.Run("GetObjectParsedData", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// ACT
+		objectID := "0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700"
+		data, err := ts.GetObjectParsedData(ts.ctx, objectID)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotEmpty(t, data.Fields)
 	})
 }
 

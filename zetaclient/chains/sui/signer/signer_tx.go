@@ -340,3 +340,13 @@ func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
 
 	return strconv.FormatUint(gasBudget, 10), nil
 }
+
+// getGatewayNonce reads the nonce of the gateway object
+func (s *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
+	data, err := s.client.GetObjectParsedData(ctx, s.gateway.ObjectID())
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to get parsed data of gateway object")
+	}
+
+	return sui.ParseGatewayNonce(data)
+}
