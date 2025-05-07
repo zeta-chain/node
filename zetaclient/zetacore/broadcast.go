@@ -173,10 +173,19 @@ func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash s
 		Str(logs.FieldTx, outboundHash)
 
 	switch {
+	// From the literal meaning of the error message, the tx with this 'nonce' has already been processed,
+	// and the latest TSS account nonce has already been incremented.
+	// Theoretically, this the tx hash should not be posted to the tracker in this case, but we've already
+	// encountered missed outbound tracker caused by unknown reasons (may or may not be false positive).
+	//
+	// To prevent missed potential outbound tracker, now we pass this hash to tracker reporter in this case.
+	// The overhead is:
+	// 	- It is uncertain whether this tx hash was the very FIRST accepted tx with THIS 'nonce', it might be the second...
+	//  - Once decided to report this tx hash, we need to spawn extra goroutines and making extra RPC queries for monitoring.
 	case strings.Contains(msg, "nonce too low"):
-		const m = "nonce too low! this might be a unnecessary key-sign. increase retry interval and awaits outbound confirmation"
+		const m = "nonce too low! this might be an unnecessary key-sign. increase retry interval and awaits outbound confirmation"
 		evt.Msg(m)
-		return false, false
+		return false, true
 
 	case strings.Contains(msg, "replacement transaction underpriced"):
 		evt.Msg("Broadcast replacement")
