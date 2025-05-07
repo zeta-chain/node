@@ -40,6 +40,10 @@ var (
 
 	// moveAbortRegex is the MoveAbort error regex pattern: "MoveAbort(..., <code>) ..."
 	moveAbortRegex = regexp.MustCompile(`MoveAbort\(.+?,\s*(\d+)\)`)
+
+	// commandIndexRegex extracts the command index from any execution error message.
+	// For example: "MoveAbort(...) in command 2"
+	commandIndexRegex = regexp.MustCompile(`in\s+command\s+(\d+)$`)
 )
 
 // MoveAbort represents a MoveAbort execution error.
@@ -69,33 +73,60 @@ func NewMoveAbortFromExecutionError(errorMsg string) (abort MoveAbort, err error
 }
 
 // IsRetryable returns true if the MoveAbort error code is in the retryable error list.
-//
-// The error handling needs to be more accurate:
-// TODO: https://github.com/zeta-chain/node/issues/3778
 func (m MoveAbort) IsRetryable() bool {
 	return slices.Contains(retryableOutboundErrCodes, m.Code)
 }
 
-// IsRetryableExecutionError checks if the error message is a retryable error. If it is,
-// we let the scheduler retry the outbound until it succeeds.
-//
-// Currently, the Sui gateway 'withdraw' may fail on three types of execution errors:
-// - MoveAbort (ErrCodeNotWhitelisted)
-// - MoveAbort (ErrCodeNonceMismatch)
-// - MoveAbort (ErrCodeInactiveWithdrawCap)
-//
-// If the execution of 'withdraw' returns one of the above errors, we let the scheduler retry the outbound
-// until it succeeds; for any other unknown execution errors, we just cancel the outbound because retry won't help.
+// IsRetryableExecutionError checks if the error message is a retryable error.
+// Sui withdraw and withdrawAndCall may fail with unknown execution errors, zetaclient
+// retries the outbound on known errors and cancels the outbound on any unknown errors.
 func IsRetryableExecutionError(errorMsg string) (bool, error) {
+	// cmdIndex is optional in Sui error message
+	cmdIndex, err := extractCommandIndex(errorMsg)
+
 	switch {
-	case strings.HasPrefix(errorMsg, "MoveAbort"):
-		moveAbort, err := NewMoveAbortFromExecutionError(errorMsg)
-		if err != nil {
-			return false, errors.Wrap(err, "unable to create MoveAbort from execution error")
-		}
-		return moveAbort.IsRetryable(), nil
-	default:
-		// currently, only MoveAbort errors are retryable
+	case err != nil:
+		// command index not found, it's fine
+		// cancel this tx with unknown command index
 		return false, nil
+	case cmdIndex == 0:
+		// 'withdraw_impl' error
+		// The gateway 'withdraw_impl' may fail with three types of known MoveAbort errors.
+		// If it does, the scheduler should retry the outbound until it succeeds:
+		// 	- MoveAbort (ErrCodeNotWhitelisted)
+		// 	- MoveAbort (ErrCodeNonceMismatch)
+		// 	- MoveAbort (ErrCodeInactiveWithdrawCap)
+		if strings.HasPrefix(errorMsg, "MoveAbort") {
+			moveAbort, err := NewMoveAbortFromExecutionError(errorMsg)
+			if err != nil {
+				return false, errors.Wrap(err, "unable to create MoveAbort from execution error")
+			}
+			return moveAbort.IsRetryable(), nil
+		}
+		return false, nil
+	case cmdIndex == 1 || cmdIndex == 2:
+		// 1: gas budget transfer error: cancel tx
+		// 2: 'on_call' error: cancel tx
+		return false, nil
+	default: // never happen
+		return false, errors.Errorf("invalid command index: %d", cmdIndex)
 	}
+}
+
+// extractCommandIndex extracts the command index from an execution error message if present.
+// The command index is optional in the Sui execution error message.
+// see: https://github.com/MystenLabs/sui/blob/8a8b5e54c59762f2da57c8ff1e76d571e7015492/crates/sui-types/src/execution_status.rs#L25
+func extractCommandIndex(errorMsg string) (uint16, error) {
+	matches := commandIndexRegex.FindStringSubmatch(errorMsg)
+	if len(matches) != 2 {
+		return 0, errors.New("no command index found")
+	}
+
+	cmdIndex, err := strconv.ParseUint(matches[1], 10, 16)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to convert command index to uint16")
+	}
+
+	// #nosec G103 always in range
+	return uint16(cmdIndex), nil
 }

@@ -24,6 +24,8 @@
 * [3826](https://github.com/zeta-chain/node/pull/3826) - add global tss signature rate-limiter to zetaclient
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 * [3839](https://github.com/zeta-chain/node/pull/3839) - parse Solana inbounds from inner instructions
+* [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
+
 
 ### Refactor
 
