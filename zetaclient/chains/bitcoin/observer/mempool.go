@@ -128,6 +128,7 @@ func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx,
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "GetPendingNoncesByChain failed")
 	}
+
 	// #nosec G115 always in range
 	for nonce := uint64(p.NonceLow); nonce < uint64(p.NonceHigh); nonce++ {
 		if nonce > lastNonce {
