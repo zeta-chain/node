@@ -263,12 +263,8 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 
 	// TON
 	r.Logger.Print("TON:")
-	_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
-	if err != nil {
-		r.Logger.Print("Error getting TON address: %s", err.Error())
-	} else {
-		r.Logger.Print("* TON address: %s", tonWallet.GetAddress().ToHuman(false, true))
-		r.Logger.Print("* TON balance: %d", balances.TONTON) // Use the stored balance
+	if balances.TONTON != 0 {
+		r.Logger.Print("* TON balance: %d", balances.TONTON)
 	}
 }
 

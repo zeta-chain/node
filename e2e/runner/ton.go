@@ -152,7 +152,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	)
 
 	// Log pre-transaction info
-	r.Logger.Info("TON Pre-Transaction: lastTxHash=%v, lastLt=%v", lastTxHash, lastLt)
+	r.Logger.Info("TON depositAndCall: gateway tx before (last): hash=%v, lt=%v", lastTxHash, lastLt)
 
 	// Send TX
 	err = gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
@@ -183,16 +183,11 @@ func (r *E2ERunner) TONDepositAndCall(
 	// Wait for cctx
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
-	// The relayed message might be stored as a hex string, so we need to check both formats
-	if cctx.RelayedMessage != string(callData) {
-		// Check if the relayed message is a hex encoding of the call data
-		hexEncoded := fmt.Sprintf("%x", callData)
-		if cctx.RelayedMessage != hexEncoded {
-			require.Equal(r, string(callData), cctx.RelayedMessage,
-				"CCTX relayed message doesn't match the callData (also checked hex format)")
-		} else {
-			r.Logger.Info("CCTX relayed message matched the hex-encoded callData: %s", hexEncoded)
-		}
+	// The relayed message might be stored as a hex string, so check both formats
+	hexEncoded := fmt.Sprintf("%x", callData)
+	if cctx.RelayedMessage != string(callData) && cctx.RelayedMessage != hexEncoded {
+		require.Equal(r, string(callData), cctx.RelayedMessage,
+			"CCTX relayed message doesn't match the callData (also checked hex format)")
 	}
 
 	return cctx, nil
@@ -274,7 +269,7 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 			}
 
 			r.Logger.Info(
-				"tonWaitForInboundCCTX: Found matching transaction, hash: %s",
+				"tonWaitForInboundCCTX: Found matching transaction: %s",
 				liteapi.TransactionToHashString(tx),
 			)
 
