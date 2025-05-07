@@ -218,7 +218,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
     sleep 10
 
   zetae2e local --skip-setup --config "$deployed_config_path" \
-    --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles
+    --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles --test-solana
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"

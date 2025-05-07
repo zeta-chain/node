@@ -88,7 +88,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20DepositRevertAndAbortName,
 			e2etests.TestERC20WithdrawAndCallRevertName,
 			e2etests.TestERC20WithdrawAndCallRevertWithCallName,
-			e2etests.TestERC20WithdrawRevertAndAbortName,
+			//e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
 }

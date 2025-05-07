@@ -30,7 +30,7 @@ echo "Starting upgrade loop"
 while true; do
     if [ -f "/data/execute-update" ]; then
         echo "Found execute-update file, performing upgrade"
-        solana program deploy gateway_upgrade.so --program-id "$GATEWAY_PROGRAM_ID"
+        solana program deploy gateway.so --program-id "$GATEWAY_PROGRAM_ID"
         rm /data/execute-update
         echo "Upgrade completed and execute-update file removed"
     fi
