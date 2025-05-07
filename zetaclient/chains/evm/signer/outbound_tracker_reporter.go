@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/evm/common"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/logs"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 // reportToOutboundTracker reports outboundHash to tracker only when tx receipt is available
@@ -40,7 +41,10 @@ func (signer *Signer) reportToOutboundTracker(
 
 	// launch a goroutine to monitor tx confirmation status
 	bg.Work(ctx, func(ctx context.Context) error {
+		metrics.NumTrackerReporters.WithLabelValues(signer.Chain().Name).Inc()
+
 		defer func() {
+			metrics.NumTrackerReporters.WithLabelValues(signer.Chain().Name).Dec()
 			signer.ClearBeingReportedFlag(outboundHash)
 		}()
 
@@ -59,6 +63,17 @@ func (signer *Signer) reportToOutboundTracker(
 				return nil
 			}
 
+			// stop if the CCTX is already finalized for optimization purposes:
+			// 1. all monitoring goroutines should stop and release resources if the CCTX is finalized
+			// 2. especially reduces the lifetime of goroutines that monitor "nonce too low" tx hashes
+			cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
+			if err != nil {
+				logger.Err(err).Msg("unable to query cctx from zetacore")
+			} else if !crosschainkeeper.IsPending(cctx) {
+				logger.Info().Msg("cctx is already finalized")
+				return nil
+			}
+
 			// check tx confirmation status
 			confirmed, err := signer.client.IsTxConfirmed(ctx, outboundHash, common.ReorgProtectBlockCount)
 			if err != nil {
@@ -67,16 +82,6 @@ func (signer *Signer) reportToOutboundTracker(
 			}
 			if !confirmed {
 				continue
-			}
-
-			// stop if the cctx is already finalized
-			cctx, err := zetacoreClient.GetCctxByNonce(ctx, chainID, nonce)
-			if err != nil {
-				logger.Err(err).Msg("unable to get cctx for outbound")
-				continue
-			} else if !crosschainkeeper.IsPending(cctx) {
-				logger.Info().Msg("cctx is finalized")
-				return nil
 			}
 
 			// report outbound hash to tracker

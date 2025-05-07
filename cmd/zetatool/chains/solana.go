@@ -27,7 +27,7 @@ func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		0,
 		event.CoinType,
 		event.Asset,
-		0, // not a smart contract call
+		uint64(event.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false,
 		crosschaintypes.InboundStatus_SUCCESS,

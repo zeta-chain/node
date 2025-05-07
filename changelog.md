@@ -27,11 +27,16 @@
 
 ### Tests
 
+* [3839](https://github.com/zeta-chain/node/pull/3839) - parse Solana inbounds from inner instructions
+* [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
+* [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+
 ### Refactor
 
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 * [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
+* [3848g](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
 
 ### Fixes
 
@@ -41,6 +46,7 @@
 * [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
+* [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
 
 ### Tests
 

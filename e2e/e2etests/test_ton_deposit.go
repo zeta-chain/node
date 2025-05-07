@@ -46,6 +46,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// Check receiver's balance after deposit
 	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
+
 	require.NoError(r, err)
 	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balanceAfter.Uint64())
 
