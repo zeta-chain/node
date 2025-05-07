@@ -78,6 +78,7 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 	return &bh, nil
 }
 
+// GetRawMempool fetches all mempool transaction hashes.
 func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
 	cmd := types.NewGetRawMempoolCmd(types.Bool(false))
 
@@ -102,6 +103,7 @@ func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
 	return txHashes, nil
 }
 
+// GetMempoolEntry fetches the mempool entry for the given transaction hash.
 func (c *Client) GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error) {
 	cmd := types.NewGetMempoolEntryCmd(txHash)
 

@@ -20,6 +20,8 @@ const (
 	FeeRateRegnet = 1
 
 	// FeeRateRegnetRBF is the hardcoded fee rate for regnet RBF
+	// The zetacore bumps CCTX's fee rate every 40 minutes, and we can't wait that long in the E2E test.
+	// For simplicity, zetaclient uses a constant fee rate (> above 1 sat/vB) to test RBF in the regnet.
 	FeeRateRegnetRBF = 5
 
 	// maxBTCSupply is the maximum supply of Bitcoin
