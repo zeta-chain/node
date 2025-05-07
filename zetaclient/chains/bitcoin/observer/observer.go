@@ -44,7 +44,7 @@ type RPC interface {
 	IsTxStuckInMempool(
 		ctx context.Context,
 		txHash string,
-		maxWaitBlocks uint64,
+		maxWaitBlocks int64,
 	) (stuck bool, pendingFor time.Duration, err error)
 
 	EstimateSmartFee(
@@ -105,7 +105,7 @@ type Observer struct {
 	pendingNonce uint64
 
 	// feeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
-	feeBumpWaitBlocks uint64
+	feeBumpWaitBlocks int64
 
 	// lastStuckTx contains the last stuck outbound tx information
 	// Note: nil if outbound is not stuck
@@ -141,7 +141,7 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 
 	isRegnet := chains.IsBitcoinRegnet(chain.ChainId)
 
-	feeBumpWaitBlocks := uint64(pendingTxFeeBumpWaitBlocks)
+	feeBumpWaitBlocks := pendingTxFeeBumpWaitBlocks
 	if isRegnet {
 		feeBumpWaitBlocks = pendingTxFeeBumpWaitBlocksRegnet
 	}
@@ -153,7 +153,7 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 		rpc:       rpc,
 
 		pendingNonce:      0,
-		feeBumpWaitBlocks: feeBumpWaitBlocks,
+		feeBumpWaitBlocks: int64(feeBumpWaitBlocks),
 		lastStuckTx:       nil,
 		utxos:             []btcjson.ListUnspentResult{},
 

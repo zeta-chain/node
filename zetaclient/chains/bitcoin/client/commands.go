@@ -226,7 +226,7 @@ func (c *Client) EstimateSmartFee(
 func (c *Client) IsTxStuckInMempool(
 	ctx context.Context,
 	txHash string,
-	maxWaitBlocks uint64,
+	maxWaitBlocks int64,
 ) (stuck bool, pendingFor time.Duration, err error) {
 	lastBlock, err := c.GetBlockCount(ctx)
 	if err != nil {
@@ -248,7 +248,7 @@ func (c *Client) IsTxStuckInMempool(
 	// is the tx pending for too long?
 	pendingFor = time.Since(time.Unix(entry.Time, 0))
 	maxPendingFor := blockTimeBTC * time.Duration(maxWaitBlocks)
-	pendingDeadline := entry.Height + int64(maxWaitBlocks)
+	pendingDeadline := entry.Height + maxWaitBlocks
 
 	// the block mining is frozen in Regnet for E2E test
 	if c.isRegnet {

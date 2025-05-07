@@ -774,7 +774,7 @@ func (_m *BitcoinClient) ImportAddress(ctx context.Context, address string) erro
 }
 
 // IsTxStuckInMempool provides a mock function with given fields: ctx, txHash, maxWaitBlocks
-func (_m *BitcoinClient) IsTxStuckInMempool(ctx context.Context, txHash string, maxWaitBlocks uint64) (bool, time.Duration, error) {
+func (_m *BitcoinClient) IsTxStuckInMempool(ctx context.Context, txHash string, maxWaitBlocks int64) (bool, time.Duration, error) {
 	ret := _m.Called(ctx, txHash, maxWaitBlocks)
 
 	if len(ret) == 0 {
@@ -784,22 +784,22 @@ func (_m *BitcoinClient) IsTxStuckInMempool(ctx context.Context, txHash string, 
 	var r0 bool
 	var r1 time.Duration
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint64) (bool, time.Duration, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) (bool, time.Duration, error)); ok {
 		return rf(ctx, txHash, maxWaitBlocks)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint64) bool); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) bool); ok {
 		r0 = rf(ctx, txHash, maxWaitBlocks)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, uint64) time.Duration); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) time.Duration); ok {
 		r1 = rf(ctx, txHash, maxWaitBlocks)
 	} else {
 		r1 = ret.Get(1).(time.Duration)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, string, uint64) error); ok {
+	if rf, ok := ret.Get(2).(func(context.Context, string, int64) error); ok {
 		r2 = rf(ctx, txHash, maxWaitBlocks)
 	} else {
 		r2 = ret.Error(2)

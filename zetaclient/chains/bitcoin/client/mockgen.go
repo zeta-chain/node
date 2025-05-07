@@ -46,7 +46,7 @@ type client interface {
 	IsTxStuckInMempool(
 		ctx context.Context,
 		txHash string,
-		maxWaitBlocks uint64,
+		maxWaitBlocks int64,
 	) (stuck bool, pendingFor time.Duration, err error)
 
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
