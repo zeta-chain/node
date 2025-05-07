@@ -184,11 +184,11 @@ func (r *E2ERunner) TONDepositAndCall(
 	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
 
 	// The relayed message might be stored as a hex string, so check both formats
-	hexEncoded := fmt.Sprintf("%x", callData)
-	if cctx.RelayedMessage != string(callData) && cctx.RelayedMessage != hexEncoded {
-		require.Equal(r, string(callData), cctx.RelayedMessage,
-			"CCTX relayed message doesn't match the callData (also checked hex format)")
-	}
+	require.Contains(r,
+		[]string{string(callData), fmt.Sprintf("%x", callData)},
+		cctx.RelayedMessage,
+		"CCTX relayed message mismatch",
+	)
 
 	return cctx, nil
 }

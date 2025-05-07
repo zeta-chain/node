@@ -269,18 +269,18 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
-func (r *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
+func (r *E2ERunner) PrintTotalDiff(diffs AccountBalancesDiff) {
 	r.Logger.Print(" ---💰 Total gas spent ---")
 
 	// show the value only if it is not zero
-	if accoutBalancesDiff.ZETA.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ZETA spent:  %s", accoutBalancesDiff.ZETA.String())
+	if diffs.ZETA.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ZETA spent:  %s", diffs.ZETA.String())
 	}
-	if accoutBalancesDiff.ETH.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ETH spent:   %s", accoutBalancesDiff.ETH.String())
+	if diffs.ETH.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ETH spent:   %s", diffs.ETH.String())
 	}
-	if accoutBalancesDiff.ERC20.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ERC20 spent: %s", accoutBalancesDiff.ERC20.String())
+	if diffs.ERC20.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ERC20 spent: %s", diffs.ERC20.String())
 	}
 }
 
