@@ -45,8 +45,13 @@ func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
 		logs.FieldMethod: "refreshLastStuckOutbound",
 	}
 
+	pendingTxFinder := ob.getLastPendingOutbound
+	if custom, ok := pendingTxFinderFromContext(ctx); ok {
+		pendingTxFinder = custom
+	}
+
 	// step 1: get last TSS transaction
-	lastTx, lastNonce, err := ob.getLastPendingOutbound(ctx)
+	lastTx, lastNonce, err := pendingTxFinder(ctx)
 	if err != nil {
 		ob.logger.Outbound.Info().Err(err).Fields(lf).Msgf("Last pending outbound not found")
 		return nil
@@ -172,4 +177,17 @@ func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx,
 // newLastStuckOutbound creates a new LastStuckOutbound struct.
 func newLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) *LastStuckOutbound {
 	return &LastStuckOutbound{Nonce: nonce, Tx: tx, StuckFor: stuckFor}
+}
+
+// allows to override observer's pending tx finder.
+// useful for testing because the default implementation is complex and requires thorough mocking.
+type (
+	pendingTxFinder    func(ctx context.Context) (*btcutil.Tx, uint64, error)
+	pendingTxFinderKey struct{}
+)
+
+func pendingTxFinderFromContext(ctx context.Context) (pendingTxFinder, bool) {
+	fn, ok := ctx.Value(pendingTxFinderKey{}).(pendingTxFinder)
+
+	return fn, ok
 }
