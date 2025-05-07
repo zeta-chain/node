@@ -39,7 +39,7 @@
 * [3802](https://github.com/zeta-chain/node/pull/3802) - prevent Sui withdraw with invalid address
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
-* [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx to avoid nonce mismatch failure
+* [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 
 ### Tests
 
