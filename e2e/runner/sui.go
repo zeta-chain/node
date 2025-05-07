@@ -88,7 +88,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(20000),
+			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
 	)
@@ -138,7 +138,7 @@ func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(20000),
+			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
 	)
