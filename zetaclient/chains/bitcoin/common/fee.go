@@ -14,7 +14,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 
-	clientcommon "github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/common"
 )
 
 const (
@@ -69,10 +69,14 @@ type RPC interface {
 type DepositorFeeCalculator func(context.Context, RPC, *btcjson.TxRawResult, *chaincfg.Params) (float64, error)
 
 // FeeRateToSatPerByte converts a fee rate from BTC/KB to sat/vB.
-func FeeRateToSatPerByte(rate float64) int64 {
+func FeeRateToSatPerByte(rate float64) (uint64, error) {
+	if rate <= 0 {
+		return 0, fmt.Errorf("invalid fee rate %f", rate)
+	}
 	satPerKB := rate * btcutil.SatoshiPerBitcoin
-	// #nosec G115 always in range
-	return int64(satPerKB / bytesPerKB)
+
+	// #nosec G115 always positive
+	return uint64(satPerKB / bytesPerKB), nil
 }
 
 // WiredTxSize calculates the wired tx size in bytes
@@ -250,14 +254,14 @@ func CalcDepositorFee(
 
 	// apply gas price multiplier
 	// #nosec G115 always in range
-	feeRate = int64(float64(feeRate) * clientcommon.BTCOutboundGasPriceMultiplier)
+	feeRate = int64(float64(feeRate) * common.BTCOutboundGasPriceMultiplier)
 
 	return DepositorFee(feeRate), nil
 }
 
 // GetRecentFeeRate gets the highest fee rate from recent blocks
 // Note: this method should be used for testnet ONLY
-func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) (int64, error) {
+func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) (uint64, error) {
 	// should avoid using this method for mainnet
 	if netParams.Name == chaincfg.MainNetParams.Name {
 		return 0, errors.New("GetRecentFeeRate should not be used for mainnet")
@@ -293,9 +297,10 @@ func GetRecentFeeRate(ctx context.Context, rpc RPC, netParams *chaincfg.Params) 
 	}
 
 	// use 10 sat/byte as default estimation if recent fee rate drops to 0
-	if highestRate == 0 {
+	if highestRate <= 0 {
 		highestRate = defaultTestnetFeeRate
 	}
 
-	return highestRate, nil
+	// #nosec G115 checked positive
+	return uint64(highestRate), nil
 }
