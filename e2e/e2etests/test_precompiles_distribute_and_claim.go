@@ -347,24 +347,3 @@ func getValidatorAddresses(r *runner.E2ERunner, distrContract *staking.IStaking)
 
 	return validators[0].OperatorAddress, validatorAddr
 }
-
-//2025-04-29 10:39:24 precompiles  | ZRC20 balance staker after claiming rewards: 293999999999999999705000
-//2025-04-29 10:39:24 precompiles  | ZRC20 balance locker after claiming rewards: 706000000000000000295000
-//2025-04-29 10:39:24 precompiles  | Staker claiming rewards: 0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
-//2025-04-29 10:39:24 precompiles  | Locker address: 0x0000000000000000000000000000000000000067
-//2025-04-29 10:39:24 precompiles  | ZRC20 balance staker after claiming rewards again : 293999999999999999705000
-//2025-04-29 10:39:24 precompiles  | Claim address: 0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
-//2025-04-29 10:39:24 precompiles  | ZRC20 Address used for distribute address: 0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
-//2025-04-29 10:39:24 precompiles  | Validator address: 0x95d85993d2b9Ac3a61da99644D53F5b143B8F6b8
-//2025-04-29 10:39:24 precompiles  | ZRC20 token: 0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
-//2025-04-29 10:39:24 precompiles  | Amount: 293999999999999999705000
-
-//2025-04-29 10:39:17 -------------------------------------------------------------------------------------
-//2025-04-29 10:39:17 Validator Cosmos Address:  zetavaloper1jhv9ny7jhxkr5cw6n9jy65l4k9pm3a4c4v9wrr
-//2025-04-29 10:39:17 Delegator Cosmos Address:  zeta1k4f0l2e9qqjccxnstwj0uaarxvn44lj990she9
-//2025-04-29 10:39:17 Rewards withdrawn:  12203615152363055000azeta,293999999999999999705000zrc20/0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
-//2025-04-29 10:39:17 Unlocked ZRC20 coins:  293999999999999999705000
-//2025-04-29 10:39:17 Unlocked delegator address (TO):  0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45
-//2025-04-29 10:39:17 Unlocked bank address (FROM):  0x0000000000000000000000000000000000000067
-//2025-04-29 10:39:17 Coin set:  293999999999999999705000zrc20/0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a
-//2025-04-29 10:39:17 ------------------------------------------------------
