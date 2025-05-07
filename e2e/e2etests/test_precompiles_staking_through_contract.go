@@ -233,6 +233,10 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.Equal(r, int64(1), delegationAfterVal2.DelegationResponse.Balance.Amount.Int64())
 
+	CleanValidatorDelegationsUsingContract(r, testStaking, validators)
+}
+
+func CleanValidatorDelegationsUsingContract(r *runner.E2ERunner, testStaking *teststaking.TestStaking, validators []teststaking.Validator) {
 	for _, validator := range validators {
 		delegator := sdk.AccAddress(r.ZEVMAuth.From.Bytes()).String()
 		delegation, err := r.StakingClient.Delegation(r.Ctx, &types.QueryDelegationRequest{
@@ -256,7 +260,3 @@ func TestPrecompilesStakingThroughContract(r *runner.E2ERunner, args []string) {
 		}
 	}
 }
-
-//func CleanValidatorDelegationsUsingContract(r *runner.E2ERunner, stakingContract *teststaking.TestStaking, validators []teststaking.Validator) {
-//
-//}
