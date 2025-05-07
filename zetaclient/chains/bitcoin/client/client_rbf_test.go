@@ -32,17 +32,9 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		t.Skip("skipping live test")
 	}
 
-	t.Run("RBFTransaction", func(t *testing.T) {
-		Run_RBFTransaction(t)
-	})
-
-	t.Run("RBFTransaction_Chained_CPFP", func(t *testing.T) {
-		Run_RBFTransaction_Chained_CPFP(t)
-	})
-
-	t.Run("PendingMempoolTx", func(t *testing.T) {
-		Run_PendingMempoolTx(t)
-	})
+	t.Run("RBFTransaction", Run_RBFTransaction)
+	t.Run("RBFTransaction_Chained_CPFP", Run_RBFTransaction_Chained_CPFP)
+	t.Run("PendingMempoolTx", Run_PendingMempoolTx)
 }
 
 // setupRBFTest initializes the test suite, privateKey, sender, receiver

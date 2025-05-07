@@ -34,11 +34,6 @@ type MempoolTxsAndFees struct {
 	AvgFeeRate uint64
 }
 
-// IsRegnet returns true if the chain is regnet
-func (c *Client) IsRegnet() bool {
-	return c.isRegnet
-}
-
 // GetBlockVerboseByStr alias for GetBlockVerbose
 func (c *Client) GetBlockVerboseByStr(ctx context.Context, blockHash string) (*types.GetBlockVerboseTxResult, error) {
 	h, err := strToHash(blockHash)
@@ -249,7 +244,7 @@ func (c *Client) GetMempoolTxsAndFees(
 	for {
 		memplEntry, err := c.GetMempoolEntry(ctx, parentHash)
 		if err != nil {
-			if IsTxNotInMempoolError(err) {
+			if isTxNotInMempoolError(err) {
 				// not a mempool tx, stop looking for parents
 				break
 			}
@@ -299,8 +294,12 @@ func (c *Client) GetMempoolTxsAndFees(
 	return txsAndFees, nil
 }
 
-// IsTxNotInMempoolError checks if the given error is due to the transaction not being in the mempool.
-func IsTxNotInMempoolError(err error) bool {
+// isTxNotInMempoolError checks if the given error is due to the transaction not being in the mempool.
+func isTxNotInMempoolError(err error) bool {
+	if err == nil {
+		return false
+	}
+
 	return strings.Contains(err.Error(), "Transaction not in mempool")
 }
 

@@ -7,21 +7,13 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/pkg/errors"
 
-	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
+// number of blocks to await before considering a tx stuck in mempool
 const (
-	// PendingTxFeeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
-	PendingTxFeeBumpWaitBlocks = 3
-
-	// PendingTxFeeBumpWaitBlocksRegnet is the number of blocks to await before considering a tx stuck in mempool in regnet
-	// Note: this is used for E2E test only
-	PendingTxFeeBumpWaitBlocksRegnet = 30
-
-	// blockTimeBTC represents the average time to mine a block in Bitcoin
-	blockTimeBTC = 10 * time.Minute
+	pendingTxFeeBumpWaitBlocks       = 3
+	pendingTxFeeBumpWaitBlocksRegnet = 30
 )
 
 // LastStuckOutbound contains the last stuck outbound tx information.
@@ -36,46 +28,27 @@ type LastStuckOutbound struct {
 	StuckFor time.Duration
 }
 
-// NewLastStuckOutbound creates a new LastStuckOutbound struct.
-func NewLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) *LastStuckOutbound {
-	return &LastStuckOutbound{
-		Nonce:    nonce,
-		Tx:       tx,
-		StuckFor: stuckFor,
+// ObserveMempool monitors pending outbound txs in the mempool.
+func (ob *Observer) ObserveMempool(ctx context.Context) error {
+	err := ob.refreshLastStuckOutbound(ctx)
+	if err != nil {
+		return errors.Wrap(err, "refresh last stuck outbound failed")
 	}
-}
 
-// PendingTxFinder is a function type for finding the last Bitcoin pending tx.
-type PendingTxFinder func(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error)
-
-// StuckTxChecker is a function type for checking if a tx is stuck in the mempool.
-type StuckTxChecker func(ctx context.Context, rpc RPC, txHash string, maxWaitBlocks int64) (bool, time.Duration, error)
-
-// WatchMempoolTxs monitors pending outbound txs in the Bitcoin mempool.
-func (ob *Observer) WatchMempoolTxs(ctx context.Context) error {
-	txChecker := GetStuckTxChecker(ob.Chain().ChainId)
-
-	if err := ob.RefreshLastStuckOutbound(ctx, GetLastPendingOutbound, txChecker); err != nil {
-		ob.Logger().Chain.Err(err).Msg("RefreshLastStuckOutbound failed")
-	}
 	return nil
 }
 
-// RefreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
+// refreshLastStuckOutbound refreshes the information about the last stuck tx in the Bitcoin mempool.
 // Once 2/3+ of the observers reach consensus on last stuck outbound, RBF will start.
-func (ob *Observer) RefreshLastStuckOutbound(
-	ctx context.Context,
-	txFinder PendingTxFinder,
-	txChecker StuckTxChecker,
-) error {
+func (ob *Observer) refreshLastStuckOutbound(ctx context.Context) error {
 	lf := map[string]any{
-		logs.FieldMethod: "RefreshLastStuckOutbound",
+		logs.FieldMethod: "refreshLastStuckOutbound",
 	}
 
 	// step 1: get last TSS transaction
-	lastTx, lastNonce, err := txFinder(ctx, ob)
+	lastTx, lastNonce, err := ob.getLastPendingOutbound(ctx)
 	if err != nil {
-		ob.logger.Outbound.Info().Fields(lf).Msgf("last pending outbound not found: %s", err.Error())
+		ob.logger.Outbound.Info().Err(err).Fields(lf).Msgf("Last pending outbound not found")
 		return nil
 	}
 
@@ -83,11 +56,10 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	txHash := lastTx.MsgTx().TxID()
 	lf[logs.FieldNonce] = lastNonce
 	lf[logs.FieldTx] = txHash
-	ob.logger.Outbound.Info().Fields(lf).Msg("checking last TSS outbound")
+	ob.logger.Outbound.Info().Fields(lf).Msg("Checking last TSS outbound")
 
 	// step 2: is last tx stuck in mempool?
-	feeBumpWaitBlocks := GetFeeBumpWaitBlocks(ob.Chain().ChainId)
-	stuck, stuckFor, err := txChecker(ctx, ob.rpc, txHash, feeBumpWaitBlocks)
+	stuck, stuckFor, err := ob.rpc.IsTxStuckInMempool(ctx, txHash, ob.feeBumpWaitBlocks)
 	if err != nil {
 		return errors.Wrapf(err, "cannot determine if tx %s nonce %d is stuck", txHash, lastNonce)
 	}
@@ -109,11 +81,12 @@ func (ob *Observer) RefreshLastStuckOutbound(
 	// Note: reserved RBF bumping fee might be not enough to clear the stuck txs during extreme traffic surges, two options:
 	//  1. wait for the gas rate to drop.
 	//  2. manually clear the stuck txs by using transaction accelerator services.
+	var stuckOutbound *LastStuckOutbound
 	if stuck {
-		ob.setLastStuckOutbound(NewLastStuckOutbound(lastNonce, lastTx, stuckFor))
-	} else {
-		ob.setLastStuckOutbound(nil)
+		stuckOutbound = newLastStuckOutbound(lastNonce, lastTx, stuckFor)
 	}
+
+	ob.setLastStuckOutbound(stuckOutbound)
 
 	return nil
 }
@@ -124,7 +97,7 @@ func (ob *Observer) RefreshLastStuckOutbound(
 //  2. txs that had been broadcasted by this observer self.
 //
 // Returns error if last pending outbound is not found
-func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uint64, error) {
+func (ob *Observer) getLastPendingOutbound(ctx context.Context) (tx *btcutil.Tx, nonce uint64, err error) {
 	var (
 		lastNonce uint64
 		lastHash  string
@@ -150,6 +123,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "GetPendingNoncesByChain failed")
 	}
+
 	// #nosec G115 always in range
 	for nonce := uint64(p.NonceLow); nonce < uint64(p.NonceHigh); nonce++ {
 		if nonce > lastNonce {
@@ -169,14 +143,15 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 
 	// is tx in the mempool?
 	if _, err = ob.rpc.GetMempoolEntry(ctx, lastHash); err != nil {
-		return nil, 0, errors.New("last tx is not in mempool")
+		return nil, 0, errors.Wrapf(err, "last tx %s is not in mempool", lastHash)
 	}
 
 	// ensure this tx is the REAL last transaction
 	// cross-check the latest UTXO list, the nonce-mark utxo exists ONLY for last nonce
-	if ob.FetchUTXOs(ctx) != nil {
-		return nil, 0, errors.New("FetchUTXOs failed")
+	if err := ob.FetchUTXOs(ctx); err != nil {
+		return nil, 0, errors.Wrap(err, "unable to fetch UTXOs")
 	}
+
 	if _, err = ob.findNonceMarkUTXO(lastNonce, lastHash); err != nil {
 		return nil, 0, errors.Wrapf(err, "findNonceMarkUTXO failed for last tx %s nonce %d", lastHash, lastNonce)
 	}
@@ -194,84 +169,7 @@ func GetLastPendingOutbound(ctx context.Context, ob *Observer) (*btcutil.Tx, uin
 	return lastTx, lastNonce, nil
 }
 
-// IsTxStuckInMempool checks if the transaction is stuck in the mempool.
-//
-// A pending tx with 'confirmations == 0' will be considered stuck due to excessive pending time.
-func IsTxStuckInMempool(
-	ctx context.Context,
-	rpc RPC,
-	txHash string,
-	maxWaitBlocks int64,
-) (bool, time.Duration, error) {
-	lastBlock, err := rpc.GetBlockCount(ctx)
-	if err != nil {
-		return false, 0, errors.Wrap(err, "GetBlockCount failed")
-	}
-
-	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
-	if err != nil {
-		if client.IsTxNotInMempoolError(err) {
-			return false, 0, nil // not a mempool tx, of course not stuck
-		}
-		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
-	}
-
-	// is the tx pending for too long?
-	pendingTime := time.Since(time.Unix(memplEntry.Time, 0))
-	pendingTimeAllowed := blockTimeBTC * time.Duration(maxWaitBlocks)
-	pendingDeadline := memplEntry.Height + maxWaitBlocks
-	if pendingTime > pendingTimeAllowed && lastBlock > pendingDeadline {
-		return true, pendingTime, nil
-	}
-
-	return false, pendingTime, nil
-}
-
-// IsTxStuckInMempoolRegnet checks if the transaction is stuck in the mempool in regnet.
-// Note: this function is a simplified version used in regnet for E2E test.
-func IsTxStuckInMempoolRegnet(
-	ctx context.Context,
-	rpc RPC,
-	txHash string,
-	maxWaitBlocks int64,
-) (bool, time.Duration, error) {
-	lastBlock, err := rpc.GetBlockCount(ctx)
-	if err != nil {
-		return false, 0, errors.Wrap(err, "GetBlockCount failed")
-	}
-
-	memplEntry, err := rpc.GetMempoolEntry(ctx, txHash)
-	if err != nil {
-		if client.IsTxNotInMempoolError(err) {
-			return false, 0, nil // not a mempool tx, of course not stuck
-		}
-		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
-	}
-
-	// is the tx pending for too long?
-	pendingTime := time.Since(time.Unix(memplEntry.Time, 0))
-	pendingTimeAllowed := time.Second * time.Duration(maxWaitBlocks)
-
-	// the block mining is frozen in Regnet for E2E test
-	if pendingTime > pendingTimeAllowed && memplEntry.Height == lastBlock {
-		return true, pendingTime, nil
-	}
-
-	return false, pendingTime, nil
-}
-
-// GetStuckTxChecker returns the stuck tx checker function based on the chain ID.
-func GetStuckTxChecker(chainID int64) StuckTxChecker {
-	if chains.IsBitcoinRegnet(chainID) {
-		return IsTxStuckInMempoolRegnet
-	}
-	return IsTxStuckInMempool
-}
-
-// GetFeeBumpWaitBlocks returns the number of blocks to await before bumping tx fees
-func GetFeeBumpWaitBlocks(chainID int64) int64 {
-	if chains.IsBitcoinRegnet(chainID) {
-		return PendingTxFeeBumpWaitBlocksRegnet
-	}
-	return PendingTxFeeBumpWaitBlocks
+// newLastStuckOutbound creates a new LastStuckOutbound struct.
+func newLastStuckOutbound(nonce uint64, tx *btcutil.Tx, stuckFor time.Duration) *LastStuckOutbound {
+	return &LastStuckOutbound{Nonce: nonce, Tx: tx, StuckFor: stuckFor}
 }

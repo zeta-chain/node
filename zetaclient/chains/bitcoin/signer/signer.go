@@ -15,6 +15,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
@@ -33,7 +34,6 @@ const (
 )
 
 type RPC interface {
-	IsRegnet() bool
 	GetNetworkInfo(ctx context.Context) (*btcjson.GetNetworkInfoResult, error)
 	GetRawTransaction(ctx context.Context, hash *chainhash.Hash) (*btcutil.Tx, error)
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
@@ -44,12 +44,17 @@ type RPC interface {
 // Signer deals with signing & broadcasting BTC transactions.
 type Signer struct {
 	*base.Signer
-	rpc RPC
+	rpc      RPC
+	isRegnet bool
 }
 
 // New creates a new Bitcoin signer
 func New(baseSigner *base.Signer, rpc RPC) *Signer {
-	return &Signer{Signer: baseSigner, rpc: rpc}
+	return &Signer{
+		Signer:   baseSigner,
+		rpc:      rpc,
+		isRegnet: chains.IsBitcoinRegnet(baseSigner.Chain().ChainId),
+	}
 }
 
 // Broadcast sends the signed transaction to the network

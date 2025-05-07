@@ -41,6 +41,12 @@ type RPC interface {
 	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
 
+	IsTxStuckInMempool(
+		ctx context.Context,
+		txHash string,
+		maxWaitBlocks uint64,
+	) (stuck bool, pendingFor time.Duration, err error)
+
 	EstimateSmartFee(
 		ctx context.Context,
 		confTarget int64,
@@ -98,6 +104,9 @@ type Observer struct {
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
 
+	// feeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
+	feeBumpWaitBlocks uint64
+
 	// lastStuckTx contains the last stuck outbound tx information
 	// Note: nil if outbound is not stuck
 	lastStuckTx *LastStuckOutbound
@@ -130,19 +139,34 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 		return nil, errors.Wrapf(err, "unable to get BTC net params")
 	}
 
+	isRegnet := chains.IsBitcoinRegnet(chain.ChainId)
+
+	feeBumpWaitBlocks := uint64(pendingTxFeeBumpWaitBlocks)
+	if isRegnet {
+		feeBumpWaitBlocks = pendingTxFeeBumpWaitBlocksRegnet
+	}
+
 	// create bitcoin observer
 	ob := &Observer{
-		Observer:          baseObserver,
-		netParams:         netParams,
-		rpc:               rpc,
+		Observer:  baseObserver,
+		netParams: netParams,
+		rpc:       rpc,
+
+		pendingNonce:      0,
+		feeBumpWaitBlocks: feeBumpWaitBlocks,
+		lastStuckTx:       nil,
 		utxos:             []btcjson.ListUnspentResult{},
+
 		tssOutboundHashes: make(map[string]bool),
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 		broadcastedTx:     make(map[string]string),
+
 		logger: Logger{
 			ObserverLogger: *baseObserver.Logger(),
 			UTXOs:          baseObserver.Logger().Chain.With().Str("module", "utxos").Logger(),
 		},
+
+		nodeEnabled: atomic.Bool{},
 	}
 
 	ob.nodeEnabled.Store(true)

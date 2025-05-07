@@ -218,7 +218,7 @@ func Test_SetLastStuckOutbound(t *testing.T) {
 
 	// STEP 2
 	// set stuck outbound
-	stuckTx := NewLastStuckOutbound(100, btcTx, 30*time.Minute)
+	stuckTx := newLastStuckOutbound(100, btcTx, 30*time.Minute)
 	ob.setLastStuckOutbound(stuckTx)
 
 	// retrieve stuck outbound
@@ -228,7 +228,7 @@ func Test_SetLastStuckOutbound(t *testing.T) {
 
 	// STEP 3
 	// update stuck outbound
-	stuckTxUpdate := NewLastStuckOutbound(101, btcTx, 40*time.Minute)
+	stuckTxUpdate := newLastStuckOutbound(101, btcTx, 40*time.Minute)
 	ob.setLastStuckOutbound(stuckTxUpdate)
 
 	// retrieve updated stuck outbound
