@@ -16,8 +16,12 @@ import (
 // It needs block mining to be stopped and runs as the last test in the suite.
 //
 // IMPORTANT: the test requires to simulate a stuck tx in the Bitcoin regnet.
-// Changing the 'minTxConfirmations' to 1 to not include Bitcoin pending txs.
-// https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
+// The challenge to simulate a stuck tx is to create overwhelming traffic in the local mempool.
+//
+// To work around this:
+//  1. change the 'minTxConfirmations' to 1 to not include outbound tx right away (production should use 0)
+//     here: https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
+//  2. stop block mining to let the pending tx sit in the mempool for longer time
 func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
