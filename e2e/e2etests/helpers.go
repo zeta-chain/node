@@ -30,7 +30,7 @@ func randomPayload(r *runner.E2ERunner) string {
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
 	// approve and withdraw on ZRC20 contract
-	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
+	receipt := BTCWithdraw(r, to, amount, true)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
@@ -65,8 +65,8 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	return rawTx
 }
 
-// approveAndWithdrawBTCZRC20 is a helper function to call 'approve' and 'withdraw' on BTCZRC20 contract
-func approveAndWithdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *ethtypes.Receipt {
+// BTCWithdraw is a helper function to call 'withdraw' on BTCZRC20 contract with optional 'approve'
+func BTCWithdraw(r *runner.E2ERunner, to btcutil.Address, amount *big.Int, approve bool) *ethtypes.Receipt {
 	// ensure enough balance to cover the withdrawal
 	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
 	require.NoError(r, err)
@@ -81,21 +81,23 @@ func approveAndWithdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount 
 	)
 
 	// approve more to cover withdraw fee
-	tx, err := r.BTCZRC20.Approve(
-		r.ZEVMAuth,
-		r.BTCZRC20Addr,
-		big.NewInt(amount.Int64()*2),
-	)
+	if approve {
+		tx, err := r.BTCZRC20.Approve(
+			r.ZEVMAuth,
+			r.BTCZRC20Addr,
+			big.NewInt(amount.Int64()*2),
+		)
+		require.NoError(r, err)
+
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt)
+	}
+
+	// withdraw 'amount' of BTC from ZRC20 to BTC address
+	tx, err := r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
 	require.NoError(r, err)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-
-	// withdraw 'amount' of BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
-	require.NoError(r, err)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
 	return receipt

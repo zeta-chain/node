@@ -10,8 +10,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
 )
 
-// MustHaveDroppedTx ensures the given tx has been dropped
-func MustHaveDroppedTx(ctx context.Context, client *client.Client, txHash *chainhash.Hash) {
+// MustHaveDroppedBitcoinTx ensures the given Bitcoin tx has been dropped
+func MustHaveDroppedBitcoinTx(ctx context.Context, client *client.Client, txHash *chainhash.Hash) {
 	t := TestingFromContext(ctx)
 
 	// dropped tx has negative confirmations
@@ -32,8 +32,8 @@ func MustHaveDroppedTx(ctx context.Context, client *client.Client, txHash *chain
 	require.Nil(t, rawTx)
 }
 
-// MustHaveMinedTx ensures the given tx has been mined
-func MustHaveMinedTx(ctx context.Context, client *client.Client, txHash *chainhash.Hash) *btcjson.TxRawResult {
+// MustHaveMinedBitcoinTx ensures the given Bitcoin tx has been mined
+func MustHaveMinedBitcoinTx(ctx context.Context, client *client.Client, txHash *chainhash.Hash) *btcjson.TxRawResult {
 	t := TestingFromContext(ctx)
 
 	// positive confirmations

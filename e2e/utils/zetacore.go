@@ -235,7 +235,9 @@ func WaitOutboundTracker(
 			time.Since(startTime) > timeout,
 			fmt.Sprintf("waiting outbound tracker timeout, chainID: %d, nonce: %d", chainID, nonce),
 		)
-		time.Sleep(5 * time.Second)
+
+		// wait for a Zeta block before querying outbound tracker
+		time.Sleep(constant.ZetaBlockTime)
 
 		outboundTracker, err := client.OutboundTrackerAllByChain(ctx, in)
 		require.NoError(t, err)

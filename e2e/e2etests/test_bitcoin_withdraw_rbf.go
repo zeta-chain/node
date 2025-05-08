@@ -30,7 +30,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	to, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
 	// initiate a withdraw CCTX
-	receipt := approveAndWithdrawBTCZRC20(r, to, amount)
+	receipt := BTCWithdraw(r, to, amount, true)
 	cctx := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, receipt.TxHash.Hex())
 
 	// wait for the 1st outbound tracker hash to come in
@@ -60,10 +60,10 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// ensure the original tx is dropped
-	utils.MustHaveDroppedTx(r.Ctx, r.BtcRPCClient, txHash)
+	utils.MustHaveDroppedBitcoinTx(r.Ctx, r.BtcRPCClient, txHash)
 
 	// ensure the RBF tx is mined
-	rawResult := utils.MustHaveMinedTx(r.Ctx, r.BtcRPCClient, txHashRBF)
+	rawResult := utils.MustHaveMinedBitcoinTx(r.Ctx, r.BtcRPCClient, txHashRBF)
 
 	// ensure RBF fee rate > old rate
 	params := cctx.GetCurrentOutboundParam()
