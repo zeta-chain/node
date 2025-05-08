@@ -262,6 +262,12 @@ const (
 	CountArgDescription = "count"
 )
 
+// Here are all the dependencies for the e2e tests, add more dependencies here if needed
+var (
+	// DepdencyAllBitcoinDeposits is a dependency to wait for all bitcoin deposit tests to complete
+	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
+)
+
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
 	/*
@@ -1147,6 +1153,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRBF,
+		runner.WithDependencies(DepdencyAllBitcoinDeposits),
 		runner.WithMinimumVersion("v31.0.0"),
 	),
 	/*

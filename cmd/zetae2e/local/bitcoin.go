@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -13,6 +12,11 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
+)
+
+const (
+	groupDeposit  = "btc_deposit"
+	groupWithdraw = "btc_withdraw"
 )
 
 // startBitcoinTests starts Bitcoin related tests
@@ -93,7 +97,7 @@ func bitcoinTestRoutines(
 	// initialize runner for deposit tests
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
-		"btc_deposit",
+		groupDeposit,
 		account,
 		conf,
 		deployerRunner,
@@ -105,7 +109,7 @@ func bitcoinTestRoutines(
 	// initialize runner for withdraw tests
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
-		"btc_withdraw",
+		groupWithdraw,
 		account,
 		conf,
 		deployerRunner,
@@ -127,8 +131,8 @@ func bitcoinTestRoutines(
 	}
 
 	// create test routines
-	routineDeposit, wgDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, nil)
-	routineWithdraw, _ := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, wgDeposit)
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, groupDeposit)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, groupWithdraw)
 
 	return routineDeposit, routineWithdraw
 }
@@ -182,14 +186,7 @@ func initBitcoinRunner(
 
 // createBitcoinTestRoutine creates a test routine for given test names
 // The 'wgDependency' argument is used to wait for dependent routine to complete
-func createBitcoinTestRoutine(
-	r *runner.E2ERunner,
-	testNames []string,
-	wgDependency *sync.WaitGroup,
-) (func() error, *sync.WaitGroup) {
-	var thisRoutine sync.WaitGroup
-	thisRoutine.Add(1)
-
+func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string, name string) func() error {
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
@@ -204,19 +201,18 @@ func createBitcoinTestRoutine(
 		}
 
 		for _, test := range testsToRun {
-			// RBF test needs to wait for all deposit tests to complete
-			if test.Name == e2etests.TestBitcoinWithdrawRBFName && wgDependency != nil {
-				r.Logger.Print("⏳ waiting for deposit runner to complete before running RBF test")
-				wgDependency.Wait()
-			}
 			if err := r.RunE2ETest(test, true); err != nil {
 				return fmt.Errorf("bitcoin tests failed: %v", err)
 			}
 		}
 
-		thisRoutine.Done()
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
 
+		// mark deposit test group as done
+		if name == groupDeposit {
+			e2etests.DepdencyAllBitcoinDeposits.Done()
+		}
+
 		return err
-	}, &thisRoutine
+	}
 }
