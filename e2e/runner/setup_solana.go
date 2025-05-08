@@ -228,7 +228,8 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 	return errors.New("unable to set Solana chain params")
 }
 
-func (r *E2ERunner) UpdateSolanaTss(gatewayID, deployerPrivateKey string) {
+// UpdateTSSAddressSolana updates the TSS address on the Solana gateway program
+func (r *E2ERunner) UpdateTSSAddressSolana(gatewayID, deployerPrivateKey string) {
 	r.Logger.Print("⚙️ updating tss on the gateway program on Solana")
 
 	// set Solana contracts
