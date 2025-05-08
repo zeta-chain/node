@@ -2,6 +2,8 @@ package signer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"cosmossdk.io/errors"
 	"github.com/gagliardetto/solana-go"
@@ -10,6 +12,50 @@ import (
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
+
+// prepareWhitelistTx prepares whitelist outbound
+func (signer *Signer) prepareWhitelistTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	relayedMsg := strings.Split(cctx.RelayedMessage, ":")
+	if len(relayedMsg) != 2 {
+		return nil, fmt.Errorf("TryProcessOutbound: invalid relayed msg")
+	}
+
+	pk, err := solana.PublicKeyFromBase58(relayedMsg[1])
+	if err != nil {
+		return nil, errors.Wrapf(err, "publicKeyFromBase58 %s error", relayedMsg[1])
+	}
+
+	seed := [][]byte{[]byte("whitelist"), pk.Bytes()}
+	whitelistEntryPDA, _, err := solana.FindProgramAddress(seed, signer.gatewayID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "findProgramAddress error for seed %s", seed)
+	}
+
+	// sign gateway whitelist message by TSS
+	msg, err := signer.createAndSignMsgWhitelist(ctx, params, height, pk, whitelistEntryPDA)
+	if err != nil {
+		return nil, errors.Wrap(err, "createAndSignMsgWhitelist error")
+	}
+
+	return func() (*Outbound, error) {
+		// sign the whitelist transaction by relayer key
+		inst, err := signer.createWhitelistInstruction(msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating whitelist instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing whitelist instruction")
+		}
+		return &Outbound{Tx: tx}, nil
+	}, nil
+}
 
 // createAndSignMsgWhitelist creates and signs a whitelist message (for gateway whitelist_spl_mint instruction) with TSS.
 func (signer *Signer) createAndSignMsgWhitelist(

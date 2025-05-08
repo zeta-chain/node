@@ -7,25 +7,65 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
-// createAndSignMsgExecute creates and batch signs execute and increment nonce messages
-// for gateway execute instruction with TSS.
-func (signer *Signer) createAndSignMsgExecute(
+// prepareExecuteTx prepares execute outbound
+func (signer *Signer) prepareExecuteTx(
 	ctx context.Context,
-	params *types.OutboundParams,
+	cctx *types.CrossChainTx,
 	height uint64,
-	sender string,
-	data []byte,
-	remainingAccounts []*solana.AccountMeta,
-	executeType contracts.ExecuteType,
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCCTXRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	// create msg execute
+	msg, msgIn, err := signer.createMsgExecute(cctx, cancelTx)
+	if err != nil {
+		return signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+	}
+
+	// TSS sign msg execute
+	msg, msgIn, err = signMsgWithFallback(ctx, signer, height, params.TssNonce, msg, msgIn)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (*Outbound, error) {
+		inst, err := signer.createExecuteInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute instruction")
+		}
+
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, params.CallOptions.GasLimit)
+	}, nil
+}
+
+// createMsgExecute creates execute and increment nonce messages
+func (signer *Signer) createMsgExecute(
+	cctx *types.CrossChainTx,
 	cancelTx bool,
-) (*contracts.MsgExecute, error) {
-	chain := signer.Chain()
+) (*contracts.MsgExecute, *contracts.MsgIncrementNonce, error) {
+	params := cctx.GetCurrentOutboundParam()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
@@ -36,26 +76,39 @@ func (signer *Signer) createAndSignMsgExecute(
 		amount = 0
 	}
 
+	// prepare data for msg execute
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
+		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
-	// prepare execute msg and compute hash
-	msg := contracts.NewMsgExecute(chainID, nonce, amount, to, sender, data, executeType, remainingAccounts)
-	msgHash := msg.Hash()
-
-	// sign the message with TSS to get an ECDSA signature.
-	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().
-		Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
-	if err != nil {
-		return nil, errors.Wrap(err, "key-sign failed")
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
 	}
 
-	// attach the signature and return
-	return msg.SetSignature(signature), nil
+	msgExecute := contracts.NewMsgExecute(
+		chainID,
+		nonce,
+		amount,
+		to,
+		cctx.InboundParams.Sender,
+		msg.Data,
+		executeType,
+		remainingAccounts,
+	)
+	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
+
+	return msgExecute, msgIncrementNonce, nil
 }
 
 // createExecuteInstruction wraps the execute 'msg' into a Solana instruction.
