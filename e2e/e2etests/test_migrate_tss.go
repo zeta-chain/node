@@ -45,7 +45,7 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 
 	btcTSSBalanceOld := btcBalance
 	// Use fixed fee of 0.01 for migration
-	btcBalance = btcBalance - 0.01
+	btcBalance = btcBalance - 0.02
 	btcChain := chains.BitcoinRegtest.ChainId
 
 	r.WaitForTSSGeneration(2)
