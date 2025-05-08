@@ -29,27 +29,24 @@ type Inbound struct {
 // It returns nil if the instruction can't be parsed.
 func ParseInboundAsDeposit(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
 	// first try to parse as deposit, then as deposit_and_call
-	deposit, err := parseAsDeposit(tx, instructionIndex, slot)
+	deposit, err := parseAsDeposit(tx, instruction, slot)
 	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
-	return parseAsDepositAndCall(tx, instructionIndex, slot)
+	return parseAsDepositAndCall(tx, instruction, slot)
 }
 
 // parseAsDeposit tries to parse instruction as deposit
 func parseAsDeposit(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
 	// try deserializing instruction as a deposit
 	inst := DepositInstructionParams{}
 	err := borsh.Deserialize(&inst, instruction.Data)
@@ -88,12 +85,9 @@ func parseAsDeposit(
 // parseAsDepositAndCall tries to parse instruction as deposit_and_call
 func parseAsDepositAndCall(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
 	// try deserializing instruction as a deposit_and_call
 	instDepositAndCall := DepositAndCallInstructionParams{}
 	err := borsh.Deserialize(&instDepositAndCall, instruction.Data)
@@ -133,27 +127,24 @@ func parseAsDepositAndCall(
 // It returns nil if the instruction can't be parsed as a deposit_spl.
 func ParseInboundAsDepositSPL(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
 	// first try to parse as deposit_spl, then as deposit_spl_and_call
-	deposit, err := parseAsDepositSPL(tx, instructionIndex, slot)
+	deposit, err := parseAsDepositSPL(tx, instruction, slot)
 	if err != nil || deposit != nil {
 		return deposit, err
 	}
 
-	return parseAsDepositSPLAndCall(tx, instructionIndex, slot)
+	return parseAsDepositSPLAndCall(tx, instruction, slot)
 }
 
 // parseAsDepositSPL tries to parse instruction as deposit_spl
 func parseAsDepositSPL(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
 	// try deserializing instruction as a deposit_spl
 	var inst DepositSPLInstructionParams
 	err := borsh.Deserialize(&inst, instruction.Data)
@@ -192,12 +183,9 @@ func parseAsDepositSPL(
 // parseAsDepositSPLAndCall tries to parse instruction as deposit_spl_and_call
 func parseAsDepositSPLAndCall(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
 	// try deserializing instruction as a deposit_spl_and_call
 	instDepositAndCall := DepositSPLAndCallInstructionParams{}
 	err := borsh.Deserialize(&instDepositAndCall, instruction.Data)
@@ -237,12 +225,9 @@ func parseAsDepositSPLAndCall(
 // It returns nil if the instruction can't be parsed as a call.
 func ParseInboundAsCall(
 	tx *solana.Transaction,
-	instructionIndex int,
+	instruction solana.CompiledInstruction,
 	slot uint64,
 ) (*Inbound, error) {
-	// get instruction by index
-	instruction := tx.Message.Instructions[instructionIndex]
-
 	// try deserializing instruction as a call
 	inst := CallInstructionParams{}
 	err := borsh.Deserialize(&inst, instruction.Data)
@@ -260,13 +245,8 @@ func ParseInboundAsCall(
 	if err != nil {
 		return nil, err
 	}
-
 	if len(instructionAccounts) != 1 {
 		return nil, fmt.Errorf("want only 1 signer account, got %d", len(instructionAccounts))
-	}
-
-	if !instructionAccounts[0].IsSigner {
-		return nil, fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
 	}
 
 	// parse receiver
@@ -299,12 +279,6 @@ func getSignerDeposit(tx *solana.Transaction, inst *solana.CompiledInstruction) 
 		return "", fmt.Errorf("want required %d accounts, got %d", accountsNumDeposit, len(instructionAccounts))
 	}
 
-	// the accounts are [signer, pda, system_program]
-	// check if first account is signer
-	if !instructionAccounts[0].IsSigner {
-		return "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
-	}
-
 	return instructionAccounts[0].PublicKey.String(), nil
 }
 
@@ -325,11 +299,6 @@ func getSignerAndSPLFromDepositSPLAccounts(
 			accountsNumberDepositSPL,
 			len(instructionAccounts),
 		)
-	}
-	// the accounts are [signer, pda, whitelist_entry, mint_account, token_program, from, to]
-	// check if first account is signer
-	if !instructionAccounts[0].IsSigner {
-		return "", "", fmt.Errorf("not signer %s", instructionAccounts[0].PublicKey.String())
 	}
 
 	signer := instructionAccounts[0].PublicKey.String()

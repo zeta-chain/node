@@ -199,7 +199,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/bitcoin-core-docker:a94b52f
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0-zeta6
     container_name: bitcoin
     hostname: bitcoin
     networks:
