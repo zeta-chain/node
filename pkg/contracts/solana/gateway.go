@@ -24,6 +24,8 @@ var (
 	// DiscriminatorInitialize returns the discriminator for Solana gateway 'initialize' instruction
 	DiscriminatorInitialize = idlgateway.IDLGateway.GetDiscriminator("initialize")
 
+	DiscriminatorUpdateTss = idlgateway.IDLGateway.GetDiscriminator("update_tss")
+
 	// DiscriminatorDeposit returns the discriminator for Solana gateway 'deposit' instruction
 	DiscriminatorDeposit = idlgateway.IDLGateway.GetDiscriminator("deposit")
 

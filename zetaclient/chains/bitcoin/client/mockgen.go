@@ -29,6 +29,9 @@ type client interface {
 	GetTransaction(ctx context.Context, hash *hash.Hash) (*types.GetTransactionResult, error)
 	GetRawTransaction(ctx context.Context, hash *hash.Hash) (*btcutil.Tx, error)
 	GetRawTransactionVerbose(ctx context.Context, hash *hash.Hash) (*types.TxRawResult, error)
+	GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error)
+	GetRawMempool(ctx context.Context) ([]*hash.Hash, error)
+	GetMempoolTxsAndFees(ctx context.Context, childHash string) (MempoolTxsAndFees, error)
 
 	GetRawTransactionResult(
 		ctx context.Context,
@@ -38,7 +41,14 @@ type client interface {
 
 	SendRawTransaction(ctx context.Context, tx *wire.MsgTx, allowHighFees bool) (*hash.Hash, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
+
+	IsTxStuckInMempool(
+		ctx context.Context,
+		txHash string,
+		maxWaitBlocks int64,
+	) (stuck bool, pendingFor time.Duration, err error)
+
 	GetTransactionFeeAndRate(ctx context.Context, tx *types.TxRawResult) (int64, int64, error)
 	EstimateSmartFee(
 		ctx context.Context,

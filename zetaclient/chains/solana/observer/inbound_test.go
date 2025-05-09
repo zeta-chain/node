@@ -64,37 +64,70 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 }
 
 func Test_FilterInboundEvents(t *testing.T) {
+	// ARRANGE
 	// load archived inbound vote tx result from localnet
 	txHash := "QSoSLxcJAFAzxWnHVJ4s2d5k2LyjC83YaLwbMUHYcEvVnCfERsowNb6Nj55GiTXNTbNF9fzF5F8JHUEpAGMrV5k"
 	chain := chains.SolanaDevnet
 	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
 
+	// load archived inbound vote tx result from localnet with inner deposit instruction
+	txHashInner := "2TH3fMqFEULjavgmYEXtQrX6qSeMwKMPPgXEmr6QRFomgpVKhj8LNJNDwyqC1dVeSBU1Av2o4TWn75PvNfjncfUH"
+	txResultInner := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHashInner, false)
+
 	// given gateway ID
 	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
 	require.NoError(t, err)
 
-	// expected result
-	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	eventExpected := &clienttypes.InboundEvent{
-		SenderChainID:    chain.ChainId,
-		Sender:           sender,
-		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
-		TxOrigin:         sender,
-		Amount:           24000000,
-		Memo:             []byte{},
-		BlockNumber:      txResult.Slot,
-		TxHash:           txHash,
-		Index:            0, // not a EVM smart contract call
-		CoinType:         coin.CoinType_Gas,
-		Asset:            "", // no asset for gas token SOL
-		IsCrossChainCall: false,
-	}
-
 	t.Run("should filter inbound event deposit SOL", func(t *testing.T) {
+		// expected result
+		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+		eventExpected := &clienttypes.InboundEvent{
+			SenderChainID:    chain.ChainId,
+			Sender:           sender,
+			Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+			TxOrigin:         sender,
+			Amount:           24000000,
+			Memo:             []byte{},
+			BlockNumber:      txResult.Slot,
+			TxHash:           txHash,
+			Index:            0,
+			CoinType:         coin.CoinType_Gas,
+			Asset:            "", // no asset for gas token SOL
+			IsCrossChainCall: false,
+		}
+
+		// ACT
 		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
 		require.NoError(t, err)
 
-		// check result
+		// ASSERT
+		require.Len(t, events, 1)
+		require.EqualValues(t, eventExpected, events[0])
+	})
+
+	t.Run("should filter inner inbound event deposit SOL", func(t *testing.T) {
+		// expected result
+		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+		eventExpected := &clienttypes.InboundEvent{
+			SenderChainID:    chain.ChainId,
+			Sender:           sender,
+			Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+			TxOrigin:         sender,
+			Amount:           24000000,
+			Memo:             []byte{},
+			BlockNumber:      txResultInner.Slot,
+			TxHash:           txHashInner,
+			Index:            0,
+			CoinType:         coin.CoinType_Gas,
+			Asset:            "", // no asset for gas token SOL
+			IsCrossChainCall: false,
+		}
+
+		// ACT
+		events, err := observer.FilterInboundEvents(txResultInner, gatewayID, chain.ChainId, zerolog.Nop())
+		require.NoError(t, err)
+
+		// ASSERT
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
 	})

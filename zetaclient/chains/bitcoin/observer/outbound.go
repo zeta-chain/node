@@ -234,15 +234,8 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	// #nosec G115 always non-negative
 	nonceLow := uint64(p.NonceLow)
 	if nonceLow > ob.GetPendingNonce() {
-		// get the last included outbound hash
-		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1)
-		if err != nil {
-			logger.Error().Err(err).Msg("error getting last outbound txid")
-		}
-
-		// set 'NonceLow' as the new pending nonce
 		ob.setPendingNonce(nonceLow)
-		logger.Info().Uint64("pending_nonce", nonceLow).Str(logs.FieldTx, txid).Msg("increased pending nonce")
+		logger.Info().Uint64("pending_nonce", nonceLow).Msg("increased pending nonce")
 	}
 }
 
@@ -354,12 +347,17 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		}
 	} else {
 		// for other hash:
-		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
-		// we can't tell which txHash is true, so we remove all to be safe
+		// got multiple hashes for same nonce. RBF tx replacement happened.
+		lf["prior_tx"] = res.TxID
+		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound")
+
+		// remove prior txHash and txResult
 		delete(ob.tssOutboundHashes, res.TxID)
 		delete(ob.includedTxResults, outboundID)
-		lf["prior_outbound"] = res.TxID
-		ob.logger.Outbound.Error().Fields(lf).Msg("be alert for duplicate payment")
+
+		// add new txHash and txResult
+		ob.tssOutboundHashes[txHash] = true
+		ob.includedTxResults[outboundID] = getTxResult
 	}
 }
 
