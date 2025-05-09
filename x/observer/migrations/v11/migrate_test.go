@@ -14,9 +14,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-const MaturityBlocks = int64(100)
-
-func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, currentHeight int64, readFile bool) {
+func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, readFile bool, startHeight int64, endHeight int64) {
 	type Ballots struct {
 		Ballots []types.Ballot `json:"Ballots"`
 	}
@@ -39,16 +37,18 @@ func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, current
 		}
 
 		for height, ballotList := range ballotsList {
-			k.SetBallotList(ctx, &types.BallotListForHeight{
-				Height:           height,
-				BallotsIndexList: ballotList,
-			})
+			if height > 0 {
+				k.SetBallotList(ctx, &types.BallotListForHeight{
+					Height:           height,
+					BallotsIndexList: ballotList,
+				})
+			}
 		}
 	} else {
-		startHeight := currentHeight - MaturityBlocks - 1
+
 		ballotPerBlock := 10
 
-		for i := startHeight; i >= 0; i-- {
+		for i := startHeight; i >= endHeight; i-- {
 			ballotList := make([]string, ballotPerBlock)
 			for j := 0; j < ballotPerBlock; j++ {
 				index := fmt.Sprintf("ballot-%d-%d", i, j)
@@ -60,10 +60,13 @@ func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, current
 				k.SetBallot(ctx, ballot)
 				ballotList[j] = index
 			}
-			k.SetBallotList(ctx, &types.BallotListForHeight{
-				Height:           i,
-				BallotsIndexList: ballotList,
-			})
+			// The Ballot list was not set for older ballots on testnet
+			if i > 0 {
+				k.SetBallotList(ctx, &types.BallotListForHeight{
+					Height:           i,
+					BallotsIndexList: ballotList,
+				})
+			}
 		}
 	}
 
@@ -79,12 +82,15 @@ func Test_MigrateStore(t *testing.T) {
 			currentHeight = 10232850
 			testnetBallotsAfterV9Migration = 270431
 		} else {
-			currentHeight = 500
+			currentHeight = 144500
 			testnetBallotsAfterV9Migration = 10
 		}
+		// Only stale ballots
+		startHeight := currentHeight - v11.BufferedMaturityBlocks - 1
+		endHeight := int64(0)
 
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		SaveBallotsToState(t, ctx, k, currentHeight, useStateExport)
+		SaveBallotsToState(t, ctx, k, useStateExport, startHeight, endHeight)
 
 		ctx = ctx.WithBlockHeight(currentHeight)
 		err := v9MigrateStore(ctx, *k)
@@ -98,24 +104,25 @@ func Test_MigrateStore(t *testing.T) {
 		require.Len(t, k.GetAllBallots(ctx), 0)
 	})
 
-	t.Run("do not nothing if no ballots are present at height 0", func(t *testing.T) {
-		useStateExport := false
-
-		currentHeight := int64(0)
-		if useStateExport {
-			currentHeight = 10232850
-		} else {
-			currentHeight = 500
-		}
-
+	t.Run("do not nothing if no ballots are present", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		SaveBallotsToState(t, ctx, k, currentHeight, useStateExport)
-		ballotList, found := k.GetBallotListForHeight(ctx, 0)
-		require.True(t, found)
-		for _, ballotIndex := range ballotList.BallotsIndexList {
-			k.DeleteBallot(ctx, ballotIndex)
-		}
+		ballotsBeforeMigrations := k.GetAllBallots(ctx)
 
+		err := v11.MigrateStore(ctx, *k)
+		require.NoError(t, err)
+
+		require.Len(t, k.GetAllBallots(ctx), len(ballotsBeforeMigrations))
+	})
+
+	t.Run("do not nothing if no stale ballots are present(Simulate Mainnet)", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		currentHeight := int64(144500)
+
+		// No stale ballots
+		startHeight := currentHeight
+		endHeight := currentHeight - v11.BufferedMaturityBlocks
+
+		SaveBallotsToState(t, ctx, k, false, startHeight, endHeight)
 		ballotsBeforeMigrations := k.GetAllBallots(ctx)
 
 		err := v11.MigrateStore(ctx, *k)
@@ -129,10 +136,10 @@ func Test_MigrateStore(t *testing.T) {
 func v9MigrateStore(ctx sdk.Context, observerKeeper keeper.Keeper) error {
 	currentHeight := ctx.BlockHeight()
 	// Maturity blocks is a parameter in the emissions module
-	if currentHeight < MaturityBlocks {
+	if currentHeight < v11.BufferedMaturityBlocks {
 		return nil
 	}
-	maturedHeight := currentHeight - MaturityBlocks
+	maturedHeight := currentHeight - v11.BufferedMaturityBlocks
 	for i := maturedHeight; i > 0; i-- {
 		ballotList, found := observerKeeper.GetBallotListForHeight(ctx, i)
 		if !found {
