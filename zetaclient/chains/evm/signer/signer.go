@@ -36,6 +36,10 @@ const (
 
 	// broadcastRetries is the maximum number of retries for broadcasting a transaction
 	broadcastRetries = 5
+
+	// broadcastTimeout is the timeout for broadcasting a transaction
+	// we should allow enough time for the tx submission and avoid fast timeout
+	broadcastTimeout = time.Second * 15
 )
 
 var (
@@ -226,7 +230,7 @@ func newTx(
 }
 
 func (signer *Signer) broadcast(ctx context.Context, tx *ethtypes.Transaction) error {
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, broadcastTimeout)
 	defer cancel()
 
 	return signer.client.SendTransaction(ctx, tx)
