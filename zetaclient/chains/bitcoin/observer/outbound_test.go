@@ -17,9 +17,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
-// the relative path to the testdata directory
-var TestDataDir = "../../../"
-
 // MockBTCObserverMainnet creates a mock Bitcoin mainnet observer for testing
 func MockBTCObserverMainnet(t *testing.T, tss interfaces.TSSSigner) *Observer {
 	// setup mock arguments

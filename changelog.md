@@ -25,7 +25,7 @@
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 * [3839](https://github.com/zeta-chain/node/pull/3839) - parse Solana inbounds from inner instructions
 * [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
-
+* [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 
 ### Refactor
 
@@ -43,12 +43,14 @@
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 * [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
+* [3863](https://github.com/zeta-chain/node/pull/3863) - give enough timeout to the EVM chain transaction broadcasting
 * [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 
 ### Tests
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
 * [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
+* [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
 
 ### Refactor
 

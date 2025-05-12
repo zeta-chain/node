@@ -311,11 +311,11 @@ start-stress-test: e2e-images
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-start-tss-migration-test: e2e-images
+start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="${E2E_ARGS} --test-tss-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"

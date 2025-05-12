@@ -208,7 +208,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   fi
 
   echo "running e2e test before migrating TSS"
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --test-tss-migration
   if [ $? -ne 0 ]; then
     echo "first e2e failed"
     exit 1
@@ -217,7 +217,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "waiting 10 seconds for node to restart"
     sleep 10
 
-  zetae2e local --skip-setup --config "$deployed_config_path" \
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" \
     --skip-bitcoin-setup --light --skip-header-proof --skip-precompiles
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
