@@ -544,6 +544,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestTONDepositName,
 			e2etests.TestTONDepositAndCallName,
 			e2etests.TestTONDepositAndCallRefundName,
+			e2etests.TestTONDepositRestrictedName,
 			e2etests.TestTONWithdrawName,
 			e2etests.TestTONWithdrawConcurrentName,
 		}
