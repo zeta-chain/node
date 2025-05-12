@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/tlb"
@@ -24,6 +23,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 type testSuite struct {
@@ -39,6 +39,7 @@ type testSuite struct {
 	zetacore *mocks.ZetacoreClient
 	tss      *mocks.TSS
 	database *db.DB
+	logger   *testlog.Log
 
 	baseObserver *base.Observer
 
@@ -69,8 +70,8 @@ func newTestSuite(t *testing.T) *testSuite {
 			OperatorAddress: sample.Bech32AccAddress(),
 		})
 
-		testLogger = zerolog.New(zerolog.NewTestWriter(t))
-		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
+		testLogger = testlog.New(t)
+		logger     = base.Logger{Std: testLogger.Logger, Compliance: testLogger.Logger}
 	)
 
 	database, err := db.NewFromSqliteInMemory(true)
@@ -102,6 +103,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		zetacore: zetacore,
 		tss:      tss,
 		database: database,
+		logger:   testLogger,
 
 		baseObserver: baseObserver,
 	}

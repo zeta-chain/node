@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/config"
 )
 
 func TestInbound(t *testing.T) {
@@ -240,6 +241,55 @@ func TestInbound(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
+	})
+
+	t.Run("Deposit restricted", func(t *testing.T) {
+		// ARRANGE
+		// Given restricted sender
+		sender := sample.GenerateTONAccountID()
+
+		// note this might be flaky because it's a global variable (*sad*)
+		config.SetRestrictedAddressesFromConfig(config.Config{
+			ComplianceConfig: config.ComplianceConfig{
+				RestrictedAddresses: []string{sender.ToRaw()},
+			},
+		})
+
+		// Given test suite
+		ts := newTestSuite(t)
+
+		// Given observer
+		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		require.NoError(t, err)
+
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
+
+		// Given mocked lite client calls
+		deposit := toncontracts.Deposit{
+			Sender:    sender,
+			Amount:    tonCoins(t, "12"),
+			Recipient: sample.EthAddress(),
+		}
+
+		depositTX := sample.TONDeposit(t, ts.gateway.AccountID(), deposit)
+		txs := []ton.Transaction{depositTX}
+
+		ts.
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			Once()
+
+		ts.MockGetBlockHeader(depositTX.BlockID)
+
+		// ACT
+		// Observe inbounds once
+		err = ob.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		assert.NoError(t, err)
+
+		// Check that NO cctx was sent && log contains entry for restricted address
+		require.Len(t, ts.votesBag, 0)
+		require.Contains(t, ts.logger.String(), "Restricted address detected in inbound")
 	})
 
 	// Yep, it's possible to have withdrawals here because we scroll through all gateway's txs
