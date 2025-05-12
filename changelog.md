@@ -44,6 +44,7 @@
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 * [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
 * [3863](https://github.com/zeta-chain/node/pull/3863) - give enough timeout to the EVM chain transaction broadcasting
+* [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 
 ### Tests
 

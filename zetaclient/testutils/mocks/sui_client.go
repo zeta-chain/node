@@ -49,6 +49,34 @@ func (_m *SuiClient) GetLatestCheckpoint(ctx context.Context) (models.Checkpoint
 	return r0, r1
 }
 
+// GetObjectParsedData provides a mock function with given fields: ctx, objectID
+func (_m *SuiClient) GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error) {
+	ret := _m.Called(ctx, objectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetObjectParsedData")
+	}
+
+	var r0 models.SuiParsedData
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (models.SuiParsedData, error)); ok {
+		return rf(ctx, objectID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) models.SuiParsedData); ok {
+		r0 = rf(ctx, objectID)
+	} else {
+		r0 = ret.Get(0).(models.SuiParsedData)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, objectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetOwnedObjectID provides a mock function with given fields: ctx, ownerAddress, structType
 func (_m *SuiClient) GetOwnedObjectID(ctx context.Context, ownerAddress string, structType string) (string, error) {
 	ret := _m.Called(ctx, ownerAddress, structType)

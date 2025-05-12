@@ -285,6 +285,30 @@ func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (eve
 	return event, w, err
 }
 
+// ParseGatewayNonce parses gateway nonce from event.
+func ParseGatewayNonce(data models.SuiParsedData) (uint64, error) {
+	fields := data.Fields
+
+	// extract nonce field from the object content
+	rawNonce, ok := fields["nonce"]
+	if !ok {
+		return 0, errors.New("missing nonce field")
+	}
+
+	v, ok := rawNonce.(string)
+	if !ok {
+		return 0, errors.Errorf("want string, got %T for nonce", rawNonce)
+	}
+
+	// #nosec G115 always in range
+	nonce, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to parse nonce")
+	}
+
+	return nonce, nil
+}
+
 type eventDescriptor struct {
 	packageID string
 	module    string
