@@ -46,7 +46,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, deployerAddress)
 
 	// fund the TSS
+	// request twice from the faucet to ensure TSS has enough funds for the first withdraw
 	// TODO: this step might no longer necessary if a custom solution is implemented for the TSS funding
+	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package

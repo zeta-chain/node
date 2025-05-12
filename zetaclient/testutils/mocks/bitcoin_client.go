@@ -8,6 +8,8 @@ import (
 
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 
+	client "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
+
 	context "context"
 
 	json "encoding/json"
@@ -328,26 +330,84 @@ func (_m *BitcoinClient) GetBlockVerboseByStr(ctx context.Context, blockHash str
 }
 
 // GetEstimatedFeeRate provides a mock function with given fields: ctx, confTarget
-func (_m *BitcoinClient) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error) {
+func (_m *BitcoinClient) GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error) {
 	ret := _m.Called(ctx, confTarget)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEstimatedFeeRate")
 	}
 
-	var r0 int64
+	var r0 uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (int64, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (uint64, error)); ok {
 		return rf(ctx, confTarget)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) int64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) uint64); ok {
 		r0 = rf(ctx, confTarget)
 	} else {
-		r0 = ret.Get(0).(int64)
+		r0 = ret.Get(0).(uint64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
 		r1 = rf(ctx, confTarget)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMempoolEntry provides a mock function with given fields: ctx, txHash
+func (_m *BitcoinClient) GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error) {
+	ret := _m.Called(ctx, txHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMempoolEntry")
+	}
+
+	var r0 *btcjson.GetMempoolEntryResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*btcjson.GetMempoolEntryResult, error)); ok {
+		return rf(ctx, txHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *btcjson.GetMempoolEntryResult); ok {
+		r0 = rf(ctx, txHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*btcjson.GetMempoolEntryResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, txHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMempoolTxsAndFees provides a mock function with given fields: ctx, childHash
+func (_m *BitcoinClient) GetMempoolTxsAndFees(ctx context.Context, childHash string) (client.MempoolTxsAndFees, error) {
+	ret := _m.Called(ctx, childHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMempoolTxsAndFees")
+	}
+
+	var r0 client.MempoolTxsAndFees
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (client.MempoolTxsAndFees, error)); ok {
+		return rf(ctx, childHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) client.MempoolTxsAndFees); ok {
+		r0 = rf(ctx, childHash)
+	} else {
+		r0 = ret.Get(0).(client.MempoolTxsAndFees)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, childHash)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -408,6 +468,36 @@ func (_m *BitcoinClient) GetNewAddress(ctx context.Context, account string) (btc
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, account)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetRawMempool provides a mock function with given fields: ctx
+func (_m *BitcoinClient) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRawMempool")
+	}
+
+	var r0 []*chainhash.Hash
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*chainhash.Hash, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*chainhash.Hash); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*chainhash.Hash)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -681,6 +771,41 @@ func (_m *BitcoinClient) ImportAddress(ctx context.Context, address string) erro
 	}
 
 	return r0
+}
+
+// IsTxStuckInMempool provides a mock function with given fields: ctx, txHash, maxWaitBlocks
+func (_m *BitcoinClient) IsTxStuckInMempool(ctx context.Context, txHash string, maxWaitBlocks int64) (bool, time.Duration, error) {
+	ret := _m.Called(ctx, txHash, maxWaitBlocks)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsTxStuckInMempool")
+	}
+
+	var r0 bool
+	var r1 time.Duration
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) (bool, time.Duration, error)); ok {
+		return rf(ctx, txHash, maxWaitBlocks)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) bool); ok {
+		r0 = rf(ctx, txHash, maxWaitBlocks)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) time.Duration); ok {
+		r1 = rf(ctx, txHash, maxWaitBlocks)
+	} else {
+		r1 = ret.Get(1).(time.Duration)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, int64) error); ok {
+		r2 = rf(ctx, txHash, maxWaitBlocks)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // ListUnspent provides a mock function with given fields: ctx

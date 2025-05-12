@@ -36,9 +36,11 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(receiverBalanceBefore))
+	r.Logger.Info("Receiver's TON address: %s", receiver.GetAddress().ToHuman(false, true))
 
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
 	amount := utils.ParseUint(r, args[0])
+	r.Logger.Info("Amount to withdraw: %s", toncontracts.FormatCoins(amount))
 	approvedAmount := amount.Add(toncontracts.Coins(1))
 
 	// ACT

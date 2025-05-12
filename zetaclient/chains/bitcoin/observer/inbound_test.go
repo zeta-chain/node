@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"bytes"
@@ -29,7 +29,6 @@ import (
 	"github.com/zeta-chain/node/testutil"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	clientcommon "github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -169,13 +168,13 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name              string
-		event             *observer.BTCInboundEvent
+		event             *BTCInboundEvent
 		observationStatus crosschaintypes.InboundStatus
 		nilVote           bool
 	}{
 		{
 			name: "should return vote for standard memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: sample.BTCAddressP2WPKH(t, r, &chaincfg.MainNetParams).String(),
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
@@ -187,7 +186,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		},
 		{
 			name: "should return vote for legacy memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// raw address + payload
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
@@ -195,7 +194,7 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		},
 		{
 			name: "should return vote for invalid memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// standard memo that carries payload only, receiver address is empty
 				MemoBytes: testutil.HexToBytes(t, "5a0110020d68656c6c6f207361746f736869"),
 			},
@@ -203,14 +202,14 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 		},
 		{
 			name: "should return nil on donation message",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				MemoBytes: []byte(constant.DonationMessage),
 			},
 			nilVote: true,
 		},
 		{
 			name: "should return nil on invalid deposit value",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				Value:     -1, // invalid value
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
@@ -247,7 +246,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
+		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.NoError(t, err)
 		require.Equal(t, "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e", sender)
 	})
@@ -256,7 +255,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		rpcClient := mocks.NewBitcoinClient(t)
 		// use invalid tx hash
 		txVin := btcjson.Vin{Txid: "invalid tx hash", Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
+		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.Error(t, err)
 		require.Empty(t, sender)
 	})
@@ -268,7 +267,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
+		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.ErrorContains(t, err, "error getting raw transaction")
 		require.Empty(t, sender)
 	})
@@ -279,7 +278,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 
 		// invalid output index
 		txVin := btcjson.Vin{Txid: txHash, Vout: 3}
-		sender, err := observer.GetSenderAddressByVin(ctx, rpcClient, txVin, net)
+		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
 		require.ErrorContains(t, err, "out of range")
 		require.Empty(t, sender)
 	})
@@ -306,7 +305,7 @@ func TestGetBtcEvent(t *testing.T) {
 	// expected result
 	memo, err := hex.DecodeString(tx.Vout[1].ScriptPubKey.Hex[4:])
 	require.NoError(t, err)
-	eventExpected := &observer.BTCInboundEvent{
+	eventExpected := &BTCInboundEvent{
 		FromAddress:  "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e",
 		ToAddress:    tssAddress,
 		Value:        tx.Vout[0].Value - depositorFee, // 6192 sataoshis
@@ -326,7 +325,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -359,7 +358,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -384,7 +383,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -409,7 +408,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -434,7 +433,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -459,7 +458,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -492,7 +491,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -513,7 +512,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -528,7 +527,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// append 1 byte to script to make it longer than 22 bytes
 		tx.Vout[0].ScriptPubKey.Hex = tx.Vout[0].ScriptPubKey.Hex + "00"
-		event, err = observer.GetBtcEvent(
+		event, err = GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -549,7 +548,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -569,7 +568,7 @@ func TestGetBtcEvent(t *testing.T) {
 
 		// get BTC event
 		rpcClient := mocks.NewBitcoinClient(t)
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -597,7 +596,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -625,7 +624,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, preHash)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -657,7 +656,7 @@ func TestGetBtcEvent(t *testing.T) {
 		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(btcutil.NewTx(msgTx), nil)
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,
@@ -696,7 +695,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
 
 		// get BTC event
-		event, err := observer.GetBtcEvent(
+		event, err := GetBtcEvent(
 			ctx,
 			rpcClient,
 			*tx,

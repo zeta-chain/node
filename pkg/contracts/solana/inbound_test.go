@@ -50,13 +50,10 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
-	require.NoError(t, err)
 
 	// expected result
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	// solana e2e user evm account
-	require.NoError(t, err)
 	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
@@ -70,7 +67,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SOL", func(t *testing.T) {
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, tx.Message.Instructions[instructionIndex], txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -82,7 +79,6 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
-
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'deposit'
@@ -98,10 +94,10 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tx.Message.Instructions[instructionIndex].Data = data
+		instruction.Data = data
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -113,31 +109,14 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
-
-		// ASSERT
-		require.Error(t, err)
-		require.Nil(t, deposit)
-	})
-
-	t.Run("should fail if first account is not signer", func(t *testing.T) {
-		// ARRANGE
-		txResult := LoadSolanaInboundTxResult(t, txHash)
-		tx, err := txResult.Transaction.GetTransaction()
-		require.NoError(t, err)
-
-		// switch account places
-		tx.Message.Instructions[instructionIndex].Accounts[0] = 1
-		tx.Message.Instructions[instructionIndex].Accounts[1] = 0
-
-		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -158,7 +137,6 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
-	require.NoError(t, err)
 
 	// expected result
 	// solana e2e deployer account
@@ -176,7 +154,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SOL and call", func(t *testing.T) {
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, tx.Message.Instructions[instructionIndex], txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -188,7 +166,6 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
-
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'deposit'
@@ -205,10 +182,10 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tx.Message.Instructions[instructionIndex].Data = data
+		instruction.Data = data
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -220,31 +197,14 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
-
-		// ASSERT
-		require.Error(t, err)
-		require.Nil(t, deposit)
-	})
-
-	t.Run("should fail if first account is not signer", func(t *testing.T) {
-		// ARRANGE
-		txResult := LoadSolanaInboundTxResult(t, txHash)
-		tx, err := txResult.Transaction.GetTransaction()
-		require.NoError(t, err)
-
-		// switch account places
-		tx.Message.Instructions[instructionIndex].Accounts[0] = 1
-		tx.Message.Instructions[instructionIndex].Accounts[1] = 0
-
-		// ACT
-		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDeposit(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -269,7 +229,6 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 	// expected result
 	// solana e2e deployer account
 	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	require.NoError(t, err)
 	expectedDeposit := &contracts.Inbound{
 		Sender:           sender,
 		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
@@ -282,7 +241,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, tx.Message.Instructions[instructionIndex], txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -294,7 +253,6 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
-
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'deposit_spl'
@@ -310,10 +268,10 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tx.Message.Instructions[instructionIndex].Data = data
+		instruction.Data = data
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -325,31 +283,14 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
-
-		// ASSERT
-		require.Error(t, err)
-		require.Nil(t, deposit)
-	})
-
-	t.Run("should fail if first account is not signer", func(t *testing.T) {
-		// ARRANGE
-		txResult := LoadSolanaInboundTxResult(t, txHash)
-		tx, err := txResult.Transaction.GetTransaction()
-		require.NoError(t, err)
-
-		// switch account places
-		tx.Message.Instructions[instructionIndex].Accounts[0] = 1
-		tx.Message.Instructions[instructionIndex].Accounts[1] = 0
-
-		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -388,7 +329,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 
 	t.Run("should parse inbound event deposit SPL", func(t *testing.T) {
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, tx.Message.Instructions[instructionIndex], txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -400,7 +341,6 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
-
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'deposit_spl'
@@ -417,10 +357,10 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tx.Message.Instructions[instructionIndex].Data = data
+		instruction.Data = data
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -432,31 +372,14 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
-
-		// ASSERT
-		require.Error(t, err)
-		require.Nil(t, deposit)
-	})
-
-	t.Run("should fail if first account is not signer", func(t *testing.T) {
-		// ARRANGE
-		txResult := LoadSolanaInboundTxResult(t, txHash)
-		tx, err := txResult.Transaction.GetTransaction()
-		require.NoError(t, err)
-
-		// switch account places
-		tx.Message.Instructions[instructionIndex].Accounts[0] = 1
-		tx.Message.Instructions[instructionIndex].Accounts[1] = 0
-
-		// ACT
-		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
+		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)
@@ -477,7 +400,6 @@ func Test_ParseInboundAsCall(t *testing.T) {
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
 	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
-	require.NoError(t, err)
 
 	// expected result
 	// solana e2e deployer account
@@ -495,7 +417,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 
 	t.Run("should parse inbound event call", func(t *testing.T) {
 		// ACT
-		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, tx.Message.Instructions[instructionIndex], txResult.Slot)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -507,7 +429,6 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
-
 		instruction := tx.Message.Instructions[instructionIndex]
 
 		// try deserializing instruction as a 'call'
@@ -522,10 +443,10 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tx.Message.Instructions[instructionIndex].Data = data
+		instruction.Data = data
 
 		// ACT
-		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -537,16 +458,17 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = append(
-			tx.Message.Instructions[instructionIndex].Accounts,
+		instruction.Accounts = append(
+			instruction.Accounts,
 			1,
 		)
 
 		// ACT
-		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
+		call, err := contracts.ParseInboundAsCall(tx, instruction, txResult.Slot)
 
 		// ASSERT
 		require.Error(t, err)

@@ -182,7 +182,8 @@ func Test_FeeRateToSatPerByte(t *testing.T) {
 	tests := []struct {
 		name     string
 		rate     float64
-		expected int64
+		expected uint64
+		errMsg   string
 	}{
 		{
 			name:     "0 sat/vByte",
@@ -204,11 +205,24 @@ func Test_FeeRateToSatPerByte(t *testing.T) {
 			rate:     0.0001,
 			expected: 10,
 		},
+		{
+			name:     "invalid fee rate",
+			rate:     0,
+			expected: 0,
+			errMsg:   "invalid fee rate",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rate := FeeRateToSatPerByte(tt.rate)
+			rate, err := FeeRateToSatPerByte(tt.rate)
+			if tt.errMsg != "" {
+				require.ErrorContains(t, err, tt.errMsg)
+				require.Zero(t, rate)
+				return
+			}
+
+			require.NoError(t, err)
 			require.Equal(t, tt.expected, rate)
 		})
 	}

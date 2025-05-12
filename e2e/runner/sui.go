@@ -17,6 +17,11 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
+const (
+	// onCallRevertMessage is the message that triggers a revert in the 'on_call' function
+	onCallRevertMessage = "revert"
+)
+
 // SuiGetSUIBalance returns the SUI balance of an address
 func (r *E2ERunner) SuiGetSUIBalance(addr string) uint64 {
 	resp, err := r.Clients.Sui.SuiXGetBalance(r.Ctx, models.SuiXGetBalanceRequest{
@@ -88,7 +93,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(20000),
+			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
 	)
@@ -138,7 +143,7 @@ func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
 		payloadBytes,
 		gatewayzevm.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(20000),
+			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
 	)
@@ -254,6 +259,24 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPaylo
 	if err != nil {
 		return sui.CallPayload{}, err
 	}
+
+	return sui.NewCallPayload(argumentTypes, objects, message), nil
+}
+
+// SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
+// function in Sui the example package
+func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {
+	// only the CCTX's coinType is needed, no additional arguments
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	// the 'on_call' method of the "connected" contract specifically throws an error
+	// for this message to trigger "tx revert" test case
+	message := []byte(onCallRevertMessage)
 
 	return sui.NewCallPayload(argumentTypes, objects, message), nil
 }
