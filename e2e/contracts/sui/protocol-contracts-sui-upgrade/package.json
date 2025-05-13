@@ -1,0 +1,10 @@
+{
+  "name": "@zetachain/protocol-contracts-sui",
+  "private": false,
+  "license": "MIT",
+  "version": "0.0.0-set-on-publish",
+  "description": "ZetaChain protocol contracts on Sui",
+  "files": [
+    "gateway.json"
+  ]
+}

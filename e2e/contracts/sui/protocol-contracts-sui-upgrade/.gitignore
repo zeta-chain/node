@@ -1,0 +1,8 @@
+.idea
+.vscode
+
+source/dependencies
+build/locks
+build/gateway/debug_info
+*.key
+.DS_Store

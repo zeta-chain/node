@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	// suiUpgradedGatewayPath is the path to the upgraded Sui gateway package
-	suiUpgradedGatewayPath = "/work/protocol-contracts-sui"
+	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
+	suiGatewayUpgradedPath = "/work/protocol-contracts-sui-upgrade"
 )
 
 // reGatewayPackageID is the regex to extract the gateway package ID from the output
@@ -62,7 +62,7 @@ func (r *E2ERunner) upgradeSuiGatewayPackage() (string, error) {
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
 	}...)
-	cmdUpgrade.Dir = suiUpgradedGatewayPath
+	cmdUpgrade.Dir = suiGatewayUpgradedPath
 
 	// run command and show output
 	startTime := time.Now()
@@ -107,7 +107,7 @@ func (r *E2ERunner) moveCallUpgraded(ctx context.Context, gatewayPackageID strin
 // updateGatewayPackageIDInMoveToml updates the 'published-at' field in the 'Move.toml' file
 // with the original published gateway package ID
 func (r *E2ERunner) updateGatewayPackageIDInMoveToml() {
-	const moveTomlPath = suiUpgradedGatewayPath + "/Move.toml"
+	const moveTomlPath = suiGatewayUpgradedPath + "/Move.toml"
 
 	// read the entire Move.toml file
 	content, err := os.ReadFile(moveTomlPath)
