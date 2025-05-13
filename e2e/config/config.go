@@ -157,6 +157,7 @@ type SuiExample struct {
 type Sui struct {
 	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
 	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
 	Example                  SuiExample         `yaml:"example"`

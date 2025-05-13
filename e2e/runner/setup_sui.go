@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -45,6 +46,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	// fund deployer
 	r.RequestSuiFromFaucet(faucetURL, deployerAddress)
 
+	// import deployer private key and select it as active address
+	r.importAndActivateDeployerAccount()
+
 	// fund the TSS
 	// request twice from the faucet to ensure TSS has enough funds for the first withdraw
 	// TODO: this step might no longer necessary if a custom solution is implemented for the TSS funding
@@ -53,6 +57,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 
 	// deploy gateway package
 	whitelistCapID, withdrawCapID := r.suiDeployGateway()
+
+	// update gateway package ID in Move.toml
+	r.updateGatewayPackageIDInMoveToml()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -72,15 +79,51 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
+// importAndActivateDeployerAccount imports a Sui deployer private key using the sui keytool import command
+// and sets the deployer address as the active address.
+func (r *E2ERunner) importAndActivateDeployerAccount() {
+	deployerSigner, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+
+	var (
+		deployerAddress    = deployerSigner.Address()
+		deployerPrivKeyHex = r.Account.RawPrivateKey.String()
+	)
+
+	// convert private key to bech32
+	deployerPrivKeySecp256k1, err := zetasui.PrivateKeyBech32Secp256k1FromHex(deployerPrivKeyHex)
+	require.NoError(r, err)
+
+	// import deployer private key using sui keytool import
+	cmdImport := exec.Command("sui", "keytool", "import", deployerPrivKeySecp256k1, "secp256k1")
+	require.NoError(r, cmdImport.Run(), "unable to import sui deployer private key")
+
+	// switch to deployer address using sui client switch
+	cmdSwitch := exec.Command("sui", "client", "switch", "--address", deployerAddress)
+	require.NoError(r, cmdSwitch.Run(), "unable to switch to deployer address")
+
+	// ensure the deployer address is active
+	cmdList := exec.Command("sui", "client", "active-address")
+	output, err := cmdList.Output()
+	require.NoError(r, err)
+	require.Equal(r, deployerAddress, strings.TrimSpace(string(output)))
+}
+
 // suiDeployGateway deploys the SUI gateway package on Sui
 func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 	const (
 		filterGatewayType      = "gateway::Gateway"
 		filterWithdrawCapType  = "gateway::WithdrawCap"
 		filterWhitelistCapType = "gateway::WhitelistCap"
+		filterUpgradeCapType   = "0x2::package::UpgradeCap"
 	)
 
-	objectTypeFilters := []string{filterGatewayType, filterWhitelistCapType, filterWithdrawCapType}
+	objectTypeFilters := []string{
+		filterGatewayType,
+		filterWhitelistCapType,
+		filterWithdrawCapType,
+		filterUpgradeCapType,
+	}
 	packageID, objectIDs := r.suiDeployPackage(
 		[]string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
 		objectTypeFilters,
@@ -94,6 +137,9 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
+
+	r.SuiGatewayUpgradeCap, ok = objectIDs[filterUpgradeCapType]
+	require.True(r, ok, "upgradeCap object not found")
 
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)

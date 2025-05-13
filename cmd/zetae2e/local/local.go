@@ -623,6 +623,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		)
 	}
 
+	if testSui {
+		deployerRunner.VerifySuiGatewayPackageUpgrade()
+	}
+
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
 	}

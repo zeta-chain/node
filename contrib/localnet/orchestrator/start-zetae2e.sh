@@ -183,6 +183,12 @@ if host ton > /dev/null; then
   ./wait-for-ton.sh
 fi
 
+# Setup Sui environment
+if host sui > /dev/null; then
+  mkdir -p /root/.sui/sui_config
+  cp sui_client.yaml /root/.sui/sui_config/client.yaml
+fi
+
 [[ -n $CI ]] && echo -e "\n::endgroup::"
 
 # need to make the directory if it was not mounted as a volume

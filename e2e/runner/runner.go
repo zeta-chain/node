@@ -127,6 +127,9 @@ type E2ERunner struct {
 	// contract Sui
 	SuiGateway *sui.Gateway
 
+	// SuiGatewayUpgradeCap is the upgrade cap used for upgrading the Sui gateway package
+	SuiGatewayUpgradeCap string
+
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
 
@@ -289,6 +292,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.TONGateway = other.TONGateway
 
 	r.SuiGateway = other.SuiGateway
+	r.SuiGatewayUpgradeCap = other.SuiGatewayUpgradeCap
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
 	r.SuiExample = other.SuiExample
@@ -425,6 +429,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	if r.SuiGateway != nil {
 		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
 		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("GatewayUpgradeCap: %s", r.SuiGatewayUpgradeCap)
 	} else {
 		r.Logger.Print("💤 Sui tests disabled")
 	}
@@ -436,7 +441,6 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
-	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("SUIZRC20:       %s", r.SUIZRC20Addr.Hex())
 	r.Logger.Print("SuiTokenZRC20:  %s", r.SuiTokenZRC20Addr.Hex())
