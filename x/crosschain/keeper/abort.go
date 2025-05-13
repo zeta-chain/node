@@ -206,11 +206,16 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainERC20(
 		return errors.New("no amount to refund")
 	}
 
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(
 		ctx,
 		cctx.InboundParams.Asset,
-		cctx.InboundParams.SenderChainId,
+		chainID,
 	)
 	if !found {
 		return fmt.Errorf("asset %s zrc not found", cctx.InboundParams.Asset)

@@ -12,6 +12,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+type UpdateTssParams struct {
+	// Discriminator is the unique identifier for the initialize instruction
+	Discriminator [8]byte
+
+	// TssAddress is the TSS address
+	TssAddress [20]byte
+}
+
 // InitializeParams contains the parameters for a gateway initialize instruction
 type InitializeParams struct {
 	// Discriminator is the unique identifier for the initialize instruction

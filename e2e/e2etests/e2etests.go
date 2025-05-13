@@ -63,7 +63,9 @@ const (
 	TestSolanaDepositName                                 = "solana_deposit"
 	TestSolanaDepositThroughProgramName                   = "solana_deposit_through_program"
 	TestSolanaWithdrawName                                = "solana_withdraw"
+	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallInvalidMsgEncodingName       = "solana_withdraw_and_call_invalid_msg_encoding"
 	TestZEVMToSolanaCallName                              = "zevm_to_solana_call"
 	TestSolanaWithdrawAndCallRevertWithCallName           = "solana_withdraw_and_call_revert_with_call"
 	TestSolanaDepositAndCallName                          = "solana_deposit_and_call"
@@ -602,11 +604,27 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v29.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSolanaWithdrawRevertExecutableReceiverName,
+		"withdraw SOL from ZEVM reverts if executable receiver",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawRevertExecutableReceiver,
+	),
+	runner.NewE2ETest(
 		TestZEVMToSolanaCallName,
 		"call solana program from ZEVM",
 		[]runner.ArgDefinition{},
 		TestZEVMToSolanaCall,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallInvalidMsgEncodingName,
+		"withdraw SOL from ZEVM and call solana program with invalid msg encoding",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCallInvalidMsgEncoding,
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallRevertWithCallName,

@@ -20,6 +20,7 @@ type suiClient interface {
 	GetLatestCheckpoint(ctx context.Context) (models.CheckpointResponse, error)
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
+	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
 	GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error)
 
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
