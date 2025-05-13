@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/pkg/chains"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -495,6 +496,49 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		balance, err = zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
 		require.NoError(t, err)
 		require.Equal(t, uint64(84), balance.Uint64())
+	})
+
+	t.Run("should refund amount on zeta chain for outgoing cctx", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		asset := sample.EthAddress().String()
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID()
+
+		// deploy zrc20
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20Addr := deployZRC20(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			chainID,
+			"bar",
+			asset,
+			"bar",
+		)
+
+		err := k.LegacyRefundAbortedAmountOnZetaChainERC20(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_ERC20,
+				SenderChainId: chains.ZetaChainPrivnet.ChainId,
+				Sender:        sender.String(),
+				Asset:         asset,
+				Amount:        math.NewUint(42),
+			},
+			OutboundParams: []*types.OutboundParams{{
+				ReceiverChainId: chainID,
+				Amount:          math.NewUint(42),
+			}},
+		},
+			sender,
+		)
+		require.NoError(t, err)
+
+		// check amount deposited in balance
+		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), balance.Uint64())
 	})
 
 	t.Run("should error if zrc20 address empty", func(t *testing.T) {
