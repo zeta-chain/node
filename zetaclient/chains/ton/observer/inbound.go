@@ -201,13 +201,6 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
-	if err != nil {
-		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
-	}
-
-	seqno := blockHeader.MinRefMcSeqno
-
 	inbound, err := extractInboundData(tx)
 	switch {
 	case err != nil:
@@ -216,6 +209,13 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		// do nothing
 		return nil
 	}
+
+	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
+	if err != nil {
+		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
+	}
+
+	seqno := blockHeader.MinRefMcSeqno
 
 	if _, err = ob.voteDeposit(ctx, inbound, seqno); err != nil {
 		return errors.Wrap(err, "unable to vote for inbound tx")
