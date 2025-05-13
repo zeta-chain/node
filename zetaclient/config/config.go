@@ -90,9 +90,6 @@ func Load(basePath string) (Config, error) {
 
 // SetRestrictedAddressesFromConfig loads compliance data (restricted addresses) from config.
 func SetRestrictedAddressesFromConfig(cfg Config) {
-	restrictedAddressBookLock.Lock()
-	defer restrictedAddressBookLock.Unlock()
-
 	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 
