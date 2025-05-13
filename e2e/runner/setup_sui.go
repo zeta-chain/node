@@ -47,7 +47,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, deployerAddress)
 
 	// import deployer private key and select it as active address
-	r.importAndActivateDeployerAccount()
+	r.suiSetupDeployerAccount()
 
 	// fund the TSS
 	// request twice from the faucet to ensure TSS has enough funds for the first withdraw
@@ -59,7 +59,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	whitelistCapID, withdrawCapID := r.suiDeployGateway()
 
 	// update gateway package ID in Move.toml
-	r.updateGatewayPackageIDInMoveToml()
+	r.suiPatchMoveConfig()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -79,11 +79,11 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	require.NoError(r, err)
 }
 
-// importAndActivateDeployerAccount imports a Sui deployer private key using the sui keytool import command
+// suiSetupDeployerAccount imports a Sui deployer private key using the sui keytool import command
 // and sets the deployer address as the active address.
-func (r *E2ERunner) importAndActivateDeployerAccount() {
+func (r *E2ERunner) suiSetupDeployerAccount() {
 	deployerSigner, err := r.Account.SuiSigner()
-	require.NoError(r, err, "get deployer signer")
+	require.NoError(r, err, "unable to get deployer signer")
 
 	var (
 		deployerAddress    = deployerSigner.Address()

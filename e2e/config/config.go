@@ -155,8 +155,9 @@ type SuiExample struct {
 
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
-	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
-	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	GatewayPackageID DoubleQuotedString `yaml:"gateway_package_id"`
+	GatewayObjectID  DoubleQuotedString `yaml:"gateway_object_id"`
+	// GatewayUpgradeCap is the capability object used to upgrade the gateway
 	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`

@@ -441,6 +441,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("ERC20ZRC20:     %s", r.ERC20ZRC20Addr.Hex())
 	r.Logger.Print("BTCZRC20:       %s", r.BTCZRC20Addr.Hex())
 	r.Logger.Print("SOLZRC20:       %s", r.SOLZRC20Addr.Hex())
+	r.Logger.Print("SPLZRC20:       %s", r.SPLZRC20Addr.Hex())
 	r.Logger.Print("TONZRC20:       %s", r.TONZRC20Addr.Hex())
 	r.Logger.Print("SUIZRC20:       %s", r.SUIZRC20Addr.Hex())
 	r.Logger.Print("SuiTokenZRC20:  %s", r.SuiTokenZRC20Addr.Hex())

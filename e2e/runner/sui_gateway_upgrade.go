@@ -34,7 +34,7 @@ var reGatewayPackageID = regexp.MustCompile(`│\s*PackageID: *(0x[0-9a-fA-F]+)\
 // SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
 func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	// retrieve original gateway object data
-	gatewayDataBefore, err := r.getObjectData(r.Ctx, r.SuiGateway.ObjectID())
+	gatewayDataBefore, err := r.suiGetObjectData(r.Ctx, r.SuiGateway.ObjectID())
 	require.NoError(r, err)
 
 	// upgrade the Sui gateway package
@@ -45,7 +45,7 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	r.moveCallUpgraded(r.Ctx, newGatewayPackageID)
 
 	// retrieve new gateway object data
-	gatewayDataAfter, err := r.getObjectData(r.Ctx, r.SuiGateway.ObjectID())
+	gatewayDataAfter, err := r.suiGetObjectData(r.Ctx, r.SuiGateway.ObjectID())
 	require.NoError(r, err)
 
 	// gateway data should remain unchanged
@@ -104,9 +104,9 @@ func (r *E2ERunner) moveCallUpgraded(ctx context.Context, gatewayPackageID strin
 	r.suiExecuteTx(signer, tx)
 }
 
-// updateGatewayPackageIDInMoveToml updates the 'published-at' field in the 'Move.toml' file
+// suiPatchMoveConfig updates the 'published-at' field in the 'Move.toml' file
 // with the original published gateway package ID
-func (r *E2ERunner) updateGatewayPackageIDInMoveToml() {
+func (r *E2ERunner) suiPatchMoveConfig() {
 	const moveTomlPath = suiGatewayUpgradedPath + "/Move.toml"
 
 	// read the entire Move.toml file
@@ -123,8 +123,8 @@ func (r *E2ERunner) updateGatewayPackageIDInMoveToml() {
 	require.NoError(r, err, "unable to write to Move.toml")
 }
 
-// getObjectData retrieves the object data from the Sui gateway package
-func (r *E2ERunner) getObjectData(ctx context.Context, objectID string) (models.SuiParsedData, error) {
+// suiGetObjectData retrieves the object data for the given object ID
+func (r *E2ERunner) suiGetObjectData(ctx context.Context, objectID string) (models.SuiParsedData, error) {
 	object, err := r.Clients.Sui.SuiGetObject(ctx, models.SuiGetObjectRequest{
 		ObjectId: objectID,
 		Options:  models.SuiObjectDataOptions{ShowContent: true},
