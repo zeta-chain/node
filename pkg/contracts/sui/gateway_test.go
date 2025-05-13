@@ -476,6 +476,68 @@ func Test_ParseOutboundEvent(t *testing.T) {
 	}
 }
 
+func Test_ParseGatewayNonce(t *testing.T) {
+	tests := []struct {
+		name   string
+		data   models.SuiParsedData
+		nonce  uint64
+		errMsg string
+	}{
+		{
+			name: "valid nonce",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{
+						"nonce": "123",
+					},
+				},
+			},
+			nonce: 123,
+		},
+		{
+			name: "missing nonce field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{},
+				},
+			},
+			errMsg: "missing nonce field",
+		},
+		{
+			name: "invalid nonce field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"nonce": 123},
+				},
+			},
+			errMsg: "want string, got int for nonce",
+		},
+		{
+			name: "invalid nonce value",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"nonce": "not a number"},
+				},
+			},
+			errMsg: "unable to parse nonce",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nonce, err := ParseGatewayNonce(tt.data)
+			if tt.errMsg != "" {
+				require.Zero(t, nonce)
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.nonce, nonce)
+		})
+	}
+}
+
 func Test_extractInteger(t *testing.T) {
 	tests := []struct {
 		name   string

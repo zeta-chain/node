@@ -605,7 +605,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
-	data []byte,
+	msgEncoded []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// approve
@@ -613,22 +613,6 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	require.NoError(r, err)
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "approve")
-
-	// create encoded msg
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
-	require.NoError(r, err)
-	msg := solanacontract.ExecuteMsg{
-		Accounts: []solanacontract.AccountMeta{
-			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
-			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
-			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
-		},
-		Data: data,
-	}
-
-	msgEncoded, err := msg.Encode()
-	require.NoError(r, err)
 
 	// withdraw
 	tx, err = r.GatewayZEVM.WithdrawAndCall0(
