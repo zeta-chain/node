@@ -408,7 +408,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		solanaTests := []string{
 			e2etests.TestSolanaDepositName,
 			e2etests.TestSolanaWithdrawName,
+			e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
 			e2etests.TestSolanaWithdrawAndCallName,
+			e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
 			e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
 			e2etests.TestSolanaDepositAndCallName,
 			e2etests.TestSolanaDepositAndCallRevertName,

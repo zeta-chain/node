@@ -138,7 +138,14 @@ func (signer *Signer) TryProcessOutbound(
 	coinType := cctx.InboundParams.CoinType
 
 	var txGetter txGetterT
-	var fallbackTxGetter txGetterT
+
+	// always have increment nonce as fallback tx
+	incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+	if err != nil {
+		logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
+		return
+	}
+	fallbackTxGetter := incrementNonceTxGetter
 
 	switch coinType {
 	case coin.CoinType_Cmd:
@@ -154,17 +161,11 @@ func (signer *Signer) TryProcessOutbound(
 		if cctx.IsWithdrawAndCall() {
 			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
-				return
+				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound, use increment nonce")
+				txGetter = incrementNonceTxGetter
+			} else {
+				txGetter = executeTxGetter
 			}
-			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
-				return
-			}
-
-			txGetter = executeTxGetter
-			fallbackTxGetter = incrementNonceTxGetter
 		} else {
 			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
 			if err != nil {
@@ -179,18 +180,13 @@ func (signer *Signer) TryProcessOutbound(
 		if cctx.IsWithdrawAndCall() {
 			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
 			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
-				return
+				logger.Error().
+					Err(err).
+					Msgf("TryProcessOutbound: Fail to sign execute spl outbound, use increment nonce")
+				txGetter = incrementNonceTxGetter
+			} else {
+				txGetter = executeSPLTxGetter
 			}
-
-			incrementNonceTxGetter, err := signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
-			if err != nil {
-				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign increment_nonce outbound")
-				return
-			}
-
-			txGetter = executeSPLTxGetter
-			fallbackTxGetter = incrementNonceTxGetter
 		} else {
 			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
 			if err != nil {
