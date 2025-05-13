@@ -278,8 +278,6 @@ func TestInbound(t *testing.T) {
 			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
-		ts.MockGetBlockHeader(depositTX.BlockID)
-
 		// ACT
 		// Observe inbounds once
 		err = ob.ObserveInbound(ts.ctx)
