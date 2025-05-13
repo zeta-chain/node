@@ -38,7 +38,7 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	require.NoError(r, err)
 
 	// upgrade the Sui gateway package
-	newGatewayPackageID, err := r.upgradeSuiGatewayPackage()
+	newGatewayPackageID, err := r.suiUpgradeGatewayPackage()
 	require.NoError(r, err)
 
 	// call the new method 'upgraded' in the new gateway package
@@ -52,8 +52,8 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	require.Equal(r, gatewayDataBefore, gatewayDataAfter)
 }
 
-// upgradeSuiGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
-func (r *E2ERunner) upgradeSuiGatewayPackage() (string, error) {
+// suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
+func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 	// construct the CLI command for package upgrade
 	// #nosec G204, inputs are controlled in E2E test
 	cmdUpgrade := exec.Command("sui", []string{
