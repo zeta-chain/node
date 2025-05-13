@@ -55,6 +55,7 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 // upgradeSuiGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
 func (r *E2ERunner) upgradeSuiGatewayPackage() (string, error) {
 	// construct the CLI command for package upgrade
+	// #nosec G204, inputs are controlled in E2E test
 	cmdUpgrade := exec.Command("sui", []string{
 		"client",
 		"upgrade",

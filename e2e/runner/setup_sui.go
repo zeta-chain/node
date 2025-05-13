@@ -95,14 +95,17 @@ func (r *E2ERunner) suiSetupDeployerAccount() {
 	require.NoError(r, err)
 
 	// import deployer private key using sui keytool import
+	// #nosec G204, inputs are controlled in E2E test
 	cmdImport := exec.Command("sui", "keytool", "import", deployerPrivKeySecp256k1, "secp256k1")
 	require.NoError(r, cmdImport.Run(), "unable to import sui deployer private key")
 
 	// switch to deployer address using sui client switch
+	// #nosec G204, inputs are controlled in E2E test
 	cmdSwitch := exec.Command("sui", "client", "switch", "--address", deployerAddress)
 	require.NoError(r, cmdSwitch.Run(), "unable to switch to deployer address")
 
 	// ensure the deployer address is active
+	// #nosec G204, inputs are controlled in E2E test
 	cmdList := exec.Command("sui", "client", "active-address")
 	output, err := cmdList.Output()
 	require.NoError(r, err)
