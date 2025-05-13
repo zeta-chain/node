@@ -118,7 +118,7 @@ func (r *E2ERunner) suiPatchMoveConfig() {
 	updatedContent := strings.Replace(contentStr, "ORIGINAL-PACKAGE-ID", publishedAt, 1)
 
 	// Write the updated content back to the file
-	err = os.WriteFile(moveTomlPath, []byte(updatedContent), 0644)
+	err = os.WriteFile(moveTomlPath, []byte(updatedContent), 0600)
 	require.NoError(r, err, "unable to write to Move.toml")
 }
 
