@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	groupDeposit  = "btc_deposit"
-	groupWithdraw = "btc_withdraw"
+	testGroupDepositName  = "btc_deposit"
+	testGroupWithdrawName = "btc_withdraw"
 )
 
 // startBitcoinTests starts Bitcoin related tests
@@ -97,7 +97,7 @@ func bitcoinTestRoutines(
 	// initialize runner for deposit tests
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
-		groupDeposit,
+		testGroupDepositName,
 		account,
 		conf,
 		deployerRunner,
@@ -109,7 +109,7 @@ func bitcoinTestRoutines(
 	// initialize runner for withdraw tests
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
-		groupWithdraw,
+		testGroupWithdrawName,
 		account,
 		conf,
 		deployerRunner,
@@ -131,8 +131,8 @@ func bitcoinTestRoutines(
 	}
 
 	// create test routines
-	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, groupDeposit)
-	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, groupWithdraw)
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, testGroupDepositName)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, testGroupWithdrawName)
 
 	return routineDeposit, routineWithdraw
 }
@@ -209,7 +209,7 @@ func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string, name stri
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
 
 		// mark deposit test group as done
-		if name == groupDeposit {
+		if name == testGroupDepositName {
 			e2etests.DepdencyAllBitcoinDeposits.Done()
 		}
 
