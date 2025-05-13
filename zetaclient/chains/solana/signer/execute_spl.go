@@ -7,27 +7,66 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
-// createAndSignMsgExecuteSPL creates and batch signs execute spl and increment nonce messages
-// for gateway execute_spl_token instruction with TSS.
-func (signer *Signer) createAndSignMsgExecuteSPL(
+// prepareExecuteSPLTx prepares execute spl outbound
+func (signer *Signer) prepareExecuteSPLTx(
 	ctx context.Context,
-	params *types.OutboundParams,
+	cctx *types.CrossChainTx,
 	height uint64,
-	asset string,
-	decimals uint8,
-	sender string,
-	data []byte,
-	remainingAccounts []*solana.AccountMeta,
-	executeType contracts.ExecuteType,
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCCTXRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SPL",
+		)
+	}
+
+	// create msg execute spl
+	msg, msgIn, err := signer.createMsgExecuteSPL(ctx, cctx, cancelTx)
+	if err != nil {
+		return signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+	}
+
+	// TSS sign msg execute spl
+	msg, msgIn, err = signMsgWithFallback(ctx, signer, height, params.TssNonce, msg, msgIn)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (*Outbound, error) {
+		inst, err := signer.createExecuteSPLInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating execute SPL instruction")
+		}
+
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, params.CallOptions.GasLimit)
+	}, nil
+}
+
+// createMsgExecuteSPL creates execute spl and increment nonce messages
+func (signer *Signer) createMsgExecuteSPL(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
 	cancelTx bool,
 ) (*contracts.MsgExecuteSPL, *contracts.MsgIncrementNonce, error) {
-	chain := signer.Chain()
+	params := cctx.GetCurrentOutboundParam()
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
@@ -38,6 +77,17 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 		amount = 0
 	}
 
+	// get mint details to get decimals
+	mint, err := signer.decodeMintAccountDetails(ctx, cctx.InboundParams.Asset)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "decoding mint account details")
+	}
+
+	executeType, msg, err := signer.prepareExecuteMsg(cctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "prepare ExecuteMsg error")
+	}
+
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
 	if err != nil {
@@ -45,9 +95,9 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 	}
 
 	// parse mint account
-	mintAccount, err := solana.PublicKeyFromBase58(asset)
+	mintAccount, err := solana.PublicKeyFromBase58(cctx.InboundParams.Asset)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "cannot parse asset public key %s", asset)
+		return nil, nil, errors.Wrapf(err, "cannot parse asset public key %s", cctx.InboundParams.Asset)
 	}
 
 	// get recipient ata
@@ -66,36 +116,32 @@ func (signer *Signer) createAndSignMsgExecuteSPL(
 		)
 	}
 
-	// prepare execute spl msg and compute hash
-	msg := contracts.NewMsgExecuteSPL(
+	remainingAccounts := []*solana.AccountMeta{}
+	for _, a := range msg.Accounts {
+		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
+			PublicKey:  solana.PublicKey(a.PublicKey),
+			IsWritable: a.IsWritable,
+		})
+	}
+
+	// prepare execute spl and increment nonce messages
+	msgExecuteSPL := contracts.NewMsgExecuteSPL(
 		chainID,
 		nonce,
 		amount,
-		decimals,
+		mint.Decimals,
 		mintAccount,
 		to,
 		destinationProgramPdaAta,
-		sender,
-		data,
+		cctx.InboundParams.Sender,
+		msg.Data,
 		executeType,
 		remainingAccounts,
 	)
-	msgHash := msg.Hash()
 
-	// prepare increment_nonce msg and compute hash, it will be used as fallback tx in case execute spl fails
 	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
-	msgHashIncrementNonce := msgIncrementNonce.Hash()
 
-	// sign the message with TSS to get an ECDSA signature.
-	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().
-		SignBatch(ctx, [][]byte{msgHash[:], msgHashIncrementNonce[:]}, height, nonce, chain.ChainId)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "key-sign failed")
-	}
-
-	// attach the signature and return
-	return msg.SetSignature(signature[0]), msgIncrementNonce.SetSignature(signature[1]), nil
+	return msgExecuteSPL, msgIncrementNonce, nil
 }
 
 // createExecuteSPLInstruction wraps the execute spl 'msg' into a Solana instruction.
