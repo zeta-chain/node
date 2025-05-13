@@ -1,8 +1,8 @@
 .idea
 .vscode
 
+build/
 source/dependencies
-build/locks
-build/gateway/debug_info
+Move.lock
 *.key
 .DS_Store

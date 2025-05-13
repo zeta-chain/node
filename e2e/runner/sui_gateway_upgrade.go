@@ -45,6 +45,11 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 
 // suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
 func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
+	// build the CLI command for package upgrade
+	cmdBuild := exec.Command("sui", "move", "build")
+	cmdBuild.Dir = suiGatewayUpgradedPath
+	require.NoError(r, cmdBuild.Run(), "unable to build sui gateway package")
+
 	// construct the CLI command for package upgrade
 	// #nosec G204, inputs are controlled in E2E test
 	cmdUpgrade := exec.Command("sui", []string{
