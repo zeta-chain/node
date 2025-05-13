@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,7 +11,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -139,6 +140,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("starting E2E tests")
 
+	if verbose {
+		logger.Info("Flags")
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			logger.Info(`--%s="%s"`, flag.Name, flag.Value.String())
+		})
+	}
+
 	if testAdmin {
 		logger.Print("⚠️ admin tests enabled")
 	}
@@ -217,15 +225,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
 
-	// run setup steps that do not require tss
 	if !skipSetup {
+		// run setup steps that do not require tss
 		noError(deployerRunner.FundEmissionsPool())
-	}
 
-	// wait for keygen to be completed
-	// if setup is skipped, we assume that the keygen is already completed
-	if !skipSetup {
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10)
+		// wait for keygen to be completed
+		// if setup is skipped, we assume that the keygen is already completed
+		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
 	// query and set the TSS
@@ -666,33 +672,36 @@ func waitKeygenHeight(
 	observerClient observertypes.QueryClient,
 	logger *runner.Logger,
 	bufferBlocks int64,
-) {
+) error {
 	// wait for keygen to be completed
 	resp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
-	if err != nil {
-		logger.Error("observerClient.Keygen error: %s", err)
-		return
+
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "observerClient.Keygen error")
+	case resp.Keygen == nil:
+		return errors.New("keygen is nil")
+	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
+		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}
-	if resp.Keygen == nil {
-		logger.Error("observerClient.Keygen keygen is nil")
-		return
-	}
-	if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
-		return
-	}
+
 	keygenHeight := resp.Keygen.BlockNumber
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
+
 	for {
 		time.Sleep(2 * time.Second)
+
 		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= keygenHeight+bufferBlocks {
-			break
-		}
+
 		logger.Info("Last ZetaHeight: %d", response.Height)
+
+		if response.Height >= keygenHeight+bufferBlocks {
+			return nil
+		}
 	}
 }
 
