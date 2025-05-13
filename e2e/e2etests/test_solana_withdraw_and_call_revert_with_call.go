@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -46,12 +47,29 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	payload := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payload, withdrawAmount)
 
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
+	require.NoError(r, err)
+
+	// encode msg
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+		},
+		Data: []byte("revert"),
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
 		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
-		[]byte("revert NonceMismatch"),
+		msgEncoded,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    revertAddress,
