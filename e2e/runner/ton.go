@@ -136,7 +136,9 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
-	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
+	cfg := &tonOpts{
+		expectedStatus: cctypes.CctxStatus_OutboundMined,
+	}
 
 	for _, opt := range opts {
 		opt(cfg)
@@ -144,9 +146,9 @@ func (r *E2ERunner) TONDepositAndCall(
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 	require.NotNil(r, sender, "Sender wallet is nil")
-	require.False(r, amount.IsZero())
-	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String())
-	require.NotEmpty(r, callData)
+	require.False(r, amount.IsZero(), "amount is zero")
+	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String(), "empty zevm recipient")
+	require.NotEmpty(r, callData, "empty call data")
 
 	r.Logger.Info(
 		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
@@ -155,12 +157,6 @@ func (r *E2ERunner) TONDepositAndCall(
 		zevmRecipient.Hex(),
 		string(callData),
 	)
-
-	// If we're expecting a Reverted status, ensure we have enough gas
-	if cfg.expectedStatus == cctypes.CctxStatus_Reverted {
-		// Log that we're expecting a reverted status, but don't do anything special yet
-		r.Logger.Info("Expecting Reverted status for this transaction")
-	}
 
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
 	if err != nil {
@@ -208,7 +204,7 @@ func (r *E2ERunner) TONDepositAndCall(
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
+	utils.RequireCCTXStatus(r, cctx, cfg.expectedStatus)
 
 	// The relayed message might be stored as a hex string, so check both formats
 	require.Contains(r,
