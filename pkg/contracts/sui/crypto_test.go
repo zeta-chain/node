@@ -125,6 +125,10 @@ func TestCrypto(t *testing.T) {
 				privKeyHex: "invalid",
 				errMsg:     "failed to decode private key hex",
 			},
+			{
+				privKeyHex: "abcdef",
+				errMsg:     "invalid private key length",
+			},
 		} {
 			t.Run(tt.privKeyHex, func(t *testing.T) {
 				privKey, err := PrivateKeyBech32Secp256k1FromHex(tt.privKeyHex)

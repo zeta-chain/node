@@ -139,6 +139,10 @@ func PrivateKeyBech32Secp256k1FromHex(privKeyHex string) (string, error) {
 		return "", errors.Wrap(err, "failed to decode private key hex")
 	}
 
+	if len(privKeyBytes) != 32 {
+		return "", errors.Errorf("invalid private key length %d)", len(privKeyBytes))
+	}
+
 	// add secp256k1 flag
 	privKeyBytes = append([]byte{flagSecp256k1}, privKeyBytes...)
 
