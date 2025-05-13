@@ -31,8 +31,8 @@ const (
 // ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 var reGatewayPackageID = regexp.MustCompile(`│\s*PackageID: *(0x[0-9a-fA-F]+)\s*│`)
 
-// VerifySuiGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
-func (r *E2ERunner) VerifySuiGatewayPackageUpgrade() {
+// SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
+func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	// retrieve original gateway object data
 	gatewayDataBefore, err := r.getObjectData(r.Ctx, r.SuiGateway.ObjectID())
 	require.NoError(r, err)

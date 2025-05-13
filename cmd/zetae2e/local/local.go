@@ -13,7 +13,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -518,20 +517,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testSui {
 		suiTests := []string{
 			e2etests.TestSuiDepositName,
-			// e2etests.TestSuiDepositAndCallRevertName,
-			// e2etests.TestSuiDepositAndCallName,
-			// e2etests.TestSuiTokenDepositName,
-			// e2etests.TestSuiTokenDepositAndCallName,
-			// e2etests.TestSuiTokenDepositAndCallRevertName,
-			// e2etests.TestSuiWithdrawName,
-			// e2etests.TestSuiWithdrawAndCallName,
-			// e2etests.TestSuiWithdrawRevertWithCallName,
-			// e2etests.TestSuiWithdrawAndCallRevertWithCallName,
-			// e2etests.TestSuiTokenWithdrawName,
-			// e2etests.TestSuiTokenWithdrawAndCallName,
-			// e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
-			// e2etests.TestSuiDepositRestrictedName,
-			// e2etests.TestSuiWithdrawRestrictedName,
+			e2etests.TestSuiDepositAndCallRevertName,
+			e2etests.TestSuiDepositAndCallName,
+			e2etests.TestSuiTokenDepositName,
+			e2etests.TestSuiTokenDepositAndCallName,
+			e2etests.TestSuiTokenDepositAndCallRevertName,
+			e2etests.TestSuiWithdrawName,
+			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawName,
+			e2etests.TestSuiTokenWithdrawAndCallName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiDepositRestrictedName,
+			e2etests.TestSuiWithdrawRestrictedName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
@@ -618,16 +617,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	if testSolana {
-		require.True(
-			deployerRunner,
-			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
-		)
-	}
-
-	if testSui {
-		deployerRunner.VerifySuiGatewayPackageUpgrade()
-	}
+	// Run gateway upgrade tests for external chains
+	deployerRunner.UpgradeAndVerifyGatewayExternalChains(conf, runner.UpgradeGatewayTestOptions{
+		TestSolana: testSolana,
+		TestSui:    testSui,
+	})
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)

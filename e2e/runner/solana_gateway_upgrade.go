@@ -16,8 +16,8 @@ import (
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
-// VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
-func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool {
+// SolanaVerifyGatewayContractsUpgrade upgrades the Solana contracts and verifies the upgrade
+func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey string) bool {
 	pdaComputed := r.ComputePdaAddress()
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,
