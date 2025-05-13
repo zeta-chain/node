@@ -1,11 +1,10 @@
 package runner
 
 import (
-	"bufio"
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
@@ -19,20 +18,10 @@ const (
 	suiGatewayUpgradedPath = "/work/protocol-contracts-sui-upgrade"
 )
 
-// reGatewayPackageID is the regex to extract the gateway package ID from the output
-//
-// │ Published Objects:                                                                               │
-// │  ┌──                                                                                             │
-// │  │ PackageID: 0x67500cf6e39f3d8937c4f15a298da72358410c84357ee33e0030c13872f5339e                 │
-// │  │ Version: 2                                                                                    │
-// │  │ Digest: 9sLQJdSZcQp8jHVJenBGKjipxspLKZ1P4QBnTxffA4Gb                                          │
-// │  │ Modules: evm, gateway                                                                         │
-// │  └──                                                                                             │
-// ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
-var reGatewayPackageID = regexp.MustCompile(`│\s*PackageID: *(0x[0-9a-fA-F]+)\s*│`)
-
 // SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
 func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
+	r.Logger.Print("🏃 Upgrading Sui gateway package")
+
 	// retrieve original gateway object data
 	gatewayDataBefore, err := r.suiGetObjectData(r.Ctx, r.SuiGateway.ObjectID())
 	require.NoError(r, err)
@@ -40,6 +29,8 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	// upgrade the Sui gateway package
 	newGatewayPackageID, err := r.suiUpgradeGatewayPackage()
 	require.NoError(r, err)
+
+	r.Logger.Print("⚙️ Sui gateway package upgrade completed")
 
 	// call the new method 'upgraded' in the new gateway package
 	r.moveCallUpgraded(r.Ctx, newGatewayPackageID)
@@ -59,6 +50,7 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 	cmdUpgrade := exec.Command("sui", []string{
 		"client",
 		"upgrade",
+		"--json", // output in JSON format for easier parsing
 		"--skip-dependency-verification",
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
@@ -70,16 +62,17 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 	output, err := cmdUpgrade.Output()
 	require.NoError(r, err)
 
-	r.Logger.Info("sui gateway package upgrade took %f seconds: \n%s", time.Since(startTime).Seconds(), string(output))
+	r.Logger.Info("Sui gateway package upgrade took %f seconds: \n%s", time.Since(startTime).Seconds(), string(output))
 
-	// scan through the output line by line to find the new gateway package ID
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
-	for scanner.Scan() {
-		line := scanner.Text()
-		matches := reGatewayPackageID.FindStringSubmatch(line)
-		if len(matches) >= 2 {
-			// return the first capture group which contains the PackageID
-			return matches[1], nil
+	// convert output to transaction block response struct
+	response := &models.SuiTransactionBlockResponse{}
+	err = json.Unmarshal(output, response)
+	require.NoError(r, err)
+
+	// find packageID
+	for _, change := range response.ObjectChanges {
+		if change.Type == "published" {
+			return change.PackageId, nil
 		}
 	}
 

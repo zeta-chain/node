@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
-// UpgradeGatewayTestOptions is the options for the gateway upgrade tests
-type UpgradeGatewayTestOptions struct {
+// UpgradeGatewayOptions is the options for the gateway upgrade tests
+type UpgradeGatewayOptions struct {
 	TestSolana bool
 	TestSui    bool
 }
@@ -25,8 +25,8 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 	r.UpgradeERC20Custody()
 }
 
-// UpgradeGatewayExternalChains upgrades the gateway contract on external chains
-func (r *E2ERunner) UpgradeAndVerifyGatewayExternalChains(conf config.Config, opts UpgradeGatewayTestOptions) {
+// RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
+func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
 	if opts.TestSolana {
 		require.True(
 			r,

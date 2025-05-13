@@ -18,6 +18,8 @@ import (
 
 // SolanaVerifyGatewayContractsUpgrade upgrades the Solana contracts and verifies the upgrade
 func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey string) bool {
+	r.Logger.Print("🏃 Upgrading Solana gateway contracts")
+
 	pdaComputed := r.ComputePdaAddress()
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,
