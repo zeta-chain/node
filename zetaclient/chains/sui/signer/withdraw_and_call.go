@@ -138,6 +138,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	withdrawCapID string,
 	onCallObjectIDs []string,
+	gasBudget uint64,
 ) (withdrawAndCallObjRefs, error) {
 	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID}, onCallObjectIDs...)
 
@@ -203,7 +204,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	// get latest TSS SUI coin object ref for gas payment
-	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui())
+	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui(), gasBudget)
 	if err != nil {
 		return withdrawAndCallObjRefs{}, errors.Wrap(err, "unable to get TSS SUI coin object")
 	}

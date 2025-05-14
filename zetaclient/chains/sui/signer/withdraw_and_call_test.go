@@ -319,10 +319,10 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			// setup RPC mock
 			ctx := context.Background()
 			ts.SuiMock.On("SuiMultiGetObjects", ctx, mock.Anything).Return(tt.mockObjects, tt.mockError)
-			ts.SuiMock.On("GetSuiCoinObjectRef", ctx, mock.Anything).Maybe().Return(suiCoinObjRef, nil)
+			ts.SuiMock.On("GetSuiCoinObjectRef", ctx, mock.Anything, mock.Anything).Maybe().Return(suiCoinObjRef, nil)
 
 			// ACT
-			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs, 100)
 
 			// ASSERT
 			if tt.errMsg != "" {

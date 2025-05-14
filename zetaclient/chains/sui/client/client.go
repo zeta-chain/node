@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -250,40 +251,69 @@ func (c *Client) SuiExecuteTransactionBlock(
 	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
 }
 
-// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address
-// Note: the SUI object may change over time, so we need to get the latest object
-func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error) {
+// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address and wanted balance
+// Note: the SUI coin object may change over time, so we need to use the up-to-date SUI coin object
+func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string, wantBalance uint64) (suiptb.ObjectRef, error) {
 	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
 		Owner:    owner,
 		CoinType: string(zetasui.SUI),
 	})
-	if err != nil {
+
+	switch {
+	case err != nil:
 		return suiptb.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
+	case len(coins.Data) == 0:
+		return suiptb.ObjectRef{}, errors.New("no SUI coin found")
 	}
 
+	// sort coins by object ID to make the result deterministic across observres
+	sort.SliceStable(coins.Data, func(i, j int) bool {
+		return coins.Data[i].CoinObjectId < coins.Data[j].CoinObjectId
+	})
+
 	var (
-		suiCoin        *models.CoinData
-		suiCoinVersion uint64
+		suiCoin           *models.CoinData
+		suiCoinVersion    uint64
+		suiCoinVersionStr string
 	)
 
-	// locate the latest version of SUI coin object of given owner
+	// get the latest version from owned SUI coin objects
 	for _, coin := range coins.Data {
 		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
-			continue
+			return suiptb.ObjectRef{}, fmt.Errorf("invalid coin type: %s", coin.CoinType)
 		}
 
 		version, err := strconv.ParseUint(coin.Version, 10, 64)
 		if err != nil {
-			return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
+			return suiptb.ObjectRef{}, errors.Wrapf(err, "invalid version %s", coin.Version)
 		}
 
-		if version > suiCoinVersion {
-			suiCoin = &coin
+		if version >= suiCoinVersion {
 			suiCoinVersion = version
+			suiCoinVersionStr = coin.Version
 		}
 	}
+
+	// pick a latest SUI coin object that covers the wanted balance
+	for _, coin := range coins.Data {
+		if coin.Version != suiCoinVersionStr {
+			continue
+		}
+
+		balance, err := strconv.ParseUint(coin.Balance, 10, 64)
+		if err != nil {
+			return suiptb.ObjectRef{}, errors.Wrapf(err, "invalid balance %s", coin.Balance)
+		}
+
+		if balance >= wantBalance {
+			suiCoin = &coin
+			break
+		}
+	}
+
+	// this should be a rare case, and it can be resolved by sending funds to owner address manually
 	if suiCoin == nil {
-		return suiptb.ObjectRef{}, errors.New("SUI coin not found")
+		return suiptb.ObjectRef{}, errors.New("no qualified SUI coin found")
 	}
 
 	// convert coin data to object ref

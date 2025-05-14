@@ -151,7 +151,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	}
 
 	// get all needed object references
-	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs)
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs, gasBudget)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
