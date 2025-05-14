@@ -43,7 +43,7 @@
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 * [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
-* [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0
+* [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
 
 ### Tests
 

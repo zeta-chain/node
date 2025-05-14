@@ -91,7 +91,7 @@ func Test_MigrateStore(t *testing.T) {
 		err := v9MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
-		require.Greater(t, k.GetAllBallots(ctx), 0)
+		require.Greater(t, len(k.GetAllBallots(ctx)), 0)
 
 		err = v11.MigrateStore(ctx, *k)
 		require.NoError(t, err)
@@ -167,7 +167,6 @@ func ImportData(t *testing.T, cdc codec.JSONCodec) []*types.Ballot {
 	require.NoError(t, err)
 	appState, err := genutiltypes.GenesisStateFromAppGenesis(genesis)
 	require.NoError(t, err)
-	//observerState := appState[types.ModuleName]
 	importedAppState := types.GetGenesisStateFromAppState(cdc, appState)
 	return importedAppState.Ballots
 }
