@@ -44,13 +44,13 @@ func TONSetRevertGasLimit(gasLimit math.Uint) TONOpt {
 	return func(t *tonOpts) { t.revertGasLimit = gasLimit }
 }
 
-// TONDeposit deposit TON to Gateway contract
-func (r *E2ERunner) TONDeposit(
+// TONDepositRaw deposits TON to Gateway contract and returns the raw tx. Doesn't wait for cctx to be mined.
+func (r *E2ERunner) TONDepositRaw(
 	gw *toncontracts.Gateway,
 	sender *wallet.Wallet,
 	amount math.Uint,
 	zevmRecipient eth.Address,
-) (*cctypes.CrossChainTx, error) {
+) (ton.Transaction, error) {
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 
 	require.NotNil(r, sender, "Sender wallet is nil")
@@ -66,7 +66,7 @@ func (r *E2ERunner) TONDeposit(
 
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
+		return ton.Transaction{}, errors.Wrap(err, "failed to get TON Gateway account state")
 	}
 
 	var (
@@ -77,7 +77,7 @@ func (r *E2ERunner) TONDeposit(
 	// Send TX
 	err = gw.SendDeposit(r.Ctx, sender, amount, zevmRecipient, tonDepositSendCode)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to send TON deposit")
+		return ton.Transaction{}, errors.Wrap(err, "failed to send TON deposit")
 	}
 
 	filter := func(tx *ton.Transaction) bool {
@@ -100,13 +100,34 @@ func (r *E2ERunner) TONDeposit(
 		lastLt:     lastLt,
 	}
 
+	// Wait for tx
+	tx := r.tonWaitForTx(waitFrom, filter)
+
+	return tx, nil
+}
+
+// TONDeposit deposit TON to Gateway contract and wait for cctx to be mined
+func (r *E2ERunner) TONDeposit(
+	gw *toncontracts.Gateway,
+	sender *wallet.Wallet,
+	amount math.Uint,
+	zevmRecipient eth.Address,
+) (*cctypes.CrossChainTx, error) {
+	tx, err := r.TONDepositRaw(gw, sender, amount, zevmRecipient)
+	if err != nil {
+		return nil, err
+	}
+
+	txHash := liteapi.TransactionToHashString(tx)
+
 	// Wait for cctx
-	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cctypes.CctxStatus_OutboundMined)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, cctypes.CctxStatus_OutboundMined)
 
 	return cctx, nil
 }
 
-// TONDepositAndCall deposit TON to Gateway contract with call data.
+// TONDepositAndCall deposit TON to Gateway contract with call data and wait for cctx to be mined
 func (r *E2ERunner) TONDepositAndCall(
 	gw *toncontracts.Gateway,
 	sender *wallet.Wallet,
@@ -115,7 +136,9 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
-	cfg := &tonOpts{expectedStatus: cctypes.CctxStatus_OutboundMined}
+	cfg := &tonOpts{
+		expectedStatus: cctypes.CctxStatus_OutboundMined,
+	}
 
 	for _, opt := range opts {
 		opt(cfg)
@@ -123,9 +146,9 @@ func (r *E2ERunner) TONDepositAndCall(
 
 	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
 	require.NotNil(r, sender, "Sender wallet is nil")
-	require.False(r, amount.IsZero())
-	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String())
-	require.NotEmpty(r, callData)
+	require.False(r, amount.IsZero(), "amount is zero")
+	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String(), "empty zevm recipient")
+	require.NotEmpty(r, callData, "empty call data")
 
 	r.Logger.Info(
 		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
@@ -134,12 +157,6 @@ func (r *E2ERunner) TONDepositAndCall(
 		zevmRecipient.Hex(),
 		string(callData),
 	)
-
-	// If we're expecting a Reverted status, ensure we have enough gas
-	if cfg.expectedStatus == cctypes.CctxStatus_Reverted {
-		// Log that we're expecting a reverted status, but don't do anything special yet
-		r.Logger.Info("Expecting Reverted status for this transaction")
-	}
 
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
 	if err != nil {
@@ -180,8 +197,14 @@ func (r *E2ERunner) TONDepositAndCall(
 		lastLt:     lastLt,
 	}
 
+	// Wait for tx
+	tx := r.tonWaitForTx(waitFrom, filter)
+
+	txHash := liteapi.TransactionToHashString(tx)
+
 	// Wait for cctx
-	cctx := r.tonWaitForInboundCCTX(waitFrom, filter, cfg.expectedStatus)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, cfg.expectedStatus)
 
 	// The relayed message might be stored as a hex string, so check both formats
 	require.Contains(r,
@@ -235,18 +258,11 @@ type tonWaitFrom struct {
 }
 
 // waits for specific inbound message for a given account and
-func (r *E2ERunner) tonWaitForInboundCCTX(
-	from tonWaitFrom,
-	filter func(tx *ton.Transaction) bool,
-	expectedStatus cctypes.CctxStatus,
-) *cctypes.CrossChainTx {
+func (r *E2ERunner) tonWaitForTx(from tonWaitFrom, filter func(tx *ton.Transaction) bool) ton.Transaction {
 	var (
 		timeout  = 2 * time.Minute
 		interval = time.Second
-		status   = expectedStatus // Use the passed status directly
 	)
-
-	r.Logger.Info("tonWaitForInboundCCTX: Waiting for CCTX with expected status: %s", status.String())
 
 	ctx, cancel := context.WithTimeout(r.Ctx, timeout)
 	defer cancel()
@@ -273,27 +289,7 @@ func (r *E2ERunner) tonWaitForInboundCCTX(
 				liteapi.TransactionToHashString(tx),
 			)
 
-			// Get the CCTX by inbound hash
-			cctx := utils.WaitCctxMinedByInboundHash(
-				ctx,
-				liteapi.TransactionToHashString(tx),
-				r.CctxClient,
-				r.Logger,
-				r.CctxTimeout,
-			)
-
-			r.Logger.Info(
-				"tonWaitForInboundCCTX: Got CCTX with status: %s, requiring: %s",
-				cctx.CctxStatus.Status.String(),
-				status.String(),
-			)
-
-			// Verify the status matches what we expect
-			utils.RequireCCTXStatus(r, cctx, status)
-
-			r.Logger.Info("tonWaitForInboundCCTX: CCTX status verified successfully")
-
-			return cctx
+			return tx
 		}
 
 		time.Sleep(interval)

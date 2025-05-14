@@ -92,6 +92,7 @@ const (
 	TestTONDepositName              = "ton_deposit"
 	TestTONDepositAndCallName       = "ton_deposit_and_call"
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONDepositRestrictedName    = "ton_deposit_restricted"
 	TestTONWithdrawName             = "ton_withdraw"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
@@ -817,6 +818,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestTONDepositRestrictedName,
+		"deposit TON into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONDepositRestricted,
 	),
 	runner.NewE2ETest(
 		TestTONWithdrawName,
