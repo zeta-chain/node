@@ -1,0 +1,8 @@
+.idea
+.vscode
+
+build/
+source/dependencies
+Move.lock
+*.key
+.DS_Store

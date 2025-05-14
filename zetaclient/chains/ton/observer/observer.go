@@ -33,8 +33,6 @@ const outboundsCacheSize = 1024
 
 // LiteClient represents a TON client
 // see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
-//
-//go:generate mockery --name LiteClient --filename ton_liteclient.go --case underscore --output ../../../testutils/mocks
 type LiteClient interface {
 	config.Getter
 	GetMasterchainInfo(ctx context.Context) (liteclient.LiteServerMasterchainInfoC, error)

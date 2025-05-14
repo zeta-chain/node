@@ -92,6 +92,7 @@ const (
 	TestTONDepositName              = "ton_deposit"
 	TestTONDepositAndCallName       = "ton_deposit_and_call"
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONDepositRestrictedName    = "ton_deposit_restricted"
 	TestTONWithdrawName             = "ton_withdraw"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
@@ -141,6 +142,7 @@ const (
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
 	TestBitcoinDepositInvalidMemoRevertName                = "bitcoin_deposit_invalid_memo_revert"
+	TestBitcoinWithdrawRBFName                             = "bitcoin_withdraw_rbf"
 
 	/*
 	 Application tests
@@ -261,6 +263,12 @@ const (
 
 const (
 	CountArgDescription = "count"
+)
+
+// Here are all the dependencies for the e2e tests, add more dependencies here if needed
+var (
+	// DepdencyAllBitcoinDeposits is a dependency to wait for all bitcoin deposit tests to complete
+	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -819,6 +827,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositAndCallRefund,
 	),
 	runner.NewE2ETest(
+		TestTONDepositRestrictedName,
+		"deposit TON into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONDepositRestricted,
+	),
+	runner.NewE2ETest(
 		TestTONWithdrawName,
 		"withdraw TON from ZEVM",
 		[]runner.ArgDefinition{
@@ -1155,6 +1171,16 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositInvalidMemoRevert,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawRBFName,
+		"withdraw Bitcoin from ZEVM and replace the outbound using RBF",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawRBF,
+		runner.WithDependencies(DepdencyAllBitcoinDeposits),
 	),
 	/*
 	 Application tests

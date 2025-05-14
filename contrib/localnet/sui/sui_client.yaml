@@ -1,0 +1,9 @@
+---
+keystore:
+  File: /root/.sui/sui_config/sui.keystore
+envs:
+  - alias: localnet
+    rpc: "http://sui:9000"
+    ws: ~
+    basic_auth: ~
+active_env: localnet
