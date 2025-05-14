@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 
@@ -13,6 +14,8 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
@@ -105,7 +108,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// Ok, let's process a new inbound tx
-		if _, err := ob.voteInbound(ctx, tx); err != nil {
+		if err := ob.voteInbound(ctx, tx); err != nil {
 			ob.Logger().Inbound.
 				Error().Err(err).
 				Fields(txLogFields(tx)).
@@ -168,7 +171,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		if _, err := ob.voteInbound(ctx, tx); err != nil {
+		if err := ob.voteInbound(ctx, tx); err != nil {
 			ob.logSkippedTracker(txHash, "vote_failed", err)
 			continue
 		}
@@ -179,77 +182,91 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 
 // inboundData represents extract data from a TON inbound deposit
 type inboundData struct {
-	sender         string
+	tx *toncontracts.Transaction
+
+	sender   ton.AccountID
+	receiver eth.Address
+
+	coinType       coin.CoinType
 	amount         math.Uint
-	receiver       string
 	message        []byte
 	isContractCall bool
 }
 
 // Sends PostVoteInbound to zetacore
-func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) (string, error) {
+func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transaction) error {
 	// noop
 	if tx.Operation == toncontracts.OpDonate {
 		ob.Logger().Inbound.Info().Fields(txLogFields(tx)).Msg("Thank you rich folk for your donation!")
-		return "", nil
+		return nil
 	}
 
-	// TODO: Add compliance check
-	// https://github.com/zeta-chain/node/issues/2916
+	inbound, err := extractInboundData(tx)
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to extract inbound data")
+	case ob.inboundComplianceCheck(inbound):
+		// do nothing
+		return nil
+	}
 
 	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
-	}
-
-	inboundData, err := extractInboundData(tx)
-	if err != nil {
-		return "", err
+		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
 	}
 
 	seqno := blockHeader.MinRefMcSeqno
 
-	return ob.voteDeposit(ctx, tx, inboundData, seqno)
+	if _, err = ob.voteDeposit(ctx, inbound, seqno); err != nil {
+		return errors.Wrap(err, "unable to vote for inbound tx")
+	}
+
+	return nil
 }
 
 // extractInboundData parses Gateway tx into deposit (TON sender, amount, memo)
 func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
+	in := inboundData{
+		tx:             tx,
+		sender:         ton.AccountID{},
+		receiver:       eth.Address{},
+		amount:         math.Uint{},
+		coinType:       coin.CoinType_Gas,
+		message:        []byte{},
+		isContractCall: false,
+	}
+
 	switch tx.Operation {
 	case toncontracts.OpDeposit:
 		d, err := tx.Deposit()
 		if err != nil {
 			return inboundData{}, err
 		}
-		return inboundData{
-			sender:         d.Sender.ToRaw(),
-			amount:         d.Amount,
-			receiver:       d.Recipient.Hex(),
-			message:        []byte{},
-			isContractCall: false,
-		}, nil
+
+		in.sender = d.Sender
+		in.receiver = d.Recipient
+		in.amount = d.Amount
+
+		return in, nil
 	case toncontracts.OpDepositAndCall:
 		d, err := tx.DepositAndCall()
 		if err != nil {
 			return inboundData{}, err
 		}
-		return inboundData{
-			sender:         d.Sender.ToRaw(),
-			amount:         d.Amount,
-			receiver:       d.Recipient.Hex(),
-			message:        d.CallData,
-			isContractCall: true,
-		}, nil
+
+		in.sender = d.Sender
+		in.receiver = d.Recipient
+		in.amount = d.Amount
+		in.message = d.CallData
+		in.isContractCall = true
+
+		return in, nil
 	default:
 		return inboundData{}, fmt.Errorf("unknown operation %d", tx.Operation)
 	}
 }
 
-func (ob *Observer) voteDeposit(
-	ctx context.Context,
-	tx *toncontracts.Transaction,
-	inboundData inboundData,
-	seqno uint32,
-) (string, error) {
+func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno uint32) (string, error) {
 	const (
 		eventIndex    = 0 // not a smart contract call
 		coinType      = coin.CoinType_Gas
@@ -260,19 +277,21 @@ func (ob *Observer) voteDeposit(
 
 	var (
 		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-		inboundHash     = liteapi.TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+		inboundHash     = liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+		sender          = inbound.sender.ToRaw()
+		receiver        = inbound.receiver.Hex()
 	)
 
 	// create the inbound message
 	msg := types.NewMsgVoteInbound(
 		operatorAddress.String(),
-		inboundData.sender,
+		sender,
 		ob.Chain().ChainId,
-		inboundData.sender,
-		inboundData.receiver,
+		sender,
+		receiver,
 		ob.ZetacoreClient().Chain().ChainId,
-		inboundData.amount,
-		hex.EncodeToString(inboundData.message),
+		inbound.amount,
+		hex.EncodeToString(inbound.message),
 		inboundHash,
 		uint64(seqno),
 		gasLimit,
@@ -283,10 +302,38 @@ func (ob *Observer) voteDeposit(
 		false, // not used
 		types.InboundStatus_SUCCESS,
 		types.ConfirmationMode_SAFE,
-		types.WithCrossChainCall(inboundData.isContractCall),
+		types.WithCrossChainCall(inbound.isContractCall),
 	)
 
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)
+}
+
+func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool) {
+	var addresses = []string{
+		inbound.receiver.Hex(),
+		inbound.sender.ToRaw(),
+		inbound.sender.ToHuman(false, false),
+		inbound.sender.ToHuman(true, false),
+	}
+
+	if !zetaclientconfig.ContainRestrictedAddress(addresses...) {
+		return false
+	}
+
+	txHash := liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+
+	compliance.PrintComplianceLog(
+		ob.Logger().Inbound,
+		ob.Logger().Compliance,
+		false,
+		ob.Chain().ChainId,
+		txHash,
+		inbound.sender.ToRaw(),
+		inbound.receiver.Hex(),
+		inbound.coinType.String(),
+	)
+
+	return true
 }
 
 func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
