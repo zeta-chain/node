@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"sort"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 
@@ -180,6 +182,44 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
+}
+
+// WithdrawBTC is a helper function to call 'withdraw' on BTCZRC20 contract with optional 'approve'
+func (r *E2ERunner) WithdrawBTC(to btcutil.Address, amount *big.Int, approve bool) *ethtypes.Receipt {
+	// ensure enough balance to cover the withdrawal
+	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
+	require.NoError(r, err)
+	minimumAmount := new(big.Int).Add(amount, gasFee)
+	currentBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	require.Greater(
+		r,
+		currentBalance.Int64(),
+		minimumAmount.Int64(),
+		"current balance must be greater than amount + gasFee",
+	)
+
+	// approve more to cover withdraw fee
+	if approve {
+		tx, err := r.BTCZRC20.Approve(
+			r.ZEVMAuth,
+			r.BTCZRC20Addr,
+			big.NewInt(amount.Int64()*2),
+		)
+		require.NoError(r, err)
+
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.RequireTxSuccessful(r, receipt)
+	}
+
+	// withdraw 'amount' of BTC from ZRC20 to BTC address
+	tx, err := r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
+	require.NoError(r, err)
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	return receipt
 }
 
 func (r *E2ERunner) SendToTSSWithMemo(

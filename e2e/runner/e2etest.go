@@ -1,6 +1,9 @@
 package runner
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // E2ETestFunc is a function representing a E2E test
 // It takes a E2ERunner as an argument
@@ -16,12 +19,20 @@ func WithMinimumVersion(version string) E2ETestOpt {
 	}
 }
 
+// WithDependencies sets dependencies to the E2ETest to wait for completion
+func WithDependencies(dependencies ...E2EDependency) E2ETestOpt {
+	return func(t *E2ETest) {
+		t.Dependencies = dependencies
+	}
+}
+
 // E2ETest represents a E2E test with a name, args, description and test func
 type E2ETest struct {
 	Name           string
 	Description    string
 	Args           []string
 	ArgsDefinition []ArgDefinition
+	Dependencies   []E2EDependency
 	E2ETest        E2ETestFunc
 	MinimumVersion string
 }
@@ -44,6 +55,33 @@ func NewE2ETest(
 		opt(&test)
 	}
 	return test
+}
+
+// E2EDependency defines a structure that holds a E2E test dependency
+type E2EDependency struct {
+	name      string
+	waitGroup *sync.WaitGroup
+}
+
+// NewE2EDependency creates a new instance of E2Edependency with specified parameters.
+func NewE2EDependency(name string) E2EDependency {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	return E2EDependency{
+		name:      name,
+		waitGroup: &wg,
+	}
+}
+
+// Wait waits for the E2EDependency to complete
+func (d *E2EDependency) Wait() {
+	d.waitGroup.Wait()
+}
+
+// Done marks the E2EDependency as done
+func (d *E2EDependency) Done() {
+	d.waitGroup.Done()
 }
 
 // ArgDefinition defines a structure for holding an argument's description along with it's default value.
@@ -110,6 +148,7 @@ func (r *E2ERunner) GetE2ETestsToRunByConfig(
 			Name:           e2eTest.Name,
 			Description:    e2eTest.Description,
 			ArgsDefinition: e2eTest.ArgsDefinition,
+			Dependencies:   e2eTest.Dependencies,
 			E2ETest:        e2eTest.E2ETest,
 			MinimumVersion: e2eTest.MinimumVersion,
 		}
