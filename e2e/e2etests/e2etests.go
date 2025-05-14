@@ -1181,7 +1181,6 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestBitcoinWithdrawRBF,
 		runner.WithDependencies(DepdencyAllBitcoinDeposits),
-		runner.WithMinimumVersion("v31.0.0"),
 	),
 	/*
 	 Application tests

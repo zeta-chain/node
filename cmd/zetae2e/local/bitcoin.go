@@ -200,10 +200,8 @@ func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string, name stri
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
-		for _, test := range testsToRun {
-			if err := r.RunE2ETest(test, true); err != nil {
-				return fmt.Errorf("bitcoin tests failed: %v", err)
-			}
+		if err := r.RunE2ETests(testsToRun); err != nil {
+			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
