@@ -236,16 +236,21 @@ func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, err
 		return nil, errors.Wrap(errSkipChain, "unable to find TON config")
 	}
 
-	gatewayID, err := tontools.ParseAccountID(chain.Params().GatewayAddress)
+	gwAddress := chain.Params().GatewayAddress
+	if gwAddress == "" {
+		return nil, errors.New("gateway address is empty")
+	}
+
+	gatewayID, err := tontools.ParseAccountID(gwAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse gateway address %q", chain.Params().GatewayAddress)
+		return nil, errors.Wrapf(err, "unable to parse gateway address %q", gwAddress)
 	}
 
 	gw := toncontracts.NewGateway(gatewayID)
 
-	lightClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
+	client, err := tonResolveClient(ctx, cfg.LiteClientConfigURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to create TON liteapi")
+		return nil, errors.Wrap(err, "unable to resolve TON liteclient")
 	}
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
@@ -253,12 +258,12 @@ func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, err
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := tonobserver.New(baseObserver, lightClient, gw)
+	observer, err := tonobserver.New(baseObserver, client, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), lightClient, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain), client, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
@@ -307,4 +312,29 @@ func btcDatabaseFileName(chain chains.Chain) string {
 	default:
 		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
 	}
+}
+
+type (
+	tonClientCtxKey struct{}
+	tonClient       interface {
+		tonobserver.LiteClient
+		tonsigner.LiteClient
+	}
+)
+
+// tonResolveClient resolves lite-api from a source OR from the context.
+// The latter is used in testing because it's challenging to mock the entire lite-api e2e
+// as it relies on low-level encrypted connections (otherwise could be wrapped with `httptest`)
+func tonResolveClient(ctx context.Context, configSource string) (tonClient, error) {
+	client, ok := ctx.Value(tonClientCtxKey{}).(tonClient)
+	if ok {
+		return client, nil
+	}
+
+	client, err := liteapi.NewFromSource(ctx, configSource)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to create TON liteapi from %q", configSource)
+	}
+
+	return client, nil
 }
