@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/stretchr/testify/require"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -611,6 +610,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	noError(deployerRunner.WithdrawEmissions())
 
+	// Run gateway upgrade tests for external chains
+	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
+		TestSolana: testSolana,
+		TestSui:    testSui,
+	})
+
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")
 	monitorPriorityCancel()
@@ -624,13 +629,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
-
-	if testSolana {
-		require.True(
-			deployerRunner,
-			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
-		)
-	}
 
 	if testTSSMigration {
 		TSSMigration(deployerRunner, logger, verbose, conf)
