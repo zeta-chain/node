@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
 const (
@@ -453,9 +454,11 @@ func (r *E2ERunner) suiExecuteTx(
 	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
 		TxBytes:     tx.TxBytes,
 		Signature:   []string{signature},
+		Options:     models.SuiTransactionBlockOptions{ShowEffects: true},
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
+	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess)
 
 	return resp
 }
