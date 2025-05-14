@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -116,7 +117,7 @@ type testSuite struct {
 	chain       chains.Chain
 	chainParams *observertypes.ChainParams
 
-	liteClient *mocks.SignerLiteClient
+	liteClient *mocks.TONLiteClient
 
 	zetacore *mocks.ZetacoreClient
 	tss      *mocks.TSS
@@ -139,7 +140,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain       = chains.TONTestnet
 		chainParams = sample.ChainParams(chain.ChainId)
 
-		liteClient = mocks.NewSignerLiteClient(t)
+		liteClient = mocks.NewTONLiteClient(t)
 
 		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
@@ -147,7 +148,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
 		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
 
-		gwAccountID = ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b")
+		gwAccountID = ton.MustParseAccountID(testutils.GatewayAddresses[chain.ChainId])
 	)
 
 	ts := &testSuite{

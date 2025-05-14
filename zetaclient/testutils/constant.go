@@ -37,11 +37,18 @@ const (
 // OldSolanaGatewayAddressDevnet is the old gateway address deployed on Solana devnet
 const OldSolanaGatewayAddressDevnet = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
 
+// stub
+const tonGatewayID = "0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"
+
 // GatewayAddresses contains constants gateway addresses for testing
 var GatewayAddresses = map[int64]string{
 	// Solana gateway addresses
 	chains.SolanaDevnet.ChainId:  "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
 	chains.SolanaMainnet.ChainId: "ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis",
+
+	// stubs
+	chains.TONTestnet.ChainId: tonGatewayID,
+	chains.TONMainnet.ChainId: tonGatewayID,
 
 	// stub, will be replaced with real address later
 	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff,0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa",
