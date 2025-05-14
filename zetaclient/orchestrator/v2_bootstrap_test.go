@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/liteclient"
 	"github.com/tonkeeper/tongo/tlb"
@@ -343,17 +342,4 @@ func mockTONCalls(_ *testSuite, client *mocks.TONLiteClient) {
 
 func withTonClient(ctx context.Context, client *mocks.TONLiteClient) context.Context {
 	return context.WithValue(ctx, tonClientCtxKey{}, tonClient(client))
-}
-
-type mockOn interface {
-	On(methodName string, arguments ...any) *mock.Call
-}
-
-func on(m mockOn, method string, nArgs int) *mock.Call {
-	args := make([]any, nArgs)
-	for i := range nArgs {
-		args[i] = mock.Anything
-	}
-
-	return m.On(method, args...)
 }
