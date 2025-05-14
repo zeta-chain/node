@@ -1,3 +1,5 @@
+// Package orchestrator is responsible for (de)provisioning, running, and monitoring various observer-signer instances.
+// It also updates app context with data from zetacore (eg chain parameters).
 package orchestrator
 
 import (
@@ -21,9 +23,8 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// V2 represents the orchestrator V2.
-// Will be renamed to `Orchestrator` in the following PR to avoid merge conflicts.
-type V2 struct {
+// Orchestrator chain orchestrator.
+type Orchestrator struct {
 	deps      *Dependencies
 	scheduler *scheduler.Scheduler
 
@@ -56,12 +57,12 @@ type Dependencies struct {
 	Telemetry *metrics.TelemetryServer
 }
 
-func NewV2(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logger) (*V2, error) {
+func New(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logger) (*Orchestrator, error) {
 	if err := validateConstructor(scheduler, deps); err != nil {
 		return nil, errors.Wrap(err, "invalid args")
 	}
 
-	return &V2{
+	return &Orchestrator{
 		scheduler: scheduler,
 		deps:      deps,
 		chains:    make(map[int64]ObserverSigner),
@@ -69,7 +70,7 @@ func NewV2(scheduler *scheduler.Scheduler, deps *Dependencies, logger base.Logge
 	}, nil
 }
 
-func (oc *V2) Start(ctx context.Context) error {
+func (oc *Orchestrator) Start(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
@@ -105,14 +106,14 @@ func (oc *V2) Start(ctx context.Context) error {
 	return nil
 }
 
-func (oc *V2) Stop() {
+func (oc *Orchestrator) Stop() {
 	oc.logger.Info().Msg("Stopping orchestrator")
 
 	// stops *all* scheduler tasks
 	oc.scheduler.Stop()
 }
 
-func (oc *V2) UpdateContext(ctx context.Context) error {
+func (oc *Orchestrator) UpdateContext(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
@@ -140,7 +141,7 @@ func (oc *V2) UpdateContext(ctx context.Context) error {
 
 var errSkipChain = errors.New("skip chain")
 
-func (oc *V2) SyncChains(ctx context.Context) error {
+func (oc *Orchestrator) SyncChains(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
@@ -220,7 +221,7 @@ var (
 	maxInt = sdkmath.NewInt(math.MaxInt64)
 )
 
-func (oc *V2) updateMetrics(ctx context.Context) error {
+func (oc *Orchestrator) updateMetrics(ctx context.Context) error {
 	block, sleepDuration, err := scheduler.BlockFromContextWithDelay(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable get block from context")
@@ -259,7 +260,7 @@ func (oc *V2) updateMetrics(ctx context.Context) error {
 	return nil
 }
 
-func (oc *V2) reportPreflightMetrics(ctx context.Context) error {
+func (oc *Orchestrator) reportPreflightMetrics(ctx context.Context) error {
 	app, err := zctx.FromContext(ctx)
 	if err != nil {
 		return err
@@ -268,7 +269,7 @@ func (oc *V2) reportPreflightMetrics(ctx context.Context) error {
 	return ReportPreflightMetrics(ctx, app, oc.deps.Zetacore, oc.logger.Logger)
 }
 
-func (oc *V2) hasChain(chainID int64) bool {
+func (oc *Orchestrator) hasChain(chainID int64) bool {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
@@ -276,7 +277,7 @@ func (oc *V2) hasChain(chainID int64) bool {
 	return ok
 }
 
-func (oc *V2) chainIDs() []int64 {
+func (oc *Orchestrator) chainIDs() []int64 {
 	oc.mu.RLock()
 	defer oc.mu.RUnlock()
 
@@ -288,7 +289,7 @@ func (oc *V2) chainIDs() []int64 {
 	return ids
 }
 
-func (oc *V2) addChain(observerSigner ObserverSigner) {
+func (oc *Orchestrator) addChain(observerSigner ObserverSigner) {
 	chain := observerSigner.Chain()
 
 	oc.mu.Lock()
@@ -303,7 +304,7 @@ func (oc *V2) addChain(observerSigner ObserverSigner) {
 	oc.logger.Info().Fields(chain.LogFields()).Msg("Added observer-signer")
 }
 
-func (oc *V2) removeChain(chainID int64) {
+func (oc *Orchestrator) removeChain(chainID int64) {
 	// noop, should not happen
 	if !oc.hasChain(chainID) {
 		return
@@ -321,7 +322,7 @@ func (oc *V2) removeChain(chainID int64) {
 
 // removeMissingChains stops and deletes chains
 // that are not present in the list of chainIDs (e.g. after governance proposal)
-func (oc *V2) removeMissingChains(presentChainIDs []int64) int {
+func (oc *Orchestrator) removeMissingChains(presentChainIDs []int64) int {
 	presentChainsSet := make(map[int64]struct{})
 	for _, chainID := range presentChainIDs {
 		presentChainsSet[chainID] = struct{}{}

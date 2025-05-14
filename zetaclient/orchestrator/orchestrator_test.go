@@ -75,7 +75,7 @@ func TestOrchestratorV2(t *testing.T) {
 }
 
 type testSuite struct {
-	*V2
+	*Orchestrator
 	*testlog.Log
 
 	t *testing.T
@@ -135,12 +135,12 @@ func newTestSuite(t *testing.T) *testSuite {
 		Telemetry: metrics.NewTelemetryServer(),
 	}
 
-	v2, err := NewV2(schedulerService, deps, baseLogger)
+	v2, err := New(schedulerService, deps, baseLogger)
 	require.NoError(t, err)
 
 	ts := &testSuite{
-		V2:  v2,
-		Log: logger,
+		Orchestrator: v2,
+		Log:          logger,
 
 		t: t,
 
@@ -184,7 +184,7 @@ func (ts *testSuite) HasObserverSigner(chainID int64) bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	_, ok := ts.V2.chains[chainID]
+	_, ok := ts.Orchestrator.chains[chainID]
 	return ok
 }
 
