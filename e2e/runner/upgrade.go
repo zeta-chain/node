@@ -28,10 +28,7 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
 	if opts.TestSolana {
-		require.True(
-			r,
-			r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
-		)
+		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	}
 
 	if opts.TestSui {

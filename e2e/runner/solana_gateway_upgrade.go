@@ -17,7 +17,7 @@ import (
 )
 
 // SolanaVerifyGatewayContractsUpgrade upgrades the Solana contracts and verifies the upgrade
-func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey string) bool {
+func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey string) {
 	r.Logger.Print("🏃 Upgrading Solana gateway contracts")
 
 	pdaComputed := r.ComputePdaAddress()
@@ -31,10 +31,8 @@ func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey strin
 	err = borsh.Deserialize(&pdaDataBefore, pdaInfo.Bytes())
 	require.NoError(r, err)
 
-	if err := triggerSolanaUpgrade(); err != nil {
-		r.Logger.Error("failed to trigger Solana upgrade: %v", err)
-		return false
-	}
+	err = triggerSolanaUpgrade()
+	require.NoError(r, err, "failed to trigger Solana upgrade")
 	r.Logger.Print("⚙️ Solana upgrade completed")
 
 	pdaInfo, err = r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
@@ -57,10 +55,11 @@ func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey strin
 	require.Equal(r, pdaDataBefore.Authority, pdaDataAfter.Authority)
 	require.Equal(r, pdaDataBefore.ChainID, pdaDataAfter.ChainID)
 	require.Equal(r, pdaDataBefore.DepositPaused, pdaDataAfter.DepositPaused)
-	return r.VerifyUpgradedInstruction(deployerPrivateKey)
+
+	r.VerifyUpgradedInstruction(deployerPrivateKey)
 }
 
-func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
+func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) {
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
 	require.NoError(r, err)
 	// Calculate the instruction discriminator for "upgraded"
@@ -86,7 +85,7 @@ func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
 
 	decoded, err := base64.StdEncoding.DecodeString(out.Meta.ReturnData.Data.String())
 	require.NoError(r, err)
-	return decoded[0] == 1
+	require.True(r, decoded[0] == 1)
 }
 
 func getAnchorDiscriminator(methodName string) []byte {
