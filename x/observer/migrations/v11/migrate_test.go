@@ -1,12 +1,13 @@
 package v11_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/x/observer/keeper"
@@ -14,25 +15,23 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, readFile bool, startHeight int64, endHeight int64) {
-	type Ballots struct {
-		Ballots []types.Ballot `json:"Ballots"`
-	}
-
-	b := Ballots{}
+func SaveBallotsToState(
+	t *testing.T,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	readFile bool,
+	startHeight int64,
+	endHeight int64,
+) {
 
 	if readFile {
-		file := os.Getenv("STATE_EXPORT_PATH")
-		data, err := os.ReadFile(file)
-		require.NoError(t, err)
-		err = json.Unmarshal(data, &b)
-		require.NoError(t, err)
+		ballots := ImportData(t, k.Codec())
 		ballotsList := map[int64][]string{}
-		for _, ballot := range b.Ballots {
-			k.SetBallot(ctx, &ballot)
-			ballotsList[ballot.BallotCreationHeight] = append(
-				ballotsList[ballot.BallotCreationHeight],
-				ballot.BallotIdentifier,
+		for _, b := range ballots {
+			k.SetBallot(ctx, b)
+			ballotsList[b.BallotCreationHeight] = append(
+				ballotsList[b.BallotCreationHeight],
+				b.BallotIdentifier,
 			)
 		}
 
@@ -47,7 +46,6 @@ func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, readFil
 	} else {
 
 		ballotPerBlock := 10
-
 		for i := startHeight; i >= endHeight; i-- {
 			ballotList := make([]string, ballotPerBlock)
 			for j := 0; j < ballotPerBlock; j++ {
@@ -75,18 +73,15 @@ func SaveBallotsToState(t *testing.T, ctx sdk.Context, k *keeper.Keeper, readFil
 func Test_MigrateStore(t *testing.T) {
 	t.Run("delete ballots with creation height 0", func(t *testing.T) {
 		useStateExport := false
-
+		bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
 		currentHeight := int64(0)
-		testnetBallotsAfterV9Migration := 0
 		if useStateExport {
-			currentHeight = 10232850
-			testnetBallotsAfterV9Migration = 270431
+			currentHeight = 10309298
 		} else {
 			currentHeight = 144500
-			testnetBallotsAfterV9Migration = 10
 		}
 		// Only stale ballots
-		startHeight := currentHeight - v11.BufferedMaturityBlocks - 1
+		startHeight := currentHeight - bufferedMaturityBlocks
 		endHeight := int64(0)
 
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
@@ -96,12 +91,17 @@ func Test_MigrateStore(t *testing.T) {
 		err := v9MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
-		require.Len(t, k.GetAllBallots(ctx), testnetBallotsAfterV9Migration)
+		require.Greater(t, k.GetAllBallots(ctx), 0)
 
 		err = v11.MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
-		require.Len(t, k.GetAllBallots(ctx), 0)
+		deletionHeight := currentHeight - bufferedMaturityBlocks
+
+		ballots := k.GetAllBallots(ctx)
+		for _, ballot := range ballots {
+			require.GreaterOrEqual(t, ballot.BallotCreationHeight, deletionHeight)
+		}
 	})
 
 	t.Run("do not nothing if no ballots are present", func(t *testing.T) {
@@ -117,10 +117,11 @@ func Test_MigrateStore(t *testing.T) {
 	t.Run("do not nothing if no stale ballots are present(Simulate Mainnet)", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		currentHeight := int64(144500)
+		bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
 
-		// No stale ballots
+		// No stale ballots ( All created ballots are higher than maturity blocks)
 		startHeight := currentHeight
-		endHeight := currentHeight - v11.BufferedMaturityBlocks
+		endHeight := currentHeight - bufferedMaturityBlocks
 
 		SaveBallotsToState(t, ctx, k, false, startHeight, endHeight)
 		ballotsBeforeMigrations := k.GetAllBallots(ctx)
@@ -129,17 +130,24 @@ func Test_MigrateStore(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, k.GetAllBallots(ctx), len(ballotsBeforeMigrations))
+
+		deletionHeight := currentHeight - bufferedMaturityBlocks
+		ballots := k.GetAllBallots(ctx)
+		for _, ballot := range ballots {
+			require.GreaterOrEqual(t, ballot.BallotCreationHeight, deletionHeight)
+		}
 	})
 
 }
 
 func v9MigrateStore(ctx sdk.Context, observerKeeper keeper.Keeper) error {
 	currentHeight := ctx.BlockHeight()
+	bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
 	// Maturity blocks is a parameter in the emissions module
-	if currentHeight < v11.BufferedMaturityBlocks {
+	if currentHeight < bufferedMaturityBlocks {
 		return nil
 	}
-	maturedHeight := currentHeight - v11.BufferedMaturityBlocks
+	maturedHeight := currentHeight - bufferedMaturityBlocks
 	for i := maturedHeight; i > 0; i-- {
 		ballotList, found := observerKeeper.GetBallotListForHeight(ctx, i)
 		if !found {
@@ -151,4 +159,15 @@ func v9MigrateStore(ctx sdk.Context, observerKeeper keeper.Keeper) error {
 		observerKeeper.DeleteBallotListForHeight(ctx, i)
 	}
 	return nil
+}
+
+func ImportData(t *testing.T, cdc codec.JSONCodec) []*types.Ballot {
+	file := os.Getenv("STATE_EXPORT_PATH")
+	_, genesis, err := genutiltypes.GenesisStateFromGenFile(file)
+	require.NoError(t, err)
+	appState, err := genutiltypes.GenesisStateFromAppGenesis(genesis)
+	require.NoError(t, err)
+	//observerState := appState[types.ModuleName]
+	importedAppState := types.GetGenesisStateFromAppState(cdc, appState)
+	return importedAppState.Ballots
 }

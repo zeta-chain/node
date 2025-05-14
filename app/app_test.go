@@ -122,7 +122,9 @@ func main() {
 	// print application-specific stats
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Module", "Avg Key Size", "Avg Value Size", "Total Key Size", "Total Value Size", "Total Key Pairs"})
+	t.AppendHeader(
+		table.Row{"Module", "Avg Key Size", "Avg Value Size", "Total Key Size", "Total Value Size", "Total Key Pairs"},
+	)
 
 	modules := maps.Keys(moduleStats)
 	SortSlice(modules)
@@ -139,7 +141,9 @@ func main() {
 		})
 	}
 
-	t.AppendFooter(table.Row{"Total", "", "", ByteCountDecimal(totalKeySize), ByteCountDecimal(totalValSize), totalKeys})
+	t.AppendFooter(
+		table.Row{"Total", "", "", ByteCountDecimal(totalKeySize), ByteCountDecimal(totalValSize), totalKeys},
+	)
 
 	t.Render()
 }

@@ -13,18 +13,22 @@ type observerKeeper interface {
 	GetAllBallots(ctx sdk.Context) (ballots []*types.Ballot)
 }
 
-const BufferedMaturityBlocks = int64(144000)
+const (
+	PendingBallotsDeletionBufferBlocks = int64(144000)
+	MaturityBlocks                     = int64(100)
+)
 
 // MigrateStore migrates the x/observer module state from consensus version 10 to version 11.
 // The migration deletes all ballots and ballot lists for heights less than the maturity blocks.
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
+	bufferedMaturityBlocks := MaturityBlocks + PendingBallotsDeletionBufferBlocks
 	// Maturity blocks is a parameter in the emissions module
-	if currentHeight < BufferedMaturityBlocks {
+	if currentHeight < bufferedMaturityBlocks {
 		return nil
 	}
 
-	maturedHeight := currentHeight - BufferedMaturityBlocks
+	maturedHeight := currentHeight - bufferedMaturityBlocks
 	// We cannot use the ballot list for height 0 as the ballot list was not set for stale ballots on testnet
 	ballots := observerKeeper.GetAllBallots(ctx)
 
@@ -34,7 +38,7 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		}
 	}
 
-	// We can directly delete the ballot list for height 0 as all other ballot lists have already been deleted
+	// We can attempt to delete the ballot list for height 0 if it exists
 	_, found := observerKeeper.GetBallotListForHeight(ctx, 0)
 	if !found {
 		return nil
