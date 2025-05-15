@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -28,38 +27,12 @@ func randomPayload(r *runner.E2ERunner) string {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
-	require.NoError(r, err)
-	minimumAmount := new(big.Int).Add(amount, gasFee)
-	currentBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
-	require.NoError(r, err)
-	require.Greater(
-		r,
-		currentBalance.Int64(),
-		minimumAmount.Int64(),
-		"current balance must be greater than amount + gasFee",
-	)
-
-	tx, err := r.BTCZRC20.Approve(
-		r.ZEVMAuth,
-		r.BTCZRC20Addr,
-		big.NewInt(amount.Int64()*2),
-	) // approve more to cover withdraw fee
-	require.NoError(r, err)
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
+	// approve and withdraw on ZRC20 contract
+	receipt := r.WithdrawBTC(to, amount, true)
 
 	// mine blocks if testing on regnet
 	stop := r.MineBlocksIfLocalBitcoin()
 	defer stop()
-
-	// withdraw 'amount' of BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
-	require.NoError(r, err)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
 
 	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

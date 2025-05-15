@@ -142,6 +142,7 @@ const (
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
 	TestBitcoinDepositInvalidMemoRevertName                = "bitcoin_deposit_invalid_memo_revert"
+	TestBitcoinWithdrawRBFName                             = "bitcoin_withdraw_rbf"
 
 	/*
 	 Application tests
@@ -262,6 +263,12 @@ const (
 
 const (
 	CountArgDescription = "count"
+)
+
+// Here are all the dependencies for the e2e tests, add more dependencies here if needed
+var (
+	// DepdencyAllBitcoinDeposits is a dependency to wait for all bitcoin deposit tests to complete
+	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -1164,6 +1171,16 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositInvalidMemoRevert,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawRBFName,
+		"withdraw Bitcoin from ZEVM and replace the outbound using RBF",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawRBF,
+		runner.WithDependencies(DepdencyAllBitcoinDeposits),
 	),
 	/*
 	 Application tests
