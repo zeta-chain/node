@@ -277,7 +277,7 @@ func (c *Client) GetSuiCoinObjectRefs(
 
 		// sort coins by object ID to make the result deterministic across observres
 		sort.SliceStable(resp.Data, func(i, j int) bool {
-			return resp.Data[i].CoinObjectId < resp.Data[j].CoinObjectId
+			return strings.Compare(resp.Data[i].CoinObjectId, resp.Data[j].CoinObjectId) < 0
 		})
 
 		// append coins until covering the minimum balance
