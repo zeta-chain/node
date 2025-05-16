@@ -311,4 +311,4 @@ fi
 # mark init completed so we skip it if container is restarted
 touch ~/.zetacored/init_complete
 
-cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored --skip-config-override
