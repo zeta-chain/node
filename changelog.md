@@ -53,6 +53,9 @@
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
 * [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
 * [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
+* [3866](https://github.com/zeta-chain/node/pull/3866) - add e2e test for upgrading sui gateway package
+* [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+
 
 ### Refactor
 

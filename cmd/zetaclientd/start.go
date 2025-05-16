@@ -151,9 +151,9 @@ func Start(_ *cobra.Command, _ []string) error {
 		Telemetry: telemetry,
 	}
 
-	maestro, err := orchestrator.NewV2(taskScheduler, maestroDeps, logger)
+	maestro, err := orchestrator.New(taskScheduler, maestroDeps, logger)
 	if err != nil {
-		return errors.Wrap(err, "unable to create orchestrator V2")
+		return errors.Wrap(err, "unable to create orchestrator")
 	}
 
 	// Start orchestrator with all observers and signers

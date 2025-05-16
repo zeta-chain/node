@@ -12,11 +12,12 @@ import (
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func TestOutbound(t *testing.T) {
 	gw := toncontracts.NewGateway(
-		ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"),
+		ton.MustParseAccountID(testutils.GatewayAddresses[chains.TONMainnet.ChainId]),
 	)
 
 	t.Run("observeOutboundTrackers", func(t *testing.T) {

@@ -14,6 +14,11 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
+const (
+	testGroupDepositName  = "btc_deposit"
+	testGroupWithdrawName = "btc_withdraw"
+)
+
 // startBitcoinTests starts Bitcoin related tests
 func startBitcoinTests(
 	eg *errgroup.Group,
@@ -58,6 +63,9 @@ func startBitcoinTests(
 		e2etests.TestBitcoinWithdrawP2WSHName,
 		e2etests.TestBitcoinWithdrawMultipleName,
 		e2etests.TestBitcoinWithdrawRestrictedName,
+		// to run RBF test, change the constant 'minTxConfirmations' to 1 in the Bitcoin observer
+		// https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
+		//e2etests.TestBitcoinWithdrawRBFName,
 	}
 
 	if !light {
@@ -89,7 +97,7 @@ func bitcoinTestRoutines(
 	// initialize runner for deposit tests
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
-		"btc_deposit",
+		testGroupDepositName,
 		account,
 		conf,
 		deployerRunner,
@@ -101,7 +109,7 @@ func bitcoinTestRoutines(
 	// initialize runner for withdraw tests
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
-		"btc_withdraw",
+		testGroupWithdrawName,
 		account,
 		conf,
 		deployerRunner,
@@ -123,8 +131,8 @@ func bitcoinTestRoutines(
 	}
 
 	// create test routines
-	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
-	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, testGroupDepositName)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, testGroupWithdrawName)
 
 	return routineDeposit, routineWithdraw
 }
@@ -177,7 +185,8 @@ func initBitcoinRunner(
 }
 
 // createBitcoinTestRoutine creates a test routine for given test names
-func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
+// The 'wgDependency' argument is used to wait for dependent routine to complete
+func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string, name string) func() error {
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
@@ -196,6 +205,11 @@ func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() er
 		}
 
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
+
+		// mark deposit test group as done
+		if name == testGroupDepositName {
+			e2etests.DepdencyAllBitcoinDeposits.Done()
+		}
 
 		return err
 	}

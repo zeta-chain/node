@@ -7,8 +7,15 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/utils"
 )
+
+// UpgradeGatewayOptions is the options for the gateway upgrade tests
+type UpgradeGatewayOptions struct {
+	TestSolana bool
+	TestSui    bool
+}
 
 // UpgradeGatewaysAndERC20Custody upgrades gateways and ERC20Custody contracts
 // It deploys new contract implementation with the current imported artifacts and upgrades the contract
@@ -16,6 +23,17 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 	r.UpgradeGatewayZEVM()
 	r.UpgradeGatewayEVM()
 	r.UpgradeERC20Custody()
+}
+
+// RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
+func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
+	if opts.TestSolana {
+		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
+	}
+
+	if opts.TestSui {
+		r.SuiVerifyGatewayPackageUpgrade()
+	}
 }
 
 // UpgradeGatewayZEVM upgrades the GatewayZEVM contract
