@@ -178,6 +178,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Strs("tx.type_args", args.payload.TypeArgs).
 		Strs("tx.object_ids", args.payload.ObjectIDs).
 		Hex("tx.payload", args.payload.Message).
+		Int("tx.sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
 		Msg("calling withdrawAndCallPTB")
 
 	// build the PTB transaction

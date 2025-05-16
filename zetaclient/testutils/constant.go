@@ -22,6 +22,9 @@ const (
 	// TSSAddressBTCAthens3 the BTC TSS address for test purposes
 	TSSAddressBTCAthens3 = "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
 
+	// TSSAddressSuiTestnet is the TSS address for Sui testnet
+	TSSAddressSuiTestnet = "0x984917146140b436a868881f92c832225b83d8219d0a7792bb418fd462f41436"
+
 	OtherAddress1 = "0x21248Decd0B7EcB0F30186297766b8AB6496265b"
 	OtherAddress2 = "0x33A351C90aF486AebC35042Bb0544123cAed26AB"
 	OtherAddress3 = "0x86B77E4fBd07CFdCc486cAe4F2787fB5C5a62cd3"

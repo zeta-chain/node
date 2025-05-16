@@ -34,7 +34,7 @@ type RPC interface {
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	GetSuiCoinObjectRef(ctx context.Context, owner string, wantBalance uint64) (suiptb.ObjectRef, error)
+	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(

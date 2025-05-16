@@ -251,87 +251,87 @@ func (c *Client) SuiExecuteTransactionBlock(
 	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
 }
 
-// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address and wanted balance
-// Note: the SUI coin object may change over time, so we need to use the up-to-date SUI coin object
-func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string, wantBalance uint64) (suiptb.ObjectRef, error) {
-	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
-		Owner:    owner,
-		CoinType: string(zetasui.SUI),
-	})
-
-	switch {
-	case err != nil:
-		return suiptb.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
-	case len(coins.Data) == 0:
-		return suiptb.ObjectRef{}, errors.New("no SUI coin found")
-	}
-
-	// sort coins by object ID to make the result deterministic across observres
-	sort.SliceStable(coins.Data, func(i, j int) bool {
-		return coins.Data[i].CoinObjectId < coins.Data[j].CoinObjectId
-	})
-
+// GetSuiCoinObjectRefs returns a subset of SUI coin objects for given owner address and minimum balance
+func (c *Client) GetSuiCoinObjectRefs(
+	ctx context.Context,
+	owner string,
+	minBalanceMist uint64,
+) ([]*suiptb.ObjectRef, error) {
 	var (
-		suiCoin           *models.CoinData
-		suiCoinVersion    uint64
-		suiCoinVersionStr string
+		totalBalance uint64
+		cursor       = any(nil)
+		suiCoins     = make([]models.CoinData, 0)
 	)
 
-	// get the latest version from owned SUI coin objects
-	for _, coin := range coins.Data {
-		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
-			return suiptb.ObjectRef{}, fmt.Errorf("invalid coin type: %s", coin.CoinType)
+	// select SUI coins to cover the given minimum balance
+	// there can be multiple pages of SUI coins, we query 50 coins per page
+	for {
+		resp, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
+			Owner:    owner,
+			CoinType: string(zetasui.SUI),
+			Cursor:   cursor,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to get TSS coins")
+		}
+
+		// sort coins by object ID to make the result deterministic across observres
+		sort.SliceStable(resp.Data, func(i, j int) bool {
+			return resp.Data[i].CoinObjectId < resp.Data[j].CoinObjectId
+		})
+
+		// append coins until covering the minimum balance
+		for _, coin := range resp.Data {
+			balance, err := strconv.ParseUint(coin.Balance, 10, 64)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid balance %s", coin.Balance)
+			}
+
+			suiCoins = append(suiCoins, coin)
+			totalBalance += balance
+			if totalBalance >= minBalanceMist {
+				break
+			}
+		}
+
+		if totalBalance >= minBalanceMist || !resp.HasNextPage {
+			break
+		}
+
+		cursor = resp.NextCursor
+	}
+
+	// this is a rare case that can be resolved by sending funds to owner (TSS)
+	if totalBalance < minBalanceMist {
+		return nil, fmt.Errorf("SUI balance is too low: %d, min balance: %d", totalBalance, minBalanceMist)
+	}
+
+	// convert coin data to object references
+	suiCoinRefs := make([]*suiptb.ObjectRef, len(suiCoins))
+	for i, coin := range suiCoins {
+		objectID, err := suiptb.ObjectIdFromHex(coin.CoinObjectId)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid SUI coin object ID: %s", coin.CoinObjectId)
+		}
+
+		digest, err := suiptb.NewBase58(coin.Digest)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid SUI coin digest: %s", coin.Digest)
 		}
 
 		version, err := strconv.ParseUint(coin.Version, 10, 64)
 		if err != nil {
-			return suiptb.ObjectRef{}, errors.Wrapf(err, "invalid version %s", coin.Version)
+			return nil, errors.Wrapf(err, "invalid SUI coin version: %s", coin.Version)
 		}
 
-		if version >= suiCoinVersion {
-			suiCoinVersion = version
-			suiCoinVersionStr = coin.Version
-		}
-	}
-
-	// pick a latest SUI coin object that covers the wanted balance
-	for _, coin := range coins.Data {
-		if coin.Version != suiCoinVersionStr {
-			continue
-		}
-
-		balance, err := strconv.ParseUint(coin.Balance, 10, 64)
-		if err != nil {
-			return suiptb.ObjectRef{}, errors.Wrapf(err, "invalid balance %s", coin.Balance)
-		}
-
-		if balance >= wantBalance {
-			suiCoin = &coin
-			break
+		suiCoinRefs[i] = &suiptb.ObjectRef{
+			ObjectId: objectID,
+			Version:  version,
+			Digest:   digest,
 		}
 	}
 
-	// this should be a rare case, and it can be resolved by sending funds to owner address manually
-	if suiCoin == nil {
-		return suiptb.ObjectRef{}, errors.New("no qualified SUI coin found")
-	}
-
-	// convert coin data to object ref
-	suiCoinID, err := suiptb.ObjectIdFromHex(suiCoin.CoinObjectId)
-	if err != nil {
-		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
-	}
-
-	suiCoinDigest, err := suiptb.NewBase58(suiCoin.Digest)
-	if err != nil {
-		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
-	}
-
-	return suiptb.ObjectRef{
-		ObjectId: suiCoinID,
-		Version:  suiCoinVersion,
-		Digest:   suiCoinDigest,
-	}, nil
+	return suiCoinRefs, nil
 }
 
 // GetObjectParsedData queries the parsed data of an object.
