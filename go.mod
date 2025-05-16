@@ -313,7 +313,7 @@ require (
 	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
 	github.com/tonkeeper/tongo v1.14.8
-	github.com/zeta-chain/go-tss v0.6.1
+	github.com/zeta-chain/go-tss v0.6.2
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 )
 
