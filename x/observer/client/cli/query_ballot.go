@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -101,7 +100,7 @@ func CmdBallotListForHeight() *cobra.Command {
 				Height: height,
 			}
 
-			res, err := queryClient.BallotListForHeight(context.Background(), params)
+			res, err := queryClient.BallotListForHeight(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

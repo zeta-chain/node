@@ -15,6 +15,9 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+const TestnetStringChainID = "zetachain_7001-1"
+const MainnetStringChainID = "zetachain_7000-2"
+
 func SaveBallotsToState(
 	t *testing.T,
 	ctx sdk.Context,
@@ -71,7 +74,7 @@ func SaveBallotsToState(
 }
 
 func Test_MigrateStore(t *testing.T) {
-	t.Run("delete ballots with creation height 0", func(t *testing.T) {
+	t.Run("delete ballots on testnet with creation height 0", func(t *testing.T) {
 		useStateExport := false
 		bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
 		currentHeight := int64(0)
@@ -88,6 +91,7 @@ func Test_MigrateStore(t *testing.T) {
 		SaveBallotsToState(t, ctx, k, useStateExport, startHeight, endHeight)
 
 		ctx = ctx.WithBlockHeight(currentHeight)
+		ctx = ctx.WithChainID(TestnetStringChainID)
 		err := v9MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
@@ -108,13 +112,14 @@ func Test_MigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		ballotsBeforeMigrations := k.GetAllBallots(ctx)
 
+		ctx = ctx.WithChainID(TestnetStringChainID)
 		err := v11.MigrateStore(ctx, *k)
 		require.NoError(t, err)
 
 		require.Len(t, k.GetAllBallots(ctx), len(ballotsBeforeMigrations))
 	})
 
-	t.Run("do not nothing if no stale ballots are present(Simulate Mainnet)", func(t *testing.T) {
+	t.Run("do not nothing on mainnet with no stale ballots", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		currentHeight := int64(144500)
 		bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
@@ -125,6 +130,8 @@ func Test_MigrateStore(t *testing.T) {
 
 		SaveBallotsToState(t, ctx, k, false, startHeight, endHeight)
 		ballotsBeforeMigrations := k.GetAllBallots(ctx)
+		ctx = ctx.WithBlockHeight(currentHeight)
+		ctx = ctx.WithChainID(MainnetStringChainID)
 
 		err := v11.MigrateStore(ctx, *k)
 		require.NoError(t, err)
@@ -136,6 +143,37 @@ func Test_MigrateStore(t *testing.T) {
 		for _, ballot := range ballots {
 			require.GreaterOrEqual(t, ballot.BallotCreationHeight, deletionHeight)
 		}
+	})
+
+	t.Run("do nothing on mainnet even if stale ballots are present", func(t *testing.T) {
+		useStateExport := false
+		bufferedMaturityBlocks := v11.MaturityBlocks + v11.PendingBallotsDeletionBufferBlocks
+		currentHeight := int64(0)
+		if useStateExport {
+			currentHeight = 10309298
+		} else {
+			currentHeight = 144500
+		}
+		// Only stale ballots
+		startHeight := currentHeight - bufferedMaturityBlocks
+		endHeight := int64(0)
+
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		SaveBallotsToState(t, ctx, k, useStateExport, startHeight, endHeight)
+
+		ctx = ctx.WithBlockHeight(currentHeight)
+		ctx = ctx.WithChainID(MainnetStringChainID)
+		err := v9MigrateStore(ctx, *k)
+		require.NoError(t, err)
+
+		require.Greater(t, len(k.GetAllBallots(ctx)), 0)
+
+		ballotsBeforeMigrations := k.GetAllBallots(ctx)
+
+		err = v11.MigrateStore(ctx, *k)
+		require.NoError(t, err)
+
+		require.Len(t, k.GetAllBallots(ctx), len(ballotsBeforeMigrations))
 	})
 
 }
