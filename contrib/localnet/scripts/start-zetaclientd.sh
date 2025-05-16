@@ -16,7 +16,7 @@ set_sepolia_endpoint() {
 
 # import a relayer private key (e.g. Solana relayer key)
 import_relayer_key() {
-    local num="$1"
+  local num="$1"
 
   # import solana (network=7) relayer private key
   privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_accounts[${num}].solana_private_key" /root/config.yml)
@@ -97,8 +97,13 @@ if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
 fi
 
 if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]] then
-  num=$(echo $HOSTNAME | tr -dc '0-9')
-  node="zetacore$num"
+  if [[ $HOSTNAME == "zetaclient-new-validator" ]]; then
+      num=1
+      node="zetacore-new-validator"
+  else
+      num=$(echo $HOSTNAME | tr -dc '0-9')
+      node="zetacore$num"
+  fi
   zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
   # import relayer private key for zetaclient{$num}

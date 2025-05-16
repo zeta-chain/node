@@ -1,4 +1,4 @@
-package main
+package observer_info
 
 import (
 	"encoding/json"

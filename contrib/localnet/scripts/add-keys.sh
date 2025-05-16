@@ -1,13 +1,23 @@
 #!/bin/bash
 
 # This script allows to add keys for operator and hotkey and create the required json structure for os_info
+# Usage: source ~/add-keys.sh [is_observer]
+# Example: source ~/add-keys.sh y
 
 KEYRING_TEST="test"
 KEYRING_FILE="file"
 HOSTNAME=$(hostname)
 
-# Operator key
+# Check if is_observer flag is provided
+if [ -z "$1" ]; then
+    is_observer="y" # Default value if not provided
+else
+    is_observer="$1"
+fi
+
+
 zetacored keys add operator --algo=secp256k1 --keyring-backend=$KEYRING_TEST
+
 operator_address=$(zetacored keys show operator -a --keyring-backend=$KEYRING_TEST)
 
 # Hotkey key depending on the keyring-backend
@@ -30,12 +40,11 @@ else
     pubkey=$(zetacored get-pubkey hotkey|sed -e 's/secp256k1:"\(.*\)"/\1/' | sed 's/ //g' )
 fi
 
-is_observer="y"
-
 echo "operator_address: $operator_address"
 echo "hotkey_address: $hotkey_address"
 echo "pubkey: $pubkey"
-mkdir ~/.zetacored/os_info
+echo "is_observer: $is_observer"
+mkdir -p ~/.zetacored/os_info
 
 # set key in file
 jq -n --arg is_observer "$is_observer" --arg operator_address "$operator_address" --arg hotkey_address "$hotkey_address" --arg pubkey "$pubkey" '{"IsObserver":$is_observer,"ObserverAddress":$operator_address,"ZetaClientGranteeAddress":$hotkey_address,"ZetaClientGranteePubKey":$pubkey}' > ~/.zetacored/os_info/os.json

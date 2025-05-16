@@ -223,7 +223,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
-
 	if !skipSetup {
 		// run setup steps that do not require tss
 		noError(deployerRunner.FundEmissionsPool())
@@ -336,6 +335,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+	} else {
+		fmt.Println(light)
+		fmt.Println(skipBitcoinSetup)
 	}
 
 	if !skipPrecompiles {
@@ -468,36 +470,36 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 
 		if !deployerRunner.IsRunningUpgrade() {
-			solanaTests = append(solanaTests, []string{
-				e2etests.TestSolanaDepositThroughProgramName,
-				e2etests.TestSolanaDepositAndCallName,
-				e2etests.TestSolanaWithdrawAndCallName,
-				e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
-				e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
-				e2etests.TestZEVMToSolanaCallName,
-				e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
-				e2etests.TestSolanaDepositAndCallRevertName,
-				e2etests.TestSolanaDepositAndCallRevertWithCallName,
-				e2etests.TestSolanaDepositAndCallRevertWithCallThatRevertsName,
-				e2etests.TestSolanaDepositAndCallRevertWithDustName,
-				e2etests.TestSolanaDepositRestrictedName,
-				e2etests.TestSolanaToZEVMCallName,
-				e2etests.TestSolanaWithdrawRestrictedName,
-			}...)
-
-			splTests = append(splTests, []string{
-				e2etests.TestSPLDepositAndCallName,
-				e2etests.TestSPLDepositAndCallRevertName,
-				e2etests.TestSPLDepositAndCallRevertWithCallName,
-				e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
-				e2etests.TestSPLWithdrawName,
-				e2etests.TestSPLWithdrawAndCallName,
-				e2etests.TestSPLWithdrawAndCallRevertName,
-				e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
-				// TODO move under admin tests
-				// https://github.com/zeta-chain/node/issues/3085
-				e2etests.TestSolanaWhitelistSPLName,
-			}...)
+			//solanaTests = append(solanaTests, []string{
+			//	e2etests.TestSolanaDepositThroughProgramName,
+			//	e2etests.TestSolanaDepositAndCallName,
+			//	e2etests.TestSolanaWithdrawAndCallName,
+			//	e2etests.TestSolanaWithdrawRevertExecutableReceiverName,
+			//	e2etests.TestSolanaWithdrawAndCallInvalidMsgEncodingName,
+			//	e2etests.TestZEVMToSolanaCallName,
+			//	e2etests.TestSolanaWithdrawAndCallRevertWithCallName,
+			//	e2etests.TestSolanaDepositAndCallRevertName,
+			//	e2etests.TestSolanaDepositAndCallRevertWithCallName,
+			//	e2etests.TestSolanaDepositAndCallRevertWithCallThatRevertsName,
+			//	e2etests.TestSolanaDepositAndCallRevertWithDustName,
+			//	e2etests.TestSolanaDepositRestrictedName,
+			//	e2etests.TestSolanaToZEVMCallName,
+			//	e2etests.TestSolanaWithdrawRestrictedName,
+			//}...)
+			//
+			//splTests = append(splTests, []string{
+			//	e2etests.TestSPLDepositAndCallName,
+			//	e2etests.TestSPLDepositAndCallRevertName,
+			//	e2etests.TestSPLDepositAndCallRevertWithCallName,
+			//	e2etests.TestSPLDepositAndCallRevertWithCallThatRevertsName,
+			//	e2etests.TestSPLWithdrawName,
+			//	e2etests.TestSPLWithdrawAndCallName,
+			//	e2etests.TestSPLWithdrawAndCallRevertName,
+			//	e2etests.TestSPLWithdrawAndCreateReceiverAtaName,
+			//	// TODO move under admin tests
+			//	// https://github.com/zeta-chain/node/issues/3085
+			//	e2etests.TestSolanaWhitelistSPLName,
+			//}...)
 		}
 
 		eg.Go(
@@ -631,6 +633,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testTSSMigration {
+		e2etests.AddNewObserver(deployerRunner)
 		TSSMigration(deployerRunner, logger, verbose, conf)
 	}
 

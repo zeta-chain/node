@@ -104,6 +104,7 @@ observer_relayer_accounts:
       solana_private_key: "3EMjCcCJg53fMEGVj13UPQpo6py9AKKyLE2qroR4yL1SvAN2tUznBvDKRYjntw7m6Jof1R2CSqjTddL27rEb6sFQ"
     - solana_address: "4kkCV8H38xirwQTkE5kL6FHNtYGHnMQQ7SkCjAxibHFK"
       solana_private_key: "5SSv7jWzamtjWNKGiKf3gvCPHcq9mE5x6LhYgzJCKNSxoQ83gFpmMgmg2JS2zdKcBEdwy7y9bvWgX4LBiUpvnrPf"
+
 rpcs:
   zevm: "http://localhost:9545"
   evm: "http://localhost:8545"

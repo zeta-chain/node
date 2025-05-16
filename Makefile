@@ -273,7 +273,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss up -d
 
 start-staking-test: e2e-images
 	@echo "--> Starting e2e staking test"
@@ -315,7 +315,7 @@ start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
 	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"

@@ -74,7 +74,7 @@ fund_accounts_auto() {
   # Fund the default account first
   local default_address=$(yq -r '.default_account.bech32_address' /root/config.yml)
   fund_account "default_account" "$default_address"
-  
+
   # Get all additional accounts and fund them
   local accounts=$(yq -r '.additional_accounts | keys | sort | .[]' /root/config.yml)
   for account_key in $accounts; do
@@ -87,7 +87,14 @@ fund_accounts_auto() {
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
-INDEX=${HOSTNAME:0-1}
+
+if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
+    INDEX="-new-validator"
+else
+    INDEX=${HOSTNAME:0-1}
+fi
+
+echo "HOSTNAME: $HOSTNAME, INDEX: $INDEX"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -100,8 +107,6 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-
-echo "HOSTNAME: $HOSTNAME"
 
 # init ssh keys
 # we generate keys at runtime to ensure that keys are never pushed to
@@ -136,10 +141,15 @@ then
   cp -r ~/zetacored/common/client.toml ~/.zetacored/config/
   cp -r ~/zetacored/common/config.toml ~/.zetacored/config/
   sed -i -e "/moniker =/s/=.*/= \"$HOSTNAME\"/" "$HOME"/.zetacored/config/config.toml
-
-  # Add two new keys for operator and hotkey and create the required json structure for os_info
-  source ~/add-keys.sh
 fi
+
+echo "Creating keys for operator and hotkey for $HOSTNAME"
+if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
+  source ~/add-keys.sh n
+else
+  source ~/add-keys.sh y
+fi
+
 
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
@@ -163,14 +173,13 @@ fi
 # 5. Copy the final genesis.json to all the nodes and start the nodes
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
 # 7. Start the nodes
-
 # Start of genesis creation . This is done only on zetacore0.
 # Skip genesis if it has already been completed (marked by presence of ~/.zetacored/init_complete file)
 if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   ZETACORED_REPLICAS=2
   if host zetacore3 ; then
-    echo "zetacore3 exists, setting ZETACORED_REPLICAS to 4"
+    echo "zetacore3 exists"
     ZETACORED_REPLICAS=4
   fi
   # generate node list
@@ -199,6 +208,16 @@ then
     done
     scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
   done
+
+  if host zetacore-new-validator ; then
+    echo "zetacore-new-validator exists"
+    ssh zetaclient-new-validator mkdir -p ~/.zetacored/
+    while ! scp zetacore-new-validator:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_non_validator.json; do
+          echo "Waiting for os_info.json from node zetacore-new-validator"
+          sleep 1
+        done
+    scp ~/.zetacored/os_info/os_non_validator.json zetaclient-new-validator:~/.zetacored/os.json
+  fi
 
   ssh zetaclient0 mkdir -p ~/.zetacored/
   scp ~/.zetacored/os_info/os.json zetaclient0:/root/.zetacored/os.json
@@ -282,11 +301,30 @@ then
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
   zetacored validate-genesis
+
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
+
+   if host zetacore-new-validator ; then
+    echo "zetacore-new-validator exists copying gentx peer"
+     ssh zetacore-new-validator rm -rf ~/.zetacored/genesis.json
+     scp ~/.zetacored/config/genesis.json zetacore-new-validator:~/.zetacored/config/genesis.json
+     ssh zetacore-new-validator mkdir -p ~/.zetacored/config/gentx/peer/
+      # Check if gentx files exist before copying
+     if ls ~/.zetacored/config/gentx/* >/dev/null 2>&1; then
+       if scp ~/.zetacored/config/gentx/* zetacore-new-validator:~/.zetacored/config/gentx/peer/; then
+         echo "Successfully copied gentx files to new-validator"
+       else
+         echo "Failed to copy gentx files to new-validator - Error code: $?"
+       fi
+     else
+       echo "No gentx files found to copy"
+     fi
+   fi
+
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
@@ -297,6 +335,7 @@ fi
 # Update persistent peers
 if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
+  echo "Updating persistent peers for $HOSTNAME"
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
