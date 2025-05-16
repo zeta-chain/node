@@ -1,0 +1,240 @@
+package cli
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/cockroachdb/pebble"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/spf13/cobra"
+	"golang.org/x/exp/constraints"
+	"golang.org/x/exp/maps"
+)
+
+// ModuleStats represents statistics for a single module
+type ModuleStats struct {
+	Count        int `json:"count"`        // Number of key-value pairs
+	TotalKeySize int `json:"totalKeySize"` // Total size of all keys in bytes
+	TotalValSize int `json:"totalValSize"` // Total size of all values in bytes
+	AvgKeySize   int `json:"avgKeySize"`   // Average key size in bytes
+	AvgValSize   int `json:"avgValSize"`   // Average value size in bytes
+}
+
+// DatabaseStats represents the overall database statistics
+type DatabaseStats struct {
+	TotalKeys    int                     `json:"totalKeys"`
+	TotalKeySize int                     `json:"totalKeySize"`
+	TotalValSize int                     `json:"totalValSize"`
+	Modules      map[string]*ModuleStats `json:"modules"`
+}
+
+// OutputFormat represents the supported output formats
+type OutputFormat string
+
+const (
+	FormatTable OutputFormat = "table"
+	FormatJSON  OutputFormat = "json"
+)
+
+var moduleRe = regexp.MustCompile(`s\/k:(\w+)\/`)
+
+// NewStatsCMD creates a new cobra command for database statistics
+func NewStatsCMD() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "stats",
+		Short: "Show database statistics for the application",
+		Long: `Show detailed statistics about the application database including:
+- Module-wise statistics (key count, sizes)
+- Total database size
+- Average key and value sizes per module
+
+The output can be formatted as a table (default) or JSON.`,
+		RunE: runStatsCommand,
+	}
+
+	cmd.Flags().String("dbpath", "", "Path to the application DB directory (required)")
+	cmd.Flags().String("format", string(FormatTable), "Output format (table|json)")
+	return cmd
+}
+
+// runStatsCommand is the main entry point for the stats command
+func runStatsCommand(cmd *cobra.Command, args []string) error {
+	dbPath, err := cmd.Flags().GetString("dbpath")
+	if err != nil {
+		return fmt.Errorf("failed to get dbpath: %w", err)
+	}
+	if dbPath == "" {
+		return fmt.Errorf("missing required --dbpath argument")
+	}
+
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return fmt.Errorf("failed to get format: %w", err)
+	}
+
+	// Open database
+	db, err := openDatabase(dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Collect statistics
+	stats, err := collectStats(db)
+	if err != nil {
+		return err
+	}
+
+	// Display results
+	return displayStats(stats, OutputFormat(format))
+}
+
+// openDatabase opens the database in read-only mode
+func openDatabase(dbPath string) (*dbm.PebbleDB, error) {
+	db, err := dbm.NewPebbleDBWithOpts("application", dbPath, &pebble.Options{
+		ReadOnly: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to open DB: %w", err)
+	}
+	return db, nil
+}
+
+// collectStats iterates through the database and collects statistics
+func collectStats(db *dbm.PebbleDB) (*DatabaseStats, error) {
+	stats := &DatabaseStats{
+		Modules: make(map[string]*ModuleStats),
+	}
+
+	iter, err := db.DB().NewIter(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create iterator: %w", err)
+	}
+
+	for iter.First(); iter.Valid(); iter.Next() {
+		keySize := len(iter.Key())
+		valSize := len(iter.Value())
+
+		stats.TotalKeys++
+		stats.TotalKeySize += keySize
+		stats.TotalValSize += valSize
+
+		moduleName := getModuleName(string(iter.Key()))
+		updateModuleStats(stats.Modules, moduleName, keySize, valSize)
+	}
+
+	// Calculate averages for each module
+	for _, moduleStats := range stats.Modules {
+		if moduleStats.Count > 0 {
+			moduleStats.AvgKeySize = moduleStats.TotalKeySize / moduleStats.Count
+			moduleStats.AvgValSize = moduleStats.TotalValSize / moduleStats.Count
+		}
+	}
+
+	return stats, nil
+}
+
+// getModuleName extracts the module name from a key
+func getModuleName(key string) string {
+	if strings.HasPrefix(key, "s/k:") {
+		tokens := moduleRe.FindStringSubmatch(key)
+		if len(tokens) > 1 {
+			return tokens[1]
+		}
+	}
+	return "misc"
+}
+
+// updateModuleStats updates statistics for a specific module
+func updateModuleStats(modules map[string]*ModuleStats, moduleName string, keySize, valSize int) {
+	if modules[moduleName] == nil {
+		modules[moduleName] = &ModuleStats{}
+	}
+
+	stats := modules[moduleName]
+	stats.Count++
+	stats.TotalKeySize += keySize
+	stats.TotalValSize += valSize
+}
+
+// displayStats renders the statistics in the specified format
+func displayStats(stats *DatabaseStats, format OutputFormat) error {
+	switch format {
+	case FormatTable:
+		displayTable(stats)
+	case FormatJSON:
+		return displayJSON(stats)
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
+	return nil
+}
+
+// displayTable renders the statistics in a formatted table
+func displayTable(stats *DatabaseStats) {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(
+		table.Row{"Module", "Avg Key Size", "Avg Value Size", "Total Key Size", "Total Value Size", "Total Key Pairs"},
+	)
+
+	modules := maps.Keys(stats.Modules)
+	sortSlice(modules)
+
+	for _, m := range modules {
+		s := stats.Modules[m]
+		t.AppendRow([]interface{}{
+			m,
+			byteCountDecimal(s.AvgKeySize),
+			byteCountDecimal(s.AvgValSize),
+			byteCountDecimal(s.TotalKeySize),
+			byteCountDecimal(s.TotalValSize),
+			s.Count,
+		})
+	}
+
+	t.AppendFooter(
+		table.Row{
+			"Total",
+			"",
+			"",
+			byteCountDecimal(stats.TotalKeySize),
+			byteCountDecimal(stats.TotalValSize),
+			stats.TotalKeys,
+		},
+	)
+	t.Render()
+}
+
+// displayJSON renders the statistics in JSON format
+func displayJSON(stats *DatabaseStats) error {
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(stats)
+}
+
+// sortSlice sorts a slice of ordered values
+func sortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
+}
+
+// byteCountDecimal formats a byte count into a human-readable string
+func byteCountDecimal(b int) string {
+	const unit = 1000
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := int64(b) / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp])
+}
