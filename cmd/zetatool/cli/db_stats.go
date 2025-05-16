@@ -43,10 +43,10 @@ const (
 
 var moduleRe = regexp.MustCompile(`s\/k:(\w+)\/`)
 
-// NewStatsCMD creates a new cobra command for database statistics
-func NewStatsCMD() *cobra.Command {
+// NewApplicationDBStatsCMD creates a new cobra command for database statistics
+func NewApplicationDBStatsCMD() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stats",
+		Use:   "db-stats",
 		Short: "Show database statistics for the application",
 		Long: `Show detailed statistics about the application database including:
 - Module-wise statistics (key count, sizes)
