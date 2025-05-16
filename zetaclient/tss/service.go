@@ -2,11 +2,9 @@ package tss
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -374,11 +372,15 @@ func (s *Service) blameFailure(
 }
 
 func (s *Service) getSignatureCached(chainID int64, req keysign.Request) ([][65]byte, bool) {
-	return s.getChainSignatureCache(chainID).Get(requestToKey(req))
+	key := must(req.MsgID())
+
+	return s.getChainSignatureCache(chainID).Get(key)
 }
 
 func (s *Service) setSignatureCached(chainID int64, req keysign.Request, sigs [][65]byte) {
-	s.getChainSignatureCache(chainID).Add(requestToKey(req), sigs)
+	key := must(req.MsgID())
+
+	s.getChainSignatureCache(chainID).Add(key, sigs)
 }
 
 func (s *Service) getChainSignatureCache(chainID int64) *sigCache {
@@ -405,29 +407,24 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 	// should match go-tss internals for easy filtering
 	const msgField = "msg_id"
 
-	// should not fail
-	msgID, _ := req.MsgID()
-
 	// #nosec G115 always in range
 	blockHeight := uint64(req.BlockHeight)
 
 	return map[string]any{
-		msgField:           msgID,
+		msgField:           must(req.MsgID()),
 		"tss.chain_id":     chainID,
 		"tss.block_height": blockHeight,
 		"tss.nonce":        nonce,
 	}
 }
 
-func requestToKey(r keysign.Request) string {
-	raw := fmt.Sprintf(
-		"%s;%s;%s",
-		r.Version,
-		strings.Join(r.Messages, ","),
-		strings.Join(r.SignerPubKeys, ","),
-	)
+// must should never fail. used for request.MsgID() which calls
+// crypto/sha256/sha256.go: (*digest).Write()
+// It implements Writer but never fails.
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(errors.Wrap(err, "must"))
+	}
 
-	h := sha256.Sum256([]byte(raw))
-
-	return hex.EncodeToString(h[:])
+	return v
 }
