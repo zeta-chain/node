@@ -32,7 +32,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestEtherWithdrawRestrictedName,
 	))
 
-	//// Test happy paths for erc20 token workflow
+	// Test happy paths for erc20 token workflow
 	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,

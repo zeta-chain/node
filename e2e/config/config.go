@@ -97,7 +97,7 @@ type PolicyAccounts struct {
 
 // ObserverRelayerAccounts are the accounts used by the observers to interact with gateway contracts in non-EVM chains (e.g. Solana)
 type ObserverRelayerAccounts struct {
-	// RelayerAccounts contains three relayer accounts used by zetaclient0 and zetaclient1
+	// RelayerAccounts contains two relayer accounts used by zetaclient0 and zetaclient1
 	RelayerAccounts [2]Account `yaml:"relayer_accounts"`
 }
 

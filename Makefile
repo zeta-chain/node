@@ -273,7 +273,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-staking-test: e2e-images
 	@echo "--> Starting e2e staking test"

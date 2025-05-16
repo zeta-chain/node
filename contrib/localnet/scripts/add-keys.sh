@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # This script allows to add keys for operator and hotkey and create the required json structure for os_info
-# Usage: source ~/add-keys.sh [is_observer]
-# Example: source ~/add-keys.sh y
 
 KEYRING_TEST="test"
 KEYRING_FILE="file"

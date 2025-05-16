@@ -179,7 +179,7 @@ if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
   ZETACORED_REPLICAS=2
   if host zetacore3 ; then
-    echo "zetacore3 exists"
+    echo "zetacore3 exists, setting ZETACORED_REPLICAS to 4"
     ZETACORED_REPLICAS=4
   fi
   # generate node list
@@ -335,7 +335,6 @@ fi
 # Update persistent peers
 if [[ $HOSTNAME != "zetacore0" && ! -f ~/.zetacored/init_complete ]]
 then
-  echo "Updating persistent peers for $HOSTNAME"
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/

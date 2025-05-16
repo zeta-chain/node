@@ -12,6 +12,29 @@ trap 'kill -- -$$' SIGINT SIGTERM
 
 /usr/sbin/sshd
 
+copy_operator_keys() {
+  local nodes=("zetacore0" "zetacore1" "zetacore2" "zetacore3" "zetacore-new-validator")
+
+  for node in "${nodes[@]}"; do
+    # Skip if key not available
+    ssh -q root@$node "exit" 2>/dev/null || continue
+    ssh root@$node "test -d /root/.zetacored/keyring-test/" || continue
+
+    mkdir -p /root/$node/
+    scp -r root@$node:/root/.zetacored/keyring-test/ /root/$node/keyring-test/ || continue
+
+    # Set node ID suffix
+    node_num=${node//[^0-9]/}
+    node_id=${node_num:-"-new-validator"}
+
+    # Rename and copy keys
+    zetacored keys rename operator operator$node_id --home=/root/$node/ --keyring-backend=test --yes
+    cp -r /root/$node/keyring-test/* /root/.zetacored/keyring-test/
+  done
+
+  echo "Key copying process completed"
+}
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -152,59 +175,9 @@ fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 
 
 # Create the destination directory
 mkdir -p /root/.zetacored/keyring-test/
+# Copy the keys from the localnet directory to the keyring-test directory
+copy_operator_keys
 
-# Define list of nodes to try
-NODES=("zetacore0" "zetacore1" "zetacore2" "zetacore3" "zetacore-new-validator")
-
-# Loop through each node
-for NODE in "${NODES[@]}"; do
-    # Check if the node exists and is reachable
-    if ssh -q root@$NODE "exit" 2>/dev/null; then
-        echo "Node $NODE is reachable, checking for keyring-test directory..."
-
-        # Check if the keyring-test directory exists
-        if ssh root@$NODE "test -d /root/.zetacored/keyring-test/"; then
-            echo "Source directory found in $NODE, copying operator keys"
-
-            # Create local directory for this node
-            mkdir -p /root/$NODE/
-
-            # Copy the keys from the node
-            scp -r root@$NODE:/root/.zetacored/keyring-test/ /root/$NODE/keyring-test/
-
-            if [ $? -eq 0 ]; then
-                echo "Files copied successfully from $NODE"
-
-                # Rename the keys to include the node identifier
-                NODE_NUM=${NODE//[^0-9]/}
-                if [ -z "$NODE_NUM" ]; then
-                    # Handle the case for new-validator
-                    NODE_ID="-new-validator"
-                else
-                    NODE_ID=$NODE_NUM
-                fi
-
-                # Rename the operator key
-                zetacored keys rename operator operator$NODE_ID --home=/root/$NODE/ --keyring-backend=test --yes
-
-                # Copy to the final destination
-                cp -r /root/$NODE/keyring-test/* /root/.zetacored/keyring-test/
-
-                echo "Key from $NODE processed and stored as operator$NODE_ID"
-            else
-                echo "Error: Failed to copy files from $NODE"
-            fi
-        else
-            echo "Error: keyring-test directory not found in $NODE container"
-        fi
-    else
-        echo "Node $NODE is not reachable, skipping..."
-    fi
-done
-
-echo "Key copying process completed"
-
-# unlock local solana relayer accounts
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
   solana_url=$(config_str '.rpcs.solana')

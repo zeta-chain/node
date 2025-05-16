@@ -177,8 +177,6 @@ services:
     container_name: zetacore-new-validator
     hostname: zetacore-new-validator
     profiles:
-      - stress
-      - all
       - tss
     networks:
       mynetwork:
@@ -195,8 +193,6 @@ services:
     container_name: zetaclient-new-validator
     hostname: zetaclient-new-validator
     profiles:
-      - stress
-      - all
       - tss
     networks:
       mynetwork:

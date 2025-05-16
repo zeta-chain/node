@@ -104,7 +104,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 			isAuthorized := func(creator string) bool {
 				return options.ObserverKeeper.IsNonTombstonedObserver(ctx, creator)
-				return true
 			}
 
 			if IsSystemTx(tx, isAuthorized) {
