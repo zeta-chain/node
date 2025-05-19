@@ -309,26 +309,12 @@ func (c *Client) GetSuiCoinObjectRefs(
 	// convert coin data to object references
 	suiCoinRefs := make([]*suiptb.ObjectRef, len(suiCoins))
 	for i, coin := range suiCoins {
-		objectID, err := suiptb.ObjectIdFromHex(coin.CoinObjectId)
+		suiCoinRef, err := coinToObjectRef(coin)
 		if err != nil {
-			return nil, errors.Wrapf(err, "invalid SUI coin object ID: %s", coin.CoinObjectId)
+			return nil, errors.Wrapf(err, "unable to convert coin to object reference")
 		}
 
-		digest, err := suiptb.NewBase58(coin.Digest)
-		if err != nil {
-			return nil, errors.Wrapf(err, "invalid SUI coin digest: %s", coin.Digest)
-		}
-
-		version, err := strconv.ParseUint(coin.Version, 10, 64)
-		if err != nil {
-			return nil, errors.Wrapf(err, "invalid SUI coin version: %s", coin.Version)
-		}
-
-		suiCoinRefs[i] = &suiptb.ObjectRef{
-			ObjectId: objectID,
-			Version:  version,
-			Digest:   digest,
-		}
+		suiCoinRefs[i] = suiCoinRef
 	}
 
 	return suiCoinRefs, nil
@@ -452,4 +438,28 @@ func CheckContainOwnedObject(res []*models.SuiObjectResponse) error {
 	}
 
 	return nil
+}
+
+// coinToObjectRef converts a SUI coin data to an object reference.
+func coinToObjectRef(coin models.CoinData) (*suiptb.ObjectRef, error) {
+	objectID, err := suiptb.ObjectIdFromHex(coin.CoinObjectId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin object ID: %s", coin.CoinObjectId)
+	}
+
+	digest, err := suiptb.NewBase58(coin.Digest)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin digest: %s", coin.Digest)
+	}
+
+	version, err := strconv.ParseUint(coin.Version, 10, 64)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin version: %s", coin.Version)
+	}
+
+	return &suiptb.ObjectRef{
+		ObjectId: objectID,
+		Version:  version,
+		Digest:   digest,
+	}, nil
 }
