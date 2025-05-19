@@ -80,14 +80,14 @@ func runStatsCommand(cmd *cobra.Command, args []string) error {
 	// Open database
 	db, err := openDatabase(dbPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to open db")
 	}
 	defer db.Close()
 
 	// Collect statistics
 	stats, err := collectStats(db)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to collect stats")
 	}
 
 	// Display results
@@ -98,7 +98,7 @@ func runStatsCommand(cmd *cobra.Command, args []string) error {
 func openDatabase(dbPath string) (dbm.DB, error) {
 	db, err := dbm.NewDB("application", dbm.PebbleDBBackend, dbPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open DB")
+		return nil, err
 	}
 	return db, nil
 }
@@ -112,6 +112,11 @@ func collectStats(db dbm.DB) (*DatabaseStats, error) {
 	iter, err := db.Iterator(nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create iterator")
+	}
+	defer iter.Close()
+
+	if err := iter.Error(); err != nil {
+		return nil, errors.Wrap(err, "iteration error")
 	}
 
 	for ; iter.Valid(); iter.Next() {
