@@ -230,13 +230,21 @@ func TestClientLive(t *testing.T) {
 		require.NoError(t, err)
 		require.Positive(t, tssBalance)
 
-		// ACT
+		// ACT-1
 		// should be able to use all owned SUI coin objects
 		coinRefs, err := ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance)
 
 		// ASSERT
 		require.NoError(t, err)
 		require.NotEmpty(t, coinRefs)
+
+		// ACT-2
+		// should NOT be able to cover the big amount (balance + 1)
+		coinRefs, err = ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance+1)
+
+		// ASSERT
+		require.ErrorContains(t, err, "SUI balance is too low")
+		require.Empty(t, coinRefs)
 	})
 }
 
