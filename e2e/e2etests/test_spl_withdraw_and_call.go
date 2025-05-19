@@ -91,7 +91,7 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	type ConnectedPdaInfo struct {
 		Discriminator     [8]byte
-		LastSender        [20]byte
+		LastSender        common.Address
 		LastMessage       string
 		LastRevertSender  solana.PublicKey
 		LastRevertMessage string
