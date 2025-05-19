@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cockroachdb/pebble"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
@@ -66,15 +66,15 @@ The output can be formatted as a table (default) or JSON.`,
 func runStatsCommand(cmd *cobra.Command, args []string) error {
 	dbPath, err := cmd.Flags().GetString("dbpath")
 	if err != nil {
-		return fmt.Errorf("failed to get dbpath: %w", err)
+		return errors.Wrap(err, "failed to get dbpath")
 	}
 	if dbPath == "" {
-		return fmt.Errorf("missing required --dbpath argument")
+		return errors.New("missing required --dbpath argument")
 	}
 
 	format, err := cmd.Flags().GetString("format")
 	if err != nil {
-		return fmt.Errorf("failed to get format: %w", err)
+		return errors.Wrap(err, "failed to get format")
 	}
 
 	// Open database
@@ -95,28 +95,26 @@ func runStatsCommand(cmd *cobra.Command, args []string) error {
 }
 
 // openDatabase opens the database in read-only mode
-func openDatabase(dbPath string) (*dbm.PebbleDB, error) {
-	db, err := dbm.NewPebbleDBWithOpts("application", dbPath, &pebble.Options{
-		ReadOnly: true,
-	})
+func openDatabase(dbPath string) (dbm.DB, error) {
+	db, err := dbm.NewDB("application", dbm.PebbleDBBackend, dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open DB: %w", err)
+		return nil, errors.Wrap(err, "failed to open DB")
 	}
 	return db, nil
 }
 
 // collectStats iterates through the database and collects statistics
-func collectStats(db *dbm.PebbleDB) (*DatabaseStats, error) {
+func collectStats(db dbm.DB) (*DatabaseStats, error) {
 	stats := &DatabaseStats{
 		Modules: make(map[string]*ModuleStats),
 	}
 
-	iter, err := db.DB().NewIter(nil)
+	iter, err := db.Iterator(nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create iterator: %w", err)
+		return nil, errors.Wrap(err, "failed to create iterator")
 	}
 
-	for iter.First(); iter.Valid(); iter.Next() {
+	for ; iter.Valid(); iter.Next() {
 		keySize := len(iter.Key())
 		valSize := len(iter.Value())
 
@@ -170,7 +168,7 @@ func displayStats(stats *DatabaseStats, format OutputFormat) error {
 	case FormatJSON:
 		return displayJSON(stats)
 	default:
-		return fmt.Errorf("unsupported format: %s", format)
+		return errors.New("unsupported format")
 	}
 	return nil
 }
