@@ -63,7 +63,7 @@ The output can be formatted as a table (default) or JSON.`,
 }
 
 // runStatsCommand is the main entry point for the stats command
-func runStatsCommand(cmd *cobra.Command, args []string) error {
+func runStatsCommand(cmd *cobra.Command, _ []string) error {
 	dbPath, err := cmd.Flags().GetString("dbpath")
 	if err != nil {
 		return errors.Wrap(err, "failed to get dbpath")
