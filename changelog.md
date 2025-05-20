@@ -46,6 +46,7 @@
 * [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
 * [3863](https://github.com/zeta-chain/node/pull/3863) - give enough timeout to the EVM chain transaction broadcasting
 * [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
+* [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
 
 ### Tests
