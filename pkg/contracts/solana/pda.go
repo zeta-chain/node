@@ -1,5 +1,7 @@
 package solana
 
+import ethcommon "github.com/ethereum/go-ethereum/common"
+
 // PdaInfo represents the PDA for the gateway program
 type PdaInfo struct {
 	// Discriminator is the unique identifier for the PDA
@@ -9,7 +11,7 @@ type PdaInfo struct {
 	Nonce uint64
 
 	// TssAddress is the TSS address for the PDA
-	TssAddress [20]byte
+	TssAddress ethcommon.Address
 
 	// Authority is the authority for the PDA
 	Authority [32]byte

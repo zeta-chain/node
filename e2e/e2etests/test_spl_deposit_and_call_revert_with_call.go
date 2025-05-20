@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
@@ -77,7 +78,7 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	type ConnectedPdaInfo struct {
 		Discriminator     [8]byte
-		LastSender        [20]byte
+		LastSender        ethcommon.Address
 		LastMessage       string
 		LastRevertSender  solana.PublicKey
 		LastRevertMessage string
