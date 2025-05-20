@@ -127,6 +127,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		setupSolana       = testSolana || testPerformance
+		setupSui          = testSui || testPerformance
 		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
 	)
@@ -290,7 +291,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		if testSui {
+		if setupSui {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
 
@@ -445,6 +446,27 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				verbose,
 				conf.AdditionalAccounts.UserSPL,
 				[]string{e2etests.TestStressSPLWithdrawName},
+			),
+		)
+		eg.Go(
+			suiDepositPerformanceRoutine(
+				conf,
+				"perf_sui_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSui,
+				[]string{e2etests.TestStressSuiDepositName},
+			),
+		)
+		eg.Go(
+			suiWithdrawPerformanceRoutine(
+				conf,
+				"perf_sui_withdraw",
+				deployerRunner,
+				verbose,
+				// use different account to avoid race conditions on the SUI coin objects
+				deployerRunner.Account,
+				[]string{e2etests.TestStressSuiWithdrawName},
 			),
 		)
 	}
