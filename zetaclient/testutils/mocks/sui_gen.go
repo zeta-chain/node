@@ -21,7 +21,7 @@ type suiClient interface {
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
-	GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error)
+	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)

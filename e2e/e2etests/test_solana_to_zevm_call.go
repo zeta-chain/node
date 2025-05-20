@@ -22,7 +22,7 @@ func TestSolanaToZEVMCall(r *runner.E2ERunner, args []string) {
 
 	// execute call transaction
 	data := []byte("hello")
-	sig := r.SOLCall(nil, contractAddr, data)
+	sig := r.SOLCall(nil, contractAddr, data, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)

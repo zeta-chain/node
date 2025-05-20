@@ -2387,7 +2387,12 @@
           },
           {
             "name": "abort_address",
-            "type": "pubkey"
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
           },
           {
             "name": "call_on_revert",

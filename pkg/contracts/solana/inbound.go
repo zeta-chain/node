@@ -308,11 +308,10 @@ func getSignerAndSPLFromDepositSPLAccounts(
 }
 
 // parseReceiver parses the receiver bytes into a Ethereum address string
-func parseReceiver(receiver [20]byte) (string, error) {
-	addr := ethcommon.BytesToAddress(receiver[:ethcommon.AddressLength])
-	if addr == (ethcommon.Address{}) {
+func parseReceiver(receiver ethcommon.Address) (string, error) {
+	if receiver == (ethcommon.Address{}) {
 		return "", fmt.Errorf("invalid receiver address: %v", receiver)
 	}
 
-	return addr.Hex(), nil
+	return receiver.Hex(), nil
 }
