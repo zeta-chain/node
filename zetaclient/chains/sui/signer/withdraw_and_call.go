@@ -22,7 +22,7 @@ type withdrawAndCallObjRefs struct {
 	gateway     sui.ObjectRef
 	withdrawCap sui.ObjectRef
 	onCall      []sui.ObjectRef
-	suiCoin     sui.ObjectRef
+	suiCoins    []*sui.ObjectRef
 }
 
 // withdrawAndCallPTBArgs contains all the arguments needed for withdraw and call
@@ -113,9 +113,7 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 	txData := suiptb.NewTransactionData(
 		signerAddr,
 		pt,
-		[]*sui.ObjectRef{
-			&args.suiCoin,
-		},
+		args.suiCoins,
 		args.gasBudget,
 		suiclient.DefaultGasPrice,
 	)
@@ -138,6 +136,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	withdrawCapID string,
 	onCallObjectIDs []string,
+	gasBudget uint64,
 ) (withdrawAndCallObjRefs, error) {
 	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID}, onCallObjectIDs...)
 
@@ -203,16 +202,16 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	// get latest TSS SUI coin object ref for gas payment
-	suiCoinObjRef, err := s.client.GetSuiCoinObjectRef(ctx, s.TSS().PubKey().AddressSui())
+	suiCoinObjRefs, err := s.client.GetSuiCoinObjectRefs(ctx, s.TSS().PubKey().AddressSui(), gasBudget)
 	if err != nil {
-		return withdrawAndCallObjRefs{}, errors.Wrap(err, "unable to get TSS SUI coin object")
+		return withdrawAndCallObjRefs{}, errors.Wrap(err, "unable to get TSS SUI coin objects")
 	}
 
 	return withdrawAndCallObjRefs{
 		gateway:     objectRefs[0],
 		withdrawCap: objectRefs[1],
 		onCall:      objectRefs[2:],
-		suiCoin:     suiCoinObjRef,
+		suiCoins:    suiCoinObjRefs,
 	}, nil
 }
 

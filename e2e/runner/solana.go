@@ -110,11 +110,13 @@ func (r *E2ERunner) CreateSOLCallInstruction(
 	signer solana.PublicKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Instruction {
 	callData, err := borsh.Serialize(solanacontract.CallInstructionParams{
 		Discriminator: solanacontract.DiscriminatorCall,
 		Receiver:      receiver,
 		Memo:          data,
+		RevertOptions: revertOptions,
 	})
 	require.NoError(r, err)
 
@@ -542,6 +544,7 @@ func (r *E2ERunner) SOLCall(
 	signerPrivKey *solana.PrivateKey,
 	receiver ethcommon.Address,
 	data []byte,
+	revertOptions *solanacontract.RevertOptions,
 ) solana.Signature {
 	// if signer is not provided, use the runner account as default
 	if signerPrivKey == nil {
@@ -550,7 +553,7 @@ func (r *E2ERunner) SOLCall(
 	}
 
 	// create 'call' instruction
-	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data)
+	instruction := r.CreateSOLCallInstruction(signerPrivKey.PublicKey(), receiver, data, revertOptions)
 
 	// create and sign the transaction
 	limit := computebudget.NewSetComputeUnitLimitInstruction(100000).Build() // 100k compute unit limit

@@ -2,10 +2,9 @@ package tss
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"strings"
+	"math"
 	"sync"
 	"time"
 
@@ -231,9 +230,7 @@ func (s *Service) SignBatch(
 	)
 
 	if sigs, ok := s.getSignatureCached(chainID, req); ok {
-		s.logger.Info().
-			Fields(keysignLogFields(req, height, nonce, chainID)).
-			Msg("Signature cache hit")
+		s.logger.Info().Fields(keysignLogFields(req, nonce, chainID)).Msg("Signature cache hit")
 
 		return sigs, nil
 	}
@@ -242,7 +239,7 @@ func (s *Service) SignBatch(
 	switch {
 	case errors.Is(err, ratelimit.ErrThrottled):
 		s.logger.Warn().
-			Fields(keysignLogFields(req, height, nonce, chainID)).
+			Fields(keysignLogFields(req, nonce, chainID)).
 			Msg("Signature request throttled")
 
 		return nil, err
@@ -250,7 +247,7 @@ func (s *Service) SignBatch(
 		// unexpected error (not related to failed key sign)
 		return nil, errors.Wrap(err, "unable to perform a key sign")
 	case res.Status == thorcommon.Fail:
-		return nil, s.blameFailure(ctx, req, res, digests, height, nonce, chainID)
+		return nil, s.blameFailure(ctx, req, res, digests, nonce, chainID)
 	case res.Status != thorcommon.Success:
 		return nil, fmt.Errorf("keysign fail: status %d", res.Status)
 	case len(res.Signatures) == 0:
@@ -296,12 +293,7 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 	messagesCount, start := float64(len(req.Messages)), time.Now()
 	s.metrics.ActiveMsgsSigns.Add(messagesCount)
 
-	lf := map[string]any{
-		"tss.chain_id":     chainID,
-		"tss.block_height": req.BlockHeight,
-		"tss.nonce":        nonce,
-	}
-
+	lf := keysignLogFields(req, nonce, chainID)
 	req.SetLogFields(lf)
 
 	// metrics finish
@@ -316,11 +308,10 @@ func (s *Service) sign(req keysign.Request, nonce uint64, chainID int64) (res ke
 			s.metrics.SignLatency.With(signLabelsError).Observe(latency)
 		}
 
-		s.logger.Info().
-			Fields(lf).
-			Bool("tss.success", res.Status == thorcommon.Success).
-			Float64("tss.latency", latency).
-			Msg("TSS keysign response")
+		lf["tss.success"] = res.Status == thorcommon.Success
+		lf["tss.latency"] = math.Round(latency*100) / 100
+
+		s.logger.Info().Fields(lf).Msg("TSS keysign response")
 	}()
 
 	return s.tss.KeySign(req)
@@ -331,16 +322,15 @@ func (s *Service) blameFailure(
 	req keysign.Request,
 	res keysign.Response,
 	digests [][]byte,
-	height uint64,
 	nonce uint64,
 	chainID int64,
 ) error {
 	errFailure := errors.Errorf("keysign failed: %s", res.Blame.FailReason)
-	lf := keysignLogFields(req, height, nonce, chainID)
+	lf := keysignLogFields(req, nonce, chainID)
 
 	s.logger.Error().Err(errFailure).
 		Fields(lf).
-		Interface("keysign.fail_blame", res.Blame).
+		Any("tss.fail_blame", res.Blame).
 		Msg("Keysign failed")
 
 	// register blame metrics
@@ -359,8 +349,15 @@ func (s *Service) blameFailure(
 		digest = digests[0]
 	}
 
-	digestHex := hex.EncodeToString(digest)
-	index := observertypes.GetBlameIndex(chainID, nonce, digestHex, height)
+	var (
+		digestHex = hex.EncodeToString(digest)
+
+		// #nosec G115 always in range
+		height = uint64(req.BlockHeight)
+
+		index = observertypes.GetBlameIndex(chainID, nonce, digestHex, height)
+	)
+
 	zetaHash, err := s.zetacore.PostVoteBlameData(ctx, &res.Blame, chainID, index)
 	if err != nil {
 		return errors.Wrap(err, "unable to post blame data for failed keysign")
@@ -368,18 +365,22 @@ func (s *Service) blameFailure(
 
 	s.logger.Info().
 		Fields(lf).
-		Str("keygen.blame_tx_hash", zetaHash).
+		Str("tss.blame_tx_hash", zetaHash).
 		Msg("Posted blame data to zetacore")
 
 	return errFailure
 }
 
 func (s *Service) getSignatureCached(chainID int64, req keysign.Request) ([][65]byte, bool) {
-	return s.getChainSignatureCache(chainID).Get(requestToKey(req))
+	key := must(req.MsgID())
+
+	return s.getChainSignatureCache(chainID).Get(key)
 }
 
 func (s *Service) setSignatureCached(chainID int64, req keysign.Request, sigs [][65]byte) {
-	s.getChainSignatureCache(chainID).Add(requestToKey(req), sigs)
+	key := must(req.MsgID())
+
+	s.getChainSignatureCache(chainID).Add(key, sigs)
 }
 
 func (s *Service) getChainSignatureCache(chainID int64) *sigCache {
@@ -402,24 +403,28 @@ func (s *Service) getChainSignatureCache(chainID int64) *sigCache {
 	return cache
 }
 
-func keysignLogFields(req keysign.Request, height, nonce uint64, chainID int64) map[string]any {
+func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[string]any {
+	// should match go-tss internals for easy filtering
+	const msgField = "msg_id"
+
+	// #nosec G115 always in range
+	blockHeight := uint64(req.BlockHeight)
+
 	return map[string]any{
-		"keysign.chain_id":     chainID,
-		"keysign.block_height": height,
-		"keysign.nonce":        nonce,
-		"keysign.request":      req,
+		msgField:           must(req.MsgID()),
+		"tss.chain_id":     chainID,
+		"tss.block_height": blockHeight,
+		"tss.nonce":        nonce,
 	}
 }
 
-func requestToKey(r keysign.Request) string {
-	raw := fmt.Sprintf(
-		"%s;%s;%s",
-		r.Version,
-		strings.Join(r.Messages, ","),
-		strings.Join(r.SignerPubKeys, ","),
-	)
+// must should never fail. used for request.MsgID() which calls
+// crypto/sha256/sha256.go: (*digest).Write()
+// It implements Writer but never fails.
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(errors.Wrap(err, "must"))
+	}
 
-	h := sha256.Sum256([]byte(raw))
-
-	return hex.EncodeToString(h[:])
+	return v
 }

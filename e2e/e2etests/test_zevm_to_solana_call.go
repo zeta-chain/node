@@ -43,7 +43,7 @@ func TestZEVMToSolanaCall(r *runner.E2ERunner, _ []string) {
 
 	type ConnectedPdaInfo struct {
 		Discriminator [8]byte
-		LastSender    [20]byte
+		LastSender    common.Address
 		LastMessage   string
 	}
 	pda := ConnectedPdaInfo{}
