@@ -74,6 +74,7 @@ const (
 	TestSolanaDepositAndCallRevertWithCallThatRevertsName = "solana_deposit_and_call_revert_with_call_that_reverts"
 	TestSolanaDepositAndCallRevertWithDustName            = "solana_deposit_and_call_revert_with_dust"
 	TestSolanaToZEVMCallName                              = "solana_to_zevm_call"
+	TestSolanaToZEVMCallAbortName                         = "solana_to_zevm_call_abort"
 	TestSolanaDepositRestrictedName                       = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName                      = "solana_withdraw_restricted"
 	TestSPLDepositName                                    = "spl_deposit"
@@ -674,6 +675,13 @@ var AllE2ETests = []runner.E2ETest{
 		"call a zevm contract",
 		[]runner.ArgDefinition{},
 		TestSolanaToZEVMCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaToZEVMCallAbortName,
+		"call a zevm contract and abort",
+		[]runner.ArgDefinition{},
+		TestSolanaToZEVMCallAbort,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
