@@ -92,7 +92,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "tss not found"), nil, nil
 		}
 
-		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), from)
+		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), to)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to get asset"), nil, err
 		}
