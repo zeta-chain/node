@@ -94,6 +94,12 @@ func (signer *Signer) createMsgExecuteSPL(
 		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
+	// check sender based on execute type
+	sender, err := validateSender(cctx.InboundParams.Sender, executeType)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot validate sender")
+	}
+
 	// parse mint account
 	mintAccount, err := solana.PublicKeyFromBase58(cctx.InboundParams.Asset)
 	if err != nil {
@@ -133,7 +139,7 @@ func (signer *Signer) createMsgExecuteSPL(
 		mintAccount,
 		to,
 		destinationProgramPdaAta,
-		cctx.InboundParams.Sender,
+		sender,
 		msg.Data,
 		executeType,
 		remainingAccounts,

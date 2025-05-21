@@ -157,7 +157,12 @@ func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL)
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
-	info, err := signer.client.GetAccountInfo(ctx, solana.MustPublicKeyFromBase58(asset))
+	mintPk, err := solana.PublicKeyFromBase58(asset)
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	info, err := signer.client.GetAccountInfo(ctx, mintPk)
 	if err != nil {
 		return token.Mint{}, err
 	}
