@@ -30,7 +30,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 		}
 
 		// filter inbound events
-		events, err := ob.FilterInboundEvents(txResult)
+		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 		if err != nil {
 			return errors.Wrapf(err, "error FilterInboundEvents for chain %d sig %s", chainID, signature)
 		}

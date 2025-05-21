@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -79,7 +81,7 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 			IsCrossChainCall: false,
 		}
 
-		events, err := ob.FilterInboundEvents(txResult)
+		events, err := observer.FilterInboundEvents(txResult, solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet), chain.ChainId, zerolog.Nop())
 		require.NoError(t, err)
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
@@ -113,10 +112,10 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
@@ -220,10 +219,10 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		deposit, err := contracts.ParseInboundAsDeposit(tx, instructionIndex, txResult.Slot)
@@ -325,10 +324,10 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
@@ -432,10 +431,10 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		deposit, err := contracts.ParseInboundAsDepositSPL(tx, instructionIndex, txResult.Slot)
@@ -537,13 +536,10 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		txResult := LoadSolanaInboundTxResult(t, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
+		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = append(
-			tx.Message.Instructions[instructionIndex].Accounts,
-			1,
-		)
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)
