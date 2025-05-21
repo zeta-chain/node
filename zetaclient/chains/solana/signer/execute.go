@@ -189,12 +189,12 @@ func validateSender(sender string, executeType contracts.ExecuteType) (string, e
 			return "", fmt.Errorf("invalid execute sender %s", sender)
 		}
 		return senderEth.Hex(), nil
-	} else {
-		// for revert execute, sender should be a Solana address
-		senderSol, err := solana.PublicKeyFromBase58(sender)
-		if err != nil {
-			return "", errors.Wrapf(err, "invalid execute revert sender %s", sender)
-		}
-		return senderSol.String(), nil
 	}
+
+	// for revert execute, sender should be a Solana address
+	senderSol, err := solana.PublicKeyFromBase58(sender)
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid execute revert sender %s", sender)
+	}
+	return senderSol.String(), nil
 }
