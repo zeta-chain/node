@@ -845,6 +845,62 @@
       ]
     },
     {
+      "name": "reset_nonce",
+      "docs": [
+        "Resets the PDA nonce. Caller is authority stored in PDA.",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `new_nonce` - The new nonce."
+      ],
+      "discriminator": [
+        104,
+        139,
+        110,
+        85,
+        234,
+        155,
+        132,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer performing the update."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "set_deposit_paused",
       "docs": [
         "Pauses or unpauses deposits. Caller is authority stored in PDA.",
