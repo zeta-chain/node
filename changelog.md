@@ -48,6 +48,7 @@
 * [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 * [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
+* [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
 
 ### Tests
 
