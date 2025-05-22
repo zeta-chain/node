@@ -200,25 +200,23 @@ func distributeRewardsForMaturedBallots(
 
 	sort.Strings(sortedKeys)
 	var finalDistributionList []*types.ObserverEmission
+	// Correct vote: If the vote matches the ballot status, it is deemed correct
+	// Incorrect vote: If the vote does not match the ballot status, it is deemed incorrect
+
+	// Not voted is Incorrect by default
+	// Only Finalized ballots (Success or Failure) are considered for rewards.
+
+	// Observers are rewarded only for correct votes.
+	// Observers are slashed only if they have no correct votes for all ballots in the entire block
 	for _, key := range sortedKeys {
 		observerAddress, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
 			ctx.Logger().Error("Error while parsing observer address ", "error", err, "address", key)
 			continue
 		}
-		// observerRewardUnits can be negative if the observer has been slashed
-		// an observers earn 1 unit for a correct vote, and -1 unit for an incorrect vote
+		// observerRewardUnits are 0 if they did not vote on any ballots successfully.
 		observerRewardUnits := rewardsDistributeMap[key]
-
 		if observerRewardUnits == 0 {
-			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
-				EmissionType:    types.EmissionType_Slash,
-				ObserverAddress: observerAddress.String(),
-				Amount:          sdkmath.ZeroInt(),
-			})
-			continue
-		}
-		if observerRewardUnits < 0 {
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,

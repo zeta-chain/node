@@ -110,18 +110,22 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 	}
 
 	// Process votes and update rewardsMap
-	// Observer gets rewarded for a correct vote and penalized for an incorrect vote
-	// Observer gets 1 unit for a correct vote and -1 unit for an incorrect vote
+	// Observer rewardsa are as follows:
+	// 1. Rewarded for correct votes
+	// 2. Not Rewarded for incorrect votes.Note We are not taking any tokens away from the observer we are just not rewarding them.
+
 	// totalRewardUnits is the sum of all the rewards units.It is used
 	// to calculate the reward per unit based on AmountOfRewards/totalRewardUnits
 
 	for _, address := range m.VoterList {
 		vote := m.Votes[m.GetVoterIndex(address)]
+		if _, exists := rewardsMap[address]; !exists {
+			rewardsMap[address] = 0
+		}
+
 		if vote == majorityVote {
 			rewardsMap[address]++
 			totalRewardUnits++
-		} else {
-			rewardsMap[address]--
 		}
 	}
 

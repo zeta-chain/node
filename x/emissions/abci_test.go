@@ -460,7 +460,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
-			name: "withdraw able emissions unchanged if rewards and slashes are equal",
+			name: "withdraw able emissions added only for correct votes",
 			votes: [][]observertypes.VoteType{
 				{
 					observertypes.VoteType_SuccessObservation,
@@ -479,7 +479,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			// total reward units would be 7 as 7 votes match the ballot status, including both ballots
 			totalRewardsForBlock: sdkmath.NewInt(70),
 			expectedRewards: map[string]int64{
-				observerSet.ObserverList[0]: 100,
+				observerSet.ObserverList[0]: 110,
 				observerSet.ObserverList[1]: 120,
 				observerSet.ObserverList[2]: 120,
 				observerSet.ObserverList[3]: 120,
