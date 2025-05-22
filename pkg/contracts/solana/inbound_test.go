@@ -540,10 +540,7 @@ func Test_ParseInboundAsCall(t *testing.T) {
 
 		// append one more account to instruction
 		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		tx.Message.Instructions[instructionIndex].Accounts = append(
-			tx.Message.Instructions[instructionIndex].Accounts,
-			1,
-		)
+		tx.Message.Instructions[instructionIndex].Accounts = tx.Message.Instructions[instructionIndex].Accounts[:len(tx.Message.Instructions[instructionIndex].Accounts)-1]
 
 		// ACT
 		call, err := contracts.ParseInboundAsCall(tx, instructionIndex, txResult.Slot)

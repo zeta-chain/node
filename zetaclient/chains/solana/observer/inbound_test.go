@@ -5,12 +5,13 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
-	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/solana/observer"
@@ -38,9 +39,14 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = GatewayAddressTest
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.MockGetBallotByID(mock.Anything, nil)
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -58,45 +64,35 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
-		err := ob.FilterInboundEventsAndVote(context.TODO(), txResult)
+		// expected result
+		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+		eventExpected := &clienttypes.InboundEvent{
+			SenderChainID:    chain.ChainId,
+			Sender:           sender,
+			Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+			TxOrigin:         sender,
+			Amount:           24000000,
+			Memo:             []byte{},
+			BlockNumber:      txResult.Slot,
+			TxHash:           txHash,
+			Index:            0, // not a EVM smart contract call
+			CoinType:         coin.CoinType_Gas,
+			Asset:            "", // no asset for gas token SOL
+			IsCrossChainCall: false,
+		}
+
+		events, err := observer.FilterInboundEvents(
+			txResult,
+			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
+			chain.ChainId,
+			zerolog.Nop(),
+		)
 		require.NoError(t, err)
-	})
-}
-
-func Test_FilterInboundEvents(t *testing.T) {
-	// load archived inbound vote tx result from localnet
-	txHash := "QSoSLxcJAFAzxWnHVJ4s2d5k2LyjC83YaLwbMUHYcEvVnCfERsowNb6Nj55GiTXNTbNF9fzF5F8JHUEpAGMrV5k"
-	chain := chains.SolanaDevnet
-	txResult := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHash, false)
-
-	// given gateway ID
-	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
-	require.NoError(t, err)
-
-	// expected result
-	sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
-	eventExpected := &clienttypes.InboundEvent{
-		SenderChainID:    chain.ChainId,
-		Sender:           sender,
-		Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
-		TxOrigin:         sender,
-		Amount:           24000000,
-		Memo:             []byte{},
-		BlockNumber:      txResult.Slot,
-		TxHash:           txHash,
-		Index:            0, // not a EVM smart contract call
-		CoinType:         coin.CoinType_Gas,
-		Asset:            "", // no asset for gas token SOL
-		IsCrossChainCall: false,
-	}
-
-	t.Run("should filter inbound event deposit SOL", func(t *testing.T) {
-		events, err := observer.FilterInboundEvents(txResult, gatewayID, chain.ChainId, zerolog.Nop())
-		require.NoError(t, err)
-
-		// check result
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
+
+		err = ob.VoteInboundEvents(context.TODO(), events)
+		require.NoError(t, err)
 	})
 }
 
