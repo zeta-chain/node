@@ -1369,6 +1369,8 @@ github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9f
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tonkeeper/tongo v1.14.8 h1:hIj3rGqAhhPxHBiFXAwDDELEw63hLcQlLdSztmEIyaA=
 github.com/tonkeeper/tongo v1.14.8/go.mod h1:MjgIgAytFarjCoVjMLjYEtpZNN1f2G/pnZhKjr28cWs=
+github.com/tonkeeper/tongo v1.16.4 h1:NxYa0pZNX8OfMQQWPED1+yP/l+80+Fk1W/0W/+sDad4=
+github.com/tonkeeper/tongo v1.16.4/go.mod h1:MjgIgAytFarjCoVjMLjYEtpZNN1f2G/pnZhKjr28cWs=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
 github.com/tyler-smith/go-bip39 v1.1.0 h1:5eUemwrMargf3BSLRRCalXT93Ns6pQJIjYQN2nyfOP8=
 github.com/tyler-smith/go-bip39 v1.1.0/go.mod h1:gUYDtqQw1JS3ZJ8UWVcGTGqqr6YIN3CWg+kkNaLt55U=
@@ -1408,6 +1410,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3 h1:Bco3vCp5owYPZrg3GcnjaTNX51U70z57TaQJBdddpvY=
 github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3/go.mod h1:Pykye2Mw2eQ8/l80MTr6yNaBm6OI3TkQCmwQGUrL5VM=
+github.com/zeta-chain/ethermint v0.0.0-20250519115402-10fea02d10bc h1:XwitnmmgUv19mDlaAP+Zw9c6ILcY9cJu+Q9S3bSsuBo=
+github.com/zeta-chain/ethermint v0.0.0-20250519115402-10fea02d10bc/go.mod h1:Pykye2Mw2eQ8/l80MTr6yNaBm6OI3TkQCmwQGUrL5VM=
 github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc h1:FVOttT/f7QCZMkOLssLTY1cbX8pT+HS/kg81zgUAmYE=
 github.com/zeta-chain/go-ethereum v1.13.16-0.20241022183758-422c6ef93ccc/go.mod h1:MgO2/CmxFnj6W7v/5hrz3ypco3kHkb8856pRnFkY4xQ=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
@@ -1418,6 +1422,10 @@ github.com/zeta-chain/go-tss v0.5.1-0.20250501131202-70bd876407f5 h1:jCaxpa5+M/2
 github.com/zeta-chain/go-tss v0.5.1-0.20250501131202-70bd876407f5/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
 github.com/zeta-chain/go-tss v0.6.0 h1:kxIBsqaq24qNJ36h6HR/rEEY84xjN2tE03KbJykooJA=
 github.com/zeta-chain/go-tss v0.6.0/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
+github.com/zeta-chain/go-tss v0.6.1 h1:MRELa9A9ANHjLfX1AhjHp8aqciUZRjW/NLj4jYW2Ark=
+github.com/zeta-chain/go-tss v0.6.1/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
+github.com/zeta-chain/go-tss v0.6.2 h1:cFXKVd+mSHr8Sc5xheARIBUwK2N4Fx/Qr/hIhb0Ce5E=
+github.com/zeta-chain/go-tss v0.6.2/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250318094825-429d8390b7fc h1:oXw/b55v4KbX5KV7CELt5IRNDwu6w6g/P6jY2ARYzUQ=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250318094825-429d8390b7fc/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da h1:QxpqQTfFPloM8wlr59TIHA1wI9SpCvFNJ4b7PQGXucE=

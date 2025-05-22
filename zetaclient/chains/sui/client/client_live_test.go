@@ -2,12 +2,15 @@ package client
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 const (
@@ -210,6 +213,38 @@ func TestClientLive(t *testing.T) {
 		// ASSERT
 		require.Error(t, err)
 		require.Empty(t, data)
+	})
+
+	t.Run("GetSuiCoinObjectRefs", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// Given TSS balance
+		resp, err := ts.SuiXGetBalance(ts.ctx, models.SuiXGetBalanceRequest{
+			Owner:    testutils.TSSAddressSuiTestnet,
+			CoinType: string(sui.SUI),
+		})
+		require.NoError(t, err)
+
+		tssBalance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+		require.NoError(t, err)
+		require.Positive(t, tssBalance)
+
+		// ACT-1
+		// should be able to use all owned SUI coin objects
+		coinRefs, err := ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotEmpty(t, coinRefs)
+
+		// ACT-2
+		// should NOT be able to cover the big amount (balance + 1)
+		coinRefs, err = ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance+1)
+
+		// ASSERT
+		require.ErrorContains(t, err, "SUI balance is too low")
+		require.Empty(t, coinRefs)
 	})
 }
 

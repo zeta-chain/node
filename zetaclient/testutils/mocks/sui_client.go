@@ -105,27 +105,29 @@ func (_m *SuiClient) GetOwnedObjectID(ctx context.Context, ownerAddress string, 
 	return r0, r1
 }
 
-// GetSuiCoinObjectRef provides a mock function with given fields: ctx, owner
-func (_m *SuiClient) GetSuiCoinObjectRef(ctx context.Context, owner string) (sui.ObjectRef, error) {
-	ret := _m.Called(ctx, owner)
+// GetSuiCoinObjectRefs provides a mock function with given fields: ctx, owner, minBalanceMist
+func (_m *SuiClient) GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*sui.ObjectRef, error) {
+	ret := _m.Called(ctx, owner, minBalanceMist)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetSuiCoinObjectRef")
+		panic("no return value specified for GetSuiCoinObjectRefs")
 	}
 
-	var r0 sui.ObjectRef
+	var r0 []*sui.ObjectRef
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (sui.ObjectRef, error)); ok {
-		return rf(ctx, owner)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64) ([]*sui.ObjectRef, error)); ok {
+		return rf(ctx, owner, minBalanceMist)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) sui.ObjectRef); ok {
-		r0 = rf(ctx, owner)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64) []*sui.ObjectRef); ok {
+		r0 = rf(ctx, owner, minBalanceMist)
 	} else {
-		r0 = ret.Get(0).(sui.ObjectRef)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*sui.ObjectRef)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, owner)
+	if rf, ok := ret.Get(1).(func(context.Context, string, uint64) error); ok {
+		r1 = rf(ctx, owner, minBalanceMist)
 	} else {
 		r1 = ret.Error(1)
 	}
