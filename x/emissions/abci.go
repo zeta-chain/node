@@ -228,7 +228,6 @@ func distributeRewardsForMaturedBallots(
 		}
 		observerRewardUnits := rewardsDistributeMap[key]
 		if observerRewardUnits == 0 {
-			keeper.SlashObserverEmission(ctx, observerAddress.String(), sdkmath.ZeroInt())
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
 				ObserverAddress: observerAddress.String(),
