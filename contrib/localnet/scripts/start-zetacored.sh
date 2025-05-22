@@ -311,4 +311,11 @@ fi
 # mark init completed so we skip it if container is restarted
 touch ~/.zetacored/init_complete
 
-cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored --skip-config-override
+# check if --skip-config-override flag exists and set it if it does
+# TODO remove after v31 upgrade
+SKIP_CONFIG_FLAG=""
+if zetacored start --help 2>&1 | grep -q "skip-config-override"; then
+  SKIP_CONFIG_FLAG="--skip-config-override"
+fi
+
+cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored $SKIP_CONFIG_FLAG
