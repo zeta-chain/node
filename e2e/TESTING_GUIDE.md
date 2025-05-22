@@ -38,7 +38,7 @@ eth_deposit_and_call:1000 eth_withdraw_and_call:1000 erc20_deposit_and_call:1000
 When it is necessary to test the Solana workflows, SOL and SPL tokens.
 
 ```
-solana_deposit:1000 solana_withdraw:1000 solana_deposit_and_call:1000 spl_deposit:1000 spl_withdraw:1000 spl_deposit_and_call:1000 solana_deposit_and_call_revert:20000
+solana_deposit:10000000 solana_withdraw:10000000 solana_deposit_and_call:1000 spl_deposit:1000 spl_withdraw:1000 spl_deposit_and_call:1000 solana_deposit_and_call_revert:10000000
 ```
 
 ## Gateway revert workflow
