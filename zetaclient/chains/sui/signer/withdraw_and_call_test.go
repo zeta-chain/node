@@ -23,7 +23,7 @@ func newTestWACPTBArgs(
 			gateway:     gatewayObjRef,
 			withdrawCap: withdrawCapObjRef,
 			onCall:      onCallObjectRefs,
-			suiCoin:     suiCoinObjRef,
+			suiCoins:    []*sui.ObjectRef{&suiCoinObjRef},
 		},
 		coinType:  string(zetasui.SUI),
 		amount:    1000000,
@@ -155,10 +155,12 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 
 	// create SUI coin object reference
-	suiCoinObjRef := sui.ObjectRef{
-		ObjectId: suiCoinID,
-		Version:  1,
-		Digest:   digest4,
+	suiCoinObjRefs := []*sui.ObjectRef{
+		{
+			ObjectId: suiCoinID,
+			Version:  1,
+			Digest:   digest4,
+		},
 	}
 
 	tests := []struct {
@@ -227,7 +229,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 						Digest:   digest3,
 					},
 				},
-				suiCoin: suiCoinObjRef,
+				suiCoins: suiCoinObjRefs,
 			},
 		},
 		{
@@ -319,10 +321,10 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			// setup RPC mock
 			ctx := context.Background()
 			ts.SuiMock.On("SuiMultiGetObjects", ctx, mock.Anything).Return(tt.mockObjects, tt.mockError)
-			ts.SuiMock.On("GetSuiCoinObjectRef", ctx, mock.Anything).Maybe().Return(suiCoinObjRef, nil)
+			ts.SuiMock.On("GetSuiCoinObjectRefs", ctx, mock.Anything, mock.Anything).Maybe().Return(suiCoinObjRefs, nil)
 
 			// ACT
-			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs, 100)
 
 			// ASSERT
 			if tt.errMsg != "" {

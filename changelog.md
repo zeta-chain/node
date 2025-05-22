@@ -25,7 +25,8 @@
 * [3793](https://github.com/zeta-chain/node/pull/3793) - support Sui withdrawAndCall using the PTB transaction
 * [3839](https://github.com/zeta-chain/node/pull/3839) - parse Solana inbounds from inner instructions
 * [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
-
+* [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
+* [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 
 ### Refactor
 
@@ -43,12 +44,21 @@
 * [3786](https://github.com/zeta-chain/node/pull/3786) - reorder end block order to allow gov changes to be added before staking.
 * [3821](https://github.com/zeta-chain/node/pull/3821) - set retry gas limit if outbound is successful
 * [3847](https://github.com/zeta-chain/node/pull/3847) - have EVM chain tracker reporter monitor `nonce too low` outbound hashes
+* [3863](https://github.com/zeta-chain/node/pull/3863) - give enough timeout to the EVM chain transaction broadcasting
+* [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
+* [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
+* [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
+* [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
 * [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
 
 ### Tests
 
 * [3692](https://github.com/zeta-chain/node/pull/3692) - e2e staking test for `MsgUndelegate` tx, to test observer staking hooks
 * [3831](https://github.com/zeta-chain/node/pull/3831) - e2e tests for sui fungible token withdraw and call
+* [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
+* [3866](https://github.com/zeta-chain/node/pull/3866) - add e2e test for upgrading sui gateway package
+* [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+
 
 ### Refactor
 

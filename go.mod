@@ -13,7 +13,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cometbft/cometbft-db v0.14.1
+	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/gogoproto v1.7.0
@@ -49,7 +49,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/ethermint v0.0.0-20250211180824-ea52413a15f3
+	github.com/zeta-chain/ethermint v0.0.0-20250519115402-10fea02d10bc
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
@@ -102,7 +102,7 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v1.1.2
+	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
@@ -309,12 +309,11 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/fardream/go-bcs v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/jedib0t/go-pretty/v6 v6.6.7
 	github.com/montanaflynn/stats v0.7.1
 	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
-	github.com/tonkeeper/tongo v1.14.8
-	github.com/zeta-chain/go-tss v0.5.0
+	github.com/tonkeeper/tongo v1.16.4
+	github.com/zeta-chain/go-tss v0.6.2
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
 )
 

@@ -111,6 +111,38 @@ func TestCrypto(t *testing.T) {
 		assert.Equal(t, signature[:64], signature2[:])
 	})
 
+	t.Run("PrivateKeySecp256k1FromHex", func(t *testing.T) {
+		for _, tt := range []struct {
+			privKeyHex             string
+			privKeyBech32Secp256k1 string
+			errMsg                 string
+		}{
+			{
+				privKeyHex:             "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263",
+				privKeyBech32Secp256k1: "suiprivkey1q8v8htmm7mw9vz39yktx0rqjus0h695zsdlstv5agydu8au2utpxxgjwf3h",
+			},
+			{
+				privKeyHex: "invalid",
+				errMsg:     "failed to decode private key hex",
+			},
+			{
+				privKeyHex: "abcdef",
+				errMsg:     "invalid private key length",
+			},
+		} {
+			t.Run(tt.privKeyHex, func(t *testing.T) {
+				privKey, err := PrivateKeyBech32Secp256k1FromHex(tt.privKeyHex)
+				if tt.errMsg != "" {
+					require.Empty(t, privKey)
+					require.Contains(t, err.Error(), tt.errMsg)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tt.privKeyBech32Secp256k1, privKey)
+				}
+			})
+		}
+	})
+
 	t.Run("SignerSecp256k1", func(t *testing.T) {
 		for _, tt := range []struct {
 			privKey string

@@ -12,13 +12,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+type UpdateTssParams struct {
+	// Discriminator is the unique identifier for the initialize instruction
+	Discriminator [8]byte
+
+	// TssAddress is the TSS address
+	TssAddress common.Address
+}
+
 // InitializeParams contains the parameters for a gateway initialize instruction
 type InitializeParams struct {
 	// Discriminator is the unique identifier for the initialize instruction
 	Discriminator [8]byte
 
 	// TssAddress is the TSS address
-	TssAddress [20]byte
+	TssAddress common.Address
 
 	// ChainID is the chain ID for the gateway program
 	ChainID uint64
@@ -33,7 +41,7 @@ type DepositInstructionParams struct {
 	Amount uint64
 
 	// Receiver is the receiver for the deposit
-	Receiver [20]byte
+	Receiver common.Address
 
 	// RevertOptions are optional revert options
 	RevertOptions *RevertOptions
@@ -48,7 +56,7 @@ type DepositAndCallInstructionParams struct {
 	Amount uint64
 
 	// Receiver is the receiver for the deposit_and_call
-	Receiver [20]byte
+	Receiver common.Address
 
 	// Memo is the memo for the deposit_and_call
 	Memo []byte
@@ -66,7 +74,7 @@ type DepositSPLInstructionParams struct {
 	Amount uint64
 
 	// Receiver is the receiver for the deposit_spl
-	Receiver [20]byte
+	Receiver common.Address
 
 	// RevertOptions are optional revert options
 	RevertOptions *RevertOptions
@@ -81,7 +89,7 @@ type DepositSPLAndCallInstructionParams struct {
 	Amount uint64
 
 	// Receiver is the receiver for the deposit_spl_and_call
-	Receiver [20]byte
+	Receiver common.Address
 
 	// Memo is the memo for the deposit_spl_and_call
 	Memo []byte
@@ -96,7 +104,7 @@ type CallInstructionParams struct {
 	Discriminator [8]byte
 
 	// Receiver is the receiver for the call
-	Receiver [20]byte
+	Receiver common.Address
 
 	// Memo is the memo for the call
 	Memo []byte
@@ -111,7 +119,7 @@ type RevertOptions struct {
 	RevertAddress solana.PublicKey
 
 	// AbortAddress is address to receive funds if aborted
-	AbortAddress solana.PublicKey
+	AbortAddress common.Address
 
 	// CallOnRevert is flag marking if on_revert hook should be called
 	CallOnRevert bool
@@ -281,7 +289,7 @@ type ExecuteInstructionParams struct {
 	Amount uint64
 
 	// Sender from zetachain
-	Sender [20]byte
+	Sender common.Address
 
 	// Data for connected program
 	Data []byte
@@ -492,7 +500,7 @@ type ExecuteSPLInstructionParams struct {
 	Amount uint64
 
 	// Sender from zetachain
-	Sender [20]byte
+	Sender common.Address
 
 	// Data for connected program
 	Data []byte

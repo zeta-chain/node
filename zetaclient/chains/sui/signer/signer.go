@@ -32,8 +32,9 @@ type Signer struct {
 type RPC interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
+	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)
-	GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error)
+	GetSuiCoinObjectRefs(ctx context.Context, owner string, minBalanceMist uint64) ([]*suiptb.ObjectRef, error)
 
 	MoveCall(ctx context.Context, req models.MoveCallRequest) (models.TxnMetaData, error)
 	SuiExecuteTransactionBlock(
@@ -77,6 +78,23 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	s.MarkOutbound(outboundID, true)
 	defer func() { s.MarkOutbound(outboundID, false) }()
 
+	// prepare logger
+	logger := s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
+	ctx = logger.WithContext(ctx)
+
+	// skip if gateway nonce does not match CCTX nonce:
+	// 1. this will avoid unnecessary gateway nonce mismatch error in the 'withdraw_impl'
+	// 2. this also avoid unexpected gateway version bump and cause subsequent txs to fail
+	gatewayNonce, err := s.getGatewayNonce(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get gateway nonce")
+	}
+
+	if gatewayNonce != nonce {
+		logger.Info().Msgf("gateway nonce %d does not match CCTX nonce %d, skip broadcast", gatewayNonce, nonce)
+		return nil
+	}
+
 	withdrawTxBuilder, err := s.createWithdrawTxBuilder(cctx, zetaHeight)
 	if err != nil {
 		return errors.Wrap(err, "unable to create withdrawal tx builder")
@@ -87,10 +105,6 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	if err != nil {
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
-
-	// prepare logger
-	logger := s.Logger().Std.With().Uint64(logs.FieldNonce, nonce).Logger()
-	ctx = logger.WithContext(ctx)
 
 	var txDigest string
 

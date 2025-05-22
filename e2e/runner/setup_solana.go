@@ -227,3 +227,52 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 
 	return errors.New("unable to set Solana chain params")
 }
+
+// UpdateTSSAddressSolana updates the TSS address on the Solana gateway program
+func (r *E2ERunner) UpdateTSSAddressSolana(gatewayID, deployerPrivateKey string) {
+	r.Logger.Print("⚙️ updating tss on the gateway program on Solana")
+
+	// set Solana contracts
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(gatewayID)
+
+	// get deployer account balance
+	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
+	require.NoError(r, err)
+	pdaComputed := r.ComputePdaAddress()
+
+	// create 'initialize' instruction
+	var inst solana.GenericInstruction
+	accountSlice := []*solana.AccountMeta{}
+	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
+	inst.ProgID = r.GatewayProgram
+	inst.AccountValues = accountSlice
+
+	inst.DataBytes, err = borsh.Serialize(solanacontracts.UpdateTssParams{
+		Discriminator: solanacontracts.DiscriminatorUpdateTss,
+		TssAddress:    r.TSSAddress,
+	})
+	require.NoError(r, err)
+
+	// create and sign the transaction
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("update TSS gateway logs: %v", out.Meta.LogMessages)
+
+	// retrieve the PDA account info
+	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
+	require.NoError(r, err)
+
+	pda := solanacontracts.PdaInfo{}
+	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
+	require.NoError(r, err)
+	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
+
+	// verify updated TSS address
+	require.Equal(r, r.TSSAddress, tssAddress, "TSS address mismatch")
+}

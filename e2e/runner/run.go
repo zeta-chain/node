@@ -28,6 +28,15 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 
 // RunE2ETest runs a e2e test
 func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
+	// wait for all dependencies to complete
+	// this is only used by Bitcoin RBF test at the moment
+	if len(e2eTest.Dependencies) > 0 {
+		r.Logger.Print("⏳ waiting   - %s", e2eTest.Name)
+		for _, dependency := range e2eTest.Dependencies {
+			dependency.Wait()
+		}
+	}
+
 	startTime := time.Now()
 	// note: spacing is padded to width of completed message
 	r.Logger.Print("⏳ running   - %s", e2eTest.Name)

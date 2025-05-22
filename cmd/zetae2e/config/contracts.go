@@ -130,6 +130,9 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if suiPackageID != "" && suiGatewayID != "" {
 		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
+	if c := conf.Contracts.Sui.GatewayUpgradeCap; c != "" {
+		r.SuiGatewayUpgradeCap = c.String()
+	}
 	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
 		r.SuiTokenCoinType = c.String()
 	}

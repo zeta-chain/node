@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"

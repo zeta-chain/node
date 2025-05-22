@@ -199,7 +199,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/bitcoin-core-docker:a94b52f
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0-zeta6
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -281,6 +281,10 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local"]
+    # add public dns to be able to resolve github.com for sui gateway upgrade test
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}

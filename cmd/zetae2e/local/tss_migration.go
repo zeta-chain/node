@@ -78,7 +78,7 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	require.NoError(deployerRunner, err)
 
 	// Generate new TSS
-	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+	noError(waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0))
 
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
@@ -97,5 +97,8 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	deployerRunner.UpdateTSSAddressForConnector()
 	deployerRunner.UpdateTSSAddressForERC20custody()
 	deployerRunner.UpdateTSSAddressForGateway()
+	deployerRunner.UpdateTSSAddressSolana(
+		conf.Contracts.Solana.GatewayProgramID.String(),
+		conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

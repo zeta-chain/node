@@ -285,11 +285,6 @@ func parseGasUsed(tx models.SuiTransactionBlockResponse) (uint64, error) {
 		return 0, errors.Wrap(err, "storage rebate")
 	}
 
-	// should not happen
-	if (compCost + storageCost) < storageRebate {
-		return 0, errors.New("storage rebate exceeds total costs")
-	}
-
 	return compCost + storageCost - storageRebate, nil
 }
 
