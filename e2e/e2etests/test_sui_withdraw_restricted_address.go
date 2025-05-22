@@ -4,27 +4,25 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSuiWithdrawRestrictedAddress tests that a withdrawal to a restricted address reverts to a revert address
 // the test also add a case to check withdrawal to Sui invalid address immediately fail, we don't add a dedicated test as this is a small logic
 func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
-	amount := utils.ParseBigInt(r, args[0])
-
-	// Restricted address
+	require.Len(r, args, 3)
 
 	// ARRANGE
-	// Given receiver, revert address
-	receiver := sample.RestrictedSuiAddressTest
-	revertAddress := sample.EthAddress()
+	// Given amount, receiver, revert address
+	receiver := args[0]
+	amount := utils.ParseBigInt(r, args[1])
+	revertAddress := ethcommon.HexToAddress(args[2])
 
 	// balances before
 	receiverBalanceBefore := r.SuiGetSUIBalance(receiver)

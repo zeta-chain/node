@@ -577,6 +577,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
@@ -590,7 +591,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 		[]byte(to.String()),
 		amount,
 		r.SOLZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		revertOptions,
 	)
 	require.NoError(r, err)
 	r.Logger.EVMTransaction(*tx, "withdraw")

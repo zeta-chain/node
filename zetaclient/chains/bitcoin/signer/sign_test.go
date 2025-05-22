@@ -46,7 +46,7 @@ func Test_SignWithdrawTx(t *testing.T) {
 	// helper function to create tx data
 	mkTxData := func(height uint64, minRelayFee float64) OutboundData {
 		cctx := mkCCTX(t)
-		txData, err := NewOutboundData(cctx, height, minRelayFee, zerolog.Nop(), zerolog.Nop())
+		txData, err := NewOutboundData(cctx, height, minRelayFee, false, zerolog.Nop())
 		require.NoError(t, err)
 		return *txData
 	}

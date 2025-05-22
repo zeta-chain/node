@@ -28,13 +28,14 @@ func Test_NewOutboundData(t *testing.T) {
 
 	// test cases
 	tests := []struct {
-		name         string
-		cctx         *crosschaintypes.CrossChainTx
-		cctxModifier func(cctx *crosschaintypes.CrossChainTx)
-		height       uint64
-		minRelayFee  float64
-		expected     *OutboundData
-		errMsg       string
+		name           string
+		cctx           *crosschaintypes.CrossChainTx
+		cctxModifier   func(cctx *crosschaintypes.CrossChainTx)
+		height         uint64
+		minRelayFee    float64
+		restrictedCCTX bool
+		expected       *OutboundData
+		errMsg         string
 	}{
 		{
 			name: "create new outbound data successfully, no fee bump",
@@ -182,8 +183,9 @@ func Test_NewOutboundData(t *testing.T) {
 				cctx.GetCurrentOutboundParam().GasPrice = "8"                // 8 sats/vByte
 				cctx.GetCurrentOutboundParam().TssNonce = 1
 			},
-			height:      101,
-			minRelayFee: 0.00001, // 1000 sat/KB
+			height:         101,
+			minRelayFee:    0.00001, // 1000 sat/KB
+			restrictedCCTX: true,
 			expected: &OutboundData{
 				to:          receiver,
 				amount:      0, // should cancel the tx
@@ -228,7 +230,7 @@ func Test_NewOutboundData(t *testing.T) {
 				tt.cctxModifier(tt.cctx)
 			}
 
-			outboundData, err := NewOutboundData(tt.cctx, tt.height, tt.minRelayFee, log.Logger, log.Logger)
+			outboundData, err := NewOutboundData(tt.cctx, tt.height, tt.minRelayFee, tt.restrictedCCTX, log.Logger)
 			if tt.errMsg != "" {
 				require.Nil(t, outboundData)
 				require.ErrorContains(t, err, tt.errMsg)
