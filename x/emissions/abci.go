@@ -185,19 +185,25 @@ func distributeRewardsForMaturedBallots(
 			continue
 		}
 		ballots = append(ballots, ballot)
+		// Definitions:
+		// Correct votes: Votes which are in line with the final status of the ballot
+		// Incorrect votes: Votes which are not in line with the final status of the ballot
+		// Finalized Ballot: A ballot which has been finalized and is not in progress.Both success and failure ballots are finalized.
+		// Net Positive: Correct and Incorrect votes cancel each other out.
+
 		// Process votes and update rewardsMap
 		// Observer rewards are as follows:
 		// 1. Rewarded for correct votes
 		// 2. Penalized for incorrect votes
 
-		// After calculating the rewardsMap, the net positive observers are rewarded
+		// After calculating the rewardsMap, the net positive observers are rewarded.
 		ballot.BuildRewardsDistribution(rewardsDistributeMap)
 	}
 	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
 
 	for address, rewardUnits := range rewardsDistributeMap {
 		sortedKeys = append(sortedKeys, address)
-		// Rewards are only distributed for correct votes
+		// Rewards are only distributed for correct votes,calculate the total rewards units from the final map to allocate maximum rewards possible to observers
 		if rewardUnits > 0 {
 			totalRewardsUnits += rewardUnits
 		}
@@ -206,6 +212,7 @@ func distributeRewardsForMaturedBallots(
 
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
+		// Use Quo to be safe and not over allocate
 		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
@@ -219,7 +226,6 @@ func distributeRewardsForMaturedBallots(
 			ctx.Logger().Error("Error while parsing observer address ", "error", err, "address", key)
 			continue
 		}
-		// observerRewardUnits are 0 if they did not vote on any ballots successfully.
 		observerRewardUnits := rewardsDistributeMap[key]
 		if observerRewardUnits == 0 {
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), sdkmath.ZeroInt())

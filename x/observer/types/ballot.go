@@ -100,7 +100,7 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) {
 	}
 
 	// Determine the winning vote type based on ballot status
-	// majorityVote is the vote type by thr majority of the observers
+	// majorityVote is the vote type by the majority of the observers
 	majorityVote := VoteType_SuccessObservation
 	if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
 		majorityVote = VoteType_FailureObservation
@@ -111,6 +111,7 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) {
 		if vote == majorityVote {
 			rewardsMap[address]++
 		} else {
+			// NotVoted is always included in else case
 			rewardsMap[address]--
 		}
 	}
