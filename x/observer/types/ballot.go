@@ -93,14 +93,11 @@ func CreateVotes(listSize int) []VoteType {
 
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
 // It returns the total rewards units which account for the observer block rewards
-func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
+func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) {
 	// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
 	if m.BallotStatus == BallotStatus_BallotInProgress {
-		return 0
+		return
 	}
-
-	// Initial value for total reward units
-	totalRewardUnits := int64(0)
 
 	// Determine the winning vote type based on ballot status
 	// majorityVote is the vote type by thr majority of the observers
@@ -109,25 +106,12 @@ func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
 		majorityVote = VoteType_FailureObservation
 	}
 
-	// Process votes and update rewardsMap
-	// Observer rewardsa are as follows:
-	// 1. Rewarded for correct votes
-	// 2. Not Rewarded for incorrect votes.Note We are not taking any tokens away from the observer we are just not rewarding them.
-
-	// totalRewardUnits is the sum of all the rewards units.It is used
-	// to calculate the reward per unit based on AmountOfRewards/totalRewardUnits
-
 	for _, address := range m.VoterList {
 		vote := m.Votes[m.GetVoterIndex(address)]
-		if _, exists := rewardsMap[address]; !exists {
-			rewardsMap[address] = 0
-		}
-
 		if vote == majorityVote {
 			rewardsMap[address]++
-			totalRewardUnits++
+		} else {
+			rewardsMap[address]--
 		}
 	}
-
-	return totalRewardUnits
 }

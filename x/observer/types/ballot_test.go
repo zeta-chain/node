@@ -443,7 +443,7 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				"Observer1": 1,
 				"Observer2": 1,
 				"Observer3": 1,
-				"Observer4": 0,
+				"Observer4": -1,
 			},
 			expectedRewardsTotal: 3,
 		},
@@ -459,8 +459,8 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			ballotStatus: BallotStatus_BallotFinalized_FailureObservation,
 			initialMap:   map[string]int64{},
 			expectedMap: map[string]int64{
-				"Observer1": 0,
-				"Observer2": 0,
+				"Observer1": -1,
+				"Observer2": -1,
 				"Observer3": 1,
 				"Observer4": 1,
 			},
@@ -510,7 +510,7 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				"Observer1": 41,
 				"Observer2": 41,
 				"Observer3": 36,
-				"Observer4": -40,
+				"Observer4": -41,
 			},
 			expectedRewardsTotal: 3,
 		},
@@ -531,8 +531,8 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				"Observer4": -40,
 			},
 			expectedMap: map[string]int64{
-				"Observer1": 40,
-				"Observer2": 40,
+				"Observer1": 39,
+				"Observer2": 39,
 				"Observer3": 36,
 				"Observer4": -39,
 			},
@@ -552,9 +552,8 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 				BallotStatus:     test.ballotStatus,
 			}
 			inputMap := test.initialMap
-			total := ballot.BuildRewardsDistribution(inputMap)
+			ballot.BuildRewardsDistribution(inputMap)
 			require.Equal(t, test.expectedMap, inputMap)
-			require.Equal(t, test.expectedRewardsTotal, total)
 		})
 	}
 }

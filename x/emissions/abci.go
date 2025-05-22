@@ -185,29 +185,34 @@ func distributeRewardsForMaturedBallots(
 			continue
 		}
 		ballots = append(ballots, ballot)
-		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributeMap)
+		// Process votes and update rewardsMap
+		// Observer rewards are as follows:
+		// 1. Rewarded for correct votes
+		// 2. Penalized for incorrect votes
+
+		// After calculating the rewardsMap, the net positive observers are rewarded
+		ballot.BuildRewardsDistribution(rewardsDistributeMap)
 	}
+	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
+
+	for address, rewardUnits := range rewardsDistributeMap {
+		sortedKeys = append(sortedKeys, address)
+		// Rewards are only distributed for correct votes
+		if rewardUnits > 0 {
+			totalRewardsUnits += rewardUnits
+		}
+	}
+	sort.Strings(sortedKeys)
+
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
 		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
 		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(maturedBallots)))
-	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
-	for k := range rewardsDistributeMap {
-		sortedKeys = append(sortedKeys, k)
-	}
 
-	sort.Strings(sortedKeys)
 	var finalDistributionList []*types.ObserverEmission
-	// Correct vote: If the vote matches the ballot status, it is deemed correct
-	// Incorrect vote: If the vote does not match the ballot status, it is deemed incorrect
 
-	// Not voted is Incorrect by default
-	// Only Finalized ballots (Success or Failure) are considered for rewards.
-
-	// Observers are rewarded only for correct votes.
-	// Observers are slashed only if they have no correct votes for all ballots in the entire block
 	for _, key := range sortedKeys {
 		observerAddress, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
@@ -217,6 +222,16 @@ func distributeRewardsForMaturedBallots(
 		// observerRewardUnits are 0 if they did not vote on any ballots successfully.
 		observerRewardUnits := rewardsDistributeMap[key]
 		if observerRewardUnits == 0 {
+			keeper.SlashObserverEmission(ctx, observerAddress.String(), sdkmath.ZeroInt())
+			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
+				EmissionType:    types.EmissionType_Slash,
+				ObserverAddress: observerAddress.String(),
+				Amount:          sdkmath.ZeroInt(),
+			})
+			continue
+		}
+
+		if observerRewardUnits < 0 {
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
