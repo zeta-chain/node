@@ -8,7 +8,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
@@ -85,10 +84,21 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
-				// filter inbound events and vote
-				if err = ob.FilterInboundEventsAndVote(ctx, txResult); err != nil {
-					// we have to re-scan this signature on next ticker
-					return errors.Wrapf(err, "error FilterInboundEventAndVote for sig %s", sigString)
+				// filter the events
+				events, err := ob.FilterInboundEvents(txResult)
+				if err != nil {
+					// Log the error but continue processing other transactions
+					ob.Logger().Inbound.Error().
+						Err(err).
+						Str("tx.signature", sigString).
+						Msg("ObserveInbound: error filtering events, skipping")
+					continue
+				}
+
+				// vote on the events
+				if err := ob.VoteInboundEvents(ctx, events); err != nil {
+					// return error to retry this transaction
+					return errors.Wrapf(err, "error voting on events for transaction %s, will retry", sigString)
 				}
 			}
 		}
@@ -117,25 +127,17 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// FilterInboundEventsAndVote filters inbound events from a txResult and post a vote.
-func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
-	// filter inbound events from txResult
-	events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
-	if err != nil {
-		return errors.Wrapf(err, "error FilterInboundEvent")
-	}
-
-	// build inbound vote message from events and post to zetacore
+// VoteInboundEvents posts votes for inbound events to zetacore.
+func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes.InboundEvent) error {
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err := ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 			if err != nil {
 				return errors.Wrapf(err, "error PostVoteInbound")
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -144,12 +146,7 @@ func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rp
 //   - takes at one event (the first) per token (SOL or SPL) per transaction.
 //   - takes at most two events (one SOL + one SPL) per transaction.
 //   - ignores exceeding events.
-func FilterInboundEvents(
-	txResult *rpc.GetTransactionResult,
-	gatewayID solana.PublicKey,
-	senderChainID int64,
-	logger zerolog.Logger,
-) ([]*clienttypes.InboundEvent, error) {
+func (ob *Observer) FilterInboundEvents(txResult *rpc.GetTransactionResult) ([]*clienttypes.InboundEvent, error) {
 	// unmarshal transaction
 	tx, err := txResult.Transaction.GetTransaction()
 	if err != nil {
@@ -172,7 +169,7 @@ func FilterInboundEvents(
 		// get the program ID
 		programPk, err := tx.Message.Program(instruction.ProgramIDIndex)
 		if err != nil {
-			logger.Err(err).
+			ob.Logger().Inbound.Err(err).
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
 				Uint16("index", instruction.ProgramIDIndex).
@@ -181,7 +178,7 @@ func FilterInboundEvents(
 		}
 
 		// skip instructions that are irrelevant to the gateway program invocation
-		if !programPk.Equals(gatewayID) {
+		if !programPk.Equals(ob.gatewayID) {
 			continue
 		}
 
@@ -193,7 +190,7 @@ func FilterInboundEvents(
 			} else if deposit != nil {
 				seenDeposit = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
+					SenderChainID:    ob.Chain().ChainId,
 					Sender:           deposit.Sender,
 					Receiver:         deposit.Receiver,
 					TxOrigin:         deposit.Sender,
@@ -207,14 +204,14 @@ func FilterInboundEvents(
 					IsCrossChainCall: deposit.IsCrossChainCall,
 					RevertOptions:    deposit.RevertOptions,
 				})
-				logger.Info().
+				ob.Logger().Inbound.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Int("instruction", i).
 					Msg("deposit detected")
 			}
 		} else {
-			logger.Warn().
+			ob.Logger().Inbound.Warn().
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
 				Int("instruction", i).
@@ -229,7 +226,7 @@ func FilterInboundEvents(
 			} else if deposit != nil {
 				seenDepositSPL = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
+					SenderChainID:    ob.Chain().ChainId,
 					Sender:           deposit.Sender,
 					Receiver:         deposit.Receiver,
 					TxOrigin:         deposit.Sender,
@@ -243,14 +240,14 @@ func FilterInboundEvents(
 					IsCrossChainCall: deposit.IsCrossChainCall,
 					RevertOptions:    deposit.RevertOptions,
 				})
-				logger.Info().
+				ob.Logger().Inbound.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Int("instruction", i).
 					Msg("SPL deposit detected")
 			}
 		} else {
-			logger.Warn().
+			ob.Logger().Inbound.Warn().
 				Str("signature", tx.Signatures[0].String()).
 				Int("instruction", i).
 				Msg("multiple SPL deposits detected")
@@ -264,7 +261,7 @@ func FilterInboundEvents(
 			} else if call != nil {
 				seenCall = true
 				events = append(events, &clienttypes.InboundEvent{
-					SenderChainID:    senderChainID,
+					SenderChainID:    ob.Chain().ChainId,
 					Sender:           call.Sender,
 					Receiver:         call.Receiver,
 					TxOrigin:         call.Sender,
@@ -278,14 +275,14 @@ func FilterInboundEvents(
 					IsCrossChainCall: call.IsCrossChainCall,
 					RevertOptions:    call.RevertOptions,
 				})
-				logger.Info().
+				ob.Logger().Inbound.Info().
 					Str(logs.FieldMethod, "FilterInboundEvents").
 					Str("signature", tx.Signatures[0].String()).
 					Int("instruction", i).
 					Msg("call detected")
 			}
 		} else {
-			logger.Warn().
+			ob.Logger().Inbound.Warn().
 				Str(logs.FieldMethod, "FilterInboundEvents").
 				Str("signature", tx.Signatures[0].String()).
 				Int("instruction", i).
