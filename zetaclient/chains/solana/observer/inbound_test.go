@@ -81,7 +81,12 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 			IsCrossChainCall: false,
 		}
 
-		events, err := observer.FilterInboundEvents(txResult, solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet), chain.ChainId, zerolog.Nop())
+		events, err := observer.FilterInboundEvents(
+			txResult,
+			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
+			chain.ChainId,
+			zerolog.Nop(),
+		)
 		require.NoError(t, err)
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
