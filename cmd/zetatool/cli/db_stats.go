@@ -16,8 +16,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-// ModuleStats represents statistics for a single module
-type ModuleStats struct {
+// moduleStats represents statistics for a single module
+type moduleStats struct {
 	Count        int `json:"count"`        // Number of key-value pairs
 	TotalKeySize int `json:"totalKeySize"` // Total size of all keys in bytes
 	TotalValSize int `json:"totalValSize"` // Total size of all values in bytes
@@ -25,20 +25,20 @@ type ModuleStats struct {
 	AvgValSize   int `json:"avgValSize"`   // Average value size in bytes
 }
 
-// DatabaseStats represents the overall database statistics
-type DatabaseStats struct {
+// databaseStats represents the overall database statistics
+type databaseStats struct {
 	TotalKeys    int                     `json:"totalKeys"`
 	TotalKeySize int                     `json:"totalKeySize"`
 	TotalValSize int                     `json:"totalValSize"`
-	Modules      map[string]*ModuleStats `json:"modules"`
+	Modules      map[string]*moduleStats `json:"modules"`
 }
 
 // OutputFormat represents the supported output formats
 type OutputFormat string
 
 const (
-	FormatTable OutputFormat = "table"
-	FormatJSON  OutputFormat = "json"
+	formatTable OutputFormat = "table"
+	formatJSON  OutputFormat = "json"
 )
 
 var moduleRe = regexp.MustCompile(`s\/k:(\w+)\/`)
@@ -58,7 +58,13 @@ The output can be formatted as a table (default) or JSON.`,
 	}
 
 	cmd.Flags().String("dbpath", "", "Path to the application DB directory (required)")
-	cmd.Flags().String("format", string(FormatTable), "Output format (table|json)")
+	cmd.Flags().String("format", string(formatTable), "Output format (table|json)")
+
+	if err := cmd.MarkFlagRequired("dbpath"); err != nil {
+		fmt.Println("Error marking flag as required")
+		os.Exit(1)
+	}
+
 	return cmd
 }
 
@@ -67,9 +73,6 @@ func runStatsCommand(cmd *cobra.Command, _ []string) error {
 	dbPath, err := cmd.Flags().GetString("dbpath")
 	if err != nil {
 		return errors.Wrap(err, "failed to get dbpath")
-	}
-	if dbPath == "" {
-		return errors.New("missing required --dbpath argument")
 	}
 
 	format, err := cmd.Flags().GetString("format")
@@ -104,9 +107,9 @@ func openDatabase(dbPath string) (dbm.DB, error) {
 }
 
 // collectStats iterates through the database and collects statistics
-func collectStats(db dbm.DB) (*DatabaseStats, error) {
-	stats := &DatabaseStats{
-		Modules: make(map[string]*ModuleStats),
+func collectStats(db dbm.DB) (*databaseStats, error) {
+	stats := &databaseStats{
+		Modules: make(map[string]*moduleStats),
 	}
 
 	iter, err := db.Iterator(nil, nil)
@@ -154,9 +157,9 @@ func getModuleName(key string) string {
 }
 
 // updateModuleStats updates statistics for a specific module
-func updateModuleStats(modules map[string]*ModuleStats, moduleName string, keySize, valSize int) {
+func updateModuleStats(modules map[string]*moduleStats, moduleName string, keySize, valSize int) {
 	if modules[moduleName] == nil {
-		modules[moduleName] = &ModuleStats{}
+		modules[moduleName] = &moduleStats{}
 	}
 
 	stats := modules[moduleName]
@@ -166,11 +169,11 @@ func updateModuleStats(modules map[string]*ModuleStats, moduleName string, keySi
 }
 
 // displayStats renders the statistics in the specified format
-func displayStats(stats *DatabaseStats, format OutputFormat) error {
+func displayStats(stats *databaseStats, format OutputFormat) error {
 	switch format {
-	case FormatTable:
+	case formatTable:
 		displayTable(stats)
-	case FormatJSON:
+	case formatJSON:
 		return displayJSON(stats)
 	default:
 		return errors.New("unsupported format")
@@ -179,7 +182,7 @@ func displayStats(stats *DatabaseStats, format OutputFormat) error {
 }
 
 // displayTable renders the statistics in a formatted table
-func displayTable(stats *DatabaseStats) {
+func displayTable(stats *databaseStats) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(
@@ -193,10 +196,10 @@ func displayTable(stats *DatabaseStats) {
 		s := stats.Modules[m]
 		t.AppendRow([]interface{}{
 			m,
-			byteCountDecimal(s.AvgKeySize),
-			byteCountDecimal(s.AvgValSize),
-			byteCountDecimal(s.TotalKeySize),
-			byteCountDecimal(s.TotalValSize),
+			formatBytes(s.AvgKeySize),
+			formatBytes(s.AvgValSize),
+			formatBytes(s.TotalKeySize),
+			formatBytes(s.TotalValSize),
 			s.Count,
 		})
 	}
@@ -206,8 +209,8 @@ func displayTable(stats *DatabaseStats) {
 			"Total",
 			"",
 			"",
-			byteCountDecimal(stats.TotalKeySize),
-			byteCountDecimal(stats.TotalValSize),
+			formatBytes(stats.TotalKeySize),
+			formatBytes(stats.TotalValSize),
 			stats.TotalKeys,
 		},
 	)
@@ -215,7 +218,7 @@ func displayTable(stats *DatabaseStats) {
 }
 
 // displayJSON renders the statistics in JSON format
-func displayJSON(stats *DatabaseStats) error {
+func displayJSON(stats *databaseStats) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(stats)
@@ -228,8 +231,8 @@ func sortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-// byteCountDecimal formats a byte count into a human-readable string
-func byteCountDecimal(b int) string {
+// formatBytes formats a byte count into a human-readable string
+func formatBytes(b int) string {
 	const unit = 1000
 	if b < unit {
 		return fmt.Sprintf("%d B", b)
