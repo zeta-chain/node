@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../../../cosmos/base/query/v1beta1/pagination_pb.js";
-import type { Ballot, BallotStatus, VoteType } from "./ballot_pb.js";
+import type { Ballot, BallotListForHeight, BallotStatus, VoteType } from "./ballot_pb.js";
 import type { OperationalFlags } from "./operational_pb.js";
 import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
@@ -1330,5 +1330,53 @@ export declare class QueryBlameByChainAndNonceResponse extends Message<QueryBlam
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBlameByChainAndNonceResponse;
 
   static equals(a: QueryBlameByChainAndNonceResponse | PlainMessage<QueryBlameByChainAndNonceResponse> | undefined, b: QueryBlameByChainAndNonceResponse | PlainMessage<QueryBlameByChainAndNonceResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBallotListForHeightRequest
+ */
+export declare class QueryBallotListForHeightRequest extends Message<QueryBallotListForHeightRequest> {
+  /**
+   * @generated from field: int64 height = 1;
+   */
+  height: bigint;
+
+  constructor(data?: PartialMessage<QueryBallotListForHeightRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBallotListForHeightRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBallotListForHeightRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBallotListForHeightRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBallotListForHeightRequest;
+
+  static equals(a: QueryBallotListForHeightRequest | PlainMessage<QueryBallotListForHeightRequest> | undefined, b: QueryBallotListForHeightRequest | PlainMessage<QueryBallotListForHeightRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryBallotListForHeightResponse
+ */
+export declare class QueryBallotListForHeightResponse extends Message<QueryBallotListForHeightResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.BallotListForHeight ballot_list = 1;
+   */
+  ballotList?: BallotListForHeight;
+
+  constructor(data?: PartialMessage<QueryBallotListForHeightResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryBallotListForHeightResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryBallotListForHeightResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryBallotListForHeightResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryBallotListForHeightResponse;
+
+  static equals(a: QueryBallotListForHeightResponse | PlainMessage<QueryBallotListForHeightResponse> | undefined, b: QueryBallotListForHeightResponse | PlainMessage<QueryBallotListForHeightResponse> | undefined): boolean;
 }
 
