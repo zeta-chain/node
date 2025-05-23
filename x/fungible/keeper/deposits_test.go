@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/node/e2e/contracts/testabort"
 	"math/big"
 	"testing"
 
@@ -66,6 +67,16 @@ func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, e
 	assertContractDeployment(t, evmk, ctx, testDAppV2)
 
 	return testDAppV2
+}
+
+// deployTestAbort deploys the test abort contract and returns its address
+func deployTestAbort(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
+	testAbort, err := k.DeployContract(ctx, testabort.TestAbortMetaData)
+	require.NoError(t, err)
+	require.NotEmpty(t, testAbort)
+	assertContractDeployment(t, evmk, ctx, testAbort)
+
+	return testAbort
 }
 
 // assertTestDAppV2MessageAndAmount asserts the message and amount of the test dapp v2 contract
@@ -704,5 +715,138 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 			messageIndex,
 			82,
 		)
+	})
+}
+
+func TestKeeper_ProcessAbort(t *testing.T) {
+	t.Run("should process abort with onAbort call", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, err := k.ProcessAbort(
+			ctx,
+			sample.EthAddress().String(),
+			big.NewInt(82),
+			false,
+			chainID,
+			coin.CoinType_Gas,
+			"",
+			testAbort,
+			[]byte("foo"),
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, testAbort)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(82), balance)
+	})
+
+	t.Run("should return a onAbortFailError if onAbortFailed", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// onAbort will fail because the testAbort contract is not a valid contract
+		abortAddress := sample.EthAddress()
+
+		// ACT
+		_, err := k.ProcessAbort(
+			ctx,
+			sample.EthAddress().String(),
+			big.NewInt(82),
+			false,
+			chainID,
+			coin.CoinType_Gas,
+			"",
+			abortAddress,
+			[]byte("foo"),
+		)
+
+		// ASSERT
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrOnAbortFailed)
+
+		// account still founded
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, abortAddress)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(82), balance)
+	})
+
+	t.Run("can't process abort for ZETA token", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// ACT
+		_, err := k.ProcessAbort(
+			ctx,
+			sample.EthAddress().String(),
+			big.NewInt(82),
+			false,
+			chainID,
+			coin.CoinType_Zeta,
+			"",
+			testAbort,
+			[]byte("foo"),
+		)
+
+		// ASSERT
+		require.Error(t, err)
+		require.NotErrorIs(t, err, types.ErrOnAbortFailed)
+	})
+
+	t.Run("can't process abort for invalid chain ID", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		// deploy test dapp
+		testAbort := deployTestAbort(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// ACT
+		_, err := k.ProcessAbort(
+			ctx,
+			sample.EthAddress().String(),
+			big.NewInt(82),
+			false,
+			919191,
+			coin.CoinType_Gas,
+			"",
+			testAbort,
+			[]byte("foo"),
+		)
+
+		// ASSERT
+		require.Error(t, err)
+		require.NotErrorIs(t, err, types.ErrOnAbortFailed)
 	})
 }
