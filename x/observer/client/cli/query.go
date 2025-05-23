@@ -45,6 +45,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdGetTssFundsMigrator(),
 		CmdShowOperationalFlags(),
 		CmdAllBallots(),
+		CmdBallotListForHeight(),
 	)
 
 	return cmd

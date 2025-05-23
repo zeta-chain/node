@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
+	errorspkg "github.com/pkg/errors"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
@@ -222,7 +223,7 @@ func (k Keeper) ProcessAbort(
 	}
 
 	// call onAbort
-	return k.CallExecuteAbort(
+	txRes, err := k.CallExecuteAbort(
 		ctx,
 		inboundSender,
 		zrc20Addr,
@@ -232,6 +233,10 @@ func (k Keeper) ProcessAbort(
 		abortAddress,
 		revertMessage,
 	)
+	if err != nil {
+		return txRes, errors.Join(err, types.ErrOnAbortFailed)
+	}
+	return txRes, nil
 }
 
 // getAndCheckZRC20 returns the ZRC20 contract address and foreign coin for the given chainID and asset
@@ -261,7 +266,7 @@ func (k Keeper) getAndCheckZRC20(
 	} else {
 		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
 		if !found {
-			return ethcommon.Address{}, types.ForeignCoins{}, errors.Wrapf(
+			return ethcommon.Address{}, types.ForeignCoins{}, errorspkg.Wrapf(
 				crosschaintypes.ErrForeignCoinNotFound,
 				"asset: %s, chainID %d", asset, chainID,
 			)
