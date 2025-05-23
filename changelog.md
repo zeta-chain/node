@@ -48,6 +48,7 @@
 * [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 * [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
+* [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
 * [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
 
 ### Tests
