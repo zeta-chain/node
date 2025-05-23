@@ -92,7 +92,6 @@ func CreateVotes(listSize int) []VoteType {
 }
 
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
-// It returns the total rewards units which account for the observer block rewards
 func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) {
 	// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
 	if m.BallotStatus == BallotStatus_BallotInProgress {
