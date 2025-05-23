@@ -290,9 +290,24 @@ start-e2e-performance-test: e2e-images solana
 	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
-start-e2e-performance-test-1k: e2e-images solana
-	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="--test-performance --iterations=1000" && \
+start-stress-test-eth: e2e-images
+	@echo "--> Starting stress test for eth"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-solana: e2e-images solana
+	@echo "--> Starting stress test for solana"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-sui: e2e-images
+	@echo "--> Starting stress test for sui"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-all: e2e-images
+	@echo "--> Starting stress test for sui"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --test-stress-solana --test-stress-sui --iterations=50" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
@@ -306,10 +321,6 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_IMAGE=ghcr.io/zeta-chain/zetanode:develop && \
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
-
-start-stress-test: e2e-images
-	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
