@@ -24,6 +24,8 @@ func TestStressSuiDeposit(r *runner.E2ERunner, args []string) {
 
 	// send the SUI deposit transactions
 	for i := range numDeposits {
+		// each goroutine captures its own copy of i
+		i := i
 		resp := r.SuiDepositSUI(r.EVMAddress(), math.NewUintFromBigInt(amount))
 
 		r.Logger.Print("index %d: started with tx hash: %s", i, resp.Digest)

@@ -36,12 +36,14 @@ func TestStressSuiWithdraw(r *runner.E2ERunner, args []string) {
 	var eg errgroup.Group
 
 	// store durations as float64 seconds like prometheus
-	withdrawDurations := []float64{}
-	withdrawDurationsLock := sync.Mutex{}
+	withdrawDurations := make([]float64, 0, numWithdrawals)
+	mu := sync.Mutex{}
 
 	// ACT
 	// send the withdrawals SUI
 	for i := range numWithdrawals {
+		// each goroutine captures its own copy of i
+		i := i
 		tx := r.SuiWithdrawSUI(signer.Address(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 		// wait for receipt before next withdrawal to avoid race condition
@@ -56,9 +58,9 @@ func TestStressSuiWithdraw(r *runner.E2ERunner, args []string) {
 				return errors.Wrap(err, "failed to monitor withdraw")
 			}
 
-			withdrawDurationsLock.Lock()
+			mu.Lock()
 			withdrawDurations = append(withdrawDurations, totalTime.Seconds())
-			withdrawDurationsLock.Unlock()
+			mu.Unlock()
 
 			return nil
 		})
@@ -82,5 +84,5 @@ func TestStressSuiWithdraw(r *runner.E2ERunner, args []string) {
 	}
 
 	require.NoError(r, err)
-	r.Logger.Print("all SUI withdrawals completed")
+	r.Logger.Print("All SUI withdrawals completed")
 }
