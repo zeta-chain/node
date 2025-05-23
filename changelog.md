@@ -27,6 +27,7 @@
 * [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
+* [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 
 ### Refactor
 

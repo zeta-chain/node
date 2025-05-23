@@ -13,7 +13,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cometbft/cometbft-db v0.14.1 // indirect
+	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/gogoproto v1.7.0
@@ -309,6 +309,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/fardream/go-bcs v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/jedib0t/go-pretty/v6 v6.6.7
 	github.com/montanaflynn/stats v0.7.1
 	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
