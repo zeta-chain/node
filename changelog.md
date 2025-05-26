@@ -27,6 +27,7 @@
 * [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
+* [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 
 ### Refactor
 
@@ -48,6 +49,8 @@
 * [3850](https://github.com/zeta-chain/node/pull/3850) - broadcast single sui withdraw tx at a time to avoid nonce mismatch failure
 * [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
+* [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
+* [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
 
 ### Tests
 
