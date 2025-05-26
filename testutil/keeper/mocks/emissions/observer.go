@@ -173,19 +173,19 @@ func (_m *EmissionObserverKeeper) GetSupportedChains(ctx types.Context) []chains
 	return r0
 }
 
-// IsNonTombstonedObserver provides a mock function with given fields: ctx, address
-func (_m *EmissionObserverKeeper) IsNonTombstonedObserver(ctx types.Context, address string) bool {
+// IsValidObserver provides a mock function with given fields: ctx, address
+func (_m *EmissionObserverKeeper) IsValidObserver(ctx types.Context, address string) error {
 	ret := _m.Called(ctx, address)
 
 	if len(ret) == 0 {
-		panic("no return value specified for IsNonTombstonedObserver")
+		panic("no return value specified for IsValidObserver")
 	}
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, string) error); ok {
 		r0 = rf(ctx, address)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Error(0)
 	}
 
 	return r0

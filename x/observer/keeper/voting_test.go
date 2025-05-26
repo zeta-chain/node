@@ -52,16 +52,19 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
-		sdkk.StakingKeeper.SetValidator(ctx, validator)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
-		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
-			Address:             string(consAddress),
-			StartHeight:         0,
-			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
-			Tombstoned:          false,
-			MissedBlocksCounter: 1,
-		})
+		require.NoError(
+			t,
+			k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+				Address:             string(consAddress),
+				StartHeight:         0,
+				JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
+				Tombstoned:          false,
+				MissedBlocksCounter: 1,
+			}),
+		)
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -69,7 +72,28 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
-		require.True(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
+		require.NoError(t, k.IsValidObserver(ctx, accAddressOfValidator.String()))
+	})
+
+	t.Run("not authorized for jailed observer", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+
+		// Set validator in the store
+		validator := sample.Validator(t, r)
+		validator.Jailed = true
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+
+		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+
+		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		require.ErrorIs(t, err, types.ErrValidatorJailed)
 	})
 
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
@@ -79,16 +103,17 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
-		sdkk.StakingKeeper.SetValidator(ctx, validator)
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
-		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+		err = k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
 			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          true,
 			MissedBlocksCounter: 1,
 		})
+		require.NoError(t, err)
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -97,7 +122,8 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
+		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		require.ErrorIs(t, err, types.ErrValidatorTombstoned)
 	})
 
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
@@ -110,13 +136,14 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 		consAddress, err := validator.GetConsAddr()
 		require.NoError(t, err)
-		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+		err = k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
 			Address:             string(consAddress),
 			StartHeight:         0,
 			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
 			Tombstoned:          false,
 			MissedBlocksCounter: 1,
 		})
+		require.NoError(t, err)
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
@@ -125,7 +152,8 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
+		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		require.ErrorIs(t, err, types.ErrNotValidator)
 	})
 }
 

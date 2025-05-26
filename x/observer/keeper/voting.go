@@ -42,19 +42,32 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
-// IsNonTombstonedObserver checks whether a signer is authorized to sign
-// This function checks if the signer is present in the observer set
-// and also checks if the signer is not tombstoned
-func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
-	isPresentInMapper := k.IsAddressPartOfObserverSet(ctx, address)
-	if !isPresentInMapper {
-		return false
+// IsValidObserver checks if the address is a valid observer
+func (k Keeper) IsValidObserver(ctx sdk.Context, address string) error {
+	isActiveObserver := k.IsAddressPartOfObserverSet(ctx, address)
+	if !isActiveObserver {
+		return sdkerrors.Wrapf(types.ErrNotObserver, " Observer address is not part of the observer set: %s", address)
 	}
-	isTombstoned, err := k.IsOperatorTombstoned(ctx, address)
-	if err != nil || isTombstoned {
-		return false
+	valAddress, err := types.GetOperatorAddressFromAccAddress(address)
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidAddress, "Invalid operator address: %s", address)
 	}
-	return true
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrNotValidator, "Validator not found for observer address: %s", address)
+	}
+	consAddress, err := validator.GetConsAddr()
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidAddress, "Invalid consensus address for validator: %s", address)
+	}
+	if validator.Jailed {
+		return sdkerrors.Wrapf(types.ErrValidatorJailed, "Observer address is jailed: %s", address)
+	}
+	if k.slashingKeeper.IsTombstoned(ctx, consAddress) {
+		return sdkerrors.Wrapf(types.ErrValidatorTombstoned, "Observer address is tombstoned: %s", address)
+	}
+
+	return nil
 }
 
 // FindBallot finds the ballot for the given index
