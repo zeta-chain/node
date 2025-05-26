@@ -75,6 +75,16 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		require.NoError(t, k.IsValidObserver(ctx, accAddressOfValidator.String()))
 	})
 
+	t.Run("not authorized if the observer address is invalid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		invalidAddress := "invalid_address"
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{invalidAddress},
+		})
+		require.ErrorIs(t, k.IsValidObserver(ctx, invalidAddress), types.ErrInvalidAddress)
+	})
+
 	t.Run("not authorized for jailed observer", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
