@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -38,9 +40,14 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = GatewayAddressTest
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.MockGetBallotByID(mock.Anything, nil)
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -58,7 +65,34 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
-		err := ob.FilterInboundEventsAndVote(context.TODO(), txResult)
+		// expected result
+		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+		eventExpected := &clienttypes.InboundEvent{
+			SenderChainID:    chain.ChainId,
+			Sender:           sender,
+			Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+			TxOrigin:         sender,
+			Amount:           24000000,
+			Memo:             []byte{},
+			BlockNumber:      txResult.Slot,
+			TxHash:           txHash,
+			Index:            0, // not a EVM smart contract call
+			CoinType:         coin.CoinType_Gas,
+			Asset:            "", // no asset for gas token SOL
+			IsCrossChainCall: false,
+		}
+
+		events, err := observer.FilterInboundEvents(
+			txResult,
+			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
+			chain.ChainId,
+			zerolog.Nop(),
+		)
+		require.NoError(t, err)
+		require.Len(t, events, 1)
+		require.EqualValues(t, eventExpected, events[0])
+
+		err = ob.VoteInboundEvents(context.TODO(), events)
 		require.NoError(t, err)
 	})
 }
