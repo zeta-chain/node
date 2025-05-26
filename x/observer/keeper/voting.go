@@ -3,6 +3,7 @@ package keeper
 import (
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -58,6 +59,9 @@ func (k Keeper) IsValidObserver(ctx sdk.Context, address string) error {
 	}
 	if validator.Jailed {
 		return sdkerrors.Wrapf(types.ErrValidatorJailed, "observer is jailed: %s", address)
+	}
+	if validator.Status != stakingtypes.Bonded {
+		return sdkerrors.Wrapf(types.ErrValidatorStatus, "observer is not bonded: %s", address)
 	}
 	consAddress, err := validator.GetConsAddr()
 	if err != nil {

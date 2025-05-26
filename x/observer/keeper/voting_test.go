@@ -96,6 +96,27 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrValidatorJailed)
 	})
 
+	t.Run("not authorized for non bonded observers", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
+
+		r := rand.New(rand.NewSource(9))
+
+		// Set validator in the store
+		validator := sample.Validator(t, r)
+		validator.Status = stakingtypes.Unbonded
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
+
+		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+
+		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		require.ErrorIs(t, err, types.ErrValidatorStatus)
+	})
+
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.ObserverKeeper(t)
 
@@ -155,6 +176,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
 		require.ErrorIs(t, err, types.ErrNotValidator)
 	})
+
 }
 
 func TestKeeper_CheckObserverSelfDelegation(t *testing.T) {
@@ -300,7 +322,8 @@ func TestKeeper_IsValidator(t *testing.T) {
 
 		r := rand.New(rand.NewSource(9))
 		validator := sample.Validator(t, r)
-		sdkk.StakingKeeper.SetValidator(ctx, validator)
+		validator.Status = stakingtypes.Unbonded
+		require.NoError(t, sdkk.StakingKeeper.SetValidator(ctx, validator))
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		require.NoError(t, err)
 

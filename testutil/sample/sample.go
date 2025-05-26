@@ -47,6 +47,7 @@ func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
 		stakingtypes.Description{})
 	require.NoError(t, err)
+	val.Status = stakingtypes.Bonded
 	return val
 }
 
