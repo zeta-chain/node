@@ -36,11 +36,7 @@ func GetRandomAccountAndObserver(
 		if !foundNodeAccount {
 			return false
 		}
-		err := k.IsValidObserver(ctx, randomObserver)
-		if err != nil {
-			return false
-		}
-		return true
+		return k.IsValidObserver(ctx, randomObserver) == nil
 	})
 
 	if !foundObserver {

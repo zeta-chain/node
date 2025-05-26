@@ -178,12 +178,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) error) bool {
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgVoteBlame:
 		signers := innerMsg.(sdk.LegacyMsg).GetSigners()
-		if len(signers) == 1 {
-			err := isAuthorizedSigner(signers[0].String())
-			if err == nil {
-				return true
-			}
-		}
+		return len(signers) == 1 && isAuthorizedSigner(signers[0].String()) == nil
 	}
 
 	return false
