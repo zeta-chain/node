@@ -180,7 +180,7 @@ services:
       - tss
     networks:
       mynetwork:
-        ipv4_address: 172.20.0.14
+        ipv4_address: 172.20.0.15
     entrypoint: ["/root/start-zetacored.sh", "4"]
     environment:
       - HOTKEY_BACKEND=file
@@ -196,7 +196,7 @@ services:
       - tss
     networks:
       mynetwork:
-        ipv4_address: 172.20.0.24
+        ipv4_address: 172.20.0.25
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - HOTKEY_BACKEND=file
