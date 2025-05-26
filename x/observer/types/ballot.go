@@ -92,26 +92,31 @@ func CreateVotes(listSize int) []VoteType {
 }
 
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
-func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) {
-	// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
-	if m.BallotStatus == BallotStatus_BallotInProgress {
-		return
-	}
+func BuildRewardsDistribution(ballots []Ballot) map[string]int64 {
+	rewardsMap := map[string]int64{}
 
-	// Determine the winning vote type based on ballot status
-	// majorityVote is the vote type by the majority of the observers
-	majorityVote := VoteType_SuccessObservation
-	if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
-		majorityVote = VoteType_FailureObservation
-	}
+	for _, m := range ballots {
+		// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
+		if m.BallotStatus == BallotStatus_BallotInProgress {
+			continue
+		}
 
-	for _, address := range m.VoterList {
-		vote := m.Votes[m.GetVoterIndex(address)]
-		if vote == majorityVote {
-			rewardsMap[address]++
-		} else {
-			// NotVoted is always included in else case
-			rewardsMap[address]--
+		// Determine the winning vote type based on ballot status
+		// majorityVote is the vote type by the majority of the observers
+		majorityVote := VoteType_SuccessObservation
+		if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
+			majorityVote = VoteType_FailureObservation
+		}
+
+		for _, address := range m.VoterList {
+			vote := m.Votes[m.GetVoterIndex(address)]
+			if vote == majorityVote {
+				rewardsMap[address]++
+			} else {
+				// NotVoted is always included in else case
+				rewardsMap[address]--
+			}
 		}
 	}
+	return rewardsMap
 }

@@ -175,8 +175,7 @@ func distributeRewardsForMaturedBallots(
 	slashAmount sdkmath.Int,
 ) []*types.ObserverEmission {
 	var (
-		rewardsDistributeMap = map[string]int64{}
-		totalRewardsUnits    = int64(0)
+		totalRewardsUnits = int64(0)
 	)
 	ballots := make([]observertypes.Ballot, 0, len(maturedBallots))
 	for _, ballotIdentifier := range maturedBallots {
@@ -185,19 +184,11 @@ func distributeRewardsForMaturedBallots(
 			continue
 		}
 		ballots = append(ballots, ballot)
-		// Definitions:
-		// Correct votes: Votes which are in line with the final status of the ballot
-		// Incorrect votes: Votes which are not in line with the final status of the ballot
-		// Finalized Ballot: A ballot which has been finalized and is not in progress.Both success and failure ballots are finalized.
-		// Net Positive: Correct and Incorrect votes cancel each other out.
+	}
+	rewardsDistributeMap := observertypes.BuildRewardsDistribution(ballots)
 
-		// Process votes and update rewardsMap
-		// Observer rewards are as follows:
-		// 1. Rewarded for correct votes
-		// 2. Penalized for incorrect votes
-
-		// After calculating the rewardsMap, the net positive observers are rewarded.
-		ballot.BuildRewardsDistribution(rewardsDistributeMap)
+	if len(rewardsDistributeMap) == 0 {
+		return nil
 	}
 	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
 
