@@ -229,7 +229,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 
 				if !skipConfigDefaults {
 					if err := overrideConfigFile(serverCtx); err != nil {
-						return fmt.Errorf("failed to configure Tendermint: %w", err)
+						return fmt.Errorf("failed to override config file: %w", err)
 					}
 				}
 
@@ -254,10 +254,6 @@ func overrideConfigFile(serverCtx *server.Context) error {
 	configDir := filepath.Join(rootDir, "config")
 	configPath := filepath.Join(configDir, "config.toml")
 
-	// initialize default config with optimized settings
-	defaultConfig := tmcfg.DefaultConfig()
-	defaultConfig.Consensus.TimeoutCommit = DefaultTimeoutCommit
-
 	// check if config file exists
 	_, err := os.Stat(configPath)
 	if err != nil {
@@ -265,6 +261,17 @@ func overrideConfigFile(serverCtx *server.Context) error {
 			return fmt.Errorf("failed to check config file %s: %w", configPath, err)
 		}
 		// config doesn't exist - will be created with defaults by server.InterceptConfigsPreRunHandler
+		return nil
+	}
+
+	fileInfo, err := os.Stat(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to check config file permissions: %w", err)
+	}
+
+	// if config.toml is not writable skip next steps
+	if fileInfo.Mode()&os.FileMode(0200) == 0 {
+		fmt.Println("warning: config.toml is not writable")
 		return nil
 	}
 
@@ -281,24 +288,15 @@ func overrideConfigFile(serverCtx *server.Context) error {
 	// update consensus timeout
 	serverCtx.Config.Consensus.TimeoutCommit = DefaultTimeoutCommit
 
-	// write updated config if file is writable
-	fileInfo, err := os.Stat(configPath)
-	if err != nil {
-		return fmt.Errorf("failed to check config file permissions: %w", err)
-	}
-
-	if fileInfo.Mode()&os.FileMode(0200) != 0 {
-		// writeConfigFile panics on error, so we need to recover
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Printf("Warning: failed to write config file: %v\n", r)
-				}
-			}()
-			tmcfg.WriteConfigFile(configPath, serverCtx.Config)
+	// writeConfigFile panics on error, so we need to recover
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("warning: failed to write config file: %v\n", r)
+			}
 		}()
-	}
-
+		tmcfg.WriteConfigFile(configPath, serverCtx.Config)
+	}()
 	return nil
 }
 
