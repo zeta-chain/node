@@ -1,4 +1,4 @@
-package e2etests
+package local
 
 import (
 	"bytes"
@@ -27,17 +27,17 @@ const (
 	StakeAmount = "1000000000000000000000azeta"
 )
 
-// AddNewObserver is a test function that adds a new observer to the network.
-func AddNewObserver(r *runner.E2ERunner) {
-	FundHotkeyAccountForNonValidatorNode(r)
-	StakeToBecomeValidator(r)
-	AddNodeAccount(r)
-	AddObserverAccount(r)
-	AddGrants(r)
+// addNewObserver is a test function that adds a new observer to the network.
+func addNewObserver(r *runner.E2ERunner) {
+	fundHotkeyAccountForNonValidatorNode(r)
+	stakeToBecomeValidator(r)
+	addNodeAccount(r)
+	addObserverAccount(r)
+	addGrants(r)
 }
 
-// StakeToBecomeValidator is a helper function that stakes tokens to become a validator.
-func StakeToBecomeValidator(r *runner.E2ERunner) {
+// stakeToBecomeValidator is a helper function that stakes tokens to become a validator.
+func stakeToBecomeValidator(r *runner.E2ERunner) {
 	stakeTokens, err := sdk.ParseCoinNormalized(StakeAmount)
 	require.NoError(r, err, "failed to parse coin")
 
@@ -73,8 +73,8 @@ func StakeToBecomeValidator(r *runner.E2ERunner) {
 	require.NoError(r, err, "failed to broadcast transaction")
 }
 
-// AddNodeAccount adds the node account of a new validator to the network.
-func AddNodeAccount(r *runner.E2ERunner) {
+// addNodeAccount adds the node account of a new validator to the network.
+func addNodeAccount(r *runner.E2ERunner) {
 	observerInfo := FetchHotkeyAddress(r)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
@@ -86,8 +86,8 @@ func AddNodeAccount(r *runner.E2ERunner) {
 	require.NoError(r, err)
 }
 
-// AddObserverAccount adds a validator account to the observer set.
-func AddObserverAccount(r *runner.E2ERunner) {
+// addObserverAccount adds a validator account to the observer set.
+func addObserverAccount(r *runner.E2ERunner) {
 	observerInfo := FetchHotkeyAddress(r)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
@@ -99,8 +99,8 @@ func AddObserverAccount(r *runner.E2ERunner) {
 	require.NoError(r, err)
 }
 
-// AddGrants adds the necessary grants between operator and hotkey accounts.
-func AddGrants(r *runner.E2ERunner) {
+// addGrants adds the necessary grants between operator and hotkey accounts.
+func addGrants(r *runner.E2ERunner) {
 	observerInfo := FetchHotkeyAddress(r)
 	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
@@ -132,8 +132,8 @@ func AddGrants(r *runner.E2ERunner) {
 	require.NoError(r, err, "failed to broadcast transaction")
 }
 
-// FundHotkeyAccountForNonValidatorNode funds the hotkey address of a new validator.
-func FundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
+// fundHotkeyAccountForNonValidatorNode funds the hotkey address of a new validator.
+func fundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
 	amount, err := sdk.ParseCoinNormalized("100000000000000000000azeta")
 	require.NoError(r, err, "failed to parse coin")
 

@@ -630,8 +630,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testTSSMigration {
-		e2etests.AddNewObserver(deployerRunner)
-		TSSMigration(deployerRunner, logger, verbose, conf)
+		addNewObserver(deployerRunner)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf)
 	}
 
 	// Verify that there are no trackers left over after tests complete
