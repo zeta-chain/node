@@ -149,6 +149,10 @@ func FilterInboundEvents(
 	senderChainID int64,
 	logger zerolog.Logger,
 ) ([]*clienttypes.InboundEvent, error) {
+	if txResult.Meta.Err != nil {
+		return nil, errors.New("transaction reverted")
+	}
+
 	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
 	if err != nil {
 		return nil, err
