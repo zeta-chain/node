@@ -349,13 +349,16 @@ func convertPayload(data []any) ([]byte, error) {
 		}
 	}
 
-	// Sui encode bytes in base64
-	decodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode payload from base64")
+	// Try decoding the payload from base64
+	// If the payload is not base64 encoded, directly return the payload bytes as is
+	// Currently the localnet Sui RPC will return bytes in Base64 for the payload data while live network return the actual bytes of the payload directly
+	// TODO: fix this discrepancy
+	// https://github.com/zeta-chain/node/issues/3919
+	base64DecodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
+	if err == nil {
+		return base64DecodedPayload, nil
 	}
-
-	return decodedPayload, nil
+	return payload, nil
 }
 
 func parsePair(pair string) (string, string, error) {
