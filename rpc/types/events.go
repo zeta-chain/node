@@ -81,6 +81,7 @@ type ParsedTx struct {
 	// -1 means uninitialized
 	EthTxIndex int32
 	GasUsed    uint64
+	GasLimit   uint64
 	Failed     bool
 	// Additional cosmos EVM tx fields
 	TxHash    string
@@ -242,6 +243,7 @@ func ParseTxIndexerResult(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				GasLimit:  parsedTx.GasLimit,
 				Data:      parsedTx.Data,
 				Nonce:     parsedTx.Nonce,
 			}, nil
@@ -294,6 +296,7 @@ func ParseTxBlockResult(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				GasLimit:  parsedTx.GasLimit,
 				Data:      parsedTx.Data,
 				Nonce:     parsedTx.Nonce,
 			}, nil
@@ -396,6 +399,12 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 			return err
 		}
 		tx.GasUsed = gasUsed
+	case evmtypes.AttributeKeyTxGasLimit:
+		gasLimit, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		tx.GasLimit = gasLimit
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
 	case SenderType:
