@@ -753,7 +753,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWhitelistSPLName,
@@ -992,6 +992,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRestrictedAddress,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	/*
 	 Bitcoin tests
@@ -1175,6 +1176,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "revert address", DefaultValue: sample.RevertAddressZEVM},
 		},
 		TestBitcoinWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
@@ -1637,6 +1639,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestEtherWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyEtherDepositAndCallRefundName,
