@@ -28,6 +28,7 @@
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
+* [3918](https://github.com/zeta-chain/node/pull/3918) - attach failure reason to solana increment nonce
 
 ### Refactor
 
