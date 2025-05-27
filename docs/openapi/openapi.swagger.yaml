@@ -28574,6 +28574,26 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/ballot_list_for_height/{height}:
+    get:
+      operationId: BallotListForHeight
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetachain.zetacore.observer.QueryBallotListForHeightResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/google.rpc.Status'
+      parameters:
+        - name: height
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/ballots:
     get:
       summary: Query all ballots
@@ -58424,6 +58444,16 @@ definitions:
         type: string
         format: int64
     title: https://github.com/zeta-chain/node/issues/939
+  zetachain.zetacore.observer.BallotListForHeight:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      ballotsIndexList:
+        type: array
+        items:
+          type: string
   zetachain.zetacore.observer.BallotStatus:
     type: string
     enum:
@@ -58794,6 +58824,11 @@ definitions:
         $ref: '#/definitions/zetachain.zetacore.observer.ObservationType'
       ballotStatus:
         $ref: '#/definitions/zetachain.zetacore.observer.BallotStatus'
+  zetachain.zetacore.observer.QueryBallotListForHeightResponse:
+    type: object
+    properties:
+      ballotList:
+        $ref: '#/definitions/zetachain.zetacore.observer.BallotListForHeight'
   zetachain.zetacore.observer.QueryBallotsResponse:
     type: object
     properties:

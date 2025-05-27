@@ -182,18 +182,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 
 	// define a few common variables
-	var receiveValue *big.Int
-	var receiveStatus chains.ReceiveStatus
-	cointype := cctx.InboundParams.CoinType
+	var (
+		receiveValue  *big.Int
+		receiveStatus chains.ReceiveStatus
+		cointype      = cctx.InboundParams.CoinType
+	)
 
-	// compliance check, special handling the cancelled cctx
+	// cancelled transaction means the outbound is failed
+	// - set amount to CCTX's amount to bypass amount check in zetacore
+	// - set status to failed to revert the CCTX in zetacore
 	if compliance.IsCCTXRestricted(cctx) {
-		// use cctx's amount to bypass the amount check in zetacore
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_failed
-		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receiveStatus = chains.ReceiveStatus_success
-		}
+		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 		return false, nil
 	}

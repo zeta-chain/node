@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
-const consensusVersion = 10
+const consensusVersion = 11
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -131,6 +131,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 9, m.Migrate9to10); err != nil {
+		panic(err)
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 10, m.Migrate10to11); err != nil {
 		panic(err)
 	}
 }

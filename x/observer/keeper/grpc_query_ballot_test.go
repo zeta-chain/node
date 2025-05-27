@@ -14,6 +14,75 @@ import (
 	"github.com/zeta-chain/node/x/observer/types"
 )
 
+func TestKeeper_BallotListForHeight(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// Act
+		res, err := k.BallotListForHeight(ctx, nil)
+
+		// Assert
+		require.Nil(t, res)
+		require.Error(t, err)
+	})
+
+	t.Run("should return empty list if no ballots", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		k.SetBallotList(ctx, &types.BallotListForHeight{
+			Height:           1,
+			BallotsIndexList: nil,
+		})
+
+		// Act
+		res, err := k.BallotListForHeight(ctx, &types.QueryBallotListForHeightRequest{
+			Height: 1,
+		})
+
+		// Assert
+		require.NoError(t, err)
+		require.Nil(t, res.BallotList.BallotsIndexList)
+	})
+
+	t.Run("should return error if list not found", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		// Act
+		res, err := k.BallotListForHeight(ctx, &types.QueryBallotListForHeightRequest{
+			Height: 1,
+		})
+
+		// Assert
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return list if exists", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		ballotList := &types.BallotListForHeight{
+			Height:           1,
+			BallotsIndexList: []string{"index-1", "index-2"},
+		}
+
+		k.SetBallotList(ctx, ballotList)
+
+		// Act
+		res, err := k.BallotListForHeight(ctx, &types.QueryBallotListForHeightRequest{
+			Height: 1,
+		})
+
+		// Assert
+		require.NoError(t, err)
+		require.Equal(t, ballotList.BallotsIndexList, res.BallotList.BallotsIndexList)
+	})
+
+}
+
 func TestKeeper_HasVoted(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)

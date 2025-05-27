@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -152,6 +153,28 @@ func (s *Signer) IsOutboundActive(outboundID string) bool {
 
 	_, found := s.activeOutbounds[outboundID]
 	return found
+}
+
+// PassesCompliance checks if the cctx passes the compliance check and prints compliance log.
+func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
+	if !compliance.IsCCTXRestricted(cctx) {
+		return true
+	}
+
+	params := cctx.GetCurrentOutboundParam()
+
+	compliance.PrintComplianceLog(
+		s.Logger().Std,
+		s.Logger().Compliance,
+		true,
+		s.Chain().ChainId,
+		cctx.Index,
+		cctx.InboundParams.Sender,
+		params.Receiver,
+		params.CoinType.String(),
+	)
+
+	return false
 }
 
 // OutboundID returns the outbound ID.
