@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/zeta-chain/node/zetaclient/common"
 	"strconv"
 	"testing"
 	"time"
@@ -18,10 +19,10 @@ const (
 )
 
 func TestClientLive(t *testing.T) {
-	//if !common.LiveTestEnabled() {
-	//	t.Skip("skipping live test")
-	//	return
-	//}
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping live test")
+		return
+	}
 
 	t.Run("HealthCheck", func(t *testing.T) {
 		// ARRANGE
