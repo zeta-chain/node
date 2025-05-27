@@ -92,38 +92,31 @@ func CreateVotes(listSize int) []VoteType {
 }
 
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
-// It returns the total rewards units which account for the observer block rewards
-func (m Ballot) BuildRewardsDistribution(rewardsMap map[string]int64) int64 {
-	// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
-	if m.BallotStatus == BallotStatus_BallotInProgress {
-		return 0
-	}
+func BuildRewardsDistribution(ballots []Ballot) map[string]int64 {
+	rewardsMap := make(map[string]int64)
 
-	// Initial value for total reward units
-	totalRewardUnits := int64(0)
+	for _, m := range ballots {
+		// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
+		if m.BallotStatus == BallotStatus_BallotInProgress {
+			continue
+		}
 
-	// Determine the winning vote type based on ballot status
-	// majorityVote is the vote type by thr majority of the observers
-	majorityVote := VoteType_SuccessObservation
-	if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
-		majorityVote = VoteType_FailureObservation
-	}
+		// Determine the winning vote type based on ballot status
+		// majorityVote is the vote type by the majority of the observers
+		majorityVote := VoteType_SuccessObservation
+		if m.BallotStatus == BallotStatus_BallotFinalized_FailureObservation {
+			majorityVote = VoteType_FailureObservation
+		}
 
-	// Process votes and update rewardsMap
-	// Observer gets rewarded for a correct vote and penalized for an incorrect vote
-	// Observer gets 1 unit for a correct vote and -1 unit for an incorrect vote
-	// totalRewardUnits is the sum of all the rewards units.It is used
-	// to calculate the reward per unit based on AmountOfRewards/totalRewardUnits
-
-	for _, address := range m.VoterList {
-		vote := m.Votes[m.GetVoterIndex(address)]
-		if vote == majorityVote {
-			rewardsMap[address]++
-			totalRewardUnits++
-		} else {
-			rewardsMap[address]--
+		for _, address := range m.VoterList {
+			vote := m.Votes[m.GetVoterIndex(address)]
+			if vote == majorityVote {
+				rewardsMap[address]++
+			} else {
+				// NotVoted is always included in else case
+				rewardsMap[address]--
+			}
 		}
 	}
-
-	return totalRewardUnits
+	return rewardsMap
 }

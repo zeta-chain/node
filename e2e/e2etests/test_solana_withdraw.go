@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -38,7 +39,12 @@ func TestSolanaWithdraw(r *runner.E2ERunner, args []string) {
 	privkey := r.GetSolanaPrivKey()
 
 	// withdraw
-	tx := r.WithdrawSOLZRC20(privkey.PublicKey(), withdrawAmount, approvedAmount)
+	tx := r.WithdrawSOLZRC20(
+		privkey.PublicKey(),
+		withdrawAmount,
+		approvedAmount,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

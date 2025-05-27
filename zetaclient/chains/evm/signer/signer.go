@@ -24,7 +24,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -341,19 +340,8 @@ func (signer *Signer) SignOutboundFromCCTX(
 	zetacoreClient interfaces.ZetacoreClient,
 	toChain zctx.Chain,
 ) (*ethtypes.Transaction, error) {
-	if compliance.IsCCTXRestricted(cctx) {
+	if !signer.PassesCompliance(cctx) {
 		// restricted cctx
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			outboundData.to.Hex(),
-			cctx.GetCurrentOutboundParam().CoinType.String(),
-		)
-
 		return signer.SignCancel(ctx, outboundData)
 	} else if cctx.InboundParams.CoinType == coin.CoinType_Cmd {
 		// admin command
