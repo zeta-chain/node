@@ -53,6 +53,7 @@
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
 * [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
 * [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
+* [3914](https://github.com/zeta-chain/node/pull/3914) - check tx result err in filter inbound events
 * [3904](https://github.com/zeta-chain/node/pull/3904) - improve observer emissions distribution to maximise pool utilisation
 
 ### Tests
