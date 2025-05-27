@@ -170,6 +170,8 @@ const (
 	TestStressSPLDepositName     = "stress_spl_deposit"
 	TestStressSolanaWithdrawName = "stress_solana_withdraw"
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
+	TestStressSuiDepositName     = "stress_sui_deposit"
+	TestStressSuiWithdrawName    = "stress_sui_withdraw"
 
 	/*
 		Staking tests
@@ -1290,6 +1292,24 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressSuiDepositName,
+		"stress test SUI deposits",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSuiWithdrawName,
+		"stress test SUI withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiWithdraw,
 	),
 	/*
 	 Admin tests
