@@ -66,6 +66,7 @@ func MinimumVersionCheck(testVersion, zetacoredVersion string) bool {
 
 // FetchNodePubkey retrieves the public key of the new validator node.
 func FetchNodePubkey(host string) (string, error) {
+	// #nosec G204 validation of host should be done by the caller
 	cmd := exec.Command("ssh", "-q", fmt.Sprintf("root@%s", host), "zetacored tendermint show-validator")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -83,6 +84,7 @@ func FetchNodePubkey(host string) (string, error) {
 
 // FetchHotkeyAddress retrieves the hotkey address of a new validator.
 func FetchHotkeyAddress(host string) (parsers.ObserverInfoReader, error) {
+	// #nosec G204 validation of host should be done by the caller
 	cmd := exec.Command("ssh", "-q", fmt.Sprintf("root@%s", host), "cat ~/.zetacored/os.json")
 	var out bytes.Buffer
 	cmd.Stdout = &out
