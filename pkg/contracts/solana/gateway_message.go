@@ -147,6 +147,9 @@ type MsgIncrementNonce struct {
 
 	// signature is the signature of the message
 	signature [65]byte
+
+	// failureReason contains reason for failure in outbound tx
+	failureReason string
 }
 
 // NewMsgIncrementNonce returns a new increment_nonce message
@@ -156,6 +159,16 @@ func NewMsgIncrementNonce(chainID, nonce, amount uint64) *MsgIncrementNonce {
 		nonce:   nonce,
 		amount:  amount,
 	}
+}
+
+// AddFailureReason adds reason for outbound tx failure to the message
+func (msg *MsgIncrementNonce) AddFailureReason(failureReason string) {
+	msg.failureReason = failureReason
+}
+
+// FailureReason returns reason for outbound tx failure
+func (msg *MsgIncrementNonce) FailureReason() string {
+	return msg.failureReason
 }
 
 // ChainID returns the chain ID of the message
