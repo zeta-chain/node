@@ -379,10 +379,8 @@ func convertPayload(data []any) ([]byte, error) {
 	// TODO: fix this discrepancy
 	// https://github.com/zeta-chain/node/issues/3919
 	base64DecodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
-	if err == nil { 
-	   return base64DecodedPayload, nil
-	}
-		return payload, nil
+	if err == nil {
+		return base64DecodedPayload, nil
 	}
 	return payload, nil
 }
