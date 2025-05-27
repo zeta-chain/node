@@ -28,6 +28,8 @@
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
+* [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
+
 
 ### Refactor
 
