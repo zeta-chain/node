@@ -384,7 +384,7 @@ func convertPayload(data []any) ([]byte, error) {
 	}
 		return payload, nil
 	}
-	return base64DecodedPayload, nil
+	return payload, nil
 }
 
 func parsePair(pair string) (string, string, error) {
