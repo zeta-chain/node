@@ -54,7 +54,7 @@ func NewOutboundData(
 	cctx *types.CrossChainTx,
 	height uint64,
 	minRelayFee float64,
-	restrictedCCTX bool,
+	isRestricted bool,
 	logger zerolog.Logger,
 ) (*OutboundData, error) {
 	if cctx == nil {
@@ -124,7 +124,7 @@ func NewOutboundData(
 	}
 
 	// set the amount to 0 when the tx should be cancelled
-	cancelTx := restrictedCCTX || dustAmount
+	cancelTx := isRestricted || dustAmount
 	if cancelTx {
 		amount = 0.0
 		amountSats = 0

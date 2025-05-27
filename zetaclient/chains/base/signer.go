@@ -157,8 +157,7 @@ func (s *Signer) IsOutboundActive(outboundID string) bool {
 
 // PassesCompliance checks if the cctx passes the compliance check and prints compliance log.
 func (s *Signer) PassesCompliance(cctx *types.CrossChainTx) bool {
-	restricted := compliance.IsCCTXRestricted(cctx)
-	if !restricted {
+	if !compliance.IsCCTXRestricted(cctx) {
 		return true
 	}
 
