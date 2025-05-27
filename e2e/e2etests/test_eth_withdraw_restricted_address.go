@@ -15,18 +15,16 @@ import (
 
 // TestEtherWithdrawRestricted tests the withdrawal to a restricted receiver address
 func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 3)
+	require.Len(r, args, 2)
 
 	// ARRANGE
 	// Given amount, receiver, revert address
 	receiver := ethcommon.HexToAddress(args[0])
 	amount := utils.ParseBigInt(r, args[1])
-	revertAddress := ethcommon.HexToAddress(args[2])
+	revertAddress := r.EVMAddress()
 
-	// balances before
+	// receiver balance before
 	receiverBalanceBefore, err := r.EVMClient.BalanceAt(r.Ctx, receiver, nil)
-	require.NoError(r, err)
-	revertBalanceBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
 	require.NoError(r, err)
 
 	// approve the ZRC20
@@ -50,6 +48,10 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	r.Logger.EVMReceipt(*receipt, "withdraw")
 	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
+
+	// revert address balance before
+	revertBalanceBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	require.NoError(r, err)
 
 	// ASSERT
 	// wait for the cctx to be reverted

@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,7 @@ import (
 )
 
 func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 3)
+	require.Len(r, args, 2)
 
 	// ARRANGE
 	// Given amount, receiver, revert address
@@ -34,15 +33,14 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 		withdrawAmount.Cmp(approvedAmount),
 		"Withdrawal amount must be less than the approved amount (1e9).",
 	)
-	revertAddress := ethcommon.HexToAddress(args[2])
+	revertAddress := r.EVMAddress()
 
-	// balances before
+	// receiver balance before
 	result, err := r.SolanaClient.GetBalance(r.Ctx, receiverRestricted, rpc.CommitmentFinalized)
 	require.NoError(r, err)
 	receiverBalanceBefore := result.Value
-	revertBalanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
-	require.NoError(r, err)
 
+	// ACT
 	// withdraw
 	tx := r.WithdrawSOLZRC20(
 		receiverRestricted,
@@ -54,6 +52,15 @@ func TestSolanaWithdrawRestricted(r *runner.E2ERunner, args []string) {
 		},
 	)
 
+	// wait for the withdraw tx to be mined
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	// revert address balance before
+	revertBalanceBefore, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	require.NoError(r, err)
+
+	// ASSERT
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
