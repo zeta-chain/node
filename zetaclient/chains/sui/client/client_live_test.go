@@ -9,7 +9,6 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
-	"github.com/zeta-chain/node/zetaclient/common"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
@@ -19,10 +18,10 @@ const (
 )
 
 func TestClientLive(t *testing.T) {
-	if !common.LiveTestEnabled() {
-		t.Skip("skipping live test")
-		return
-	}
+	//if !common.LiveTestEnabled() {
+	//	t.Skip("skipping live test")
+	//	return
+	//}
 
 	t.Run("HealthCheck", func(t *testing.T) {
 		// ARRANGE
@@ -245,6 +244,29 @@ func TestClientLive(t *testing.T) {
 		// ASSERT
 		require.ErrorContains(t, err, "SUI balance is too low")
 		require.Empty(t, coinRefs)
+	})
+
+	t.Run("GetTransactionBlock successful tx on testnet with a deposit event", func(t *testing.T) {
+		ts := newTestSuite(t, RPCTestnet)
+
+		res, err := ts.SuiGetTransactionBlock(ts.ctx, models.SuiGetTransactionBlockRequest{
+			Digest:  "BtVGRved1cvW3PHHeeMqeU96cwFxim5W6pNuHZpEuUQF",
+			Options: models.SuiTransactionBlockOptions{ShowEvents: true, ShowEffects: true},
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, TxStatusSuccess, res.Effects.Status.Status)
+
+		gw, err := sui.NewGatewayFromPairID(
+			"0x6b2fe12c605d64e14ca69f9aba51550593ba92ff43376d0a6cc26a5ca226f9bd,0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700",
+		)
+		require.NoError(t, err)
+
+		require.Len(t, res.Events, 1)
+
+		_, err = gw.ParseEvent(res.Events[0])
+		require.NoError(t, err)
 	})
 }
 
