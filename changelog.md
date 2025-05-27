@@ -51,6 +51,7 @@
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
 * [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
 * [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
+* [3920](https://github.com/zeta-chain/node/pull/3920) - show correct gas limit for synthetic txs
 
 ### Tests
 
