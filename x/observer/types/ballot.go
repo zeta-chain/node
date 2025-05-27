@@ -93,7 +93,7 @@ func CreateVotes(listSize int) []VoteType {
 
 // BuildRewardsDistribution builds the rewards distribution map for the ballot
 func BuildRewardsDistribution(ballots []Ballot) map[string]int64 {
-	rewardsMap := map[string]int64{}
+	rewardsMap := make(map[string]int64)
 
 	for _, m := range ballots {
 		// If the ballot is in progress, return 0, we do not want to distribute rewards for in progress ballots
