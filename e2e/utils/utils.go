@@ -1,13 +1,20 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/mod/semver"
+
+	"github.com/zeta-chain/node/pkg/parsers"
 )
 
 // ScriptPKToAddress is a hex string for P2WPKH script
@@ -55,4 +62,50 @@ func MinimumVersionCheck(testVersion, zetacoredVersion string) bool {
 
 	// Otherwise, return true if zetacoredVersion >= testVersion
 	return semver.Compare(zetacoredVersion, testVersion) >= 0
+}
+
+// FetchNodePubkey retrieves the public key of the new validator node.
+func FetchNodePubkey(host string) (string, error) {
+	cmd := exec.Command("ssh", "-q", fmt.Sprintf("root@%s", host), "zetacored tendermint show-validator")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("failed to run command: %s, stderr: %s, error: %w", cmd.String(), stderr.String(), err)
+	}
+	output := out.String()
+	output = strings.TrimSpace(output)
+	return output, nil
+}
+
+// FetchHotkeyAddress retrieves the hotkey address of a new validator.
+func FetchHotkeyAddress(host string) (parsers.ObserverInfoReader, error) {
+	cmd := exec.Command("ssh", "-q", fmt.Sprintf("root@%s", host), "cat ~/.zetacored/os.json")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return parsers.ObserverInfoReader{}, fmt.Errorf(
+			"failed to run command: %s, stderr: %s, error: %w",
+			cmd.String(),
+			stderr.String(),
+			err,
+		)
+	}
+	output := out.String()
+
+	observerInfo := parsers.ObserverInfoReader{}
+
+	err = json.Unmarshal([]byte(output), &observerInfo)
+	if err != nil {
+		return parsers.ObserverInfoReader{}, fmt.Errorf("failed to unmarshal observer info: %w", err)
+	}
+
+	return observerInfo, nil
 }

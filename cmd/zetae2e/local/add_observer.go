@@ -1,11 +1,6 @@
 package local
 
 import (
-	"bytes"
-	"encoding/json"
-	"os/exec"
-	"strings"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,7 +12,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/pkg/parsers"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -42,13 +36,14 @@ func stakeToBecomeValidator(r *runner.E2ERunner) {
 	require.NoError(r, err, "failed to parse coin")
 
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
-	pubkey := FetchNodePubkey(r)
+	pubkey, err := utils.FetchNodePubkey("zetacore-new-validator")
+	require.NoError(r, err)
 	var pk cryptotypes.PubKey
 	cdc := r.ZetaTxServer.GetCodec()
 	err = cdc.UnmarshalInterfaceJSON([]byte(pubkey), &pk)
 	require.NoError(r, err, "failed to unmarshal pubkey")
 
-	operator := GetNewValidatorInfo(r)
+	operator := getNewValidatorInfo(r)
 	address, err := operator.GetAddress()
 	require.NoError(r, err, "failed to get address")
 
@@ -75,40 +70,43 @@ func stakeToBecomeValidator(r *runner.E2ERunner) {
 
 // addNodeAccount adds the node account of a new validator to the network.
 func addNodeAccount(r *runner.E2ERunner) {
-	observerInfo := FetchHotkeyAddress(r)
+	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	require.NoError(r, err)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		ObserverAddress:         observerInfo.ObserverAddress,
 		ZetaclientGranteePubkey: observerInfo.ZetaClientGranteePubKey,
 		AddNodeAccountOnly:      true,
 	}
-	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, &msg)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, &msg)
 	require.NoError(r, err)
 }
 
 // addObserverAccount adds a validator account to the observer set.
 func addObserverAccount(r *runner.E2ERunner) {
-	observerInfo := FetchHotkeyAddress(r)
+	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	require.NoError(r, err)
 	msg := observertypes.MsgAddObserver{
 		Creator:                 r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
 		ObserverAddress:         observerInfo.ObserverAddress,
 		ZetaclientGranteePubkey: observerInfo.ZetaClientGranteePubKey,
 		AddNodeAccountOnly:      false,
 	}
-	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, &msg)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, &msg)
 	require.NoError(r, err)
 }
 
 // addGrants adds the necessary grants between operator and hotkey accounts.
 func addGrants(r *runner.E2ERunner) {
-	observerInfo := FetchHotkeyAddress(r)
+	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	require.NoError(r, err)
 	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
 
 	zetaTxServer := r.ZetaTxServer
 	validatorsTxServer := zetaTxServer.UpdateKeyring(validatorsKeyring)
 
-	operator := GetNewValidatorInfo(r)
+	operator := getNewValidatorInfo(r)
 	for _, txType := range txTypes {
 		msg, err := authz.NewMsgGrant(
 			sdk.MustAccAddressFromBech32(observerInfo.ObserverAddress),
@@ -137,13 +135,14 @@ func fundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
 	amount, err := sdk.ParseCoinNormalized("100000000000000000000azeta")
 	require.NoError(r, err, "failed to parse coin")
 
-	observerInfo := FetchHotkeyAddress(r)
+	observerInfo, err := utils.FetchHotkeyAddress("zetaclient-new-validator")
+	require.NoError(r, err)
 
 	validatorsKeyring := r.ZetaTxServer.GetValidatorsKeyring()
 	zetaTxServer := r.ZetaTxServer
 	validatorsTxServer := zetaTxServer.UpdateKeyring(validatorsKeyring)
 
-	operator := GetNewValidatorInfo(r)
+	operator := getNewValidatorInfo(r)
 	operatorAddress, err := operator.GetAddress()
 	require.NoError(r, err, "failed to get address for operator")
 
@@ -157,44 +156,9 @@ func fundHotkeyAccountForNonValidatorNode(r *runner.E2ERunner) {
 	require.NoError(r, err, "failed to broadcast transaction")
 }
 
-// GetNewValidatorInfo retrieves the keyring record for the new validator from the keyring.
-func GetNewValidatorInfo(r *runner.E2ERunner) *keyring.Record {
+// getNewValidatorInfo retrieves the keyring record for the new validator from the keyring.
+func getNewValidatorInfo(r *runner.E2ERunner) *keyring.Record {
 	record, err := r.ZetaTxServer.GetValidatorsKeyring().Key("operator-new-validator")
 	require.NoError(r, err, "failed to get operator-new-validator key")
 	return record
-}
-
-// FetchHotkeyAddress retrieves the hotkey address of a new validator.
-func FetchHotkeyAddress(r *runner.E2ERunner) parsers.ObserverInfoReader {
-	cmd := exec.Command("ssh", "-q", "root@zetaclient-new-validator", "cat ~/.zetacored/os.json")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	require.NoError(r, err)
-	output := out.String()
-
-	observerInfo := parsers.ObserverInfoReader{}
-
-	err = json.Unmarshal([]byte(output), &observerInfo)
-	require.NoError(r, err)
-
-	return observerInfo
-}
-
-// FetchNodePubkey retrieves the public key of the new validator node.
-func FetchNodePubkey(r *runner.E2ERunner) string {
-	cmd := exec.Command("ssh", "-q", "root@zetacore-new-validator", "zetacored tendermint show-validator")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	require.NoError(r, err)
-	output := out.String()
-	output = strings.TrimSpace(output)
-	return output
 }

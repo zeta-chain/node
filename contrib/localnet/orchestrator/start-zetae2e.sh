@@ -12,6 +12,7 @@ trap 'kill -- -$$' SIGINT SIGTERM
 
 /usr/sbin/sshd
 
+# Copy the operator keys from the zetacore nodes to the orchestrator
 copy_operator_keys() {
   local nodes=("zetacore0" "zetacore1" "zetacore2" "zetacore3" "zetacore-new-validator")
 

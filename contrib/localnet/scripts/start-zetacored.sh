@@ -308,7 +308,7 @@ then
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
 
-   if host zetacore-new-validator ; then
+   if host zetacore-new-validator > /dev/null; then
     echo "zetacore-new-validator exists copying gentx peer"
      ssh zetacore-new-validator rm -rf ~/.zetacored/genesis.json
      scp ~/.zetacored/config/genesis.json zetacore-new-validator:~/.zetacored/config/genesis.json
