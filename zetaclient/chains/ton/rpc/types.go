@@ -1,47 +1,101 @@
 package rpc
 
-import "github.com/tidwall/gjson"
+import (
+	"encoding/base64"
+	"strings"
 
-type MasterchainInfo struct {
-	Seqno    uint64
-	RootHash string
-	FileHash string
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"github.com/tonkeeper/tongo/tlb"
+	"github.com/tonkeeper/tongo/ton"
+)
+
+type BlockIDExt struct {
+	Workchain int    `json:"workchain"`
+	Seqno     uint32 `json:"seqno"`
+	Shard     string `json:"shard"`
+	RootHash  string `json:"root_hash"`
+	FileHash  string `json:"file_hash"`
 }
 
-/*
-	{
-	    "@type": "blocks.masterchainInfo",
-	    "last": {
-	      "@type": "ton.blockIdExt",
-	      "workchain": -1,
-	      "shard": "-9223372036854775808",
-	      "seqno": 48264168,
-	      "root_hash": "KMDqzkt/GnyPWviwg6FgDPImNRg95Fmd9WBwREkBG+M=",
-	      "file_hash": "eE+Ij4upTsZfzlEh7+n323gNzsl+3fsHtxJysIweU0k="
-	    },
-	    "state_root_hash": "jDOC8hLoeS+Kx0s4yI9IEqHxlWyImnBBvpP7ljMXF4o=",
-	    "init": {
-	      "@type": "ton.blockIdExt",
-	      "workchain": -1,
-	      "shard": "0",
-	      "seqno": 0,
-	      "root_hash": "F6OpKZKqvqeFp6CQmFomXNMfMj2EnaUSOXN+Mh+wVWk=",
-	      "file_hash": "XplPz01CXAps5qeSWUtxcyBfdAo5zVb1N979KLSKD24="
-	    },
-	    "@extra": "1748432129.6833205:6:0.23348377421037714"
-	}
-*/
-func (m *MasterchainInfo) UnmarshalJSON(data []byte) error {
-	result := gjson.GetManyBytes(
+type MasterchainInfo struct {
+	Last BlockIDExt `json:"last"`
+}
+
+type BlockHeader struct {
+	ID            BlockIDExt `json:"id"`
+	MinRefMcSeqno uint32     `json:"min_ref_mc_seqno"`
+	GenUtime      uint32     `json:"gen_utime"`
+}
+
+type AccountState uint8
+
+const (
+	AccountStateInvalid AccountState = iota
+	AccountStateNotExists
+	AccountStateUninit
+	AccountStateActive
+	AccountStateFrozen
+)
+
+type Account struct {
+	ID         ton.AccountID
+	State      AccountState
+	Balance    uint64
+	LastTxHash tlb.Bits256
+	LastTxLT   uint64
+}
+
+func (acc *Account) UnmarshalJSON(data []byte) error {
+	items := gjson.GetManyBytes(
 		data,
-		"last.seqno",
-		"last.root_hash",
-		"last.file_hash",
+		"address.account_address",
+		"balance",
+		"last_transaction_id.lt",
+		"last_transaction_id.hash",
+		"account_state.@type",
+		"account_state.frozen_hash",
 	)
 
-	m.Seqno = result[0].Uint()
-	m.RootHash = result[1].String()
-	m.FileHash = result[2].String()
+	var (
+		addrRaw       = items[0].String()
+		balanceRaw    = items[1].String()
+		ltRaw         = items[2].String()
+		hashRaw       = items[3].String()
+		stateRaw      = items[4].String()
+		frozenHashRaw = items[5].String()
+	)
+
+	id, err := ton.ParseAccountID(addrRaw)
+	if err != nil {
+		return errors.Wrapf(err, "unable to parse account id from %q", addrRaw)
+	}
+
+	acc.ID = id
+
+	if balanceRaw != "-1" {
+		acc.Balance = items[1].Uint()
+	}
+
+	switch {
+	case ltRaw == "0" && strings.Contains(stateRaw, "uninit"):
+		acc.State = AccountStateNotExists
+		return nil
+	case strings.Contains(stateRaw, "uninit"):
+		acc.State = AccountStateUninit
+	case stateRaw == "raw.accountState":
+		acc.State = AccountStateActive
+	case frozenHashRaw != "":
+		acc.State = AccountStateFrozen
+	}
+
+	hashBytes, err := base64.StdEncoding.DecodeString(hashRaw)
+	if err != nil {
+		return errors.Wrapf(err, "unable to decode last tx hash from %q", hashRaw)
+	}
+
+	copy(acc.LastTxHash[:], hashBytes)
+	acc.LastTxLT = items[2].Uint()
 
 	return nil
 }
