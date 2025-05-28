@@ -126,8 +126,11 @@ func (signer *Signer) TryProcessOutbound(
 		return
 	}
 
+	// compliance check
+	isRestricted := !signer.PassesCompliance(cctx)
+
 	// setup outbound data
-	txData, err := NewOutboundData(cctx, height, minRelayFee, logger, signer.Logger().Compliance)
+	txData, err := NewOutboundData(cctx, height, minRelayFee, isRestricted, logger)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to setup Bitcoin outbound data")
 		return
