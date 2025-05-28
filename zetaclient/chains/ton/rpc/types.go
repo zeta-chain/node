@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 )
@@ -98,4 +99,17 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 	acc.LastTxLT = items[2].Uint()
 
 	return nil
+}
+
+// takes base64 encoded BOC and decodes it into v
+func unmarshalFromBase64(b64 string, v any) error {
+	cells, err := boc.DeserializeBocBase64(b64)
+	switch {
+	case err != nil:
+		return errors.Wrapf(err, "unable to deserialize boc from %q", b64)
+	case len(cells) == 0:
+		return errors.Errorf("expected at least one cell, got 0")
+	default:
+		return tlb.Unmarshal(cells[0], v)
+	}
 }
