@@ -37,10 +37,9 @@ func WithHTTPClient(client *http.Client) Opt {
 var ErrNotFound = errors.New("not found")
 
 // New Client constructor
+// To enable metrics, use WithHTTPClient() + metrics.GetInstrumentedHTTPClient()
 func New(endpoint string, opts ...Opt) *Client {
 	const defaultTimeout = 10 * time.Second
-
-	// todo metrics
 
 	// Most API providers expose a url with api in in the path
 	// - https://ton-testnet.core.chainstack.com/$key/api/v2
