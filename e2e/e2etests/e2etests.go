@@ -170,6 +170,8 @@ const (
 	TestStressSPLDepositName     = "stress_spl_deposit"
 	TestStressSolanaWithdrawName = "stress_solana_withdraw"
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
+	TestStressSuiDepositName     = "stress_sui_deposit"
+	TestStressSuiWithdrawName    = "stress_sui_withdraw"
 
 	/*
 		Staking tests
@@ -753,7 +755,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWhitelistSPLName,
@@ -988,9 +990,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiWithdrawRestrictedName,
 		"withdraw SUI from ZEVM to restricted address",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedSuiAddressTest},
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRestrictedAddress,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	/*
 	 Bitcoin tests
@@ -1169,9 +1173,12 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedBtcAddressTest},
 			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "revert address", DefaultValue: sample.RevertAddressZEVM},
 		},
 		TestBitcoinWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
@@ -1290,6 +1297,24 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressSuiDepositName,
+		"stress test SUI deposits",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSuiWithdrawName,
+		"stress test SUI withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiWithdraw,
 	),
 	/*
 	 Admin tests
@@ -1630,9 +1655,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestEtherWithdrawRestrictedName,
 		"withdraw Ether from ZEVM to restricted address (v1 protocol contracts)",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedEVMAddressTest},
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestEtherWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyEtherDepositAndCallRefundName,

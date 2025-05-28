@@ -291,6 +291,7 @@ services:
     profiles:
       - sui
       - all
+      - stress
     ports:
       - "9000:9000" # RPC
     environment:

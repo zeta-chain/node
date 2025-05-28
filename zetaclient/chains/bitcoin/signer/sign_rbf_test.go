@@ -237,7 +237,7 @@ func mkTxData(t *testing.T, minRelayFee float64, latestFeeRate string) OutboundD
 	cctx.GetCurrentOutboundParam().ReceiverChainId = chains.BitcoinMainnet.ChainId
 	cctx.GetCurrentOutboundParam().Amount = sdkmath.NewUint(1e7) // 0.1 BTC
 
-	txData, err := NewOutboundData(cctx, 1, minRelayFee, zerolog.Nop(), zerolog.Nop())
+	txData, err := NewOutboundData(cctx, 1, minRelayFee, false, zerolog.Nop())
 	require.NoError(t, err)
 	return *txData
 }
