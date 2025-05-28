@@ -29,10 +29,16 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			return errors.Wrapf(err, "error GetTransaction for chain %d sig %s", chainID, signature)
 		}
 
-		// filter inbound events and vote
-		err = ob.FilterInboundEventsAndVote(ctx, txResult)
+		// filter inbound events
+		events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
 		if err != nil {
-			return errors.Wrapf(err, "error FilterInboundEventAndVote for chain %d sig %s", chainID, signature)
+			return errors.Wrapf(err, "error FilterInboundEvents for chain %d sig %s", chainID, signature)
+		}
+
+		// vote inbound events
+		if err := ob.VoteInboundEvents(ctx, events); err != nil {
+			// return error to retry this transaction
+			return errors.Wrapf(err, "error VoteInboundEvents for chain %d sig %s", chainID, signature)
 		}
 	}
 

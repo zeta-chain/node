@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
 // prepareWithdrawSPLTx prepares withdraw spl outbound
@@ -20,23 +19,10 @@ func (signer *Signer) prepareWithdrawSPLTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	height uint64,
+	cancelTx bool,
 	logger zerolog.Logger,
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
-	// compliance check
-	cancelTx := compliance.IsCCTXRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SPL",
-		)
-	}
 
 	// create msg withdraw spl
 	msg, msgIn, err := signer.createMsgWithdrawSPL(
@@ -157,7 +143,12 @@ func (signer *Signer) createWithdrawSPLInstruction(msg contracts.MsgWithdrawSPL)
 }
 
 func (signer *Signer) decodeMintAccountDetails(ctx context.Context, asset string) (token.Mint, error) {
-	info, err := signer.client.GetAccountInfo(ctx, solana.MustPublicKeyFromBase58(asset))
+	mintPk, err := solana.PublicKeyFromBase58(asset)
+	if err != nil {
+		return token.Mint{}, err
+	}
+
+	info, err := signer.client.GetAccountInfo(ctx, mintPk)
 	if err != nil {
 		return token.Mint{}, err
 	}

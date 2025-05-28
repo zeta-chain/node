@@ -352,6 +352,12 @@ func (msg *MsgExecute) Hash() [32]byte {
 
 	message = append(message, msg.to.Bytes()...)
 
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, common.HexToAddress(msg.sender).Bytes()...)
+	} else {
+		message = append(message, solana.MustPublicKeyFromBase58(msg.sender).Bytes()...)
+	}
+
 	message = append(message, msg.data...)
 
 	return crypto.Keccak256Hash(message)
@@ -660,6 +666,12 @@ func (msg *MsgExecuteSPL) Hash() [32]byte {
 	message = append(message, msg.mintAccount.Bytes()...)
 
 	message = append(message, msg.recipientAta.Bytes()...)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, common.HexToAddress(msg.sender).Bytes()...)
+	} else {
+		message = append(message, solana.MustPublicKeyFromBase58(msg.sender).Bytes()...)
+	}
 
 	message = append(message, msg.data...)
 

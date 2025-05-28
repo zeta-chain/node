@@ -138,13 +138,14 @@ func (signer *Signer) TryProcessOutbound(
 		Str("cctx", cctx.Index).
 		Logger()
 
-	// support gas token only for Solana outbound
-	chainID := signer.Chain().ChainId
-	nonce := params.TssNonce
-	coinType := cctx.InboundParams.CoinType
-	isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
-
-	var outboundGetter outboundGetter
+	var (
+		chainID        = signer.Chain().ChainId
+		nonce          = params.TssNonce
+		coinType       = cctx.InboundParams.CoinType
+		isRevert       = (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
+		cancelTx       = !signer.PassesCompliance(cctx)
+		outboundGetter outboundGetter
+	)
 
 	switch coinType {
 	case coin.CoinType_Cmd:
@@ -159,7 +160,7 @@ func (signer *Signer) TryProcessOutbound(
 	case coin.CoinType_Gas:
 		isRevert := (cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert)
 		if cctx.IsWithdrawAndCall() || isRevert {
-			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+			executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
 				return
@@ -167,7 +168,7 @@ func (signer *Signer) TryProcessOutbound(
 
 			outboundGetter = executeTxGetter
 		} else {
-			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, logger)
+			withdrawTxGetter, err := signer.prepareWithdrawTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw outbound")
 				return
@@ -178,7 +179,7 @@ func (signer *Signer) TryProcessOutbound(
 
 	case coin.CoinType_ERC20:
 		if cctx.IsWithdrawAndCall() || isRevert {
-			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, logger)
+			executeSPLTxGetter, err := signer.prepareExecuteSPLTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute spl outbound")
 				return
@@ -186,7 +187,7 @@ func (signer *Signer) TryProcessOutbound(
 
 			outboundGetter = executeSPLTxGetter
 		} else {
-			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, logger)
+			withdrawSPLTxGetter, err := signer.prepareWithdrawSPLTx(ctx, cctx, height, cancelTx, logger)
 			if err != nil {
 				logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign withdraw spl outbound")
 				return
@@ -195,7 +196,7 @@ func (signer *Signer) TryProcessOutbound(
 			outboundGetter = withdrawSPLTxGetter
 		}
 	case coin.CoinType_NoAssetCall:
-		executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, logger)
+		executeTxGetter, err := signer.prepareExecuteTx(ctx, cctx, height, cancelTx, logger)
 		if err != nil {
 			logger.Error().Err(err).Msgf("TryProcessOutbound: Fail to sign execute outbound")
 			return

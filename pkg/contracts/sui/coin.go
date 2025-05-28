@@ -9,6 +9,9 @@ const (
 
 	// SUIShort is the short coin type for SUI
 	SUIShort CoinType = "0x2::sui::SUI"
+
+	// MISTPerSUI is the number of mist in one SUI
+	MistPerSUI = uint64(1e9)
 )
 
 // IsSUICoinType returns true if the given coin type is SUI
