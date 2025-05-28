@@ -19,7 +19,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// Hardcode priority fee to zero to avoid gas price bump failure in the zetacore:
 	// https://github.com/zeta-chain/node/blob/release%2Fv30/x/crosschain/keeper/abci.go#L182
 	// https://github.com/zeta-chain/node/issues/3221
-	priorityFee := big.NewInt(0)
+	priorityFee := uint64(0)
 
 	// PRIORITY FEE (EIP-1559)
 	// priorityFee, err := ob.determinePriorityFee(ctx)
@@ -34,7 +34,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 	_, err = ob.
 		ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee.Uint64(), blockNum)
+		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee, blockNum)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
