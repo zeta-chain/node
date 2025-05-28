@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
@@ -28,7 +29,7 @@ func TestLiveClient(t *testing.T) {
 
 	ctx := context.Background()
 
-	client := New(endpoint)
+	client := New(endpoint, chains.TONTestnet.ChainId)
 
 	t.Run("HealthCheck", func(t *testing.T) {
 		// Involves getMasterchainInfo and getBlockHeader

@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
@@ -19,11 +20,14 @@ import (
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 type Client struct {
-	client   *http.Client
-	endpoint string
+	client     *http.Client
+	endpoint   string
+	clientName string
 }
 
 const pageSize = 100
@@ -37,8 +41,8 @@ func WithHTTPClient(client *http.Client) Opt {
 var ErrNotFound = errors.New("not found")
 
 // New Client constructor
-// To enable metrics, use WithHTTPClient() + metrics.GetInstrumentedHTTPClient()
-func New(endpoint string, opts ...Opt) *Client {
+// To enable generic client metrics, use WithHTTPClient() + metrics.GetInstrumentedHTTPClient()
+func New(endpoint string, chainID int64, opts ...Opt) *Client {
 	const defaultTimeout = 10 * time.Second
 
 	// Most API providers expose a url with api in in the path
@@ -49,7 +53,8 @@ func New(endpoint string, opts ...Opt) *Client {
 	endpoint = strings.TrimRight(endpoint, "/") + "/jsonRPC"
 
 	c := &Client{
-		endpoint: endpoint,
+		endpoint:   endpoint,
+		clientName: fmt.Sprintf("ton:%d", chainID),
 		client: &http.Client{
 			Timeout: defaultTimeout,
 		},
@@ -384,7 +389,13 @@ func (c *Client) call(ctx context.Context, method string, params map[string]any)
 }
 
 // rpcRequest perform rpc request using HTTP transport
-func (c *Client) rpcRequest(ctx context.Context, req rpcRequest) (rpcResponse, error) {
+func (c *Client) rpcRequest(ctx context.Context, req rpcRequest) (res rpcResponse, err error) {
+	start := time.Now()
+
+	defer func() {
+		c.recordMetrics(req.Method, start, res, err)
+	}()
+
 	httpReqBody, err := req.asBody()
 	if err != nil {
 		return rpcResponse{}, errors.Wrapf(err, "unable to marshal rpc request")
@@ -415,4 +426,16 @@ func (c *Client) rpcRequest(ctx context.Context, req rpcRequest) (rpcResponse, e
 	}
 
 	return rpcResp, nil
+}
+
+func (c *Client) recordMetrics(method string, start time.Time, res rpcResponse, err error) {
+	dur := time.Since(start).Seconds()
+
+	status := "ok"
+	if err != nil || res.Error != "" {
+		status = "failed"
+	}
+
+	metrics.RPCClientCounter.WithLabelValues(status, c.clientName, method).Inc()
+	metrics.RPCClientDuration.WithLabelValues(c.clientName).Observe(dur)
 }
