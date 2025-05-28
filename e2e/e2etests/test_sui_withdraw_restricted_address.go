@@ -9,27 +9,22 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // TestSuiWithdrawRestrictedAddress tests that a withdrawal to a restricted address reverts to a revert address
 // the test also add a case to check withdrawal to Sui invalid address immediately fail, we don't add a dedicated test as this is a small logic
 func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
-	amount := utils.ParseBigInt(r, args[0])
-
-	// Restricted address
+	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given receiver, revert address
-	receiver := sample.RestrictedSuiAddressTest
-	revertAddress := sample.EthAddress()
+	// Given amount, receiver, revert address
+	receiver := args[0]
+	amount := utils.ParseBigInt(r, args[1])
+	revertAddress := r.EVMAddress()
 
-	// balances before
+	// receiver balance before
 	receiverBalanceBefore := r.SuiGetSUIBalance(receiver)
-	revertBalanceBefore, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
-	require.NoError(r, err)
 
 	// approve the ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
@@ -45,6 +40,14 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 		},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw to restricted sui address")
+
+	// wait for the withdraw tx to be mined
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	// revert address balance before
+	revertBalanceBefore, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, revertAddress)
+	require.NoError(r, err)
 
 	// ASSERT
 	// wait for the cctx to be reverted

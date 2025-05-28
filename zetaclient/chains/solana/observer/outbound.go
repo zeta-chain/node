@@ -140,10 +140,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		outboundStatus = chains.ReceiveStatus_failed
 	}
 
-	// compliance check, special handling the cancelled cctx
+	// cancelled transaction means the outbound is failed
+	// - set amount to CCTX's amount to bypass amount check in zetacore
+	// - set status to failed to revert the CCTX in zetacore
 	if compliance.IsCCTXRestricted(cctx) {
-		// use cctx's amount to bypass the amount check in zetacore
 		outboundAmount = cctx.GetCurrentOutboundParam().Amount.BigInt()
+		outboundStatus = chains.ReceiveStatus_failed
 	}
 
 	// post vote to zetacore

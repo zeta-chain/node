@@ -245,8 +245,8 @@ func ParseInboundAsCall(
 	if err != nil {
 		return nil, err
 	}
-	if len(instructionAccounts) != 1 {
-		return nil, fmt.Errorf("want only 1 signer account, got %d", len(instructionAccounts))
+	if len(instructionAccounts) < accountsNumberCall {
+		return nil, fmt.Errorf("want required 1 signer account, got %d", len(instructionAccounts))
 	}
 
 	// parse receiver
