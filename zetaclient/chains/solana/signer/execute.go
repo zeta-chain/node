@@ -2,6 +2,7 @@ package signer
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
@@ -74,6 +75,12 @@ func (signer *Signer) createMsgExecute(
 		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
+	// check sender based on execute type
+	sender, err := validateSender(cctx.InboundParams.Sender, executeType)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot validate sender")
+	}
+
 	remainingAccounts := []*solana.AccountMeta{}
 	for _, a := range msg.Accounts {
 		remainingAccounts = append(remainingAccounts, &solana.AccountMeta{
@@ -87,7 +94,7 @@ func (signer *Signer) createMsgExecute(
 		nonce,
 		amount,
 		to,
-		cctx.InboundParams.Sender,
+		sender,
 		msg.Data,
 		executeType,
 		remainingAccounts,
@@ -157,4 +164,23 @@ func (signer *Signer) createExecuteInstruction(msg contracts.MsgExecute) (*solan
 	}
 
 	return inst, nil
+}
+
+// validateSender validates and formats the sender address based on execute type
+func validateSender(sender string, executeType contracts.ExecuteType) (string, error) {
+	if executeType == contracts.ExecuteTypeCall {
+		// for regular execute, sender should be an Ethereum address
+		senderEth := common.HexToAddress(sender)
+		if senderEth == (common.Address{}) {
+			return "", fmt.Errorf("invalid execute sender %s", sender)
+		}
+		return senderEth.Hex(), nil
+	}
+
+	// for revert execute, sender should be a Solana address
+	senderSol, err := solana.PublicKeyFromBase58(sender)
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid execute revert sender %s", sender)
+	}
+	return senderSol.String(), nil
 }

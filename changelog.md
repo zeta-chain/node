@@ -56,6 +56,7 @@
 * [3914](https://github.com/zeta-chain/node/pull/3914) - check tx result err in filter inbound events
 * [3904](https://github.com/zeta-chain/node/pull/3904) - improve observer emissions distribution to maximise pool utilisation
 * [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
+* [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
 
 ### Tests
 
