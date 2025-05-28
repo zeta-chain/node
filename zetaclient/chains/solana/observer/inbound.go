@@ -83,10 +83,21 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				// we have to re-scan this signature on next ticker
 				return errors.Wrapf(err, "error GetTransaction for sig %s", sigString)
 			default:
-				// filter inbound events and vote
-				if err = ob.FilterInboundEventsAndVote(ctx, txResult); err != nil {
-					// we have to re-scan this signature on next ticker
-					return errors.Wrapf(err, "error FilterInboundEventAndVote for sig %s", sigString)
+				// filter the events
+				events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
+				if err != nil {
+					// Log the error but continue processing other transactions
+					ob.Logger().Inbound.Error().
+						Err(err).
+						Str("tx.signature", sigString).
+						Msg("ObserveInbound: error filtering events, skipping")
+					continue
+				}
+
+				// vote on the events
+				if err := ob.VoteInboundEvents(ctx, events); err != nil {
+					// return error to retry this transaction
+					return errors.Wrapf(err, "error voting on events for transaction %s, will retry", sigString)
 				}
 			}
 		}
@@ -115,19 +126,12 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	return nil
 }
 
-// FilterInboundEventsAndVote filters inbound events from a txResult and post a vote.
-func (ob *Observer) FilterInboundEventsAndVote(ctx context.Context, txResult *rpc.GetTransactionResult) error {
-	// filter inbound events from txResult
-	events, err := FilterInboundEvents(txResult, ob.gatewayID, ob.Chain().ChainId, ob.Logger().Inbound)
-	if err != nil {
-		return errors.Wrapf(err, "error FilterInboundEvent")
-	}
-
-	// build inbound vote message from events and post to zetacore
+// VoteInboundEvents posts votes for inbound events to zetacore.
+func (ob *Observer) VoteInboundEvents(ctx context.Context, events []*clienttypes.InboundEvent) error {
 	for _, event := range events {
 		msg := ob.BuildInboundVoteMsgFromEvent(event)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
+			_, err := ob.PostVoteInbound(ctx, msg, zetacore.PostVoteInboundExecutionGasLimit)
 			if err != nil {
 				return errors.Wrapf(err, "error PostVoteInbound")
 			}
