@@ -812,7 +812,10 @@ func (k Keeper) CallEVMWithData(
 			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data)))
 			// adding nonce and gas limit for more info in rpc methods in order to parse synthetic txs
 			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxGasLimit, strconv.FormatUint(msg.GasLimit, 10)))
+			attrs = append(
+				attrs,
+				sdk.NewAttribute(evmtypes.AttributeKeyTxGasLimit, strconv.FormatUint(msg.GasLimit, 10)),
+			)
 
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
