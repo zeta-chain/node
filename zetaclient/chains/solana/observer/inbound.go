@@ -153,6 +153,10 @@ func FilterInboundEvents(
 	senderChainID int64,
 	logger zerolog.Logger,
 ) ([]*clienttypes.InboundEvent, error) {
+	if txResult.Meta.Err != nil {
+		return nil, errors.Errorf("transaction failed with error: %v", txResult.Meta.Err)
+	}
+
 	parser, err := NewInboundEventParser(txResult, gatewayID, senderChainID, logger)
 	if err != nil {
 		return nil, err

@@ -108,6 +108,10 @@ func Test_FilterInboundEvents(t *testing.T) {
 	txHashInner := "2TH3fMqFEULjavgmYEXtQrX6qSeMwKMPPgXEmr6QRFomgpVKhj8LNJNDwyqC1dVeSBU1Av2o4TWn75PvNfjncfUH"
 	txResultInner := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHashInner, false)
 
+	// load reverted inbound tx
+	txHashReverted := "2M5hpf4CNdfV4a44Ra8mYAyQRZr3UX61FjAU6qBmV6K7HxyS6CsSPcvq2fS7eB9QqT8rx8jE2wMoMYauTmuvPgrx"
+	txResultRevert := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHashReverted, false)
+
 	// given gateway ID
 	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
 	require.NoError(t, err)
@@ -164,6 +168,11 @@ func Test_FilterInboundEvents(t *testing.T) {
 		// ASSERT
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
+	})
+
+	t.Run("should not filter reverted inbound deposit SOL", func(t *testing.T) {
+		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop())
+		require.Error(t, err)
 	})
 }
 

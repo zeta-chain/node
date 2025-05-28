@@ -14,7 +14,6 @@ import (
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
@@ -109,7 +108,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 	var txDigest string
 
 	// broadcast tx according to compliance check result
-	if s.passesCompliance(cctx) {
+	if s.PassesCompliance(cctx) {
 		txDigest, err = s.broadcastWithdrawalWithFallback(ctx, withdrawTxBuilder, cancelTxBuilder)
 	} else {
 		txDigest, err = s.broadcastCancelTx(ctx, cancelTxBuilder)
@@ -200,28 +199,6 @@ func (s *Signer) SignTxWithCancel(
 	}
 
 	return sig, sigCancel, nil
-}
-
-func (s *Signer) passesCompliance(cctx *cctypes.CrossChainTx) bool {
-	restricted := compliance.IsCCTXRestricted(cctx)
-	if !restricted {
-		return true
-	}
-
-	params := cctx.GetCurrentOutboundParam()
-
-	compliance.PrintComplianceLog(
-		s.Logger().Std,
-		s.Logger().Compliance,
-		true,
-		s.Chain().ChainId,
-		cctx.Index,
-		cctx.InboundParams.Sender,
-		params.Receiver,
-		params.CoinType.String(),
-	)
-
-	return false
 }
 
 // wrapDigest wraps the digest with sha256.
