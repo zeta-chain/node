@@ -12,19 +12,19 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
-	// "github.com/zeta-chain/node/zetaclient/common"
 )
 
 func TestLiveClient(t *testing.T) {
-	// todo
-	// if !common.LiveTestEnabled() {
-	// t.Skip("live test is disabled")
-	// }
+	if !common.LiveTestEnabled() {
+		t.Skip("live test is disabled")
+	}
 
 	endpoint := os.Getenv(common.EnvTONRPC)
 	if endpoint == "" {
 		endpoint = "https://testnet.toncenter.com/api/v2/"
 	}
+
+	gatewayTestnet := ton.MustParseAccountID("EQB6TUFJZyaq2yJ89NMTyVkS8f5sx0LBjr3jBv9ZiB2IFjrk")
 
 	ctx := context.Background()
 
@@ -42,13 +42,13 @@ func TestLiveClient(t *testing.T) {
 
 	t.Run("GetAccountState", func(t *testing.T) {
 		t.Run("Exists", func(t *testing.T) {
-			accountID := ton.MustParseAccountID("EQB6TUFJZyaq2yJ89NMTyVkS8f5sx0LBjr3jBv9ZiB2IFjrk")
+			accountID := gatewayTestnet
 
 			acc, err := client.GetAccountState(ctx, accountID)
 
 			require.NoError(t, err)
 			require.Equal(t, accountID, acc.ID)
-			require.Equal(t, AccountStateActive, acc.State)
+			require.Equal(t, tlb.AccountActive, acc.Status)
 			require.NotZero(t, acc.Balance)
 			require.NotEmpty(t, acc.LastTxHash)
 			require.NotZero(t, acc.LastTxLT)
@@ -63,7 +63,7 @@ func TestLiveClient(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, accountID, acc.ID)
-			require.Equal(t, AccountStateNotExists, acc.State)
+			require.Equal(t, tlb.AccountNone, acc.Status)
 			require.Zero(t, acc.Balance)
 			require.Empty(t, acc.LastTxHash)
 			require.Empty(t, acc.LastTxLT)
@@ -90,7 +90,7 @@ func TestLiveClient(t *testing.T) {
 	})
 
 	t.Run("GetTransactions", func(t *testing.T) {
-		accountID := ton.MustParseAccountID("EQB6TUFJZyaq2yJ89NMTyVkS8f5sx0LBjr3jBv9ZiB2IFjrk")
+		accountID := gatewayTestnet
 
 		txs, err := client.GetTransactions(ctx, 10, accountID, 0, ton.Bits256{})
 		require.NoError(t, err)
@@ -100,6 +100,46 @@ func TestLiveClient(t *testing.T) {
 			printTx(t, tx)
 		}
 	})
+
+	t.Run("GetTransactionsSince", func(t *testing.T) {
+		// ARRANGE
+		// Given testnet gateway
+		accountID := gatewayTestnet
+
+		// Given its last 3 txs
+		txs, err := client.GetTransactions(ctx, 3, accountID, 0, ton.Bits256{})
+		require.NoError(t, err)
+		require.Len(t, txs, 3)
+
+		for i := 0; i < 2; i++ {
+			// ensure that GetTransactions orders TXs by DESC
+			require.Greater(t, txs[i].Lt, txs[i+1].Lt)
+		}
+
+		t.Logf("GetTransactions")
+		for _, tx := range txs {
+			printTx(t, tx)
+		}
+
+		// ACT
+		// Get all txs since last-3
+		txs2, err := client.GetTransactionsSince(ctx, accountID, txs[2].Lt, ton.Bits256(txs[2].Hash()))
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Len(t, txs2, 2)
+
+		t.Logf("GetTransactionsSince")
+		for _, tx := range txs2 {
+			printTx(t, tx)
+		}
+
+		// now the pagination should be ASC
+		require.Equal(t, txs[0].Lt, txs2[1].Lt)
+		require.Equal(t, txs[1].Lt, txs2[0].Lt)
+
+	})
+
 }
 
 func printTx(t *testing.T, tx ton.Transaction) {

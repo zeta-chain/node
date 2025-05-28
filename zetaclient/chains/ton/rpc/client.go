@@ -1,18 +1,23 @@
+// Package rpc implements a client for HTTP-RPC using toncenter API V2 spec
+// See: https://toncenter.com/api/v2
+// See: https://github.com/toncenter/ton-http-api
+// See: https://docs.ton.org/v3/guidelines/dapps/apis-sdks/ton-http-apis
 package rpc
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/tonkeeper/tongo/boc"
+	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 )
 
@@ -21,9 +26,7 @@ type Client struct {
 	endpoint string
 }
 
-// todo GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
-// todo GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
-// todo GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
+const pageSize = 100
 
 type Opt func(c *Client)
 
@@ -31,9 +34,9 @@ func WithHTTPClient(client *http.Client) Opt {
 	return func(c *Client) { c.client = client }
 }
 
+var ErrNotFound = errors.New("not found")
+
 // New Client constructor
-// See: https://toncenter.com/api/v2
-// See: https://docs.ton.org/v3/guidelines/dapps/apis-sdks/ton-http-apis
 func New(endpoint string, opts ...Opt) *Client {
 	const defaultTimeout = 10 * time.Second
 
@@ -112,6 +115,20 @@ func (c *Client) GetAccountState(ctx context.Context, acc ton.AccountID) (Accoun
 	return account, err
 }
 
+// getLastTransactionHash returns logical time and hash of the last transaction
+func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
+	state, err := c.GetAccountState(ctx, acc)
+	if err != nil {
+		return 0, tlb.Bits256{}, errors.Wrap(err, "unable to get account state")
+	}
+
+	if state.Status != tlb.AccountActive {
+		return 0, tlb.Bits256{}, errors.New("account is not active")
+	}
+
+	return state.LastTxLT, state.LastTxHash, nil
+}
+
 func (c *Client) GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error) {
 	params := map[string]any{
 		"config_id": index,
@@ -159,9 +176,9 @@ func (c *Client) GetTransactions(
 		params["hash"] = hash.Base64()
 	}
 
-	// todo should we support archival nodes?
-	// """By default getTransaction request is processed by any available liteserver.
-	// If archival=true only lite-servers with full history are used."""
+	// todo should we support ARCHIVAL nodes?
+	// «By default getTransaction request is processed by any available liteserver.
+	// If archival=true ONLY lite-servers with full history are used»
 
 	response, err := c.call(ctx, "getTransactions", params)
 	if err != nil {
@@ -188,6 +205,126 @@ func (c *Client) GetTransactions(
 	return txs, nil
 }
 
+func (c *Client) GetTransaction(
+	ctx context.Context,
+	acc ton.AccountID,
+	lt uint64,
+	hash ton.Bits256,
+) (ton.Transaction, error) {
+	txs, err := c.GetTransactions(ctx, 1, acc, lt, hash)
+	if err != nil {
+		return ton.Transaction{}, err
+	}
+
+	if len(txs) == 0 {
+		return ton.Transaction{}, ErrNotFound
+	}
+
+	return txs[0], nil
+}
+
+// GetTransactionsSince returns all account transactions since the given logicalTime and hash (exclusive).
+// The result is ordered from oldest to newest. Used to detect new txs to observe.
+func (c *Client) GetTransactionsSince(
+	ctx context.Context,
+	acc ton.AccountID,
+	oldestLT uint64,
+	oldestHash ton.Bits256,
+) (txs []ton.Transaction, err error) {
+	lt, hash, err := c.getLastTransactionHash(ctx, acc)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []ton.Transaction
+
+	// reverse the result to get the oldest tx first
+	defer func() {
+		if len(result) > 0 {
+			slices.Reverse(result)
+		}
+	}()
+
+	for {
+		hashBits := ton.Bits256(hash)
+
+		// note that ton liteapi works in the reverse order.
+		// Here we go from the LATEST txs to the oldest at N txs per page
+		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
+		}
+
+		if len(txs) == 0 {
+			break
+		}
+
+		for i := range txs {
+			found := txs[i].Lt == oldestLT && txs[i].Hash() == tlb.Bits256(oldestHash)
+			if !found {
+				continue
+			}
+
+			// early exit
+			result = append(result, txs[:i]...)
+
+			return result, nil
+		}
+
+		// otherwise, append all page results
+		result = append(result, txs...)
+
+		// prepare pagination params for the next page
+		oldestIndex := len(txs) - 1
+
+		lt, hash = txs[oldestIndex].PrevTransLt, txs[oldestIndex].PrevTransHash
+	}
+
+	return result, nil
+}
+
+// GetFirstTransaction scrolls through the transactions of the given account to find the first one.
+// Note that it might fail w/o using an archival node. Also returns the number of
+// scrolled transactions for this account i.e. total transactions
+func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
+	lt, hash, err := c.getLastTransactionHash(ctx, acc)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var (
+		tx       *ton.Transaction
+		scrolled int
+	)
+
+	for {
+		hashBits := ton.Bits256(hash)
+
+		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
+		if err != nil {
+			return nil, scrolled, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
+		}
+
+		if len(txs) == 0 {
+			break
+		}
+
+		scrolled += len(txs)
+
+		tx = &txs[len(txs)-1]
+
+		// Not we take the latest item in the list (oldest tx in the page)
+		// and set it as the new last tx
+		lt, hash = tx.PrevTransLt, tx.PrevTransHash
+	}
+
+	if tx == nil {
+		return nil, scrolled, errors.Errorf("no transactions found [lt %d, hash %s]", lt, ton.Bits256(hash).Hex())
+	}
+
+	return tx, scrolled, nil
+}
+
 func (c *Client) SendMessage(ctx context.Context, payload []byte) (uint32, error) {
 	const method = "sendBoc"
 
@@ -195,7 +332,7 @@ func (c *Client) SendMessage(ctx context.Context, payload []byte) (uint32, error
 		"boc": base64.StdEncoding.EncodeToString(payload),
 	}
 
-	req := newRPCRequest("sendBoc", params)
+	req := newRPCRequest(method, params)
 
 	res, err := c.rpcRequest(ctx, req)
 	if err != nil {
@@ -204,7 +341,7 @@ func (c *Client) SendMessage(ctx context.Context, payload []byte) (uint32, error
 
 	// todo: future: this should be explored during e2e wiring,
 	// todo: probably need to parse code from res.Result
-
+	// #nosec G115 in range
 	return uint32(res.Code), nil
 }
 
@@ -279,40 +416,4 @@ func (c *Client) rpcRequest(ctx context.Context, req rpcRequest) (rpcResponse, e
 	}
 
 	return rpcResp, nil
-}
-
-type rpcRequest struct {
-	Jsonrpc string         `json:"jsonrpc"`
-	Method  string         `json:"method"`
-	Params  map[string]any `json:"params"`
-	ID      string         `json:"id"`
-}
-
-func newRPCRequest(method string, params map[string]any) rpcRequest {
-	if params == nil {
-		params = make(map[string]any)
-	}
-
-	return rpcRequest{
-		Jsonrpc: "2.0",
-		ID:      "1",
-		Method:  method,
-		Params:  params,
-	}
-}
-
-func (r *rpcRequest) asBody() (io.Reader, error) {
-	body, err := json.Marshal(r)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to marshal rpc request")
-	}
-
-	return bytes.NewReader(body), nil
-}
-
-type rpcResponse struct {
-	Success bool            `json:"ok"`
-	Result  json.RawMessage `json:"result"`
-	Error   string          `json:"error"`
-	Code    int             `json:"code"`
 }

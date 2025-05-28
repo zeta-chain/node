@@ -1,7 +1,10 @@
 package rpc
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"io"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -28,20 +31,9 @@ type BlockHeader struct {
 	MinRefMcSeqno uint32     `json:"min_ref_mc_seqno"`
 	GenUtime      uint32     `json:"gen_utime"`
 }
-
-type AccountState uint8
-
-const (
-	AccountStateInvalid AccountState = iota
-	AccountStateNotExists
-	AccountStateUninit
-	AccountStateActive
-	AccountStateFrozen
-)
-
 type Account struct {
 	ID         ton.AccountID
-	State      AccountState
+	Status     tlb.AccountStatus
 	Balance    uint64
 	LastTxHash tlb.Bits256
 	LastTxLT   uint64
@@ -80,14 +72,14 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case ltRaw == "0" && strings.Contains(stateRaw, "uninit"):
-		acc.State = AccountStateNotExists
+		acc.Status = tlb.AccountNone
 		return nil
 	case strings.Contains(stateRaw, "uninit"):
-		acc.State = AccountStateUninit
+		acc.Status = tlb.AccountUninit
 	case stateRaw == "raw.accountState":
-		acc.State = AccountStateActive
+		acc.Status = tlb.AccountActive
 	case frozenHashRaw != "":
-		acc.State = AccountStateFrozen
+		acc.Status = tlb.AccountFrozen
 	}
 
 	hashBytes, err := base64.StdEncoding.DecodeString(hashRaw)
@@ -112,4 +104,40 @@ func unmarshalFromBase64(b64 string, v any) error {
 	default:
 		return tlb.Unmarshal(cells[0], v)
 	}
+}
+
+type rpcRequest struct {
+	Jsonrpc string         `json:"jsonrpc"`
+	Method  string         `json:"method"`
+	Params  map[string]any `json:"params"`
+	ID      string         `json:"id"`
+}
+
+func newRPCRequest(method string, params map[string]any) rpcRequest {
+	if params == nil {
+		params = make(map[string]any)
+	}
+
+	return rpcRequest{
+		Jsonrpc: "2.0",
+		ID:      "1",
+		Method:  method,
+		Params:  params,
+	}
+}
+
+func (r *rpcRequest) asBody() (io.Reader, error) {
+	body, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to marshal rpc request")
+	}
+
+	return bytes.NewReader(body), nil
+}
+
+type rpcResponse struct {
+	Success bool            `json:"ok"`
+	Result  json.RawMessage `json:"result"`
+	Error   string          `json:"error"`
+	Code    int             `json:"code"`
 }
