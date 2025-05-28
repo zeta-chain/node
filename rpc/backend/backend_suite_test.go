@@ -158,6 +158,7 @@ func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, ab
 				{Key: "txData", Value: "0x1234"},
 				{Key: "amount", Value: "1000"},
 				{Key: "txGasUsed", Value: "21000"},
+				{Key: "txGasLimit", Value: "21000"},
 				{Key: "txHash", Value: ""},
 				{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
 			}},

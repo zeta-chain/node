@@ -261,7 +261,7 @@ func NewRPCTransactionFromIncompleteMsg(
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(txAdditional.Type),
 		From:     common.HexToAddress(msg.From),
-		Gas:      hexutil.Uint64(txAdditional.GasUsed),
+		Gas:      hexutil.Uint64(txAdditional.GasLimit),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
 		Input:    txAdditional.Data,

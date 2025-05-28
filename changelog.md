@@ -58,6 +58,7 @@
 * [3904](https://github.com/zeta-chain/node/pull/3904) - improve observer emissions distribution to maximise pool utilisation
 * [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
 * [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
+* [3920](https://github.com/zeta-chain/node/pull/3920) - show correct gas limit for synthetic txs
 
 ### Tests
 
