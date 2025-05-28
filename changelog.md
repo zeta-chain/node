@@ -27,6 +27,9 @@
 * [3837](https://github.com/zeta-chain/node/pull/3837) - cancel Sui withdrawAndCall if tx cannot go through, e.g. on_call fails due to invalid data
 * [3396](https://github.com/zeta-chain/node/pull/3396) - add support for Bitcoin RBF (Replace-By-Fee) in zetaclient
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
+* [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
+* [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
+
 
 ### Refactor
 
@@ -49,6 +52,10 @@
 * [3877](https://github.com/zeta-chain/node/pull/3877) - use multiple SUI coin objects to pay PTB transaction gas fee
 * [3890](https://github.com/zeta-chain/node/pull/3890) - solana abort address format
 * [3901](https://github.com/zeta-chain/node/pull/3901) - prevent cctx being set as abortRefunded if the abort processing failed before the refund
+* [3872](https://github.com/zeta-chain/node/pull/3872) - delete testnet ballots for creation height 0 and add a query to list all ballots created at a height.
+* [3914](https://github.com/zeta-chain/node/pull/3914) - check tx result err in filter inbound events
+* [3904](https://github.com/zeta-chain/node/pull/3904) - improve observer emissions distribution to maximise pool utilisation
+* [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
 * [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
 
 ### Tests
@@ -58,6 +65,7 @@
 * [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
 * [3866](https://github.com/zeta-chain/node/pull/3866) - add e2e test for upgrading sui gateway package
 * [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+* [3893](https://github.com/zeta-chain/node/pull/3893) - add e2e performance tests for sui deposit and withdrawal
 
 
 ### Refactor

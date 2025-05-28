@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -36,7 +37,12 @@ func TestSolanaWithdrawRevertExecutableReceiver(r *runner.E2ERunner, args []stri
 	)
 
 	// withdraw using example connected program as receiver
-	tx := r.WithdrawSOLZRC20(runner.ConnectedProgramID, withdrawAmount, approvedAmount)
+	tx := r.WithdrawSOLZRC20(
+		runner.ConnectedProgramID,
+		withdrawAmount,
+		approvedAmount,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

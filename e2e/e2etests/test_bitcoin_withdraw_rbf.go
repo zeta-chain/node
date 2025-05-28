@@ -1,11 +1,13 @@
 package e2etests
 
 import (
+	"math/big"
 	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -30,8 +32,8 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	to, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
 	// initiate a withdraw CCTX
-	receipt := r.WithdrawBTC(to, amount, true)
-	cctx := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, receipt.TxHash.Hex())
+	tx := r.WithdrawBTC(to, amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
+	cctx := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, tx.Hash().Hex())
 
 	// wait for the 1st outbound tracker hash to come in
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
@@ -56,7 +58,7 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	defer stop()
 
 	// waiting for CCTX to be mined
-	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// ensure the original tx is dropped

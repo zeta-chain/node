@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
 // prepareExecuteTx prepares execute outbound
@@ -21,23 +20,10 @@ func (signer *Signer) prepareExecuteTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	height uint64,
+	cancelTx bool,
 	logger zerolog.Logger,
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
-	// compliance check
-	cancelTx := compliance.IsCCTXRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SOL",
-		)
-	}
 
 	// create msg execute
 	msg, msgIn, err := signer.createMsgExecute(cctx, cancelTx)
