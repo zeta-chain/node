@@ -1,10 +1,21 @@
 package types
 
-import "time"
+import (
+	"math"
+	"time"
+)
+
+const (
+	// Estimated block time in seconds (used to calculate epoch length)
+	BlockTimeSeconds = 4.5
+
+	// Target epoch duration in seconds (e.g., 10 minutes)
+	TargetEpochDurationSeconds = 600
+)
 
 var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	// EpochLength is the number of blocks in an epoch before triggering a gas price increase
-	EpochLength: 100,
+	EpochLength: int64(math.Round(TargetEpochDurationSeconds / BlockTimeSeconds)),
 
 	// RetryInterval is the time to wait before incrementing the gas price again
 	RetryInterval: time.Minute * 10,

@@ -49,7 +49,7 @@ import (
 
 const EnvPrefix = "zetacore"
 
-const DefaultTimeoutCommit = 5 * time.Second
+const DefaultTimeoutCommit = 3500 * time.Millisecond // 3.5 seconds
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.

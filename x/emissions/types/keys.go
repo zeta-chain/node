@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math"
+
 	sdkmath "cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -26,6 +28,13 @@ const (
 	ParamsKey                = "Params-value-"
 )
 
+// BlockTimeSeconds is the estimated block time in seconds
+// TargetBallotMaturitySeconds is the real-world target duration for ballot maturity
+const (
+	BlockTimeSeconds            = 4.5
+	TargetBallotMaturitySeconds = 600
+)
+
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
@@ -44,14 +53,14 @@ var (
 	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTSSRewardsPool)
 	// BlockReward is an initial block reward amount when emissions module was initialized.
 	// The current value can be obtained from by querying the params
+	// TODO: how is this value calculated?
 	BlockReward = sdkmath.LegacyMustNewDecFromStr("9620949074074074074.074070733466756687")
 	// ObserverSlashAmount is the amount of tokens to be slashed from observer in case of incorrect vote
 	// by default it is set to 0.1 ZETA
 	ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 
 	// BallotMaturityBlocks is amount of blocks needed for ballot to mature
-	// by default is set to 100
-	BallotMaturityBlocks = 100 // approximately 9-10 minutes
+	BallotMaturityBlocks = int64(math.Round(TargetBallotMaturitySeconds / BlockTimeSeconds)) // approximately 9-10 minutes
 	// PendingBallotsBufferBlocks is a buffer number of blocks
 	//(in addition to BallotMaturityBlocks)
 	// that we use only for pending ballots before deleting them
