@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
+	"time"
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -32,6 +34,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	ethermintclient "github.com/zeta-chain/ethermint/client"
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	evmenc "github.com/zeta-chain/ethermint/encoding"
@@ -45,6 +48,8 @@ import (
 )
 
 const EnvPrefix = "zetacore"
+
+const DefaultTimeoutCommit = 5 * time.Second
 
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
@@ -118,9 +123,6 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 	}
 
 	initRootCmd(rootCmd, encodingConfig)
-	rootCmd.AddCommand(
-		confixcmd.ConfigCommand(),
-	)
 
 	// need to create this app instance to get autocliopts
 	tempApp := app.New(
@@ -203,9 +205,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		addModuleInitFlags,
 	)
 
-	// the ethermintserver one supercedes the sdk one
-	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
-
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
@@ -215,14 +214,99 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
+	rootCmd.AddCommand(
+		confixcmd.ConfigCommand(),
+	)
+
+	// override config.toml default values, can be skipped with a flag (eg: in localnet, e2e tests etc.)
+	for i, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "start" {
+			startRunE := cmd.RunE
+
+			cmd.RunE = func(cmd *cobra.Command, args []string) error {
+				serverCtx := server.GetServerContextFromCmd(cmd)
+				skipConfigDefaults := serverCtx.Viper.GetBool(FlagSkipConfigOverride)
+
+				if !skipConfigDefaults {
+					if err := overrideConfigFile(serverCtx); err != nil {
+						return fmt.Errorf("failed to override config file: %w", err)
+					}
+				}
+
+				return startRunE(cmd, args)
+			}
+
+			rootCmd.Commands()[i] = cmd
+			break
+		}
+	}
+
 	// replace the default hd-path for the key add command with Ethereum HD Path
 	if err := SetEthereumHDPath(rootCmd); err != nil {
 		fmt.Printf("warning: unable to set default HD path: %v\n", err)
 	}
 }
 
+// overrideConfigFile handles the configuration of config.toml file,
+// it either creates a new config with optimized defaults or updates an existing one.
+func overrideConfigFile(serverCtx *server.Context) error {
+	rootDir := serverCtx.Viper.GetString(tmcli.HomeFlag)
+	configDir := filepath.Join(rootDir, "config")
+	configPath := filepath.Join(configDir, "config.toml")
+
+	// check if config file exists
+	_, err := os.Stat(configPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to check config file %s: %w", configPath, err)
+		}
+		// config doesn't exist - will be created with defaults by server.InterceptConfigsPreRunHandler
+		return nil
+	}
+
+	fileInfo, err := os.Stat(configPath)
+	if err != nil {
+		return fmt.Errorf("failed to check config file permissions: %w", err)
+	}
+
+	// if config.toml is not writable skip next steps
+	if fileInfo.Mode()&os.FileMode(0200) == 0 {
+		fmt.Println("warning: config.toml is not writable")
+		return nil
+	}
+
+	// config exists - read and update it
+	viperConfig := viper.New()
+	viperConfig.SetConfigType("toml")
+	viperConfig.SetConfigName("config")
+	viperConfig.AddConfigPath(configDir)
+
+	if err := viperConfig.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to read config file %s: %w", configPath, err)
+	}
+
+	// update consensus timeout
+	serverCtx.Config.Consensus.TimeoutCommit = DefaultTimeoutCommit
+
+	// writeConfigFile panics on error, so we need to recover
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("warning: failed to write config file: %v\n", r)
+			}
+		}()
+		tmcfg.WriteConfigFile(configPath, serverCtx.Config)
+	}()
+	return nil
+}
+
+// FlagSkipConfigOverride defines a flag to skip automatic config.toml override.
+// This should be used for localnet, e2e tests etc.
+const FlagSkipConfigOverride = "skip-config-override"
+
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagSkipConfigOverride, false, "Skip automatic config.toml override")
 }
 
 func queryCommand() *cobra.Command {
