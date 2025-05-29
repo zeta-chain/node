@@ -60,7 +60,9 @@ var (
 	ObserverSlashAmount = sdkmath.NewInt(100000000000000000)
 
 	// BallotMaturityBlocks is amount of blocks needed for ballot to mature
-	BallotMaturityBlocks = int64(math.Round(TargetBallotMaturitySeconds / BlockTimeSeconds)) // approximately 9-10 minutes
+	BallotMaturityBlocks = int64(
+		math.Round(TargetBallotMaturitySeconds / BlockTimeSeconds),
+	) // approximately 9-10 minutes
 	// PendingBallotsBufferBlocks is a buffer number of blocks
 	//(in addition to BallotMaturityBlocks)
 	// that we use only for pending ballots before deleting them

@@ -5,7 +5,7 @@ import "time"
 const (
 	// ZetaBlockTime is the block time of the ZetaChain network
 	// It's a rough estimate that can be used in non-critical path to estimate the time of a block
-	ZetaBlockTime = 4500 * time.Millisecond
+	ZetaBlockTime = 6000 * time.Millisecond
 
 	// DonationMessage is the message for donation transactions
 	// Transaction sent to the TSS or ERC20 Custody address containing this message are considered as a donation

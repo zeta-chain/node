@@ -14,7 +14,7 @@ func NewParams() Params {
 		ObserverEmissionPercentage:         "00.25",
 		TssSignerEmissionPercentage:        "00.25",
 		ObserverSlashAmount:                ObserverSlashAmount,
-		BallotMaturityBlocks:               int64(BallotMaturityBlocks),
+		BallotMaturityBlocks:               BallotMaturityBlocks,
 		BlockRewardAmount:                  BlockReward,
 		PendingBallotsDeletionBufferBlocks: PendingBallotsBufferBlocks,
 	}
