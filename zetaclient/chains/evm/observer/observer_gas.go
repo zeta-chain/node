@@ -43,9 +43,9 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
-// DeterminePriorityFee determines the chain priority fee.
+// determinePriorityFee determines the chain priority fee.
 // Returns zero for non EIP-1559 (London fork) chains.
-func (ob *Observer) DeterminePriorityFee(ctx context.Context) (*big.Int, error) {
+func (ob *Observer) determinePriorityFee(ctx context.Context) (*big.Int, error) {
 	supported, err := ob.supportsPriorityFee(ctx)
 	switch {
 	case err != nil:
