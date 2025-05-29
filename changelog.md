@@ -30,6 +30,7 @@
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 * [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
 * [3882](https://github.com/zeta-chain/node/pull/3882) - support setting default config.toml values
+* [3932](https://github.com/zeta-chain/node/pull/3932) - hardcoded block time related params
 
 ### Refactor
 
