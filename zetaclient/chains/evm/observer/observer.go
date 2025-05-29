@@ -43,9 +43,11 @@ type Observer struct {
 type priorityFeeConfig struct {
 	// checked indicates whether the observer checked
 	// this EVM chain for EIP-1559 (further checks are cached)
+	// nolint:unused
 	checked bool
 
 	// supported indicates whether this EVM chain supports EIP-1559
+	// nolint:unused
 	supported bool
 }
 

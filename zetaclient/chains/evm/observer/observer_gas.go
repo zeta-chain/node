@@ -45,6 +45,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 // determinePriorityFee determines the chain priority fee.
 // Returns zero for non EIP-1559 (London fork) chains.
+// nolint:unused
 func (ob *Observer) determinePriorityFee(ctx context.Context) (*big.Int, error) {
 	supported, err := ob.supportsPriorityFee(ctx)
 	switch {
@@ -65,6 +66,7 @@ func (ob *Observer) determinePriorityFee(ctx context.Context) (*big.Int, error) 
 
 // supportsPriorityFee checks if the chain supports EIP-1559 (London fork).
 // uses cache so actual RPC call is made only once.
+// nolint:unused
 func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 	// noop
 	if ob.priorityFeeConfig.checked {
@@ -95,6 +97,7 @@ func (ob *Observer) supportsPriorityFee(ctx context.Context) (bool, error) {
 }
 
 // getChainBaseFee fetches baseFee from latest block's header.
+// nolint:unused
 func (ob *Observer) getChainBaseFee(ctx context.Context) (*big.Int, error) {
 	// get latest block
 	header, err := ob.evmClient.HeaderByNumber(ctx, nil)
