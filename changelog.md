@@ -67,6 +67,7 @@
 * [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
 * [3866](https://github.com/zeta-chain/node/pull/3866) - add e2e test for upgrading sui gateway package
 * [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+* [3885](https://github.com/zeta-chain/node/pull/3885) - add e2e test for MsgAddObserver
 * [3893](https://github.com/zeta-chain/node/pull/3893) - add e2e performance tests for sui deposit and withdrawal
 
 
