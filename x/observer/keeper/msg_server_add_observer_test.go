@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -101,6 +102,7 @@ func TestMsgServer_AddObserver(t *testing.T) {
 			AddNodeAccountOnly:      false,
 			ObserverAddress:         observerAddress,
 		}
+		fmt.Println("msg", msg.ZetaclientGranteePubkey)
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, &msg, nil)
 		res, err := srv.AddObserver(wctx, &msg)
 		require.NoError(t, err)

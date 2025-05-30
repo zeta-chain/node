@@ -29,6 +29,7 @@
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 * [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
+* [3882](https://github.com/zeta-chain/node/pull/3882) - support setting default config.toml values
 * [3918](https://github.com/zeta-chain/node/pull/3918) - attach failure reason to solana increment nonce
 
 ### Refactor
@@ -58,6 +59,7 @@
 * [3904](https://github.com/zeta-chain/node/pull/3904) - improve observer emissions distribution to maximise pool utilisation
 * [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
 * [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
+* [3920](https://github.com/zeta-chain/node/pull/3920) - show correct gas limit for synthetic txs
 
 ### Tests
 
@@ -66,6 +68,7 @@
 * [3582](https://github.com/zeta-chain/node/pull/3852) - add solana to tss migration e2e tests
 * [3866](https://github.com/zeta-chain/node/pull/3866) - add e2e test for upgrading sui gateway package
 * [3417](https://github.com/zeta-chain/node/pull/3417) - add e2e test for the Bitcoin RBF (Replace-By-Fee) feature
+* [3885](https://github.com/zeta-chain/node/pull/3885) - add e2e test for MsgAddObserver
 * [3893](https://github.com/zeta-chain/node/pull/3893) - add e2e performance tests for sui deposit and withdrawal
 
 

@@ -232,7 +232,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
-
 	if !skipSetup {
 		// run setup steps that do not require tss
 		noError(deployerRunner.FundEmissionsPool())
@@ -346,7 +345,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
-
 	if !skipPrecompiles {
 		precompiledContractTests := []string{
 			//e2etests.TestPrecompilesPrototypeName,
@@ -596,7 +594,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
 	if testTSSMigration {
-		TSSMigration(deployerRunner, logger, verbose, conf)
+		addNewObserver(deployerRunner)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf)
 	}
 
 	// Verify that there are no trackers left over after tests complete
