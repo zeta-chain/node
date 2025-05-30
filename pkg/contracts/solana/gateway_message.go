@@ -161,8 +161,8 @@ func NewMsgIncrementNonce(chainID, nonce, amount uint64) *MsgIncrementNonce {
 	}
 }
 
-// AddFailureReason adds reason for outbound tx failure to the message
-func (msg *MsgIncrementNonce) AddFailureReason(failureReason string) {
+// SetFailureReason sets reason for outbound tx failure to the message
+func (msg *MsgIncrementNonce) SetFailureReason(failureReason string) {
 	msg.failureReason = failureReason
 }
 

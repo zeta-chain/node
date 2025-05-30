@@ -8,7 +8,7 @@ import (
 
 // parseRPCErrorForFallback parse error as RPCError and verifies if fallback tx should be used
 // and which failure reason to attach to fallback tx
-func parseRPCErrorForFallback(err error, program string) (bool, string) {
+func parseRPCErrorForFallback(err error, program string) (useFallback bool, failureReason string) {
 	rpcErr, ok := err.(*jsonrpc.RPCError)
 	if !ok {
 		return false, ""
@@ -37,8 +37,7 @@ func parseRPCErrorForFallback(err error, program string) (bool, string) {
 	}
 
 	// get failure reason from logs
-	failureReason := getFailureReason(logs)
-	return true, failureReason
+	return true, getFailureReason(logs)
 }
 
 // getFailureReason returns first log that is in format "Program <P_ID> <error> failed"

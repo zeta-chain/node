@@ -331,16 +331,16 @@ func (signer *Signer) broadcastOutbound(
 			shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, signer.GetGatewayAddress())
 			if outbound.FallbackMsg != nil && shouldUseFallbackTx {
 				// create and sign fallback transaction
-				outbound.FallbackMsg.AddFailureReason(failureReason)
+				outbound.FallbackMsg.SetFailureReason(failureReason)
 				fallbackInst, err := signer.createIncrementNonceInstruction(*outbound.FallbackMsg)
 				if err != nil {
-					logger.Info().Err(err).Fields(lf).Msgf("error creating increment nonce instruction")
+					logger.Error().Err(err).Fields(lf).Msgf("error creating increment nonce instruction")
 					break
 				}
 
 				fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
 				if err != nil {
-					logger.Info().Err(err).Fields(lf).Msgf("error signing increment nonce instruction")
+					logger.Error().Err(err).Fields(lf).Msgf("error signing increment nonce instruction")
 					break
 				}
 				tx = fallbackTx
