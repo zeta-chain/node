@@ -27,12 +27,12 @@ func TestMigrateStore(t *testing.T) {
 		updatedParams, found := k.GetParams(ctx)
 
 		require.NotEqual(t, currentParams.BallotMaturityBlocks, updatedParams.BallotMaturityBlocks)
-		require.Equal(t, int64(133), updatedParams.BallotMaturityBlocks)
+		require.Equal(t, int64(150), updatedParams.BallotMaturityBlocks)
 
 		require.NotEqual(t, currentParams.BlockRewardAmount, updatedParams.BlockRewardAmount)
 		require.Equal(
 			t,
-			sdkmath.LegacyMustNewDecFromStr("7595486111111111680.000000000000000000"),
+			sdkmath.LegacyMustNewDecFromStr("6751543209876543209.876543209876543210"),
 			updatedParams.BlockRewardAmount,
 		)
 
@@ -43,7 +43,7 @@ func TestMigrateStore(t *testing.T) {
 		)
 		require.Equal(
 			t,
-			int64(192000),
+			int64(216000),
 			updatedParams.PendingBallotsDeletionBufferBlocks,
 		)
 
