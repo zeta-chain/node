@@ -36,16 +36,22 @@ func TestMigrateStore(t *testing.T) {
 			updatedParams.BlockRewardAmount,
 		)
 
+		require.NotEqual(
+			t,
+			currentParams.PendingBallotsDeletionBufferBlocks,
+			updatedParams.PendingBallotsDeletionBufferBlocks,
+		)
+		require.Equal(
+			t,
+			int64(192000),
+			updatedParams.PendingBallotsDeletionBufferBlocks,
+		)
+
 		require.True(t, found)
 		require.Equal(t, currentParams.ValidatorEmissionPercentage, updatedParams.ValidatorEmissionPercentage)
 		require.Equal(t, currentParams.ObserverEmissionPercentage, updatedParams.ObserverEmissionPercentage)
 		require.Equal(t, currentParams.TssSignerEmissionPercentage, updatedParams.TssSignerEmissionPercentage)
 		require.Equal(t, currentParams.ObserverSlashAmount, updatedParams.ObserverSlashAmount)
 
-		require.Equal(
-			t,
-			currentParams.PendingBallotsDeletionBufferBlocks,
-			updatedParams.PendingBallotsDeletionBufferBlocks,
-		)
 	})
 }
