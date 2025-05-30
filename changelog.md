@@ -29,7 +29,6 @@
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 * [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
-* [3882](https://github.com/zeta-chain/node/pull/3882) - support setting default config.toml values
 * [3932](https://github.com/zeta-chain/node/pull/3932) - hardcoded block time related params
 
 ### Refactor
@@ -60,6 +59,7 @@
 * [3895](https://github.com/zeta-chain/node/pull/3895) - solana call required accounts number condition
 * [3896](https://github.com/zeta-chain/node/pull/3896) - add sender to solana execute message hash
 * [3920](https://github.com/zeta-chain/node/pull/3920) - show correct gas limit for synthetic txs
+* [3934](https://github.com/zeta-chain/node/pull/3934) - post zero priority fee for EVM chains to avoid gas price pump failure in the zetacore
 
 ### Tests
 
