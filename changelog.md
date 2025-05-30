@@ -36,7 +36,8 @@
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 * [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
-* [3848g](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
+* [3848](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
+* [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 
 ### Fixes
 
