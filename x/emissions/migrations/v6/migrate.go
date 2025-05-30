@@ -2,7 +2,6 @@ package v6
 
 import (
 	"errors"
-	"math"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,7 @@ func MigrateStore(
 	// If params are found, update fields
 	params, found := emissionsKeeper.GetParams(ctx)
 	if found {
-		params.BallotMaturityBlocks = int64(math.Round(float64(params.BallotMaturityBlocks) * 1.33))
+		params.BallotMaturityBlocks = params.BallotMaturityBlocks * 133 / 100
 		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("7595486111111111680.000000000000000000")
 
 		return emissionsKeeper.SetParams(ctx, params)
