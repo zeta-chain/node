@@ -700,13 +700,13 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
 	txHash := incrementNonceTxTest
-	txAmount := uint64(1000000)
+	txAmount := uint64(1100000)
 
 	t.Run("should parse instruction increment nonce", func(t *testing.T) {
 		// ARRANGE
 		// load and unmarshal archived transaction
 		// tss address used in local devnet
-		tssAddress := "0xF2eCA3Fd5a152eb5b9ceBcA7E492C668cA09Cdd3"
+		tssAddress := "0x3E220e92b71E2FA36E90B9439a6Ff1c13Ba30035"
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -722,7 +722,7 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 		sender, err := inst.Signer()
 		require.NoError(t, err)
 		require.Equal(t, tssAddress, sender.String())
-		require.EqualValues(t, inst.GatewayNonce(), 2)
+		require.EqualValues(t, inst.GatewayNonce(), 15)
 		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
 

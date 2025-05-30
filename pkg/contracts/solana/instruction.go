@@ -167,6 +167,9 @@ type IncrementNonceInstructionParams struct {
 
 	// Nonce is the nonce for the increment_nonce
 	Nonce uint64
+
+	// FailureReason contains reason for failure in outbound tx
+	FailureReason string
 }
 
 // InstructionDiscriminator returns the discriminator of the instruction

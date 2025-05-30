@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
@@ -102,4 +103,15 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	require.NoError(r, err)
 
 	require.Equal(r, withdrawAmount.Int64(), finalBalance.Int64()-initialBalance.Int64())
+
+	// check that failure log is attached to increment nonce instruction
+	txIncNonce, err := r.SolanaClient.GetTransaction(
+		r.Ctx,
+		solana.MustSignatureFromBase58(cctx.OutboundParams[0].Hash),
+		nil,
+	)
+	require.NoError(r, err)
+
+	expectedLog := "Program log: Failure reason: Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc failed: custom program error: 0x1771"
+	require.True(r, slices.Contains(txIncNonce.Meta.LogMessages, expectedLog))
 }
