@@ -29,6 +29,7 @@
 * [3864](https://github.com/zeta-chain/node/pull/3864) - add compliance checks for TON inbounds
 * [3881](https://github.com/zeta-chain/node/pull/3881) - add zetatool cmd to analyze size of application.db
 * [3906](https://github.com/zeta-chain/node/pull/3906) - revert restricted cctx for EVM, bitcoin and solana chains
+* [3918](https://github.com/zeta-chain/node/pull/3918) - attach failure reason to solana increment nonce
 * [3932](https://github.com/zeta-chain/node/pull/3932) - hardcoded block time related params
 
 ### Refactor

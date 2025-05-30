@@ -38,8 +38,8 @@ const (
 )
 
 type Outbound struct {
-	Tx         *solana.Transaction
-	FallbackTx *solana.Transaction
+	Tx          *solana.Transaction
+	FallbackMsg *contracts.MsgIncrementNonce
 }
 
 type outboundGetter func() (*Outbound, error)
@@ -328,8 +328,22 @@ func (signer *Signer) broadcastOutbound(
 			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
 		)
 		if err != nil {
-			if outbound.FallbackTx != nil && shouldUseFallbackTx(err, signer.GetGatewayAddress()) {
-				tx = outbound.FallbackTx
+			shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, signer.GetGatewayAddress())
+			if outbound.FallbackMsg != nil && shouldUseFallbackTx {
+				// create and sign fallback transaction
+				outbound.FallbackMsg.SetFailureReason(failureReason)
+				fallbackInst, err := signer.createIncrementNonceInstruction(*outbound.FallbackMsg)
+				if err != nil {
+					logger.Error().Err(err).Fields(lf).Msgf("error creating increment nonce instruction")
+					break
+				}
+
+				fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
+				if err != nil {
+					logger.Error().Err(err).Fields(lf).Msgf("error signing increment nonce instruction")
+					break
+				}
+				tx = fallbackTx
 			}
 			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
 			backOff *= 2
@@ -357,20 +371,9 @@ func (signer *Signer) createOutboundWithFallback(
 		return nil, errors.Wrap(err, "error signing main instruction")
 	}
 
-	// Create and sign fallback transaction
-	fallbackInst, err := signer.createIncrementNonceInstruction(*msgIn)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating increment nonce instruction")
-	}
-
-	fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
-	if err != nil {
-		return nil, errors.Wrap(err, "error signing fallback instruction")
-	}
-
 	return &Outbound{
-		Tx:         tx,
-		FallbackTx: fallbackTx,
+		Tx:          tx,
+		FallbackMsg: msgIn,
 	}, nil
 }
 
