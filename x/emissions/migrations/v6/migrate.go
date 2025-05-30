@@ -23,8 +23,9 @@ func MigrateStore(
 	// If params are found, update fields
 	params, found := emissionsKeeper.GetParams(ctx)
 	if found {
-		params.BallotMaturityBlocks = 133
-		params.PendingBallotsDeletionBufferBlocks = 192000
+		params.BallotMaturityBlocks = 133                  // increase from 100
+		params.PendingBallotsDeletionBufferBlocks = 192000 // increase from 144000
+		// decrease from 9620949074074074074.074070733466756687
 		params.BlockRewardAmount = sdkmath.LegacyMustNewDecFromStr("7595486111111111680.000000000000000000")
 
 		return emissionsKeeper.SetParams(ctx, params)
