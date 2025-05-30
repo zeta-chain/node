@@ -33,6 +33,17 @@ const (
 	// 6 retries will span over 1 + 2 + 4 + 8 + 16 + 32 + 64 = 127 seconds, good enough for the 2 minute timeout
 	broadcastRetries = 7
 
+	// pdaNonceWaitTimeout is the timeout for waiting for the PDA nonce to arrive
+	// given 1~2 seconds finality at the 'confirmed' level, 1 minute can cover 30~60 (the lookahead) parallel CCTXs processing
+	pdaNonceWaitTimeout = 1 * time.Minute
+
+	// broadcastOutboundCommitment is the commitment level for broadcasting solana outbound.
+	// Commitment "finalized" eliminate all risk but the tradeoff is pretty severe and effectively
+	// reduces the expiration of tx by about 13 seconds. The "confirmed" level has very low risk of
+	// belonging to a dropped fork.
+	// see: https://solana.com/developers/guides/advanced/confirmation#use-an-appropriate-preflight-commitment-level
+	broadcastOutboundCommitment = rpc.CommitmentConfirmed
+
 	// SolanaMaxComputeBudget is the max compute budget for a transaction.
 	SolanaMaxComputeBudget = 1_400_000
 )
@@ -218,6 +229,14 @@ func (signer *Signer) TryProcessOutbound(
 	// set relayer balance metrics
 	signer.SetRelayerBalanceMetrics(ctx)
 
+	// wait for the exact PDA nonce to arrive with timeout
+	ctxWait, cancel := context.WithTimeout(ctx, pdaNonceWaitTimeout)
+	defer cancel()
+
+	if !signer.waitExactGatewayNonce(ctxWait, params.TssNonce) {
+		return
+	}
+
 	// Get transactions from getters
 	// This is when the recent block hash timer starts
 	outbound, err := outboundGetter()
@@ -237,7 +256,7 @@ func (signer *Signer) signTx(
 	limit uint64,
 ) (*solana.Transaction, error) {
 	// get a recent blockhash
-	recent, err := signer.client.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	recent, err := signer.client.GetLatestBlockhash(ctx, broadcastOutboundCommitment)
 	if err != nil {
 		return nil, errors.Wrap(err, "getLatestBlockhash error")
 	}
@@ -299,7 +318,7 @@ func (signer *Signer) broadcastOutbound(
 	// try broacasting tx with increasing backoff (1s, 2s, 4s, 8s, 16s, 32s, 64s)
 	// to tolerate tx nonce mismatch with PDA nonce or unknown RPC error
 	backOff := broadcastBackoff
-	for i := 0; i < broadcastRetries; i++ {
+	for range broadcastRetries {
 		time.Sleep(backOff)
 
 		// PDA nonce may already be increased by other relayer, no need to retry
@@ -320,12 +339,7 @@ func (signer *Signer) broadcastOutbound(
 		txSig, err := signer.client.SendTransactionWithOpts(
 			ctx,
 			tx,
-			// Commitment "finalized" is too conservative for preflight check and
-			// it results in repeated broadcast attempts that only 1 will succeed.
-			// Commitment "processed" will simulate tx against more recent state
-			// thus fails faster once a tx is already broadcasted and processed by the cluster.
-			// This reduces the number of "failed" txs due to repeated broadcast attempts.
-			rpc.TransactionOpts{PreflightCommitment: rpc.CommitmentProcessed},
+			rpc.TransactionOpts{PreflightCommitment: broadcastOutboundCommitment},
 		)
 		if err != nil {
 			shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, signer.GetGatewayAddress())
@@ -461,4 +475,68 @@ func signMsgWithFallback[T SignableMessage[T]](
 	}
 
 	return msg.SetSignature(signature[0]), msgIn.SetSignature(signature[1]), nil
+}
+
+// waitExactGatewayNonce waits for exact given gateway nonce to arrive
+//
+// the reasons are:
+//  1. any pre-signed Solana tx expires after 150 blocks, so we should avoid pre-signing any tx to maximize the lifetime of signed txs
+//  2. there can be up to 'lookahead' CCTX processing goroutines running in parallel, so waiting for PDA nonce helps to order the CCTX
+//     processing goroutines by nonce and avoid nonce mismatch
+//  3. less nonce mismatch will reduce CCTX retries and TSS keysign requests
+func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) bool {
+	logger := signer.Logger().Std.With().
+		Str("method", "waitExactGatewayNonce").
+		Int64("chain", signer.Chain().ChainId).
+		Uint64("nonce", nonce).
+		Logger()
+
+	for {
+		if ctx.Err() != nil {
+			return false
+		}
+
+		// check timeout to avoid infinite waiting
+		if deadline, ok := ctx.Deadline(); ok {
+			if time.Now().After(deadline) {
+				logger.Error().Msgf("timeout reached on waiting for gateway nonce")
+				return false
+			}
+		}
+
+		// query the gateway PDA account information
+		pdaInfo, err := signer.client.GetAccountInfoWithOpts(
+			ctx,
+			signer.pda,
+			&rpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
+		)
+		if err != nil {
+			logger.Error().Err(err).Msgf("unable to get gateway PDA account info")
+			continue
+		}
+
+		// deserialize the PDA account information
+		pda, err := contracts.DeserializePdaInfo(pdaInfo)
+		if err != nil {
+			logger.Error().Err(err).Msgf("unable to deserialize PDA info")
+			return false
+		}
+
+		switch {
+		case pda.Nonce > nonce:
+			logger.Info().Uint64("pda.nonce", pda.Nonce).Msg("PDA nonce is greater than outbound nonce")
+			return false
+		case pda.Nonce == nonce:
+			return true
+		default:
+			logger.Info().Uint64("pda.nonce", pda.Nonce).Msg("waiting for PDA nonce to arrive")
+
+			// calculate how far behind the PDA nonce and sleep accordingly
+			//  - base sleep time of 1 second, multiplied by the nonce difference
+			//  - 'lookahead' parameter should keep this from getting too out of control
+			// #nosec G115 always in range
+			sleepDuration := time.Second * time.Duration(nonce-pda.Nonce)
+			time.Sleep(sleepDuration)
+		}
+	}
 }
