@@ -5,10 +5,10 @@ import (
 	"runtime/debug"
 	"time"
 
-	"cosmossdk.io/errors"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -233,7 +233,8 @@ func (signer *Signer) TryProcessOutbound(
 	ctxWait, cancel := context.WithTimeout(ctx, pdaNonceWaitTimeout)
 	defer cancel()
 
-	if !signer.waitExactGatewayNonce(ctxWait, params.TssNonce) {
+	if err := signer.waitExactGatewayNonce(ctxWait, params.TssNonce); err != nil {
+		logger.Error().Err(err).Msgf("fail to wait for gateway nonce")
 		return
 	}
 
@@ -484,7 +485,7 @@ func signMsgWithFallback[T SignableMessage[T]](
 //  2. there can be up to 'lookahead' CCTX processing goroutines running in parallel, so waiting for PDA nonce helps to order the CCTX
 //     processing goroutines by nonce and avoid nonce mismatch
 //  3. less nonce mismatch will reduce CCTX retries and TSS keysign requests
-func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) bool {
+func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) error {
 	logger := signer.Logger().Std.With().
 		Str("method", "waitExactGatewayNonce").
 		Int64("chain", signer.Chain().ChainId).
@@ -493,14 +494,13 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) b
 
 	for {
 		if ctx.Err() != nil {
-			return false
+			return errors.Wrap(ctx.Err(), "context cancelled")
 		}
 
 		// check timeout to avoid infinite waiting
 		if deadline, ok := ctx.Deadline(); ok {
 			if time.Now().After(deadline) {
-				logger.Error().Msgf("timeout reached on waiting for gateway nonce")
-				return false
+				return errors.New("timeout reached on waiting for gateway nonce")
 			}
 		}
 
@@ -512,22 +512,21 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) b
 		)
 		if err != nil {
 			logger.Error().Err(err).Msgf("unable to get gateway PDA account info")
+			time.Sleep(time.Second) // prevent RPC spamming
 			continue
 		}
 
 		// deserialize the PDA account information
 		pda, err := contracts.DeserializePdaInfo(pdaInfo)
 		if err != nil {
-			logger.Error().Err(err).Msgf("unable to deserialize PDA info")
-			return false
+			return errors.Wrap(err, "unable to deserialize PDA info")
 		}
 
 		switch {
 		case pda.Nonce > nonce:
-			logger.Info().Uint64("pda.nonce", pda.Nonce).Msg("PDA nonce is greater than outbound nonce")
-			return false
+			return errors.Wrapf(err, "PDA nonce %d is greater than outbound nonce %d", pda.Nonce, nonce)
 		case pda.Nonce == nonce:
-			return true
+			return nil
 		default:
 			logger.Info().Uint64("pda.nonce", pda.Nonce).Msg("waiting for PDA nonce to arrive")
 
