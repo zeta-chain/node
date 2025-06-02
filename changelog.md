@@ -1,6 +1,6 @@
 # CHANGELOG
 
-# UNRELEASED
+## v31.0.0
 
 ### Breaking Changes
 
