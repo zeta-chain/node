@@ -17,6 +17,8 @@ const (
 
 	// EnvBtcRPCTestnet4 is the environment variable to enable testnet4 for bitcoin rpc
 	EnvBtcRPCTestnet4 = "BTC_RPC_TESTNET4"
+
+	EnvTONRPC = "TON_RPC"
 )
 
 // LiveTestEnabled returns true if live tests are enabled

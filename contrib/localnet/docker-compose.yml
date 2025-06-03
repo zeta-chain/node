@@ -280,6 +280,7 @@ services:
       - "4443:4443" # lite client
     environment:
       DOCKER_IP: 172.20.0.104
+      ENABLE_RPC: true
     networks:
       mynetwork:
         ipv4_address: 172.20.0.104
