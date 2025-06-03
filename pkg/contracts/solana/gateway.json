@@ -1308,7 +1308,8 @@
         "* `signature` - The TSS signature.",
         "* `recovery_id` - The recovery ID for signature verification.",
         "* `message_hash` - Message hash for signature verification.",
-        "* `nonce` - The current nonce value."
+        "* `nonce` - The current nonce value.",
+        "* `failure_reason` - The reason for the failure of original outbound."
       ],
       "discriminator": [
         84,
@@ -1380,6 +1381,10 @@
         {
           "name": "nonce",
           "type": "u64"
+        },
+        {
+          "name": "failure_reason",
+          "type": "string"
         }
       ]
     },
