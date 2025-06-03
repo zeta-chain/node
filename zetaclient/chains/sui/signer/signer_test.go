@@ -312,7 +312,12 @@ func Test_ValidSuiAddress(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Valid short address",
+			name:    "Uppercase addresses are explicitly rejected",
+			address: "0X2A4C5A97B561AC5B38EDC4B4E9B2C183C57B56DF5B1EA2F1C6F2E4A44B92D59F",
+			wantErr: true,
+		},
+		{
+			name:    "Short addresses are explicitly rejected",
 			address: "0x1a",
 			wantErr: true,
 		},
@@ -350,12 +355,13 @@ func Test_ValidSuiAddress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validSuiAddress(tt.address)
+			err := ValidateAddress(tt.address)
 			if tt.wantErr {
-				require.Error(t, err, "expected error for address: %s", tt.address)
-			} else {
-				require.NoError(t, err, "unexpected error for address: %s", tt.address)
+				require.Error(t, err, tt.address)
+				return
 			}
+
+			require.NoError(t, err, tt.address)
 		})
 	}
 }
