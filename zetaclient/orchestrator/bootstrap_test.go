@@ -294,7 +294,7 @@ func clearChainConfigs(cfg *config.Config) {
 	cfg.EVMChainConfigs = make(map[int64]config.EVMConfig)
 	cfg.SolanaConfig.Endpoint = ""
 	cfg.SuiConfig.Endpoint = ""
-	cfg.TONConfig.LiteClientConfigURL = ""
+	cfg.TONConfig.RPC = ""
 }
 
 func mockZetacoreCalls(ts *testSuite) {

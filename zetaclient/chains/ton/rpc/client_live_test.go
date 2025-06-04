@@ -11,6 +11,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/pkg/chains"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
@@ -51,6 +52,10 @@ func TestLiveClient(t *testing.T) {
 			require.Equal(t, accountID, acc.ID)
 			require.Equal(t, tlb.AccountActive, acc.Status)
 			require.NotZero(t, acc.Balance)
+
+			require.NotNil(t, acc.Code)
+			require.NotNil(t, acc.Data)
+
 			require.NotEmpty(t, acc.LastTxHash)
 			require.NotZero(t, acc.LastTxLT)
 
@@ -73,9 +78,27 @@ func TestLiveClient(t *testing.T) {
 		})
 	})
 
+	t.Run("GetSeqno", func(t *testing.T) {
+		seqno, err := client.GetSeqno(ctx, gatewayTestnet)
+		require.NoError(t, err)
+		require.NotZero(t, seqno)
+
+		t.Logf("seqno: %d", seqno)
+	})
+
+	t.Run("RunSmcMethod", func(t *testing.T) {
+		gw := toncontracts.NewGateway(gatewayTestnet)
+
+		fee, err := gw.GetTxFee(ctx, client, toncontracts.OpDepositAndCall)
+		require.NoError(t, err)
+
+		t.Logf("fee: %d", fee)
+	})
+
 	t.Run("GetConfigParam", func(t *testing.T) {
 		// Get gas config
 		gasLimitPrices, err := config.FetchGasConfigRPC(ctx, client)
+		require.NoError(t, err)
 
 		// Parse it
 		gasPrice, err := config.ParseGasPrice(gasLimitPrices)

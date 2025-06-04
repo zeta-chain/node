@@ -119,6 +119,24 @@ func (c *Client) GetAccountState(ctx context.Context, acc ton.AccountID) (Accoun
 	return account, err
 }
 
+func (c *Client) GetSeqno(ctx context.Context, acc ton.AccountID) (uint32, error) {
+	exitCode, stack, err := c.RunSmcMethod(ctx, acc, "seqno", tlb.VmStack{})
+
+	switch {
+	case err != nil:
+		return 0, errors.Wrap(err, "unable to get seqno")
+	case exitCode != 0:
+		return 0, errors.Errorf("seqno method failed with exit code %d", exitCode)
+	case len(stack) == 0:
+		return 0, errors.Errorf("seqno method returned empty stack")
+	case stack[0].SumType != "VmStkTinyInt":
+		return 0, errors.Errorf("invalid seqno type: %s", stack[0].SumType)
+	default:
+		// #nosec G115 always in range
+		return uint32(stack[0].VmStkTinyInt), nil
+	}
+}
+
 // getLastTransactionHash returns logical time and hash of the last transaction
 func (c *Client) getLastTransactionHash(ctx context.Context, acc ton.AccountID) (uint64, tlb.Bits256, error) {
 	state, err := c.GetAccountState(ctx, acc)
@@ -347,6 +365,32 @@ func (c *Client) SendMessage(ctx context.Context, payload []byte) (uint32, error
 	// todo: probably need to parse code from res.Result
 	// #nosec G115 in range
 	return uint32(res.Code), nil
+}
+
+func (c *Client) RunSmcMethod(
+	ctx context.Context,
+	acc ton.AccountID,
+	method string,
+	stack tlb.VmStack,
+) (uint32, tlb.VmStack, error) {
+	stackEncoded, err := marshalVmStack(stack)
+	if err != nil {
+		return 0, tlb.VmStack{}, errors.Wrapf(err, "unable to marshal stack")
+	}
+
+	// https://testnet.toncenter.com/api/v2/#/run%20method/run_get_method_runGetMethod_post
+	params := map[string]any{
+		"address": acc.ToRaw(),
+		"method":  method,
+		"stack":   stackEncoded,
+	}
+
+	res, err := c.call(ctx, "runGetMethod", params)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return parseGetMethodResponse(res)
 }
 
 func (c *Client) callAndUnmarshal(

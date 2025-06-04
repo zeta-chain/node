@@ -34,9 +34,13 @@ type BlockHeader struct {
 	GenUtime      uint32     `json:"gen_utime"`
 }
 type Account struct {
-	ID         ton.AccountID
-	Status     tlb.AccountStatus
-	Balance    uint64
+	ID      ton.AccountID
+	Status  tlb.AccountStatus
+	Balance uint64
+
+	Code *boc.Cell
+	Data *boc.Cell
+
 	LastTxHash tlb.Bits256
 	LastTxLT   uint64
 }
@@ -50,6 +54,8 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 		"last_transaction_id.hash",
 		"account_state.@type",
 		"account_state.frozen_hash",
+		"account_state.code",
+		"account_state.data",
 	)
 
 	var (
@@ -59,6 +65,8 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 		hashRaw       = items[3].String()
 		stateRaw      = items[4].String()
 		frozenHashRaw = items[5].String()
+		codeRaw       = items[6].String()
+		dataRaw       = items[7].String()
 	)
 
 	id, err := ton.ParseAccountID(addrRaw)
@@ -84,6 +92,20 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 		acc.Status = tlb.AccountFrozen
 	}
 
+	if codeRaw != "" {
+		acc.Code, err = cellFromBase64(codeRaw)
+		if err != nil {
+			return errors.Wrapf(err, "code")
+		}
+	}
+
+	if dataRaw != "" {
+		acc.Data, err = cellFromBase64(dataRaw)
+		if err != nil {
+			return errors.Wrapf(err, "data")
+		}
+	}
+
 	hashBytes, err := base64.StdEncoding.DecodeString(hashRaw)
 	if err != nil {
 		return errors.Wrapf(err, "unable to decode last tx hash from %q", hashRaw)
@@ -97,15 +119,28 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 
 // takes base64 encoded BOC and decodes it into v
 func unmarshalFromBase64(b64 string, v any) error {
+	cell, err := cellFromBase64(b64)
+	if err != nil {
+		return err
+	}
+
+	return tlb.Unmarshal(cell, v)
+}
+
+func cellFromBase64(b64 string) (*boc.Cell, error) {
+	if b64 == "" {
+		return nil, errors.New("empty boc")
+	}
+
 	cells, err := boc.DeserializeBocBase64(b64)
 	switch {
 	case err != nil:
-		return errors.Wrapf(err, "unable to deserialize boc from %q", b64)
+		return nil, errors.Wrapf(err, "unable to deserialize boc from %q", b64)
 	case len(cells) == 0:
-		return errors.Errorf("expected at least one cell, got 0")
-	default:
-		return tlb.Unmarshal(cells[0], v)
+		return nil, errors.Errorf("expected at least one cell, got 0 (raw: %q)", b64)
 	}
+
+	return cells[0], nil
 }
 
 type rpcRequest struct {

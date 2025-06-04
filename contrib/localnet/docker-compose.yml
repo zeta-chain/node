@@ -277,7 +277,7 @@ services:
       - all
     ports:
       - "8111:8000" # sidecar
-      - "4443:4443" # lite client
+      - "8081:8081" # rpc (toncenter v2)
     environment:
       DOCKER_IP: 172.20.0.104
       ENABLE_RPC: true
