@@ -270,8 +270,7 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	// todo NIL
-	signer := tonsigner.New(oc.newBaseSigner(chain), nil, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain), rpc, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }

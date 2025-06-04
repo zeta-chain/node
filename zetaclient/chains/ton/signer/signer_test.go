@@ -20,6 +20,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
@@ -30,7 +31,7 @@ func TestSigner(t *testing.T) {
 	ts := newTestSuite(t)
 
 	// Given TON signer
-	signer := New(ts.baseSigner, ts.liteClient, ts.gw)
+	signer := New(ts.baseSigner, ts.rpc, ts.gw)
 
 	// Given a sample TON receiver
 	receiver := ton.MustParseAccountID("0QAyaVdkvWSuax8luWhDXY_0X9Am1ASWlJz4OI7M-jqcM5wK")
@@ -65,7 +66,7 @@ func TestSigner(t *testing.T) {
 
 	// Given expected liteapi calls
 	lt, hash := uint64(400), decodeHash(t, "df8a01053f50a74503dffe6802f357bf0e665bd1f3d082faccfebdea93cddfeb")
-	ts.OnGetAccountState(ts.gw.AccountID(), tlb.ShardAccount{LastTransLt: lt, LastTransHash: hash})
+	ts.OnGetAccountState(ts.gw.AccountID(), rpc.Account{LastTxLT: lt, LastTxHash: hash})
 
 	ts.OnSendMessage(0, nil)
 
@@ -117,7 +118,7 @@ type testSuite struct {
 	chain       chains.Chain
 	chainParams *observertypes.ChainParams
 
-	liteClient *mocks.TONLiteClient
+	rpc *mocks.TONRPC
 
 	zetacore *mocks.ZetacoreClient
 	tss      *mocks.TSS
@@ -140,7 +141,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain       = chains.TONTestnet
 		chainParams = sample.ChainParams(chain.ChainId)
 
-		liteClient = mocks.NewTONLiteClient(t)
+		rpc = mocks.NewTONRPC(t)
 
 		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
@@ -158,7 +159,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain:       chain,
 		chainParams: chainParams,
 
-		liteClient: liteClient,
+		rpc: rpc,
 
 		zetacore: zetacore,
 		tss:      tss,
@@ -175,12 +176,12 @@ func newTestSuite(t *testing.T) *testSuite {
 	return ts
 }
 
-func (ts *testSuite) OnGetAccountState(acc ton.AccountID, state tlb.ShardAccount) *mock.Call {
-	return ts.liteClient.On("GetAccountState", mock.Anything, acc).Return(state, nil)
+func (ts *testSuite) OnGetAccountState(acc ton.AccountID, state rpc.Account) *mock.Call {
+	return ts.rpc.On("GetAccountState", mock.Anything, acc).Return(state, nil)
 }
 
 func (ts *testSuite) OnSendMessage(id uint32, err error) *mock.Call {
-	return ts.liteClient.On("SendMessage", mock.Anything, mock.Anything).Return(id, err)
+	return ts.rpc.On("SendMessage", mock.Anything, mock.Anything).Return(id, err)
 }
 
 func (ts *testSuite) OnGetTransactionsSince(
@@ -190,7 +191,7 @@ func (ts *testSuite) OnGetTransactionsSince(
 	txs []ton.Transaction,
 	err error,
 ) *mock.Call {
-	return ts.liteClient.
+	return ts.rpc.
 		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
 }

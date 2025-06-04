@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/liteclient"
-	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -16,20 +15,19 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
-// LiteClient represents a TON client
-// see https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/tonlib_api.tl
-type LiteClient interface {
+type RPC interface {
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
-	GetAccountState(ctx context.Context, accountID ton.AccountID) (tlb.ShardAccount, error)
+	GetAccountState(ctx context.Context, accountID ton.AccountID) (rpc.Account, error)
 	SendMessage(ctx context.Context, payload []byte) (uint32, error)
 }
 
 // Signer represents TON signer.
 type Signer struct {
 	*base.Signer
-	client  LiteClient
+	rpc     RPC
 	gateway *toncontracts.Gateway
 }
 
@@ -49,10 +47,10 @@ const (
 )
 
 // New Signer constructor.
-func New(baseSigner *base.Signer, client LiteClient, gateway *toncontracts.Gateway) *Signer {
+func New(baseSigner *base.Signer, rpc RPC, gateway *toncontracts.Gateway) *Signer {
 	return &Signer{
 		Signer:  baseSigner,
-		client:  client,
+		rpc:     rpc,
 		gateway: gateway,
 	}
 }
@@ -129,7 +127,7 @@ func (s *Signer) ProcessOutbound(
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
 	}
 
-	gwState, err := s.client.GetAccountState(ctx, s.gateway.AccountID())
+	gwState, err := s.rpc.GetAccountState(ctx, s.gateway.AccountID())
 	if err != nil {
 		return Fail, errors.Wrap(err, "unable to get gateway state")
 	}
@@ -139,7 +137,7 @@ func (s *Signer) ProcessOutbound(
 	//
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
-	exitCode, err := s.gateway.SendExternalMessage(ctx, s.client, withdrawal)
+	exitCode, err := s.gateway.SendExternalMessage(ctx, s.rpc, withdrawal)
 	if err != nil || exitCode != 0 {
 		return s.handleSendError(exitCode, err, lf)
 	}
