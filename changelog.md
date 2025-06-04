@@ -6,6 +6,10 @@
 
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
 
+### Fixes
+
+* [3954](https://github.com/zeta-chain/node/pull/3954) - fail sui withdrawal event in the ZEVM if it carries invalid receiver address
+
 ## v31.0.0
 
 ### Breaking Changes
