@@ -16,7 +16,7 @@ set_sepolia_endpoint() {
 
 # import a relayer private key (e.g. Solana relayer key)
 import_relayer_key() {
-    local num="$1"
+  local num="$1"
 
   # import solana (network=7) relayer private key
   privkey_solana=$(yq -r ".observer_relayer_accounts.relayer_accounts[${num}].solana_private_key" /root/config.yml)
@@ -77,10 +77,12 @@ fi
 MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
 echo "Start zetaclientd"
+
 # skip initialization if the config file already exists (zetaclientd init has already been run)
-if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
-then
-    zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
+if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]] then
+    zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 \
+        --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" \
+        --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
     # import relayer private key for zetaclient0
     import_relayer_key 0
@@ -88,15 +90,20 @@ then
     # if eth2 is enabled, set the endpoint in the zetaclient_config.json
     # in this case, the additional evm is represented with the sepolia chain, we set manually the eth2 endpoint to the sepolia chain (11155111 -> http://eth2:8545)
     # in /root/.zetacored/config/zetaclient_config.json
-    if host eth2 ; then
+    if host eth2 > /dev/null; then
      echo "enabling additional evm (eth2)"
      set_sepolia_endpoint
     fi
 fi
-if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]]
-then
-  num=$(echo $HOSTNAME | tr -dc '0-9')
-  node="zetacore$num"
+
+if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]] then
+  if [[ $HOSTNAME == "zetaclient-new-validator" ]]; then
+      num=1
+      node="zetacore-new-validator"
+  else
+      num=$(echo $HOSTNAME | tr -dc '0-9')
+      node="zetacore$num"
+  fi
   zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
   # import relayer private key for zetaclient{$num}
@@ -118,5 +125,7 @@ fi
 
 # ensure restricted addresses config is initialized to avoid log spam
 echo "[]" > ~/.zetacored/config/zetaclient_restricted_addresses.json
+
+echo "Running zetaclientd via supervisor"
 
 zetaclientd-supervisor start < /root/password.file

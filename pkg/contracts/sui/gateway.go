@@ -285,6 +285,30 @@ func (gw *Gateway) ParseTxWithdrawal(tx models.SuiTransactionBlockResponse) (eve
 	return event, w, err
 }
 
+// ParseGatewayNonce parses gateway nonce from event.
+func ParseGatewayNonce(data models.SuiParsedData) (uint64, error) {
+	fields := data.Fields
+
+	// extract nonce field from the object content
+	rawNonce, ok := fields["nonce"]
+	if !ok {
+		return 0, errors.New("missing nonce field")
+	}
+
+	v, ok := rawNonce.(string)
+	if !ok {
+		return 0, errors.Errorf("want string, got %T for nonce", rawNonce)
+	}
+
+	// #nosec G115 always in range
+	nonce, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to parse nonce")
+	}
+
+	return nonce, nil
+}
+
 type eventDescriptor struct {
 	packageID string
 	module    string
@@ -349,13 +373,16 @@ func convertPayload(data []any) ([]byte, error) {
 		}
 	}
 
-	// Sui encode bytes in base64
-	decodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode payload from base64")
+	// Try decoding the payload from base64
+	// If the payload is not base64 encoded, directly return the payload bytes as is
+	// Currently the localnet Sui RPC will return bytes in Base64 for the payload data while live network return the actual bytes of the payload directly
+	// TODO: fix this discrepancy
+	// https://github.com/zeta-chain/node/issues/3919
+	base64DecodedPayload, err := base64.StdEncoding.DecodeString(string(payload))
+	if err == nil {
+		return base64DecodedPayload, nil
 	}
-
-	return decodedPayload, nil
+	return payload, nil
 }
 
 func parsePair(pair string) (string, string, error) {

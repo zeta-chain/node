@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -250,58 +251,94 @@ func (c *Client) SuiExecuteTransactionBlock(
 	return parseRPCResponse[models.SuiTransactionBlockResponse]([]byte(resString))
 }
 
-// GetSuiCoinObjectRef returns the latest SUI coin object reference for given owner address
-// Note: the SUI object may change over time, so we need to get the latest object
-func (c *Client) GetSuiCoinObjectRef(ctx context.Context, owner string) (suiptb.ObjectRef, error) {
-	coins, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
-		Owner:    owner,
-		CoinType: string(zetasui.SUI),
-	})
-	if err != nil {
-		return suiptb.ObjectRef{}, errors.Wrap(err, "unable to get TSS coins")
-	}
-
+// GetSuiCoinObjectRefs returns a subset of SUI coin objects for given owner address and minimum balance
+func (c *Client) GetSuiCoinObjectRefs(
+	ctx context.Context,
+	owner string,
+	minBalanceMist uint64,
+) ([]*suiptb.ObjectRef, error) {
 	var (
-		suiCoin        *models.CoinData
-		suiCoinVersion uint64
+		totalBalance uint64
+		cursor       = any(nil)
+		suiCoins     = make([]models.CoinData, 0)
 	)
 
-	// locate the latest version of SUI coin object of given owner
-	for _, coin := range coins.Data {
-		if !zetasui.IsSUICoinType(zetasui.CoinType(coin.CoinType)) {
-			continue
-		}
-
-		version, err := strconv.ParseUint(coin.Version, 10, 64)
+	// select SUI coins to cover the given minimum balance
+	// there can be multiple pages of SUI coins, we query 50 coins per page
+	for {
+		resp, err := c.SuiXGetCoins(ctx, models.SuiXGetCoinsRequest{
+			Owner:    owner,
+			CoinType: string(zetasui.SUI),
+			Cursor:   cursor,
+		})
 		if err != nil {
-			return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin version %s", coin.Version)
+			return nil, errors.Wrap(err, "unable to get TSS coins")
 		}
 
-		if version > suiCoinVersion {
-			suiCoin = &coin
-			suiCoinVersion = version
+		// sort coins by object ID to make the result deterministic across observres
+		sort.SliceStable(resp.Data, func(i, j int) bool {
+			return strings.Compare(resp.Data[i].CoinObjectId, resp.Data[j].CoinObjectId) < 0
+		})
+
+		// append coins until covering the minimum balance
+		for _, coin := range resp.Data {
+			balance, err := strconv.ParseUint(coin.Balance, 10, 64)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid balance %s", coin.Balance)
+			}
+
+			suiCoins = append(suiCoins, coin)
+			totalBalance += balance
+			if totalBalance >= minBalanceMist {
+				break
+			}
 		}
-	}
-	if suiCoin == nil {
-		return suiptb.ObjectRef{}, errors.New("SUI coin not found")
+
+		if totalBalance >= minBalanceMist || !resp.HasNextPage {
+			break
+		}
+
+		cursor = resp.NextCursor
 	}
 
-	// convert coin data to object ref
-	suiCoinID, err := suiptb.ObjectIdFromHex(suiCoin.CoinObjectId)
-	if err != nil {
-		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin ID: %s", suiCoin.CoinObjectId)
+	// this is a rare case that can be resolved by sending funds to owner (TSS)
+	if totalBalance < minBalanceMist {
+		return nil, fmt.Errorf("SUI balance is too low: %d, min balance: %d", totalBalance, minBalanceMist)
 	}
 
-	suiCoinDigest, err := suiptb.NewBase58(suiCoin.Digest)
-	if err != nil {
-		return suiptb.ObjectRef{}, errors.Wrapf(err, "failed to parse SUI coin digest: %s", suiCoin.Digest)
+	// convert coin data to object references
+	suiCoinRefs := make([]*suiptb.ObjectRef, len(suiCoins))
+	for i, coin := range suiCoins {
+		suiCoinRef, err := coinToObjectRef(coin)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to convert coin to object reference")
+		}
+
+		suiCoinRefs[i] = suiCoinRef
 	}
 
-	return suiptb.ObjectRef{
-		ObjectId: suiCoinID,
-		Version:  suiCoinVersion,
-		Digest:   suiCoinDigest,
-	}, nil
+	return suiCoinRefs, nil
+}
+
+// GetObjectParsedData queries the parsed data of an object.
+func (c *Client) GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error) {
+	resp, err := c.SuiGetObject(ctx, models.SuiGetObjectRequest{
+		ObjectId: objectID,
+		Options:  models.SuiObjectDataOptions{ShowContent: true},
+	})
+
+	switch {
+	case err != nil:
+		return models.SuiParsedData{}, errors.Wrap(err, "unable to get gateway object")
+	case resp.Error != nil:
+		return models.SuiParsedData{}, fmt.Errorf("gateway object response error: %s", resp.Error.Error)
+	case resp.Data == nil:
+		return models.SuiParsedData{}, errors.New("gateway object data is nil")
+	case resp.Data.Content == nil:
+		return models.SuiParsedData{}, errors.New("gateway object content is nil")
+	default:
+		return *resp.Data.Content, nil
+	}
 }
 
 // EncodeCursor encodes event ID into cursor.
@@ -401,4 +438,28 @@ func CheckContainOwnedObject(res []*models.SuiObjectResponse) error {
 	}
 
 	return nil
+}
+
+// coinToObjectRef converts a SUI coin data to an object reference.
+func coinToObjectRef(coin models.CoinData) (*suiptb.ObjectRef, error) {
+	objectID, err := suiptb.ObjectIdFromHex(coin.CoinObjectId)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin object ID: %s", coin.CoinObjectId)
+	}
+
+	digest, err := suiptb.NewBase58(coin.Digest)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin digest: %s", coin.Digest)
+	}
+
+	version, err := strconv.ParseUint(coin.Version, 10, 64)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid coin version: %s", coin.Version)
+	}
+
+	return &suiptb.ObjectRef{
+		ObjectId: objectID,
+		Version:  version,
+		Digest:   digest,
+	}, nil
 }

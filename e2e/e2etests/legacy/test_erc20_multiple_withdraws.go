@@ -84,6 +84,6 @@ func TestMultipleERC20Withdraws(r *runner.E2ERunner, args []string) {
 
 	// verify the withdraw value
 	for _, cctx := range cctxs {
-		r.VerifyTransferAmountFromCCTX(cctx, withdrawalAmount.Int64())
+		r.EVMVerifyOutboundTransferAmount(cctx.GetCurrentOutboundParam().Hash, withdrawalAmount.Int64())
 	}
 }

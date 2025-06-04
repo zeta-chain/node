@@ -2,16 +2,20 @@ package client
 
 import (
 	"context"
+	"github.com/zeta-chain/node/zetaclient/common"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/zetaclient/common"
+	"github.com/zeta-chain/node/pkg/contracts/sui"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 const (
 	RPCMainnet = "https://sui-mainnet.public.blastapi.io"
+	RPCTestnet = "https://sui-testnet.public.blastapi.io"
 )
 
 func TestClientLive(t *testing.T) {
@@ -182,6 +186,88 @@ func TestClientLive(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 		require.Equal(t, TxStatusFailure, res.Effects.Status.Status)
+	})
+
+	t.Run("GetObjectParsedData", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// ACT
+		// use testnet gateway object for testing
+		gatewayID := "0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700"
+		data, err := ts.GetObjectParsedData(ts.ctx, gatewayID)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotEmpty(t, data.Fields)
+	})
+
+	t.Run("GetObjectParsedData failed", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// ACT
+		nonExistentID := "0x674d2b7396f2484dda53249ab5e4d4dee304e93a0037fd5d5d86aabd029fae98"
+		data, err := ts.GetObjectParsedData(ts.ctx, nonExistentID)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Empty(t, data)
+	})
+
+	t.Run("GetSuiCoinObjectRefs", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, RPCTestnet)
+
+		// Given TSS balance
+		resp, err := ts.SuiXGetBalance(ts.ctx, models.SuiXGetBalanceRequest{
+			Owner:    testutils.TSSAddressSuiTestnet,
+			CoinType: string(sui.SUI),
+		})
+		require.NoError(t, err)
+
+		tssBalance, err := strconv.ParseUint(resp.TotalBalance, 10, 64)
+		require.NoError(t, err)
+		require.Positive(t, tssBalance)
+
+		// ACT-1
+		// should be able to use all owned SUI coin objects
+		coinRefs, err := ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.NotEmpty(t, coinRefs)
+
+		// ACT-2
+		// should NOT be able to cover the big amount (balance + 1)
+		coinRefs, err = ts.GetSuiCoinObjectRefs(ts.ctx, testutils.TSSAddressSuiTestnet, tssBalance+1)
+
+		// ASSERT
+		require.ErrorContains(t, err, "SUI balance is too low")
+		require.Empty(t, coinRefs)
+	})
+
+	t.Run("GetTransactionBlock successful tx on testnet with a deposit event", func(t *testing.T) {
+		ts := newTestSuite(t, RPCTestnet)
+
+		res, err := ts.SuiGetTransactionBlock(ts.ctx, models.SuiGetTransactionBlockRequest{
+			Digest:  "BtVGRved1cvW3PHHeeMqeU96cwFxim5W6pNuHZpEuUQF",
+			Options: models.SuiTransactionBlockOptions{ShowEvents: true, ShowEffects: true},
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, TxStatusSuccess, res.Effects.Status.Status)
+
+		gw, err := sui.NewGatewayFromPairID(
+			"0x6b2fe12c605d64e14ca69f9aba51550593ba92ff43376d0a6cc26a5ca226f9bd,0x6fc08f682551e52c2cc34362a20f744ba6a3d8d17f6583fa2f774887c4079700",
+		)
+		require.NoError(t, err)
+
+		require.Len(t, res.Events, 1)
+
+		_, err = gw.ParseEvent(res.Events[0])
+		require.NoError(t, err)
 	})
 }
 

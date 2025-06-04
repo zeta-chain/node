@@ -30,10 +30,12 @@ func TestParseEvent(t *testing.T) {
 	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
 	receiverBob := ethcommon.HexToAddress("0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7")
 
-	var payload []any
-	payloadBytes := []byte(base64.StdEncoding.EncodeToString([]byte{0, 1, 2}))
+	payload := []any{float64(0), float64(1), float64(2)}
+
+	var payloadBase64 []any
+	payloadBytes := []byte(base64.StdEncoding.EncodeToString([]byte{3, 4, 5}))
 	for _, p := range payloadBytes {
-		payload = append(payload, float64(p))
+		payloadBase64 = append(payloadBase64, float64(p))
 	}
 
 	for _, tt := range []struct {
@@ -73,7 +75,7 @@ func TestParseEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "depositAndCall",
+			name: "depositAndCall with bytes payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
 				PackageId: packageID,
@@ -101,6 +103,37 @@ func TestParseEvent(t *testing.T) {
 				assert.Equal(t, receiverBob, deposit.Receiver)
 				assert.True(t, deposit.IsCrossChainCall)
 				assert.Equal(t, []byte{0, 1, 2}, deposit.Payload)
+			},
+		},
+		{
+			name: "depositAndCall with Base64 formatted payload",
+			event: models.SuiEventResponse{
+				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
+				PackageId: packageID,
+				Sender:    sender,
+				Type:      eventType("DepositAndCallEvent"),
+				ParsedJson: map[string]any{
+					"coin_type": string(SUI),
+					"amount":    "200",
+					"sender":    sender,
+					"receiver":  receiverBob.String(),
+					"payload":   payloadBase64,
+				},
+			},
+			assert: func(t *testing.T, raw models.SuiEventResponse, out Event) {
+				assert.Equal(t, txHash, out.TxHash)
+				assert.Equal(t, DepositAndCallEvent, out.EventType)
+				assert.Equal(t, uint64(1), out.EventIndex)
+
+				deposit, err := out.Deposit()
+				require.NoError(t, err)
+
+				assert.Equal(t, SUI, deposit.CoinType)
+				assert.True(t, math.NewUint(200).Equal(deposit.Amount))
+				assert.Equal(t, sender, deposit.Sender)
+				assert.Equal(t, receiverBob, deposit.Receiver)
+				assert.True(t, deposit.IsCrossChainCall)
+				assert.Equal(t, []byte{3, 4, 5}, deposit.Payload)
 			},
 		},
 		{
@@ -472,6 +505,68 @@ func Test_ParseOutboundEvent(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.wantEvent, event)
 			require.Equal(t, tt.wantEvent.content, content)
+		})
+	}
+}
+
+func Test_ParseGatewayNonce(t *testing.T) {
+	tests := []struct {
+		name   string
+		data   models.SuiParsedData
+		nonce  uint64
+		errMsg string
+	}{
+		{
+			name: "valid nonce",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{
+						"nonce": "123",
+					},
+				},
+			},
+			nonce: 123,
+		},
+		{
+			name: "missing nonce field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{},
+				},
+			},
+			errMsg: "missing nonce field",
+		},
+		{
+			name: "invalid nonce field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"nonce": 123},
+				},
+			},
+			errMsg: "want string, got int for nonce",
+		},
+		{
+			name: "invalid nonce value",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"nonce": "not a number"},
+				},
+			},
+			errMsg: "unable to parse nonce",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nonce, err := ParseGatewayNonce(tt.data)
+			if tt.errMsg != "" {
+				require.Zero(t, nonce)
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.nonce, nonce)
 		})
 	}
 }

@@ -1,14 +1,17 @@
 package orchestrator
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tonkeeper/tongo/liteclient"
+	"github.com/tonkeeper/tongo/tlb"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
@@ -30,6 +33,7 @@ func TestBootstrap(t *testing.T) {
 		btcServer, btcConfig := testrpc.NewBtcServer(t)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		})
 
@@ -69,18 +73,14 @@ func TestBootstrap(t *testing.T) {
 		mockEthCalls(ts, maticServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
+
 			cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 				Endpoint: ethServer.Endpoint,
 			}
 			cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 				Endpoint: maticServer.Endpoint,
 			}
-
-			// disable other chains
-			cfg.BTCChainConfigs = nil
-			cfg.SolanaConfig.Endpoint = ""
-			cfg.SuiConfig.Endpoint = ""
-			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -135,12 +135,8 @@ func TestBootstrap(t *testing.T) {
 		mockSolanaCalls(ts, solServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.SolanaConfig = solConfig
-
-			// disable other chains
-			cfg.TONConfig.LiteClientConfigURL = ""
-			cfg.EVMChainConfigs = nil
-			cfg.BTCChainConfigs = nil
 		})
 
 		// Mock zetacore calls
@@ -174,11 +170,8 @@ func TestBootstrap(t *testing.T) {
 
 		// Disable other chains
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.SuiConfig = suiConfig
-			cfg.BTCChainConfigs = nil
-			cfg.EVMChainConfigs = nil
-			cfg.SolanaConfig.Endpoint = ""
-			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -201,22 +194,23 @@ func TestBootstrap(t *testing.T) {
 	})
 
 	t.Run("TON", func(t *testing.T) {
-		// TODO: mock TON liteServer with real calls
-		// https://github.com/zeta-chain/node/issues/3419
-
-		t.Skip("Depends on lite-server mocks")
-		// t.Parallel()
+		t.Parallel()
 
 		// ARRANGE
 		// Given orchestrator
 		ts := newTestSuite(t)
 
+		// Given TON lite-server mock ...
+		tonClient := mocks.NewTONLiteClient(t)
+		mockTONCalls(ts, tonClient)
+
+		// ... that is attached to the context so we can properly mock it
+		ctx := withTonClient(ts.ctx, tonClient)
+
 		// Given TON rpc URL
 		ts.UpdateConfig(func(cfg *config.Config) {
-			// todo
-			cfg.TONConfig = config.TONConfig{
-				LiteClientConfigURL: "localhost",
-			}
+			clearChainConfigs(cfg)
+			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "test-mock"}
 		})
 
 		// Mock zetacore calls
@@ -224,7 +218,7 @@ func TestBootstrap(t *testing.T) {
 
 		// ACT
 		// Start the orchestrator and wait for TON observerSigner to bootstrap
-		require.NoError(t, ts.Start(ts.ctx))
+		require.NoError(t, ts.Start(ctx))
 
 		// ASSERT
 		check := func() bool {
@@ -301,6 +295,25 @@ func tasksMissGroup(t *testing.T, tasks map[uuid.UUID]*scheduler.Task, group str
 	assert.False(t, found, "Group %s found in tasks", group)
 }
 
+// isolates config from other chains
+func clearChainConfigs(cfg *config.Config) {
+	cfg.BTCChainConfigs = make(map[int64]config.BTCConfig)
+	cfg.EVMChainConfigs = make(map[int64]config.EVMConfig)
+	cfg.SolanaConfig.Endpoint = ""
+	cfg.SuiConfig.Endpoint = ""
+	cfg.TONConfig.LiteClientConfigURL = ""
+}
+
+func mockZetacoreCalls(ts *testSuite) {
+	blockChan := make(chan cometbfttypes.EventDataNewBlock)
+
+	on(ts.zetacore, "NewBlockSubscriber", 1).Return(blockChan, nil)
+	on(ts.zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
+	on(ts.zetacore, "GetPendingNoncesByChain", 2).Return(observertypes.PendingNonces{}, nil).Maybe()
+	on(ts.zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(ts.zetacore, "PostVoteGasPrice", 5).Return("", nil).Maybe()
+}
+
 func mockBitcoinCalls(_ *testSuite, client *testrpc.BtcServer) {
 	client.SetBlockCount(100)
 }
@@ -318,13 +331,15 @@ func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer) {
 	// todo
 }
 
-func mockZetacoreCalls(ts *testSuite) {
-	blockChan := make(chan cometbfttypes.EventDataNewBlock)
-	ts.zetacore.On("NewBlockSubscriber", mock.Anything).Return(blockChan, nil).Maybe()
+func mockTONCalls(_ *testSuite, client *mocks.TONLiteClient) {
+	errMock := errors.New("not implemented")
 
-	ts.zetacore.On("GetInboundTrackersForChain", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
-	ts.zetacore.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).
-		Return(observertypes.PendingNonces{}, nil).
-		Maybe()
-	ts.zetacore.On("GetAllOutboundTrackerByChain", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	on(client, "GetConfigParams", 3).Return(tlb.ConfigParams{}, errMock).Maybe()
+	on(client, "GetMasterchainInfo", 1).Return(liteclient.LiteServerMasterchainInfoC{}, nil).Maybe()
+	on(client, "HealthCheck", 1).Return(time.Now(), nil).Maybe()
+	on(client, "GetFirstTransaction", 2).Return(nil, 0, errMock).Maybe()
+}
+
+func withTonClient(ctx context.Context, client *mocks.TONLiteClient) context.Context {
+	return context.WithValue(ctx, tonClientCtxKey{}, tonClient(client))
 }

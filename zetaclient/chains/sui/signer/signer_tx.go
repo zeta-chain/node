@@ -151,7 +151,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	}
 
 	// get all needed object references
-	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs)
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs, gasBudget)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
@@ -178,6 +178,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Strs("tx.type_args", args.payload.TypeArgs).
 		Strs("tx.object_ids", args.payload.ObjectIDs).
 		Hex("tx.payload", args.payload.Message).
+		Int("tx.sui_coins", len(args.withdrawAndCallObjRefs.suiCoins)).
 		Msg("calling withdrawAndCallPTB")
 
 	// build the PTB transaction
@@ -339,4 +340,14 @@ func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
 	gasBudget := max(gasPrice*params.CallOptions.GasLimit, minGasBudgetCancelTx)
 
 	return strconv.FormatUint(gasBudget, 10), nil
+}
+
+// getGatewayNonce reads the nonce of the gateway object
+func (s *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
+	data, err := s.client.GetObjectParsedData(ctx, s.gateway.ObjectID())
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to get parsed data of gateway object")
+	}
+
+	return sui.ParseGatewayNonce(data)
 }

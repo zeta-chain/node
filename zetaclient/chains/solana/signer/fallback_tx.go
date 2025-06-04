@@ -6,31 +6,55 @@ import (
 	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 )
 
-// shouldUseFallbackTx parse error as RPCError and verifies if fallback tx should be used
-func shouldUseFallbackTx(err error, program string) bool {
+// parseRPCErrorForFallback parse error as RPCError and verifies if fallback tx should be used
+// and which failure reason to attach to fallback tx
+func parseRPCErrorForFallback(err error, program string) (useFallback bool, failureReason string) {
 	rpcErr, ok := err.(*jsonrpc.RPCError)
 	if !ok {
-		return false
+		return false, ""
 	}
 
 	if !strings.Contains(rpcErr.Message, "Error processing Instruction") {
-		return false
+		return false, ""
 	}
 
 	dataMap, ok := rpcErr.Data.(map[string]interface{})
 	if !ok {
-		return false
+		return false, ""
 	}
 
 	rawLogs, ok := dataMap["logs"].([]interface{})
 	if !ok {
-		return false
+		return false, ""
 	}
 
 	logs := parseLogs(rawLogs)
 
-	// If any other program invoked after gateway OR nonce mismatch not present, fallback
-	return programInvokedAfterTargetInLogs(logs, program) || !containsNonceMismatch(logs)
+	// if any other program invoked after gateway OR nonce mismatch not present, fallback
+	shouldUseFallbackTx := programInvokedAfterTargetInLogs(logs, program) || !containsNonceMismatch(logs)
+	if !shouldUseFallbackTx {
+		return false, ""
+	}
+
+	// get failure reason from logs
+	return true, getFailureReason(logs)
+}
+
+// getFailureReason returns first log that is in format "Program <P_ID> <error> failed"
+func getFailureReason(logs []string) string {
+	var failures []string
+	for _, line := range logs {
+		if strings.HasPrefix(line, "Program ") && strings.Contains(line, " failed") {
+			failures = append(failures, line)
+		}
+	}
+
+	if len(failures) == 0 {
+		return ""
+	}
+
+	// returning first one is enough, since that is original program where program failed
+	return failures[0]
 }
 
 // programInvokedAfterTargetInLogs checks if there is Program <P_ID> invoke after target program invoke log

@@ -55,12 +55,27 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	senderBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, privkey.PublicKey())
 	require.NoError(r, err)
 
+	// encode msg
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
+		},
+		Data: []byte("hello"),
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
 		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
-		[]byte("hello"),
+		msgEncoded,
 		gatewayzevm.RevertOptions{
 			OnRevertGasLimit: big.NewInt(0),
 		},
@@ -88,7 +103,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	type ConnectedPdaInfo struct {
 		Discriminator     [8]byte
-		LastSender        [20]byte
+		LastSender        common.Address
 		LastMessage       string
 		LastRevertSender  solana.PublicKey
 		LastRevertMessage string

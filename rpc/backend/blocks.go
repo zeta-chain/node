@@ -352,7 +352,7 @@ func (b *Backend) parseSyntethicTxFromAdditionalFields(
 	t := ethtypes.NewTx(&ethtypes.LegacyTx{
 		Nonce:    additional.Nonce,
 		Data:     additional.Data,
-		Gas:      additional.GasUsed,
+		Gas:      additional.GasLimit,
 		To:       &recipient,
 		GasPrice: nil,
 		Value:    additional.Value,

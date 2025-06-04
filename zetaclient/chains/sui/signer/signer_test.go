@@ -50,6 +50,9 @@ func TestSigner(t *testing.T) {
 			},
 		}}
 
+		// Given mocked gateway nonce
+		ts.MockGatewayNonce(nonce)
+
 		// Given mocked WithdrawCapID
 		const withdrawCapID = "0xWithdrawCapID"
 		ts.MockWithdrawCapID(withdrawCapID)
@@ -144,6 +147,9 @@ func TestSigner(t *testing.T) {
 			},
 		}
 		config.SetRestrictedAddressesFromConfig(cfg)
+
+		// Given mocked gateway nonce
+		ts.MockGatewayNonce(nonce)
 
 		// Given mocked WithdrawCapID
 		const withdrawCapID = "0xWithdrawCapID"
@@ -260,6 +266,14 @@ func newTestSuite(t *testing.T) *testSuite {
 	ts.setupTrackersBag()
 
 	return ts
+}
+
+func (ts *testSuite) MockGatewayNonce(nonce uint64) {
+	ts.SuiMock.On("GetObjectParsedData", mock.Anything, mock.Anything).Return(models.SuiParsedData{
+		SuiMoveObject: models.SuiMoveObject{
+			Fields: map[string]any{"nonce": fmt.Sprintf("%d", nonce)},
+		},
+	}, nil)
 }
 
 func (ts *testSuite) MockWithdrawCapID(id string) {
