@@ -9,6 +9,7 @@
 ### Fixes
 
 * [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
+* [3956](https://github.com/zeta-chain/node/pull/3956) - use the latest nonce to perform pre-broadcast check to make evm tx replacement possible
 
 ## v31.0.0
 
