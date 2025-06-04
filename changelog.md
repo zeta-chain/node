@@ -6,6 +6,10 @@
 
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
 
+### Fixes
+
+* [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
+
 ## v31.0.0
 
 ### Breaking Changes
