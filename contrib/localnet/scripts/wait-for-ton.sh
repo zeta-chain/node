@@ -3,27 +3,32 @@
 timeout_seconds=300 # 5 minutes
 poll_interval=5     # Check every 5 seconds
 
-status_url="http://ton:8000/status"
+ton_status_url="http://ton:8081/jsonRPC"
 
-check_status() {
-    response=$(curl -s -w "\n%{http_code}" $status_url)
-    body=$(echo "$response" | head -n 1)
-    http_status=$(echo "$response" | tail -n 1)
+check_ton_status() {
+    response=$(curl -s $ton_status_url -X POST \
+        -H 'accept: application/json' -H 'Content-Type: application/json' \
+        -d '{ "method": "getMasterchainInfo", "id": "1", "jsonrpc": "2.0" }')
 
-    if [ "$http_status" == "200" ]; then
-        echo "Pass: $body"
+    if [ -z "$response" ]; then
+        echo "Waiting: no response"
+        return 1
+    fi
+
+    if echo "$response" | jq -e '.ok == true' > /dev/null 2>&1; then
+        echo "Pass: TON node responded with ok=true"
         return 0
     else
-        echo "Waiting: $body"
+        echo "Waiting: Response received but ok!=true"
         return 1
     fi
 }
 
-echo "💎 Checking TON status at $status_url (timeout: $timeout_seconds seconds)"
+echo "💎 Checking TON status at $ton_status_url (timeout: $timeout_seconds seconds)"
 
 elapsed=0
 while [ $elapsed -lt $timeout_seconds ]; do
-    if check_status; then
+    if check_ton_status; then
         echo "💎 TON node bootstrapped"
         exit 0
     fi
