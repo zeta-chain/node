@@ -12,8 +12,11 @@ const (
 	// EnvBtcRPCMainnet is the environment variable to enable mainnet for bitcoin rpc
 	EnvBtcRPCMainnet = "BTC_RPC_MAINNET"
 
-	// EnvBtcRPCTestnet is the environment variable to enable testnet for bitcoin rpc
-	EnvBtcRPCTestnet = "BTC_RPC_TESTNET"
+	// EnvBtcRPCSignet is the environment variable to enable signet for bitcoin rpc
+	EnvBtcRPCSignet = "BTC_RPC_SIGNET"
+
+	// EnvBtcRPCTestnet4 is the environment variable to enable testnet4 for bitcoin rpc
+	EnvBtcRPCTestnet4 = "BTC_RPC_TESTNET4"
 )
 
 // LiveTestEnabled returns true if live tests are enabled
