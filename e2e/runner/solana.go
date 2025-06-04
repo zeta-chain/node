@@ -662,6 +662,7 @@ func (r *E2ERunner) CallSOLZRC20(
 			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
 			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
 		},
 		Data: data,
 	}

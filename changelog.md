@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## UNRELEASED
+
+### Features
+
+* [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+
+### Fixes
+
+* [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
+
 ## v31.0.0
 
 ### Breaking Changes

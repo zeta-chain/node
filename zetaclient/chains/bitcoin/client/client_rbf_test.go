@@ -26,7 +26,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
-// Test_BitcoinLive runs RBF tests on a live Bitcoin network.
+// Test_BitcoinRBFLive runs RBF tests on a live Bitcoin network.
 func Test_BitcoinRBFLive(t *testing.T) {
 	if !common.LiveTestEnabled() {
 		t.Skip("skipping live test")
@@ -162,7 +162,7 @@ func Run_RBFTransaction(t *testing.T) {
 	fmt.Println("tx2 dropped")
 }
 
-// Test_RBFTransactionChained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
+// Run_RBFTransaction_Chained_CPFP tests Child-Pays-For-Parent (CPFP) fee bumping strategy for chained RBF transactions
 func Run_RBFTransaction_Chained_CPFP(t *testing.T) {
 	// setup test
 	ts, privKey, sender, to := setupRBFTest(t)
