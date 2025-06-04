@@ -71,6 +71,7 @@ func GetBtcEventWithWitness(
 	// 1. sender is empty, we don't know whom to refund if this tx gets reverted in zetacore
 	// 2. the tx is an outbound (sender is TSS) and we should not process it as an inbound
 	if fromAddress == "" || strings.EqualFold(fromAddress, tssAddress) {
+		logger.Info().Fields(lf).Msgf("skipping transaction for sender: %s", fromAddress)
 		return nil, nil
 	}
 
