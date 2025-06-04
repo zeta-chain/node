@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
@@ -40,7 +39,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	}
 
 	// extract logicalTime and tx hash from last scanned tx
-	lt, hashBits, err := liteapi.TransactionHashFromString(ob.LastTxScanned())
+	lt, hashBits, err := rpc.TransactionHashFromString(ob.LastTxScanned())
 	if err != nil {
 		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
 	}
@@ -80,7 +79,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		if skip {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
-			txHash := liteapi.TransactionToHashString(tx.Transaction)
+			txHash := rpc.TransactionToHashString(tx.Transaction)
 			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
 			ob.setLastScannedTX(tx)
 			continue
@@ -142,7 +141,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		txHash := tracker.TxHash
 
-		lt, hash, err := liteapi.TransactionHashFromString(txHash)
+		lt, hash, err := rpc.TransactionHashFromString(txHash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_parse_hash", err)
 			continue
@@ -278,7 +277,7 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno 
 
 	var (
 		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-		inboundHash     = liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+		inboundHash     = rpc.TransactionToHashString(inbound.tx.Transaction)
 		sender          = inbound.sender.ToRaw()
 		receiver        = inbound.receiver.Hex()
 	)
@@ -321,7 +320,7 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 		return false
 	}
 
-	txHash := liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+	txHash := rpc.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
 
 	compliance.PrintComplianceLog(
 		ob.Logger().Inbound,
@@ -354,7 +353,7 @@ func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 }
 
 func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
-	txHash := liteapi.TransactionToHashString(tx.Transaction)
+	txHash := rpc.TransactionToHashString(tx.Transaction)
 
 	ob.WithLastTxScanned(txHash)
 
@@ -382,7 +381,7 @@ func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
 
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"transaction.hash":           liteapi.TransactionToHashString(tx.Transaction),
+		"transaction.hash":           rpc.TransactionToHashString(tx.Transaction),
 		"transaction.ton.lt":         tx.Lt,
 		"transaction.ton.hash":       tx.Hash().Hex(),
 		"transaction.ton.block_id":   tx.BlockID.BlockID.String(),

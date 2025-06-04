@@ -19,7 +19,6 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -83,7 +82,7 @@ func TestSigner(t *testing.T) {
 	tracker := ts.trackerBag[0]
 
 	require.Equal(t, uint64(nonce), tracker.nonce)
-	require.Equal(t, liteapi.TransactionToHashString(withdrawalTX), tracker.hash)
+	require.Equal(t, rpc.TransactionToHashString(withdrawalTX), tracker.hash)
 }
 
 func TestExitCodeRegex(t *testing.T) {

@@ -12,7 +12,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
@@ -104,7 +104,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.New("only gas cctxs are supported")
 	}
 
-	lt, hash, err := liteapi.TransactionHashFromString(txHash)
+	lt, hash, err := rpc.TransactionHashFromString(txHash)
 	if err != nil {
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
@@ -167,7 +167,7 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	var (
 		chainID = ob.Chain().ChainId
 		nonce   = uint64(w.Seqno)
-		hash    = liteapi.TransactionToHashString(tx.Transaction)
+		hash    = rpc.TransactionToHashString(tx.Transaction)
 	)
 
 	// note it has a check for noop
@@ -218,7 +218,7 @@ func (ob *Observer) postVoteOutbound(
 
 	var (
 		chainID       = ob.Chain().ChainId
-		txHash        = liteapi.TransactionToHashString(outboundRes.tx.Transaction)
+		txHash        = rpc.TransactionToHashString(outboundRes.tx.Transaction)
 		nonce         = cctx.GetCurrentOutboundParam().TssNonce
 		signerAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 		coinType      = cctx.InboundParams.CoinType
