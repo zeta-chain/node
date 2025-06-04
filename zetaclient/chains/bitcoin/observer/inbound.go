@@ -167,7 +167,16 @@ func FilterAndParseIncomingTx(
 			continue
 		}
 
-		event, err := GetBtcEvent(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, common.CalcDepositorFee)
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpc,
+			tx,
+			tssAddress,
+			blockNumber,
+			logger,
+			netParams,
+			common.CalcDepositorFee,
+		)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -223,21 +232,6 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// create inbound vote message for standard memo
 	return ob.NewInboundVoteFromStdMemo(event, amountInt)
-}
-
-// GetBtcEvent returns a valid BTCInboundEvent or nil
-// it uses witness data to extract the sender address
-func GetBtcEvent(
-	ctx context.Context,
-	rpc RPC,
-	tx btcjson.TxRawResult,
-	tssAddress string,
-	blockNumber uint64,
-	logger zerolog.Logger,
-	netParams *chaincfg.Params,
-	feeCalculator common.DepositorFeeCalculator,
-) (*BTCInboundEvent, error) {
-	return GetBtcEventWithWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
 }
 
 // GetSenderAddressByVin get the sender address from the transaction input (vin)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -22,8 +23,15 @@ const (
 )
 
 // GetBtcEventWithWitness either returns a valid BTCInboundEvent or nil.
-// This method supports data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
-// It will first prioritize OP_RETURN over tapscript.
+//
+// This method supports two types of memo:
+// 1. OP_RETURN based memo:
+//   - the default memo type that can carry up to 80 bytes of data
+//
+// 2. Tapscript based memo:
+//   - allow data with more than 80 bytes by scanning the witness for possible presence of a tapscript.
+//
+// Note:  OP_RETURN based memo is prioritized over tapscript memo if both are present.
 func GetBtcEventWithWitness(
 	ctx context.Context,
 	rpc RPC,
@@ -50,6 +58,19 @@ func GetBtcEventWithWitness(
 
 	if err := isValidRecipient(tx.Vout[0].ScriptPubKey.Hex, tssAddress, netParams); err != nil {
 		logger.Debug().Err(err).Fields(lf).Msgf("irrelevant recipient: %s", tx.Vout[0].ScriptPubKey.Hex)
+		return nil, nil
+	}
+
+	// event found, get sender address
+	fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
+	}
+
+	// skip this tx if one of the two conditions is met
+	// 1. sender is empty, we don't know whom to refund if this tx gets reverted in zetacore
+	// 2. the tx is an outbound (sender is TSS) and we should not process it as an inbound
+	if fromAddress == "" || strings.EqualFold(fromAddress, tssAddress) {
 		return nil, nil
 	}
 
@@ -82,18 +103,6 @@ func GetBtcEventWithWitness(
 		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
 	} else {
 		memo = []byte(noMemoFound)
-	}
-
-	// event found, get sender address
-	fromAddress, err := GetSenderAddressByVin(ctx, rpc, tx.Vin[0], netParams)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
-	}
-
-	// skip this tx and move on (e.g., due to unknown script type)
-	// we don't know whom to refund if this tx gets reverted in zetacore
-	if fromAddress == "" {
-		return nil, nil
 	}
 
 	return &BTCInboundEvent{

@@ -43,7 +43,7 @@ func TestClientLive(t *testing.T) {
 	}
 
 	testnetConfig := config.BTCConfig{
-		RPCHost:   os.Getenv(common.EnvBtcRPCTestnet),
+		RPCHost:   os.Getenv(common.EnvBtcRPCTestnet4),
 		RPCParams: "testnet3",
 	}
 
