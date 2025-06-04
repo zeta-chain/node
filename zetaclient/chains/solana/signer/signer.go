@@ -322,21 +322,23 @@ func (signer *Signer) broadcastOutbound(
 	for range broadcastRetries {
 		time.Sleep(backOff)
 
-		// PDA nonce may already be increased by other relayer, no need to retry
-		pdaInfo, err := signer.client.GetAccountInfo(ctx, signer.pda)
+		// query the gateway PDA nonce
+		pdaNonce, err := signer.getGatewayNonce(ctx)
 		if err != nil {
-			logger.Error().Err(err).Fields(lf).Msgf("unable to get PDA account info")
-		} else {
-			pda, err := contracts.DeserializePdaInfo(pdaInfo)
-			if err != nil {
-				logger.Error().Err(err).Fields(lf).Msgf("unable to deserialize PDA info")
-			} else if pda.Nonce > nonce {
-				logger.Info().Err(err).Fields(lf).Msgf("PDA nonce %d is greater than outbound nonce, stop retrying", pda.Nonce)
-				break
-			}
+			logger.Error().Err(err).Fields(lf).Msg("unable to get PDA nonce")
+			backOff *= 2
+			continue
+		}
+		lf["pda_nonce"] = pdaNonce
+
+		// PDA nonce may already be increased by other relayers, no need to retry
+		if pdaNonce > nonce {
+			logger.Info().Fields(lf).Msg("PDA nonce is greater than outbound nonce, stop retrying")
+			break
 		}
 
 		// broadcast the signed tx to the Solana network with preflight check
+		// the PDA nonce MUST be equal to 'nonce' if arrived here, guaranteed by upstream code
 		txSig, err := signer.client.SendTransactionWithOpts(
 			ctx,
 			tx,
@@ -349,22 +351,22 @@ func (signer *Signer) broadcastOutbound(
 				outbound.FallbackMsg.SetFailureReason(failureReason)
 				fallbackInst, err := signer.createIncrementNonceInstruction(*outbound.FallbackMsg)
 				if err != nil {
-					logger.Error().Err(err).Fields(lf).Msgf("error creating increment nonce instruction")
+					logger.Error().Err(err).Fields(lf).Msg("error creating increment nonce instruction")
 					break
 				}
 
 				fallbackTx, err := signer.signTx(ctx, fallbackInst, 0)
 				if err != nil {
-					logger.Error().Err(err).Fields(lf).Msgf("error signing increment nonce instruction")
+					logger.Error().Err(err).Fields(lf).Msg("error signing increment nonce instruction")
 					break
 				}
 				tx = fallbackTx
 			}
-			logger.Warn().Err(err).Fields(lf).Msgf("SendTransactionWithOpts failed")
+			logger.Warn().Err(err).Fields(lf).Msg("SendTransactionWithOpts failed")
 			backOff *= 2
 			continue
 		}
-		logger.Info().Fields(lf).Msgf("broadcasted Solana outbound successfully")
+		logger.Info().Fields(lf).Msg("broadcasted Solana outbound successfully")
 
 		// successful broadcast; report to the outbound tracker
 		signer.reportToOutboundTracker(ctx, zetacoreClient, chainID, nonce, txSig, logger)
@@ -504,38 +506,49 @@ func (signer *Signer) waitExactGatewayNonce(ctx context.Context, nonce uint64) e
 			}
 		}
 
-		// query the gateway PDA account information
-		pdaInfo, err := signer.client.GetAccountInfoWithOpts(
-			ctx,
-			signer.pda,
-			&rpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
-		)
+		// query the gateway PDA nonce
+		pdaNonce, err := signer.getGatewayNonce(ctx)
 		if err != nil {
-			logger.Error().Err(err).Msgf("unable to get gateway PDA account info")
+			logger.Error().Err(err).Msgf("unable to get gateway nonce")
 			time.Sleep(time.Second) // prevent RPC spamming
 			continue
 		}
 
-		// deserialize the PDA account information
-		pda, err := contracts.DeserializePdaInfo(pdaInfo)
-		if err != nil {
-			return errors.Wrap(err, "unable to deserialize PDA info")
-		}
-
 		switch {
-		case pda.Nonce > nonce:
-			return errors.Wrapf(err, "PDA nonce %d is greater than outbound nonce %d", pda.Nonce, nonce)
-		case pda.Nonce == nonce:
+		case pdaNonce > nonce:
+			return errors.Wrapf(err, "PDA nonce %d is greater than outbound nonce %d", pdaNonce, nonce)
+		case pdaNonce == nonce:
 			return nil
 		default:
-			logger.Info().Uint64("pda.nonce", pda.Nonce).Msg("waiting for PDA nonce to arrive")
+			logger.Info().Uint64("pda.nonce", pdaNonce).Msg("waiting for PDA nonce to arrive")
 
 			// calculate how far behind the PDA nonce and sleep accordingly
 			//  - base sleep time of 1 second, multiplied by the nonce difference
 			//  - 'lookahead' parameter should keep this from getting too out of control
 			// #nosec G115 always in range
-			sleepDuration := time.Second * time.Duration(nonce-pda.Nonce)
+			sleepDuration := time.Second * time.Duration(nonce-pdaNonce)
 			time.Sleep(sleepDuration)
 		}
 	}
+}
+
+// getGatewayNonce queries the gateway nonce from the PDA account information
+func (signer *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
+	// query the gateway PDA account information
+	pdaInfo, err := signer.client.GetAccountInfoWithOpts(
+		ctx,
+		signer.pda,
+		&rpc.GetAccountInfoOpts{Commitment: broadcastOutboundCommitment},
+	)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to get gateway PDA account info")
+	}
+
+	// deserialize the PDA account information
+	pda, err := contracts.DeserializePdaInfo(pdaInfo)
+	if err != nil {
+		return 0, errors.Wrap(err, "unable to deserialize PDA info")
+	}
+
+	return pda.Nonce, nil
 }
