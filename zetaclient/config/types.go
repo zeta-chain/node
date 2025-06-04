@@ -64,6 +64,10 @@ type SuiConfig struct {
 type TONConfig struct {
 	// Can be either URL of local file path
 	LiteClientConfigURL string `json:"liteClientConfigURL"`
+
+	// RPC url (toncenter V2 api)
+	// https://toncenter.com/api/v2/
+	RPC string `json:"rpc"`
 }
 
 // ComplianceConfig is the config for compliance

@@ -24,7 +24,7 @@ func TestOutbound(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
 
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.rpc, gw)
 		require.NoError(t, err)
 
 		// Given withdrawal

@@ -14,6 +14,7 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -44,7 +45,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
 	}
 
-	txs, err := ob.client.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
+	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
@@ -147,7 +148,7 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 			continue
 		}
 
-		raw, err := ob.client.GetTransaction(ctx, gatewayAccountID, lt, hash)
+		raw, err := ob.rpc.GetTransaction(ctx, gatewayAccountID, lt, hash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_get_tx", err)
 			continue
@@ -210,7 +211,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
+	blockHeader, err := ob.rpc.GetBlockHeader(ctx, castBlockID(tx.BlockID))
 	if err != nil {
 		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
 	}
@@ -342,7 +343,7 @@ func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
 		return nil
 	}
 
-	rawTX, _, err := ob.client.GetFirstTransaction(ctx, ob.gateway.AccountID())
+	rawTX, _, err := ob.rpc.GetFirstTransaction(ctx, ob.gateway.AccountID())
 	if err != nil {
 		return err
 	}
@@ -388,5 +389,15 @@ func txLogFields(tx *toncontracts.Transaction) map[string]any {
 		"transaction.ton.is_inbound": tx.IsInbound(),
 		"transaction.ton.op_code":    tx.Operation,
 		"transaction.ton.exit_code":  tx.ExitCode,
+	}
+}
+
+func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
+	return rpc.BlockIDExt{
+		Workchain: int(id.Workchain),
+		Seqno:     id.Seqno,
+		Shard:     fmt.Sprintf("%d", id.Shard),
+		RootHash:  id.RootHash.Base64(),
+		FileHash:  id.FileHash.Base64(),
 	}
 }

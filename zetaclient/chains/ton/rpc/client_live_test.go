@@ -75,16 +75,10 @@ func TestLiveClient(t *testing.T) {
 
 	t.Run("GetConfigParam", func(t *testing.T) {
 		// Get gas config
-		cell, err := client.GetConfigParam(ctx, 21)
-
-		require.NoError(t, err)
-		require.NotNil(t, cell)
+		gasLimitPrices, err := config.FetchGasConfigRPC(ctx, client)
 
 		// Parse it
-		var cfg tlb.ConfigParam21
-		require.NoError(t, tlb.Unmarshal(cell, &cfg))
-
-		gasPrice, err := config.ParseGasPrice(cfg.GasLimitsPrices)
+		gasPrice, err := config.ParseGasPrice(gasLimitPrices)
 		require.NoError(t, err)
 
 		t.Logf("gasPrice: %d", gasPrice)

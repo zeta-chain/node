@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/config"
 	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
@@ -90,6 +91,28 @@ func FetchGasConfig(ctx context.Context, getter Getter) (tlb.GasLimitsPrices, er
 
 	var cfg tlb.ConfigParam21
 	if err = tlb.Unmarshal(&ref.Value, &cfg); err != nil {
+		return tlb.GasLimitsPrices{}, errors.Wrap(err, "failed to unmarshal config param")
+	}
+
+	return cfg.GasLimitsPrices, nil
+}
+
+type RPCGetter interface {
+	GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error)
+}
+
+func FetchGasConfigRPC(ctx context.Context, rpc RPCGetter) (tlb.GasLimitsPrices, error) {
+	// https://docs.ton.org/develop/howto/blockchain-configs
+	// https://tonviewer.com/config#21
+	const configKeyGas = 21
+
+	cell, err := rpc.GetConfigParam(ctx, configKeyGas)
+	if err != nil {
+		return tlb.GasLimitsPrices{}, errors.Wrap(err, "failed to get config param")
+	}
+
+	var cfg tlb.ConfigParam21
+	if err = tlb.Unmarshal(cell, &cfg); err != nil {
 		return tlb.GasLimitsPrices{}, errors.Wrap(err, "failed to unmarshal config param")
 	}
 

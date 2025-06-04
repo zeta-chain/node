@@ -20,7 +20,7 @@ func TestInbound(t *testing.T) {
 	t.Run("No gateway provided", func(t *testing.T) {
 		ts := newTestSuite(t)
 
-		_, err := New(ts.baseObserver, ts.liteClient, nil)
+		_, err := New(ts.baseObserver, ts.rpc, nil)
 		require.Error(t, err)
 	})
 
@@ -30,7 +30,7 @@ func TestInbound(t *testing.T) {
 			ts := newTestSuite(t)
 
 			// Given observer
-			ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+			ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 			require.NoError(t, err)
 
 			// Given mocked lite client call
@@ -59,7 +59,7 @@ func TestInbound(t *testing.T) {
 			ts.OnGetTransactionsSince(ts.gateway.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
 
 			// Given observer
-			ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+			ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 			require.NoError(t, err)
 
 			// ACT
@@ -86,7 +86,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -122,7 +122,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -172,7 +172,7 @@ func TestInbound(t *testing.T) {
 		expectedHash := liteapi.TransactionHashToString(depositTX.Lt, txHash(depositTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 
-		blockInfo, err := ts.liteClient.GetBlockHeader(ts.ctx, depositTX.BlockID, 0)
+		blockInfo, err := ts.rpc.GetBlockHeader(ts.ctx, castBlockID(depositTX.BlockID))
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
@@ -183,7 +183,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -237,7 +237,7 @@ func TestInbound(t *testing.T) {
 		expectedHash := liteapi.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 
-		blockInfo, err := ts.liteClient.GetBlockHeader(ts.ctx, depositAndCallTX.BlockID, 0)
+		blockInfo, err := ts.rpc.GetBlockHeader(ts.ctx, castBlockID(depositAndCallTX.BlockID))
 		require.NoError(t, err)
 
 		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
@@ -259,7 +259,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -296,7 +296,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -344,7 +344,7 @@ func TestInbound(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given observer
-		ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 		require.NoError(t, err)
 
 		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
@@ -442,7 +442,7 @@ func TestInboundTracker(t *testing.T) {
 	ts := newTestSuite(t)
 
 	// Given observer
-	ob, err := New(ts.baseObserver, ts.liteClient, ts.gateway)
+	ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
 	require.NoError(t, err)
 
 	// Given TON gateway transactions
