@@ -8,6 +8,7 @@
 
 ### Fixes
 
+* [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
 * [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
 
 ## v31.0.0
