@@ -28,9 +28,10 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -193,6 +194,8 @@ type E2ERunner struct {
 	GatewayZEVM          *gatewayzevm.GatewayZEVM
 	TestDAppV2ZEVMAddr   ethcommon.Address
 	TestDAppV2ZEVM       *testdappv2.TestDAppV2
+	ConnectorNativeAddr  ethcommon.Address
+	ConnectorNative      *zetaconnnectornative.ZetaConnectorNative
 
 	// config
 	CctxTimeout    time.Duration

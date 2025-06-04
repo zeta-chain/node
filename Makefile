@@ -273,6 +273,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
+	export E2E_ARGS="${E2E_ARGS} --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-staking-test: e2e-images
@@ -358,7 +359,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v29' \
+		--build-arg OLD_VERSION='release/v30' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.

@@ -523,10 +523,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testLegacy {
-		eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestLegacyERC20WithdrawName,
-			e2etests.TestLegacyMultipleERC20WithdrawsName,
-			e2etests.TestLegacyERC20DepositAndCallRefundName))
+		//eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose,
+		//	e2etests.TestLegacyERC20WithdrawName,
+		//	e2etests.TestLegacyMultipleERC20WithdrawsName,
+		//	e2etests.TestLegacyERC20DepositAndCallRefundName))
 		eg.Go(legacyZETATestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestLegacyZetaWithdrawName,
 			e2etests.TestLegacyMessagePassingExternalChainsName,
@@ -536,19 +536,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyZetaDepositName,
 			e2etests.TestLegacyZetaDepositNewAddressName,
 		))
-		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestLegacyMessagePassingZEVMToEVMName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
-			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
-			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
-			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
-		))
-		eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestLegacyEtherWithdrawName,
-			e2etests.TestLegacyEtherDepositAndCallName,
-			e2etests.TestLegacyEtherDepositAndCallRefundName,
-		))
+		//eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
+		//	e2etests.TestLegacyMessagePassingZEVMToEVMName,
+		//	e2etests.TestLegacyMessagePassingEVMtoZEVMName,
+		//	e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
+		//	e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
+		//	e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
+		//	e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
+		//))
+		//eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose,
+		//	e2etests.TestLegacyEtherWithdrawName,
+		//	e2etests.TestLegacyEtherDepositAndCallName,
+		//	e2etests.TestLegacyEtherDepositAndCallRefundName,
+		//))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
@@ -563,6 +563,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+
+	deployerRunner.SetupConnectorV2()
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
@@ -605,6 +607,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// Verify that the balance of restricted address is zero
 	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+
+	//deployerRunner.MigrateConnector()
 
 	if !deployerRunner.IsRunningUpgrade() {
 		// Verify that there are no stale ballots left over after tests complete

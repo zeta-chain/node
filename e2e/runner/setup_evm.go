@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
@@ -140,4 +143,94 @@ func (r *E2ERunner) SetupEVM() {
 
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
 	ensureTxReceipt(txSetLegacySupported, "Set legacy support failed")
+}
+
+func (r *E2ERunner) SetupConnectorV2() {
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage)
+	}
+
+	r.Logger.Info("⚙️ setting up EVM network")
+	startTime := time.Now()
+	defer func() {
+		r.Logger.Info("EVM setup took %s\n", time.Since(startTime))
+	}()
+
+	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+		r.EVMAuth,
+		r.EVMClient,
+	)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
+
+	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
+	require.NoError(r, err)
+
+	// Encode the initializer data
+	initializerData, err := zetaConnnectorNativeABI.Pack("initialize", r.GatewayEVMAddr, r.ZetaEthAddr, r.TSSAddress, r.Account.EVMAddress())
+	require.NoError(r, err)
+
+	// Deploy zetaConnnectorNative proxy contract
+	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.EVMAuth,
+		r.EVMClient,
+		zetaConnnectorNativeAddress,
+		initializerData,
+	)
+	require.NoError(r, err)
+
+	// check contract deployment receipt
+	ensureTxReceipt(zetaConnnectorNativeProxyTx, "ZetaConnectorNative proxy deployment failed")
+	r.ConnectorNativeAddr = zetaConnnectorNativeAddress
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
+	require.NoError(r, err)
+
+	r.Logger.Print(
+		"ZetaConnectorNative contract address: %s, tx hash: %s",
+		zetaConnnectorNativeAddress.Hex(),
+		txZetaConnnectorNativeHash.Hash().Hex(),
+	)
+
+	r.MigrateConnector()
+
+	r.Logger.Print("ZetaConnectorNative contract address: %s", r.ConnectorNativeAddr.Hex())
+}
+
+func (r *E2ERunner) MigrateConnector() {
+	r.Logger.Print("⚙️ Migrating ZetaConnectorNative to v2")
+	startTime := time.Now()
+	defer func() {
+		r.Logger.Info("ZetaConnectorNative migration took %s\n", time.Since(startTime))
+	}()
+	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		r.requireTxSuccessful(receipt, failMessage)
+	}
+
+	pauseV2Tx, err := r.ConnectorNative.Pause(r.EVMAuth)
+	require.NoError(r, err)
+	ensureTxReceipt(pauseV2Tx, "ZetaConnectorNative pause failed")
+
+	pauseV1Tx, err := r.ConnectorEth.Pause(r.EVMAuth)
+	require.NoError(r, err)
+	ensureTxReceipt(pauseV1Tx, "ZetaConnectorEth pause failed")
+
+	balance, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
+	require.NoError(r, err, "GetLockedAmount failed")
+
+	r.Logger.Print("ZetaConnectorEth locked amount: %s", balance.String())
+
+	tx, err := r.ConnectorEth.OnReceive(
+		r.EVMAuth,
+		common.LeftPadBytes([]byte{}, 32), // Encoded zero address
+		big.NewInt(7001),                  // Chain ID 7001
+		r.ConnectorNativeAddr,             // ZetaConnectorNative (V2) address
+		big.NewInt(0).Mul(big.NewInt(10), big.NewInt(1e18)), // 10 ZETA
+		[]byte{}, // Empty message
+		crypto.Keccak256Hash([]byte("ZetaConnectorETH")), // Hash of "ZetaConnectorETH"
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(tx, "ZetaConnectorEth OnReceive failed")
 }
