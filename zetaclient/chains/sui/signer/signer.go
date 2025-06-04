@@ -3,9 +3,7 @@ package signer
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	suiptb "github.com/pattonkan/sui-go/sui"
@@ -114,7 +112,7 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 
 	// check CCTX receiver address format
 	receiver := cctx.GetCurrentOutboundParam().Receiver
-	if err := ValidateAddress(receiver); err != nil {
+	if err := sui.ValidateAddress(receiver); err != nil {
 		validReceiver = false
 		logger.Error().Err(err).Str("receiver", receiver).Msg("Invalid receiver address")
 	}
@@ -211,27 +209,6 @@ func (s *Signer) SignTxWithCancel(
 	}
 
 	return sig, sigCancel, nil
-}
-
-// ValidateAddress checks whether the input string is a valid Sui address
-// For WithdrawAndCall, the receiver is the target package ID. It follows same format, so we use same validation for both
-func ValidateAddress(addr string) error {
-	addr, hasPrefix := strings.CutPrefix(addr, "0x")
-	switch {
-	case !hasPrefix:
-		return errors.New("address must start with 0x")
-	case addr != strings.ToLower(addr):
-		return errors.New("address must be lowercase")
-	case len(addr) != 64:
-		// accept full Sui address format only to make the validation easier
-		return errors.New("address must be 64 characters")
-	}
-
-	if _, err := hex.DecodeString(addr); err != nil {
-		return errors.Wrapf(err, "address %s is not valid hex", addr)
-	}
-
-	return nil
 }
 
 // wrapDigest wraps the digest with sha256.

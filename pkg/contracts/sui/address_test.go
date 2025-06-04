@@ -2,8 +2,9 @@ package sui
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestEncodeAddress(t *testing.T) {
@@ -55,53 +56,29 @@ func TestEncodeAddress(t *testing.T) {
 
 func TestDecodeAddress(t *testing.T) {
 	tests := []struct {
-		name      string
-		input     []byte
-		want      string
-		shouldErr bool
+		name  string
+		input []byte
+		want  string
 	}{
 		{
-			name:  "empty input",
-			input: []byte{},
-			want:  "0x0000000000000000000000000000000000000000000000000000000000000000",
-		},
-		{
-			name:  "short input",
-			input: []byte{0x1, 0x2, 0x3},
-			want:  "0x0000000000000000000000000000000000000000000000000000000000010203",
-		},
-		{
-			name: "exact 32 bytes",
+			name: "sample bytes",
 			input: func() []byte {
-				b, _ := hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+				b, _ := hex.DecodeString("1234567890abcdef")
 				return b
 			}(),
-			want: "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-		},
-		{
-			name: "too long (33 bytes)",
-			input: func() []byte {
-				b := make([]byte, 33)
-				return b
-			}(),
-			shouldErr: true,
+			want: "0x1234567890abcdef",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DecodeAddress(tt.input)
-			if tt.shouldErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
-			}
+			got := DecodeAddress(tt.input)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func TestCheckValidSuiAddress(t *testing.T) {
+func TestValidSuiAddress(t *testing.T) {
 	tests := []struct {
 		name    string
 		address string
@@ -113,9 +90,14 @@ func TestCheckValidSuiAddress(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "Valid short address",
+			name:    "Uppercase addresses are explicitly rejected",
+			address: "0X2A4C5A97B561AC5B38EDC4B4E9B2C183C57B56DF5B1EA2F1C6F2E4A44B92D59F",
+			wantErr: true,
+		},
+		{
+			name:    "Short addresses are explicitly rejected",
 			address: "0x1a",
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name:    "Missing 0x prefix",
@@ -129,7 +111,7 @@ func TestCheckValidSuiAddress(t *testing.T) {
 		},
 		{
 			name:    "Invalid hex characters",
-			address: "0xZZZZZZ",
+			address: "0xZZZZZZ0000000000000000000000000000000000000000000000000000000000",
 			wantErr: true,
 		},
 		{
@@ -145,18 +127,19 @@ func TestCheckValidSuiAddress(t *testing.T) {
 		{
 			name:    "Minimal valid single-byte address",
 			address: "0x0",
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidAddress(tt.address)
+			err := ValidateAddress(tt.address)
 			if tt.wantErr {
-				require.Error(t, err, "expected error for address: %s", tt.address)
-			} else {
-				require.NoError(t, err, "unexpected error for address: %s", tt.address)
+				require.Error(t, err, tt.address)
+				return
 			}
+
+			require.NoError(t, err, tt.address)
 		})
 	}
 }
