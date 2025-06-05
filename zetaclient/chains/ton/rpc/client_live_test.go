@@ -72,7 +72,7 @@ func TestLiveClient(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, accountID, acc.ID)
-			require.Equal(t, tlb.AccountNone, acc.Status)
+			require.Equal(t, tlb.AccountUninit, acc.Status)
 			require.Zero(t, acc.Balance)
 			require.Empty(t, acc.LastTxHash)
 			require.Empty(t, acc.LastTxLT)
@@ -80,7 +80,7 @@ func TestLiveClient(t *testing.T) {
 			t.Logf("account: %+v", acc)
 
 			tlbAcc := acc.ToShardAccount()
-			require.Equal(t, tlb.AccountNone, tlbAcc.Account.Status())
+			require.Equal(t, tlb.AccountUninit, tlbAcc.Account.Status())
 		})
 	})
 

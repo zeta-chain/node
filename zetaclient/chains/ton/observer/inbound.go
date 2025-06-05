@@ -34,14 +34,9 @@ const (
 //
 // The name `ObserveInbound` is used for consistency with other chains.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	if err := ob.ensureLastScannedTX(ctx); err != nil {
-		return errors.Wrap(err, "unable to ensure last scanned tx")
-	}
-
-	// extract logicalTime and tx hash from last scanned tx
-	lt, hashBits, err := rpc.TransactionHashFromString(ob.LastTxScanned())
+	lt, hashBits, err := ob.ensureLastScannedTx(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
+		return errors.Wrapf(err, "unable to get last scanned tx")
 	}
 
 	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
@@ -81,7 +76,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
 			txHash := rpc.TransactionToHashString(tx.Transaction)
 			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
-			ob.setLastScannedTX(tx)
+			ob.setLastScannedTx(tx)
 			continue
 		}
 
@@ -103,7 +98,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				return errors.Wrap(err, "unable to add outbound tracker")
 			}
 
-			ob.setLastScannedTX(tx)
+			ob.setLastScannedTx(tx)
 			continue
 		}
 
@@ -117,7 +112,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
 		}
 
-		ob.setLastScannedTX(tx)
+		ob.setLastScannedTx(tx)
 	}
 
 	return nil
@@ -210,12 +205,9 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	blockHeader, err := ob.rpc.GetBlockHeader(ctx, castBlockID(tx.BlockID))
-	if err != nil {
-		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
-	}
-
-	seqno := blockHeader.MinRefMcSeqno
+	// TON doesn't use sequential block numbers
+	// because txs can happen in different shards
+	const seqno = 0
 
 	if _, err = ob.voteDeposit(ctx, inbound, seqno); err != nil {
 		return errors.Wrap(err, "unable to vote for inbound tx")
@@ -336,23 +328,33 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 	return true
 }
 
-func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
-	// noop
-	if ob.LastTxScanned() != "" {
-		return nil
+// ensureLastScannedTx or query the latest tx from RPC
+func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
+	// always expect init state.
+	if txHash := ob.LastTxScanned(); txHash != "" {
+		return rpc.TransactionHashFromString(txHash)
 	}
 
-	rawTX, _, err := ob.rpc.GetFirstTransaction(ctx, ob.gateway.AccountID())
-	if err != nil {
-		return err
+	// get last txs from RPC and pick the oldest one
+	const limit = 20
+
+	txs, err := ob.rpc.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
+	switch {
+	case err != nil:
+		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")
+	case len(txs) == 0:
+		return 0, ton.Bits256{}, errors.New("no transactions found")
 	}
 
-	ob.setLastScannedTX(&toncontracts.Transaction{Transaction: *rawTX})
+	tx := txs[len(txs)-1]
 
-	return nil
+	// note this data is not persisted to DB unless real inbound is processed
+	ob.WithLastTxScanned(rpc.TransactionToHashString(tx))
+
+	return tx.Lt, ton.Bits256(tx.Hash()), nil
 }
 
-func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
+func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
 	txHash := rpc.TransactionToHashString(tx.Transaction)
 
 	ob.WithLastTxScanned(txHash)
@@ -382,9 +384,6 @@ func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
 		"transaction.hash":           rpc.TransactionToHashString(tx.Transaction),
-		"transaction.ton.lt":         tx.Lt,
-		"transaction.ton.hash":       tx.Hash().Hex(),
-		"transaction.ton.block_id":   tx.BlockID.BlockID.String(),
 		"transaction.ton.is_inbound": tx.IsInbound(),
 		"transaction.ton.op_code":    tx.Operation,
 		"transaction.ton.exit_code":  tx.ExitCode,

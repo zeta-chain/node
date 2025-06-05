@@ -16,7 +16,6 @@ type tonRPC interface {
 	GetAccountState(ctx context.Context, acc ton.AccountID) (rpc.Account, error)
 	GetBlockHeader(ctx context.Context, blockID rpc.BlockIDExt) (rpc.BlockHeader, error)
 	GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error)
-	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
 	GetMasterchainInfo(ctx context.Context) (rpc.MasterchainInfo, error)
 	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
 	GetTransactions(

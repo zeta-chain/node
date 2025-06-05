@@ -36,7 +36,13 @@ type RPC interface {
 	GetMasterchainInfo(ctx context.Context) (rpc.MasterchainInfo, error)
 	HealthCheck(ctx context.Context) (time.Time, error)
 	GetTransactionsSince(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) ([]ton.Transaction, error)
-	GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error)
+	GetTransactions(
+		ctx context.Context,
+		count uint32,
+		accountID ton.AccountID,
+		lt uint64,
+		hash ton.Bits256,
+	) ([]ton.Transaction, error)
 	GetTransaction(ctx context.Context, acc ton.AccountID, lt uint64, hash ton.Bits256) (ton.Transaction, error)
 }
 

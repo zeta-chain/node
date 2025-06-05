@@ -2,12 +2,9 @@ package signer
 
 import (
 	"context"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/liteclient"
 	"github.com/tonkeeper/tongo/ton"
 
 	"github.com/zeta-chain/node/pkg/coin"
@@ -172,31 +169,14 @@ func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonc
 	return nil
 }
 
-// Sample (from local ton):
-// error code: 0 message: cannot apply external message to current state:
-// External message was not accepted Cannot run message on account:
-// inbound external message rejected by transaction ...: exitcode=109, steps=108, gas_used=0\
-// VM Log (truncated): ...
-var exitCodeErrorRegex = regexp.MustCompile(`exitcode=(\d+)`)
-
 // handleSendError tries to figure out the reason of the send error.
 func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[string]any) (Outcome, error) {
 	if err != nil {
 		// Might be possible if 2 concurrent zeta clients
 		// are trying to broadcast the same message.
-		if strings.Contains(err.Error(), "duplicate message") {
+		if strings.Contains(err.Error(), "duplicate") {
 			s.Logger().Std.Warn().Fields(logFields).Msg("Message already sent")
 			return Invalid, nil
-		}
-
-		var errLiteClient liteclient.LiteServerErrorC
-		if errors.As(err, &errLiteClient) {
-			logFields["outbound.error.message"] = errLiteClient.Message
-			exitCode = errLiteClient.Code
-		}
-
-		if code, ok := extractExitCode(err.Error()); ok {
-			exitCode = code
 		}
 	}
 
@@ -212,20 +192,6 @@ func (s *Signer) handleSendError(exitCode uint32, err error, logFields map[strin
 	default:
 		return Fail, errors.Errorf("unable to send external message: exit code %d", exitCode)
 	}
-}
-
-func extractExitCode(text string) (uint32, bool) {
-	match := exitCodeErrorRegex.FindStringSubmatch(text)
-	if len(match) < 2 {
-		return 0, false
-	}
-
-	exitCode, err := strconv.ParseUint(match[1], 10, 32)
-	if err != nil {
-		return 0, false
-	}
-
-	return uint32(exitCode), true
 }
 
 // GetGatewayAddress returns gateway address as raw TON address "0:ABC..."

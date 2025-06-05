@@ -48,49 +48,27 @@ type Account struct {
 func (acc *Account) UnmarshalJSON(data []byte) error {
 	items := gjson.GetManyBytes(
 		data,
-		"address.account_address",
+		"state",
 		"balance",
+		"code",
+		"data",
+		"frozen_hash",
 		"last_transaction_id.lt",
 		"last_transaction_id.hash",
-		"account_state.@type",
-		"account_state.frozen_hash",
-		"account_state.code",
-		"account_state.data",
 	)
 
 	var (
-		addrRaw       = items[0].String()
-		balanceRaw    = items[1].String()
-		ltRaw         = items[2].String()
-		hashRaw       = items[3].String()
-		stateRaw      = items[4].String()
-		frozenHashRaw = items[5].String()
-		codeRaw       = items[6].String()
-		dataRaw       = items[7].String()
+		state      = items[0].String()
+		balance    = items[1].Uint()
+		codeRaw    = items[2].String()
+		dataRaw    = items[3].String()
+		frozenHash = items[4].String()
+		lt         = items[5].Uint()
+		hashRaw    = items[6].String()
+		err        error
 	)
 
-	id, err := ton.ParseAccountID(addrRaw)
-	if err != nil {
-		return errors.Wrapf(err, "unable to parse account id from %q", addrRaw)
-	}
-
-	acc.ID = id
-
-	if balanceRaw != "-1" {
-		acc.Balance = items[1].Uint()
-	}
-
-	switch {
-	case ltRaw == "0" && strings.Contains(stateRaw, "uninit"):
-		acc.Status = tlb.AccountNone
-		return nil
-	case strings.Contains(stateRaw, "uninit"):
-		acc.Status = tlb.AccountUninit
-	case stateRaw == "raw.accountState":
-		acc.Status = tlb.AccountActive
-	case frozenHashRaw != "":
-		acc.Status = tlb.AccountFrozen
-	}
+	acc.Balance = balance
 
 	if codeRaw != "" {
 		acc.Code, err = cellFromBase64(codeRaw)
@@ -106,13 +84,24 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	switch {
+	case frozenHash != "":
+		acc.Status = tlb.AccountFrozen
+	case strings.Contains(state, "uninit"):
+		acc.Status = tlb.AccountUninit
+	case state == "active":
+		acc.Status = tlb.AccountActive
+	default:
+		return errors.New("unable to parse account status")
+	}
+
 	hashBytes, err := base64.StdEncoding.DecodeString(hashRaw)
 	if err != nil {
 		return errors.Wrapf(err, "unable to decode last tx hash from %q", hashRaw)
 	}
 
 	copy(acc.LastTxHash[:], hashBytes)
-	acc.LastTxLT = items[2].Uint()
+	acc.LastTxLT = lt
 
 	return nil
 }

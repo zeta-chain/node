@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/tlb"
@@ -22,63 +21,6 @@ func TestInbound(t *testing.T) {
 
 		_, err := New(ts.baseObserver, ts.rpc, nil)
 		require.Error(t, err)
-	})
-
-	t.Run("Ensure last scanned tx", func(t *testing.T) {
-		t.Run("Unable to get first tx", func(t *testing.T) {
-			// ARRANGE
-			ts := newTestSuite(t)
-
-			// Given observer
-			ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
-			require.NoError(t, err)
-
-			// Given mocked lite client call
-			ts.OnGetFirstTransaction(ts.gateway.AccountID(), nil, 0, errors.New("oops")).Once()
-
-			// ACT
-			// Observe inbounds once
-			err = ob.ObserveInbound(ts.ctx)
-
-			// ASSERT
-			assert.ErrorContains(t, err, "unable to ensure last scanned tx")
-			assert.Empty(t, ob.LastTxScanned())
-		})
-
-		t.Run("All good", func(t *testing.T) {
-			// ARRANGE
-			ts := newTestSuite(t)
-
-			// Given mocked lite client calls
-			firstTX := sample.TONDonation(t, ts.gateway.AccountID(), toncontracts.Donation{
-				Sender: sample.GenerateTONAccountID(),
-				Amount: tonCoins(t, "1"),
-			})
-
-			ts.OnGetFirstTransaction(ts.gateway.AccountID(), &firstTX, 0, nil).Once()
-			ts.OnGetTransactionsSince(ts.gateway.AccountID(), firstTX.Lt, txHash(firstTX), nil, nil).Once()
-
-			// Given observer
-			ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
-			require.NoError(t, err)
-
-			// ACT
-			// Observe inbounds once
-			err = ob.ObserveInbound(ts.ctx)
-
-			// ASSERT
-			assert.NoError(t, err)
-
-			// Check that last scanned tx is set and is valid
-			lastScanned, err := ob.ReadLastTxScannedFromDB()
-			assert.NoError(t, err)
-			assert.Equal(t, ob.LastTxScanned(), lastScanned)
-
-			lt, hash, err := rpc.TransactionHashFromString(lastScanned)
-			assert.NoError(t, err)
-			assert.Equal(t, firstTX.Lt, lt)
-			assert.Equal(t, firstTX.Hash().Hex(), hash.Hex())
-		})
 	})
 
 	t.Run("Donation", func(t *testing.T) {
@@ -141,7 +83,6 @@ func TestInbound(t *testing.T) {
 			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
-		ts.MockGetBlockHeader(depositTX.BlockID)
 		ts.MockGetCctxByHash()
 
 		// ACT
@@ -171,11 +112,7 @@ func TestInbound(t *testing.T) {
 		// Check hash & block height
 		expectedHash := rpc.TransactionHashToString(depositTX.Lt, txHash(depositTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
-
-		blockInfo, err := ts.rpc.GetBlockHeader(ts.ctx, castBlockID(depositTX.BlockID))
-		require.NoError(t, err)
-
-		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
+		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})
 
 	t.Run("Deposit and call", func(t *testing.T) {
@@ -206,7 +143,6 @@ func TestInbound(t *testing.T) {
 			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
-		ts.MockGetBlockHeader(depositAndCallTX.BlockID)
 		ts.MockGetCctxByHash()
 
 		// ACT
@@ -236,11 +172,7 @@ func TestInbound(t *testing.T) {
 		// Check hash & block height
 		expectedHash := rpc.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
-
-		blockInfo, err := ts.rpc.GetBlockHeader(ts.ctx, castBlockID(depositAndCallTX.BlockID))
-		require.NoError(t, err)
-
-		assert.Equal(t, uint64(blockInfo.MinRefMcSeqno), cctx.InboundBlockHeight)
+		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})
 
 	t.Run("Deposit restricted", func(t *testing.T) {
@@ -394,9 +326,6 @@ func TestInbound(t *testing.T) {
 			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
 			Once()
 
-		for _, tx := range txs {
-			ts.MockGetBlockHeader(tx.BlockID)
-		}
 		ts.MockGetCctxByHash()
 
 		// ACT
@@ -455,7 +384,6 @@ func TestInboundTracker(t *testing.T) {
 
 	txDeposit := sample.TONDeposit(t, ts.gateway.AccountID(), deposit)
 	ts.MockGetTransaction(ts.gateway.AccountID(), txDeposit)
-	ts.MockGetBlockHeader(txDeposit.BlockID)
 
 	// Should be skipped (I doubt anyone would vote for this gov proposal, but let’s still put up rail guards)
 	txWithdrawal := sample.TONWithdrawal(t, ts.gateway.AccountID(), toncontracts.Withdrawal{
@@ -464,7 +392,6 @@ func TestInboundTracker(t *testing.T) {
 		Seqno:     1,
 	})
 	ts.MockGetTransaction(ts.gateway.AccountID(), txWithdrawal)
-	ts.MockGetBlockHeader(txWithdrawal.BlockID)
 
 	// Given inbound trackers from zetacore
 	trackers := []cc.InboundTracker{

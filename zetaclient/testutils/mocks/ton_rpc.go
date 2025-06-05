@@ -107,43 +107,6 @@ func (_m *TONRPC) GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, 
 	return r0, r1
 }
 
-// GetFirstTransaction provides a mock function with given fields: ctx, acc
-func (_m *TONRPC) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
-	ret := _m.Called(ctx, acc)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetFirstTransaction")
-	}
-
-	var r0 *ton.Transaction
-	var r1 int
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) (*ton.Transaction, int, error)); ok {
-		return rf(ctx, acc)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, ton.AccountID) *ton.Transaction); ok {
-		r0 = rf(ctx, acc)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ton.Transaction)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, ton.AccountID) int); ok {
-		r1 = rf(ctx, acc)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	if rf, ok := ret.Get(2).(func(context.Context, ton.AccountID) error); ok {
-		r2 = rf(ctx, acc)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetMasterchainInfo provides a mock function with given fields: ctx
 func (_m *TONRPC) GetMasterchainInfo(ctx context.Context) (rpc.MasterchainInfo, error) {
 	ret := _m.Called(ctx)
