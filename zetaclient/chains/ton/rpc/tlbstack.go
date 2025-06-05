@@ -19,7 +19,7 @@ import (
 // it supports: "num" (hex) and "cell" (base64) for input arguments. however we only support "num" due to
 // awful encoding logic in tvm_valuetypes. Not an issue, since observer-signer doesn't need this feature,
 // only e2e tests need it.
-func marshalVmStack(stack tlb.VmStack) ([][]any, error) {
+func marshalStack(stack tlb.VmStack) ([][]any, error) {
 	items := make([][]any, len(stack))
 
 	for i, arg := range stack {

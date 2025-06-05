@@ -327,7 +327,7 @@ func (c *Client) RunSmcMethod(
 	method string,
 	stack tlb.VmStack,
 ) (uint32, tlb.VmStack, error) {
-	stackEncoded, err := marshalVmStack(stack)
+	stackEncoded, err := marshalStack(stack)
 	if err != nil {
 		return 0, tlb.VmStack{}, errors.Wrapf(err, "unable to marshal stack")
 	}

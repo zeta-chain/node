@@ -390,6 +390,7 @@ func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	}
 }
 
+//nolint:unused // used for in tests
 func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
 	return rpc.BlockIDExt{
 		Workchain: int(id.Workchain),

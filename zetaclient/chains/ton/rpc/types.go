@@ -106,6 +106,34 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ToShardAccount partially converts Account to tongo's tlb.ShardAccount
+func (acc *Account) ToShardAccount() tlb.ShardAccount {
+	if acc.Status == tlb.AccountNone {
+		return tlb.ShardAccount{
+			Account: tlb.Account{SumType: "AccountNone"},
+		}
+	}
+
+	return tlb.ShardAccount{
+		Account: tlb.Account{
+			SumType: "Account",
+			Account: tlb.ExistedAccount{
+				Addr:        acc.ID.ToMsgAddress(),
+				StorageStat: tlb.StorageInfo{},
+				Storage: tlb.AccountStorage{
+					State:       tlbAccountState(acc),
+					LastTransLt: acc.LastTxLT,
+					Balance: tlb.CurrencyCollection{
+						Grams: tlb.Grams(acc.Balance),
+					},
+				},
+			},
+		},
+		LastTransHash: acc.LastTxHash,
+		LastTransLt:   acc.LastTxLT,
+	}
+}
+
 // takes base64 encoded BOC and decodes it into v
 func unmarshalFromBase64(b64 string, v any) error {
 	cell, err := cellFromBase64(b64)
@@ -198,34 +226,6 @@ func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
 	}
 
 	return lt, hashBits, nil
-}
-
-// ToShardAccount partially converts Account to tongo's tlb.ShardAccount
-func (a *Account) ToShardAccount() tlb.ShardAccount {
-	if a.Status == tlb.AccountNone {
-		return tlb.ShardAccount{
-			Account: tlb.Account{SumType: "AccountNone"},
-		}
-	}
-
-	return tlb.ShardAccount{
-		Account: tlb.Account{
-			SumType: "Account",
-			Account: tlb.ExistedAccount{
-				Addr:        a.ID.ToMsgAddress(),
-				StorageStat: tlb.StorageInfo{},
-				Storage: tlb.AccountStorage{
-					State:       tlbAccountState(a),
-					LastTransLt: a.LastTxLT,
-					Balance: tlb.CurrencyCollection{
-						Grams: tlb.Grams(a.Balance),
-					},
-				},
-			},
-		},
-		LastTransHash: a.LastTxHash,
-		LastTransLt:   a.LastTxLT,
-	}
 }
 
 func tlbAccountState(a *Account) tlb.AccountState {
