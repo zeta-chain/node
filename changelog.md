@@ -7,6 +7,11 @@
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
 * [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 
+### Fixes
+
+* [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
+* [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
+
 ## v31.0.0
 
 ### Breaking Changes
