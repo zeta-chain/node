@@ -210,3 +210,66 @@ func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
 
 	return lt, hashBits, nil
 }
+
+// ToShardAccount partially converts Account to tongo's tlb.ShardAccount
+func (a *Account) ToShardAccount() tlb.ShardAccount {
+	if a.Status == tlb.AccountNone {
+		return tlb.ShardAccount{
+			Account: tlb.Account{SumType: "AccountNone"},
+		}
+	}
+
+	return tlb.ShardAccount{
+		Account: tlb.Account{
+			SumType: "Account",
+			Account: tlb.ExistedAccount{
+				Addr:        a.ID.ToMsgAddress(),
+				StorageStat: tlb.StorageInfo{},
+				Storage: tlb.AccountStorage{
+					State:       tlbAccountState(a),
+					LastTransLt: a.LastTxLT,
+					Balance: tlb.CurrencyCollection{
+						Grams: tlb.Grams(a.Balance),
+					},
+				},
+			},
+		},
+		LastTransHash: a.LastTxHash,
+		LastTransLt:   a.LastTxLT,
+	}
+}
+
+func tlbAccountState(a *Account) tlb.AccountState {
+	switch a.Status {
+	case tlb.AccountActive:
+		return tlb.AccountState{
+			SumType: "AccountActive",
+			AccountActive: struct {
+				StateInit tlb.StateInit
+			}{
+				StateInit: tlb.StateInit{
+					Code: wrapCell(a.Code),
+					Data: wrapCell(a.Data),
+				},
+			},
+		}
+	case tlb.AccountFrozen:
+		return tlb.AccountState{SumType: "AccountFrozen"}
+	case tlb.AccountUninit:
+		return tlb.AccountState{SumType: "AccountUninit"}
+	default:
+		// should not happen
+		return tlb.AccountState{}
+	}
+}
+
+func wrapCell(v *boc.Cell) tlb.Maybe[tlb.Ref[boc.Cell]] {
+	if v == nil {
+		return tlb.Maybe[tlb.Ref[boc.Cell]]{}
+	}
+
+	return tlb.Maybe[tlb.Ref[boc.Cell]]{
+		Exists: true,
+		Value:  tlb.Ref[boc.Cell]{Value: *v},
+	}
+}

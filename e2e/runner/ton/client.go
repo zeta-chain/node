@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
@@ -132,65 +131,5 @@ func (a *tongoAdapter) GetAccountState(ctx context.Context, accountID ton.Accoun
 		return tlb.ShardAccount{}, err
 	}
 
-	return tlb.ShardAccount{
-		Account:       tlbAccountFromState(state),
-		LastTransHash: state.LastTxHash,
-		LastTransLt:   state.LastTxLT,
-	}, nil
-}
-
-func tlbAccountFromState(state rpc.Account) tlb.Account {
-	if state.Status == tlb.AccountNone {
-		return tlb.Account{SumType: "AccountNone"}
-	}
-
-	return tlb.Account{
-		SumType: "Account",
-		Account: tlb.ExistedAccount{
-			Addr:        state.ID.ToMsgAddress(),
-			StorageStat: tlb.StorageInfo{},
-			Storage: tlb.AccountStorage{
-				State:       tlbAccountState(state),
-				LastTransLt: state.LastTxLT,
-				Balance: tlb.CurrencyCollection{
-					Grams: tlb.Grams(state.Balance),
-				},
-			},
-		},
-	}
-}
-
-func tlbAccountState(state rpc.Account) tlb.AccountState {
-	switch state.Status {
-	case tlb.AccountActive:
-		return tlb.AccountState{
-			SumType: "AccountActive",
-			AccountActive: struct {
-				StateInit tlb.StateInit
-			}{
-				StateInit: tlb.StateInit{
-					Code: wrapCell(state.Code),
-					Data: wrapCell(state.Data),
-				},
-			},
-		}
-	case tlb.AccountFrozen:
-		return tlb.AccountState{SumType: "AccountFrozen"}
-	case tlb.AccountUninit:
-		return tlb.AccountState{SumType: "AccountUninit"}
-	default:
-		// should not happen
-		return tlb.AccountState{}
-	}
-}
-
-func wrapCell(v *boc.Cell) tlb.Maybe[tlb.Ref[boc.Cell]] {
-	if v == nil {
-		return tlb.Maybe[tlb.Ref[boc.Cell]]{}
-	}
-
-	return tlb.Maybe[tlb.Ref[boc.Cell]]{
-		Exists: true,
-		Value:  tlb.Ref[boc.Cell]{Value: *v},
-	}
+	return state.ToShardAccount(), nil
 }

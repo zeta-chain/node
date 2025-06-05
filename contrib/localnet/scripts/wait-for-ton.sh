@@ -1,7 +1,7 @@
 #!/bin/bash
 
 timeout_seconds=300 # 5 minutes
-poll_interval=5     # Check every 5 seconds
+poll_interval=2 # 2 seconds
 
 ton_status_url="http://ton:8081/jsonRPC"
 
@@ -16,10 +16,10 @@ check_ton_status() {
     fi
 
     if echo "$response" | jq -e '.ok == true' > /dev/null 2>&1; then
-        echo "Pass: TON node responded with ok=true"
+        echo "Pass: successful response received"
         return 0
     else
-        echo "Waiting: Response received but ok!=true"
+        echo "Waiting: unsuccessful response received"
         return 1
     fi
 }

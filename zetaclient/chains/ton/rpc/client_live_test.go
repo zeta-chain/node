@@ -60,6 +60,9 @@ func TestLiveClient(t *testing.T) {
 			require.NotZero(t, acc.LastTxLT)
 
 			t.Logf("account: %+v", acc)
+
+			tlbAcc := acc.ToShardAccount()
+			require.Equal(t, tlb.AccountActive, tlbAcc.Account.Status())
 		})
 
 		t.Run("NotExists", func(t *testing.T) {
@@ -75,6 +78,9 @@ func TestLiveClient(t *testing.T) {
 			require.Empty(t, acc.LastTxLT)
 
 			t.Logf("account: %+v", acc)
+
+			tlbAcc := acc.ToShardAccount()
+			require.Equal(t, tlb.AccountNone, tlbAcc.Account.Status())
 		})
 	})
 
