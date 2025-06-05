@@ -33,7 +33,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsValidObserver", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 
 		msg := types.MsgAddInboundTracker{
 			Creator:  nonAdmin,
@@ -86,7 +86,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsValidObserver", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 
 		setSupportedChain(ctx, zk, chainID)
 
@@ -118,7 +118,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsValidObserver", mock.Anything, mock.Anything).Return(nil)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		msg := types.MsgAddInboundTracker{
 			Creator:  admin,

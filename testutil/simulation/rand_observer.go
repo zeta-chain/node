@@ -36,7 +36,7 @@ func GetRandomAccountAndObserver(
 		if !foundNodeAccount {
 			return false
 		}
-		return k.IsValidObserver(ctx, randomObserver) == nil
+		return k.CheckObserverCanVote(ctx, randomObserver) == nil
 	})
 
 	if !foundObserver {

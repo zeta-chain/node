@@ -43,8 +43,8 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
-// IsValidObserver checks if the address is a valid observer
-func (k Keeper) IsValidObserver(ctx sdk.Context, address string) error {
+// CheckObserverCanVote checks if the address is a valid observer
+func (k Keeper) CheckObserverCanVote(ctx sdk.Context, address string) error {
 	isActiveObserver := k.IsAddressPartOfObserverSet(ctx, address)
 	if !isActiveObserver {
 		return sdkerrors.Wrapf(types.ErrNotObserver, "address is not part of the observer set: %s", address)

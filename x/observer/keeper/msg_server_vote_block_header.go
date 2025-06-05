@@ -27,7 +27,7 @@ func (k msgServer) VoteBlockHeader(
 			"%s, ChainID %d", voteBlockHeaderID, msg.ChainId)
 	}
 
-	err := k.IsValidObserver(ctx, msg.Creator)
+	err := k.CheckObserverCanVote(ctx, msg.Creator)
 	if err != nil {
 		return nil, err
 	}

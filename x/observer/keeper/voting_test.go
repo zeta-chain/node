@@ -72,7 +72,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
-		require.NoError(t, k.IsValidObserver(ctx, accAddressOfValidator.String()))
+		require.NoError(t, k.CheckObserverCanVote(ctx, accAddressOfValidator.String()))
 	})
 
 	t.Run("not authorized if the observer address is invalid", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{invalidAddress},
 		})
-		require.ErrorIs(t, k.IsValidObserver(ctx, invalidAddress), types.ErrInvalidAddress)
+		require.ErrorIs(t, k.CheckObserverCanVote(ctx, invalidAddress), types.ErrInvalidAddress)
 	})
 
 	t.Run("not authorized for jailed observer", func(t *testing.T) {
@@ -102,7 +102,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		err = k.CheckObserverCanVote(ctx, accAddressOfValidator.String())
 		require.ErrorIs(t, err, types.ErrValidatorJailed)
 	})
 
@@ -123,7 +123,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		err = k.CheckObserverCanVote(ctx, accAddressOfValidator.String())
 		require.ErrorIs(t, err, types.ErrValidatorStatus)
 	})
 
@@ -153,7 +153,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		err = k.CheckObserverCanVote(ctx, accAddressOfValidator.String())
 		require.ErrorIs(t, err, types.ErrValidatorTombstoned)
 	})
 
@@ -183,7 +183,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		err = k.IsValidObserver(ctx, accAddressOfValidator.String())
+		err = k.CheckObserverCanVote(ctx, accAddressOfValidator.String())
 		require.ErrorIs(t, err, types.ErrNotValidator)
 	})
 

@@ -55,7 +55,7 @@ type ObserverKeeper interface {
 		observationType observertypes.VoteType,
 	) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
-	IsValidObserver(ctx sdk.Context, address string) error
+	CheckObserverCanVote(ctx sdk.Context, address string) error
 	FindBallot(
 		ctx sdk.Context,
 		index string,

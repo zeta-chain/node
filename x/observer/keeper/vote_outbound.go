@@ -33,7 +33,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	}
 
 	// check if voter is authorized
-	err = k.IsValidObserver(ctx, voter)
+	err = k.CheckObserverCanVote(ctx, voter)
 	if err != nil {
 		return false, false, ballot, "", err
 	}

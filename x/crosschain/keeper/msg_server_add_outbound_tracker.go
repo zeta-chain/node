@@ -56,7 +56,7 @@ func (k msgServer) AddOutboundTracker(
 	// or an observer
 	var (
 		isAuthorizedPolicy = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil
-		isObserver         = k.GetObserverKeeper().IsValidObserver(ctx, msg.Creator) == nil
+		isObserver         = k.GetObserverKeeper().CheckObserverCanVote(ctx, msg.Creator) == nil
 	)
 
 	if !(isAuthorizedPolicy || isObserver) {

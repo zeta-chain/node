@@ -109,6 +109,24 @@ func (_m *CrosschainObserverKeeper) CheckIfTssPubkeyHasBeenGenerated(ctx types.C
 	return r0, r1
 }
 
+// CheckObserverCanVote provides a mock function with given fields: ctx, address
+func (_m *CrosschainObserverKeeper) CheckObserverCanVote(ctx types.Context, address string) error {
+	ret := _m.Called(ctx, address)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckObserverCanVote")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, string) error); ok {
+		r0 = rf(ctx, address)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // FindBallot provides a mock function with given fields: ctx, index, chain, observationType
 func (_m *CrosschainObserverKeeper) FindBallot(ctx types.Context, index string, chain chains.Chain, observationType observertypes.ObservationType) (observertypes.Ballot, bool, error) {
 	ret := _m.Called(ctx, index, chain, observationType)
@@ -675,24 +693,6 @@ func (_m *CrosschainObserverKeeper) IsInboundEnabled(ctx types.Context) bool {
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// IsValidObserver provides a mock function with given fields: ctx, address
-func (_m *CrosschainObserverKeeper) IsValidObserver(ctx types.Context, address string) error {
-	ret := _m.Called(ctx, address)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsValidObserver")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, string) error); ok {
-		r0 = rf(ctx, address)
-	} else {
-		r0 = ret.Error(0)
 	}
 
 	return r0

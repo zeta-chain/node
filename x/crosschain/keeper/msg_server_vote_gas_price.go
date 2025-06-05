@@ -30,7 +30,7 @@ func (k msgServer) VoteGasPrice(
 		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "chain id %d", msg.ChainId)
 	}
 
-	err := k.zetaObserverKeeper.IsValidObserver(ctx, msg.Creator)
+	err := k.zetaObserverKeeper.CheckObserverCanVote(ctx, msg.Creator)
 	if err != nil {
 		return nil, err
 	}

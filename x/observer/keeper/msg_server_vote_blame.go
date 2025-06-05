@@ -24,7 +24,7 @@ func (k msgServer) VoteBlame(
 		return nil, sdkerrors.Wrapf(cctypes.ErrUnsupportedChain, "%s, ChainID %d", voteBlameID, msg.ChainId)
 	}
 
-	err := k.IsValidObserver(ctx, msg.Creator)
+	err := k.CheckObserverCanVote(ctx, msg.Creator)
 	if err != nil {
 		return nil, err
 	}
