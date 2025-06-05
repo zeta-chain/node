@@ -159,7 +159,7 @@ func reportPreflightMetricsTON(ctx context.Context, app *zctx.AppContext, chain 
 		return nil
 	}
 
-	client := tonrpc.New(cfg.RPC, chain.ChainId)
+	client := tonrpc.New(cfg.Endpoint, chain.ChainId)
 
 	blockTime, err := client.HealthCheck(ctx)
 	if err != nil {

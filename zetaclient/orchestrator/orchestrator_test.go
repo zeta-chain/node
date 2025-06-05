@@ -279,7 +279,7 @@ func newAppContext(
 		case chains.IsSolanaChain(c.ChainId, nil):
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
 		case chains.IsTONChain(c.ChainId, nil):
-			cfg.TONConfig = config.TONConfig{RPC: "localhost"}
+			cfg.TONConfig = config.TONConfig{Endpoint: "localhost"}
 		case chains.IsSuiChain(c.ChainId, nil):
 			cfg.SuiConfig = config.SuiConfig{Endpoint: "localhost"}
 		default:

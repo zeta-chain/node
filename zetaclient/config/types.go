@@ -62,9 +62,8 @@ type SuiConfig struct {
 
 // TONConfig is the config for TON chain
 type TONConfig struct {
-	// RPC url (toncenter V2 api)
-	// https://toncenter.com/api/v2/
-	RPC string `json:"rpc"`
+	// Endpoint url (toncenter V2 api) e.g. https://toncenter.com/api/v2/
+	Endpoint string `mask:"filled"`
 }
 
 // ComplianceConfig is the config for compliance

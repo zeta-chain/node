@@ -249,16 +249,16 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 
 	gw := toncontracts.NewGateway(gatewayID)
 
-	if cfg.RPC == "" {
+	if cfg.Endpoint == "" {
 		return nil, errors.New("rpc url is empty")
 	}
 
-	rpcClient, err := metrics.GetInstrumentedHTTPClient(cfg.RPC)
+	rpcClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create instrumented rpc client")
 	}
 
-	rpc := tonrpc.New(cfg.RPC, chain.ID(), tonrpc.WithHTTPClient(rpcClient))
+	rpc := tonrpc.New(cfg.Endpoint, chain.ID(), tonrpc.WithHTTPClient(rpcClient))
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {

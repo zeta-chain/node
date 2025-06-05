@@ -58,7 +58,7 @@ func suiConfigLocalnet() SuiConfig {
 
 func tonConfigLocalnet() TONConfig {
 	return TONConfig{
-		RPC: "http://ton:8081",
+		Endpoint: "http://ton:8081",
 	}
 }
 
