@@ -11,6 +11,10 @@
 * [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
 * [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
 
+### Refactor
+
+* [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
+
 ## v31.0.0
 
 ### Breaking Changes
@@ -49,7 +53,6 @@
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 * [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
 * [3848](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
-* [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 
 ### Fixes
 
