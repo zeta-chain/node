@@ -12,7 +12,6 @@ import (
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -103,11 +102,11 @@ func TestLiveClient(t *testing.T) {
 
 	t.Run("GetConfigParam", func(t *testing.T) {
 		// Get gas config
-		gasLimitPrices, err := config.FetchGasConfigRPC(ctx, client)
+		gasLimitPrices, err := FetchGasConfigRPC(ctx, client)
 		require.NoError(t, err)
 
 		// Parse it
-		gasPrice, err := config.ParseGasPrice(gasLimitPrices)
+		gasPrice, err := ParseGasPrice(gasLimitPrices)
 		require.NoError(t, err)
 
 		t.Logf("gasPrice: %d", gasPrice)

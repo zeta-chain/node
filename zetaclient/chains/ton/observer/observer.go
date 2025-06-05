@@ -7,11 +7,11 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
+	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/ton"
 
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
@@ -31,7 +31,7 @@ type Observer struct {
 const outboundsCacheSize = 1024
 
 type RPC interface {
-	config.RPCGetter
+	GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error)
 	GetBlockHeader(ctx context.Context, blockID rpc.BlockIDExt) (rpc.BlockHeader, error)
 	GetMasterchainInfo(ctx context.Context) (rpc.MasterchainInfo, error)
 	HealthCheck(ctx context.Context) (time.Time, error)
@@ -74,12 +74,12 @@ func New(bo *base.Observer, rpc RPC, gateway *toncontracts.Gateway) (*Observer, 
 
 // PostGasPrice fetches on-chain gas config and reports it to Zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
-	cfg, err := config.FetchGasConfigRPC(ctx, ob.rpc)
+	cfg, err := rpc.FetchGasConfigRPC(ctx, ob.rpc)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch gas config")
 	}
 
-	gasPrice, err := config.ParseGasPrice(cfg)
+	gasPrice, err := rpc.ParseGasPrice(cfg)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse gas price")
 	}
