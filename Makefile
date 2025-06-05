@@ -151,6 +151,8 @@ lint-pre:
 	@test -z $(gofmt -l .)
 	@GOFLAGS=$(GOFLAGS) go mod verify
 
+# Make sure LATEST golangci-lint is installed 
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
 lint: lint-pre
 	@golangci-lint run
 
@@ -160,12 +162,8 @@ lint-gosec:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
-###############################################################################
-###                           		Formatting			                    ###
-###############################################################################
-
 fmt:
-	@bash ./scripts/fmt.sh
+	@golangci-lint fmt
 
 ###############################################################################
 ###                           Generation commands  		                    ###
