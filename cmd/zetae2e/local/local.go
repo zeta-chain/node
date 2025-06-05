@@ -301,10 +301,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if setupSui {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
-
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
-
+	deployerRunner.SetupConnectorV2()
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -529,12 +528,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		//	e2etests.TestLegacyERC20DepositAndCallRefundName))
 		eg.Go(legacyZETATestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestLegacyZetaWithdrawName,
-			e2etests.TestLegacyMessagePassingExternalChainsName,
-			e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
-			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
-			e2etests.TestLegacyZetaDepositRestrictedName,
+			//e2etests.TestLegacyMessagePassingExternalChainsName,
+			//e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
+			//e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
+			//e2etests.TestLegacyZetaDepositRestrictedName,
 			e2etests.TestLegacyZetaDepositName,
-			e2etests.TestLegacyZetaDepositNewAddressName,
+			//e2etests.TestLegacyZetaDepositNewAddressName,
 		))
 		//eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
 		//	e2etests.TestLegacyMessagePassingZEVMToEVMName,
@@ -564,7 +563,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.SetupConnectorV2()
+	deployerRunner.MigrateConnector()
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.

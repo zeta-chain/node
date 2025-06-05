@@ -4,11 +4,13 @@ import (
 	"math/big"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/e2e/txserver"
+	"github.com/zeta-chain/node/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
@@ -193,8 +195,6 @@ func (r *E2ERunner) SetupConnectorV2() {
 		txZetaConnnectorNativeHash.Hash().Hex(),
 	)
 
-	r.MigrateConnector()
-
 	r.Logger.Print("ZetaConnectorNative contract address: %s", r.ConnectorNativeAddr.Hex())
 }
 
@@ -222,15 +222,38 @@ func (r *E2ERunner) MigrateConnector() {
 
 	r.Logger.Print("ZetaConnectorEth locked amount: %s", balance.String())
 
-	tx, err := r.ConnectorEth.OnReceive(
-		r.EVMAuth,
-		common.LeftPadBytes([]byte{}, 32), // Encoded zero address
-		big.NewInt(7001),                  // Chain ID 7001
-		r.ConnectorNativeAddr,             // ZetaConnectorNative (V2) address
-		big.NewInt(0).Mul(big.NewInt(10), big.NewInt(1e18)), // 10 ZETA
-		[]byte{}, // Empty message
-		crypto.Keccak256Hash([]byte("ZetaConnectorETH")), // Hash of "ZetaConnectorETH"
+	msgMigrateConnectorFunds := crosschaintypes.NewMsgMigrateConnectorFunds(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		chains.GoerliLocalnet.ChainId,
+		r.ConnectorNativeAddr.Hex(),
+		sdkmath.NewUintFromBigInt(balance),
 	)
+
+	res, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgMigrateConnectorFunds)
 	require.NoError(r, err)
-	ensureTxReceipt(tx, "ZetaConnectorEth OnReceive failed")
+
+	event, ok := txserver.EventOfType[*crosschaintypes.EventConnectorFundsMigration](res.Events)
+	require.True(r, ok, "no EventERC20CustodyFundsMigration in %s", res.TxHash)
+
+	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: event.CctxIndex})
+	require.NoError(r, err)
+
+	cctx := cctxRes.CrossChainTx
+	r.Logger.CCTX(*cctx, "migration")
+
+	// wait for the cctx to be mined
+	r.WaitForMinedCCTXFromIndex(event.CctxIndex)
+
+	r.Logger.Print("CCTX %s migrated to new connector %s", cctx.Index, r.ConnectorNativeAddr.Hex())
+
+	// check if the new connector has the funds
+	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
+	require.NoError(r, err, "BalanceOf failed for new connector")
+
+	// Verify that the migration was successful
+	require.Equal(r, balance, newConnectorBalance,
+		"Migration failed: old connector balance (%s) != new connector balance (%s)",
+		balance.String(), newConnectorBalance.String())
+
+	r.Logger.Print("✅ Migration verification successful: %s ZETA tokens migrated", newConnectorBalance.String())
 }

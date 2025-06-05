@@ -72,6 +72,41 @@ func MigrateERC20CustodyFundsCmdCCTX(
 	)
 }
 
+func MigrateConnectorFundsCmdCCTX(
+	creator string,
+	v1ConnectorContractAddress string,
+	v2ConnectorContractAddress string,
+	chainID int64,
+	amount sdkmath.Uint,
+	gasPrice string,
+	priorityFee string,
+	tssPubKey string,
+	currentNonce uint64,
+) CrossChainTx {
+	indexString := GetConnectorsMigrationCCTXIndexString(tssPubKey, currentNonce, chainID)
+	hash := crypto.Keccak256Hash([]byte(indexString))
+
+	return newCmdCCTX(
+		creator,
+		hash.Hex(),
+		fmt.Sprintf(
+			"%s:%s,%s",
+			constant.CmdMigrateConnectorFunds,
+			v2ConnectorContractAddress,
+			amount.String(),
+		),
+		creator,
+		hash.Hex(),
+		v1ConnectorContractAddress,
+		chainID,
+		sdkmath.NewUint(0),
+		100_000,
+		gasPrice,
+		priorityFee,
+		tssPubKey,
+	)
+}
+
 // GetERC20CustodyMigrationCCTXIndexString returns the index string of the CCTX for migrating ERC20 custody funds
 func GetERC20CustodyMigrationCCTXIndexString(
 	tssPubKey string,
@@ -80,6 +115,15 @@ func GetERC20CustodyMigrationCCTXIndexString(
 	erc20Address string,
 ) string {
 	return fmt.Sprintf("%s-%s-%d-%d-%s", constant.CmdMigrateERC20CustodyFunds, tssPubKey, nonce, chainID, erc20Address)
+}
+
+// GetConnectorsMigrationCCTXIndexString returns the index string of the CCTX for migrating connector funds
+func GetConnectorsMigrationCCTXIndexString(
+	tssPubKey string,
+	nonce uint64,
+	chainID int64,
+) string {
+	return fmt.Sprintf("%s-%s-%d-%d", constant.CmdMigrateConnectorFunds, tssPubKey, nonce, chainID)
 }
 
 // UpdateERC20CustodyPauseStatusCmdCCTX returns a CCTX allowing to update the pause status of the ERC20 custody contract
