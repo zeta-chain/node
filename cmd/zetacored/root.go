@@ -320,10 +320,7 @@ func (ac appCreator) appExport(
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
-	loadLatest := false
-	if height == -1 {
-		loadLatest = true
-	}
+	loadLatest := height == -1
 
 	zetaApp = app.New(
 		logger,

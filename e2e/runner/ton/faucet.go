@@ -9,7 +9,7 @@ import (
 
 // Faucet represents the faucet information.
 //
-//nolint:revive,stylecheck // comes from my-local-ton
+//nolint:revive // comes from my-local-ton
 type Faucet struct {
 	InitialBalance   int64  `json:"initialBalance"`
 	PrivateKey       string `json:"privateKey"`
