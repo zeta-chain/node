@@ -12,6 +12,8 @@ type ConfigGetter interface {
 	GetConfigParam(ctx context.Context, index uint32) (*boc.Cell, error)
 }
 
+// FetchGasConfigRPC query chain's config params and extract gas prices.
+// Gas prices can be changes only by gov proposal (ie infrequently).
 func FetchGasConfigRPC(ctx context.Context, rpc ConfigGetter) (tlb.GasLimitsPrices, error) {
 	// https://docs.ton.org/develop/howto/blockchain-configs
 	// https://tonviewer.com/config#21

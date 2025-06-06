@@ -36,7 +36,7 @@ const (
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	lt, hashBits, err := ob.ensureLastScannedTx(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get last scanned tx")
+		return errors.Wrap(err, "unable to get last scanned tx")
 	}
 
 	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)

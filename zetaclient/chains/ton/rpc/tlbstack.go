@@ -25,7 +25,6 @@ const (
 // due to awful encoding logic in tvm_valuetypes. Not an issue, since observer-signer doesn't need this feature,
 // only e2e tests need it.
 func marshalStack(stack tlb.VmStack) ([][]any, error) {
-
 	items := make([][]any, len(stack))
 
 	for i, arg := range stack {

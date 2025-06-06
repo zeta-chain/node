@@ -336,7 +336,7 @@ func (c *Client) RunSmcMethod(
 ) (uint32, tlb.VmStack, error) {
 	stackEncoded, err := marshalStack(stack)
 	if err != nil {
-		return 0, tlb.VmStack{}, errors.Wrapf(err, "unable to marshal stack")
+		return 0, tlb.VmStack{}, errors.Wrap(err, "unable to marshal stack")
 	}
 
 	// https://testnet.toncenter.com/api/v2/#/run%20method/run_get_method_runGetMethod_post
