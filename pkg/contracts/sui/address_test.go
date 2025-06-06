@@ -78,7 +78,7 @@ func TestDecodeAddress(t *testing.T) {
 	}
 }
 
-func TestValidSuiAddress(t *testing.T) {
+func TestValidateAddress(t *testing.T) {
 	tests := []struct {
 		name    string
 		address string
