@@ -111,7 +111,7 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 
 	rawTX, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
-		return errors.Wrap(err, "unable to get transaction form liteapi")
+		return errors.Wrap(err, "unable to get transaction")
 	}
 
 	tx, err := ob.gateway.ParseTransaction(rawTX)

@@ -12,22 +12,28 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 )
 
+const (
+	typeTinyInt = "VmStkTinyInt"
+	typeInt     = "VmStkInt"
+)
+
 // toncenter api uses toncenter/pytonlib which relies on toncenter/tvm_valuetypes.
 // by looking at its sources, we can partially mimic the logic
 // https://github.com/toncenter/tvm_valuetypes/blob/55b910782eceee5824bc01c3d280905c1432be9d/tvm_valuetypes/cell.py#L437-L445
 //
-// it supports: "num" (hex) and "cell" (base64) for input arguments. however we only support "num" due to
-// awful encoding logic in tvm_valuetypes. Not an issue, since observer-signer doesn't need this feature,
+// it supports: "num" (hex) and "cell" (base64) for input arguments. however we only support "num"
+// due to awful encoding logic in tvm_valuetypes. Not an issue, since observer-signer doesn't need this feature,
 // only e2e tests need it.
 func marshalStack(stack tlb.VmStack) ([][]any, error) {
+
 	items := make([][]any, len(stack))
 
 	for i, arg := range stack {
 		switch {
-		case arg.SumType == "VmStkTinyInt":
+		case arg.SumType == typeTinyInt:
 			items[i] = []any{"num", fmt.Sprintf("%d", arg.VmStkTinyInt)}
 
-		case arg.SumType == "VmStkInt":
+		case arg.SumType == typeInt:
 			bi := big.Int(arg.VmStkInt)
 			items[i] = []any{"num", "0x" + bi.Text(16)}
 

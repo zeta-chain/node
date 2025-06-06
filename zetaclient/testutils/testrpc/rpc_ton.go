@@ -12,7 +12,7 @@ type TONServer struct {
 	Endpoint string
 }
 
-// NewSuiServer creates a new SuiServer.
+// NewTONServer creates a new TONServer.
 func NewTONServer(t *testing.T) (*TONServer, config.TONConfig) {
 	rpc, endpoint := New(t, "TON")
 	cfg := config.TONConfig{Endpoint: endpoint}

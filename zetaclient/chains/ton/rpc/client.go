@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"slices"
 	"strings"
@@ -129,12 +130,17 @@ func (c *Client) GetSeqno(ctx context.Context, acc ton.AccountID) (uint32, error
 		return 0, errors.Errorf("seqno method failed with exit code %d", exitCode)
 	case len(stack) == 0:
 		return 0, errors.Errorf("seqno method returned empty stack")
-	case stack[0].SumType != "VmStkTinyInt":
+	case stack[0].SumType != typeTinyInt:
 		return 0, errors.Errorf("invalid seqno type: %s", stack[0].SumType)
-	default:
-		// #nosec G115 always in range
-		return uint32(stack[0].VmStkTinyInt), nil
 	}
+
+	seqno := stack[0].VmStkTinyInt
+	if seqno < 0 || seqno > math.MaxUint32 {
+		return 0, errors.Errorf("seqno %d is out of uint32 range", seqno)
+	}
+
+	// #nosec G115 always in range
+	return uint32(seqno), nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction
@@ -283,6 +289,7 @@ func (c *Client) GetTransactionsSince(
 			// early exit
 			if found {
 				result = append(result, txs[:i]...)
+				// reverse the result to sort by ASC
 				slices.Reverse(result)
 
 				return result, nil
@@ -297,7 +304,7 @@ func (c *Client) GetTransactionsSince(
 		lt, hash = txs[idx].PrevTransLt, txs[idx].PrevTransHash
 	}
 
-	// reverse the result to get sort by ASC
+	// reverse the result to sort by ASC
 	slices.Reverse(result)
 
 	return result, nil
