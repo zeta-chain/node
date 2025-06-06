@@ -319,7 +319,7 @@ func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
 func (r *E2ERunner) SuiMonitorCCTXByInboundHash(inboundHash string, index int) (time.Duration, error) {
 	startTime := time.Now()
 
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.ReceiptTimeout)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return 0, fmt.Errorf(
 			"index %d: cctx failed with status %s, message %s, index %s",
