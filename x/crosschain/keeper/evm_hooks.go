@@ -365,12 +365,8 @@ func (k Keeper) validateOutbound(
 		}
 	} else if chains.IsSuiChain(chainID, additionalChains) {
 		// check the string format of the address is valid
-
-		addr, err := sui.DecodeAddress(to)
-		if err != nil {
-			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
-		}
-		if err := sui.ValidAddress(addr); err != nil {
+		addr := sui.DecodeAddress(to)
+		if err := sui.ValidateAddress(addr); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidAddress, "invalid Sui address %s", string(to))
 		}
 	}
