@@ -158,10 +158,10 @@ func (k Keeper) ProcessRevert(
 			// no asset, call simple revert
 			res, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
 			return res, err
-		} else {
-			// no asset, no call, do nothing
-			return nil, nil
 		}
+
+		// no asset, no call, do nothing
+		return nil, nil
 	case coin.CoinType_ERC20, coin.CoinType_Gas:
 		if callOnRevert {
 			// revert with a ZRC20 asset
@@ -174,11 +174,11 @@ func (k Keeper) ProcessRevert(
 				revertMessage,
 			)
 			return res, err
-		} else {
-			// simply deposit back to the revert address
-			res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
-			return res, err
 		}
+
+		// simply deposit back to the revert address
+		res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
+		return res, err
 	}
 
 	return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
