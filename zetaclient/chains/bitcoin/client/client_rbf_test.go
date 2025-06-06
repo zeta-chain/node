@@ -32,8 +32,10 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		t.Skip("skipping live test")
 	}
 
-	t.Run("RBFTransaction", Run_RBFTransaction)
-	t.Run("RBFTransaction_Chained_CPFP", Run_RBFTransaction_Chained_CPFP)
+	// RBF tests requires private key to be set, skip it for now
+	t.Skip("skipping RBF live tests")
+	//t.Run("RBFTransaction", Run_RBFTransaction)
+	//t.Run("RBFTransaction_Chained_CPFP", Run_RBFTransaction_Chained_CPFP)
 	t.Run("PendingMempoolTx", Run_PendingMempoolTx)
 }
 

@@ -73,7 +73,7 @@ func CreateBTCRPCAndLoadTx(t *testing.T, dir string, chainID int64, txHashes ...
 
 		// mock rpc response
 		tx := btcutil.NewTx(&msgTx)
-		rpcClient.On("GetRawTransaction", mock.Anything, tx.Hash()).Return(tx, nil)
+		rpcClient.On("GetTransactionInputSpender", mock.Anything, txHash, mock.Anything, mock.Anything).Return(tx, nil)
 	}
 
 	return rpcClient
