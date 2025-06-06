@@ -456,7 +456,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 //   - The third output is the change to TSS (optional)
 func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
-	if !(len(vouts) == 2 || len(vouts) == 3) {
+	if len(vouts) != 2 && len(vouts) != 3 {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
 	}
 
@@ -515,7 +515,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 //   - The second output is the change to TSS (optional)
 func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
-	if !(len(vouts) == 1 || len(vouts) == 2) {
+	if len(vouts) != 1 && len(vouts) != 2 {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
 	}
 

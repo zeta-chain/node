@@ -49,30 +49,30 @@ func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundType {
 		case types.CctxStatus_PendingOutbound:
 			if cctx.InboundParams.IsCrossChainCall {
 				return OutboundTypeGasWithdrawAndCall
-			} else {
-				return OutboundTypeGasWithdraw
 			}
+
+			return OutboundTypeGasWithdraw
 		case types.CctxStatus_PendingRevert:
 			if cctx.RevertOptions.CallOnRevert {
 				return OutboundTypeGasWithdrawRevertAndCallOnRevert
-			} else {
-				return OutboundTypeGasWithdrawRevert
 			}
+
+			return OutboundTypeGasWithdrawRevert
 		}
 	case coin.CoinType_ERC20:
 		switch cctx.CctxStatus.Status {
 		case types.CctxStatus_PendingOutbound:
 			if cctx.InboundParams.IsCrossChainCall {
 				return OutboundTypeERC20WithdrawAndCall
-			} else {
-				return OutboundTypeERC20Withdraw
 			}
+
+			return OutboundTypeERC20Withdraw
 		case types.CctxStatus_PendingRevert:
 			if cctx.RevertOptions.CallOnRevert {
 				return OutboundTypeERC20WithdrawRevertAndCallOnRevert
-			} else {
-				return OutboundTypeERC20WithdrawRevert
 			}
+
+			return OutboundTypeERC20WithdrawRevert
 		}
 	case coin.CoinType_NoAssetCall:
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
