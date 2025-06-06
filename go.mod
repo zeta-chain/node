@@ -25,7 +25,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/fatih/color v1.15.0
 	github.com/gagliardetto/solana-go v1.12.0
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
@@ -51,7 +51,7 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/ethermint v0.0.0-20250530150856-32d27766cc7a
+	github.com/zeta-chain/ethermint v0.0.0-20250606151045-75716891f3f0
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.38.0
@@ -314,6 +314,7 @@ require (
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.2
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
+	go.uber.org/mock v0.5.2
 )
 
 require (
@@ -341,7 +342,6 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.34.0 // indirect
-	go.uber.org/mock v0.5.2 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
