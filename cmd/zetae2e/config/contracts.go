@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
@@ -161,6 +162,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ERC20: %w", err)
 		}
 		r.ERC20, err = erc20.NewERC20(r.ERC20Addr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.EVM.ConnectorNativeAddr; c != "" {
+		r.ConnectorNativeAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorZEVMAddr: %w", err)
+		}
+		r.ConnectorNative, err = zetaconnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}

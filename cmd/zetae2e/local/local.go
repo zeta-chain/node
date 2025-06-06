@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/e2etests"
@@ -29,32 +28,33 @@ import (
 )
 
 const (
-	flagContractsDeployed = "deployed"
-	flagWaitForHeight     = "wait-for"
-	FlagConfigFile        = "config"
-	flagConfigOut         = "config-out"
-	flagVerbose           = "verbose"
-	flagTestAdmin         = "test-admin"
-	flagTestEthStress     = "test-stress-eth"
-	flagTestSolanaStress  = "test-stress-solana"
-	flagTestSuiStress     = "test-stress-sui"
-	flagIterations        = "iterations"
-	flagTestSolana        = "test-solana"
-	flagTestTON           = "test-ton"
-	flagTestSui           = "test-sui"
-	flagSkipRegular       = "skip-regular"
-	flagLight             = "light"
-	flagSetupOnly         = "setup-only"
-	flagSkipSetup         = "skip-setup"
-	flagTestTSSMigration  = "test-tss-migration"
-	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
-	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestLegacy        = "test-legacy"
-	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagSkipPrecompiles   = "skip-precompiles"
-	flagUpgradeContracts  = "upgrade-contracts"
-	flagTestFilter        = "test-filter"
-	flagTestStaking       = "test-staking"
+	flagContractsDeployed        = "deployed"
+	flagWaitForHeight            = "wait-for"
+	FlagConfigFile               = "config"
+	flagConfigOut                = "config-out"
+	flagVerbose                  = "verbose"
+	flagTestAdmin                = "test-admin"
+	flagTestEthStress            = "test-stress-eth"
+	flagTestSolanaStress         = "test-stress-solana"
+	flagTestSuiStress            = "test-stress-sui"
+	flagIterations               = "iterations"
+	flagTestSolana               = "test-solana"
+	flagTestTON                  = "test-ton"
+	flagTestSui                  = "test-sui"
+	flagSkipRegular              = "skip-regular"
+	flagLight                    = "light"
+	flagSetupOnly                = "setup-only"
+	flagSkipSetup                = "skip-setup"
+	flagTestTSSMigration         = "test-tss-migration"
+	flagSkipBitcoinSetup         = "skip-bitcoin-setup"
+	flagSkipHeaderProof          = "skip-header-proof"
+	flagTestLegacy               = "test-legacy"
+	flagSkipTrackerCheck         = "skip-tracker-check"
+	flagSkipPrecompiles          = "skip-precompiles"
+	flagUpgradeContracts         = "upgrade-contracts"
+	flagTestFilter               = "test-filter"
+	flagTestStaking              = "test-staking"
+	flagTestV2ConnectorMigration = "test-v2-connector-migration"
 )
 
 var (
@@ -98,6 +98,7 @@ func NewLocalCmd() *cobra.Command {
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
+	cmd.Flags().Bool(flagTestV2ConnectorMigration, false, "set to true to run v2 connector migration tests")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -109,34 +110,35 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose           = must(cmd.Flags().GetBool(flagVerbose))
-		configOut         = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testEthStress     = must(cmd.Flags().GetBool(flagTestEthStress))
-		testSolanaStress  = must(cmd.Flags().GetBool(flagTestSolanaStress))
-		testSuiStress     = must(cmd.Flags().GetBool(flagTestSuiStress))
-		iterations        = must(cmd.Flags().GetInt(flagIterations))
-		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON           = must(cmd.Flags().GetBool(flagTestTON))
-		testSui           = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		testStress        = testEthStress || testSolanaStress || testSuiStress
-		setupSolana       = testSolana || testStress
-		setupSui          = testSui || testStress
-		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
-		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
+		waitForHeight            = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed        = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose                  = must(cmd.Flags().GetBool(flagVerbose))
+		configOut                = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin                = must(cmd.Flags().GetBool(flagTestAdmin))
+		testEthStress            = must(cmd.Flags().GetBool(flagTestEthStress))
+		testSolanaStress         = must(cmd.Flags().GetBool(flagTestSolanaStress))
+		testSuiStress            = must(cmd.Flags().GetBool(flagTestSuiStress))
+		iterations               = must(cmd.Flags().GetInt(flagIterations))
+		testSolana               = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON                  = must(cmd.Flags().GetBool(flagTestTON))
+		testSui                  = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular              = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                    = must(cmd.Flags().GetBool(flagLight))
+		setupOnly                = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup                = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup         = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof          = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck         = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration         = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy               = must(cmd.Flags().GetBool(flagTestLegacy))
+		skipPrecompiles          = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts         = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		testStress               = testEthStress || testSolanaStress || testSuiStress
+		setupSolana              = testSolana || testStress
+		setupSui                 = testSui || testStress
+		testFilterStr            = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking              = must(cmd.Flags().GetBool(flagTestStaking))
+		testV2ConnectorMigration = must(cmd.Flags().GetBool(flagTestV2ConnectorMigration))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -303,7 +305,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
-	deployerRunner.SetupConnectorV2()
+
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -522,32 +524,32 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testLegacy {
-		//eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose,
-		//	e2etests.TestLegacyERC20WithdrawName,
-		//	e2etests.TestLegacyMultipleERC20WithdrawsName,
-		//	e2etests.TestLegacyERC20DepositAndCallRefundName))
+		eg.Go(legacyERC20TestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyERC20WithdrawName,
+			e2etests.TestLegacyMultipleERC20WithdrawsName,
+			e2etests.TestLegacyERC20DepositAndCallRefundName))
 		eg.Go(legacyZETATestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestLegacyZetaWithdrawName,
-			//e2etests.TestLegacyMessagePassingExternalChainsName,
-			//e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
-			//e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
-			//e2etests.TestLegacyZetaDepositRestrictedName,
+			e2etests.TestLegacyMessagePassingExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertFailExternalChainsName,
+			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
+			e2etests.TestLegacyZetaDepositRestrictedName,
 			e2etests.TestLegacyZetaDepositName,
 			//e2etests.TestLegacyZetaDepositNewAddressName,
 		))
-		//eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
-		//	e2etests.TestLegacyMessagePassingZEVMToEVMName,
-		//	e2etests.TestLegacyMessagePassingEVMtoZEVMName,
-		//	e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
-		//	e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
-		//	e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
-		//	e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
-		//))
-		//eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose,
-		//	e2etests.TestLegacyEtherWithdrawName,
-		//	e2etests.TestLegacyEtherDepositAndCallName,
-		//	e2etests.TestLegacyEtherDepositAndCallRefundName,
-		//))
+		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyMessagePassingZEVMToEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertName,
+			e2etests.TestLegacyMessagePassingZEVMtoEVMRevertFailName,
+			e2etests.TestLegacyMessagePassingEVMtoZEVMRevertFailName,
+		))
+		eg.Go(legacyEthereumTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestLegacyEtherWithdrawName,
+			e2etests.TestLegacyEtherDepositAndCallName,
+			e2etests.TestLegacyEtherDepositAndCallRefundName,
+		))
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
@@ -563,8 +565,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.MigrateConnector()
-
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
 	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests for this check as we expect all observers to vote correctly.
@@ -572,7 +572,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.WaitForBlocks(31)
 	}
 
+	// Withdraw emissions from the deployer account
 	noError(deployerRunner.WithdrawEmissions())
+	// Migrate funds from old connector to the new one if there are any funds present
+	if utils.MinimumVersionCheck("v30.0.0", deployerRunner.GetZetacoredVersion()) && testV2ConnectorMigration {
+		fn := V2ConnectorMigrationsTestRoutine(conf, deployerRunner, verbose, []string{
+			e2etests.TestMigrateConnectorFundsName,
+			e2etests.TestLegacyZetaDepositName,
+			e2etests.TestLegacyMessagePassingExternalChainsName,
+		}...)
+
+		if err := fn(); err != nil {
+			logger.Print("❌ %v", err)
+			logger.Print("❌ tss migration test failed")
+			os.Exit(1)
+		}
+
+	}
 
 	// Run gateway upgrade tests for external chains
 	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{

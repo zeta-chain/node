@@ -359,7 +359,7 @@ ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v30' \
+		--build-arg OLD_VERSION='release/v29' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
 		--build-arg NODE_COMMIT=$(NODE_COMMIT)
 		.
@@ -388,6 +388,7 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
@@ -403,6 +404,12 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+start-v2-connector-migration: zetanode-upgrade
+	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="${E2E_ARGS} --test-v2-connector-migration --test-legacy" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 ###############################################################################
 ###                         Simulation Tests              					###

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ import (
 func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMigrateConnectorFunds) (*types.MsgMigrateConnectorFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	//// check if authorized
+	// check if authorized
 	//err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
 	//if err != nil {
 	//	return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
@@ -49,8 +48,8 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 	}
 
 	// overpays gas price by 2x
-	medianGasPrice = medianGasPrice.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM)
-	priorityFee = priorityFee.MulUint64(types.ERC20CustodyMigrationGasMultiplierEVM)
+	medianGasPrice = medianGasPrice.MulUint64(types.ConnectorMigrationGasMultiplierEVM)
+	priorityFee = priorityFee.MulUint64(types.ConnectorMigrationGasMultiplierEVM)
 
 	// should not happen
 	if priorityFee.GT(medianGasPrice) {
@@ -73,8 +72,6 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 		tss.TssPubkey,
 		currentNonce,
 	)
-
-	fmt.Println("cctx:", cctx.Index)
 
 	// save the cctx
 	err := k.SetObserverOutboundInfo(ctx, msg.ChainId, &cctx)

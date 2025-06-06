@@ -199,6 +199,7 @@ const (
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
+	TestMigrateConnectorFundsName        = "migrate_connector_funds"
 
 	/*
 	 Operational tests
@@ -1386,6 +1387,12 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate ERC20 custody funds",
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
+	),
+	runner.NewE2ETest(
+		TestMigrateConnectorFundsName,
+		"migrate connector funds from V1 to V2 connector",
+		[]runner.ArgDefinition{},
+		TestMigrateConnectorFunds,
 	),
 	runner.NewE2ETest(
 		TestUpdateZRC20NameName,

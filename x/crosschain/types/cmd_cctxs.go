@@ -32,6 +32,8 @@ const (
 
 	// ERC20CustodyPausingGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody pausing
 	ERC20CustodyPausingGasMultiplierEVM = 2
+
+	ConnectorMigrationGasMultiplierEVM
 )
 
 // MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds

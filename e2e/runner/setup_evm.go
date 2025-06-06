@@ -4,13 +4,9 @@ import (
 	"math/big"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/e2e/txserver"
-	"github.com/zeta-chain/node/pkg/chains"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
@@ -114,6 +110,41 @@ func (r *E2ERunner) SetupEVM() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
+	// Deploy zetaConnectorNative contract
+	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+		r.EVMAuth,
+		r.EVMClient,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
+
+	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
+	require.NoError(r, err)
+	// Encode the initializer data
+	initializerData, err = zetaConnnectorNativeABI.Pack("initialize", r.GatewayEVMAddr, r.ZetaEthAddr, r.TSSAddress, r.Account.EVMAddress())
+	require.NoError(r, err)
+
+	// Deploy zetaConnnectorNative proxy contract
+	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.EVMAuth,
+		r.EVMClient,
+		zetaConnnectorNativeAddress,
+		initializerData,
+	)
+	require.NoError(r, err)
+
+	ensureTxReceipt(zetaConnnectorNativeProxyTx, "ZetaConnectorNative proxy deployment failed")
+
+	r.ConnectorNativeAddr = zetaConnnectorNativeProxyAddress
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
+	require.NoError(r, err)
+
+	r.Logger.Info(
+		"ZetaConnectorNative contract address: %s, tx hash: %s",
+		zetaConnnectorNativeAddress.Hex(),
+		txZetaConnnectorNativeHash.Hash().Hex(),
+	)
+
 	// deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
 	require.NoError(r, err)
@@ -145,115 +176,4 @@ func (r *E2ERunner) SetupEVM() {
 
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
 	ensureTxReceipt(txSetLegacySupported, "Set legacy support failed")
-}
-
-func (r *E2ERunner) SetupConnectorV2() {
-	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-		r.requireTxSuccessful(receipt, failMessage)
-	}
-
-	r.Logger.Info("⚙️ setting up EVM network")
-	startTime := time.Now()
-	defer func() {
-		r.Logger.Info("EVM setup took %s\n", time.Since(startTime))
-	}()
-
-	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
-		r.EVMAuth,
-		r.EVMClient,
-	)
-	require.NoError(r, err)
-
-	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
-
-	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
-	require.NoError(r, err)
-
-	// Encode the initializer data
-	initializerData, err := zetaConnnectorNativeABI.Pack("initialize", r.GatewayEVMAddr, r.ZetaEthAddr, r.TSSAddress, r.Account.EVMAddress())
-	require.NoError(r, err)
-
-	// Deploy zetaConnnectorNative proxy contract
-	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
-		r.EVMAuth,
-		r.EVMClient,
-		zetaConnnectorNativeAddress,
-		initializerData,
-	)
-	require.NoError(r, err)
-
-	// check contract deployment receipt
-	ensureTxReceipt(zetaConnnectorNativeProxyTx, "ZetaConnectorNative proxy deployment failed")
-	r.ConnectorNativeAddr = zetaConnnectorNativeAddress
-	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
-	require.NoError(r, err)
-
-	r.Logger.Print(
-		"ZetaConnectorNative contract address: %s, tx hash: %s",
-		zetaConnnectorNativeAddress.Hex(),
-		txZetaConnnectorNativeHash.Hash().Hex(),
-	)
-
-	r.Logger.Print("ZetaConnectorNative contract address: %s", r.ConnectorNativeAddr.Hex())
-}
-
-func (r *E2ERunner) MigrateConnector() {
-	r.Logger.Print("⚙️ Migrating ZetaConnectorNative to v2")
-	startTime := time.Now()
-	defer func() {
-		r.Logger.Info("ZetaConnectorNative migration took %s\n", time.Since(startTime))
-	}()
-	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
-		r.requireTxSuccessful(receipt, failMessage)
-	}
-
-	pauseV2Tx, err := r.ConnectorNative.Pause(r.EVMAuth)
-	require.NoError(r, err)
-	ensureTxReceipt(pauseV2Tx, "ZetaConnectorNative pause failed")
-
-	pauseV1Tx, err := r.ConnectorEth.Pause(r.EVMAuth)
-	require.NoError(r, err)
-	ensureTxReceipt(pauseV1Tx, "ZetaConnectorEth pause failed")
-
-	balance, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
-	require.NoError(r, err, "GetLockedAmount failed")
-
-	r.Logger.Print("ZetaConnectorEth locked amount: %s", balance.String())
-
-	msgMigrateConnectorFunds := crosschaintypes.NewMsgMigrateConnectorFunds(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
-		chains.GoerliLocalnet.ChainId,
-		r.ConnectorNativeAddr.Hex(),
-		sdkmath.NewUintFromBigInt(balance),
-	)
-
-	res, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgMigrateConnectorFunds)
-	require.NoError(r, err)
-
-	event, ok := txserver.EventOfType[*crosschaintypes.EventConnectorFundsMigration](res.Events)
-	require.True(r, ok, "no EventERC20CustodyFundsMigration in %s", res.TxHash)
-
-	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: event.CctxIndex})
-	require.NoError(r, err)
-
-	cctx := cctxRes.CrossChainTx
-	r.Logger.CCTX(*cctx, "migration")
-
-	// wait for the cctx to be mined
-	r.WaitForMinedCCTXFromIndex(event.CctxIndex)
-
-	r.Logger.Print("CCTX %s migrated to new connector %s", cctx.Index, r.ConnectorNativeAddr.Hex())
-
-	// check if the new connector has the funds
-	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
-	require.NoError(r, err, "BalanceOf failed for new connector")
-
-	// Verify that the migration was successful
-	require.Equal(r, balance, newConnectorBalance,
-		"Migration failed: old connector balance (%s) != new connector balance (%s)",
-		balance.String(), newConnectorBalance.String())
-
-	r.Logger.Print("✅ Migration verification successful: %s ZETA tokens migrated", newConnectorBalance.String())
 }

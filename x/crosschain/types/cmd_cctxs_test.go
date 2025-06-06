@@ -668,3 +668,127 @@ func TestGetTssMigrationCCTXIndexString(t *testing.T) {
 		require.NotEqual(t, index, indexDifferentHeight)
 	})
 }
+
+func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
+	t.Run("returns a new CCTX for migrating connector funds with unique index", func(t *testing.T) {
+		// ARRANGE
+		creator := sample.AccAddress()
+		v1ConnectorContractAddress := sample.EthAddress().String()
+		v2ConnectorContractAddress := sample.EthAddress().String()
+		chainID := int64(42)
+		amount := sdkmath.NewUint(1000)
+		gasPrice := "100000"
+		priorityFee := "100000"
+		tssPubKey := sample.PubKeyString()
+		currentNonce := uint64(1)
+
+		// ACT
+		cctx := types.MigrateConnectorFundsCmdCCTX(
+			creator,
+			v1ConnectorContractAddress,
+			v2ConnectorContractAddress,
+			chainID,
+			amount,
+			gasPrice,
+			priorityFee,
+			tssPubKey,
+			currentNonce,
+		)
+		cctxDifferentNonce := types.MigrateConnectorFundsCmdCCTX(
+			creator,
+			v1ConnectorContractAddress,
+			v2ConnectorContractAddress,
+			chainID,
+			amount,
+			gasPrice,
+			priorityFee,
+			tssPubKey,
+			currentNonce+1,
+		)
+		cctxDifferentTSSPubkey := types.MigrateConnectorFundsCmdCCTX(
+			creator,
+			v1ConnectorContractAddress,
+			v2ConnectorContractAddress,
+			chainID,
+			amount,
+			gasPrice,
+			priorityFee,
+			sample.PubKeyString(),
+			currentNonce,
+		)
+		cctxDifferentChainID := types.MigrateConnectorFundsCmdCCTX(
+			creator,
+			v1ConnectorContractAddress,
+			v2ConnectorContractAddress,
+			chainID+1,
+			amount,
+			gasPrice,
+			priorityFee,
+			tssPubKey,
+			currentNonce,
+		)
+
+		// ASSERT
+		require.NotEmpty(t, cctx.Index)
+		require.EqualValues(t, creator, cctx.Creator)
+		require.EqualValues(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
+		require.EqualValues(t, fmt.Sprintf("%s:%s,%s",
+			constant.CmdMigrateConnectorFunds,
+			v2ConnectorContractAddress,
+			amount.String(),
+		), cctx.RelayedMessage)
+		require.EqualValues(t, creator, cctx.InboundParams.Sender)
+		require.EqualValues(t, coin.CoinType_Cmd, cctx.InboundParams.CoinType)
+		require.Len(t, cctx.OutboundParams, 1)
+		require.EqualValues(t, v1ConnectorContractAddress, cctx.OutboundParams[0].Receiver)
+		require.EqualValues(t, chainID, cctx.OutboundParams[0].ReceiverChainId)
+		require.EqualValues(t, coin.CoinType_Cmd, cctx.OutboundParams[0].CoinType)
+		require.EqualValues(t, sdkmath.NewUint(0), cctx.OutboundParams[0].Amount)
+		require.EqualValues(t, 100_000, cctx.OutboundParams[0].CallOptions.GasLimit)
+		require.EqualValues(t, gasPrice, cctx.OutboundParams[0].GasPrice)
+		require.EqualValues(t, priorityFee, cctx.OutboundParams[0].GasPriorityFee)
+		require.EqualValues(t, tssPubKey, cctx.OutboundParams[0].TssPubkey)
+
+		// check TSS pubkey, nonce and chainID produce unique index
+		require.NotEqual(t, cctx.Index, cctxDifferentNonce.Index)
+		require.NotEqual(t, cctx.Index, cctxDifferentTSSPubkey.Index)
+		require.NotEqual(t, cctx.Index, cctxDifferentChainID.Index)
+	})
+}
+
+func TestGetConnectorsMigrationCCTXIndexString(t *testing.T) {
+	t.Run("returns the unique index string for the CCTX for migrating connector funds", func(t *testing.T) {
+		// ARRANGE
+		tssPubKey := sample.PubKeyString()
+		nonce := uint64(1)
+		chainID := int64(42)
+
+		// ACT
+		index := types.GetConnectorsMigrationCCTXIndexString(
+			tssPubKey,
+			nonce,
+			chainID,
+		)
+		indexDifferentTSSPubkey := types.GetConnectorsMigrationCCTXIndexString(
+			sample.PubKeyString(),
+			nonce,
+			chainID,
+		)
+		indexDifferentNonce := types.GetConnectorsMigrationCCTXIndexString(
+			tssPubKey,
+			nonce+1,
+			chainID,
+		)
+		indexDifferentChainID := types.GetConnectorsMigrationCCTXIndexString(
+			tssPubKey,
+			nonce,
+			chainID+1,
+		)
+
+		// ASSERT
+		require.NotEmpty(t, index)
+		require.NotEqual(t, index, indexDifferentTSSPubkey)
+		require.NotEqual(t, index, indexDifferentNonce)
+		require.NotEqual(t, index, indexDifferentChainID)
+	})
+}
