@@ -11,6 +11,8 @@
 
 * [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
 * [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
+* [3956](https://github.com/zeta-chain/node/pull/3956) - use the latest nonce to perform pre-broadcast check to make evm tx replacement possible
+* [3954](https://github.com/zeta-chain/node/pull/3954) - fail sui withdrawal event in the ZEVM if it carries invalid receiver address
 
 ### Refactor
 

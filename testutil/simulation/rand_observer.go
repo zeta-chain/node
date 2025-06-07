@@ -36,11 +36,8 @@ func GetRandomAccountAndObserver(
 		if !foundNodeAccount {
 			return false
 		}
-		ok := k.IsNonTombstonedObserver(ctx, randomObserver)
-		if ok {
-			return true
-		}
-		return false
+
+		return k.IsNonTombstonedObserver(ctx, randomObserver)
 	})
 
 	if !foundObserver {

@@ -149,9 +149,9 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
 
-	// mock evm client "PendingNonceAt"
+	// mock evm client "NonceAt"
 	nonce := uint64(123)
-	evmSigner.evmServer.MockPendingNonceAt(nonce)
+	evmSigner.evmServer.MockNonceAt(nonce)
 
 	// ACT
 	evmSigner.TryProcessOutbound(ctx, cctx, client, nonce)
@@ -175,8 +175,8 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, skip)
 
-	// Mock evm client "PendingNonceAt"
-	evmSigner.evmServer.MockPendingNonceAt(nonce)
+	// Mock evm client "NonceAt"
+	evmSigner.evmServer.MockNonceAt(nonce)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw

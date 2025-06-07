@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -12,14 +10,14 @@ import (
 func (k Keeper) SetChainParamsList(ctx sdk.Context, chainParams types.ChainParamsList) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&chainParams)
-	key := types.KeyPrefix(fmt.Sprintf("%s", types.AllChainParamsKey))
+	key := types.KeyPrefix(types.AllChainParamsKey)
 	store.Set(key, b)
 }
 
 func (k Keeper) GetChainParamsList(ctx sdk.Context) (val types.ChainParamsList, found bool) {
 	found = false
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s", types.AllChainParamsKey)))
+	b := store.Get(types.KeyPrefix(types.AllChainParamsKey))
 	if b == nil {
 		return
 	}

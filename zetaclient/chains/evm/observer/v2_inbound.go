@@ -180,10 +180,7 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	}
 
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
-	isCrossChainCall := false
-	if len(event.Payload) > 0 {
-		isCrossChainCall = true
-	}
+	isCrossChainCall := len(event.Payload) > 0
 
 	// determine confirmation mode
 	confirmationMode := types.ConfirmationMode_FAST
