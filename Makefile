@@ -348,7 +348,7 @@ start-sui-test: e2e-images
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
-	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy --test-v2-connector-migration" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################

@@ -139,6 +139,9 @@ func (r *E2ERunner) SetupEVM() {
 	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
 	require.NoError(r, err)
 
+	txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, zetaConnnectorNativeProxyAddress)
+	require.NoError(r, err)
+
 	r.Logger.Info(
 		"ZetaConnectorNative contract address: %s, tx hash: %s",
 		zetaConnnectorNativeAddress.Hex(),
@@ -160,6 +163,7 @@ func (r *E2ERunner) SetupEVM() {
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+	ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
 
 	// check isZetaChain is false
 	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})

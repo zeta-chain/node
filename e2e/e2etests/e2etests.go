@@ -264,6 +264,7 @@ const (
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
+	TestV2ZetaDepositName = "v2_zeta_deposit"
 )
 
 const (
@@ -281,6 +282,14 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 EVM chain tests
 	*/
+	runner.NewE2ETest(
+		TestV2ZetaDepositName,
+		"deposit ZETA into ZEVM using v2 protocol contracts",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+		},
+		TestV2ZetaDeposit,
+	),
 	runner.NewE2ETest(
 		TestETHDepositName,
 		"deposit Ether into ZEVM",

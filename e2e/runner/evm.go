@@ -97,6 +97,24 @@ func (r *E2ERunner) ERC20Deposit(
 	return tx
 }
 
+// ZetaDeposit calls Deposit of Gateway with gas token on EVM
+func (r *E2ERunner) ZetaDeposit(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	revertOptions gatewayevm.RevertOptions,
+) *ethtypes.Transaction {
+	gatewayZetaToken, err := r.GatewayEVM.ZetaToken(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.Equal(r, r.ZetaEthAddr, gatewayZetaToken, "ZETA token address mismatch")
+
+	tx, err := r.GatewayEVM.Deposit(r.EVMAuth, receiver, amount, r.ZetaEthAddr, revertOptions)
+	require.NoError(r, err)
+
+	logDepositInfoAndWaitForTxReceipt(r, tx, "zeta_deposit")
+
+	return tx
+}
+
 // ERC20DepositAndCall calls DepositAndCall of Gateway with erc20 token on EVM
 func (r *E2ERunner) ERC20DepositAndCall(
 	receiver ethcommon.Address,
@@ -184,6 +202,19 @@ func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
 	// approve 1M*1e18 if allowance is zero
 	if allowance.Cmp(big.NewInt(0)) == 0 {
 		tx, err := r.ERC20.Approve(r.EVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
+		require.NoError(r, err)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+		require.True(r, receipt.Status == 1, "approval failed")
+	}
+}
+
+func (r *E2ERunner) ApproveZetaOnEVM(allowed ethcommon.Address) {
+	allowance, err := r.ZetaEth.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	// approve 1M*1e18 if allowance is zero
+	if allowance.Cmp(big.NewInt(0)) == 0 {
+		tx, err := r.ZetaEth.Approve(r.EVMAuth, allowed, big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(1000000)))
 		require.NoError(r, err)
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 		require.True(r, receipt.Status == 1, "approval failed")

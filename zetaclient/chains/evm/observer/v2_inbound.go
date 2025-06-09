@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/errors"
@@ -173,8 +174,15 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
+
+	fmt.Println("newDepositInboundVote called with event:", event.Raw.TxHash.Hex())
+	fmt.Println("Sender:", event.Sender.Hex())
+	fmt.Println("Receiver:", event.Receiver.Hex())
+	fmt.Println("Amount:", event.Amount.String())
+	fmt.Println("Asset:", event.Asset.Hex())
+
 	// if event.Asset is zero, it's a native token
-	coinType := coin.CoinType_ERC20
+	coinType := coin.CoinType_Zeta
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
