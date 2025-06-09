@@ -152,7 +152,7 @@ func main() {
 	//time.Sleep(10 * time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
-	receipt = MustWaitForReceipt(ctx, zevmClient, tx2.Hash())
+	MustWaitForReceipt(ctx, zevmClient, tx2.Hash())
 	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx2.Hash())
 	if err != nil {
 		panic(err)

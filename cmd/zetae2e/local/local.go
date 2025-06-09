@@ -501,6 +501,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
+			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}

@@ -147,11 +147,17 @@ test-cctx:
 ###                                 Linting            	                    ###
 ###############################################################################
 
-lint-pre:
-	@test -z $(gofmt -l .)
-	@GOFLAGS=$(GOFLAGS) go mod verify
+# Make sure LATEST golangci-lint is installed 
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+lint-deps:
+	@if ! command -v golangci-lint &> /dev/null; then \
+		echo "Installing golangci-lint"; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6; \
+		echo "golangci-lint installed successfully"; \
+	fi
 
-lint: lint-pre
+lint: lint-deps
+	@GOFLAGS=$(GOFLAGS) go mod verify
 	@golangci-lint run
 
 lint-gosec:
@@ -160,12 +166,8 @@ lint-gosec:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
-###############################################################################
-###                           		Formatting			                    ###
-###############################################################################
-
-fmt:
-	@bash ./scripts/fmt.sh
+fmt: lint-deps
+	@golangci-lint fmt
 
 ###############################################################################
 ###                           Generation commands  		                    ###

@@ -105,10 +105,20 @@ func (s *Signer) ProcessCCTX(ctx context.Context, cctx *cctypes.CrossChainTx, ze
 		return errors.Wrap(err, "unable to create cancel tx builder")
 	}
 
-	var txDigest string
+	var (
+		txDigest      string
+		validReceiver = true
+	)
+
+	// check CCTX receiver address format
+	receiver := cctx.GetCurrentOutboundParam().Receiver
+	if err := sui.ValidateAddress(receiver); err != nil {
+		validReceiver = false
+		logger.Error().Err(err).Str("receiver", receiver).Msg("Invalid receiver address")
+	}
 
 	// broadcast tx according to compliance check result
-	if s.PassesCompliance(cctx) {
+	if validReceiver && s.PassesCompliance(cctx) {
 		txDigest, err = s.broadcastWithdrawalWithFallback(ctx, withdrawTxBuilder, cancelTxBuilder)
 	} else {
 		txDigest, err = s.broadcastCancelTx(ctx, cancelTxBuilder)

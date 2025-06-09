@@ -115,6 +115,7 @@ const (
 	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiDepositRestrictedName                  = "sui_deposit_restricted"
 	TestSuiWithdrawRestrictedName                 = "sui_withdraw_restricted"
+	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
 
 	/*
 	 Bitcoin tests
@@ -996,6 +997,15 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSuiWithdrawRestrictedAddress,
 		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawInvalidReceiverName,
+		"withdraw SUI from ZEVM to invalid receiver address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: "0x547a07f0564e0c8d48c4ae53305eabdef87e9610"},
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawInvalidReceiver,
 	),
 	/*
 	 Bitcoin tests
