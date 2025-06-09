@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -17,6 +18,15 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
+	r.Logger.Print("Migrating connector funds")
+
+	msgAddAuthorization := authoritytypes.NewMsgAddAuthorization(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
+		"/zetachain.zetacore.crosschain.MsgMigrateConnectorFunds",
+		authoritytypes.PolicyType_groupAdmin,
+	)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgAddAuthorization)
+	require.NoError(r, err)
 
 	pauseV2Tx, err := r.ConnectorNative.Pause(r.EVMAuth)
 	require.NoError(r, err)
@@ -53,7 +63,7 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 		r.ConnectorNativeAddr.Hex(),
 		sdkmath.NewUintFromBigInt(balance),
 	)
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateConnectorFunds)
+	res, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateConnectorFunds)
 	require.NoError(r, err)
 
 	// Verify that the funds have been migrated successfully

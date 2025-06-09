@@ -5,6 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
+
 	//authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
 	"github.com/zeta-chain/node/x/crosschain/types"
@@ -14,10 +16,10 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	//err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
-	//if err != nil {
-	//	return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
-	//}
+	err := k.GetAuthorityKeeper().CheckAuthorization(ctx, msg)
+	if err != nil {
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
+	}
 
 	// get the current TSS nonce allow to set a unique index for the CCTX
 	chainNonce, found := k.GetObserverKeeper().GetChainNonces(ctx, msg.ChainId)
@@ -74,7 +76,7 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 	)
 
 	// save the cctx
-	err := k.SetObserverOutboundInfo(ctx, msg.ChainId, &cctx)
+	err = k.SetObserverOutboundInfo(ctx, msg.ChainId, &cctx)
 	if err != nil {
 		return nil, err
 	}
