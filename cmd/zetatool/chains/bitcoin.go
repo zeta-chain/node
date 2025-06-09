@@ -56,7 +56,7 @@ func BitcoinBallotIdentifier(
 		return
 	}
 
-	event, err := zetaclientObserver.GetBtcEvent(
+	event, err := zetaclientObserver.GetBtcEventWithWitness(
 		goCtx,
 		btcClient,
 		*tx,

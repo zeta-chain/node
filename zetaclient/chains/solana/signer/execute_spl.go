@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
 // prepareExecuteSPLTx prepares execute spl outbound
@@ -20,23 +19,10 @@ func (signer *Signer) prepareExecuteSPLTx(
 	ctx context.Context,
 	cctx *types.CrossChainTx,
 	height uint64,
+	cancelTx bool,
 	logger zerolog.Logger,
 ) (outboundGetter, error) {
 	params := cctx.GetCurrentOutboundParam()
-	// compliance check
-	cancelTx := compliance.IsCCTXRestricted(cctx)
-	if cancelTx {
-		compliance.PrintComplianceLog(
-			logger,
-			signer.Logger().Compliance,
-			true,
-			signer.Chain().ChainId,
-			cctx.Index,
-			cctx.InboundParams.Sender,
-			params.Receiver,
-			"SPL",
-		)
-	}
 
 	// create msg execute spl
 	msg, msgIn, err := signer.createMsgExecuteSPL(ctx, cctx, cancelTx)
@@ -94,6 +80,12 @@ func (signer *Signer) createMsgExecuteSPL(
 		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
+	// check sender based on execute type
+	sender, err := validateSender(cctx.InboundParams.Sender, executeType)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot validate sender")
+	}
+
 	// parse mint account
 	mintAccount, err := solana.PublicKeyFromBase58(cctx.InboundParams.Asset)
 	if err != nil {
@@ -133,7 +125,7 @@ func (signer *Signer) createMsgExecuteSPL(
 		mintAccount,
 		to,
 		destinationProgramPdaAta,
-		cctx.InboundParams.Sender,
+		sender,
 		msg.Data,
 		executeType,
 		remainingAccounts,

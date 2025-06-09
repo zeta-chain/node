@@ -28,7 +28,7 @@ func (k msgServer) AddInboundTracker(
 		isObserver         = k.GetObserverKeeper().CheckObserverCanVote(ctx, msg.Creator) == nil
 	)
 
-	if !(isAuthorizedPolicy || isObserver) {
+	if !isAuthorizedPolicy && !isObserver {
 		return nil, errorsmod.Wrapf(authoritytypes.ErrUnauthorized, "Creator %s", msg.Creator)
 	}
 

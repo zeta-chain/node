@@ -146,10 +146,12 @@ func (k Keeper) CheckAndCleanObserverDelegator(
 	if err != nil {
 		return err
 	}
+
 	// Check if this is a self delegation, if it's not then return, we only check self-delegation for cleaning observer set
-	if !(accAddress.String() == delAddress.String()) {
+	if accAddress.String() != delAddress.String() {
 		return nil
 	}
+
 	err = k.CheckObserverSelfDelegation(ctx, accAddress.String())
 	if err != nil {
 		return err

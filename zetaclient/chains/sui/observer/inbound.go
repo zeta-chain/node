@@ -24,8 +24,6 @@ var (
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	ob.ensureCursor()
-
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
 		Module:    ob.gateway.Module(),
@@ -71,7 +69,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// update the cursor
-		if err := ob.setCursor(client.EncodeCursor(event.Id)); err != nil {
+		if err := ob.setCursor(event.Id); err != nil {
 			return errors.Wrapf(err, "unable to set cursor %+v", event.Id)
 		}
 	}

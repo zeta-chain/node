@@ -460,7 +460,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			rewardsPerBlock: emissionstypes.BlockReward,
 		},
 		{
-			name: "withdraw able emissions unchanged if rewards and slashes are equal",
+			name: "withdraw able emissions added only for correct votes",
 			votes: [][]observertypes.VoteType{
 				{
 					observertypes.VoteType_SuccessObservation,
@@ -480,9 +480,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 			totalRewardsForBlock: sdkmath.NewInt(70),
 			expectedRewards: map[string]int64{
 				observerSet.ObserverList[0]: 100,
-				observerSet.ObserverList[1]: 120,
-				observerSet.ObserverList[2]: 120,
-				observerSet.ObserverList[3]: 120,
+				observerSet.ObserverList[1]: 122,
+				observerSet.ObserverList[2]: 122,
+				observerSet.ObserverList[3]: 122,
 			},
 			ballotStatus:    observertypes.BallotStatus_BallotFinalized_SuccessObservation,
 			slashAmount:     sdkmath.NewInt(25),
@@ -627,7 +627,6 @@ func TestDistributeObserverRewards(t *testing.T) {
 				_, found := zk.ObserverKeeper.GetBallotListForHeight(ctx, 0)
 				require.False(t, found)
 			}
-
 		})
 	}
 }

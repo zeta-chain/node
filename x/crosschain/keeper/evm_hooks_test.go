@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"math/big"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

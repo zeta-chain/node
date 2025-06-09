@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -38,9 +40,14 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 
 	// create observer
 	chainParams := sample.ChainParams(chain.ChainId)
-	chainParams.GatewayAddress = GatewayAddressTest
+	chainParams.GatewayAddress = testutils.OldSolanaGatewayAddressDevnet
 	zetacoreClient := mocks.NewZetacoreClient(t)
 	zetacoreClient.WithKeys(&keys.Keys{}).WithZetaChain().WithPostVoteInbound("", "")
+
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.WithPostVoteInbound(sample.ZetaIndex(t), mock.Anything)
+	zetacoreClient.MockGetCctxByHash(nil)
+	zetacoreClient.MockGetBallotByID(mock.Anything, nil)
 
 	baseObserver, err := base.NewObserver(
 		chain,
@@ -58,7 +65,34 @@ func Test_FilterInboundEventAndVote(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("should filter inbound events and vote", func(t *testing.T) {
-		err := ob.FilterInboundEventsAndVote(context.TODO(), txResult)
+		// expected result
+		sender := "37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ"
+		eventExpected := &clienttypes.InboundEvent{
+			SenderChainID:    chain.ChainId,
+			Sender:           sender,
+			Receiver:         "0x103FD9224F00ce3013e95629e52DFc31D805D68d",
+			TxOrigin:         sender,
+			Amount:           24000000,
+			Memo:             []byte{},
+			BlockNumber:      txResult.Slot,
+			TxHash:           txHash,
+			Index:            0, // not a EVM smart contract call
+			CoinType:         coin.CoinType_Gas,
+			Asset:            "", // no asset for gas token SOL
+			IsCrossChainCall: false,
+		}
+
+		events, err := observer.FilterInboundEvents(
+			txResult,
+			solana.MustPublicKeyFromBase58(testutils.OldSolanaGatewayAddressDevnet),
+			chain.ChainId,
+			zerolog.Nop(),
+		)
+		require.NoError(t, err)
+		require.Len(t, events, 1)
+		require.EqualValues(t, eventExpected, events[0])
+
+		err = ob.VoteInboundEvents(context.TODO(), events)
 		require.NoError(t, err)
 	})
 }
@@ -73,6 +107,10 @@ func Test_FilterInboundEvents(t *testing.T) {
 	// load archived inbound vote tx result from localnet with inner deposit instruction
 	txHashInner := "2TH3fMqFEULjavgmYEXtQrX6qSeMwKMPPgXEmr6QRFomgpVKhj8LNJNDwyqC1dVeSBU1Av2o4TWn75PvNfjncfUH"
 	txResultInner := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHashInner, false)
+
+	// load reverted inbound tx
+	txHashReverted := "2M5hpf4CNdfV4a44Ra8mYAyQRZr3UX61FjAU6qBmV6K7HxyS6CsSPcvq2fS7eB9QqT8rx8jE2wMoMYauTmuvPgrx"
+	txResultRevert := testutils.LoadSolanaInboundTxResult(t, TestDataDir, chain.ChainId, txHashReverted, false)
 
 	// given gateway ID
 	gatewayID, _, err := contracts.ParseGatewayWithPDA(testutils.OldSolanaGatewayAddressDevnet)
@@ -130,6 +168,11 @@ func Test_FilterInboundEvents(t *testing.T) {
 		// ASSERT
 		require.Len(t, events, 1)
 		require.EqualValues(t, eventExpected, events[0])
+	})
+
+	t.Run("should not filter reverted inbound deposit SOL", func(t *testing.T) {
+		_, err := observer.FilterInboundEvents(txResultRevert, gatewayID, chain.ChainId, zerolog.Nop())
+		require.Error(t, err)
 	})
 }
 

@@ -147,6 +147,9 @@ type MsgIncrementNonce struct {
 
 	// signature is the signature of the message
 	signature [65]byte
+
+	// failureReason contains reason for failure in outbound tx
+	failureReason string
 }
 
 // NewMsgIncrementNonce returns a new increment_nonce message
@@ -156,6 +159,16 @@ func NewMsgIncrementNonce(chainID, nonce, amount uint64) *MsgIncrementNonce {
 		nonce:   nonce,
 		amount:  amount,
 	}
+}
+
+// SetFailureReason sets reason for outbound tx failure to the message
+func (msg *MsgIncrementNonce) SetFailureReason(failureReason string) {
+	msg.failureReason = failureReason
+}
+
+// FailureReason returns reason for outbound tx failure
+func (msg *MsgIncrementNonce) FailureReason() string {
+	return msg.failureReason
 }
 
 // ChainID returns the chain ID of the message
@@ -338,6 +351,12 @@ func (msg *MsgExecute) Hash() [32]byte {
 	message = append(message, buff...)
 
 	message = append(message, msg.to.Bytes()...)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, common.HexToAddress(msg.sender).Bytes()...)
+	} else {
+		message = append(message, solana.MustPublicKeyFromBase58(msg.sender).Bytes()...)
+	}
 
 	message = append(message, msg.data...)
 
@@ -647,6 +666,12 @@ func (msg *MsgExecuteSPL) Hash() [32]byte {
 	message = append(message, msg.mintAccount.Bytes()...)
 
 	message = append(message, msg.recipientAta.Bytes()...)
+
+	if msg.executeType == ExecuteTypeCall {
+		message = append(message, common.HexToAddress(msg.sender).Bytes()...)
+	} else {
+		message = append(message, solana.MustPublicKeyFromBase58(msg.sender).Bytes()...)
+	}
 
 	message = append(message, msg.data...)
 

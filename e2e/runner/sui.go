@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
@@ -14,7 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
@@ -309,6 +312,28 @@ func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
 	require.NoError(r, err)
 
 	return calledCount
+}
+
+// SuiMonitorCCTXByInboundHash monitors a CCTX by inbound hash until it gets mined
+// This function wrapps WaitCctxMinedByInboundHash and prints additional logs needed in stress test
+func (r *E2ERunner) SuiMonitorCCTXByInboundHash(inboundHash string, index int) (time.Duration, error) {
+	startTime := time.Now()
+
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		return 0, fmt.Errorf(
+			"index %d: cctx failed with status %s, message %s, index %s",
+			index,
+			cctx.CctxStatus.Status,
+			cctx.CctxStatus.StatusMessage,
+			cctx.Index,
+		)
+	}
+
+	timeElapsed := time.Since(startTime)
+	r.Logger.Print("index %d: cctx succeeded in %s", index, timeElapsed.String())
+
+	return timeElapsed, nil
 }
 
 // suiExecuteDeposit executes a deposit on the SUI contract

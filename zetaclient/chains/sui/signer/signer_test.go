@@ -209,6 +209,95 @@ func TestSigner(t *testing.T) {
 
 		require.Eventually(t, wait, 5*time.Second, 100*time.Millisecond)
 	})
+
+	t.Run("ProcessCCTX invalid receiver address", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		const zetaHeight = 1000
+
+		// Given cctx
+		nonce := uint64(123)
+		amount := math.NewUint(100_000)
+
+		// Given invalid receiver address, it's a EVM address
+		receiver := "0x547a07f0564e0c8d48c4ae53305eabdef87e9610"
+
+		cctx := sample.CrossChainTxV2(t, "0xABC123")
+		cctx.InboundParams.CoinType = coin.CoinType_Gas
+		cctx.OutboundParams = []*cc.OutboundParams{{
+			Receiver:        receiver,
+			ReceiverChainId: ts.Chain.ChainId,
+			CoinType:        coin.CoinType_Gas,
+			Amount:          amount,
+			TssNonce:        nonce,
+			GasPrice:        "1000",
+			CallOptions: &cc.CallOptions{
+				GasLimit: 42,
+			},
+		}}
+
+		// Given mocked gateway nonce
+		ts.MockGatewayNonce(nonce)
+
+		// Given mocked WithdrawCapID
+		const withdrawCapID = "0xWithdrawCapID"
+		ts.MockWithdrawCapID(withdrawCapID)
+
+		// Given expected MoveCall
+		txBytes := base64.StdEncoding.EncodeToString([]byte("raw_tx_bytes"))
+
+		ts.MockMoveCall(func(req models.MoveCallRequest) {
+			require.Equal(t, ts.TSS.PubKey().AddressSui(), req.Signer)
+			require.Equal(t, ts.Gateway.PackageID(), req.PackageObjectId)
+			require.Equal(t, "increase_nonce", req.Function)
+
+			expectedArgs := []any{
+				ts.Gateway.ObjectID(),
+				fmt.Sprintf("%d", nonce),
+				withdrawCapID,
+			}
+			require.Equal(t, expectedArgs, req.Arguments)
+		}, txBytes)
+
+		// Given expected SuiExecuteTransactionBlock
+		const digest = "0xTransactionBlockDigest"
+		ts.MockExec(func(req models.SuiExecuteTransactionBlockRequest) {
+			require.Equal(t, txBytes, req.TxBytes)
+			require.NotEmpty(t, req.Signature)
+		}, digest)
+
+		// Given included tx from Sui RPC
+		ts.SuiMock.
+			On("SuiGetTransactionBlock", mock.Anything, mock.Anything).
+			Return(models.SuiTransactionBlockResponse{
+				Digest: digest,
+				Effects: models.SuiEffects{
+					Status: models.ExecutionStatus{
+						Status: client.TxStatusSuccess,
+					},
+				},
+				Checkpoint: "1000000",
+			}, nil)
+
+		// ACT
+		err := ts.Signer.ProcessCCTX(ts.Ctx, cctx, zetaHeight)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Wait for vote posting
+		wait := func() bool {
+			if len(ts.TrackerBag) == 0 {
+				return false
+			}
+
+			vote := ts.TrackerBag[0]
+			return vote.hash == digest && vote.nonce == nonce
+		}
+
+		require.Eventually(t, wait, 5*time.Second, 100*time.Millisecond)
+	})
 }
 
 type testSuite struct {

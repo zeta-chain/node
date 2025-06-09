@@ -172,6 +172,39 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  zetacore-new-validator:
+    image: zetanode:latest
+    container_name: zetacore-new-validator
+    hostname: zetacore-new-validator
+    profiles:
+      - tss
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.15
+    entrypoint: ["/root/start-zetacored.sh", "4"]
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+
+  zetaclient-new-validator:
+    image: zetanode:latest
+    container_name: zetaclient-new-validator
+    hostname: zetaclient-new-validator
+    profiles:
+      - tss
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.25
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
   eth:
     image: ghcr.io/zeta-chain/ethereum-client-go:v1.10.26
     container_name: eth
@@ -247,6 +280,7 @@ services:
       - "4443:4443" # lite client
     environment:
       DOCKER_IP: 172.20.0.104
+      ENABLE_RPC: true
     networks:
       mynetwork:
         ipv4_address: 172.20.0.104
@@ -258,6 +292,7 @@ services:
     profiles:
       - sui
       - all
+      - stress
     ports:
       - "9000:9000" # RPC
     environment:

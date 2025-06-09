@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/stretchr/testify/require"
@@ -111,8 +110,7 @@ func Test_ParseInboundAsDeposit(t *testing.T) {
 		require.NoError(t, err)
 		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		// remove account from instruction
 		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
@@ -199,8 +197,7 @@ func Test_ParseInboundAsDepositAndCall(t *testing.T) {
 		require.NoError(t, err)
 		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		// remove account from instruction
 		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
@@ -285,8 +282,7 @@ func Test_ParseInboundAsDepositSPL(t *testing.T) {
 		require.NoError(t, err)
 		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		// remove account from instruction
 		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
@@ -374,8 +370,7 @@ func Test_ParseInboundAsDepositAndCallSPL(t *testing.T) {
 		require.NoError(t, err)
 		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
+		// remove account from instruction
 		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
@@ -460,12 +455,8 @@ func Test_ParseInboundAsCall(t *testing.T) {
 		require.NoError(t, err)
 		instruction := tx.Message.Instructions[instructionIndex]
 
-		// append one more account to instruction
-		tx.Message.AccountKeys = append(tx.Message.AccountKeys, solana.MustPublicKeyFromBase58(sample.SolanaAddress(t)))
-		instruction.Accounts = append(
-			instruction.Accounts,
-			1,
-		)
+		// remove account from instruction
+		instruction.Accounts = instruction.Accounts[:len(instruction.Accounts)-1]
 
 		// ACT
 		call, err := contracts.ParseInboundAsCall(tx, instruction, txResult.Slot)

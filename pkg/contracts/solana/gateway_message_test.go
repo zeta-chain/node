@@ -108,7 +108,7 @@ func Test_MsgExecuteHash(t *testing.T) {
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
 
-		wantHash := "7391cf357fd80e7cb3d2a9758932fdea4988d03c87210a2632f03b467728d199"
+		wantHash := "ff0737262c010614dead18a4ed152ca38bd92aae694f08ba611cea307f3d92d9"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -134,7 +134,7 @@ func Test_MsgExecuteSPLHash(t *testing.T) {
 		require.NoError(t, err)
 		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
 
-		wantHash := "d90f9640faecd76509b4e88fa7d18f130918130b8666179f1597f185a828d3a5"
+		wantHash := "8ed9d12294399703611bf6b4d131aa0cdd9b1c2ca7e2586238c47929766ed0b9"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
@@ -155,14 +155,14 @@ func Test_MsgExecuteRevertHash(t *testing.T) {
 		nonce := uint64(0)
 		amount := uint64(1336000)
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
-		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
+		sender := solana.MustPublicKeyFromBase58("CVoPuE3EMu6QptGHLx7mDGb2ZgASJRQ5BcTvmhZNJd8A")
 
-		wantHash := "A55A5E8E302D5BA9A4C2DCDE54225F45F5E20081873AA7F6A3A361DB20527E31"
+		wantHash := "8a84b88736c9b677b1d859b212bd07f9808f8ca07682b3585eb1b6c5f2f6f4dd"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.Hex(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecute(chainID, nonce, amount, to, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT
@@ -180,14 +180,14 @@ func Test_MsgExecuteSPLRevertHash(t *testing.T) {
 		to := solana.MustPublicKeyFromBase58("37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ")
 		toAta, _, err := solana.FindAssociatedTokenAddress(to, mintAccount)
 		require.NoError(t, err)
-		sender := common.HexToAddress("0x42bd6E2ce4CDb2F58Ed0A0E427F011A0645D5E33")
+		sender := solana.MustPublicKeyFromBase58("CVoPuE3EMu6QptGHLx7mDGb2ZgASJRQ5BcTvmhZNJd8A")
 
-		wantHash := "C27871066FB9F28387E39281F267688FC54CE584F321891454503B17C3353B11"
+		wantHash := "147f471f794e0227653f69c40d9ac0ab278ac8549de41d9229e9b6ca14735c57"
 		wantHashBytes := testutil.HexToBytes(t, wantHash)
 
 		// ACT
 		// create new execute message
-		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.Hex(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
+		hash := contracts.NewMsgExecuteSPL(chainID, nonce, amount, 8, mintAccount, to, toAta, sender.String(), []byte("hello"), contracts.ExecuteTypeRevert, []*solana.AccountMeta{}).
 			Hash()
 
 		// ASSERT

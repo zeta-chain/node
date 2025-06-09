@@ -105,6 +105,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			isAuthorized := func(creator string) error {
 				return options.ObserverKeeper.CheckObserverCanVote(ctx, creator)
 			}
+
 			if IsSystemTx(tx, isAuthorized) {
 				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}

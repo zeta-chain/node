@@ -111,14 +111,16 @@ func triggerSolanaUpgrade() error {
 
 	// Start checking for file removal with timeout
 	timeout := time.After(2 * time.Minute)
-	tick := time.Tick(2 * time.Second)
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-timeout:
 			return fmt.Errorf("timeout waiting for Solana upgrade to complete")
 
-		case <-tick:
+		case <-ticker.C:
 			// Check if file still exists
 			checkCmd := exec.Command("ssh", "root@solana", "test", "-f", "/data/execute-update")
 			if err := checkCmd.Run(); err != nil {

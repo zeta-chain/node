@@ -26,6 +26,7 @@ import (
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/crypto"
+	"github.com/zeta-chain/node/pkg/parsers"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -74,7 +75,7 @@ func AddObserverListCmd() *cobra.Command {
 			}
 
 			file := args[0]
-			observerInfo, err := ParsefileToObserverDetails(file)
+			observerInfo, err := parsers.ParsefileToObserverDetails(file)
 			if err != nil {
 				return err
 			}
@@ -257,7 +258,7 @@ func removeDuplicate[T string | int](sliceList []T) []T {
 	return list
 }
 
-func generateGrants(info ObserverInfoReader) []authz.GrantAuthorization {
+func generateGrants(info parsers.ObserverInfoReader) []authz.GrantAuthorization {
 	sdk.MustAccAddressFromBech32(info.ObserverAddress)
 	var grants []authz.GrantAuthorization
 	if info.ZetaClientGranteeAddress != "" {
@@ -281,7 +282,10 @@ func generateGrants(info ObserverInfoReader) []authz.GrantAuthorization {
 	return grants
 }
 
-func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+func addZetaClientGrants(
+	grants []authz.GrantAuthorization,
+	info parsers.ObserverInfoReader,
+) []authz.GrantAuthorization {
 	txTypes := crosschaintypes.GetAllAuthzZetaclientTxTypes()
 	for _, txType := range txTypes {
 		auth, err := codectypes.NewAnyWithValue(authz.NewGenericAuthorization(txType))
@@ -299,7 +303,7 @@ func addZetaClientGrants(grants []authz.GrantAuthorization, info ObserverInfoRea
 	return grants
 }
 
-func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+func addGovGrants(grants []authz.GrantAuthorization, info parsers.ObserverInfoReader) []authz.GrantAuthorization {
 	txTypes := []string{sdk.MsgTypeURL(&v1beta1.MsgVote{}),
 		sdk.MsgTypeURL(&v1beta1.MsgSubmitProposal{}),
 		sdk.MsgTypeURL(&v1beta1.MsgDeposit{}),
@@ -326,7 +330,10 @@ func addGovGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []
 	return grants
 }
 
-func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+func addSpendingGrants(
+	grants []authz.GrantAuthorization,
+	info parsers.ObserverInfoReader,
+) []authz.GrantAuthorization {
 	spendMaxTokens, ok := sdkmath.NewIntFromString(info.SpendMaxTokens)
 	if !ok {
 		panic("Failed to parse spend max tokens")
@@ -346,7 +353,10 @@ func addSpendingGrants(grants []authz.GrantAuthorization, info ObserverInfoReade
 	return grants
 }
 
-func addStakingGrants(grants []authz.GrantAuthorization, info ObserverInfoReader) []authz.GrantAuthorization {
+func addStakingGrants(
+	grants []authz.GrantAuthorization,
+	info parsers.ObserverInfoReader,
+) []authz.GrantAuthorization {
 	stakingMaxTokens, ok := sdkmath.NewIntFromString(info.StakingMaxTokens)
 	if !ok {
 		panic("Failed to parse staking max tokens")

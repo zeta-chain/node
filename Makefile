@@ -147,11 +147,17 @@ test-cctx:
 ###                                 Linting            	                    ###
 ###############################################################################
 
-lint-pre:
-	@test -z $(gofmt -l .)
-	@GOFLAGS=$(GOFLAGS) go mod verify
+# Make sure LATEST golangci-lint is installed 
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+lint-deps:
+	@if ! command -v golangci-lint &> /dev/null; then \
+		echo "Installing golangci-lint"; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6; \
+		echo "golangci-lint installed successfully"; \
+	fi
 
-lint: lint-pre
+lint: lint-deps
+	@GOFLAGS=$(GOFLAGS) go mod verify
 	@golangci-lint run
 
 lint-gosec:
@@ -160,12 +166,8 @@ lint-gosec:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
-###############################################################################
-###                           		Formatting			                    ###
-###############################################################################
-
-fmt:
-	@bash ./scripts/fmt.sh
+fmt: lint-deps
+	@golangci-lint fmt
 
 ###############################################################################
 ###                           Generation commands  		                    ###
@@ -287,12 +289,27 @@ start-e2e-admin-test: e2e-images
 
 start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --test-stress-solana --test-stress-sui" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-performance-test-1k: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="--test-performance --iterations=1000" && \
+	export E2E_ARGS="${E2E_ARGS}--test-stress-eth --test-stress-solana --test-stress-sui --iterations=1000" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-eth: e2e-images
+	@echo "--> Starting stress test for eth"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-solana: e2e-images solana
+	@echo "--> Starting stress test for solana"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-sui: e2e-images
+	@echo "--> Starting stress test for sui"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
@@ -307,15 +324,11 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-stress-test: e2e-images
-	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
-
 start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
 	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
