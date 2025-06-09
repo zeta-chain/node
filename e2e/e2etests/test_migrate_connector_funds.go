@@ -17,7 +17,7 @@ import (
 
 // TestMigrateConnectorFunds tests the migration of funds from the old ZetaConnectorEth (V1) to the new ZetaConnectorNative (V2)
 func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
-	r.Logger.Print("Migrating connector funds")
+	r.Logger.Print("Migrating connector funds from V1 to V2")
 
 	// Define the common transaction receipt handler
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
@@ -25,19 +25,15 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
 
-	// Add authorization for migration
 	if err := addMigrationAuthorization(r); err != nil {
 		require.NoError(r, err)
 	}
 
-	// Pause both connectors
 	pauseConnectors(r, ensureTxReceipt)
 	defer unpauseConnectors(r, ensureTxReceipt)
 
-	// Get chain ID and check balance
 	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
-
 	balance, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
 	require.NoError(r, err, "ZetaConnectorEth GetLockedAmount failed")
 
@@ -53,6 +49,9 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 	verifyMigrationSuccess(r, migrationIndex, balance)
 
 	// Update chain parameters to use new connector
+	// This would disable the old connector and thus stop the V1 flow from working.
+	// V1 : Call the connector directly
+	// V2 : Call the gateway
 	// updateChainParams(r, chainID.Int64())
 }
 

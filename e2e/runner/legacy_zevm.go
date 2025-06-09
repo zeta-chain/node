@@ -53,10 +53,7 @@ func (r *E2ERunner) LegacyDepositZetaWithAmount(to ethcommon.Address, amount *bi
 
 	paused, err := r.ConnectorEth.Paused(&bind.CallOpts{})
 	require.NoError(r, err)
-	if paused {
-		r.Logger.Print("ConnectorEth is paused, cannot send Zeta")
-		return ethcommon.Hash{}
-	}
+	require.False(r, paused, "ZetaConnectorEth is paused, cannot send ZETA")
 
 	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id

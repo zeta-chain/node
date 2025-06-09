@@ -394,6 +394,40 @@ export declare class EventERC20CustodyFundsMigration extends Message<EventERC20C
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.EventConnectorFundsMigration
+ */
+export declare class EventConnectorFundsMigration extends Message<EventConnectorFundsMigration> {
+  /**
+   * @generated from field: string new_connector_address = 1;
+   */
+  newConnectorAddress: string;
+
+  /**
+   * @generated from field: string amount = 2;
+   */
+  amount: string;
+
+  /**
+   * @generated from field: string cctx_index = 3;
+   */
+  cctxIndex: string;
+
+  constructor(data?: PartialMessage<EventConnectorFundsMigration>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.EventConnectorFundsMigration";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventConnectorFundsMigration;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventConnectorFundsMigration;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventConnectorFundsMigration;
+
+  static equals(a: EventConnectorFundsMigration | PlainMessage<EventConnectorFundsMigration> | undefined, b: EventConnectorFundsMigration | PlainMessage<EventConnectorFundsMigration> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.EventERC20CustodyPausing
  */
 export declare class EventERC20CustodyPausing extends Message<EventERC20CustodyPausing> {

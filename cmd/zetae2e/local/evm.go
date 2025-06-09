@@ -145,16 +145,16 @@ func evmTestRoutine(
 	}
 }
 
-func V2ConnectorMigrationsTestRoutine(
+// V2ZetaTestRoutine runs v2 connector migrations related e2e tests
+func V2ZetaTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	testNames ...string,
 ) func() error {
 	return func() (err error) {
-		name := "v2-connector-migrations"
+		name := "v2-zeta"
 		account := conf.DefaultAccount
-		// initialize runner for erc20 test
 		v2Runner, err := initTestRunner(
 			name,
 			conf,
@@ -174,7 +174,6 @@ func V2ConnectorMigrationsTestRoutine(
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 10000)
 		v2Runner.WaitForTxReceiptOnEVM(txERC20Send)
 
-		// run erc20 test
 		testsToRun, err := v2Runner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			testNames...,

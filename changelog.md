@@ -5,6 +5,7 @@
 ### Features
 
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+* [3962](https://github.com/zeta-chain/node/pull/3962) - add a new Admin CMD to migrate connector funds from V1 to V2
 
 ### Fixes
 

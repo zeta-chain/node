@@ -74,6 +74,7 @@ func MigrateERC20CustodyFundsCmdCCTX(
 	)
 }
 
+// MigrateConnectorFundsCmdCCTX returns a CCTX allowing to migrate connector funds
 func MigrateConnectorFundsCmdCCTX(
 	creator string,
 	v1ConnectorContractAddress string,
@@ -84,10 +85,12 @@ func MigrateConnectorFundsCmdCCTX(
 	priorityFee string,
 	tssPubKey string,
 	currentNonce uint64,
+	height int64,
 ) CrossChainTx {
-	indexString := GetConnectorsMigrationCCTXIndexString(tssPubKey, currentNonce, chainID)
+	indexString := GetConnectorsMigrationCCTXIndexString(tssPubKey, currentNonce, chainID, height)
 	hash := crypto.Keccak256Hash([]byte(indexString))
-
+	// Zetaclient uses the v2 address and amount from `relayedMessage` field.
+	// The `to` field is used to initiate the migration on the v1 contract
 	return newCmdCCTX(
 		creator,
 		hash.Hex(),
@@ -120,12 +123,14 @@ func GetERC20CustodyMigrationCCTXIndexString(
 }
 
 // GetConnectorsMigrationCCTXIndexString returns the index string of the CCTX for migrating connector funds
+// It includes the TSS public key, nonce, chain ID, and height to ensure uniqueness
 func GetConnectorsMigrationCCTXIndexString(
 	tssPubKey string,
 	nonce uint64,
 	chainID int64,
+	height int64,
 ) string {
-	return fmt.Sprintf("%s-%s-%d-%d", constant.CmdMigrateConnectorFunds, tssPubKey, nonce, chainID)
+	return fmt.Sprintf("%s-%s-%d-%d-%d", constant.CmdMigrateConnectorFunds, tssPubKey, nonce, chainID, height)
 }
 
 // UpdateERC20CustodyPauseStatusCmdCCTX returns a CCTX allowing to update the pause status of the ERC20 custody contract

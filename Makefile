@@ -275,7 +275,7 @@ solana:
 
 start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
-	export E2E_ARGS="${E2E_ARGS} --test-legacy" && \
+	export E2E_ARGS="${E2E_ARGS}" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 start-staking-test: e2e-images

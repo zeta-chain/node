@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
-	//authoritytypes "github.com/zeta-chain/node/x/authority/types"
-
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -21,7 +19,7 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, err.Error())
 	}
 
-	// get the current TSS nonce allow to set a unique index for the CCTX
+	// get the current TSS nonce to allow setting a unique index for the CCTX
 	chainNonce, found := k.GetObserverKeeper().GetChainNonces(ctx, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrInvalidChainID, "cannot find current chain nonce")
@@ -34,7 +32,6 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 		return nil, errorsmod.Wrap(types.ErrCannotFindTSSKeys, "cannot find current TSS")
 	}
 
-	// get necessary parameters to create the cctx
 	params, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
@@ -53,7 +50,6 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 	medianGasPrice = medianGasPrice.MulUint64(types.ConnectorMigrationGasMultiplierEVM)
 	priorityFee = priorityFee.MulUint64(types.ConnectorMigrationGasMultiplierEVM)
 
-	// should not happen
 	if priorityFee.GT(medianGasPrice) {
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidGasAmount,
@@ -73,6 +69,7 @@ func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMi
 		priorityFee.String(),
 		tss.TssPubkey,
 		currentNonce,
+		ctx.BlockHeight(),
 	)
 
 	// save the cctx
