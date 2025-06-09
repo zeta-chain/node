@@ -156,6 +156,31 @@ func TestClientLive(t *testing.T) {
 		require.Equal(t, inbounds[0].TxHash, "fb626645382defa1a68f4c07300ede722147c3b27a2fded698f0bf54b1110232")
 	})
 
+	t.Run("FilterAndParseIncomingTxNoop", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, mainnetConfig)
+
+		// get a block that contains no incoming tx
+		hashStr := "000000000000000000004a8ff16cd6be6c9410768c40c253868137f72f020f2d"
+
+		block, err := ts.GetBlockVerboseByStr(ts.ctx, hashStr)
+		require.NoError(t, err)
+
+		// filter incoming tx
+		inbounds, err := observer.FilterAndParseIncomingTx(
+			ts.ctx,
+			ts.Client,
+			block.Tx,
+			uint64(block.Height),
+			"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
+			ts.Logger,
+			&chaincfg.TestNet3Params,
+		)
+
+		require.NoError(t, err)
+		require.Empty(t, inbounds)
+	})
+
 	t.Run("GetRecentFeeRate", func(t *testing.T) {
 		// ARRANGE
 		// setup Bitcoin testnet client
