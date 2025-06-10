@@ -5,12 +5,15 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 
+	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func (k msgServer) MigrateConnectorFunds(goCtx context.Context, msg *types.MsgMigrateConnectorFunds) (*types.MsgMigrateConnectorFundsResponse, error) {
+func (k msgServer) MigrateConnectorFunds(
+	goCtx context.Context,
+	msg *types.MsgMigrateConnectorFunds,
+) (*types.MsgMigrateConnectorFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized

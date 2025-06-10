@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 
 	"github.com/zeta-chain/node/e2e/runner"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // randomPayload generates a random payload to be used in gateway calls for testing purposes
@@ -38,9 +38,20 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%dm%.1fs", minutes, seconds)
 }
 
-func requireCctxStatus(r *runner.E2ERunner, expectedStatus crosschaintypes.CctxStatus, cctx *crosschaintypes.CrossChainTx) {
+func requireCctxStatus(
+	r *runner.E2ERunner,
+	expectedStatus crosschaintypes.CctxStatus,
+	cctx *crosschaintypes.CrossChainTx,
+) {
 	if expectedStatus == cctx.CctxStatus.Status {
 		return
 	}
-	require.Failf(r, "cctx status mismatch", "cctx index %s ,expected status: %s, got status: %s", cctx.Index, expectedStatus.String(), cctx.CctxStatus.Status.String())
+	require.Failf(
+		r,
+		"cctx status mismatch",
+		"cctx index %s ,expected status: %s, got status: %s",
+		cctx.Index,
+		expectedStatus.String(),
+		cctx.CctxStatus.Status.String(),
+	)
 }

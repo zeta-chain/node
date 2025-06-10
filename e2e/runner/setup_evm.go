@@ -121,7 +121,13 @@ func (r *E2ERunner) SetupEVM() {
 	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
 	require.NoError(r, err)
 	// Encode the initializer data
-	initializerData, err = zetaConnnectorNativeABI.Pack("initialize", r.GatewayEVMAddr, r.ZetaEthAddr, r.TSSAddress, r.Account.EVMAddress())
+	initializerData, err = zetaConnnectorNativeABI.Pack(
+		"initialize",
+		r.GatewayEVMAddr,
+		r.ZetaEthAddr,
+		r.TSSAddress,
+		r.Account.EVMAddress(),
+	)
 	require.NoError(r, err)
 
 	// Deploy zetaConnnectorNative proxy contract
