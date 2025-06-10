@@ -37,7 +37,7 @@ func (s *EVMServer) MockSendTransaction() {
 }
 
 func (s *EVMServer) MockNonceAt(nonce uint64) {
-	s.On("eth_getTransactionCount", func(_ []any) (any, error) {
+	s.On("eth_getTransactionCount", func(_ map[string]any) (any, error) {
 		return hex(nonce), nil
 	})
 }
