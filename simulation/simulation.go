@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/zeta-chain/ethermint/app"
-	evmante "github.com/zeta-chain/ethermint/app/ante"
+	evmante "github.com/cosmos/evm/ante"
 
+	app "github.com/cosmos/evm/evmd"
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
 )
@@ -47,7 +47,7 @@ func NewSimApp(
 		EvmKeeper:       zetaApp.EvmKeeper,
 		FeeMarketKeeper: zetaApp.FeeMarketKeeper,
 		SignModeHandler: encCdc.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
+		SigGasConsumer:  evmante.SigVerificationGasConsumer,
 		MaxTxGasWanted:  0,
 		ObserverKeeper:  zetaApp.ObserverKeeper,
 	}

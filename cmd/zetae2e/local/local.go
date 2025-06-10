@@ -51,7 +51,6 @@ const (
 	flagSkipHeaderProof   = "skip-header-proof"
 	flagTestLegacy        = "test-legacy"
 	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagSkipPrecompiles   = "skip-precompiles"
 	flagUpgradeContracts  = "upgrade-contracts"
 	flagTestFilter        = "test-filter"
 	flagTestStaking       = "test-staking"
@@ -93,7 +92,6 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagSkipPrecompiles, true, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
@@ -130,7 +128,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		testStress        = testEthStress || testSolanaStress || testSuiStress
 		setupSolana       = testSolana || testStress
@@ -162,7 +159,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
-		skipPrecompiles = true
 
 		if iterations > 100 {
 			TestTimeout = time.Hour
@@ -250,9 +246,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			chains.BitcoinRegtest.ChainId,
 		}))
 	}
-
-	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
-	noError(err)
 
 	// setting up the networks
 	if !skipSetup {
@@ -344,32 +337,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
-	}
-	if !skipPrecompiles {
-		precompiledContractTests := []string{
-			//e2etests.TestPrecompilesPrototypeName,
-			//e2etests.TestPrecompilesPrototypeThroughContractName,
-			//// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-			//// e2etests.TestPrecompilesStakingThroughContractName,
-			//e2etests.TestPrecompilesBankName,
-			//e2etests.TestPrecompilesBankFailName,
-			//e2etests.TestPrecompilesBankThroughContractName,
-		}
-		if e2eStartHeight < 100 {
-			// these tests require a clean system
-			// since unstaking has an unbonding period
-			//precompiledContractTests = append(precompiledContractTests,
-			//	e2etests.TestPrecompilesStakingName,
-			//	e2etests.TestPrecompilesDistributeName,
-			//	e2etests.TestPrecompilesDistributeNonZRC20Name,
-			//	e2etests.TestPrecompilesDistributeThroughContractName,
-			//)
-			// prevent lint error
-			_ = precompiledContractTests
-		} else {
-			logger.Print("⚠️ partial precompiled run (unclean state)")
-		}
-		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
 
 	if testAdmin {

@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -30,12 +31,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	cosmosevmcmd "github.com/cosmos/evm/client"
+	"github.com/cosmos/evm/crypto/hd"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	ethermintclient "github.com/zeta-chain/ethermint/client"
-	"github.com/zeta-chain/ethermint/crypto/hd"
-	evmenc "github.com/zeta-chain/ethermint/encoding"
-	"github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
@@ -53,8 +52,8 @@ type emptyAppOptions struct{}
 
 func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 
-func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig()
+func NewRootCmd() *cobra.Command {
+	encodingConfig := app.MakeEncodingConfig(4221) // TODO evm: evm chain id?
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -131,7 +130,7 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 		map[int64]bool{},
 		"",
 		0,
-		evmenc.MakeConfig(),
+		4221, // TODO evm: evm chain id
 		emptyAppOptions{},
 	)
 	autoCliOpts := tempApp.AutoCliOpts()
@@ -141,7 +140,7 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 		panic(err)
 	}
 
-	return rootCmd, encodingConfig
+	return rootCmd
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -159,15 +158,15 @@ func initTmConfig() *tmcfg.Config {
 	return cfg
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingConfig) {
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
 
 	rootCmd.AddCommand(
-		ethermintclient.ValidateChainID(
-			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		),
+		// ethermintclient.ValidateChainID( // TODO evm: removed
+		// 	genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		// ),
 		genutilcli.CollectGenTxsCmd(
 			banktypes.GenesisBalancesIterator{},
 			app.DefaultNodeHome,
@@ -190,7 +189,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		AddrConversionCmd(),
 		UpgradeHandlerVersionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		// ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}), // TODO evm: removed, was it used before?
 
 		debug.Cmd(),
 		snapshot.Cmd(ac.newApp),
@@ -212,7 +211,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
-		ethermintclient.KeyCommands(app.DefaultNodeHome),
+		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true), // TODO evm: second arg default to eth keys?
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
@@ -275,7 +274,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg types.EncodingConfig
+	encCfg testutil.TestEncodingConfig
 }
 
 func (ac appCreator) newApp(
@@ -301,7 +300,7 @@ func (ac appCreator) newApp(
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		//cosmoscmd.EncodingConfig(ac.encCfg),
-		ac.encCfg,
+		4221, // TODO evm: evm chain id?
 		appOpts,
 		baseappOptions...,
 	)
@@ -333,7 +332,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		ac.encCfg,
+		4221, // TODO evm: evm chain id?
 		appOpts,
 	)
 

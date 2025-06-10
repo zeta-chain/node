@@ -211,13 +211,8 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-precompiles:
-	@echo "--> Generating bindings for precompiled contracts"
-	@bash ./scripts/bindings-stateful-precompiles.sh
-.PHONY: precompiles
-
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks precompiles fmt
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 .PHONY: generate
 
 

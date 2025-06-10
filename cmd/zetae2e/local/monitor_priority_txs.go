@@ -112,5 +112,5 @@ func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 }
 
 func isActionNonSystemTx(attr types.EventAttribute) bool {
-	return attr.Value == "/ethermint.evm.v1.MsgEthereumTx"
+	return attr.Value == "/cosmos.evm.vm.v1.MsgEthereumTx"
 }

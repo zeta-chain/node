@@ -33,13 +33,13 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/evm/crypto/hd"
+	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/samber/lo"
-	"github.com/zeta-chain/ethermint/crypto/hd"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -728,7 +728,7 @@ func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	evidencetypes.RegisterInterfaces(interfaceRegistry)
 	crisistypes.RegisterInterfaces(interfaceRegistry)
 	evmtypes.RegisterInterfaces(interfaceRegistry)
-	etherminttypes.RegisterInterfaces(interfaceRegistry)
+	cosmosevmtypes.RegisterInterfaces(interfaceRegistry)
 	crosschaintypes.RegisterInterfaces(interfaceRegistry)
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)

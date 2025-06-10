@@ -33,7 +33,10 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmmodule "github.com/cosmos/evm/x/vm"
+	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	capabilitymodule "github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
@@ -45,9 +48,6 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
-	evmmodule "github.com/zeta-chain/ethermint/x/evm"
-	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
-	feemarketkeeper "github.com/zeta-chain/ethermint/x/feemarket/keeper"
 
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
@@ -231,7 +231,7 @@ func AccountKeeper(
 	return authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		moduleAccountPerms,
 		authcodec.NewBech32Codec("zeta"),
 		"zeta",
@@ -364,7 +364,6 @@ func FeeMarketKeeper(
 
 	return feemarketkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(storeKey),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		storeKey,
 		transientKey,
@@ -400,7 +399,6 @@ func EVMKeeper(
 
 	k := evmkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(storeKey),
 		storeKey,
 		transientKey,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
