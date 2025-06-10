@@ -7,7 +7,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/keeper"
 )

@@ -10,7 +10,7 @@ import (
 
 	core "github.com/ethereum/go-ethereum/core"
 
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	mock "github.com/stretchr/testify/mock"
 

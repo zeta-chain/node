@@ -27,9 +27,9 @@ import (
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"golang.org/x/exp/slog"
 
+	ethermint "github.com/zeta-chain/ethermint/types"
 	"github.com/zeta-chain/node/rpc"
 	"github.com/zeta-chain/node/server/config"
 )

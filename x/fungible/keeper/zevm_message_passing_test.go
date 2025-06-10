@@ -1,19 +1,20 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/node/e2e/contracts/dapp"
-	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+	"github.com/zeta-chain/node/e2e/contracts/dappreverter"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/evm/x/vm/statedb"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/holiman/uint256"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"

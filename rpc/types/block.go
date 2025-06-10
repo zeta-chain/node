@@ -29,7 +29,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/spf13/cast"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc/metadata"
 )
 

@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
@@ -86,7 +86,7 @@ func withDummyServer(zetaBlockHeight int64) []grpcmock.ServerOption {
 			s.ExpectUnary("/ethermint.feemarket.v1.Query/Params").
 				UnlimitedTimes().
 				Return(feemarkettypes.QueryParamsResponse{
-					Params: feemarkettypes.Params{BaseFee: sdkmath.NewInt(100)},
+					Params: feemarkettypes.Params{BaseFee: sdkmath.LegacyNewDec(100)},
 				})
 		},
 	}

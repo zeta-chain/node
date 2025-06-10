@@ -9,11 +9,11 @@ import (
 	"github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
 	"github.com/zeta-chain/ethermint/indexer"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"github.com/zeta-chain/node/rpc/backend/mocks"

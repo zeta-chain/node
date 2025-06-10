@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/node/pkg/chains"
 	"testing"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/pkg/chains"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -9,8 +9,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
@@ -66,7 +66,7 @@ func TestBroadcast(t *testing.T) {
 				WithPayload(feemarkettypes.QueryParamsRequest{}).
 				Return(feemarkettypes.QueryParamsResponse{
 					Params: feemarkettypes.Params{
-						BaseFee: sdkmath.NewInt(23455),
+						BaseFee: sdkmath.LegacyNewDec(23455),
 					},
 				})
 		},

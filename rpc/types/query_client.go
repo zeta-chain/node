@@ -22,7 +22,7 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 

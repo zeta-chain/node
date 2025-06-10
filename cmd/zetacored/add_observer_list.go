@@ -18,10 +18,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -425,12 +422,12 @@ func AddGenesisAccount(
 	genAccounts := make([]authtypes.GenesisAccount, len(balances))
 	for i, balance := range balances {
 		totalBalanceAdded = totalBalanceAdded.Add(balance.Coins...)
-		accAddress := sdk.MustAccAddressFromBech32(balance.Address)
-		baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
-		genAccount = &ethermint.EthAccount{
-			BaseAccount: baseAccount,
-			CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-		}
+		// accAddress := sdk.MustAccAddressFromBech32(balance.Address) // TODO evm: EthAccount missing?
+		// baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
+		// genAccount = &cosmosevmtypes.EthAccount{
+		// 	BaseAccount: baseAccount,
+		// 	CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
+		// }
 		if err := genAccount.Validate(); err != nil {
 			return appState, fmt.Errorf("failed to validate new genesis account: %w", err)
 		}

@@ -22,10 +22,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"go.uber.org/mock/gomock"
 
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
