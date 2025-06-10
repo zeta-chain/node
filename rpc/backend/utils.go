@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
@@ -22,14 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/log"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
@@ -37,7 +14,17 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/zeta-chain/node/rpc/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	"github.com/cosmos/evm/rpc/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	"cosmossdk.io/log"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type txGasAndReward struct {
@@ -60,12 +47,7 @@ func (s sortGasAndReward) Less(i, j int) bool {
 // If the pending value is true, it will iterate over the mempool (pending)
 // txs in order to compute and return the pending tx sequence.
 // Todo: include the ability to specify a blockNumber
-func (b *Backend) getAccountNonce(
-	accAddr common.Address,
-	pending bool,
-	height int64,
-	logger log.Logger,
-) (uint64, error) {
+func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height int64, logger log.Logger) (uint64, error) {
 	queryClient := authtypes.NewQueryClient(b.clientCtx)
 	adr := sdk.AccAddress(accAddr.Bytes()).String()
 	ctx := types.ContextWithHeight(height)
@@ -78,7 +60,7 @@ func (b *Backend) getAccountNonce(
 		}
 		return 0, err
 	}
-	var acc authtypes.AccountI
+	var acc sdk.AccountI
 	if err := b.clientCtx.InterfaceRegistry.UnpackAny(res.Account, &acc); err != nil {
 		return 0, err
 	}
@@ -109,7 +91,6 @@ func (b *Backend) getAccountNonce(
 
 			sender, err := ethMsg.GetSender(b.chainID)
 			if err != nil {
-				b.logger.Debug("failed to parse from field", "hash", ethMsg.Hash, "error", err.Error())
 				continue
 			}
 			if sender == accAddr {
@@ -123,10 +104,10 @@ func (b *Backend) getAccountNonce(
 
 // output: targetOneFeeHistory
 func (b *Backend) processBlock(
-	tendermintBlock *tmrpctypes.ResultBlock,
+	tendermintBlock *cmtrpctypes.ResultBlock,
 	ethBlock *map[string]interface{},
 	rewardPercentiles []float64,
-	tendermintBlockResult *tmrpctypes.ResultBlockResults,
+	tendermintBlockResult *cmtrpctypes.ResultBlockResults,
 	targetOneFeeHistory *types.OneFeeHistory,
 ) error {
 	blockHeight := tendermintBlock.Block.Height
@@ -139,7 +120,11 @@ func (b *Backend) processBlock(
 	targetOneFeeHistory.BaseFee = blockBaseFee
 	cfg := b.ChainConfig()
 	if cfg.IsLondon(big.NewInt(blockHeight + 1)) {
-		targetOneFeeHistory.NextBaseFee = eip1559.CalcBaseFee(cfg, b.CurrentHeader())
+		header, err := b.CurrentHeader()
+		if err != nil {
+			return err
+		}
+		targetOneFeeHistory.NextBaseFee = eip1559.CalcBaseFee(cfg, header)
 	} else {
 		targetOneFeeHistory.NextBaseFee = new(big.Int)
 	}
@@ -157,11 +142,7 @@ func (b *Backend) processBlock(
 	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
 
 	if gasLimitUint64 <= 0 {
-		return fmt.Errorf(
-			"gasLimit of block height %d should be bigger than 0 , current gaslimit %d",
-			blockHeight,
-			gasLimitUint64,
-		)
+		return fmt.Errorf("gasLimit of block height %d should be bigger than 0 , current gaslimit %d", blockHeight, gasLimitUint64)
 	}
 
 	gasUsedRatio := gasusedfloat / float64(gasLimitUint64)
@@ -190,8 +171,7 @@ func (b *Backend) processBlock(
 			b.logger.Debug("failed to decode transaction in block", "height", blockHeight, "error", err.Error())
 			continue
 		}
-		// #nosec G115 always positive
-		txGasUsed := uint64(eachTendermintTxResult.GasUsed)
+		txGasUsed := uint64(eachTendermintTxResult.GasUsed) // #nosec G115
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 			if !ok {
@@ -218,8 +198,7 @@ func (b *Backend) processBlock(
 	sumGasUsed := sorter[0].gasUsed
 
 	for i, p := range rewardPercentiles {
-		// #nosec G115 always positive
-		thresholdGasUsed := uint64(blockGasUsed * p / 100)
+		thresholdGasUsed := uint64(blockGasUsed * p / 100) // #nosec G115
 		for sumGasUsed < thresholdGasUsed && txIndex < ethTxCount-1 {
 			txIndex++
 			sumGasUsed += sorter[txIndex].gasUsed
@@ -274,12 +253,12 @@ func ParseTxLogsFromEvent(event abci.Event) ([]*ethtypes.Log, error) {
 			continue
 		}
 
-		var log evmtypes.Log
-		if err := json.Unmarshal([]byte(attr.Value), &log); err != nil {
+		var txLog evmtypes.Log
+		if err := json.Unmarshal([]byte(attr.Value), &txLog); err != nil {
 			return nil, err
 		}
 
-		logs = append(logs, &log)
+		logs = append(logs, &txLog)
 	}
 	return evmtypes.LogsToEthereum(logs), nil
 }
@@ -291,7 +270,7 @@ func ShouldIgnoreGasUsed(res *abci.ExecTxResult) bool {
 }
 
 // GetLogsFromBlockResults returns the list of event logs from the tendermint block result response
-func GetLogsFromBlockResults(blockRes *tmrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
+func GetLogsFromBlockResults(blockRes *cmtrpctypes.ResultBlockResults) ([][]*ethtypes.Log, error) {
 	blockLogs := [][]*ethtypes.Log{}
 	for _, txResult := range blockRes.TxsResults {
 		logs, err := AllTxLogsFromEvents(txResult.Events)
@@ -319,17 +298,4 @@ func GetHexProofs(proof *crypto.ProofOps) []string {
 		proofs = append(proofs, proof)
 	}
 	return proofs
-}
-
-func GetValidatorAccount(header *tmtypes.Header, qc *types.QueryClient) (sdk.AccAddress, error) {
-	res, err := qc.ValidatorAccount(
-		types.ContextWithHeight(header.Height),
-		&evmtypes.QueryValidatorAccountRequest{
-			ConsAddress: sdk.ConsAddress(header.ProposerAddress).String(),
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get validator account %w", err)
-	}
-	return sdk.AccAddressFromBech32(res.AccountAddress)
 }

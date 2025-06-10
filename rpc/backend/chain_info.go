@@ -1,54 +1,34 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
 	"fmt"
-	"math"
 	"math/big"
-	"strconv"
 
-	sdkmath "cosmossdk.io/math"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethmath "github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
-	rpctypes "github.com/zeta-chain/node/rpc/types"
+	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	rpctypes "github.com/cosmos/evm/rpc/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ChainID is the EIP-155 replay-protection chain id for the current ethereum chain config.
 func (b *Backend) ChainID() (*hexutil.Big, error) {
-	eip155ChainID, err := ethermint.ParseChainID(b.clientCtx.ChainID)
-	if err != nil {
-		panic(err)
-	}
 	// if current block is at or past the EIP-155 replay-protection fork block, return chainID from config
 	bn, err := b.BlockNumber()
 	if err != nil {
 		b.logger.Debug("failed to fetch latest block number", "error", err.Error())
-		return (*hexutil.Big)(eip155ChainID), nil
+		return (*hexutil.Big)(b.chainID), nil
 	}
 
 	if config := b.ChainConfig(); config.IsEIP155(new(big.Int).SetUint64(uint64(bn))) {
@@ -60,28 +40,26 @@ func (b *Backend) ChainID() (*hexutil.Big, error) {
 
 // ChainConfig returns the latest ethereum chain configuration
 func (b *Backend) ChainConfig() *params.ChainConfig {
-	params, err := b.queryClient.Params(b.ctx, &evmtypes.QueryParamsRequest{})
-	if err != nil {
-		return nil
-	}
-
-	return params.Params.ChainConfig.EthereumConfig(b.chainID)
+	return evmtypes.GetEthChainConfig()
 }
 
 // GlobalMinGasPrice returns MinGasPrice param from FeeMarket
-func (b *Backend) GlobalMinGasPrice() (sdkmath.LegacyDec, error) {
-	res, err := b.queryClient.FeeMarket.Params(b.ctx, &feemarkettypes.QueryParamsRequest{})
+func (b *Backend) GlobalMinGasPrice() (*big.Int, error) {
+	res, err := b.queryClient.GlobalMinGasPrice(b.ctx, &evmtypes.QueryGlobalMinGasPriceRequest{})
 	if err != nil {
-		return sdkmath.LegacyZeroDec(), err
+		return nil, err
 	}
-	return res.Params.MinGasPrice, nil
+	if res == nil {
+		return nil, fmt.Errorf("GlobalMinGasPrice query returned a nil response")
+	}
+	return res.MinGasPrice.BigInt(), nil
 }
 
 // BaseFee returns the base fee tracked by the Fee Market module.
 // If the base fee is not enabled globally, the query returns nil.
 // If the London hard fork is not activated at the current height, the query will
 // return nil.
-func (b *Backend) BaseFee(blockRes *tmrpctypes.ResultBlockResults) (*big.Int, error) {
+func (b *Backend) BaseFee(blockRes *cmtrpctypes.ResultBlockResults) (*big.Int, error) {
 	// return BaseFee if London hard fork is activated and feemarket is enabled
 	res, err := b.queryClient.BaseFee(rpctypes.ContextWithHeight(blockRes.Height), &evmtypes.QueryBaseFeeRequest{})
 	if err != nil || res.BaseFee == nil {
@@ -90,10 +68,10 @@ func (b *Backend) BaseFee(blockRes *tmrpctypes.ResultBlockResults) (*big.Int, er
 		// faster to iterate reversely
 		for i := len(blockRes.FinalizeBlockEvents) - 1; i >= 0; i-- {
 			evt := blockRes.FinalizeBlockEvents[i]
-			if evt.Type == feemarkettypes.EventTypeFeeMarket && len(evt.Attributes) > 0 {
-				baseFee, err := strconv.ParseInt(evt.Attributes[0].Value, 10, 64)
-				if err == nil {
-					return big.NewInt(baseFee), nil
+			if evt.Type == evmtypes.EventTypeFeeMarket && len(evt.Attributes) > 0 {
+				baseFee, ok := math.NewIntFromString(evt.Attributes[0].Value)
+				if ok {
+					return baseFee.BigInt(), nil
 				}
 				break
 			}
@@ -109,22 +87,20 @@ func (b *Backend) BaseFee(blockRes *tmrpctypes.ResultBlockResults) (*big.Int, er
 }
 
 // CurrentHeader returns the latest block header
-func (b *Backend) CurrentHeader() *ethtypes.Header {
-	header, err := b.HeaderByNumber(rpctypes.EthLatestBlockNumber)
-	if err != nil {
-		b.logger.Debug("failed to fetch latest header", "error", err.Error())
-		return nil
-	}
-	return header
+// This will return error as per node configuration
+// if the ABCI responses are discarded ('discard_abci_responses' config param)
+func (b *Backend) CurrentHeader() (*ethtypes.Header, error) {
+	return b.HeaderByNumber(rpctypes.EthLatestBlockNumber)
 }
 
 // PendingTransactions returns the transactions that are in the transaction pool
 // and have a from address that is one of the accounts this node manages.
 func (b *Backend) PendingTransactions() ([]*sdk.Tx, error) {
-	mc, ok := b.clientCtx.Client.(tmrpcclient.MempoolClient)
+	mc, ok := b.clientCtx.Client.(cmtrpcclient.MempoolClient)
 	if !ok {
 		return nil, errors.New("invalid rpc client")
 	}
+
 	res, err := mc.UnconfirmedTxs(b.ctx, nil)
 	if err != nil {
 		return nil, err
@@ -163,39 +139,28 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 		return nil, err
 	}
 
-	address, err := sdk.AccAddressFromBech32(res.AccountAddress)
-	if err != nil {
-		return nil, err
-	}
+	address, _ := sdk.AccAddressFromBech32(res.AccountAddress) // #nosec G703
 	return address, nil
 }
 
 // FeeHistory returns data relevant for fee estimation based on the specified range of blocks.
 func (b *Backend) FeeHistory(
-	userBlockCount ethmath.HexOrDecimal64, // number blocks to fetch, maximum is 100
+	userBlockCount uint64, // number blocks to fetch, maximum is 100
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
-	blockEnd := int64(lastBlock)
+	blockEnd := int64(lastBlock) //#nosec G115 -- checked for int overflow already
 
 	if blockEnd < 0 {
 		blockNumber, err := b.BlockNumber()
 		if err != nil {
 			return nil, err
 		}
-		if blockNumber > math.MaxInt64 {
-			return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
-		}
-		// #nosec G115 range checked
-		blockEnd = int64(blockNumber)
+		blockEnd = int64(blockNumber) //#nosec G115 -- checked for int overflow already
 	}
 
-	if userBlockCount > math.MaxInt64 {
-		return nil, fmt.Errorf("not able to query block count greater than MaxInt64")
-	}
-	// #nosec G115 range checked
-	blocks := int64(userBlockCount)
-	maxBlockCount := int64(b.cfg.JSONRPC.FeeHistoryCap)
+	blocks := int64(userBlockCount)                     // #nosec G115 -- checked for int overflow already
+	maxBlockCount := int64(b.cfg.JSONRPC.FeeHistoryCap) // #nosec G115 -- checked for int overflow already
 	if blocks > maxBlockCount {
 		return nil, fmt.Errorf("FeeHistory user block count %d higher than %d", blocks, maxBlockCount)
 	}
@@ -222,8 +187,7 @@ func (b *Backend) FeeHistory(
 
 	// fetch block
 	for blockID := blockStart; blockID <= blockEnd; blockID++ {
-		// #nosec G115 range checked
-		index := int32(blockID - blockStart)
+		index := int32(blockID - blockStart) // #nosec G115
 		// tendermint block
 		tendermintblock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(blockID))
 		if tendermintblock == nil {
@@ -237,7 +201,7 @@ func (b *Backend) FeeHistory(
 		}
 
 		// tendermint block result
-		tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
+		tendermintBlockResult, err := b.rpcClient.BlockResults(b.ctx, &tendermintblock.Block.Height)
 		if tendermintBlockResult == nil {
 			b.logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
 			return nil, err
@@ -298,11 +262,8 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 	// ```
 	// MaxDelta = BaseFee * (GasLimit - GasLimit / ElasticityMultiplier) / (GasLimit / ElasticityMultiplier) / Denominator
 	//          = BaseFee * (ElasticityMultiplier - 1) / Denominator
-	// ```
-	// #nosec G115 range checked
-	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(
-		params.Params.BaseFeeChangeDenominator,
-	)
+	// ```t
+	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(params.Params.BaseFeeChangeDenominator) // #nosec G115
 	if maxDelta < 0 {
 		// impossible if the parameter validation passed.
 		maxDelta = 0

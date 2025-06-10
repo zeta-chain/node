@@ -1,29 +1,25 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+
+	cmttypes "github.com/cometbft/cometbft/types"
+
+	"github.com/cosmos/evm/crypto/ethsecp256k1"
+	rpctypes "github.com/cosmos/evm/rpc/types"
+	"github.com/cosmos/evm/server/config"
+	"github.com/cosmos/evm/testutil/constants"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	tmtypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
@@ -32,19 +28,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	"github.com/zeta-chain/ethermint/server/config"
-
-	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // Accounts returns the list of accounts available to this node.
 func (b *Backend) Accounts() ([]common.Address, error) {
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
+
+	if !b.cfg.JSONRPC.AllowInsecureUnlock {
+		b.logger.Debug("account unlock with HTTP access is forbidden")
+		return addresses, fmt.Errorf("account unlock with HTTP access is forbidden")
+	}
 
 	infos, err := b.clientCtx.Keyring.List()
 	if err != nil {
@@ -81,10 +74,8 @@ func (b *Backend) Syncing() (interface{}, error) {
 	}
 
 	return map[string]interface{}{
-		// #nosec G115 block height always positive
-		"startingBlock": hexutil.Uint64(status.SyncInfo.EarliestBlockHeight),
-		// #nosec G115 block height always positive
-		"currentBlock": hexutil.Uint64(status.SyncInfo.LatestBlockHeight),
+		"startingBlock": hexutil.Uint64(status.SyncInfo.EarliestBlockHeight), //nolint:gosec // G115 // won't exceed uint64
+		"currentBlock":  hexutil.Uint64(status.SyncInfo.LatestBlockHeight),   //nolint:gosec // G115 // won't exceed uint64
 		// "highestBlock":  nil, // NA
 		// "pulledStates":  nil, // NA
 		// "knownStates":   nil, // NA
@@ -93,6 +84,11 @@ func (b *Backend) Syncing() (interface{}, error) {
 
 // SetEtherbase sets the etherbase of the miner
 func (b *Backend) SetEtherbase(etherbase common.Address) bool {
+	if !b.cfg.JSONRPC.AllowInsecureUnlock {
+		b.logger.Debug("account unlock with HTTP access is forbidden")
+		return false
+	}
+
 	delAddr, err := b.GetCoinbase()
 	if err != nil {
 		b.logger.Debug("failed to get coinbase address", "error", err.Error())
@@ -115,10 +111,10 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 		return false
 	}
 
-	// Fetch minimun gas price to calculate fees using the configuration.
+	// Fetch minimum gas price to calculate fees using the configuration.
 	minGasPrices := b.cfg.GetMinGasPrices()
 	if len(minGasPrices) == 0 || minGasPrices.Empty() {
-		b.logger.Debug("the minimun fee is not set")
+		b.logger.Debug("the minimum fee is not set")
 		return false
 	}
 	minGasPriceValue := minGasPrices[0].Amount
@@ -158,7 +154,7 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 		return false
 	}
 
-	if err := tx.Sign(context.TODO(), txFactory, keyInfo.Name, builder, false); err != nil {
+	if err := tx.Sign(b.clientCtx.CmdContext, txFactory, keyInfo.Name, builder, false); err != nil {
 		b.logger.Debug("failed to sign tx", "error", err.Error())
 		return false
 	}
@@ -171,7 +167,7 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 		return false
 	}
 
-	tmHash := common.BytesToHash(tmtypes.Tx(txBytes).Hash())
+	tmHash := common.BytesToHash(cmttypes.Tx(txBytes).Hash())
 
 	// Broadcast transaction in sync mode (default)
 	// NOTE: If error is encountered on the node, the broadcast will not return an error
@@ -211,10 +207,7 @@ func (b *Backend) ImportRawKey(privkey, password string) (common.Address, error)
 	}
 
 	// ignore error as we only care about the length of the list
-	list, err := b.clientCtx.Keyring.List()
-	if err != nil {
-		list = []*keyring.Record{}
-	}
+	list, _ := b.clientCtx.Keyring.List() // #nosec G703
 	privKeyName := fmt.Sprintf("personal_%d", len(list))
 
 	armor := sdkcrypto.EncryptArmorPrivKey(privKey, password, ethsecp256k1.KeyType)
@@ -232,6 +225,11 @@ func (b *Backend) ImportRawKey(privkey, password string) (common.Address, error)
 func (b *Backend) ListAccounts() ([]common.Address, error) {
 	addrs := []common.Address{}
 
+	if !b.cfg.JSONRPC.AllowInsecureUnlock {
+		b.logger.Debug("account unlock with HTTP access is forbidden")
+		return addrs, fmt.Errorf("account unlock with HTTP access is forbidden")
+	}
+
 	list, err := b.clientCtx.Keyring.List()
 	if err != nil {
 		return nil, err
@@ -248,7 +246,7 @@ func (b *Backend) ListAccounts() ([]common.Address, error) {
 	return addrs, nil
 }
 
-// NewMnemonic will create a new account and returns the address for the new account.
+// NewAccount will create a new account and returns the address for the new account.
 func (b *Backend) NewMnemonic(uid string,
 	_ keyring.Language,
 	hdPath,
@@ -259,7 +257,7 @@ func (b *Backend) NewMnemonic(uid string,
 	if err != nil {
 		return nil, err
 	}
-	return info, nil
+	return info, err
 }
 
 // SetGasPrice sets the minimum accepted gas price for the miner.
@@ -271,28 +269,31 @@ func (b *Backend) SetGasPrice(gasPrice hexutil.Big) bool {
 		b.logger.Debug("could not get the server config", "error", err.Error())
 		return false
 	}
-
-	var unit string
-	minGasPrices := appConf.GetMinGasPrices()
-
-	// fetch the base denom from the sdk Config in case it's not currently defined on the node config
-	if len(minGasPrices) == 0 || minGasPrices.Empty() {
-		var err error
-		unit, err = sdk.GetBaseDenom()
-		if err != nil {
-			b.logger.Debug("could not get the denom of smallest unit registered", "error", err.Error())
-			return false
-		}
-	} else {
-		unit = minGasPrices[0].Denom
-	}
-
-	c := sdk.NewDecCoin(unit, sdkmath.NewIntFromBigInt(gasPrice.ToInt()))
+	c := b.GenerateMinGasCoin(gasPrice, appConf)
 
 	appConf.SetMinGasPrices(sdk.DecCoins{c})
 	sdkconfig.WriteConfigFile(b.clientCtx.Viper.ConfigFileUsed(), appConf)
 	b.logger.Info("Your configuration file was modified. Please RESTART your node.", "gas-price", c.String())
 	return true
+}
+
+func (b *Backend) GenerateMinGasCoin(gasPrice hexutil.Big, appConf config.Config) sdk.DecCoin {
+	var unit string
+	minGasPrices := appConf.GetMinGasPrices()
+
+	// fetch the base denom from the sdk Config in case it's not currently defined on the node config
+	if len(minGasPrices) == 0 || minGasPrices.Empty() {
+		unit = evmtypes.GetEVMCoinDenom()
+	} else {
+		unit = minGasPrices[0].Denom
+	}
+
+	// The provided gasPrice has 18 decimals.
+	// We need to update to the denom's real precision
+	scaledAmt := evmtypes.ConvertBigIntFrom18DecimalsToLegacyDec(gasPrice.ToInt())
+	c := sdk.DecCoin{Denom: unit, Amount: scaledAmt}
+
+	return c
 }
 
 // UnprotectedAllowed returns the node configuration value for allowing
@@ -311,7 +312,7 @@ func (b *Backend) RPCEVMTimeout() time.Duration {
 	return b.cfg.JSONRPC.EVMTimeout
 }
 
-// RPCTxFeeCap is the global gas cap for eth-call variants.
+// RPCGasCap is the global gas cap for eth-call variants.
 func (b *Backend) RPCTxFeeCap() float64 {
 	return b.cfg.JSONRPC.TxFeeCap
 }
@@ -338,18 +339,14 @@ func (b *Backend) RPCBlockRangeCap() int32 {
 
 // RPCMinGasPrice returns the minimum gas price for a transaction obtained from
 // the node config. If set value is 0, it will default to 20.
-
-func (b *Backend) RPCMinGasPrice() int64 {
-	evmParams, err := b.queryClient.Params(b.ctx, &evmtypes.QueryParamsRequest{})
-	if err != nil {
-		return ethermint.DefaultGasPrice
-	}
+func (b *Backend) RPCMinGasPrice() *big.Int {
+	baseDenom := evmtypes.GetEVMCoinDenom()
 
 	minGasPrice := b.cfg.GetMinGasPrices()
-	amt := minGasPrice.AmountOf(evmParams.Params.EvmDenom).TruncateInt64()
-	if amt == 0 {
-		return ethermint.DefaultGasPrice
+	amt := minGasPrice.AmountOf(baseDenom)
+	if amt.IsNil() || amt.IsZero() {
+		return big.NewInt(constants.DefaultGasPrice)
 	}
 
-	return amt
+	return evmtypes.ConvertAmountTo18DecimalsLegacy(amt).TruncateInt().BigInt()
 }

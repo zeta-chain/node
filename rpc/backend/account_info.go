@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
@@ -20,18 +5,21 @@ import (
 	"math"
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/bytes"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 
-	rpctypes "github.com/zeta-chain/node/rpc/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+
+	rpctypes "github.com/cosmos/evm/rpc/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetCode returns the contract code at the given address and block number.
@@ -54,17 +42,14 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 }
 
 // GetProof returns an account object with proof and any storage proofs
-func (b *Backend) GetProof(
-	address common.Address,
-	storageKeys []string,
-	blockNrOrHash rpctypes.BlockNumberOrHash,
-) (*rpctypes.AccountResult, error) {
+func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
 	}
 
 	height := blockNum.Int64()
+
 	_, err = b.TendermintBlockByNumber(blockNum)
 	if err != nil {
 		// the error message imitates geth behavior
@@ -83,8 +68,7 @@ func (b *Backend) GetProof(
 			return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
 		}
 
-		// #nosec G115 range checked
-		height = int64(bn)
+		height = int64(bn) //#nosec G115 -- checked for int overflow already
 	}
 
 	clientCtx := b.clientCtx.WithHeight(height)
@@ -94,11 +78,7 @@ func (b *Backend) GetProof(
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.queryClient.GetProof(
-			clientCtx,
-			evmtypes.StoreKey,
-			evmtypes.StateKey(address, hexKey.Bytes()),
-		)
+		valueBz, proof, err := b.queryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
 		if err != nil {
 			return nil, err
 		}
@@ -138,17 +118,13 @@ func (b *Backend) GetProof(
 		Balance:      (*hexutil.Big)(balance.BigInt()),
 		CodeHash:     common.HexToHash(res.CodeHash),
 		Nonce:        hexutil.Uint64(res.Nonce),
-		StorageHash:  common.Hash{}, // NOTE: Ethermint doesn't have a storage hash. TODO: implement?
+		StorageHash:  common.Hash{}, // NOTE: Cosmos EVM doesn't have a storage hash. TODO: implement?
 		StorageProof: storageProofs,
 	}, nil
 }
 
 // GetStorageAt returns the contract storage at the given address, block number, and key.
-func (b *Backend) GetStorageAt(
-	address common.Address,
-	key string,
-	blockNrOrHash rpctypes.BlockNumberOrHash,
-) (hexutil.Bytes, error) {
+func (b *Backend) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
@@ -209,13 +185,9 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	if err != nil {
 		return &n, err
 	}
-	if bn > math.MaxInt64 {
-		return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
-	}
 	height := blockNum.Int64()
-	// #nosec G115 range checked
-	currentHeight := int64(bn)
 
+	currentHeight := int64(bn) //#nosec G115 -- checked for int overflow already
 	if height > currentHeight {
 		return &n, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidHeight,
