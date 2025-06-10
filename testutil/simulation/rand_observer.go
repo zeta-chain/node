@@ -36,8 +36,7 @@ func GetRandomAccountAndObserver(
 		if !foundNodeAccount {
 			return false
 		}
-
-		return k.IsNonTombstonedObserver(ctx, randomObserver)
+		return k.CheckObserverCanVote(ctx, randomObserver) == nil
 	})
 
 	if !foundObserver {

@@ -16,6 +16,24 @@ type EmissionObserverKeeper struct {
 	mock.Mock
 }
 
+// CheckObserverCanVote provides a mock function with given fields: ctx, address
+func (_m *EmissionObserverKeeper) CheckObserverCanVote(ctx types.Context, address string) error {
+	ret := _m.Called(ctx, address)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckObserverCanVote")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, string) error); ok {
+		r0 = rf(ctx, address)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ClearFinalizedMaturedBallots provides a mock function with given fields: ctx, maturityBlocks, deleteAllBallots
 func (_m *EmissionObserverKeeper) ClearFinalizedMaturedBallots(ctx types.Context, maturityBlocks int64, deleteAllBallots bool) {
 	_m.Called(ctx, maturityBlocks, deleteAllBallots)
@@ -168,24 +186,6 @@ func (_m *EmissionObserverKeeper) GetSupportedChains(ctx types.Context) []chains
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]chains.Chain)
 		}
-	}
-
-	return r0
-}
-
-// IsNonTombstonedObserver provides a mock function with given fields: ctx, address
-func (_m *EmissionObserverKeeper) IsNonTombstonedObserver(ctx types.Context, address string) bool {
-	ret := _m.Called(ctx, address)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsNonTombstonedObserver")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
-		r0 = rf(ctx, address)
-	} else {
-		r0 = ret.Get(0).(bool)
 	}
 
 	return r0

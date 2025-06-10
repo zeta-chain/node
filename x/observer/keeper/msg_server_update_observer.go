@@ -29,7 +29,7 @@ func (k msgServer) UpdateObserver(
 			"Unable to update observer with update reason : %s", msg.UpdateReason)
 	}
 
-	// We do not use IsNonTombstonedObserver here because we want to allow tombstoned observers to be updated
+	// We do not use CheckObserverCanVote here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
 		return nil, errorsmod.Wrapf(
 			types.ErrNotObserver,
