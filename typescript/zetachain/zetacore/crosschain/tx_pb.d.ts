@@ -1103,7 +1103,7 @@ export declare class MsgMigrateConnectorFunds extends Message<MsgMigrateConnecto
   newConnectorAddress: string;
 
   /**
-   * @generated from field: string amount = 5;
+   * @generated from field: string amount = 4;
    */
   amount: string;
 

@@ -326,7 +326,7 @@ message MsgMigrateConnectorFunds {
 	string creator = 1;
 	int64 chain_id = 2;
 	string new_connector_address = 3;
-	string amount = 5;
+	string amount = 4;
 }
 ```
 
