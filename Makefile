@@ -167,7 +167,8 @@ gosec:
 	gosec  -exclude-dir=localnet ./...
 
 fmt: lint-deps
-	@golangci-lint fmt
+	@echo "--> Formatting Go code"
+	go fmt ./...
 
 ###############################################################################
 ###                           Generation commands  		                    ###
@@ -348,7 +349,7 @@ start-sui-test: e2e-images
 
 start-legacy-test: e2e-images
 	@echo "--> Starting e2e smart contracts legacy test"
-	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy --test-v2-connector-migration" && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
 ###############################################################################
@@ -406,7 +407,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
-start-v2-connector-migration: zetanode-upgrade
+start-v2-connector-migration-test: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \

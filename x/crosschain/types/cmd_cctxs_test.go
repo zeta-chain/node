@@ -681,6 +681,7 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 		priorityFee := "100000"
 		tssPubKey := sample.PubKeyString()
 		currentNonce := uint64(1)
+		height := int64(1000)
 
 		// ACT
 		cctx := types.MigrateConnectorFundsCmdCCTX(
@@ -693,6 +694,7 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 			priorityFee,
 			tssPubKey,
 			currentNonce,
+			height,
 		)
 		cctxDifferentNonce := types.MigrateConnectorFundsCmdCCTX(
 			creator,
@@ -704,6 +706,7 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 			priorityFee,
 			tssPubKey,
 			currentNonce+1,
+			height,
 		)
 		cctxDifferentTSSPubkey := types.MigrateConnectorFundsCmdCCTX(
 			creator,
@@ -715,6 +718,7 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 			priorityFee,
 			sample.PubKeyString(),
 			currentNonce,
+			height,
 		)
 		cctxDifferentChainID := types.MigrateConnectorFundsCmdCCTX(
 			creator,
@@ -726,6 +730,19 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 			priorityFee,
 			tssPubKey,
 			currentNonce,
+			height,
+		)
+		cctxDifferentHeight := types.MigrateConnectorFundsCmdCCTX(
+			creator,
+			v1ConnectorContractAddress,
+			v2ConnectorContractAddress,
+			chainID+1,
+			amount,
+			gasPrice,
+			priorityFee,
+			tssPubKey,
+			currentNonce,
+			height+1,
 		)
 
 		// ASSERT
@@ -753,6 +770,7 @@ func TestMigrateConnectorFundsCmdCCTX(t *testing.T) {
 		require.NotEqual(t, cctx.Index, cctxDifferentNonce.Index)
 		require.NotEqual(t, cctx.Index, cctxDifferentTSSPubkey.Index)
 		require.NotEqual(t, cctx.Index, cctxDifferentChainID.Index)
+		require.NotEqual(t, cctx.Index, cctxDifferentHeight.Index)
 	})
 }
 
@@ -762,27 +780,38 @@ func TestGetConnectorsMigrationCCTXIndexString(t *testing.T) {
 		tssPubKey := sample.PubKeyString()
 		nonce := uint64(1)
 		chainID := int64(42)
+		height := int64(1000)
 
 		// ACT
 		index := types.GetConnectorsMigrationCCTXIndexString(
 			tssPubKey,
 			nonce,
 			chainID,
+			height,
 		)
 		indexDifferentTSSPubkey := types.GetConnectorsMigrationCCTXIndexString(
 			sample.PubKeyString(),
 			nonce,
 			chainID,
+			height,
 		)
 		indexDifferentNonce := types.GetConnectorsMigrationCCTXIndexString(
 			tssPubKey,
 			nonce+1,
 			chainID,
+			height,
 		)
 		indexDifferentChainID := types.GetConnectorsMigrationCCTXIndexString(
 			tssPubKey,
 			nonce,
 			chainID+1,
+			height,
+		)
+		indexDifferentHeight := types.GetConnectorsMigrationCCTXIndexString(
+			tssPubKey,
+			nonce,
+			chainID,
+			height+1,
 		)
 
 		// ASSERT
@@ -790,5 +819,6 @@ func TestGetConnectorsMigrationCCTXIndexString(t *testing.T) {
 		require.NotEqual(t, index, indexDifferentTSSPubkey)
 		require.NotEqual(t, index, indexDifferentNonce)
 		require.NotEqual(t, index, indexDifferentChainID)
+		require.NotEqual(t, index, indexDifferentHeight)
 	})
 }
