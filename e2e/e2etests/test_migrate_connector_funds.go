@@ -50,8 +50,8 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 
 	// Update chain parameters to use new connector
 	// This would disable the old connector and thus stop the V1 flow from working.
-	// V1 : Call the connector directly
-	// V2 : Call the gateway
+	// V1: Call the connector directly
+	// V2: Call the gateway
 	// updateChainParams(r, chainID.Int64())
 }
 
@@ -100,7 +100,6 @@ func performFundsMigration(r *runner.E2ERunner, chainID int64, balance *big.Int)
 	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateConnectorFunds)
 	require.NoError(r, err)
 
-	// Extract migration event
 	event, ok := txserver.EventOfType[*crosschaintypes.EventConnectorFundsMigration](res.Events)
 	require.True(r, ok, "no EventConnectorFundsMigration in %s", res.TxHash)
 
@@ -109,21 +108,17 @@ func performFundsMigration(r *runner.E2ERunner, chainID int64, balance *big.Int)
 
 // verifyMigrationSuccess verifies that the migration was completed successfully
 func verifyMigrationSuccess(r *runner.E2ERunner, cctxIndex string, expectedBalance *big.Int) {
-	// Get CCTX details
 	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
 	require.NoError(r, err)
 
 	cctx := cctxRes.CrossChainTx
 	r.Logger.CCTX(*cctx, "migration")
 
-	// Wait for the CCTX to be mined
 	r.WaitForMinedCCTXFromIndex(cctxIndex)
 
-	// Check if the new connector has the funds
 	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
 	require.NoError(r, err, "BalanceOf failed for new connector")
 
-	// Verify that the migration was successful
 	require.Equal(r, expectedBalance, newConnectorBalance,
 		"Migration failed: old connector balance (%s) != new connector balance (%s)",
 		expectedBalance.String(), newConnectorBalance.String())
