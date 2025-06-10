@@ -167,8 +167,7 @@ gosec:
 	gosec  -exclude-dir=localnet ./...
 
 fmt: lint-deps
-	@echo "--> Formatting Go code"
-	go fmt ./...
+	@golangci-lint fmt
 
 ###############################################################################
 ###                           Generation commands  		                    ###

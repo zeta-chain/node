@@ -591,7 +591,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			logger.Print("❌ v2 connector migration tests failed")
 			os.Exit(1)
 		}
-
 	}
 
 	// Run gateway upgrade tests for external chains
