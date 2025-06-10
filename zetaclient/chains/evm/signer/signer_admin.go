@@ -126,11 +126,11 @@ func (signer *Signer) signMigrateConnectorFundsCmd(
 	newConnector := ethcommon.HexToAddress(paramsArray[0])
 	amount, ok := new(big.Int).SetString(paramsArray[1], 10)
 	if !ok {
-		return nil, fmt.Errorf("signMigrateConnectorFundsCmd: invalid amount %s", paramsArray[2])
+		return nil, fmt.Errorf("signMigrateConnectorFundsCmd: invalid amount %s", paramsArray[1])
 	}
 	// Parameters for onReceive
 	zetaTxSenderAddress := ethcommon.Address{}.Bytes()
-	sourceChainID := zetachainID
+	sourceChainID := big.NewInt(zetachainID)
 	// destinationAddress passed as parameter
 	// zetaValue passed as parameter
 	var message []byte

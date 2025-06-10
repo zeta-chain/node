@@ -580,12 +580,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// Run the migration tests after all the other tests are completed.
 	if utils.MinimumVersionCheck("v30.0.0", deployerRunner.GetZetacoredVersion()) && testV2ConnectorMigration {
-		fn := V2ZetaTestRoutine(conf, deployerRunner, verbose, []string{
+		fn := evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestMigrateConnectorFundsName,
 			e2etests.TestLegacyZetaDepositName,
 			e2etests.TestLegacyMessagePassingExternalChainsName,
 			e2etests.TestV2ZetaDepositName,
-		}...)
+		)
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)

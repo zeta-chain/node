@@ -170,7 +170,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if c := conf.Contracts.EVM.ConnectorNativeAddr; c != "" {
 		r.ConnectorNativeAddr, err = c.AsEVMAddress()
 		if err != nil {
-			return fmt.Errorf("invalid ConnectorZEVMAddr: %w", err)
+			return fmt.Errorf("invalid ConnectorNativeAddr: %w", err)
 		}
 		r.ConnectorNative, err = zetaconnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
 		if err != nil {

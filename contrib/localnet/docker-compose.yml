@@ -178,6 +178,7 @@ services:
     hostname: zetacore-new-validator
     profiles:
       - tss
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.15
@@ -194,6 +195,7 @@ services:
     hostname: zetaclient-new-validator
     profiles:
       - tss
+      - all
     networks:
       mynetwork:
         ipv4_address: 172.20.0.25
