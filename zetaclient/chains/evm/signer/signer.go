@@ -359,7 +359,7 @@ func (signer *Signer) SignOutboundFromCCTX(
 		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
 		// contract address when a whitelist command is requested
 		params := msg[1]
-		return signer.SignAdminTx(ctx, outboundData, cmd, params)
+		return signer.SignAdminTx(ctx, outboundData, cmd, params, zetacoreClient.Chain().ChainId)
 	} else if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
 		// call sign outbound from cctx for v2 protocol contracts
 		return signer.SignOutboundFromCCTXV2(ctx, cctx, outboundData)

@@ -21,6 +21,7 @@ func (signer *Signer) SignAdminTx(
 	txData *OutboundData,
 	cmd string,
 	params string,
+	zetachainID int64,
 ) (*ethtypes.Transaction, error) {
 	switch cmd {
 	case constant.CmdWhitelistERC20:
@@ -30,7 +31,7 @@ func (signer *Signer) SignAdminTx(
 	case constant.CmdUpdateERC20CustodyPauseStatus:
 		return signer.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
 	case constant.CmdMigrateConnectorFunds:
-		return signer.signMigrateConnectorFundsCmd(ctx, txData, params)
+		return signer.signMigrateConnectorFundsCmd(ctx, txData, params, zetachainID)
 	case constant.CmdMigrateTssFunds:
 		return signer.signMigrateTssFundsCmd(ctx, txData)
 	}
@@ -116,6 +117,7 @@ func (signer *Signer) signMigrateConnectorFundsCmd(
 	ctx context.Context,
 	txData *OutboundData,
 	params string,
+	zetachainID int64,
 ) (*ethtypes.Transaction, error) {
 	paramsArray := strings.Split(params, ",")
 	if len(paramsArray) != 2 {
@@ -126,14 +128,13 @@ func (signer *Signer) signMigrateConnectorFundsCmd(
 	if !ok {
 		return nil, fmt.Errorf("signMigrateConnectorFundsCmd: invalid amount %s", paramsArray[2])
 	}
-
 	// Parameters for onReceive
-	zetaTxSenderAddress := ethcommon.Address{}.Bytes() // encoded zero address (20 bytes)
-	sourceChainId := big.NewInt(7001)                  // 7001 as requested
+	zetaTxSenderAddress := ethcommon.Address{}.Bytes()
+	sourceChainID := zetachainID
 	// destinationAddress passed as parameter
 	// zetaValue passed as parameter
-	message := []byte{}                                                  // empty bytes
-	internalSendHash := crypto.Keccak256Hash([]byte("ZetaConnectorETH")) // keccak256("ZetaConnectorETH")
+	var message []byte
+	internalSendHash := crypto.Keccak256Hash([]byte("ZetaConnectorETH"))
 
 	connectorAbi, err := zetaconnectoreth.ZetaConnectorEthMetaData.GetAbi()
 	if err != nil {
@@ -143,7 +144,7 @@ func (signer *Signer) signMigrateConnectorFundsCmd(
 	data, err := connectorAbi.Pack(
 		"onReceive",
 		zetaTxSenderAddress,
-		sourceChainId,
+		sourceChainID,
 		newConnector,
 		amount,
 		message,

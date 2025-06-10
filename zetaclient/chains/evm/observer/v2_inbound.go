@@ -173,16 +173,13 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
-
 	coinType := coin.CoinType_ERC20
-	// if event.Asset is zero, it's a native token
-	switch {
-	case crypto.IsEmptyAddress(event.Asset):
+
+	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
-	case event.Asset == ethcommon.HexToAddress(ob.ChainParams().ZetaTokenContractAddress):
+	}
+	if event.Asset == ethcommon.HexToAddress(ob.ChainParams().ZetaTokenContractAddress) {
 		coinType = coin.CoinType_Zeta
-	default:
-		coinType = coin.CoinType_ERC20
 	}
 
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
