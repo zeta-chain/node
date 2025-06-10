@@ -1,42 +1,26 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package filters
 
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"sync"
 	"time"
 
-	"cosmossdk.io/log"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/zeta-chain/node/rpc/backend"
-	"github.com/zeta-chain/node/rpc/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	cmttypes "github.com/cometbft/cometbft/types"
+
+	"github.com/cosmos/evm/rpc/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // FilterAPI gathers
@@ -85,30 +69,23 @@ type filter struct {
 // PublicFilterAPI offers support to create and manage filters. This will allow external clients to retrieve various
 // information related to the Ethereum protocol such as blocks, transactions and logs.
 type PublicFilterAPI struct {
-	logger      log.Logger
-	clientCtx   client.Context
-	backend     Backend
-	events      *EventSystem
-	filtersMu   sync.Mutex
-	filters     map[rpc.ID]*filter
-	queryClient *types.QueryClient
+	logger    log.Logger
+	clientCtx client.Context
+	backend   Backend
+	events    *EventSystem
+	filtersMu sync.Mutex
+	filters   map[rpc.ID]*filter
 }
 
 // NewPublicAPI returns a new PublicFilterAPI instance.
-func NewPublicAPI(
-	logger log.Logger,
-	clientCtx client.Context,
-	tmWSClient *rpcclient.WSClient,
-	backend Backend,
-) *PublicFilterAPI {
+func NewPublicAPI(logger log.Logger, clientCtx client.Context, tmWSClient *rpcclient.WSClient, backend Backend) *PublicFilterAPI {
 	logger = logger.With("api", "filter")
 	api := &PublicFilterAPI{
-		logger:      logger,
-		clientCtx:   clientCtx,
-		backend:     backend,
-		filters:     make(map[rpc.ID]*filter),
-		events:      NewEventSystem(logger, tmWSClient),
-		queryClient: types.NewQueryClient(clientCtx),
+		logger:    logger,
+		clientCtx: clientCtx,
+		backend:   backend,
+		filters:   make(map[rpc.ID]*filter),
+		events:    NewEventSystem(logger, tmWSClient),
 	}
 
 	go api.timeoutLoop()
@@ -125,6 +102,7 @@ func (api *PublicFilterAPI) timeoutLoop() {
 	for {
 		<-ticker.C
 		api.filtersMu.Lock()
+		// #nosec G705
 		for id, f := range api.filters {
 			select {
 			case <-f.deadline.C:
@@ -179,7 +157,7 @@ func (api *PublicFilterAPI) NewPendingTransactionFilter() rpc.ID {
 					return
 				}
 
-				data, ok := ev.Data.(tmtypes.EventDataTx)
+				data, ok := ev.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -245,7 +223,7 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 					return
 				}
 
-				data, ok := ev.Data.(tmtypes.EventDataTx)
+				data, ok := ev.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -260,16 +238,10 @@ func (api *PublicFilterAPI) NewPendingTransactions(ctx context.Context) (*rpc.Su
 				for _, msg := range tx.GetMsgs() {
 					ethTx, ok := msg.(*evmtypes.MsgEthereumTx)
 					if ok {
-						err = notifier.Notify(rpcSub.ID, ethTx.AsTransaction().Hash())
-						if err != nil {
-							api.logger.Debug("failed to notify", "error", err.Error())
-						}
+						_ = notifier.Notify(rpcSub.ID, ethTx.AsTransaction().Hash()) // #nosec G703
 					}
 				}
 			case <-rpcSub.Err():
-				pendingTxSub.Unsubscribe(api.events)
-				return
-			case <-notifier.Closed():
 				pendingTxSub.Unsubscribe(api.events)
 				return
 			}
@@ -297,12 +269,7 @@ func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 		return rpc.ID(fmt.Sprintf("error creating block filter: %s", err.Error()))
 	}
 
-	api.filters[headerSub.ID()] = &filter{
-		typ:      filters.BlocksSubscription,
-		deadline: time.NewTimer(deadline),
-		hashes:   []common.Hash{},
-		s:        headerSub,
-	}
+	api.filters[headerSub.ID()] = &filter{typ: filters.BlocksSubscription, deadline: time.NewTimer(deadline), hashes: []common.Hash{}, s: headerSub}
 
 	go func(headersCh <-chan coretypes.ResultEvent, errCh <-chan error) {
 		defer cancelSubs()
@@ -317,7 +284,7 @@ func (api *PublicFilterAPI) NewBlockFilter() rpc.ID {
 					return
 				}
 
-				data, ok := ev.Data.(tmtypes.EventDataNewBlockHeader)
+				data, ok := ev.Data.(cmttypes.EventDataNewBlockHeader)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -355,8 +322,6 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 		return &rpc.Subscription{}, err
 	}
 
-	// TODO: use events
-	baseFee := big.NewInt(params.InitialBaseFee)
 	go func(headersCh <-chan coretypes.ResultEvent) {
 		defer cancelSubs()
 
@@ -368,48 +333,18 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 					return
 				}
 
-				data, ok := ev.Data.(tmtypes.EventDataNewBlockHeader)
+				data, ok := ev.Data.(cmttypes.EventDataNewBlock)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
 
-				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
-				if err != nil {
-					api.logger.Error("failed to get validator account", "err", err)
-					continue
-				}
+				baseFee := types.BaseFeeFromEvents(data.ResultFinalizeBlock.Events)
 
 				// TODO: fetch bloom from events
-				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
-
-				var enc types.Header
-				enc.ParentHash = header.ParentHash
-				enc.UncleHash = header.UncleHash
-				enc.Coinbase = header.Coinbase.Hex()
-				enc.Root = header.Root
-				enc.TxHash = header.TxHash
-				enc.ReceiptHash = header.ReceiptHash
-				enc.Bloom = header.Bloom
-				enc.Difficulty = (*hexutil.Big)(header.Difficulty)
-				enc.Number = (*hexutil.Big)(header.Number)
-				enc.GasLimit = hexutil.Uint64(header.GasLimit)
-				enc.GasUsed = hexutil.Uint64(header.GasUsed)
-				enc.Time = hexutil.Uint64(header.Time)
-				enc.Extra = header.Extra
-				enc.MixDigest = header.MixDigest
-				enc.Nonce = header.Nonce
-				enc.BaseFee = (*hexutil.Big)(header.BaseFee)
-				enc.Hash = common.BytesToHash(data.Header.Hash())
-
-				err = notifier.Notify(rpcSub.ID, enc)
-				if err != nil {
-					api.logger.Debug("failed to notify", "error", err.Error())
-				}
+				header := types.EthHeaderFromTendermint(data.Block.Header, ethtypes.Bloom{}, baseFee)
+				_ = notifier.Notify(rpcSub.ID, header) // #nosec G703
 			case <-rpcSub.Err():
-				headersSub.Unsubscribe(api.events)
-				return
-			case <-notifier.Closed():
 				headersSub.Unsubscribe(api.events)
 				return
 			}
@@ -454,7 +389,7 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit filters.FilterCriteri
 				}
 
 				// get transaction result data
-				dataTx, ok := ev.Data.(tmtypes.EventDataTx)
+				dataTx, ok := ev.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -466,24 +401,12 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit filters.FilterCriteri
 					return
 				}
 
-				logs := FilterLogs(
-					evmtypes.LogsToEthereum(txResponse.Logs),
-					crit.FromBlock,
-					crit.ToBlock,
-					crit.Addresses,
-					crit.Topics,
-				)
+				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
 
 				for _, log := range logs {
-					err = notifier.Notify(rpcSub.ID, log)
-					if err != nil {
-						api.logger.Debug("failed to notify", "error", err.Error())
-					}
+					_ = notifier.Notify(rpcSub.ID, log) // #nosec G703
 				}
 			case <-rpcSub.Err(): // client send an unsubscribe request
-				logsSub.Unsubscribe(api.events)
-				return
-			case <-notifier.Closed(): // connection dropped
 				logsSub.Unsubscribe(api.events)
 				return
 			}
@@ -546,7 +469,7 @@ func (api *PublicFilterAPI) NewFilter(criteria filters.FilterCriteria) (rpc.ID, 
 					api.filtersMu.Unlock()
 					return
 				}
-				dataTx, ok := ev.Data.(tmtypes.EventDataTx)
+				dataTx, ok := ev.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -558,13 +481,7 @@ func (api *PublicFilterAPI) NewFilter(criteria filters.FilterCriteria) (rpc.ID, 
 					return
 				}
 
-				logs := FilterLogs(
-					evmtypes.LogsToEthereum(txResponse.Logs),
-					criteria.FromBlock,
-					criteria.ToBlock,
-					criteria.Addresses,
-					criteria.Topics,
-				)
+				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), criteria.FromBlock, criteria.ToBlock, criteria.Addresses, criteria.Topics)
 
 				api.filtersMu.Lock()
 				if f, found := api.filters[filterID]; found {
@@ -611,7 +528,7 @@ func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit filters.FilterCrit
 		return nil, err
 	}
 
-	return returnLogs(logs), nil
+	return returnLogs(logs), err
 }
 
 // UninstallFilter removes the filter with the given filter id.
@@ -702,7 +619,7 @@ func (api *PublicFilterAPI) GetFilterChanges(id rpc.ID) (interface{}, error) {
 		hashes := f.hashes
 		f.hashes = nil
 		return returnHashes(hashes), nil
-	case filters.LogsSubscription, filters.MinedAndPendingLogsSubscription:
+	case filters.LogsSubscription:
 		logs := make([]*ethtypes.Log, len(f.logs))
 		copy(logs, f.logs)
 		f.logs = []*ethtypes.Log{}

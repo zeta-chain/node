@@ -1,37 +1,25 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/node/blob/main/LICENSE
 package rpc
 
 import (
 	"fmt"
 
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/zeta-chain/node/rpc/backend"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/eth"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/miner"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/net"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/personal"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/txpool"
-	"github.com/zeta-chain/node/rpc/namespaces/ethereum/web3"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+
+	"github.com/cosmos/evm/rpc/backend"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/debug"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/eth"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/eth/filters"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/miner"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/net"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/personal"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/txpool"
+	"github.com/cosmos/evm/rpc/namespaces/ethereum/web3"
+	"github.com/cosmos/evm/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // RPC namespaces and API version
@@ -44,8 +32,8 @@ const (
 
 	Web3Namespace     = "web3"
 	EthNamespace      = "eth"
-	NetNamespace      = "net"
 	PersonalNamespace = "personal"
+	NetNamespace      = "net"
 	TxPoolNamespace   = "txpool"
 	DebugNamespace    = "debug"
 	MinerNamespace    = "miner"
@@ -59,7 +47,7 @@ type APICreator = func(
 	clientCtx client.Context,
 	tendermintWebsocketClient *rpcclient.WSClient,
 	allowUnprotectedTxs bool,
-	indexer ethermint.EVMTxIndexer,
+	indexer types.EVMTxIndexer,
 ) []rpc.API
 
 // apiCreators defines the JSON-RPC API namespaces.
@@ -71,7 +59,7 @@ func init() {
 			clientCtx client.Context,
 			tmWSClient *rpcclient.WSClient,
 			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
+			indexer types.EVMTxIndexer,
 		) []rpc.API {
 			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
 			return []rpc.API{
@@ -89,7 +77,7 @@ func init() {
 				},
 			}
 		},
-		Web3Namespace: func(*server.Context, client.Context, *rpcclient.WSClient, bool, ethermint.EVMTxIndexer) []rpc.API {
+		Web3Namespace: func(*server.Context, client.Context, *rpcclient.WSClient, bool, types.EVMTxIndexer) []rpc.API {
 			return []rpc.API{
 				{
 					Namespace: Web3Namespace,
@@ -99,7 +87,7 @@ func init() {
 				},
 			}
 		},
-		NetNamespace: func(_ *server.Context, clientCtx client.Context, _ *rpcclient.WSClient, _ bool, _ ethermint.EVMTxIndexer) []rpc.API {
+		NetNamespace: func(_ *server.Context, clientCtx client.Context, _ *rpcclient.WSClient, _ bool, _ types.EVMTxIndexer) []rpc.API {
 			return []rpc.API{
 				{
 					Namespace: NetNamespace,
@@ -109,12 +97,11 @@ func init() {
 				},
 			}
 		},
-		// NOTE: Public field of API is deprecated and defined only for compatibility.
 		PersonalNamespace: func(ctx *server.Context,
 			clientCtx client.Context,
 			_ *rpcclient.WSClient,
 			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
+			indexer types.EVMTxIndexer,
 		) []rpc.API {
 			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
 			return []rpc.API{
@@ -126,7 +113,7 @@ func init() {
 				},
 			}
 		},
-		TxPoolNamespace: func(ctx *server.Context, _ client.Context, _ *rpcclient.WSClient, _ bool, _ ethermint.EVMTxIndexer) []rpc.API {
+		TxPoolNamespace: func(ctx *server.Context, _ client.Context, _ *rpcclient.WSClient, _ bool, _ types.EVMTxIndexer) []rpc.API {
 			return []rpc.API{
 				{
 					Namespace: TxPoolNamespace,
@@ -140,7 +127,7 @@ func init() {
 			clientCtx client.Context,
 			_ *rpcclient.WSClient,
 			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
+			indexer types.EVMTxIndexer,
 		) []rpc.API {
 			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
 			return []rpc.API{
@@ -156,7 +143,7 @@ func init() {
 			clientCtx client.Context,
 			_ *rpcclient.WSClient,
 			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
+			indexer types.EVMTxIndexer,
 		) []rpc.API {
 			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
 			return []rpc.API{
@@ -176,7 +163,7 @@ func GetRPCAPIs(ctx *server.Context,
 	clientCtx client.Context,
 	tmWSClient *rpcclient.WSClient,
 	allowUnprotectedTxs bool,
-	indexer ethermint.EVMTxIndexer,
+	indexer types.EVMTxIndexer,
 	selectedAPIs []string,
 ) []rpc.API {
 	var apis []rpc.API

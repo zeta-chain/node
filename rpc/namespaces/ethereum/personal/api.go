@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package personal
 
 import (
@@ -21,24 +6,27 @@ import (
 	"os"
 	"time"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/ethermint/crypto/hd"
 
-	"github.com/zeta-chain/node/rpc/backend"
+	"github.com/cosmos/evm/crypto/hd"
+	"github.com/cosmos/evm/rpc/backend"
+	"github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PrivateAccountAPI is the personal_ prefixed set of APIs in the Web3 JSON-RPC spec.
 type PrivateAccountAPI struct {
 	backend    backend.EVMBackend
 	logger     log.Logger
-	hdPathIter ethermint.HDPathIterator
+	hdPathIter types.HDPathIterator
 }
 
 // NewAPI creates an instance of the public Personal Eth API.
@@ -49,7 +37,7 @@ func NewAPI(
 	cfg := sdk.GetConfig()
 	basePath := cfg.GetFullBIP44Path()
 
-	iterator, err := ethermint.NewHDPathIterator(basePath, true)
+	iterator, err := types.NewHDPathIterator(basePath, true)
 	if err != nil {
 		panic(err)
 	}
@@ -106,11 +94,7 @@ func (api *PrivateAccountAPI) NewAccount(password string) (common.Address, error
 	}
 	addr := common.BytesToAddress(pubKey.Address().Bytes())
 	api.logger.Info("Your new key was generated", "address", addr.String())
-	api.logger.Info(
-		"Please backup your key file!",
-		"path",
-		os.Getenv("HOME")+"/.ethermint/"+name,
-	) // TODO: pass the correct binary
+	api.logger.Info("Please backup your key file!", "path", os.Getenv("HOME")+"/.evmos/"+name) // TODO: pass the correct binary
 	api.logger.Info("Please remember your password!")
 	return addr, nil
 }
@@ -127,11 +111,7 @@ func (api *PrivateAccountAPI) UnlockAccount(_ context.Context, addr common.Addre
 // SendTransaction will create a transaction from the given arguments and
 // tries to sign it with the key associated with args.To. If the given password isn't
 // able to decrypt the key it fails.
-func (api *PrivateAccountAPI) SendTransaction(
-	_ context.Context,
-	args evmtypes.TransactionArgs,
-	_ string,
-) (common.Hash, error) {
+func (api *PrivateAccountAPI) SendTransaction(_ context.Context, args evmtypes.TransactionArgs, _ string) (common.Hash, error) {
 	api.logger.Debug("personal_sendTransaction", "address", args.To.String())
 	return api.backend.SendTransaction(args)
 }
@@ -145,12 +125,7 @@ func (api *PrivateAccountAPI) SendTransaction(
 // The key used to calculate the signature is decrypted with the given password.
 //
 // https://github.com/ethereum/go-ethereum/wiki/Management-APIs#personal_sign
-func (api *PrivateAccountAPI) Sign(
-	_ context.Context,
-	data hexutil.Bytes,
-	addr common.Address,
-	_ string,
-) (hexutil.Bytes, error) {
+func (api *PrivateAccountAPI) Sign(_ context.Context, data hexutil.Bytes, addr common.Address, _ string) (hexutil.Bytes, error) {
 	api.logger.Debug("personal_sign", "data", data, "address", addr.String())
 	return api.backend.Sign(addr, data)
 }
@@ -186,7 +161,7 @@ func (api *PrivateAccountAPI) EcRecover(_ context.Context, data, sig hexutil.Byt
 	return crypto.PubkeyToAddress(*pubkey), nil
 }
 
-// Unpair deletes a pairing between wallet and ethermint.
+// Unpair deletes a pairing between wallet and Cosmos EVM.
 func (api *PrivateAccountAPI) Unpair(_ context.Context, url, pin string) error {
 	api.logger.Debug("personal_unpair", "url", url, "pin", pin)
 	api.logger.Info("personal_unpair for smartcard wallet not supported")
