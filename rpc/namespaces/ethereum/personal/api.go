@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/cosmos/evm/crypto/hd"
-	"github.com/cosmos/evm/rpc/backend"
 	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/backend"
 
 	"cosmossdk.io/log"
 

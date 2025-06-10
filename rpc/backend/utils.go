@@ -18,8 +18,8 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	"github.com/cosmos/evm/rpc/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 

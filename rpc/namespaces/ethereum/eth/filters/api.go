@@ -15,8 +15,8 @@ import (
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	cmttypes "github.com/cometbft/cometbft/types"
 
-	"github.com/cosmos/evm/rpc/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 

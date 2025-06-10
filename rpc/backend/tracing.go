@@ -10,8 +10,8 @@ import (
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -79,10 +79,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig, err = convertConfig(config)
-		if err != nil {
-			return nil, err
-		}
+		traceTxRequest.TraceConfig = config // TODO evm: convert config
 	}
 
 	// minus one to get the context of block beginning
@@ -147,14 +144,9 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		return nil, err
 	}
 
-	traceConfig, err := convertConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     traceConfig,
+		TraceConfig:     config, // TODO evm: convert config?
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
@@ -174,32 +166,4 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	return decodedResults, nil
-}
-
-func convertConfig(config *rpctypes.TraceConfig) (*evmtypes.TraceConfig, error) {
-	if config == nil {
-		return &evmtypes.TraceConfig{}, nil
-	}
-
-	cfg := config.TraceConfig
-
-	if config.TracerConfig != nil {
-		switch v := config.TracerConfig.(type) {
-		case string:
-			// It's already a string, use it directly
-			cfg.TracerJsonConfig = v
-		case map[string]interface{}:
-			// this is the compliant style
-			// we need to encode it to a string before passing it to the ethermint side
-			jsonBytes, err := json.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("unable to encode traceConfig to JSON: %w", err)
-			}
-			cfg.TracerJsonConfig = string(jsonBytes)
-		default:
-			return nil, errors.New("unexpected traceConfig type")
-		}
-	}
-
-	return &cfg, nil
 }

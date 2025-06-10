@@ -16,10 +16,10 @@ import (
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	"github.com/cosmos/evm/server/config"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 
@@ -67,14 +67,14 @@ type EVMBackend interface {
 	TendermintBlockByHash(blockHash common.Hash) (*tmrpctypes.ResultBlock, error)
 	BlockNumberFromTendermint(blockNrOrHash rpctypes.BlockNumberOrHash) (rpctypes.BlockNumber, error)
 	BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.Int, error)
-	EthMsgsFromTendermintBlock(block *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) []*evmtypes.MsgEthereumTx
+	EthMsgsFromTendermintBlock(block *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields)
 	BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 	HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Header, error)
 	HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error)
 	RPCBlockFromTendermintBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults, fullTx bool) (map[string]interface{}, error)
 	EthBlockByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Block, error)
 	EthBlockFromTendermintBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) (*ethtypes.Block, error)
-	GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error)
+	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) // TODO evm: new method
 
 	// Account Info
 	GetCode(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
@@ -96,8 +96,8 @@ type EVMBackend interface {
 
 	// Tx Info
 	GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransaction, error)
-	GetTxByEthHash(txHash common.Hash) (*cosmosevmtypes.TxResult, error)
-	GetTxByTxIndex(height int64, txIndex uint) (*cosmosevmtypes.TxResult, error)
+	GetTxByEthHash(txHash common.Hash) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
+	GetTxByTxIndex(height int64, txIndex uint) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
 	GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
 	GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error)

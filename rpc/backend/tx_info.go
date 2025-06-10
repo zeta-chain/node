@@ -14,9 +14,9 @@ import (
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -350,7 +350,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 func (b *Backend) GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error) {
 	hexTx := hash.Hex()
 
-	res, err := b.GetTxByEthHash(hash)
+	res, _, err := b.GetTxByEthHash(hash) // TODO evm: additional fields?
 	if err != nil {
 		b.logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
 		return nil, nil

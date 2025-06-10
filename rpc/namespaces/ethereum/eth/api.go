@@ -9,10 +9,10 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
-	"github.com/cosmos/evm/rpc/backend"
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/backend"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 )
@@ -151,11 +151,12 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 	return e.backend.GetBlockByHash(hash, fullTx)
 }
 
-// GetBlockReceipts returns the block receipts for the given block hash or number or tag.
-func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
-	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
-	return e.backend.GetBlockReceipts(blockNrOrHash)
-}
+// TODO evm: new method
+// // GetBlockReceipts returns the block receipts for the given block hash or number or tag.
+// func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
+// 	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
+// 	return e.backend.GetBlockReceipts(blockNrOrHash)
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Read Txs					                            ///
@@ -494,6 +495,7 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 				uint64(0),
 				nil,
 				chainID,
+				nil,
 			)
 			if err != nil {
 				return nil, err

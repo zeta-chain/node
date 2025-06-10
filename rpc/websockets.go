@@ -24,10 +24,10 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/evm/rpc/ethereum/pubsub"
-	rpcfilters "github.com/cosmos/evm/rpc/namespaces/ethereum/eth/filters"
-	"github.com/cosmos/evm/rpc/types"
 	"github.com/cosmos/evm/server/config"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
+	"github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/log"
 

@@ -17,9 +17,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
+	cmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -297,7 +298,7 @@ func (b *Backend) parseSyntheticTxFromBlockResults(
 	txResults []*abci.ExecTxResult,
 	i int,
 	tx sdk.Tx,
-	block *tmtypes.Block,
+	block *cmtypes.Block,
 ) (*evmtypes.MsgEthereumTx, *rpctypes.TxResultAdditionalFields) {
 	res, additional, err := rpctypes.ParseTxBlockResult(txResults[i], tx, i, block.Height)
 	// just skip tx if it can not be parsed, so remaining txs from the block are parsed
@@ -447,7 +448,7 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			tx := ethMsg.AsTransaction()
 			height := uint64(block.Height) //#nosec G115 -- checked for int overflow already
 			index := uint64(txIndex)       //#nosec G115 -- checked for int overflow already
-			rpcTx, err := rpctypes.NewRPCTransaction(
+			rpcTx, err = rpctypes.NewRPCTransaction(
 				tx,
 				common.BytesToHash(block.Hash()),
 				height,
@@ -460,7 +461,7 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			rpcTx, err = rpctypes.NewRPCTransactionFromIncompleteMsg(ethMsg, common.BytesToHash(block.Hash()), uint64(block.Height), uint64(txIndex), baseFee, b.chainID, txsAdditional[txIndex])
 		}
 		if err != nil {
-			b.logger.Debug("NewTransactionFromData for receipt failed", "hash", tx.Hash().Hex(), "error", err.Error())
+			b.logger.Debug("NewTransactionFromData for receipt failed", "hash", ethMsg.Hash, "error", err.Error())
 			continue
 		}
 		ethRPCTxs = append(ethRPCTxs, rpcTx)

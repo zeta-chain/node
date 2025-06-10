@@ -11,8 +11,8 @@ import (
 
 	"github.com/cometbft/cometbft/libs/bytes"
 
-	rpctypes "github.com/cosmos/evm/rpc/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
