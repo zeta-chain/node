@@ -21,7 +21,7 @@ type ObserverKeeper interface {
 	GetMaturedBallots(ctx sdk.Context, maturityBlocks int64) (val observertypes.BallotListForHeight, found bool)
 	ClearFinalizedMaturedBallots(ctx sdk.Context, maturityBlocks int64, deleteAllBallots bool)
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
-	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
+	CheckObserverCanVote(ctx sdk.Context, address string) error
 	GetSupportedChains(ctx sdk.Context) []chains.Chain
 	GetNodeAccount(ctx sdk.Context, address string) (observertypes.NodeAccount, bool)
 	GetAllNodeAccount(ctx sdk.Context) []observertypes.NodeAccount
