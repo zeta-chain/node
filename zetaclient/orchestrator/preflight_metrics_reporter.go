@@ -13,7 +13,7 @@ import (
 	evmclient "github.com/zeta-chain/node/zetaclient/chains/evm/client"
 	zetasolrpc "github.com/zeta-chain/node/zetaclient/chains/solana/rpc"
 	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	tonrpc "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
@@ -159,15 +159,13 @@ func reportPreflightMetricsTON(ctx context.Context, app *zctx.AppContext, chain 
 		return nil
 	}
 
-	lightClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
-	if err != nil {
-		return errors.Wrap(err, "unable to create TON liteapi")
-	}
+	client := tonrpc.New(cfg.Endpoint, chain.ChainId)
 
-	blockTime, err := lightClient.HealthCheck(ctx)
+	blockTime, err := client.HealthCheck(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get ton last block time")
 	}
+
 	metrics.ReportBlockLatency(chain.Name, blockTime)
 
 	return nil
