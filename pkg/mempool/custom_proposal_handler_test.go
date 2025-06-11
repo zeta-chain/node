@@ -4,7 +4,6 @@ package mempool_test
 
 import (
 	"bytes"
-	"math/big"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -378,18 +377,18 @@ func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]
 
 func buildEthMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
 	t.Helper()
-	msgEthereumTx := evmtypes.NewTx(
-		big.NewInt(1),
-		nonces[0],
-		nil,
-		nil,
-		0,
-		nil,
-		nil,
-		nil,
-		value,
-		nil,
-	)
+	msgEthereumTx := evmtypes.NewTx(&evmtypes.EvmTxArgs{
+		Nonce:     nonces[0],
+		GasLimit:  0,
+		Input:     nil,
+		GasFeeCap: nil,
+		GasPrice:  nil,
+		ChainID:   nil,
+		Amount:    nil,
+		GasTipCap: nil,
+		To:        nil,
+		Accesses:  nil,
+	})
 
 	privKey := secp256k1.GenPrivKeyFromSecret(secrets[0])
 	addr := sdk.AccAddress(privKey.PubKey().Address())

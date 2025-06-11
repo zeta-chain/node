@@ -2,7 +2,6 @@ package mempool_test
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -213,7 +212,18 @@ func (tx txSpec) String() string {
 }
 
 func (s *MempoolTestSuite) buildMockEthTx(id int, priority int64, from string, nonce uint64) testEthTx {
-	msg := evmtypes.NewTx(big.NewInt(1), nonce, nil, big.NewInt(1), 0, nil, nil, nil, nil, nil)
+	msg := evmtypes.NewTx(&evmtypes.EvmTxArgs{
+		Nonce:     nonce,
+		GasLimit:  0,
+		Input:     nil,
+		GasFeeCap: nil,
+		GasPrice:  nil,
+		ChainID:   nil,
+		Amount:    nil,
+		GasTipCap: nil,
+		To:        nil,
+		Accesses:  nil,
+	})
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	require.NoError(s.T(), err)
 	msg.From = from
@@ -228,7 +238,18 @@ func (s *MempoolTestSuite) buildMockEthTx(id int, priority int64, from string, n
 }
 
 func (s *MempoolTestSuite) buildInvalidMockEthTx(id int, priority int64, from string, nonce uint64) testUnsignedEthTx {
-	msg := evmtypes.NewTx(big.NewInt(1), nonce, nil, big.NewInt(1), 0, nil, nil, nil, nil, nil)
+	msg := evmtypes.NewTx(&evmtypes.EvmTxArgs{
+		Nonce:     nonce,
+		GasLimit:  0,
+		Input:     nil,
+		GasFeeCap: nil,
+		GasPrice:  nil,
+		ChainID:   nil,
+		Amount:    nil,
+		GasTipCap: nil,
+		To:        nil,
+		Accesses:  nil,
+	})
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	require.NoError(s.T(), err)
 	msg.From = from

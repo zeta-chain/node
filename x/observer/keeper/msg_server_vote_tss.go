@@ -118,7 +118,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	keygenSuccess := false
 	if ballot.BallotStatus == types.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
-		keygen.BlockNumber = math.MaxInt64
+		keygen.BlockNumber = math.MaxBig256.Int64()
 	} else {
 		tss := types.TSS{
 			TssPubkey:           msg.TssPubkey,
