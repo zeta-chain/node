@@ -697,6 +697,12 @@ func (k Keeper) CallEVM(
 	return resp, nil
 }
 
+const (
+	AttributeKeyTxNonce    = "txNonce"
+	AttributeKeyTxData     = "txData"
+	AttributeKeyTxGasLimit = "txGasLimit"
+)
+
 // CallEVMWithData performs a smart contract method call using contract data
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
 // to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
@@ -746,21 +752,22 @@ func (k Keeper) CallEVMWithData(
 		gasCap = gasLimit.Uint64()
 	}
 	msg := &core.Message{
-		From:              from,
-		To:                contract,
-		Nonce:             nonce,
-		Value:             value,         // amount
-		GasLimit:          gasCap,        // gasLimit
-		GasFeeCap:         big.NewInt(0), // gasFeeCap
-		GasTipCap:         big.NewInt(0), // gasTipCap
-		GasPrice:          big.NewInt(0), // gasPrice
-		Data:              data,
-		AccessList:        ethtypes.AccessList{}, // AccessList
-		SkipAccountChecks: !commit,               // isFake
+		From:             from,
+		To:               contract,
+		Nonce:            nonce,
+		Value:            value,         // amount
+		GasLimit:         gasCap,        // gasLimit
+		GasFeeCap:        big.NewInt(0), // gasFeeCap
+		GasTipCap:        big.NewInt(0), // gasTipCap
+		GasPrice:         big.NewInt(0), // gasPrice
+		Data:             data,
+		AccessList:       ethtypes.AccessList{}, // AccessList
+		SkipNonceChecks:  !commit,               // isFake
+		SkipFromEOACheck: !commit,               // TODO evm: double check
 	}
-	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
-	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
-	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
+	// k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
+	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "ctx.chainid", ctx.ChainID())
+	res, err := k.evmKeeper.ApplyMessage(ctx, *msg, evmtypes.NewNoOpTracer(), commit)
 	if err != nil {
 		return nil, err
 	}
@@ -809,12 +816,12 @@ func (k Keeper) CallEVMWithData(
 
 		if !noEthereumTxEvent {
 			// adding txData for more info in rpc methods in order to parse synthetic txs
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data)))
+			attrs = append(attrs, sdk.NewAttribute(AttributeKeyTxData, hexutil.Encode(msg.Data)))
 			// adding nonce and gas limit for more info in rpc methods in order to parse synthetic txs
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
+			attrs = append(attrs, sdk.NewAttribute(AttributeKeyTxNonce, fmt.Sprint(nonce)))
 			attrs = append(
 				attrs,
-				sdk.NewAttribute(evmtypes.AttributeKeyTxGasLimit, strconv.FormatUint(msg.GasLimit, 10)),
+				sdk.NewAttribute(AttributeKeyTxGasLimit, strconv.FormatUint(msg.GasLimit, 10)),
 			)
 
 			ctx.EventManager().EmitEvents(sdk.Events{
@@ -835,11 +842,12 @@ func (k Keeper) CallEVMWithData(
 			})
 		}
 
+		// Compute block bloom filter
 		logs := evmtypes.LogsToEthereum(res.Logs)
 		var bloomReceipt ethtypes.Bloom
 		if len(logs) > 0 {
 			bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
-			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.CreateBloom(&ethtypes.Receipt{Logs: logs}).Bytes()))
 			bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
 			k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
 			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))

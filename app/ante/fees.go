@@ -145,10 +145,7 @@ func (empd EthMinGasPriceDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	evmParams := empd.evmKeeper.GetParams(ctx)
-	chainCfg := evmParams.GetChainConfig()
-	ethCfg := chainCfg.EthereumConfig(empd.evmKeeper.ChainID())
-	baseFee := empd.evmKeeper.GetBaseFee(ctx, ethCfg)
+	baseFee := empd.evmKeeper.GetBaseFee(ctx)
 
 	for _, msg := range tx.GetMsgs() {
 		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
@@ -211,10 +208,7 @@ func (mfd EthMempoolFeeDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 	evmParams := mfd.evmKeeper.GetParams(ctx)
-	chainCfg := evmParams.GetChainConfig()
-	ethCfg := chainCfg.EthereumConfig(mfd.evmKeeper.ChainID())
-
-	baseFee := mfd.evmKeeper.GetBaseFee(ctx, ethCfg)
+	baseFee := mfd.evmKeeper.GetBaseFee(ctx)
 	// skip check as the London hard fork and EIP-1559 are enabled
 	if baseFee != nil {
 		return next(ctx, tx, simulate)

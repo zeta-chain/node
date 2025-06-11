@@ -36,11 +36,12 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/evm/cmd/evmd/cmd"
+	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	zevmserver "github.com/zeta-chain/node/server"
-	servercfg "github.com/zeta-chain/node/server/config"
 )
 
 const EnvPrefix = "zetacore"
@@ -146,7 +147,7 @@ func NewRootCmd() *cobra.Command {
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
-	return servercfg.AppConfig(zetacoredconfig.BaseDenom)
+	return cmd.InitAppConfig(zetacoredconfig.BaseDenom, evmdconfig.EVMChainID) // TODO evm: evm chain id?
 }
 
 // initTmConfig overrides the default Tendermint config

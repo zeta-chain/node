@@ -42,12 +42,12 @@ func TestIsSystemTx(t *testing.T) {
 	//		*observertypes.MsgVoteTSS,
 	//		*observertypes.MsgVoteBlame:
 	buildTxFromMsg := func(msg sdk.Msg) sdk.Tx {
-		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
+		txBuilder := app.MakeEncodingConfig(4221).TxConfig.NewTxBuilder()
 		txBuilder.SetMsgs(msg)
 		return txBuilder.GetTx()
 	}
 	buildAuthzTxFromMsg := func(msg sdk.Msg) sdk.Tx {
-		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
+		txBuilder := app.MakeEncodingConfig(4221).TxConfig.NewTxBuilder()
 		msgExec := authz.NewMsgExec(sample.Bech32AccAddress(), []sdk.Msg{msg})
 		txBuilder.SetMsgs(&msgExec)
 		return txBuilder.GetTx()

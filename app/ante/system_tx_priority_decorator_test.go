@@ -16,7 +16,7 @@ import (
 )
 
 func TestSystemTxPriorityDecorator_AnteHandle(t *testing.T) {
-	txConfig := app.MakeEncodingConfig().TxConfig
+	txConfig := app.MakeEncodingConfig(4221).TxConfig
 
 	testPrivKey, _ := sample.PrivKeyAddressPair()
 

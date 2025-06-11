@@ -33,6 +33,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	erc20types "github.com/cosmos/evm/x/erc20/types"
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	evmmodule "github.com/cosmos/evm/x/vm"
@@ -49,6 +50,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
+	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
@@ -370,6 +372,31 @@ func FeeMarketKeeper(
 	)
 }
 
+// FeeMarketKeeper instantiates an erc20 keeper for testing purposes
+func ERC20Keeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	accountKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
+	evmKeeper erc20types.EVMKeeper,
+) erc20keeper.Keeper {
+	storeKey := storetypes.NewKVStoreKey(erc20types.StoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	return erc20keeper.NewKeeper(
+		storeKey,
+		cdc,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+		accountKeeper,
+		bankKeeper,
+		evmKeeper,
+		stakingKeeper,
+		nil, // TODO evm: transfer keeper?
+	)
+}
+
 // EVMKeeper instantiates an evm keeper for testing purposes
 func EVMKeeper(
 	cdc codec.Codec,
@@ -379,6 +406,7 @@ func EVMKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
+	erc20Keeper evmtypes.Erc20Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
 	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
@@ -406,9 +434,8 @@ func EVMKeeper(
 		bankKeeper,
 		stakingKeeper,
 		feemarketKeeper,
+		erc20Keeper,
 		"",
-		nil,
-		allKeys,
 	)
 
 	return k
@@ -431,7 +458,7 @@ func NewSDKKeepersWithKeys(
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -446,7 +473,7 @@ func NewSDKKeepersWithKeys(
 	authKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -472,14 +499,13 @@ func NewSDKKeepersWithKeys(
 	)
 	feeMarketKeeper := feemarketkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey],
 		tKeys[feemarkettypes.TransientKey],
 	)
+	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := evmkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[evmtypes.StoreKey]),
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
@@ -487,10 +513,21 @@ func NewSDKKeepersWithKeys(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
+		&erc20Keeper,
 		"",
-		[]evmkeeper.CustomContractFn{},
-		allKeys,
 	)
+
+	erc20Keeper = erc20keeper.NewKeeper(
+		keys[erc20types.StoreKey],
+		cdc,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+		accountKeeper,
+		bankKeeper,
+		evmKeeper,
+		stakingKeeper,
+		nil, // TODO evm: transfer keeper?
+	)
+
 	slashingKeeper := slashingkeeper.NewKeeper(
 		cdc,
 		codec.NewLegacyAmino(),
@@ -650,6 +687,7 @@ func NewSDKKeepers(
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss)
+	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := EVMKeeper(
 		cdc,
 		db,
@@ -658,7 +696,9 @@ func NewSDKKeepers(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
+		&erc20Keeper,
 	)
+	erc20Keeper = ERC20Keeper(cdc, db, ss, authKeeper, bankKeeper, &stakingKeeper, evmKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
 	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, stakingKeeper, UpgradeKeeper(cdc, db, ss), *capabilityKeeper)

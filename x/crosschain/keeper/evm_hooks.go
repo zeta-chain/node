@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -41,14 +42,14 @@ func (k Keeper) Hooks() Hooks {
 
 // PostTxProcessing is a wrapper for calling the EVM PostTxProcessing hook on
 // the module keeper
-func (h Hooks) PostTxProcessing(ctx sdk.Context, msg *core.Message, receipt *ethtypes.Receipt) error {
+func (h Hooks) PostTxProcessing(ctx sdk.Context, _ common.Address, msg core.Message, receipt *ethtypes.Receipt) error {
 	return h.k.PostTxProcessing(ctx, msg, receipt)
 }
 
 // PostTxProcessing implements EvmHooks.PostTxProcessing.
 func (k Keeper) PostTxProcessing(
 	ctx sdk.Context,
-	msg *core.Message,
+	msg core.Message,
 	receipt *ethtypes.Receipt,
 ) error {
 	var emittingContract ethcommon.Address
