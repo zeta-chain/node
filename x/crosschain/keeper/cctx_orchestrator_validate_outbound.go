@@ -53,7 +53,7 @@ func (k Keeper) ValidateOutboundZEVM(
 			// This is the only case where we set outbound and revert messages,
 			// as both the outbound and the revert failed in the same block
 			k.ProcessAbort(ctx, cctx, types.StatusMessages{
-				StatusMessage:        fmt.Sprintf("revert failed to be processed"),
+				StatusMessage:        "revert failed to be processed",
 				ErrorMessageOutbound: ccctxerror.NewCCTXErrorJSONMessage("", depositErr),
 				ErrorMessageRevert:   ccctxerror.NewCCTXErrorJSONMessage("", revertErr),
 			})
@@ -293,7 +293,6 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 	}
 	newStatus := cctx.CctxStatus.Status.String()
 	EmitOutboundFailure(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
-	return
 }
 
 // processFailedZETAOutboundOnZEVM processes a failed ZETA outbound on ZEVM

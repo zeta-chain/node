@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v31.1
+
+### Features
+
+* [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
+
 ## v31.0.0
 
 ### Breaking Changes
