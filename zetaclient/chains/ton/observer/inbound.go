@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/compliance"
 	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
@@ -34,17 +34,12 @@ const (
 //
 // The name `ObserveInbound` is used for consistency with other chains.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	if err := ob.ensureLastScannedTX(ctx); err != nil {
-		return errors.Wrap(err, "unable to ensure last scanned tx")
-	}
-
-	// extract logicalTime and tx hash from last scanned tx
-	lt, hashBits, err := liteapi.TransactionHashFromString(ob.LastTxScanned())
+	lt, hashBits, err := ob.ensureLastScannedTx(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse last scanned tx %q", ob.LastTxScanned())
+		return errors.Wrap(err, "unable to get last scanned tx")
 	}
 
-	txs, err := ob.client.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
+	txs, err := ob.rpc.GetTransactionsSince(ctx, ob.gateway.AccountID(), lt, hashBits)
 	if err != nil {
 		return errors.Wrap(err, "unable to get transactions")
 	}
@@ -79,9 +74,9 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 
 		if skip {
 			tx = &toncontracts.Transaction{Transaction: txs[i]}
-			txHash := liteapi.TransactionToHashString(tx.Transaction)
+			txHash := rpc.TransactionToHashString(tx.Transaction)
 			ob.Logger().Inbound.Warn().Str("transaction.hash", txHash).Msg("observeGateway: skipping tx")
-			ob.setLastScannedTX(tx)
+			ob.setLastScannedTx(tx)
 			continue
 		}
 
@@ -103,7 +98,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				return errors.Wrap(err, "unable to add outbound tracker")
 			}
 
-			ob.setLastScannedTX(tx)
+			ob.setLastScannedTx(tx)
 			continue
 		}
 
@@ -117,7 +112,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 			return errors.Wrapf(err, "unable to vote for inbound tx %s", tx.Hash().Hex())
 		}
 
-		ob.setLastScannedTX(tx)
+		ob.setLastScannedTx(tx)
 	}
 
 	return nil
@@ -141,13 +136,13 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 	for _, tracker := range trackers {
 		txHash := tracker.TxHash
 
-		lt, hash, err := liteapi.TransactionHashFromString(txHash)
+		lt, hash, err := rpc.TransactionHashFromString(txHash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_parse_hash", err)
 			continue
 		}
 
-		raw, err := ob.client.GetTransaction(ctx, gatewayAccountID, lt, hash)
+		raw, err := ob.rpc.GetTransaction(ctx, gatewayAccountID, lt, hash)
 		if err != nil {
 			ob.logSkippedTracker(txHash, "unable_to_get_tx", err)
 			continue
@@ -210,12 +205,9 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	blockHeader, err := ob.client.GetBlockHeader(ctx, tx.BlockID, 0)
-	if err != nil {
-		return errors.Wrapf(err, "unable to get block header %s", tx.BlockID.String())
-	}
-
-	seqno := blockHeader.MinRefMcSeqno
+	// TON doesn't use sequential block numbers
+	// because txs can happen in different shards
+	const seqno = 0
 
 	if _, err = ob.voteDeposit(ctx, inbound, seqno); err != nil {
 		return errors.Wrap(err, "unable to vote for inbound tx")
@@ -277,7 +269,7 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno 
 
 	var (
 		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
-		inboundHash     = liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+		inboundHash     = rpc.TransactionToHashString(inbound.tx.Transaction)
 		sender          = inbound.sender.ToRaw()
 		receiver        = inbound.receiver.Hex()
 	)
@@ -320,7 +312,7 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 		return false
 	}
 
-	txHash := liteapi.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
+	txHash := rpc.TransactionHashToString(inbound.tx.Lt, ton.Bits256(inbound.tx.Hash()))
 
 	compliance.PrintComplianceLog(
 		ob.Logger().Inbound,
@@ -336,24 +328,34 @@ func (ob *Observer) inboundComplianceCheck(inbound inboundData) (restricted bool
 	return true
 }
 
-func (ob *Observer) ensureLastScannedTX(ctx context.Context) error {
-	// noop
-	if ob.LastTxScanned() != "" {
-		return nil
+// ensureLastScannedTx or query the latest tx from RPC
+func (ob *Observer) ensureLastScannedTx(ctx context.Context) (uint64, ton.Bits256, error) {
+	// always expect init state.
+	if txHash := ob.LastTxScanned(); txHash != "" {
+		return rpc.TransactionHashFromString(txHash)
 	}
 
-	rawTX, _, err := ob.client.GetFirstTransaction(ctx, ob.gateway.AccountID())
-	if err != nil {
-		return err
+	// get last txs from RPC and pick the oldest one
+	const limit = 20
+
+	txs, err := ob.rpc.GetTransactions(ctx, limit, ob.gateway.AccountID(), 0, ton.Bits256{})
+	switch {
+	case err != nil:
+		return 0, ton.Bits256{}, errors.Wrap(err, "unable to get last scanned tx")
+	case len(txs) == 0:
+		return 0, ton.Bits256{}, errors.New("no transactions found")
 	}
 
-	ob.setLastScannedTX(&toncontracts.Transaction{Transaction: *rawTX})
+	tx := txs[len(txs)-1]
 
-	return nil
+	// note this data is not persisted to DB unless real inbound is processed
+	ob.WithLastTxScanned(rpc.TransactionToHashString(tx))
+
+	return tx.Lt, ton.Bits256(tx.Hash()), nil
 }
 
-func (ob *Observer) setLastScannedTX(tx *toncontracts.Transaction) {
-	txHash := liteapi.TransactionToHashString(tx.Transaction)
+func (ob *Observer) setLastScannedTx(tx *toncontracts.Transaction) {
+	txHash := rpc.TransactionToHashString(tx.Transaction)
 
 	ob.WithLastTxScanned(txHash)
 
@@ -381,12 +383,20 @@ func (ob *Observer) logSkippedTracker(hash string, reason string, err error) {
 
 func txLogFields(tx *toncontracts.Transaction) map[string]any {
 	return map[string]any{
-		"transaction.hash":           liteapi.TransactionToHashString(tx.Transaction),
-		"transaction.ton.lt":         tx.Lt,
-		"transaction.ton.hash":       tx.Hash().Hex(),
-		"transaction.ton.block_id":   tx.BlockID.BlockID.String(),
+		"transaction.hash":           rpc.TransactionToHashString(tx.Transaction),
 		"transaction.ton.is_inbound": tx.IsInbound(),
 		"transaction.ton.op_code":    tx.Operation,
 		"transaction.ton.exit_code":  tx.ExitCode,
+	}
+}
+
+//nolint:unused // used for in tests
+func castBlockID(id ton.BlockIDExt) rpc.BlockIDExt {
+	return rpc.BlockIDExt{
+		Workchain: int(id.Workchain),
+		Seqno:     id.Seqno,
+		Shard:     fmt.Sprintf("%d", id.Shard),
+		RootHash:  id.RootHash.Base64(),
+		FileHash:  id.FileHash.Base64(),
 	}
 }

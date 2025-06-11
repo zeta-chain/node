@@ -1,17 +1,13 @@
 package orchestrator
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tonkeeper/tongo/liteclient"
-	"github.com/tonkeeper/tongo/tlb"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/scheduler"
@@ -201,16 +197,13 @@ func TestBootstrap(t *testing.T) {
 		ts := newTestSuite(t)
 
 		// Given TON lite-server mock ...
-		tonClient := mocks.NewTONLiteClient(t)
-		mockTONCalls(ts, tonClient)
-
-		// ... that is attached to the context so we can properly mock it
-		ctx := withTonClient(ts.ctx, tonClient)
+		tonRPC, tonConfig := testrpc.NewTONServer(t)
+		mockTONCalls(ts, tonRPC)
 
 		// Given TON rpc URL
 		ts.UpdateConfig(func(cfg *config.Config) {
 			clearChainConfigs(cfg)
-			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "test-mock"}
+			cfg.TONConfig = tonConfig
 		})
 
 		// Mock zetacore calls
@@ -218,7 +211,7 @@ func TestBootstrap(t *testing.T) {
 
 		// ACT
 		// Start the orchestrator and wait for TON observerSigner to bootstrap
-		require.NoError(t, ts.Start(ctx))
+		require.NoError(t, ts.Start(ts.ctx))
 
 		// ASSERT
 		check := func() bool {
@@ -301,7 +294,7 @@ func clearChainConfigs(cfg *config.Config) {
 	cfg.EVMChainConfigs = make(map[int64]config.EVMConfig)
 	cfg.SolanaConfig.Endpoint = ""
 	cfg.SuiConfig.Endpoint = ""
-	cfg.TONConfig.LiteClientConfigURL = ""
+	cfg.TONConfig.Endpoint = ""
 }
 
 func mockZetacoreCalls(ts *testSuite) {
@@ -323,23 +316,7 @@ func mockEthCalls(_ *testSuite, client *testrpc.EVMServer) {
 	client.SetChainID(1)
 }
 
-func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {
-	// todo
-}
-
-func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer) {
-	// todo
-}
-
-func mockTONCalls(_ *testSuite, client *mocks.TONLiteClient) {
-	errMock := errors.New("not implemented")
-
-	on(client, "GetConfigParams", 3).Return(tlb.ConfigParams{}, errMock).Maybe()
-	on(client, "GetMasterchainInfo", 1).Return(liteclient.LiteServerMasterchainInfoC{}, nil).Maybe()
-	on(client, "HealthCheck", 1).Return(time.Now(), nil).Maybe()
-	on(client, "GetFirstTransaction", 2).Return(nil, 0, errMock).Maybe()
-}
-
-func withTonClient(ctx context.Context, client *mocks.TONLiteClient) context.Context {
-	return context.WithValue(ctx, tonClientCtxKey{}, tonClient(client))
-}
+// might be useful
+func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {}
+func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer)       {}
+func mockTONCalls(_ *testSuite, _ *testrpc.TONServer)       {}
