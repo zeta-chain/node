@@ -267,7 +267,7 @@ services:
       - ssh:/root/.ssh
 
   ton:
-    image: ghcr.io/zeta-chain/ton-docker:v2.0.0
+    image: ghcr.io/zeta-chain/ton-docker:v2.1.0
     container_name: ton
     hostname: ton
     profiles:
