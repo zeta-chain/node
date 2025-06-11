@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -19,7 +18,7 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
@@ -34,8 +33,8 @@ type testSuite struct {
 	chain       chains.Chain
 	chainParams *observertypes.ChainParams
 
-	gateway    *toncontracts.Gateway
-	liteClient *mocks.TONLiteClient
+	gateway *toncontracts.Gateway
+	rpc     *mocks.TONRPC
 
 	zetacore *mocks.ZetacoreClient
 	tss      *mocks.TSS
@@ -64,7 +63,7 @@ func newTestSuite(t *testing.T) *testSuite {
 			testutils.GatewayAddresses[chain.ChainId],
 		))
 
-		liteClient = mocks.NewTONLiteClient(t)
+		rpc = mocks.NewTONRPC(t)
 
 		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{
@@ -98,8 +97,8 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain:       chain,
 		chainParams: chainParams,
 
-		liteClient: liteClient,
-		gateway:    gateway,
+		rpc:     rpc,
+		gateway: gateway,
 
 		zetacore: zetacore,
 		tss:      tss,
@@ -124,7 +123,7 @@ func (ts *testSuite) SetupLastScannedTX(gw ton.AccountID) ton.Transaction {
 		Amount: tonCoins(ts.t, "1"),
 	})
 
-	txHash := liteapi.TransactionHashToString(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
+	txHash := rpc.TransactionHashToString(lastScannedTX.Lt, ton.Bits256(lastScannedTX.Hash()))
 
 	ts.baseObserver.WithLastTxScanned(txHash)
 	require.NoError(ts.t, ts.baseObserver.WriteLastTxScannedToDB(txHash))
@@ -133,13 +132,13 @@ func (ts *testSuite) SetupLastScannedTX(gw ton.AccountID) ton.Transaction {
 }
 
 func (ts *testSuite) OnGetFirstTransaction(acc ton.AccountID, tx *ton.Transaction, scanned int, err error) *mock.Call {
-	return ts.liteClient.
+	return ts.rpc.
 		On("GetFirstTransaction", ts.ctx, acc).
 		Return(tx, scanned, err)
 }
 
 func (ts *testSuite) MockGetTransaction(acc ton.AccountID, tx ton.Transaction) *mock.Call {
-	return ts.liteClient.
+	return ts.rpc.
 		On("GetTransaction", mock.Anything, acc, tx.Lt, ton.Bits256(tx.Hash())).
 		Return(tx, nil)
 }
@@ -157,7 +156,7 @@ func (ts *testSuite) OnGetTransactionsSince(
 	txs []ton.Transaction,
 	err error,
 ) *mock.Call {
-	return ts.liteClient.
+	return ts.rpc.
 		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
 }
@@ -169,14 +168,17 @@ func (ts *testSuite) OnGetAllOutboundTrackerByChain(trackers []cc.OutboundTracke
 }
 
 func (ts *testSuite) MockGetBlockHeader(id ton.BlockIDExt) *mock.Call {
+	castedBlockID := castBlockID(id)
+
 	// let's pretend that block's masterchain ref has the same seqno
-	blockInfo := tlb.BlockInfo{
-		BlockInfoPart: tlb.BlockInfoPart{MinRefMcSeqno: id.Seqno},
+	info := rpc.BlockHeader{
+		ID:            castedBlockID,
+		MinRefMcSeqno: id.Seqno,
 	}
 
-	return ts.liteClient.
-		On("GetBlockHeader", mock.Anything, id, uint32(0)).
-		Return(blockInfo, nil)
+	return ts.rpc.
+		On("GetBlockHeader", mock.Anything, castedBlockID).
+		Return(info, nil)
 }
 
 func (ts *testSuite) MockGetCctxByHash() *mock.Call {
@@ -193,7 +195,7 @@ func (ts *testSuite) OnGetInboundTrackersForChain(trackers []cc.InboundTracker) 
 func (ts *testSuite) TxToInboundTracker(tx ton.Transaction) cc.InboundTracker {
 	return cc.InboundTracker{
 		ChainId:  ts.chain.ChainId,
-		TxHash:   liteapi.TransactionToHashString(tx),
+		TxHash:   rpc.TransactionToHashString(tx),
 		CoinType: coin.CoinType_Gas,
 	}
 }

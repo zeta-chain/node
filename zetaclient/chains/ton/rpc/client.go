@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"slices"
 	"strings"
@@ -112,11 +113,34 @@ func (c *Client) GetAccountState(ctx context.Context, acc ton.AccountID) (Accoun
 		"address": acc.ToRaw(),
 	}
 
-	var account Account
+	account := Account{ID: acc}
 
-	err := c.callAndUnmarshal(ctx, "getExtendedAddressInformation", params, &account)
+	err := c.callAndUnmarshal(ctx, "getAddressInformation", params, &account)
 
 	return account, err
+}
+
+func (c *Client) GetSeqno(ctx context.Context, acc ton.AccountID) (uint32, error) {
+	exitCode, stack, err := c.RunSmcMethod(ctx, acc, "seqno", tlb.VmStack{})
+
+	switch {
+	case err != nil:
+		return 0, errors.Wrap(err, "unable to get seqno")
+	case exitCode != 0:
+		return 0, errors.Errorf("seqno method failed with exit code %d", exitCode)
+	case len(stack) == 0:
+		return 0, errors.Errorf("seqno method returned empty stack")
+	case stack[0].SumType != typeTinyInt:
+		return 0, errors.Errorf("invalid seqno type: %s", stack[0].SumType)
+	}
+
+	seqno := stack[0].VmStkTinyInt
+	if seqno < 0 || seqno > math.MaxUint32 {
+		return 0, errors.Errorf("seqno %d is out of uint32 range", seqno)
+	}
+
+	// #nosec G115 always in range
+	return uint32(seqno), nil
 }
 
 // getLastTransactionHash returns logical time and hash of the last transaction
@@ -234,7 +258,10 @@ func (c *Client) GetTransactionsSince(
 	acc ton.AccountID,
 	oldestLT uint64,
 	oldestHash ton.Bits256,
-) (txs []ton.Transaction, err error) {
+) ([]ton.Transaction, error) {
+	// Based on toncenter's rpc code sources, it fetches the last tx hash from the account state
+	// if (lt, hash) are not provided. This can be potentially beneficial to save some rpc calls.
+	// but for now, let's query things explicitly.
 	lt, hash, err := c.getLastTransactionHash(ctx, acc)
 	if err != nil {
 		return nil, err
@@ -242,21 +269,14 @@ func (c *Client) GetTransactionsSince(
 
 	var result []ton.Transaction
 
-	// reverse the result to get the oldest tx first
-	defer func() {
-		if len(result) > 0 {
-			slices.Reverse(result)
-		}
-	}()
-
 	for {
-		hashBits := ton.Bits256(hash)
-
-		// note that ton liteapi works in the reverse order.
+		// note that ton RPC works in the reverse order.
 		// Here we go from the LATEST txs to the oldest at N txs per page
-		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
+		// The first tx in the result is the LATEST and equals to (lt, hash)
+		// eg: getTransactions(10, lt_10, hash_10) would return [tx_10, tx_9, tx_8, tx_7, ...]
+		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, ton.Bits256(hash))
 		if err != nil {
-			return nil, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
+			return nil, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hash.Hex())
 		}
 
 		if len(txs) == 0 {
@@ -265,88 +285,73 @@ func (c *Client) GetTransactionsSince(
 
 		for i := range txs {
 			found := txs[i].Lt == oldestLT && txs[i].Hash() == tlb.Bits256(oldestHash)
-			if !found {
-				continue
-			}
 
 			// early exit
-			result = append(result, txs[:i]...)
+			if found {
+				result = append(result, txs[:i]...)
+				// reverse the result to sort by ASC
+				slices.Reverse(result)
 
-			return result, nil
+				return result, nil
+			}
 		}
 
-		// otherwise, append all page results
 		result = append(result, txs...)
 
-		// prepare pagination params for the next page
-		oldestIndex := len(txs) - 1
+		// last tx (oldest) contains cursor to its predecessor
+		idx := len(txs) - 1
 
-		lt, hash = txs[oldestIndex].PrevTransLt, txs[oldestIndex].PrevTransHash
+		lt, hash = txs[idx].PrevTransLt, txs[idx].PrevTransHash
 	}
+
+	// reverse the result to sort by ASC
+	slices.Reverse(result)
 
 	return result, nil
 }
 
-// GetFirstTransaction scrolls through the transactions of the given account to find the first one.
-// Note that it might fail w/o using an archival node. Also returns the number of
-// scrolled transactions for this account i.e. total transactions
-func (c *Client) GetFirstTransaction(ctx context.Context, acc ton.AccountID) (*ton.Transaction, int, error) {
-	lt, hash, err := c.getLastTransactionHash(ctx, acc)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var (
-		tx       *ton.Transaction
-		scrolled int
-	)
-
-	for {
-		hashBits := ton.Bits256(hash)
-
-		txs, err := c.GetTransactions(ctx, pageSize, acc, lt, hashBits)
-		if err != nil {
-			return nil, scrolled, errors.Wrapf(err, "unable to get transactions [lt %d, hash %s]", lt, hashBits.Hex())
-		}
-
-		if len(txs) == 0 {
-			break
-		}
-
-		scrolled += len(txs)
-
-		tx = &txs[len(txs)-1]
-
-		// Not we take the latest item in the list (oldest tx in the page)
-		// and set it as the new last tx
-		lt, hash = tx.PrevTransLt, tx.PrevTransHash
-	}
-
-	if tx == nil {
-		return nil, scrolled, errors.Errorf("no transactions found [lt %d, hash %s]", lt, ton.Bits256(hash).Hex())
-	}
-
-	return tx, scrolled, nil
-}
-
 func (c *Client) SendMessage(ctx context.Context, payload []byte) (uint32, error) {
-	const method = "sendBoc"
-
-	params := map[string]any{
+	req := newRPCRequest("sendBoc", map[string]any{
 		"boc": base64.StdEncoding.EncodeToString(payload),
-	}
-
-	req := newRPCRequest(method, params)
+	})
 
 	res, err := c.rpcRequest(ctx, req)
+	switch {
+	case err != nil:
+		return 0, errors.Wrapf(err, "%s: unable to call rpc with params: %v", req.Method, req.Params)
+	case res.Error != "":
+		// #nosec G115 in range
+		return uint32(res.Code), errors.Errorf("got bad response: %s", res.Error)
+	default:
+		// #nosec G115 in range
+		return uint32(res.Code), nil
+	}
+}
+
+func (c *Client) RunSmcMethod(
+	ctx context.Context,
+	acc ton.AccountID,
+	method string,
+	stack tlb.VmStack,
+) (uint32, tlb.VmStack, error) {
+	stackEncoded, err := marshalStack(stack)
 	if err != nil {
-		return 0, errors.Wrapf(err, "%s: unable to call rpc with params: %v", method, req.Params)
+		return 0, tlb.VmStack{}, errors.Wrap(err, "unable to marshal stack")
 	}
 
-	// todo: future: this should be explored during e2e wiring,
-	// todo: probably need to parse code from res.Result
-	// #nosec G115 in range
-	return uint32(res.Code), nil
+	// https://testnet.toncenter.com/api/v2/#/run%20method/run_get_method_runGetMethod_post
+	params := map[string]any{
+		"address": acc.ToRaw(),
+		"method":  method,
+		"stack":   stackEncoded,
+	}
+
+	res, err := c.call(ctx, "runGetMethod", params)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return parseGetMethodResponse(res)
 }
 
 func (c *Client) callAndUnmarshal(

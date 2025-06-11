@@ -11,7 +11,7 @@ import (
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/config"
+	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/common"
 )
 
@@ -51,10 +51,17 @@ func TestLiveClient(t *testing.T) {
 			require.Equal(t, accountID, acc.ID)
 			require.Equal(t, tlb.AccountActive, acc.Status)
 			require.NotZero(t, acc.Balance)
+
+			require.NotNil(t, acc.Code)
+			require.NotNil(t, acc.Data)
+
 			require.NotEmpty(t, acc.LastTxHash)
 			require.NotZero(t, acc.LastTxLT)
 
 			t.Logf("account: %+v", acc)
+
+			tlbAcc := acc.ToShardAccount()
+			require.Equal(t, tlb.AccountActive, tlbAcc.Account.Status())
 		})
 
 		t.Run("NotExists", func(t *testing.T) {
@@ -64,27 +71,42 @@ func TestLiveClient(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, accountID, acc.ID)
-			require.Equal(t, tlb.AccountNone, acc.Status)
+			require.Equal(t, tlb.AccountUninit, acc.Status)
 			require.Zero(t, acc.Balance)
 			require.Empty(t, acc.LastTxHash)
 			require.Empty(t, acc.LastTxLT)
 
 			t.Logf("account: %+v", acc)
+
+			tlbAcc := acc.ToShardAccount()
+			require.Equal(t, tlb.AccountUninit, tlbAcc.Account.Status())
 		})
+	})
+
+	t.Run("GetSeqno", func(t *testing.T) {
+		seqno, err := client.GetSeqno(ctx, gatewayTestnet)
+		require.NoError(t, err)
+		require.NotZero(t, seqno)
+
+		t.Logf("seqno: %d", seqno)
+	})
+
+	t.Run("RunSmcMethod", func(t *testing.T) {
+		gw := toncontracts.NewGateway(gatewayTestnet)
+
+		fee, err := gw.GetTxFee(ctx, client, toncontracts.OpDepositAndCall)
+		require.NoError(t, err)
+
+		t.Logf("fee: %d", fee)
 	})
 
 	t.Run("GetConfigParam", func(t *testing.T) {
 		// Get gas config
-		cell, err := client.GetConfigParam(ctx, 21)
-
+		gasLimitPrices, err := FetchGasConfigRPC(ctx, client)
 		require.NoError(t, err)
-		require.NotNil(t, cell)
 
 		// Parse it
-		var cfg tlb.ConfigParam21
-		require.NoError(t, tlb.Unmarshal(cell, &cfg))
-
-		gasPrice, err := config.ParseGasPrice(cfg.GasLimitsPrices)
+		gasPrice, err := ParseGasPrice(gasLimitPrices)
 		require.NoError(t, err)
 
 		t.Logf("gasPrice: %d", gasPrice)
