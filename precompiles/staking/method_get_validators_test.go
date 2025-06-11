@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
@@ -78,7 +79,8 @@ func Test_GetValidators(t *testing.T) {
 
 		// Create validator.
 		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
-		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+		validator.Status = stakingtypes.Unbonded
+		require.NoError(t, s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator))
 
 		// Create staker.
 		stakerEVMAddr := sample.EthAddress()
@@ -131,7 +133,8 @@ func Test_GetValidators(t *testing.T) {
 		// Create 100 validators, and stake on each of them.
 		for n := range 100 {
 			validator := sample.Validator(t, rand.New(rand.NewSource(int64(n))))
-			s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+			validator.Status = stakingtypes.Unbonded
+			require.NoError(t, s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator))
 
 			stakeThroughCosmosAPI(
 				t,
