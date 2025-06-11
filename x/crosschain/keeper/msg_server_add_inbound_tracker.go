@@ -25,7 +25,7 @@ func (k msgServer) AddInboundTracker(
 	// only emergency group and observer can submit a tracker
 	var (
 		isAuthorizedPolicy = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil
-		isObserver         = k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
+		isObserver         = k.GetObserverKeeper().CheckObserverCanVote(ctx, msg.Creator) == nil
 	)
 
 	if !isAuthorizedPolicy && !isObserver {

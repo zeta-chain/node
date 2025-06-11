@@ -102,8 +102,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 			// if tx is a system tx, and singer is authorized, use system tx handler
 
-			isAuthorized := func(creator string) bool {
-				return options.ObserverKeeper.IsNonTombstonedObserver(ctx, creator)
+			isAuthorized := func(creator string) error {
+				return options.ObserverKeeper.CheckObserverCanVote(ctx, creator)
 			}
 
 			if IsSystemTx(tx, isAuthorized) {
@@ -152,7 +152,7 @@ func Recover(logger tmlog.Logger, err *error) {
 // system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
 // the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
 // the tx is authorized.
-func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
+func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) error) bool {
 	// the following determines whether the tx is a system tx which will uses different handler
 	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
 	if len(tx.GetMsgs()) != 1 { // this is not a system tx
@@ -179,9 +179,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgVoteBlame:
 		signers := innerMsg.(sdk.LegacyMsg).GetSigners()
-		if len(signers) == 1 {
-			return isAuthorizedSigner(signers[0].String())
-		}
+		return len(signers) == 1 && isAuthorizedSigner(signers[0].String()) == nil
 	}
 
 	return false

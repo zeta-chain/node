@@ -39,7 +39,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		keepertest.MockGetSupportedChainFromChainID(observerMock, sample.Chain(5))
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 
@@ -60,7 +60,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(0), errors.New("err"))
@@ -85,7 +85,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
@@ -123,7 +123,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
@@ -171,7 +171,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		keepertest.MockGetSupportedChainFromChainID(observerMock, chains.Chain{
 			ChainId: 5,
 		})
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
@@ -223,7 +223,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, chain.ChainId).
 			Return(chain, true)
 
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
@@ -279,7 +279,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 			On("GetSupportedChainFromChainID", mock.Anything, chain.ChainId).
 			Return(chain, true)
 
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
@@ -336,7 +336,7 @@ func TestMsgServer_VoteGasPrice(t *testing.T) {
 			On("GetSupportedChainFromChainID", mock.Anything, chain.ChainId).
 			Return(chain, true)
 
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		fungibleMock.On("SetGasPrice", mock.Anything, mock.Anything, mock.Anything).Return(uint64(1), nil)
