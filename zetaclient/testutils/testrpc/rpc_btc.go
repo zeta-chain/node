@@ -35,7 +35,7 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 		RPCParams:   "mainnet",
 	}
 
-	rpc.On("ping", func(_ []any) (any, error) {
+	rpc.On("ping", func(_ map[string]any) (any, error) {
 		return nil, nil
 	})
 
@@ -43,7 +43,7 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 }
 
 func (s *BtcServer) SetBlockCount(count int) {
-	s.On("getblockcount", func(_ []any) (any, error) {
+	s.On("getblockcount", func(_ map[string]any) (any, error) {
 		return count, nil
 	})
 }

@@ -62,8 +62,8 @@ type SuiConfig struct {
 
 // TONConfig is the config for TON chain
 type TONConfig struct {
-	// Can be either URL of local file path
-	LiteClientConfigURL string `json:"liteClientConfigURL"`
+	// Endpoint url (toncenter V2 api) e.g. https://toncenter.com/api/v2/
+	Endpoint string `mask:"filled"`
 }
 
 // ComplianceConfig is the config for compliance
