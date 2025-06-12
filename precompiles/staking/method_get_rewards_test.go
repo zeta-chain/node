@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	precompiletypes "github.com/zeta-chain/node/precompiles/types"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -50,7 +51,8 @@ func Test_GetRewards(t *testing.T) {
 
 		// Create validator.
 		validator := sample.Validator(t, rand.New(rand.NewSource(42)))
-		s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator)
+		validator.Status = stakingtypes.Unbonded
+		require.NoError(t, s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, validator))
 
 		// Create staker.
 		stakerEVMAddr := sample.EthAddress()

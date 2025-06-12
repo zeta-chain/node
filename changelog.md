@@ -5,6 +5,7 @@
 ### Features
 
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 * [3961](https://github.com/zeta-chain/node/pull/3961) - cosmos v53 upgrade
 
 ### Fixes
@@ -13,6 +14,7 @@
 * [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
 * [3956](https://github.com/zeta-chain/node/pull/3956) - use the latest nonce to perform pre-broadcast check to make evm tx replacement possible
 * [3954](https://github.com/zeta-chain/node/pull/3954) - fail sui withdrawal event in the ZEVM if it carries invalid receiver address
+* [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
 
 ### Refactor
 

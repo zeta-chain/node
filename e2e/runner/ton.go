@@ -17,7 +17,7 @@ import (
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
 // we need to use this send mode due to how wallet V5 works
@@ -70,8 +70,8 @@ func (r *E2ERunner) TONDepositRaw(
 	}
 
 	var (
-		lastTxHash = gwState.LastTransHash
-		lastLt     = gwState.LastTransLt
+		lastTxHash = gwState.LastTxHash
+		lastLt     = gwState.LastTxLT
 	)
 
 	// Send TX
@@ -118,7 +118,7 @@ func (r *E2ERunner) TONDeposit(
 		return nil, err
 	}
 
-	txHash := liteapi.TransactionToHashString(tx)
+	txHash := rpc.TransactionToHashString(tx)
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -164,8 +164,8 @@ func (r *E2ERunner) TONDepositAndCall(
 	}
 
 	var (
-		lastTxHash = gwState.LastTransHash
-		lastLt     = gwState.LastTransLt
+		lastTxHash = gwState.LastTxHash
+		lastLt     = gwState.LastTxLT
 	)
 
 	// Log pre-transaction info
@@ -200,7 +200,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	// Wait for tx
 	tx := r.tonWaitForTx(waitFrom, filter)
 
-	txHash := liteapi.TransactionToHashString(tx)
+	txHash := rpc.TransactionToHashString(tx)
 
 	// Wait for cctx
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
@@ -286,7 +286,7 @@ func (r *E2ERunner) tonWaitForTx(from tonWaitFrom, filter func(tx *ton.Transacti
 
 			r.Logger.Info(
 				"tonWaitForInboundCCTX: Found matching transaction: %s",
-				liteapi.TransactionToHashString(tx),
+				rpc.TransactionToHashString(tx),
 			)
 
 			return tx
