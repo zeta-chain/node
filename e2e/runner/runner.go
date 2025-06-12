@@ -141,21 +141,23 @@ type E2ERunner struct {
 	SuiExample config.SuiExample
 
 	// contracts evm
-	ZetaEthAddr         ethcommon.Address
-	ZetaEth             *zetaeth.ZetaEth
-	ConnectorEthAddr    ethcommon.Address
-	ConnectorEth        *zetaconnectoreth.ZetaConnectorEth
-	ERC20CustodyAddr    ethcommon.Address
-	ERC20Custody        *erc20custodyv2.ERC20Custody
-	ERC20Addr           ethcommon.Address
-	ERC20               *erc20.ERC20
-	EvmTestDAppAddr     ethcommon.Address
-	GatewayEVMAddr      ethcommon.Address
-	GatewayEVM          *gatewayevm.GatewayEVM
-	TestDAppV2EVMAddr   ethcommon.Address
-	TestDAppV2EVM       *testdappv2.TestDAppV2
+	ZetaEthAddr       ethcommon.Address
+	ZetaEth           *zetaeth.ZetaEth
+	ERC20CustodyAddr  ethcommon.Address
+	ERC20Custody      *erc20custodyv2.ERC20Custody
+	ERC20Addr         ethcommon.Address
+	ERC20             *erc20.ERC20
+	EvmTestDAppAddr   ethcommon.Address
+	GatewayEVMAddr    ethcommon.Address
+	GatewayEVM        *gatewayevm.GatewayEVM
+	TestDAppV2EVMAddr ethcommon.Address
+	TestDAppV2EVM     *testdappv2.TestDAppV2
+	// ConnectorNative is the V2 connector for EVM chains
 	ConnectorNativeAddr ethcommon.Address
 	ConnectorNative     *zetaconnnectornative.ZetaConnectorNative
+	// ConnectorEthAddr is the V1 connector for EVM chains
+	ConnectorEthAddr ethcommon.Address
+	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
 
 	// contracts zevm
 	// zrc20 contracts
@@ -463,7 +465,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
 	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
-	r.Logger.Print("ConnectorEth V2: %s", r.ConnectorNativeAddr.Hex())
+	r.Logger.Print("ConnectorEthV2: %s", r.ConnectorNativeAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())

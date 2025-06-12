@@ -167,7 +167,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
-	if c := conf.Contracts.EVM.ConnectorNativeAddr; c != "" {
+	if c := conf.Contracts.EVM.ConnectorNative; c != "" {
 		r.ConnectorNativeAddr, err = c.AsEVMAddress()
 		if err != nil {
 			return fmt.Errorf("invalid ConnectorNativeAddr: %w", err)
