@@ -237,7 +237,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 				StatusMessage: "outbound failed and revert failed",
 				ErrorMessageRevert: ccctxerror.NewCCTXErrorJSONMessage(
 					"revert tx failed to be executed",
-					nil,
+					err,
 				),
 			})
 		}

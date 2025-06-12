@@ -19,6 +19,9 @@
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 
+### Test 
+* [3975](https://github.com/zeta-chain/node/pull/3975) - add v2 connector deployment to the e2e test
+
 ## v31.0.0
 
 ### Breaking Changes
