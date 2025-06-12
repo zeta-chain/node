@@ -15,6 +15,7 @@
 * [3956](https://github.com/zeta-chain/node/pull/3956) - use the latest nonce to perform pre-broadcast check to make evm tx replacement possible
 * [3954](https://github.com/zeta-chain/node/pull/3954) - fail sui withdrawal event in the ZEVM if it carries invalid receiver address
 * [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
+* [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
 
 ### Refactor
 
