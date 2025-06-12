@@ -401,7 +401,9 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	}
 
 	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
-
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

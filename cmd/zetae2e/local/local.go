@@ -556,9 +556,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	if testV2ConnectorMigration {
-		// Add the v2 connector migration tests
+		// Add the v2 connector migration tests and assertions
 		// https://github.com/zeta-chain/node/issues/3947
-		//eg.Go(evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose))
+		deployerRunner.Logger.Info("no migration tests to run")
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
