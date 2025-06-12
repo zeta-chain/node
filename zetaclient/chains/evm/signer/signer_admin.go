@@ -8,11 +8,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
-	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
-
 	"github.com/zeta-chain/node/pkg/constant"
+	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 )
 
 // SignAdminTx signs a admin cmd transaction based on the given command
@@ -21,7 +18,6 @@ func (signer *Signer) SignAdminTx(
 	txData *OutboundData,
 	cmd string,
 	params string,
-	zetachainID int64,
 ) (*ethtypes.Transaction, error) {
 	switch cmd {
 	case constant.CmdWhitelistERC20:
@@ -30,8 +26,6 @@ func (signer *Signer) SignAdminTx(
 		return signer.signMigrateERC20CustodyFundsCmd(ctx, txData, params)
 	case constant.CmdUpdateERC20CustodyPauseStatus:
 		return signer.signUpdateERC20CustodyPauseStatusCmd(ctx, txData, params)
-	case constant.CmdMigrateConnectorFunds:
-		return signer.signMigrateConnectorFundsCmd(ctx, txData, params, zetachainID)
 	case constant.CmdMigrateTssFunds:
 		return signer.signMigrateTssFundsCmd(ctx, txData)
 	}
@@ -94,63 +88,6 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 		return nil, err
 	}
 	data, err := custodyAbi.Pack("withdraw", newCustody, erc20, amount)
-	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
-	}
-
-	tx, _, _, err := signer.Sign(
-		ctx,
-		data,
-		txData.to,
-		zeroValue,
-		txData.gas,
-		txData.nonce,
-		txData.height,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd error: %w", err)
-	}
-	return tx, nil
-}
-
-func (signer *Signer) signMigrateConnectorFundsCmd(
-	ctx context.Context,
-	txData *OutboundData,
-	params string,
-	zetachainID int64,
-) (*ethtypes.Transaction, error) {
-	paramsArray := strings.Split(params, ",")
-	if len(paramsArray) != 2 {
-		return nil, fmt.Errorf("signMigrateConnectorFundsCmd: invalid params %s", params)
-	}
-	newConnector := ethcommon.HexToAddress(paramsArray[0])
-	amount, ok := new(big.Int).SetString(paramsArray[1], 10)
-	if !ok {
-		return nil, fmt.Errorf("signMigrateConnectorFundsCmd: invalid amount %s", paramsArray[1])
-	}
-	// Parameters for onReceive
-	zetaTxSenderAddress := ethcommon.Address{}.Bytes()
-	sourceChainID := big.NewInt(zetachainID)
-	// destinationAddress passed as parameter
-	// zetaValue passed as parameter
-	var message []byte
-	internalSendHash := crypto.Keccak256Hash([]byte("ZetaConnectorETH"))
-
-	connectorAbi, err := zetaconnectoreth.ZetaConnectorEthMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := connectorAbi.Pack(
-		"onReceive",
-		zetaTxSenderAddress,
-		sourceChainID,
-		newConnector,
-		amount,
-		message,
-		internalSendHash,
-	)
-
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}

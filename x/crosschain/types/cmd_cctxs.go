@@ -32,8 +32,6 @@ const (
 
 	// ERC20CustodyPausingGasMultiplierEVM is multiplied to the median gas price to get the gas price for the erc20 custody pausing
 	ERC20CustodyPausingGasMultiplierEVM = 2
-
-	ConnectorMigrationGasMultiplierEVM = 2
 )
 
 // MigrateERC20CustodyFundsCmdCCTX returns a CCTX allowing to migrate ERC20 custody funds
@@ -74,44 +72,6 @@ func MigrateERC20CustodyFundsCmdCCTX(
 	)
 }
 
-// MigrateConnectorFundsCmdCCTX returns a CCTX allowing to migrate connector funds
-func MigrateConnectorFundsCmdCCTX(
-	creator string,
-	v1ConnectorContractAddress string,
-	v2ConnectorContractAddress string,
-	chainID int64,
-	amount sdkmath.Uint,
-	gasPrice string,
-	priorityFee string,
-	tssPubKey string,
-	currentNonce uint64,
-	height int64,
-) CrossChainTx {
-	indexString := GetConnectorsMigrationCCTXIndexString(tssPubKey, currentNonce, chainID, height)
-	hash := crypto.Keccak256Hash([]byte(indexString))
-	// Zetaclient uses the v2 address and amount from `relayedMessage` field.
-	// The `to` field is used to initiate the migration on the v1 contract
-	return newCmdCCTX(
-		creator,
-		hash.Hex(),
-		fmt.Sprintf(
-			"%s:%s,%s",
-			constant.CmdMigrateConnectorFunds,
-			v2ConnectorContractAddress,
-			amount.String(),
-		),
-		creator,
-		hash.Hex(),
-		v1ConnectorContractAddress,
-		chainID,
-		sdkmath.NewUint(0),
-		100_000,
-		gasPrice,
-		priorityFee,
-		tssPubKey,
-	)
-}
-
 // GetERC20CustodyMigrationCCTXIndexString returns the index string of the CCTX for migrating ERC20 custody funds
 func GetERC20CustodyMigrationCCTXIndexString(
 	tssPubKey string,
@@ -120,17 +80,6 @@ func GetERC20CustodyMigrationCCTXIndexString(
 	erc20Address string,
 ) string {
 	return fmt.Sprintf("%s-%s-%d-%d-%s", constant.CmdMigrateERC20CustodyFunds, tssPubKey, nonce, chainID, erc20Address)
-}
-
-// GetConnectorsMigrationCCTXIndexString returns the index string of the CCTX for migrating connector funds
-// It includes the TSS public key, nonce, chain ID, and height to ensure uniqueness
-func GetConnectorsMigrationCCTXIndexString(
-	tssPubKey string,
-	nonce uint64,
-	chainID int64,
-	height int64,
-) string {
-	return fmt.Sprintf("%s-%s-%d-%d-%d", constant.CmdMigrateConnectorFunds, tssPubKey, nonce, chainID, height)
 }
 
 // UpdateERC20CustodyPauseStatusCmdCCTX returns a CCTX allowing to update the pause status of the ERC20 custody contract

@@ -26,7 +26,6 @@ var (
 	AdminPolicyMessages = []string{
 		"/zetachain.zetacore.crosschain.MsgUpdateERC20CustodyPauseStatus",
 		"/zetachain.zetacore.crosschain.MsgMigrateERC20CustodyFunds",
-		"/zetachain.zetacore.crosschain.MsgMigrateConnectorFunds",
 		"/zetachain.zetacore.crosschain.MsgMigrateTssFunds",
 		"/zetachain.zetacore.crosschain.MsgUpdateTssAddress",
 		"/zetachain.zetacore.crosschain.MsgWhitelistERC20",

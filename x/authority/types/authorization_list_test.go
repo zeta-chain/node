@@ -437,7 +437,6 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&types.MsgRemoveChainInfo{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
-			sdk.MsgTypeURL(&crosschaintypes.MsgMigrateConnectorFunds{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

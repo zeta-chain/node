@@ -31,7 +31,11 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 	verifyMigrationSuccess(r, balanceTransferred)
 }
 
-func updateTssAddress(r *runner.E2ERunner, tssAddress common.Address, ensureTxReceipt func(*ethtypes.Transaction, string)) {
+func updateTssAddress(
+	r *runner.E2ERunner,
+	tssAddress common.Address,
+	ensureTxReceipt func(*ethtypes.Transaction, string),
+) {
 	updateTssTx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, tssAddress)
 	require.NoError(r, err)
 	ensureTxReceipt(updateTssTx, "ZetaConnectorEth TSS address update failed")

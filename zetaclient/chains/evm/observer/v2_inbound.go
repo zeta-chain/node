@@ -178,10 +178,6 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
-	if event.Asset == ethcommon.HexToAddress(ob.ChainParams().ZetaTokenContractAddress) {
-		coinType = coin.CoinType_Zeta
-	}
-
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
 	isCrossChainCall := len(event.Payload) > 0
 

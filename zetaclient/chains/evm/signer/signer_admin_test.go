@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -21,8 +20,6 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	// Setup txData struct
 	cctx := getCCTX(t)
 
-	zetaChainID := chains.ZetaChainPrivnet.ChainId
-
 	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
 
 	require.False(t, skip)
@@ -32,7 +29,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		cmd := constant.CmdWhitelistERC20
 		params := ConnectorAddress.Hex()
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params, zetaChainID)
+		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -52,7 +49,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 			big.NewInt(100).String(),
 		)
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params, zetaChainID)
+		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -67,7 +64,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 		cmd := constant.CmdUpdateERC20CustodyPauseStatus
 		params := constant.OptionPause
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params, zetaChainID)
+		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params)
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -81,7 +78,7 @@ func TestSigner_SignAdminTx(t *testing.T) {
 	t.Run("SignAdminTx CmdMigrateTssFunds", func(t *testing.T) {
 		cmd := constant.CmdMigrateTssFunds
 		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, "", zetaChainID)
+		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, "")
 		require.NoError(t, err)
 
 		// Verify tx signature
@@ -89,23 +86,6 @@ func TestSigner_SignAdminTx(t *testing.T) {
 
 		// Verify tx body basics
 		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, txData.amount)
-	})
-	t.Run("SignAdminTx CmdMigrateConnectorFunds", func(t *testing.T) {
-		cmd := constant.CmdMigrateConnectorFunds
-		params := fmt.Sprintf(
-			"%s,%s",
-			sample.EthAddress().Hex(),
-			big.NewInt(100).String(),
-		)
-		// Call SignAdminTx
-		tx, err := evmSigner.SignAdminTx(ctx, txData, cmd, params, zetaChainID)
-		require.NoError(t, err)
-
-		// Verify tx signature
-		verifyTxSender(t, tx, evmSigner.tss.PubKey().AddressEVM(), evmSigner.EvmSigner())
-
-		// Verify tx body basics
-		verifyTxBodyBasics(t, tx, txData.to, txData.nonce, big.NewInt(0))
 	})
 }
 
