@@ -567,7 +567,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Default ballot maturity is set to 30 blocks.
-	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
+	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.
 	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests for this check as we expect all observers to vote correctly.
 	if testStress {
 		deployerRunner.WaitForBlocks(31)
@@ -577,7 +577,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(deployerRunner.WithdrawEmissions())
 
 	// Run the migration of funds from v1 connectors to v2 connectors.
-	if utils.MinimumVersionCheck("v30.0.0", deployerRunner.GetZetacoredVersion()) && testV2ConnectorMigration {
+	if testV2ConnectorMigration {
 		fn := evmTestRoutine(conf, "connector-migration", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestMigrateConnectorFundsName,
 			e2etests.TestLegacyZetaDepositName,
