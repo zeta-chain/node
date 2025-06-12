@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
@@ -21,6 +20,7 @@ import (
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
+	"go.uber.org/mock/gomock"
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
