@@ -44,9 +44,6 @@ service Msg {
 
   rpc UpdateERC20CustodyPauseStatus(MsgUpdateERC20CustodyPauseStatus)
       returns (MsgUpdateERC20CustodyPauseStatusResponse);
-
-  rpc MigrateConnectorFunds(MsgMigrateConnectorFunds)
-      returns (MsgMigrateConnectorFundsResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -281,16 +278,3 @@ message MsgUpdateERC20CustodyPauseStatus {
 }
 
 message MsgUpdateERC20CustodyPauseStatusResponse { string cctx_index = 1; }
-
-message MsgMigrateConnectorFunds {
-  option (cosmos.msg.v1.signer) = "creator";
-  string creator = 1;
-  int64 chain_id = 2;
-  string new_connector_address = 3;
-  string amount = 4 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message MsgMigrateConnectorFundsResponse { string cctx_index = 1; }

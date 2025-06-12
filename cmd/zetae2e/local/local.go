@@ -143,8 +143,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
-	fmt.Println("light:", light)
-	fmt.Println("skipBitcoinSetup:", skipBitcoinSetup)
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
@@ -578,18 +576,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// Withdraw emissions from the deployer account
 	noError(deployerRunner.WithdrawEmissions())
 
-	// Run the migration tests after all the other tests are completed.
+	// Run the migration of funds from v1 connectors to v2 connectors.
 	if utils.MinimumVersionCheck("v30.0.0", deployerRunner.GetZetacoredVersion()) && testV2ConnectorMigration {
-		fn := evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
+		fn := evmTestRoutine(conf, "connector-migration", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestMigrateConnectorFundsName,
 			e2etests.TestLegacyZetaDepositName,
-			e2etests.TestLegacyMessagePassingExternalChainsName,
-			e2etests.TestV2ZetaDepositName,
 		)
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
-			logger.Print("❌ v2 connector migration tests failed")
+			logger.Print("❌ v2 connector migration failed")
 			os.Exit(1)
 		}
 	}

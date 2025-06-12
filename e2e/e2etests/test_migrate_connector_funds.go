@@ -3,68 +3,60 @@ package e2etests
 import (
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
-	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
-	authoritytypes "github.com/zeta-chain/node/x/authority/types"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // TestMigrateConnectorFunds tests the migration of funds from the old ZetaConnectorEth (V1) to the new ZetaConnectorNative (V2)
 func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 	r.Logger.Print("Migrating connector funds from V1 to V2")
-
-	// Define the common transaction receipt handler
 	ensureTxReceipt := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
 
-	if err := addMigrationAuthorization(r); err != nil {
-		require.NoError(r, err)
-	}
-
 	pauseConnectors(r, ensureTxReceipt)
 	defer unpauseConnectors(r, ensureTxReceipt)
 
-	chainID, err := r.EVMClient.ChainID(r.Ctx)
-	require.NoError(r, err)
-	balance, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
-	require.NoError(r, err, "ZetaConnectorEth GetLockedAmount failed")
+	updateTssAddress(r, r.EVMAddress(), ensureTxReceipt)
+	defer updateTssAddress(r, r.TSSAddress, ensureTxReceipt)
 
-	if balance.Int64() == 0 {
-		r.Logger.Print("No funds to migrate from old connector")
-		return
-	}
-
-	// Perform the migration
-	migrationIndex := performFundsMigration(r, chainID.Int64(), balance)
-
-	// Verify migration success
-	verifyMigrationSuccess(r, migrationIndex, balance)
-
-	// Update chain parameters to use new connector
-	// This would disable the old connector and thus stop the V1 flow from working.
-	// V1: Call the connector directly
-	// V2: Call the gateway
-	// updateChainParams(r, chainID.Int64())
+	balanceTransferred := transferAllFunds(r, ensureTxReceipt)
+	verifyMigrationSuccess(r, balanceTransferred)
 }
 
-// addMigrationAuthorization adds the necessary authorization for migration
-func addMigrationAuthorization(r *runner.E2ERunner) error {
-	msgAddAuthorization := authoritytypes.NewMsgAddAuthorization(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
-		"/zetachain.zetacore.crosschain.MsgMigrateConnectorFunds",
-		authoritytypes.PolicyType_groupAdmin,
+func updateTssAddress(r *runner.E2ERunner, tssAddress common.Address, ensureTxReceipt func(*ethtypes.Transaction, string)) {
+	updateTssTx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, tssAddress)
+	require.NoError(r, err)
+	ensureTxReceipt(updateTssTx, "ZetaConnectorEth TSS address update failed")
+}
+
+func transferAllFunds(r *runner.E2ERunner, ensureTxReceipt func(*ethtypes.Transaction, string)) *big.Int {
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+	totalAmount, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
+	require.NoError(r, err)
+
+	// Transfer all funds
+	// messaage should be empty so that there is no call triggered on the new connector
+	transferTx, err := r.ConnectorEth.OnReceive(
+		r.EVMAuth,
+		[]byte{},              // empty zetaTxSenderAddress
+		chainID,               // sourceChainId
+		r.ConnectorNativeAddr, // destinationAddress
+		totalAmount,           // zetaValue
+		[]byte{},              // empty message
+		[32]byte{},            // empty internalSendHash
 	)
-	_, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgAddAuthorization)
-	return err
+	require.NoError(r, err)
+	ensureTxReceipt(transferTx, "Fund transfer failed")
+	return totalAmount
 }
 
 // pauseConnectors pauses both V1 and V2 connectors
@@ -89,34 +81,8 @@ func unpauseConnectors(r *runner.E2ERunner, ensureTxReceipt func(*ethtypes.Trans
 	ensureTxReceipt(unpauseV1Tx, "ZetaConnectorEth(V1) unpause failed")
 }
 
-// performFundsMigration executes the actual funds migration and returns the CCTX index
-func performFundsMigration(r *runner.E2ERunner, chainID int64, balance *big.Int) string {
-	msgMigrateConnectorFunds := crosschaintypes.NewMsgMigrateConnectorFunds(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
-		chainID,
-		r.ConnectorNativeAddr.Hex(),
-		sdkmath.NewUintFromBigInt(balance),
-	)
-
-	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgMigrateConnectorFunds)
-	require.NoError(r, err)
-
-	event, ok := txserver.EventOfType[*crosschaintypes.EventConnectorFundsMigration](res.Events)
-	require.True(r, ok, "no EventConnectorFundsMigration in %s", res.TxHash)
-
-	return event.CctxIndex
-}
-
 // verifyMigrationSuccess verifies that the migration was completed successfully
-func verifyMigrationSuccess(r *runner.E2ERunner, cctxIndex string, expectedBalance *big.Int) {
-	cctxRes, err := r.CctxClient.Cctx(r.Ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
-	require.NoError(r, err)
-
-	cctx := cctxRes.CrossChainTx
-	r.Logger.CCTX(*cctx, "migration")
-
-	r.WaitForMinedCCTXFromIndex(cctxIndex)
-
+func verifyMigrationSuccess(r *runner.E2ERunner, expectedBalance *big.Int) {
 	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
 	require.NoError(r, err, "BalanceOf failed for new connector")
 
