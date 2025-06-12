@@ -20,6 +20,8 @@ const (
 
 	// TEST_PK_BTC is the environment variable to configure bitcoin private key for live unit tests
 	EnvTestPKBTC = "TEST_PK_BTC"
+
+	EnvTONRPC = "TON_RPC"
 )
 
 // LiveTestEnabled returns true if live tests are enabled

@@ -267,9 +267,7 @@ services:
       - ssh:/root/.ssh
 
   ton:
-    # figure out why E2E fail with MyLocalTon v124 @ deposit: deployer.CreateWallet(..)
-    # image: ghcr.io/zeta-chain/ton-docker:4f08c1d
-    image: ghcr.io/zeta-chain/ton-docker:a69ea0f
+    image: ghcr.io/zeta-chain/ton-docker:v2.2.1
     container_name: ton
     hostname: ton
     profiles:
@@ -277,7 +275,7 @@ services:
       - all
     ports:
       - "8111:8000" # sidecar
-      - "4443:4443" # lite client
+      - "8081:8081" # rpc (toncenter v2)
     environment:
       DOCKER_IP: 172.20.0.104
     networks:

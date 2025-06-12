@@ -94,7 +94,7 @@ func (k Keeper) GetAllInboundTrackerForChainPaginated(
 	chainID int64,
 	pagination *query.PageRequest,
 ) (inTxTrackers []types.InboundTracker, pageRes *query.PageResponse, err error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.InboundTrackerKeyPrefix)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InboundTrackerKeyPrefix))
 	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", chainID)))
 	pageRes, err = query.Paginate(chainStore, pagination, func(_ []byte, value []byte) error {
 		var inTxTracker types.InboundTracker

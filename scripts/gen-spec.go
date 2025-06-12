@@ -129,17 +129,17 @@ func processProtoFile(path string, outputBaseDir string) error {
 						goFunctionPath := filepath.Join(currentDir, "x")
 						functionComment, functionFound := findFunctionInGoFiles(functionName, goFunctionPath)
 
-						_, err = file.WriteString(fmt.Sprintf("## %s\n\n", rpc.RequestType))
+						_, err = fmt.Fprintf(file, "## %s\n\n", rpc.RequestType)
 						if err != nil {
 							return err
 						}
 						if functionFound && functionComment != "" {
-							_, err = file.WriteString(fmt.Sprintf("%s\n", functionComment))
+							_, err = fmt.Fprintf(file, "%s\n", functionComment)
 							if err != nil {
 								return err
 							}
 						}
-						_, err = file.WriteString("```proto\n")
+						_, err = fmt.Fprintf(file, "```proto\n")
 						if err != nil {
 							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
 							return err
@@ -155,7 +155,7 @@ func processProtoFile(path string, outputBaseDir string) error {
 							return err
 						}
 					} else {
-						if _, err = file.WriteString(fmt.Sprintf("## %s\n\n```\n%s\n```\n\n", rpc.RequestType, rpc.RequestType)); err != nil {
+						if _, err = fmt.Fprintf(file, "## %s\n\n```\n%s\n```\n\n", rpc.RequestType, rpc.RequestType); err != nil {
 							fmt.Printf("Error writing to file %q: %v\n", safeOutputFile, err)
 							return err
 						}
