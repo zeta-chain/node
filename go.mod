@@ -50,7 +50,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/zeta-chain/ethermint v0.0.0-20250530150856-32d27766cc7a
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250603154140-a2b6c07814ed
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.32.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
@@ -257,7 +257,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect

@@ -28,9 +28,10 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -140,19 +141,21 @@ type E2ERunner struct {
 	SuiExample config.SuiExample
 
 	// contracts evm
-	ZetaEthAddr       ethcommon.Address
-	ZetaEth           *zetaeth.ZetaEth
-	ConnectorEthAddr  ethcommon.Address
-	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
-	ERC20CustodyAddr  ethcommon.Address
-	ERC20Custody      *erc20custodyv2.ERC20Custody
-	ERC20Addr         ethcommon.Address
-	ERC20             *erc20.ERC20
-	EvmTestDAppAddr   ethcommon.Address
-	GatewayEVMAddr    ethcommon.Address
-	GatewayEVM        *gatewayevm.GatewayEVM
-	TestDAppV2EVMAddr ethcommon.Address
-	TestDAppV2EVM     *testdappv2.TestDAppV2
+	ZetaEthAddr         ethcommon.Address
+	ZetaEth             *zetaeth.ZetaEth
+	ConnectorEthAddr    ethcommon.Address
+	ConnectorEth        *zetaconnectoreth.ZetaConnectorEth
+	ERC20CustodyAddr    ethcommon.Address
+	ERC20Custody        *erc20custodyv2.ERC20Custody
+	ERC20Addr           ethcommon.Address
+	ERC20               *erc20.ERC20
+	EvmTestDAppAddr     ethcommon.Address
+	GatewayEVMAddr      ethcommon.Address
+	GatewayEVM          *gatewayevm.GatewayEVM
+	TestDAppV2EVMAddr   ethcommon.Address
+	TestDAppV2EVM       *testdappv2.TestDAppV2
+	ConnectorNativeAddr ethcommon.Address
+	ConnectorNative     *zetaconnnectornative.ZetaConnectorNative
 
 	// contracts zevm
 	// zrc20 contracts
