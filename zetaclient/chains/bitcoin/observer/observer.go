@@ -63,8 +63,8 @@ type RPC interface {
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
 	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 
-	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32, net *chaincfg.Params) (string, error)
-	GetTransactionInitiator(ctx context.Context, txid string, net *chaincfg.Params) (string, error)
+	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
 }
 
 const (

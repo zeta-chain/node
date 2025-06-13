@@ -278,10 +278,6 @@ func TestClientLive(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t, mainnetConfig)
 
-		// net params
-		net, err := chains.GetBTCChainParams(ts.chain.ChainId)
-		require.NoError(t, err)
-
 		// calculates block range to test
 		startBlock, err := ts.GetBlockCount(ts.ctx)
 		require.NoError(t, err)
@@ -315,7 +311,7 @@ func TestClientLive(t *testing.T) {
 						Txid: mpvin.TxID,
 						Vout: mpvin.Vout,
 					}
-					senderAddr, err := ts.GetTransactionInputSpender(ts.ctx, mpvin.TxID, mpvin.Vout, net)
+					senderAddr, err := ts.GetTransactionInputSpender(ts.ctx, mpvin.TxID, mpvin.Vout)
 					if err != nil {
 						fmt.Printf("error GetSenderAddressByVin for block %d, tx %s vout %d: %s\n", bn, vin.Txid, vin.Vout, err)
 						time.Sleep(3 * time.Second)
@@ -337,16 +333,12 @@ func TestClientLive(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t, signetConfig)
 
-		// net params
-		net, err := chains.GetBTCChainParams(ts.chain.ChainId)
-		require.NoError(t, err)
-
 		// Given a inscription commit tx
 		commitTxSender := "tb1quy58ql4ss9q2f00p8xlhtl05ncp3rp6dvtxdtp"
 		commitTxid := "e8072dcd232fe6f89037ee1d6a4ab75ed4c119798743b6edfbfe9af18811ad3e"
 
 		// ACT
-		initiator, err := ts.GetTransactionInitiator(ts.ctx, commitTxid, net)
+		initiator, err := ts.GetTransactionInitiator(ts.ctx, commitTxid)
 		require.NoError(t, err)
 
 		// ASSERT

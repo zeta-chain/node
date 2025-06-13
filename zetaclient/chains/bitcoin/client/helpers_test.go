@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,6 @@ import (
 
 func Test_GetTransactionInputSpender(t *testing.T) {
 	ctx := context.Background()
-	net := &chaincfg.MainNetParams
 
 	tests := []struct {
 		name               string
@@ -68,7 +66,7 @@ func Test_GetTransactionInputSpender(t *testing.T) {
 			}
 
 			// ACT
-			senderAddr, err := ts.GetTransactionInputSpender(ctx, tt.txid, tt.vout, net)
+			senderAddr, err := ts.GetTransactionInputSpender(ctx, tt.txid, tt.vout)
 
 			// ASSERT
 			if tt.errMsg == "" {
@@ -84,7 +82,6 @@ func Test_GetTransactionInputSpender(t *testing.T) {
 
 func Test_GetTransactionInitiator(t *testing.T) {
 	ctx := context.Background()
-	net := &chaincfg.MainNetParams
 
 	tests := []struct {
 		name                    string
@@ -142,7 +139,7 @@ func Test_GetTransactionInitiator(t *testing.T) {
 			}
 
 			// ACT
-			initiator, err := ts.GetTransactionInitiator(ctx, tt.txid, net)
+			initiator, err := ts.GetTransactionInitiator(ctx, tt.txid)
 
 			// ASSERT
 			if tt.errMsg == "" {

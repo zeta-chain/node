@@ -62,7 +62,7 @@ func GetBtcEventWithWitness(
 	}
 
 	// event found, get sender address
-	fromAddress, err := rpc.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout, netParams)
+	fromAddress, err := rpc.GetTransactionInputSpender(ctx, tx.Vin[0].Txid, tx.Vin[0].Vout)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting sender address for inbound: %s", tx.Txid)
 	}
@@ -104,7 +104,7 @@ func GetBtcEventWithWitness(
 		logger.Debug().Fields(lf).Msgf("found inscription memo: %s", hex.EncodeToString(memo))
 
 		// override the sender address with the initiator of the inscription's commit tx
-		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid, netParams); err != nil {
+		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
 			return nil, errors.Wrapf(err, "unable to get inscription initiator")
 		}
 	} else {
