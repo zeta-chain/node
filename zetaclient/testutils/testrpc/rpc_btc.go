@@ -55,7 +55,7 @@ func (s *BtcServer) SetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...
 	params = append(params, btcjson.Int(0))
 
 	s.On("getrawtransaction", func(_ map[string]any) (any, error) {
-		return hex(buf.Bytes()), nil
+		return hex(buf.Bytes(), false), nil
 	}, params...)
 }
 
