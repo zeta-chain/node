@@ -14,14 +14,14 @@ import (
 // Server represents JSON RPC mock with a "real" HTTP server allocated (httptest)
 type Server struct {
 	t        *testing.T
-	handlers map[string]func(params []any) (any, error)
+	handlers map[string]map[string]func(params []any) (any, error)
 	name     string
 }
 
 // New constructs Server.
 func New(t *testing.T, name string) (*Server, string) {
 	var (
-		handlers = make(map[string]func(params []any) (any, error))
+		handlers = make(map[string]map[string]func(params []any) (any, error))
 		rpc      = &Server{t, handlers, name}
 		testWeb  = httptest.NewServer(http.HandlerFunc(rpc.httpHandler))
 	)
@@ -31,9 +31,15 @@ func New(t *testing.T, name string) (*Server, string) {
 	return rpc, testWeb.URL
 }
 
-// On registers a handler for a given method.
-func (s *Server) On(method string, call func(params []any) (any, error)) {
-	s.handlers[method] = call
+// On registers a handler for a given method and optional parameters.
+// If params is provided, it registers a parameter-specific handler.
+func (s *Server) On(method string, call func(params []any) (any, error), params ...any) {
+	if s.handlers[method] == nil {
+		s.handlers[method] = make(map[string]func(params []any) (any, error))
+	}
+
+	paramKey := s.buildParamKey(params)
+	s.handlers[method][paramKey] = call
 }
 
 // example: {"jsonrpc":"1.0","method":"ping","params":[],"id":1}
@@ -76,12 +82,31 @@ func (s *Server) httpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) rpcHandler(req rpcRequest) rpcResponse {
-	call, ok := s.handlers[req.Method]
-	if !ok {
+	methodHandlers, found := s.handlers[req.Method]
+	if !found {
 		return rpcResponse{Error: errors.New("method not found")}
 	}
 
-	res, err := call(req.Params)
+	// Build param key for lookup
+	paramKey := s.buildParamKey(req.Params)
 
+	// Look for parameter-specific handler
+	call, found := methodHandlers[paramKey]
+	if !found {
+		return rpcResponse{Error: errors.New("no handler found")}
+	}
+
+	res, err := call(req.Params)
 	return rpcResponse{Result: res, Error: err}
+}
+
+// buildParamKey creates a map key for the given parameters.
+func (s *Server) buildParamKey(params []any) string {
+	if len(params) == 0 {
+		return ""
+	}
+	paramBytes, err := json.Marshal(params)
+	require.NoError(s.t, err)
+
+	return string(paramBytes)
 }

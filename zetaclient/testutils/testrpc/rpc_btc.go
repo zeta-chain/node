@@ -1,10 +1,13 @@
 package testrpc
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -40,6 +43,20 @@ func (s *BtcServer) SetBlockCount(count int) {
 	s.On("getblockcount", func(_ []any) (any, error) {
 		return count, nil
 	})
+}
+
+// SetRawTransaction mocks the raw transaction response.
+func (s *BtcServer) SetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...any) {
+	// append the default 'verbose' parameter, otherwise the calculated params key won't match
+	params = append(params, btcjson.Int(0))
+
+	s.On("getrawtransaction", func(_ []any) (any, error) {
+		var buf bytes.Buffer
+		err := msgTx.Serialize(&buf)
+		require.NoError(t, err)
+
+		return hex(buf.Bytes()), nil
+	}, params...)
 }
 
 func formatBitcoinRPCHost(serverURL string) (string, error) {

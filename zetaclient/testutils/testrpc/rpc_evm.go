@@ -49,5 +49,5 @@ func (s *EVMServer) SetChainID(n int) {
 }
 
 func hex(v any) string {
-	return fmt.Sprintf("0x%x", v)
+	return fmt.Sprintf("%x", v)
 }
