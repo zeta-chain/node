@@ -893,8 +893,10 @@ zetacored gentx [key_name] [amount] [flags]
       --security-contact string             The validator's (optional) security contact email
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
       --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint                 Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration           TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint                 DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                          Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                           Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
       --website string                      The validator's (optional) website
   -y, --yes                                 Skip tx broadcasting prompt confirmation
 ```
@@ -993,13 +995,14 @@ zetacored init [moniker] [flags]
 ### Options
 
 ```
-      --chain-id string        genesis file chain-id, if left blank will be randomly created
-      --default-denom string   genesis file default denomination, if left blank default value is 'stake'
-  -h, --help                   help for init
-      --home string            node's home directory 
-      --initial-height int     specify the initial block height at genesis (default 1)
-  -o, --overwrite              overwrite the genesis.json file
-      --recover                provide seed phrase to recover existing key instead of creating
+      --chain-id string             genesis file chain-id, if left blank will be randomly created
+      --consensus-key-algo string   algorithm to use for the consensus key 
+      --default-denom string        genesis file default denomination, if left blank default value is 'stake'
+  -h, --help                        help for init
+      --home string                 node's home directory 
+      --initial-height int          specify the initial block height at genesis (default 1)
+  -o, --overwrite                   overwrite the genesis.json file
+      --recover                     provide seed phrase to recover existing key instead of creating
 ```
 
 ### Options inherited from parent commands
@@ -1252,6 +1255,7 @@ zetacored keys export [name] [flags]
   -h, --help            help for export
       --unarmored-hex   Export unarmored hex privkey. Requires --unsafe.
       --unsafe          Enable unsafe operations. This flag must be switched on along with all unsafe operation-specific options.
+  -y, --yes             Skip confirmation prompt when export unarmored hex privkey
 ```
 
 ### Options inherited from parent commands
@@ -1402,6 +1406,7 @@ zetacored keys mnemonic [flags]
 ```
   -h, --help             help for mnemonic
       --unsafe-entropy   Prompt the user to supply their own entropy, instead of relying on the system
+  -y, --yes              Skip confirmation prompt when check input entropy length
 ```
 
 ### Options inherited from parent commands
@@ -1522,6 +1527,7 @@ zetacored keys show [name_or_address [name_or_address...]] [flags]
   -h, --help                     help for show
       --multisig-threshold int   K out of N required signatures (default 1)
   -p, --pubkey                   Output the public key only (cannot be used with --output)
+      --qrcode                   Display key address QR code (will be ignored if -a or --address is false)
 ```
 
 ### Options inherited from parent commands
@@ -2486,6 +2492,7 @@ zetacored query bank [flags]
 * [zetacored query bank denom-metadata](#zetacored-query-bank-denom-metadata)	 - Query the client metadata of a given coin denomination
 * [zetacored query bank denom-metadata-by-query-string](#zetacored-query-bank-denom-metadata-by-query-string)	 - Execute the DenomMetadataByQueryString RPC method
 * [zetacored query bank denom-owners](#zetacored-query-bank-denom-owners)	 - Query for all account addresses that own a particular token denomination.
+* [zetacored query bank denom-owners-by-query](#zetacored-query-bank-denom-owners-by-query)	 - Execute the DenomOwnersByQuery RPC method
 * [zetacored query bank denoms-metadata](#zetacored-query-bank-denoms-metadata)	 - Query the client metadata for all registered coin denominations
 * [zetacored query bank params](#zetacored-query-bank-params)	 - Query the current bank parameters
 * [zetacored query bank send-enabled](#zetacored-query-bank-send-enabled)	 - Query for send enabled entries
@@ -2668,6 +2675,49 @@ zetacored query bank denom-owners [denom] [flags]
       --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
       --height int               Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help                     help for denom-owners
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --no-indent                Do not indent JSON output
+      --node string              [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string            Output format (text|json) 
+      --page-count-total         
+      --page-key binary          
+      --page-limit uint          
+      --page-offset uint         
+      --page-reverse             
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query bank](#zetacored-query-bank)	 - Querying commands for the bank module
+
+## zetacored query bank denom-owners-by-query
+
+Execute the DenomOwnersByQuery RPC method
+
+```
+zetacored query bank denom-owners-by-query [flags]
+```
+
+### Options
+
+```
+      --denom string             
+      --grpc-addr string         the gRPC endpoint to use for this chain
+      --grpc-insecure            allow gRPC over insecure channels, if not the server must use TLS
+      --height int               Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help                     help for denom-owners-by-query
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --no-indent                Do not indent JSON output
@@ -9652,6 +9702,68 @@ zetacored tx auth [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx auth update-params-proposal](#zetacored-tx-auth-update-params-proposal)	 - Submit a proposal to update auth module params. Note: the entire params must be provided.
+
+## zetacored tx auth update-params-proposal
+
+Submit a proposal to update auth module params. Note: the entire params must be provided.
+
+```
+zetacored tx auth update-params-proposal [params] [flags]
+```
+
+### Examples
+
+```
+zetacored tx auth update-params-proposal '{ "max_memo_characters": 0, "tx_sig_limit": 0, "tx_size_cost_per_byte": 0, "sig_verify_cost_ed25519": 0, "sig_verify_cost_secp256k1": 0 }'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-params-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx auth](#zetacored-tx-auth)	 - Transactions commands for the auth module
 
 ## zetacored tx authority
 
@@ -9698,32 +9810,34 @@ zetacored tx authority add-authorization [msg-url] [authorized-policy] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-authorization
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for add-authorization
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -9751,32 +9865,34 @@ zetacored tx authority remove-authorization [msg-url] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-authorization
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-authorization
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -9804,32 +9920,34 @@ zetacored tx authority remove-chain-info [chain-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-chain-info
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-chain-info
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -9857,32 +9975,34 @@ zetacored tx authority update-chain-info [chain-info-json-file] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-chain-info
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-chain-info
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -9910,32 +10030,34 @@ zetacored tx authority update-policies [policies-json-file] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-policies
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-policies
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10006,32 +10128,34 @@ zetacored tx authz exec [tx-json-file] --from [grantee] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for exec
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for exec
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10096,8 +10220,10 @@ zetacored tx authz grant [grantee] [authorization_type="send"|"generic"|"delegat
   -s, --sequence uint                The sequence number of the signing account (offline mode only)
       --sign-mode string             Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --spend-limit string           SpendLimit for Send Authorization, an array of Coins allowed spend
-      --timeout-height uint          Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration    TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint          DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                   Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                    Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
   -y, --yes                          Skip tx broadcasting prompt confirmation
 ```
 
@@ -10132,32 +10258,34 @@ zetacored tx authz revoke [grantee] [msg-type-url] --from=[granter] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for revoke
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for revoke
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10204,6 +10332,8 @@ zetacored tx bank [flags]
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx bank multi-send](#zetacored-tx-bank-multi-send)	 - Send funds from one account to two or more accounts.
 * [zetacored tx bank send](#zetacored-tx-bank-send)	 - Send funds from one account to another.
+* [zetacored tx bank set-send-enabled-proposal](#zetacored-tx-bank-set-send-enabled-proposal)	 - Submit a proposal to set/update/delete send enabled entries
+* [zetacored tx bank update-params-proposal](#zetacored-tx-bank-update-params-proposal)	 - Submit a proposal to update bank module params. Note: the entire params must be provided.
 
 ## zetacored tx bank multi-send
 
@@ -10231,33 +10361,35 @@ zetacored tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for multi-send
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --split                    Send the equally split token amount to each address
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for multi-send
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --split                       Send the equally split token amount to each address
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10292,32 +10424,157 @@ zetacored tx bank send [from_key_or_address] [to_address] [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for send
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for send
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx bank](#zetacored-tx-bank)	 - Bank transaction subcommands
+
+## zetacored tx bank set-send-enabled-proposal
+
+Submit a proposal to set/update/delete send enabled entries
+
+```
+zetacored tx bank set-send-enabled-proposal [send_enabled] [flags]
+```
+
+### Examples
+
+```
+zetacored tx bank set-send-enabled-proposal '{"denom":"stake","enabled":true}'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for set-send-enabled-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+      --use-default-for strings     Use default for the given denom (delete a send enabled entry)
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx bank](#zetacored-tx-bank)	 - Bank transaction subcommands
+
+## zetacored tx bank update-params-proposal
+
+Submit a proposal to update bank module params. Note: the entire params must be provided.
+
+```
+zetacored tx bank update-params-proposal [params] [flags]
+```
+
+### Examples
+
+```
+zetacored tx bank update-params-proposal '{ "default_send_enabled": true }'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-params-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10354,32 +10611,34 @@ zetacored tx broadcast [file_path] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for broadcast
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for broadcast
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10424,6 +10683,68 @@ zetacored tx consensus [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx consensus update-params-proposal](#zetacored-tx-consensus-update-params-proposal)	 - Submit a proposal to update consensus module params. Note: the entire params must be provided.
+
+## zetacored tx consensus update-params-proposal
+
+Submit a proposal to update consensus module params. Note: the entire params must be provided.
+
+```
+zetacored tx consensus update-params-proposal [params] [flags]
+```
+
+### Examples
+
+```
+zetacored tx consensus update-params-proposal '{ params }'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-params-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx consensus](#zetacored-tx-consensus)	 - Transactions commands for the consensus module
 
 ## zetacored tx crisis
 
@@ -10466,32 +10787,34 @@ zetacored tx crisis invariant-broken [module-name] [invariant-route] --from myke
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for invariant-broken
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for invariant-broken
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10561,32 +10884,34 @@ zetacored tx crosschain abort-stuck-cctx [index] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for abort-stuck-cctx
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for abort-stuck-cctx
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10615,32 +10940,34 @@ zetacored tx crosschain add-inbound-tracker [chain-id] [tx-hash] [coin-type] [fl
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-inbound-tracker
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for add-inbound-tracker
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10668,32 +10995,34 @@ zetacored tx crosschain add-outbound-tracker [chain] [nonce] [tx-hash] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-outbound-tracker
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for add-outbound-tracker
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10721,32 +11050,34 @@ zetacored tx crosschain migrate-tss-funds [chainID] [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for migrate-tss-funds
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for migrate-tss-funds
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10774,32 +11105,34 @@ zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for refund-aborted
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for refund-aborted
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10827,32 +11160,34 @@ zetacored tx crosschain remove-inbound-tracker [chain-id] [tx-hash] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-inbound-tracker
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-inbound-tracker
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10880,32 +11215,34 @@ zetacored tx crosschain remove-outbound-tracker [chain] [nonce] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-outbound-tracker
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-outbound-tracker
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10933,32 +11270,34 @@ zetacored tx crosschain update-tss-address [pubkey] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-tss-address
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-tss-address
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -10986,32 +11325,34 @@ zetacored tx crosschain vote-gas-price [chain] [price] [priorityFee] [blockNumbe
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote-gas-price
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote-gas-price
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11045,32 +11386,34 @@ zetacored tx crosschain vote-inbound 0xfa233D806C8EB69548F3c4bC0ABb46FaD4e2EB26 
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote-inbound
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote-inbound
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11104,32 +11447,34 @@ zetacored tx crosschain vote-outbound 0x12044bec3b050fb28996630e9f2e9cc8d6cf9ef0
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote-outbound
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote-outbound
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11157,32 +11502,34 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for whitelist-erc20
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for whitelist-erc20
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11210,32 +11557,34 @@ zetacored tx decode [protobuf-byte-string] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for decode
-  -x, --hex                      Treat input as hexadecimal instead of base64
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for decode
+  -x, --hex                         Treat input as hexadecimal instead of base64
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11280,11 +11629,75 @@ zetacored tx distribution [flags]
 ### SEE ALSO
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
+* [zetacored tx distribution community-pool-spend-proposal](#zetacored-tx-distribution-community-pool-spend-proposal)	 - Submit a proposal to spend from the community pool
 * [zetacored tx distribution fund-community-pool](#zetacored-tx-distribution-fund-community-pool)	 - Funds the community pool with the specified amount
 * [zetacored tx distribution fund-validator-rewards-pool](#zetacored-tx-distribution-fund-validator-rewards-pool)	 - Fund the validator rewards pool with the specified amount
 * [zetacored tx distribution set-withdraw-addr](#zetacored-tx-distribution-set-withdraw-addr)	 - change the default withdraw address for rewards associated with an address
+* [zetacored tx distribution update-params-proposal](#zetacored-tx-distribution-update-params-proposal)	 - Submit a proposal to update distribution module params. Note: the entire params must be provided.
 * [zetacored tx distribution withdraw-all-rewards](#zetacored-tx-distribution-withdraw-all-rewards)	 - withdraw all delegations rewards for a delegator
 * [zetacored tx distribution withdraw-rewards](#zetacored-tx-distribution-withdraw-rewards)	 - Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator
+* [zetacored tx distribution withdraw-validator-commission](#zetacored-tx-distribution-withdraw-validator-commission)	 - Withdraw commissions from a validator address (must be a validator operator)
+
+## zetacored tx distribution community-pool-spend-proposal
+
+Submit a proposal to spend from the community pool
+
+```
+zetacored tx distribution community-pool-spend-proposal [recipient] [amount] [flags]
+```
+
+### Examples
+
+```
+$ zetacored tx distribution community-pool-spend-proposal [recipient] 100uatom
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for community-pool-spend-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx distribution](#zetacored-tx-distribution)	 - Distribution transactions subcommands
 
 ## zetacored tx distribution fund-community-pool
 
@@ -11304,32 +11717,34 @@ zetacored tx distribution fund-community-pool [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for fund-community-pool
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for fund-community-pool
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11363,32 +11778,34 @@ zetacored tx distribution fund-validator-rewards-pool cosmosvaloper1x20lytyf6zkc
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for fund-validator-rewards-pool
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for fund-validator-rewards-pool
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11423,32 +11840,95 @@ zetacored tx distribution set-withdraw-addr [withdraw-addr] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for set-withdraw-addr
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for set-withdraw-addr
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx distribution](#zetacored-tx-distribution)	 - Distribution transactions subcommands
+
+## zetacored tx distribution update-params-proposal
+
+Submit a proposal to update distribution module params. Note: the entire params must be provided.
+
+```
+zetacored tx distribution update-params-proposal [params] [flags]
+```
+
+### Examples
+
+```
+zetacored tx distribution update-params-proposal '{ "community_tax": "20000", "base_proposer_reward": "0", "bonus_proposer_reward": "0", "withdraw_addr_enabled": true }'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-params-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11484,33 +11964,35 @@ zetacored tx distribution withdraw-all-rewards [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for withdraw-all-rewards
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --max-msgs int             Limit the number of messages per tx (0 for unlimited)
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for withdraw-all-rewards
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --max-msgs int                Limit the number of messages per tx (0 for unlimited)
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11547,33 +12029,90 @@ zetacored tx distribution withdraw-rewards [validator-addr] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --commission               Withdraw the validator's commission in addition to the rewards
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for withdraw-rewards
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --commission                  Withdraw the validator's commission in addition to the rewards
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for withdraw-rewards
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx distribution](#zetacored-tx-distribution)	 - Distribution transactions subcommands
+
+## zetacored tx distribution withdraw-validator-commission
+
+Withdraw commissions from a validator address (must be a validator operator)
+
+```
+zetacored tx distribution withdraw-validator-commission [validator-addr] [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for withdraw-validator-commission
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11631,32 +12170,34 @@ zetacored tx emissions withdraw-emission [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for withdraw-emission
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for withdraw-emission
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11690,31 +12231,33 @@ zetacored tx encode [file] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for encode
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for encode
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11801,32 +12344,34 @@ zetacored tx evm raw TX_HEX [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for raw
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for raw
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -11908,8 +12453,10 @@ zetacored tx feemarket update-params [flags]
       --params ethermint.feemarket.v1.Params (json)   
   -s, --sequence uint                                 The sequence number of the signing account (offline mode only)
       --sign-mode string                              Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint                           Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration                     TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint                           DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                                    Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                                     Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
   -y, --yes                                           Skip tx broadcasting prompt confirmation
 ```
 
@@ -11977,32 +12524,34 @@ zetacored tx fungible deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decim
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for deploy-fungible-coin-zrc-4
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for deploy-fungible-coin-zrc-4
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12030,32 +12579,34 @@ zetacored tx fungible deploy-system-contracts [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for deploy-system-contracts
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for deploy-system-contracts
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12089,32 +12640,34 @@ zetacored tx fungible pause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc, 0
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for pause-zrc20
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for pause-zrc20
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12142,32 +12695,34 @@ zetacored tx fungible remove-foreign-coin [name] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-foreign-coin
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-foreign-coin
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12201,32 +12756,34 @@ zetacored tx fungible unpause-zrc20 "0xece40cbB54d65282c4623f141c4a8a0bE7D6AdEc,
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for unpause-zrc20
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for unpause-zrc20
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12254,32 +12811,34 @@ zetacored tx fungible update-contract-bytecode [contract-address] [new-code-hash
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-contract-bytecode
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-contract-bytecode
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12307,32 +12866,34 @@ zetacored tx fungible update-gateway-contract [contract-address] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-gateway-contract
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-gateway-contract
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12360,32 +12921,34 @@ zetacored tx fungible update-system-contract [contract-address]  [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-system-contract
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-system-contract
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12413,32 +12976,34 @@ zetacored tx fungible update-zrc20-liquidity-cap [zrc20] [liquidity-cap] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-zrc20-liquidity-cap
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-zrc20-liquidity-cap
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12466,32 +13031,34 @@ zetacored tx fungible update-zrc20-withdraw-fee [contractAddress] [newWithdrawFe
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-zrc20-withdraw-fee
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-zrc20-withdraw-fee
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12561,32 +13128,34 @@ $ zetacored tx gov cancel-proposal 1 --from mykey
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for cancel-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for cancel-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12622,32 +13191,34 @@ zetacored tx gov deposit [proposal-id] [deposit] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for deposit
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for deposit
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12675,33 +13246,35 @@ zetacored tx gov draft-proposal [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for draft-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --skip-metadata            skip metadata prompt
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for draft-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --skip-metadata               skip metadata prompt
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12750,37 +13323,39 @@ zetacored tx gov submit-legacy-proposal [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --deposit string           The proposal deposit
-      --description string       The proposal description
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for submit-legacy-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-      --proposal string          Proposal file path (if this path is given, other proposal flags are ignored)
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --title string             The proposal title
-      --type string              The proposal Type
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --deposit string              The proposal deposit
+      --description string          The proposal description
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for submit-legacy-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+      --proposal string             Proposal file path (if this path is given, other proposal flags are ignored)
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --title string                The proposal title
+      --type string                 The proposal Type
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12847,32 +13422,34 @@ zetacored tx gov submit-proposal [path/to/proposal.json] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for submit-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for submit-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12908,33 +13485,35 @@ zetacored tx gov vote [proposal-id] [option] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --metadata string          Specify metadata of the vote
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --metadata string             Specify metadata of the vote
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -12970,33 +13549,35 @@ zetacored tx gov weighted-vote [proposal-id] [weighted-options] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for weighted-vote
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --metadata string          Specify metadata of the weighted vote
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for weighted-vote
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --metadata string             Specify metadata of the weighted vote
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13097,32 +13678,34 @@ Where members.json contains:
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-group
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-group
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13179,32 +13762,34 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-group-policy
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-group-policy
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13275,33 +13860,35 @@ and policy.json contains:
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-      --group-policy-as-admin    Sets admin of the newly created group and group policy with group policy address itself when true
-  -h, --help                     help for create-group-with-policy
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+      --group-policy-as-admin       Sets admin of the newly created group and group policy with group policy address itself when true
+  -h, --help                        help for create-group-with-policy
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13329,33 +13916,35 @@ zetacored tx group draft-proposal [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for draft-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --skip-metadata            skip metadata prompt
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for draft-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --skip-metadata               skip metadata prompt
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13383,32 +13972,34 @@ zetacored tx group exec [proposal-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for exec
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for exec
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13446,32 +14037,34 @@ zetacored tx group leave-group [member-address] [group-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for leave-group
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for leave-group
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13544,33 +14137,35 @@ metadata example:
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --exec string              Set to 1 or 'try' to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for submit-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --exec string                 Set to 1 or 'try' to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for submit-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13598,32 +14193,34 @@ zetacored tx group update-group-admin [admin] [group-id] [new-admin] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-admin
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-admin
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13678,32 +14275,34 @@ Set a member's weight to "0" to delete it.
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-members
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-members
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13731,32 +14330,34 @@ zetacored tx group update-group-metadata [admin] [group-id] [metadata] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-metadata
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-metadata
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13784,32 +14385,34 @@ zetacored tx group update-group-policy-admin [admin] [group-policy-account] [new
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-policy-admin
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-policy-admin
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13837,32 +14440,34 @@ zetacored tx group update-group-policy-decision-policy [admin] [group-policy-acc
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-policy-decision-policy
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-policy-decision-policy
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13890,32 +14495,34 @@ zetacored tx group update-group-policy-metadata [admin] [group-policy-account] [
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-group-policy-metadata
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-group-policy-metadata
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -13959,33 +14566,35 @@ zetacored tx group vote [proposal-id] [voter] [vote-option] [metadata] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --exec string              Set to 1 to try to execute proposal immediately after voting
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --exec string                 Set to 1 to try to execute proposal immediately after voting
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14023,32 +14632,34 @@ zetacored tx group withdraw-proposal [proposal-id] [group-policy-admin-or-propos
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for withdraw-proposal
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for withdraw-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14116,32 +14727,34 @@ zetacored tx lightclient disable-header-verification [list of chain-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for disable-header-verification
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for disable-header-verification
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14178,32 +14791,34 @@ zetacored tx lightclient enable-header-verification [list of chain-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for enable-header-verification
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for enable-header-verification
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14280,8 +14895,10 @@ zetacored tx multi-sign [file] [name] [[signature]...] [flags]
       --sign-mode string              Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --signature-only                Print only the generated signature, then exit
       --skip-signature-verification   Skip signature verification
-      --timeout-height uint           Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration     TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint           DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                    Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                     Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
   -y, --yes                           Skip tx broadcasting prompt confirmation
 ```
 
@@ -14323,34 +14940,36 @@ zetacored tx multisign-batch [file] [name] [[signature-file]...] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for multisign-batch
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --multisig string          Address of the multisig account that the transaction signs on behalf of
-      --no-auto-increment        disable sequence auto increment
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-      --output-document string   The document is written to the given file instead of STDOUT
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for multisign-batch
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --multisig string             Address of the multisig account that the transaction signs on behalf of
+      --no-auto-increment           disable sequence auto increment
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+      --output-document string      The document is written to the given file instead of STDOUT
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14421,32 +15040,34 @@ zetacored tx observer add-observer [observer-address] [zetaclient-grantee-pubkey
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-observer
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for add-observer
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14474,32 +15095,34 @@ zetacored tx observer disable-cctx [disable-inbound] [disable-outbound] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for disable-cctx
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for disable-cctx
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14533,32 +15156,34 @@ zetacored tx observer disable-fast-confirmation 1
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for disable-fast-confirmation
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for disable-fast-confirmation
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14586,32 +15211,34 @@ zetacored tx observer enable-cctx [enable-inbound] [enable-outbound] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for enable-cctx
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for enable-cctx
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14639,32 +15266,34 @@ zetacored tx observer encode [file.json] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for encode
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for encode
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14692,32 +15321,34 @@ zetacored tx observer remove-chain-params [chain-id] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for remove-chain-params
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for remove-chain-params
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14745,32 +15376,34 @@ zetacored tx observer reset-chain-nonces [chain-id] [chain-nonce-low] [chain-non
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for reset-chain-nonces
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for reset-chain-nonces
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14798,32 +15431,34 @@ zetacored tx observer update-chain-params [chain-id] [client-params.json] [flags
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-chain-params
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-chain-params
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14851,32 +15486,34 @@ zetacored tx observer update-gas-price-increase-flags [epochLength] [retryInterv
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-gas-price-increase-flags
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-gas-price-increase-flags
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14904,32 +15541,34 @@ zetacored tx observer update-keygen [block] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-keygen
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-keygen
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -14957,32 +15596,34 @@ zetacored tx observer update-observer [old-observer-address] [new-observer-addre
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for update-observer
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-observer
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15036,8 +15677,10 @@ zetacored tx observer update-operational-flags [flags]
   -s, --sequence uint                       The sequence number of the signing account (offline mode only)
       --sign-mode string                    Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
       --signer-block-time-offset duration   Offset from the zetacore block time to initiate signing
-      --timeout-height uint                 Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration           TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint                 DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                          Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                           Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
   -y, --yes                                 Skip tx broadcasting prompt confirmation
 ```
 
@@ -15066,32 +15709,34 @@ zetacored tx observer vote-blame [chain-id] [index] [failure-reason] [node-list]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote-blame
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote-blame
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15119,32 +15764,34 @@ zetacored tx observer vote-tss [pubkey] [keygen-block] [status] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for vote-tss
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for vote-tss
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15189,36 +15836,38 @@ zetacored tx sign [file] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for sign
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-      --output-document string   The document will be written to the given file instead of STDOUT
-      --overwrite                Overwrite existing signatures with a new one. If disabled, new signature will be appended
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --signature-only           Print only the signatures
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for sign
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --multisig string             Address or key name of the multisig account on behalf of which the transaction shall be signed
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+      --output-document string      The document will be written to the given file instead of STDOUT
+      --overwrite                   Overwrite existing signatures with a new one. If disabled, new signature will be appended
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --signature-only              Print only the signatures
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15268,36 +15917,38 @@ zetacored tx sign-batch [file] ([file2]...) [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --append                   Combine all message and generate single signed transaction for broadcast.
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for sign-batch
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --multisig string          Address or key name of the multisig account on behalf of which the transaction shall be signed
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-      --output-document string   The document will be written to the given file instead of STDOUT
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --signature-only           Print only the generated signature, then exit
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --append                      Combine all message and generate single signed transaction for broadcast.
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for sign-batch
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --multisig string             Address or key name of the multisig account on behalf of which the transaction shall be signed
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+      --output-document string      The document will be written to the given file instead of STDOUT
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --signature-only              Print only the generated signature, then exit
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15343,6 +15994,7 @@ zetacored tx slashing [flags]
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx slashing unjail](#zetacored-tx-slashing-unjail)	 - Unjail a jailed validator
+* [zetacored tx slashing update-params-proposal](#zetacored-tx-slashing-update-params-proposal)	 - Submit a proposal to update slashing module params. Note: the entire params must be provided.
 
 ## zetacored tx slashing unjail
 
@@ -15361,32 +16013,100 @@ zetacored tx slashing unjail --from [validator]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for unjail
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for unjail
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx slashing](#zetacored-tx-slashing)	 - Transactions commands for the slashing module
+
+## zetacored tx slashing update-params-proposal
+
+Submit a proposal to update slashing module params. Note: the entire params must be provided.
+
+### Synopsis
+
+Submit a proposal to update slashing module params. Note: the entire params must be provided.
+ See the fields to fill in by running `zetacored query slashing params --output json`
+
+```
+zetacored tx slashing update-params-proposal [params] [flags]
+```
+
+### Examples
+
+```
+zetacored tx slashing update-params-proposal '{ "signed_blocks_window": "100", ... }'
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for update-params-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15462,32 +16182,34 @@ $ zetacored tx staking cancel-unbond zetavaloper1gghjut3ccd8ay0zduzj64hwre2fxs9l
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for cancel-unbond
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for cancel-unbond
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15543,34 +16265,36 @@ where we can get the pubkey using "zetacored tendermint show-validator"
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-validator
-      --ip string                The node's public IP. It takes effect only when used in combination with --generate-only
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --node-id string           The node's ID
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-validator
+      --ip string                   The node's public IP. It takes effect only when used in combination with --generate-only
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --node-id string              The node's ID
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15605,32 +16329,34 @@ zetacored tx staking delegate [validator-addr] [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for delegate
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for delegate
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15687,8 +16413,10 @@ zetacored tx staking edit-validator [flags]
       --security-contact string      The validator's (optional) security contact email 
   -s, --sequence uint                The sequence number of the signing account (offline mode only)
       --sign-mode string             Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint          Set a block timeout height to prevent the tx from being committed past a certain height
+      --timeout-duration duration    TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint          DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                   Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                    Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
       --website string               The validator's (optional) website 
   -y, --yes                          Skip tx broadcasting prompt confirmation
 ```
@@ -15725,32 +16453,34 @@ zetacored tx staking redelegate [src-validator-addr] [dst-validator-addr] [amoun
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for redelegate
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for redelegate
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15785,32 +16515,34 @@ zetacored tx staking unbond [validator-addr] [amount] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for unbond
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for unbond
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15869,37 +16601,39 @@ zetacored tx upgrade cancel-software-upgrade [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --authority string         The address of the upgrade module authority (defaults to gov)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --deposit string           The deposit to include with the governance proposal
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for cancel-software-upgrade
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --metadata string          The metadata to include with the governance proposal
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --summary string           The summary to include with the governance proposal
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --title string             The title to put on the governance proposal
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --authority string            The address of the upgrade module authority (defaults to gov)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --deposit string              The deposit to include with the governance proposal
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for cancel-software-upgrade
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --metadata string             The metadata to include with the governance proposal
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --summary string              The summary to include with the governance proposal
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --title string                The title to put on the governance proposal
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -15933,42 +16667,44 @@ zetacored tx upgrade software-upgrade [name] (--upgrade-height [height]) (--upgr
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --authority string         The address of the upgrade module authority (defaults to gov)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --daemon-name string       The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable 
-      --deposit string           The deposit to include with the governance proposal
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for software-upgrade
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --metadata string          The metadata to include with the governance proposal
-      --no-checksum-required     Skip requirement of checksums for binaries in the upgrade info
-      --no-validate              Skip validation of the upgrade info (dangerous!)
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --summary string           The summary to include with the governance proposal
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --title string             The title to put on the governance proposal
-      --upgrade-height int       The height at which the upgrade must happen
-      --upgrade-info string      Info for the upgrade plan such as new version download urls, etc.
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --authority string            The address of the upgrade module authority (defaults to gov)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --daemon-name string          The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable 
+      --deposit string              The deposit to include with the governance proposal
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for software-upgrade
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --metadata string             The metadata to include with the governance proposal
+      --no-checksum-required        Skip requirement of checksums for binaries in the upgrade info
+      --no-validate                 Skip validation of the upgrade info (dangerous!)
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --summary string              The summary to include with the governance proposal
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --title string                The title to put on the governance proposal
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+      --upgrade-height int          The height at which the upgrade must happen
+      --upgrade-info string         Info for the upgrade plan such as new version download urls, etc.
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -16007,32 +16743,34 @@ zetacored tx validate-signatures [file] [flags]
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for validate-signatures
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for validate-signatures
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -16112,32 +16850,34 @@ zetacored tx vesting create-periodic-vesting-account [to_address] [periods_json_
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-periodic-vesting-account
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-periodic-vesting-account
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -16171,32 +16911,34 @@ zetacored tx vesting create-permanent-locked-account [to_address] [amount] [flag
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-permanent-locked-account
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-permanent-locked-account
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -16232,33 +16974,35 @@ zetacored tx vesting create-vesting-account [to_address] [amount] [end_time] [fl
 ### Options
 
 ```
-  -a, --account-number uint      The account number of the signing account (offline mode only)
-      --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async) 
-      --chain-id string          The network chain ID
-      --delayed                  Create a delayed vesting account if true
-      --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string       Fee granter grants fees for the transaction
-      --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string              Fees to pay along with transaction; eg: 10uatom
-      --from string              Name or address of private key with which to sign
-      --gas string               gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-vesting-account
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                   Use a connected Ledger device
-      --node string              [host]:[port] to CometBFT rpc interface for this chain 
-      --note string              Note to add a description to the transaction (previously --memo)
-      --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) 
-  -s, --sequence uint            The sequence number of the signing account (offline mode only)
-      --sign-mode string         Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string               Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-  -y, --yes                      Skip tx broadcasting prompt confirmation
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --delayed                     Create a delayed vesting account if true
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for create-vesting-account
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands

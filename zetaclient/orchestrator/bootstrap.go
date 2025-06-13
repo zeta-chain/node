@@ -29,12 +29,13 @@ import (
 	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonrpc "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 const btcBlocksPerDay = 144
@@ -248,22 +249,28 @@ func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*to
 
 	gw := toncontracts.NewGateway(gatewayID)
 
-	client, err := tonResolveClient(ctx, cfg.LiteClientConfigURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to resolve TON liteclient")
+	if cfg.Endpoint == "" {
+		return nil, errors.New("rpc url is empty")
 	}
+
+	rpcClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create instrumented rpc client")
+	}
+
+	rpc := tonrpc.New(cfg.Endpoint, chain.ID(), tonrpc.WithHTTPClient(rpcClient))
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := tonobserver.New(baseObserver, client, gw)
+	observer, err := tonobserver.New(baseObserver, rpc, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), client, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain), rpc, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
@@ -312,29 +319,4 @@ func btcDatabaseFileName(chain chains.Chain) string {
 	default:
 		return fmt.Sprintf("%s_%s", legacyBTCDatabaseFilename, chain.Name)
 	}
-}
-
-type (
-	tonClientCtxKey struct{}
-	tonClient       interface {
-		tonobserver.LiteClient
-		tonsigner.LiteClient
-	}
-)
-
-// tonResolveClient resolves lite-api from a source OR from the context.
-// The latter is used in testing because it's challenging to mock the entire lite-api e2e
-// as it relies on low-level encrypted connections (otherwise could be wrapped with `httptest`)
-func tonResolveClient(ctx context.Context, configSource string) (tonClient, error) {
-	client, ok := ctx.Value(tonClientCtxKey{}).(tonClient)
-	if ok {
-		return client, nil
-	}
-
-	client, err := liteapi.NewFromSource(ctx, configSource)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to create TON liteapi from %q", configSource)
-	}
-
-	return client, nil
 }

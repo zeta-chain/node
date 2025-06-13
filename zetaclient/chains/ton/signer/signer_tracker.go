@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
 
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -25,7 +24,7 @@ func (s *Signer) trackOutbound(
 	ctx context.Context,
 	zetacore interfaces.ZetacoreClient,
 	w *toncontracts.Withdrawal,
-	prevState tlb.ShardAccount,
+	prevState rpc.Account,
 ) error {
 	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
 	defer metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Dec()
@@ -40,15 +39,15 @@ func (s *Signer) trackOutbound(
 		chainID = s.Chain().ChainId
 
 		acc   = s.gateway.AccountID()
-		lt    = prevState.LastTransLt
-		hash  = ton.Bits256(prevState.LastTransHash)
+		lt    = prevState.LastTxLT
+		hash  = ton.Bits256(prevState.LastTxHash)
 		nonce = uint64(w.Seqno)
 
 		filter = withdrawalFilter(w)
 	)
 
 	for time.Since(start) <= timeout {
-		txs, err := s.client.GetTransactionsSince(ctx, acc, lt, hash)
+		txs, err := s.rpc.GetTransactionsSince(ctx, acc, lt, hash)
 		if err != nil {
 			return errors.Wrapf(err, "unable to get transactions (lt %d, hash %s)", lt, hash.Hex())
 		}
@@ -60,7 +59,7 @@ func (s *Signer) trackOutbound(
 		}
 
 		tx := results[0].Transaction
-		txHash := liteapi.TransactionToHashString(results[0].Transaction)
+		txHash := rpc.TransactionToHashString(results[0].Transaction)
 
 		if !tx.IsSuccess() {
 			// should not happen
