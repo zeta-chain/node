@@ -21,17 +21,20 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
 
+	// Pause the connectors before migration
 	pauseConnectors(r, ensureTxReceipt)
-	defer unpauseConnectors(r, ensureTxReceipt)
+	updateTSSAddress(r, r.EVMAddress(), ensureTxReceipt)
 
-	updateTssAddress(r, r.EVMAddress(), ensureTxReceipt)
-	defer updateTssAddress(r, r.TSSAddress, ensureTxReceipt)
-
+	// Transfer all funds from the old connector to the new connector
 	balanceTransferred := transferAllFunds(r, ensureTxReceipt)
 	verifyMigrationSuccess(r, balanceTransferred)
+
+	// Unpause the connectors after migration and reset the TSS address
+	unpauseConnectors(r, ensureTxReceipt)
+	updateTSSAddress(r, r.TSSAddress, ensureTxReceipt)
 }
 
-func updateTssAddress(
+func updateTSSAddress(
 	r *runner.E2ERunner,
 	tssAddress common.Address,
 	ensureTxReceipt func(*ethtypes.Transaction, string),
