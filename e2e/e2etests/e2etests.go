@@ -489,6 +489,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawAndCall,
 	),
@@ -497,6 +498,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawAndCallNoMessage,
 	),
@@ -521,6 +523,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM, revert, then abort with onAbort",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),

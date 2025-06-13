@@ -15,9 +15,10 @@ import (
 )
 
 func TestERC20WithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -38,6 +39,7 @@ func TestERC20WithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined
