@@ -76,4 +76,6 @@ var (
 		1141,
 		"minimum version is not a valid semver string",
 	)
+	ErrValidatorJailed     = errorsmod.Register(ModuleName, 1142, "validator is jailed")
+	ErrValidatorTombstoned = errorsmod.Register(ModuleName, 1143, "validator is tombstoned")
 )

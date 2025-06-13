@@ -220,7 +220,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 
 		// ACT
 		// parse gateway instruction
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -243,10 +243,10 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions = nil
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 
 		// ASSERT
-		require.ErrorContains(t, err, "unexpected number of instructions: 0")
+		require.ErrorContains(t, err, "no matching outbound instruction with expected nonce 0")
 		require.Nil(t, inst)
 	})
 
@@ -261,7 +261,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions = []solana.CompiledInstruction{tx.Message.Instructions[0], tx.Message.Instructions[0]}
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 
 		// ASSERT
 		require.Error(t, err)
@@ -279,7 +279,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions[0].ProgramIDIndex = 4
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 
 		// ASSERT
 		require.ErrorContains(t, err, "error getting program ID")
@@ -297,10 +297,10 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions[0].ProgramIDIndex = 1
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 
 		// ASSERT
-		require.ErrorContains(t, err, "not matching gatewayID")
+		require.ErrorContains(t, err, "no matching outbound instruction")
 		require.Nil(t, inst)
 	})
 
@@ -315,7 +315,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		tx.Message.Instructions[0].Data = []byte("invalid instruction data")
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Gas, 0)
 
 		// ASSERT
 		require.Error(t, err)
@@ -328,7 +328,7 @@ func Test_ParseGatewayInstruction(t *testing.T) {
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Zeta)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_Zeta, 0)
 
 		// ASSERT
 		require.ErrorContains(t, err, "unsupported outbound coin type")
@@ -700,13 +700,13 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 	// the test chain and transaction hash
 	chain := chains.SolanaDevnet
 	txHash := incrementNonceTxTest
-	txAmount := uint64(1000000)
+	txAmount := uint64(1100000)
 
 	t.Run("should parse instruction increment nonce", func(t *testing.T) {
 		// ARRANGE
 		// load and unmarshal archived transaction
 		// tss address used in local devnet
-		tssAddress := "0xF2eCA3Fd5a152eb5b9ceBcA7E492C668cA09Cdd3"
+		tssAddress := "0x3E220e92b71E2FA36E90B9439a6Ff1c13Ba30035"
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 		tx, err := txResult.Transaction.GetTransaction()
 		require.NoError(t, err)
@@ -722,7 +722,7 @@ func Test_ParseInstructionIncrementNonce(t *testing.T) {
 		sender, err := inst.Signer()
 		require.NoError(t, err)
 		require.Equal(t, tssAddress, sender.String())
-		require.EqualValues(t, inst.GatewayNonce(), 2)
+		require.EqualValues(t, inst.GatewayNonce(), 15)
 		require.EqualValues(t, inst.TokenAmount(), txAmount)
 	})
 
@@ -932,7 +932,7 @@ func Test_ParseInstructionCall(t *testing.T) {
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, txHash)
 
 		// ACT
-		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall)
+		inst, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall, 0)
 		require.NoError(t, err)
 
 		// ASSERT
@@ -950,7 +950,7 @@ func Test_ParseInstructionCall(t *testing.T) {
 		txResult := testutils.LoadSolanaOutboundTxResult(t, TestDataDir, chain.ChainId, executeSPLTxTest)
 
 		// ACT
-		_, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall)
+		_, err := observer.ParseGatewayInstruction(txResult, gatewayID, coin.CoinType_NoAssetCall, 0)
 		require.Error(t, err)
 
 		// ASSERT

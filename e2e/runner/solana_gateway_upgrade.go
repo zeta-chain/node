@@ -16,8 +16,10 @@ import (
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
-// VerifySolanaContractsUpgrade checks if the Solana contracts are upgraded
-func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool {
+// SolanaVerifyGatewayContractsUpgrade upgrades the Solana contracts and verifies the upgrade
+func (r *E2ERunner) SolanaVerifyGatewayContractsUpgrade(deployerPrivateKey string) {
+	r.Logger.Print("🏃 Upgrading Solana gateway contracts")
+
 	pdaComputed := r.ComputePdaAddress()
 	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
 		Commitment: rpc.CommitmentConfirmed,
@@ -29,10 +31,8 @@ func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool
 	err = borsh.Deserialize(&pdaDataBefore, pdaInfo.Bytes())
 	require.NoError(r, err)
 
-	if err := triggerSolanaUpgrade(); err != nil {
-		r.Logger.Error("failed to trigger Solana upgrade: %v", err)
-		return false
-	}
+	err = triggerSolanaUpgrade()
+	require.NoError(r, err, "failed to trigger Solana upgrade")
 	r.Logger.Print("⚙️ Solana upgrade completed")
 
 	pdaInfo, err = r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
@@ -55,10 +55,11 @@ func (r *E2ERunner) VerifySolanaContractsUpgrade(deployerPrivateKey string) bool
 	require.Equal(r, pdaDataBefore.Authority, pdaDataAfter.Authority)
 	require.Equal(r, pdaDataBefore.ChainID, pdaDataAfter.ChainID)
 	require.Equal(r, pdaDataBefore.DepositPaused, pdaDataAfter.DepositPaused)
-	return r.VerifyUpgradedInstruction(deployerPrivateKey)
+
+	r.VerifyUpgradedInstruction(deployerPrivateKey)
 }
 
-func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
+func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) {
 	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
 	require.NoError(r, err)
 	// Calculate the instruction discriminator for "upgraded"
@@ -84,7 +85,7 @@ func (r *E2ERunner) VerifyUpgradedInstruction(deployerPrivateKey string) bool {
 
 	decoded, err := base64.StdEncoding.DecodeString(out.Meta.ReturnData.Data.String())
 	require.NoError(r, err)
-	return decoded[0] == 1
+	require.True(r, decoded[0] == 1)
 }
 
 func getAnchorDiscriminator(methodName string) []byte {
@@ -110,14 +111,16 @@ func triggerSolanaUpgrade() error {
 
 	// Start checking for file removal with timeout
 	timeout := time.After(2 * time.Minute)
-	tick := time.Tick(2 * time.Second)
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-timeout:
 			return fmt.Errorf("timeout waiting for Solana upgrade to complete")
 
-		case <-tick:
+		case <-ticker.C:
 			// Check if file still exists
 			checkCmd := exec.Command("ssh", "root@solana", "test", "-f", "/data/execute-update")
 			if err := checkCmd.Run(); err != nil {

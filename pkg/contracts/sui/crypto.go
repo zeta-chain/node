@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	secp256k1signer "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -15,7 +16,13 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const flagSecp256k1 = 0x01
+const (
+	// flagSecp256k1 is the flag to indicate secp256k1 key scheme.
+	flagSecp256k1 = 0x01
+
+	// suiPrivateKeyPrefix is the prefix for Sui private key string.
+	suiPrivateKeyPrefix = "suiprivkey"
+)
 
 // Digest calculates tx digest (hash) for further signing by TSS.
 func Digest(tx models.TxnMetaData) ([32]byte, error) {
@@ -123,6 +130,23 @@ func DeserializeSignatureECDSA(sigBase64 string) (*ecdsa.PublicKey, [64]byte, er
 	copy(sig[:], sigBytes[flagLen:pubOffset])
 
 	return pk, sig, nil
+}
+
+// PrivateKeyBech32Secp256k1FromHex converts private key in hex into bech32 format using secp256k1 scheme.
+func PrivateKeyBech32Secp256k1FromHex(privKeyHex string) (string, error) {
+	privKeyBytes, err := hex.DecodeString(privKeyHex)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to decode private key hex")
+	}
+
+	if len(privKeyBytes) != 32 {
+		return "", errors.Errorf("invalid private key length %d)", len(privKeyBytes))
+	}
+
+	// add secp256k1 flag
+	privKeyBytes = append([]byte{flagSecp256k1}, privKeyBytes...)
+
+	return bech32.ConvertAndEncode(suiPrivateKeyPrefix, privKeyBytes)
 }
 
 // SignerSecp256k1 represents Sui Secp256k1 signer.

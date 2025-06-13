@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	"github.com/zeta-chain/node/zetaclient/compliance"
 )
 
 // OutboundData is a data structure containing necessary data to construct a BTC outbound transaction
@@ -55,7 +54,8 @@ func NewOutboundData(
 	cctx *types.CrossChainTx,
 	height uint64,
 	minRelayFee float64,
-	logger, loggerCompliance zerolog.Logger,
+	isRestricted bool,
+	logger zerolog.Logger,
 ) (*OutboundData, error) {
 	if cctx == nil {
 		return nil, errors.New("cctx is nil")
@@ -117,13 +117,6 @@ func NewOutboundData(
 	amount := float64(params.Amount.Uint64()) / 1e8
 	amountSats := params.Amount.BigInt().Int64()
 
-	// compliance check
-	restrictedCCTX := compliance.IsCCTXRestricted(cctx)
-	if restrictedCCTX {
-		compliance.PrintComplianceLog(logger, loggerCompliance,
-			true, params.ReceiverChainId, cctx.Index, cctx.InboundParams.Sender, params.Receiver, "BTC")
-	}
-
 	// check dust amount
 	dustAmount := amountSats < constant.BTCWithdrawalDustAmount
 	if dustAmount {
@@ -131,7 +124,7 @@ func NewOutboundData(
 	}
 
 	// set the amount to 0 when the tx should be cancelled
-	cancelTx := restrictedCCTX || dustAmount
+	cancelTx := isRestricted || dustAmount
 	if cancelTx {
 		amount = 0.0
 		amountSats = 0

@@ -11,13 +11,17 @@ const (
 	// PDASeed is the seed for the Solana gateway program derived address
 	PDASeed = "meta"
 
-	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit instruction
+	// accountsNumDeposit is the number of accounts required for Solana gateway deposit instruction
 	// [signer, pda, system_program]
 	accountsNumDeposit = 3
 
-	// AccountsNumberOfDeposit is the number of accounts required for Solana gateway deposit spl instruction
+	// accountsNumberDepositSPL is the number of accounts required for Solana gateway deposit spl instruction
 	// [signer, pda, whitelist_entry, mint_account, token_program, from, to, system_program]
 	accountsNumberDepositSPL = 8
+
+	// accountsNumberCall is the number of accounts required for Solana gateway call instruction
+	// [signer]
+	accountsNumberCall = 1
 )
 
 var (

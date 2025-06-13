@@ -723,6 +723,7 @@ func New(
 
 	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
+		authtypes.ModuleName,
 	)
 
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)

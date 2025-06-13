@@ -62,6 +62,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
 			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
 			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
 		},
 		Data: []byte("hello"),
 	}
@@ -102,7 +103,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	type ConnectedPdaInfo struct {
 		Discriminator     [8]byte
-		LastSender        [20]byte
+		LastSender        common.Address
 		LastMessage       string
 		LastRevertSender  solana.PublicKey
 		LastRevertMessage string

@@ -75,7 +75,7 @@ func TestOrchestratorV2(t *testing.T) {
 }
 
 type testSuite struct {
-	*V2
+	*Orchestrator
 	*testlog.Log
 
 	t *testing.T
@@ -135,12 +135,12 @@ func newTestSuite(t *testing.T) *testSuite {
 		Telemetry: metrics.NewTelemetryServer(),
 	}
 
-	v2, err := NewV2(schedulerService, deps, baseLogger)
+	v2, err := New(schedulerService, deps, baseLogger)
 	require.NoError(t, err)
 
 	ts := &testSuite{
-		V2:  v2,
-		Log: logger,
+		Orchestrator: v2,
+		Log:          logger,
 
 		t: t,
 
@@ -156,24 +156,24 @@ func newTestSuite(t *testing.T) *testSuite {
 	}
 
 	// Mock basic zetacore methods
-	zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil).Maybe()
-	zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil).Maybe()
-	zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil).Maybe()
-	zetacore.On("GetCrosschainFlags", mock.Anything).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
-	zetacore.On("GetOperationalFlags", mock.Anything).Return(appCtx.GetOperationalFlags(), nil).Maybe()
-	zetacore.On("GetZetaHotKeyBalance", mock.Anything).Return(math.NewInt(123), nil).Maybe()
+	on(zetacore, "GetBlockHeight", 1).Return(int64(123), nil).Maybe()
+	on(zetacore, "GetUpgradePlan", 1).Return(nil, nil).Maybe()
+	on(zetacore, "GetAdditionalChains", 1).Return(nil, nil).Maybe()
+	on(zetacore, "GetCrosschainFlags", 1).Return(appCtx.GetCrossChainFlags(), nil).Maybe()
+	on(zetacore, "GetOperationalFlags", 1).Return(appCtx.GetOperationalFlags(), nil).Maybe()
+	on(zetacore, "GetZetaHotKeyBalance", 1).Return(math.NewInt(123), nil).Maybe()
 
 	// Mock chain-related methods as dynamic getters
-	zetacore.On("GetSupportedChains", mock.Anything).Return(ts.getSupportedChains).Maybe()
-	zetacore.On("GetChainParams", mock.Anything).Return(ts.getChainParams).Maybe()
+	on(zetacore, "GetSupportedChains", 1).Return(ts.getSupportedChains).Maybe()
+	on(zetacore, "GetChainParams", 1).Return(ts.getChainParams).Maybe()
 
 	// Mock zetacore blocks
-	zetacore.On("NewBlockSubscriber", mock.Anything).Return(ts.blockProducer).Maybe()
+	on(zetacore, "NewBlockSubscriber", 1).Return(ts.blockProducer).Maybe()
 
 	// Mock CCTX-related calls (stubs for now)
-	zetacore.On("ListPendingCCTX", mock.Anything, mock.Anything).Return(nil, uint64(0), nil).Maybe()
-	zetacore.On("GetInboundTrackersForChain", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
-	zetacore.On("GetAllOutboundTrackerByChain", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	on(zetacore, "ListPendingCCTX", 2).Return(nil, uint64(0), nil).Maybe()
+	on(zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
+	on(zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
 
 	t.Cleanup(ts.Stop)
 
@@ -184,7 +184,7 @@ func (ts *testSuite) HasObserverSigner(chainID int64) bool {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	_, ok := ts.V2.chains[chainID]
+	_, ok := ts.Orchestrator.chains[chainID]
 	return ok
 }
 
@@ -279,7 +279,7 @@ func newAppContext(
 		case chains.IsSolanaChain(c.ChainId, nil):
 			cfg.SolanaConfig = config.SolanaConfig{Endpoint: "localhost"}
 		case chains.IsTONChain(c.ChainId, nil):
-			cfg.TONConfig = config.TONConfig{LiteClientConfigURL: "localhost"}
+			cfg.TONConfig = config.TONConfig{Endpoint: "localhost"}
 		case chains.IsSuiChain(c.ChainId, nil):
 			cfg.SuiConfig = config.SuiConfig{Endpoint: "localhost"}
 		default:
@@ -345,4 +345,18 @@ func chainsContain(list []zctx.Chain, ids ...int64) bool {
 	}
 
 	return true
+}
+
+type mockOn interface {
+	On(methodName string, arguments ...any) *mock.Call
+}
+
+// handy wrapper for concise calls
+func on(m mockOn, method string, nArgs int) *mock.Call {
+	args := make([]any, nArgs)
+	for i := range nArgs {
+		args[i] = mock.Anything
+	}
+
+	return m.On(method, args...)
 }

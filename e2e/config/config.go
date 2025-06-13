@@ -155,8 +155,10 @@ type SuiExample struct {
 
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
-	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
-	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	GatewayPackageID DoubleQuotedString `yaml:"gateway_package_id"`
+	GatewayObjectID  DoubleQuotedString `yaml:"gateway_object_id"`
+	// GatewayUpgradeCap is the capability object used to upgrade the gateway
+	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
 	Example                  SuiExample         `yaml:"example"`
@@ -211,7 +213,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
-			TON:          "http://ton:8000/lite-client.json",
+			TON:          "http://ton:8081",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{

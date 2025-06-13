@@ -7,7 +7,6 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
@@ -30,6 +29,7 @@ func TestBootstrap(t *testing.T) {
 		btcServer, btcConfig := testrpc.NewBtcServer(t)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.BTCChainConfigs[chains.BitcoinMainnet.ChainId] = btcConfig
 		})
 
@@ -69,18 +69,14 @@ func TestBootstrap(t *testing.T) {
 		mockEthCalls(ts, maticServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
+
 			cfg.EVMChainConfigs[chains.Ethereum.ChainId] = config.EVMConfig{
 				Endpoint: ethServer.Endpoint,
 			}
 			cfg.EVMChainConfigs[chains.Polygon.ChainId] = config.EVMConfig{
 				Endpoint: maticServer.Endpoint,
 			}
-
-			// disable other chains
-			cfg.BTCChainConfigs = nil
-			cfg.SolanaConfig.Endpoint = ""
-			cfg.SuiConfig.Endpoint = ""
-			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -135,12 +131,8 @@ func TestBootstrap(t *testing.T) {
 		mockSolanaCalls(ts, solServer)
 
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.SolanaConfig = solConfig
-
-			// disable other chains
-			cfg.TONConfig.LiteClientConfigURL = ""
-			cfg.EVMChainConfigs = nil
-			cfg.BTCChainConfigs = nil
 		})
 
 		// Mock zetacore calls
@@ -174,11 +166,8 @@ func TestBootstrap(t *testing.T) {
 
 		// Disable other chains
 		ts.UpdateConfig(func(cfg *config.Config) {
+			clearChainConfigs(cfg)
 			cfg.SuiConfig = suiConfig
-			cfg.BTCChainConfigs = nil
-			cfg.EVMChainConfigs = nil
-			cfg.SolanaConfig.Endpoint = ""
-			cfg.TONConfig.LiteClientConfigURL = ""
 		})
 
 		// Mock zetacore calls
@@ -201,22 +190,20 @@ func TestBootstrap(t *testing.T) {
 	})
 
 	t.Run("TON", func(t *testing.T) {
-		// TODO: mock TON liteServer with real calls
-		// https://github.com/zeta-chain/node/issues/3419
-
-		t.Skip("Depends on lite-server mocks")
-		// t.Parallel()
+		t.Parallel()
 
 		// ARRANGE
 		// Given orchestrator
 		ts := newTestSuite(t)
 
+		// Given TON lite-server mock ...
+		tonRPC, tonConfig := testrpc.NewTONServer(t)
+		mockTONCalls(ts, tonRPC)
+
 		// Given TON rpc URL
 		ts.UpdateConfig(func(cfg *config.Config) {
-			// todo
-			cfg.TONConfig = config.TONConfig{
-				LiteClientConfigURL: "localhost",
-			}
+			clearChainConfigs(cfg)
+			cfg.TONConfig = tonConfig
 		})
 
 		// Mock zetacore calls
@@ -301,6 +288,25 @@ func tasksMissGroup(t *testing.T, tasks map[uuid.UUID]*scheduler.Task, group str
 	assert.False(t, found, "Group %s found in tasks", group)
 }
 
+// isolates config from other chains
+func clearChainConfigs(cfg *config.Config) {
+	cfg.BTCChainConfigs = make(map[int64]config.BTCConfig)
+	cfg.EVMChainConfigs = make(map[int64]config.EVMConfig)
+	cfg.SolanaConfig.Endpoint = ""
+	cfg.SuiConfig.Endpoint = ""
+	cfg.TONConfig.Endpoint = ""
+}
+
+func mockZetacoreCalls(ts *testSuite) {
+	blockChan := make(chan cometbfttypes.EventDataNewBlock)
+
+	on(ts.zetacore, "NewBlockSubscriber", 1).Return(blockChan, nil)
+	on(ts.zetacore, "GetInboundTrackersForChain", 2).Return(nil, nil).Maybe()
+	on(ts.zetacore, "GetPendingNoncesByChain", 2).Return(observertypes.PendingNonces{}, nil).Maybe()
+	on(ts.zetacore, "GetAllOutboundTrackerByChain", 3).Return(nil, nil).Maybe()
+	on(ts.zetacore, "PostVoteGasPrice", 5).Return("", nil).Maybe()
+}
+
 func mockBitcoinCalls(_ *testSuite, client *testrpc.BtcServer) {
 	client.SetBlockCount(100)
 }
@@ -310,21 +316,7 @@ func mockEthCalls(_ *testSuite, client *testrpc.EVMServer) {
 	client.SetChainID(1)
 }
 
-func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {
-	// todo
-}
-
-func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer) {
-	// todo
-}
-
-func mockZetacoreCalls(ts *testSuite) {
-	blockChan := make(chan cometbfttypes.EventDataNewBlock)
-	ts.zetacore.On("NewBlockSubscriber", mock.Anything).Return(blockChan, nil).Maybe()
-
-	ts.zetacore.On("GetInboundTrackersForChain", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
-	ts.zetacore.On("GetPendingNoncesByChain", mock.Anything, mock.Anything).
-		Return(observertypes.PendingNonces{}, nil).
-		Maybe()
-	ts.zetacore.On("GetAllOutboundTrackerByChain", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil).Maybe()
-}
+// might be useful
+func mockSolanaCalls(_ *testSuite, _ *testrpc.SolanaServer) {}
+func mockSuiCalls(_ *testSuite, _ *testrpc.SuiServer)       {}
+func mockTONCalls(_ *testSuite, _ *testrpc.TONServer)       {}

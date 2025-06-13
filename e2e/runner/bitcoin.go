@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"sort"
 	"time"
 
@@ -15,8 +16,10 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -180,6 +183,93 @@ func (r *E2ERunner) DepositBTC(receiver common.Address) {
 	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
 	require.NoError(r, err)
 	require.Equal(r, 1, balance.Sign(), "balance should be positive")
+}
+
+// WithdrawBTC is a helper function to call 'withdraw' on BTCZRC20 contract with optional 'approve'
+func (r *E2ERunner) WithdrawBTC(
+	to btcutil.Address,
+	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+	approve bool,
+) *ethtypes.Transaction {
+	// ensure enough balance to cover the withdrawal
+	_, gasFee, err := r.BTCZRC20.WithdrawGasFee(&bind.CallOpts{})
+	require.NoError(r, err)
+	minimumAmount := new(big.Int).Add(amount, gasFee)
+	currentBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
+	require.Greater(
+		r,
+		currentBalance.Int64(),
+		minimumAmount.Int64(),
+		"current balance must be greater than amount + gasFee",
+	)
+
+	// approve more to cover withdraw fee
+	if approve {
+		r.ApproveBTCZRC20(r.GatewayZEVMAddr)
+	}
+
+	// withdraw 'amount' of BTC through ZEVM gateway
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte(to.EncodeAddress()),
+		amount,
+		r.BTCZRC20Addr,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// WithdrawBTCAndWaitCCTX withdraws BTC from ZRC20 contract and waits for the CCTX to be finalized
+func (r *E2ERunner) WithdrawBTCAndWaitCCTX(
+	to btcutil.Address,
+	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+	expectedCCTXStatus crosschaintypes.CctxStatus,
+) *btcjson.TxRawResult {
+	// approve and withdraw on ZRC20 contract
+	tx := r.WithdrawBTC(to, amount, revertOptions, true)
+
+	// mine blocks if testing on regnet
+	stop := r.MineBlocksIfLocalBitcoin()
+	defer stop()
+
+	// get cctx and check status
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, expectedCCTXStatus)
+
+	// get outbound hash according to status
+	// note: the first outbound param contains the cancel tx hash for reverted cctx
+	outboundHash := cctx.GetCurrentOutboundParam().Hash
+	if expectedCCTXStatus == crosschaintypes.CctxStatus_Reverted {
+		outboundHash = cctx.OutboundParams[0].Hash
+	}
+
+	// get bitcoin tx by outbound hash
+	hash, err := chainhash.NewHashFromStr(outboundHash)
+	require.NoError(r, err)
+
+	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, hash)
+	require.NoError(r, err)
+
+	r.Logger.Info("raw tx:")
+	r.Logger.Info("  TxIn: %d", len(rawTx.Vin))
+	for idx, txIn := range rawTx.Vin {
+		r.Logger.Info("  TxIn %d:", idx)
+		r.Logger.Info("    TxID:Vout:  %s:%d", txIn.Txid, txIn.Vout)
+		r.Logger.Info("    ScriptSig: %s", txIn.ScriptSig.Hex)
+	}
+	r.Logger.Info("  TxOut: %d", len(rawTx.Vout))
+	for _, txOut := range rawTx.Vout {
+		r.Logger.Info("  TxOut %d:", txOut.N)
+		r.Logger.Info("    Value: %.8f", txOut.Value)
+		r.Logger.Info("    ScriptPubKey: %s", txOut.ScriptPubKey.Hex)
+	}
+
+	return rawTx
 }
 
 func (r *E2ERunner) SendToTSSWithMemo(

@@ -12,6 +12,30 @@ trap 'kill -- -$$' SIGINT SIGTERM
 
 /usr/sbin/sshd
 
+# Copy the operator keys from the zetacore nodes to the orchestrator
+copy_operator_keys() {
+  local nodes=("zetacore0" "zetacore1" "zetacore2" "zetacore3" "zetacore-new-validator")
+
+  for node in "${nodes[@]}"; do
+    # Skip if key not available
+    ssh -q root@$node "exit" 2>/dev/null || continue
+    ssh root@$node "test -d /root/.zetacored/keyring-test/" || continue
+
+    mkdir -p /root/$node/
+    scp -r root@$node:/root/.zetacored/keyring-test/ /root/$node/keyring-test/ || continue
+
+    # Set node ID suffix
+    node_num=${node//[^0-9]/}
+    node_id=${node_num:-"-new-validator"}
+
+    # Rename and copy keys
+    zetacored keys rename operator operator$node_id --home=/root/$node/ --keyring-backend=test --yes
+    cp -r /root/$node/keyring-test/* /root/.zetacored/keyring-test/
+  done
+
+  echo "Key copying process completed"
+}
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -150,19 +174,10 @@ fund_eth_from_config '.additional_accounts.user_erc20_revert.evm_address' 10000 
 # unlock emissions withdraw tests accounts
 fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
 
+# Create the destination directory
 mkdir -p /root/.zetacored/keyring-test/
-for i in 0 1; do
-    ssh root@zetacore$i "test -d /root/.zetacored/keyring-test/" && \
-    (echo "Source directory found in zetacore$i, copying operator keys" && \
-    mkdir -p /root/zetacore$i/ && \
-
-    scp -r root@zetacore$i:/root/.zetacored/keyring-test/ /root/zetacore$i/keyring-test/ && \
-    echo "Files copied successfully from zetacore$i") || \
-    echo "Error: keyring-test directory not found in zetacore$i container"
-
-    zetacored keys rename operator operator$i --home=/root/zetacore$i/ --keyring-backend=test --yes
-    cp -r /root/zetacore$i/keyring-test/* /root/.zetacored/keyring-test/
-done
+# Copy the keys from the localnet directory to the keyring-test directory
+copy_operator_keys
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
@@ -208,7 +223,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   fi
 
   echo "running e2e test before migrating TSS"
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --test-tss-migration
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light --test-tss-migration
   if [ $? -ne 0 ]; then
     echo "first e2e failed"
     exit 1

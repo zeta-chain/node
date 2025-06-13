@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"errors"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,17 +53,17 @@ func TestIsSystemTx(t *testing.T) {
 		txBuilder.SetMsgs(&msgExec)
 		return txBuilder.GetTx()
 	}
-	isAuthorized := func(_ string) bool {
-		return true
+	isAuthorized := func(_ string) error {
+		return nil
 	}
-	isAuthorizedFalse := func(_ string) bool {
-		return false
+	isAuthorizedFalse := func(_ string) error {
+		return errors.New("not authorized")
 	}
 
 	tests := []struct {
 		name         string
 		tx           sdk.Tx
-		isAuthorized func(string) bool
+		isAuthorized func(string) error
 		wantIs       bool
 	}{
 		{

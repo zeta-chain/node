@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,8 +11,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
+	"github.com/spf13/pflag"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -35,7 +35,9 @@ const (
 	flagConfigOut         = "config-out"
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
-	flagTestPerformance   = "test-performance"
+	flagTestEthStress     = "test-stress-eth"
+	flagTestSolanaStress  = "test-stress-solana"
+	flagTestSuiStress     = "test-stress-sui"
 	flagIterations        = "iterations"
 	flagTestSolana        = "test-solana"
 	flagTestTON           = "test-ton"
@@ -74,7 +76,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
-	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
+	cmd.Flags().Bool(flagTestEthStress, false, "set to true to run eth stress tests")
+	cmd.Flags().Bool(flagTestSolanaStress, false, "set to true to run solana stress tests")
+	cmd.Flags().Bool(flagTestSuiStress, false, "set to true to run sui stress tests")
 	cmd.Flags().Int(flagIterations, 100, "number of iterations to run each performance test")
 	cmd.Flags().Bool(flagTestSolana, false, "set to true to run solana tests")
 	cmd.Flags().Bool(flagTestTON, false, "set to true to run TON tests")
@@ -110,7 +114,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		verbose           = must(cmd.Flags().GetBool(flagVerbose))
 		configOut         = must(cmd.Flags().GetString(flagConfigOut))
 		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testPerformance   = must(cmd.Flags().GetBool(flagTestPerformance))
+		testEthStress     = must(cmd.Flags().GetBool(flagTestEthStress))
+		testSolanaStress  = must(cmd.Flags().GetBool(flagTestSolanaStress))
+		testSuiStress     = must(cmd.Flags().GetBool(flagTestSuiStress))
 		iterations        = must(cmd.Flags().GetInt(flagIterations))
 		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
 		testTON           = must(cmd.Flags().GetBool(flagTestTON))
@@ -126,7 +132,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
 		skipPrecompiles   = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		setupSolana       = testSolana || testPerformance
+		testStress        = testEthStress || testSolanaStress || testSuiStress
+		setupSolana       = testSolana || testStress
+		setupSui          = testSui || testStress
 		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
 	)
@@ -139,23 +147,31 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("starting E2E tests")
 
+	if verbose {
+		logger.Info("Flags")
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			logger.Info(`--%s="%s"`, flag.Name, flag.Value.String())
+		})
+	}
+
 	if testAdmin {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
-	if testPerformance {
+	// skip regular tests if stress tests are enabled
+	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
 		skipPrecompiles = true
+
+		if iterations > 100 {
+			TestTimeout = time.Hour
+		}
 	}
 
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
-
-	if testPerformance && iterations > 100 {
-		TestTimeout = time.Hour
-	}
 
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
@@ -216,16 +232,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// set the authority client to the zeta tx server to be able to query message permissions
 	deployerRunner.ZetaTxServer.SetAuthorityClient(deployerRunner.AuthorityClient)
-
-	// run setup steps that do not require tss
 	if !skipSetup {
+		// run setup steps that do not require tss
 		noError(deployerRunner.FundEmissionsPool())
-	}
 
-	// wait for keygen to be completed
-	// if setup is skipped, we assume that the keygen is already completed
-	if !skipSetup {
-		waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10)
+		// wait for keygen to be completed
+		// if setup is skipped, we assume that the keygen is already completed
+		noError(waitKeygenHeight(ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 10))
 	}
 
 	// query and set the TSS
@@ -285,7 +298,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		if testSui {
+		if setupSui {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
 
@@ -332,7 +345,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
-
 	if !skipPrecompiles {
 		precompiledContractTests := []string{
 			//e2etests.TestPrecompilesPrototypeName,
@@ -383,64 +395,19 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
-	if testPerformance {
-		eg.Go(
-			ethereumDepositPerformanceRoutine(
-				conf,
-				deployerRunner,
-				verbose,
-				[]string{e2etests.TestStressEtherDepositName},
-				iterations,
-			),
-		)
-		eg.Go(
-			ethereumWithdrawPerformanceRoutine(
-				conf,
-				deployerRunner,
-				verbose,
-				[]string{e2etests.TestStressEtherWithdrawName},
-				iterations,
-			),
-		)
-		eg.Go(
-			solanaDepositPerformanceRoutine(
-				conf,
-				"perf_sol_deposit",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSolana,
-				[]string{e2etests.TestStressSolanaDepositName},
-			),
-		)
-		eg.Go(
-			solanaDepositPerformanceRoutine(
-				conf,
-				"perf_spl_deposit",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSPL,
-				[]string{e2etests.TestStressSPLDepositName},
-			),
-		)
-		eg.Go(
-			solanaWithdrawPerformanceRoutine(
-				conf,
-				"perf_sol_withdraw",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSolana,
-				[]string{e2etests.TestStressSolanaWithdrawName},
-			),
-		)
-		eg.Go(
-			solanaWithdrawPerformanceRoutine(
-				conf,
-				"perf_spl_withdraw",
-				deployerRunner,
-				verbose,
-				conf.AdditionalAccounts.UserSPL,
-				[]string{e2etests.TestStressSPLWithdrawName},
-			),
+	// stress tests
+	// TODO: add btc stress tests goroutines
+	// https://github.com/zeta-chain/node/issues/3909
+	if testStress {
+		runE2EStressTests(
+			conf,
+			deployerRunner,
+			verbose,
+			iterations,
+			testEthStress,
+			testSolanaStress,
+			testSuiStress,
+			&eg,
 		)
 	}
 
@@ -462,7 +429,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositName,
 		}
 
-		if !deployerRunner.IsRunningUpgrade() {
+		if !deployerRunner.IsRunningUpgrade() && !light {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositThroughProgramName,
 				e2etests.TestSolanaDepositAndCallName,
@@ -477,6 +444,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 				e2etests.TestSolanaDepositAndCallRevertWithDustName,
 				e2etests.TestSolanaDepositRestrictedName,
 				e2etests.TestSolanaToZEVMCallName,
+				e2etests.TestSolanaToZEVMCallAbortName,
 				e2etests.TestSolanaWithdrawRestrictedName,
 			}...)
 
@@ -532,6 +500,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
+			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
@@ -546,6 +515,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestTONDepositName,
 			e2etests.TestTONDepositAndCallName,
 			e2etests.TestTONDepositAndCallRefundName,
+			e2etests.TestTONDepositRestrictedName,
 			e2etests.TestTONWithdrawName,
 			e2etests.TestTONWithdrawConcurrentName,
 		}
@@ -598,11 +568,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some of the observers based on their vote.
 	// This seems to be a problem only in performance tests where we are creating a lot of ballots in a short time. We do not need to slow down regular tests for this check as we expect all observers to vote correctly.
-	if testPerformance {
+	if testStress {
 		deployerRunner.WaitForBlocks(31)
 	}
 
 	noError(deployerRunner.WithdrawEmissions())
+
+	// Run gateway upgrade tests for external chains
+	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
+		TestSolana: testSolana,
+		TestSui:    testSui,
+	})
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")
@@ -618,15 +594,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
-	if testSolana {
-		require.True(
-			deployerRunner,
-			deployerRunner.VerifySolanaContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String()),
-		)
-	}
-
 	if testTSSMigration {
-		TSSMigration(deployerRunner, logger, verbose, conf)
+		addNewObserver(deployerRunner)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf)
 	}
 
 	// Verify that there are no trackers left over after tests complete
@@ -660,6 +630,106 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	os.Exit(0)
 }
 
+// runE2EStressTests runs the appropriate stress tests based on the provided flags
+func runE2EStressTests(
+	conf config.Config,
+	deployerRunner *runner.E2ERunner,
+	verbose bool,
+	iterations int,
+	testEthStress bool,
+	testSolanaStress bool,
+	testSuiStress bool,
+	eg *errgroup.Group,
+) {
+	if testEthStress {
+		eg.Go(
+			ethereumDepositPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherDepositName},
+				iterations,
+			),
+		)
+		eg.Go(
+			ethereumWithdrawPerformanceRoutine(
+				conf,
+				deployerRunner,
+				verbose,
+				[]string{e2etests.TestStressEtherWithdrawName},
+				iterations,
+			),
+		)
+	}
+
+	if testSolanaStress {
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_sol_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				[]string{e2etests.TestStressSolanaDepositName},
+			),
+		)
+		eg.Go(
+			solanaDepositPerformanceRoutine(
+				conf,
+				"perf_spl_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				[]string{e2etests.TestStressSPLDepositName},
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_sol_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSolana,
+				[]string{e2etests.TestStressSolanaWithdrawName},
+			),
+		)
+		eg.Go(
+			solanaWithdrawPerformanceRoutine(
+				conf,
+				"perf_spl_withdraw",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSPL,
+				[]string{e2etests.TestStressSPLWithdrawName},
+			),
+		)
+	}
+
+	if testSuiStress {
+		eg.Go(
+			suiDepositPerformanceRoutine(
+				conf,
+				"perf_sui_deposit",
+				deployerRunner,
+				verbose,
+				conf.AdditionalAccounts.UserSui,
+				[]string{e2etests.TestStressSuiDepositName},
+			),
+		)
+		eg.Go(
+			suiWithdrawPerformanceRoutine(
+				conf,
+				"perf_sui_withdraw",
+				deployerRunner,
+				verbose,
+				// use different account to avoid race conditions on the SUI coin objects
+				deployerRunner.Account,
+				[]string{e2etests.TestStressSuiWithdrawName},
+			),
+		)
+	}
+}
+
 // waitKeygenHeight waits for keygen height
 func waitKeygenHeight(
 	ctx context.Context,
@@ -667,33 +737,39 @@ func waitKeygenHeight(
 	observerClient observertypes.QueryClient,
 	logger *runner.Logger,
 	bufferBlocks int64,
-) {
+) error {
 	// wait for keygen to be completed
 	resp, err := observerClient.Keygen(ctx, &observertypes.QueryGetKeygenRequest{})
-	if err != nil {
-		logger.Error("observerClient.Keygen error: %s", err)
-		return
+
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "observerClient.Keygen error")
+	case resp.Keygen == nil:
+		return errors.New("keygen is nil")
+	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
+		// noop
+		return nil
+	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
+		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}
-	if resp.Keygen == nil {
-		logger.Error("observerClient.Keygen keygen is nil")
-		return
-	}
-	if resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen {
-		return
-	}
+
 	keygenHeight := resp.Keygen.BlockNumber
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
+
 	for {
 		time.Sleep(2 * time.Second)
+
 		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= keygenHeight+bufferBlocks {
-			break
-		}
+
 		logger.Info("Last ZetaHeight: %d", response.Height)
+
+		if response.Height >= keygenHeight+bufferBlocks {
+			return nil
+		}
 	}
 }
 

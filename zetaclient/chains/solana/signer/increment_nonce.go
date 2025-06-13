@@ -102,6 +102,7 @@ func (signer *Signer) createIncrementNonceInstruction(
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
+		FailureReason: msg.FailureReason(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot serialize increment_nonce instruction")

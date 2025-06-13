@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
@@ -146,8 +145,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		}
 	}
 
-	// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
-	amountInSat := params.Amount.BigInt()
 	// #nosec G115 always in range
 	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
 		ob.logger.Outbound.Debug().
@@ -168,9 +165,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		)
 	}
 
-	ob.Logger().
-		Outbound.Debug().
-		Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
+	var (
+		// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
+		receiveValue  = math.NewUintFromBigInt(params.Amount.BigInt())
+		receiveStatus = chains.ReceiveStatus_success
+		cointype      = cctx.InboundParams.CoinType
+	)
+
+	// cancelled transaction means the outbound is failed
+	// set status to failed to revert the CCTX in zetacore
+	if compliance.IsCCTXRestricted(cctx) {
+		receiveStatus = chains.ReceiveStatus_failed
+	}
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
@@ -178,20 +184,17 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		signer.String(),
 		cctx.Index,
 		res.TxID,
-
 		// #nosec G115 always positive
 		uint64(blockHeight),
-
 		// not used with Bitcoin
 		outboundGasUsed,
 		math.NewInt(outboundGasPrice),
 		outboundGasLimit,
-
-		math.NewUintFromBigInt(amountInSat),
-		chains.ReceiveStatus_success,
+		receiveValue,
+		receiveStatus,
 		ob.Chain().ChainId,
 		nonce,
-		coin.CoinType_Gas,
+		cointype,
 		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
@@ -453,7 +456,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 //   - The third output is the change to TSS (optional)
 func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
-	if !(len(vouts) == 2 || len(vouts) == 3) {
+	if len(vouts) != 2 && len(vouts) != 3 {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
 	}
 
@@ -512,7 +515,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 //   - The second output is the change to TSS (optional)
 func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
-	if !(len(vouts) == 1 || len(vouts) == 2) {
+	if len(vouts) != 1 && len(vouts) != 2 {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
 	}
 

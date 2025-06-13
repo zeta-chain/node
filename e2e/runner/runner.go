@@ -127,6 +127,9 @@ type E2ERunner struct {
 	// contract Sui
 	SuiGateway *sui.Gateway
 
+	// SuiGatewayUpgradeCap is the upgrade cap used for upgrading the Sui gateway package
+	SuiGatewayUpgradeCap string
+
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
 
@@ -289,6 +292,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.TONGateway = other.TONGateway
 
 	r.SuiGateway = other.SuiGateway
+	r.SuiGatewayUpgradeCap = other.SuiGatewayUpgradeCap
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
 	r.SuiExample = other.SuiExample
@@ -425,6 +429,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	if r.SuiGateway != nil {
 		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
 		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("GatewayUpgradeCap: %s", r.SuiGatewayUpgradeCap)
 	} else {
 		r.Logger.Print("💤 Sui tests disabled")
 	}

@@ -74,6 +74,7 @@ const (
 	TestSolanaDepositAndCallRevertWithCallThatRevertsName = "solana_deposit_and_call_revert_with_call_that_reverts"
 	TestSolanaDepositAndCallRevertWithDustName            = "solana_deposit_and_call_revert_with_dust"
 	TestSolanaToZEVMCallName                              = "solana_to_zevm_call"
+	TestSolanaToZEVMCallAbortName                         = "solana_to_zevm_call_abort"
 	TestSolanaDepositRestrictedName                       = "solana_deposit_restricted"
 	TestSolanaWithdrawRestrictedName                      = "solana_withdraw_restricted"
 	TestSPLDepositName                                    = "spl_deposit"
@@ -92,6 +93,7 @@ const (
 	TestTONDepositName              = "ton_deposit"
 	TestTONDepositAndCallName       = "ton_deposit_and_call"
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
+	TestTONDepositRestrictedName    = "ton_deposit_restricted"
 	TestTONWithdrawName             = "ton_withdraw"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
@@ -113,6 +115,7 @@ const (
 	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiDepositRestrictedName                  = "sui_deposit_restricted"
 	TestSuiWithdrawRestrictedName                 = "sui_withdraw_restricted"
+	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
 
 	/*
 	 Bitcoin tests
@@ -141,6 +144,7 @@ const (
 	TestBitcoinWithdrawInvalidAddressName                  = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName                      = "bitcoin_withdraw_restricted"
 	TestBitcoinDepositInvalidMemoRevertName                = "bitcoin_deposit_invalid_memo_revert"
+	TestBitcoinWithdrawRBFName                             = "bitcoin_withdraw_rbf"
 
 	/*
 	 Application tests
@@ -167,6 +171,8 @@ const (
 	TestStressSPLDepositName     = "stress_spl_deposit"
 	TestStressSolanaWithdrawName = "stress_solana_withdraw"
 	TestStressSPLWithdrawName    = "stress_spl_withdraw"
+	TestStressSuiDepositName     = "stress_sui_deposit"
+	TestStressSuiWithdrawName    = "stress_sui_withdraw"
 
 	/*
 		Staking tests
@@ -261,6 +267,12 @@ const (
 
 const (
 	CountArgDescription = "count"
+)
+
+// Here are all the dependencies for the e2e tests, add more dependencies here if needed
+var (
+	// DepdencyAllBitcoinDeposits is a dependency to wait for all bitcoin deposit tests to complete
+	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -477,6 +489,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawAndCall,
 	),
@@ -485,6 +498,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawAndCallNoMessage,
 	),
@@ -509,6 +523,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM, revert, then abort with onAbort",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestERC20WithdrawRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
@@ -669,6 +684,13 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
+		TestSolanaToZEVMCallAbortName,
+		"call a zevm contract and abort",
+		[]runner.ArgDefinition{},
+		TestSolanaToZEVMCallAbort,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
 		TestSPLWithdrawName,
 		"withdraw SPL from ZEVM",
 		[]runner.ArgDefinition{
@@ -737,7 +759,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in lamport", DefaultValue: "1000000"},
 		},
 		TestSolanaWithdrawRestricted,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSolanaWhitelistSPLName,
@@ -817,6 +839,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in nano tons", DefaultValue: "1000000000"}, // 1.0 TON
 		},
 		TestTONDepositAndCallRefund,
+	),
+	runner.NewE2ETest(
+		TestTONDepositRestrictedName,
+		"deposit TON into ZEVM restricted address",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONDepositRestricted,
 	),
 	runner.NewE2ETest(
 		TestTONWithdrawName,
@@ -964,9 +994,20 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiWithdrawRestrictedName,
 		"withdraw SUI from ZEVM to restricted address",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedSuiAddressTest},
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRestrictedAddress,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawInvalidReceiverName,
+		"withdraw SUI from ZEVM to invalid receiver address",
+		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: "0x547a07f0564e0c8d48c4ae53305eabdef87e9610"},
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawInvalidReceiver,
 	),
 	/*
 	 Bitcoin tests
@@ -1145,9 +1186,12 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedBtcAddressTest},
 			{Description: "amount in btc", DefaultValue: "0.001"},
+			{Description: "revert address", DefaultValue: sample.RevertAddressZEVM},
 		},
 		TestBitcoinWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositInvalidMemoRevertName,
@@ -1155,6 +1199,16 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositInvalidMemoRevert,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawRBFName,
+		"withdraw Bitcoin from ZEVM and replace the outbound using RBF",
+		[]runner.ArgDefinition{
+			{Description: "receiver address", DefaultValue: ""},
+			{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawRBF,
+		runner.WithDependencies(DepdencyAllBitcoinDeposits),
 	),
 	/*
 	 Application tests
@@ -1256,6 +1310,24 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: CountArgDescription, DefaultValue: "50"},
 		},
 		TestStressSPLWithdraw,
+	),
+	runner.NewE2ETest(
+		TestStressSuiDepositName,
+		"stress test SUI deposits",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiDeposit,
+	),
+	runner.NewE2ETest(
+		TestStressSuiWithdrawName,
+		"stress test SUI withdrawals",
+		[]runner.ArgDefinition{
+			{Description: "amount in SUI", DefaultValue: "1000000"},
+			{Description: CountArgDescription, DefaultValue: "50"},
+		},
+		TestStressSuiWithdraw,
 	),
 	/*
 	 Admin tests
@@ -1596,9 +1668,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestEtherWithdrawRestrictedName,
 		"withdraw Ether from ZEVM to restricted address (v1 protocol contracts)",
 		[]runner.ArgDefinition{
+			{Description: "receiver", DefaultValue: sample.RestrictedEVMAddressTest},
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestEtherWithdrawRestricted,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestLegacyEtherDepositAndCallRefundName,

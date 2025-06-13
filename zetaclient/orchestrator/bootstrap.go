@@ -29,17 +29,18 @@ import (
 	suiobserver "github.com/zeta-chain/node/zetaclient/chains/sui/observer"
 	suisigner "github.com/zeta-chain/node/zetaclient/chains/sui/signer"
 	"github.com/zeta-chain/node/zetaclient/chains/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
 	tonobserver "github.com/zeta-chain/node/zetaclient/chains/ton/observer"
+	tonrpc "github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	tonsigner "github.com/zeta-chain/node/zetaclient/chains/ton/signer"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
 const btcBlocksPerDay = 144
 
-func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
+func (oc *Orchestrator) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.Bitcoin, error) {
 	// should not happen
 	if !chain.IsBitcoin() {
 		return nil, errors.New("chain is not bitcoin")
@@ -81,7 +82,7 @@ func (oc *V2) bootstrapBitcoin(ctx context.Context, chain zctx.Chain) (*bitcoin.
 	return bitcoin.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, error) {
+func (oc *Orchestrator) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, error) {
 	// should not happen
 	if !chain.IsEVM() {
 		return nil, errors.New("chain is not EVM")
@@ -132,7 +133,7 @@ func (oc *V2) bootstrapEVM(ctx context.Context, chain zctx.Chain) (*evm.EVM, err
 	return evm.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.Solana, error) {
+func (oc *Orchestrator) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.Solana, error) {
 	// should not happen
 	if !chain.IsSolana() {
 		return nil, errors.New("chain is not Solana")
@@ -184,7 +185,7 @@ func (oc *V2) bootstrapSolana(ctx context.Context, chain zctx.Chain) (*solana.So
 	return solana.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, error) {
+func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, error) {
 	// should not happen
 	if !chain.IsSui() {
 		return nil, errors.New("chain is not sui")
@@ -220,7 +221,7 @@ func (oc *V2) bootstrapSui(ctx context.Context, chain zctx.Chain) (*sui.Sui, err
 	return sui.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
+func (oc *Orchestrator) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, error) {
 	// should not happen
 	if !chain.IsTON() {
 		return nil, errors.New("chain is not TON")
@@ -236,34 +237,45 @@ func (oc *V2) bootstrapTON(ctx context.Context, chain zctx.Chain) (*ton.TON, err
 		return nil, errors.Wrap(errSkipChain, "unable to find TON config")
 	}
 
-	gatewayID, err := tontools.ParseAccountID(chain.Params().GatewayAddress)
+	gwAddress := chain.Params().GatewayAddress
+	if gwAddress == "" {
+		return nil, errors.New("gateway address is empty")
+	}
+
+	gatewayID, err := tontools.ParseAccountID(gwAddress)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse gateway address %q", chain.Params().GatewayAddress)
+		return nil, errors.Wrapf(err, "unable to parse gateway address %q", gwAddress)
 	}
 
 	gw := toncontracts.NewGateway(gatewayID)
 
-	lightClient, err := liteapi.NewFromSource(ctx, cfg.LiteClientConfigURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create TON liteapi")
+	if cfg.Endpoint == "" {
+		return nil, errors.New("rpc url is empty")
 	}
+
+	rpcClient, err := metrics.GetInstrumentedHTTPClient(cfg.Endpoint)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create instrumented rpc client")
+	}
+
+	rpc := tonrpc.New(cfg.Endpoint, chain.ID(), tonrpc.WithHTTPClient(rpcClient))
 
 	baseObserver, err := oc.newBaseObserver(chain, chain.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create base observer")
 	}
 
-	observer, err := tonobserver.New(baseObserver, lightClient, gw)
+	observer, err := tonobserver.New(baseObserver, rpc, gw)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create observer")
 	}
 
-	signer := tonsigner.New(oc.newBaseSigner(chain), lightClient, gw)
+	signer := tonsigner.New(oc.newBaseSigner(chain), rpc, gw)
 
 	return ton.New(oc.scheduler, observer, signer), nil
 }
 
-func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {
+func (oc *Orchestrator) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, error) {
 	var (
 		rawChain       = chain.RawChain()
 		rawChainParams = chain.Params()
@@ -291,7 +303,7 @@ func (oc *V2) newBaseObserver(chain zctx.Chain, dbName string) (*base.Observer, 
 	)
 }
 
-func (oc *V2) newBaseSigner(chain zctx.Chain) *base.Signer {
+func (oc *Orchestrator) newBaseSigner(chain zctx.Chain) *base.Signer {
 	return base.NewSigner(*chain.RawChain(), oc.deps.TSS, oc.logger.base)
 }
 

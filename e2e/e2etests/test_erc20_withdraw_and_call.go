@@ -13,7 +13,7 @@ import (
 )
 
 func TestERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
@@ -22,6 +22,7 @@ func TestERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 	}()
 
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	payload := randomPayload(r)
 
@@ -36,6 +37,7 @@ func TestERC20WithdrawAndCall(r *runner.E2ERunner, args []string) {
 		amount,
 		[]byte(payload),
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined

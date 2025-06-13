@@ -93,3 +93,20 @@ func (k Keeper) Ballots(goCtx context.Context, req *types.QueryBallotsRequest) (
 	}
 	return &types.QueryBallotsResponse{Ballots: ballots, Pagination: pageRes}, nil
 }
+
+func (k Keeper) BallotListForHeight(
+	goCtx context.Context,
+	req *types.QueryBallotListForHeightRequest,
+) (*types.QueryBallotListForHeightResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ballotList, found := k.GetBallotListForHeight(ctx, req.Height)
+	if !found {
+		return nil, status.Error(codes.NotFound, "not found ballot list")
+	}
+	return &types.QueryBallotListForHeightResponse{
+		BallotList: ballotList,
+	}, nil
+}
