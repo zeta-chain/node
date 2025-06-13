@@ -100,7 +100,11 @@ func (s *Server) rpcHandler(req rpcRequest) rpcResponse {
 	// look for parameter-specific handler
 	call, ok := methodHandlers[paramKey]
 	if !ok {
-		return rpcResponse{Error: errors.New("no handler found")}
+		// look for default handler
+		call, ok = methodHandlers[""]
+		if !ok {
+			return rpcResponse{Error: errors.New("no handler found")}
+		}
 	}
 
 	res, err := call(req.Params)
