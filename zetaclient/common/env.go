@@ -21,8 +21,8 @@ const (
 	// EnvTONRPC is the environment variable to enable ton rpc
 	EnvTONRPC = "TON_RPC"
 
-	// TEST_PK_BTC is the environment variable to configure bitcoin private key for live unit tests
-	EnvTestPKBTC = "TEST_PK_BTC"
+	// BTC_TEST_PK is the environment variable to configure bitcoin private key for live unit tests
+	EnvBTCTestPK = "BTC_TEST_PK"
 )
 
 // LiveTestEnabled returns true if live tests are enabled
