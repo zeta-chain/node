@@ -4,7 +4,7 @@ version: "2"
 
 run:
   go: "1.23"
-  timeout: 5m
+  timeout: 30m
   tests: false
 
 # https://golangci-lint.run/usage/formatters

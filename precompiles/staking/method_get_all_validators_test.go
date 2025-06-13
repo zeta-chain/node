@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/testutil/sample"
 )
@@ -18,9 +19,11 @@ func Test_GetAllValidators(t *testing.T) {
 		validatorsList, err := s.sdkKeepers.StakingKeeper.GetAllValidators(s.ctx)
 		require.NoError(t, err)
 		for _, v := range validatorsList {
+			v.Status = stakingtypes.Unbonded // Set status to unbonded to avoid any issues with removal
+			require.NoError(t, s.sdkKeepers.StakingKeeper.SetValidator(s.ctx, v))
 			valAddr, err := sdk.ValAddressFromBech32(v.GetOperator())
 			require.NoError(t, err)
-			s.sdkKeepers.StakingKeeper.RemoveValidator(s.ctx, valAddr)
+			require.NoError(t, s.sdkKeepers.StakingKeeper.RemoveValidator(s.ctx, valAddr))
 		}
 
 		methodID := s.stkContractABI.Methods[GetAllValidatorsMethodName]

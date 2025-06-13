@@ -105,12 +105,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// no priority fee for Sui
 	const priorityFee = 0
 
-	ob.setLatestGasPrice(gasPrice)
-
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
 	}
+
+	ob.setLatestGasPrice(gasPrice)
 
 	return nil
 }

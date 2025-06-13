@@ -429,7 +429,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositName,
 		}
 
-		if !deployerRunner.IsRunningUpgrade() {
+		if !deployerRunner.IsRunningUpgrade() && !light {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositThroughProgramName,
 				e2etests.TestSolanaDepositAndCallName,
@@ -746,6 +746,9 @@ func waitKeygenHeight(
 		return errors.Wrap(err, "observerClient.Keygen error")
 	case resp.Keygen == nil:
 		return errors.New("keygen is nil")
+	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
+		// noop
+		return nil
 	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
 		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}

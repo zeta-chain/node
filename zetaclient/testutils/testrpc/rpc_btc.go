@@ -32,7 +32,7 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 		RPCParams:   "mainnet",
 	}
 
-	rpc.On("ping", func(_ []any) (any, error) {
+	rpc.On("ping", func(_ map[string]any) (any, error) {
 		return nil, nil
 	})
 
@@ -40,21 +40,21 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 }
 
 func (s *BtcServer) SetBlockCount(count int) {
-	s.On("getblockcount", func(_ []any) (any, error) {
+	s.On("getblockcount", func(_ map[string]any) (any, error) {
 		return count, nil
 	})
 }
 
 // SetRawTransaction mocks the raw transaction response.
 func (s *BtcServer) SetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...any) {
+	var buf bytes.Buffer
+	err := msgTx.Serialize(&buf)
+	require.NoError(t, err)
+
 	// append the default 'verbose' parameter, otherwise the calculated params key won't match
 	params = append(params, btcjson.Int(0))
 
-	s.On("getrawtransaction", func(_ []any) (any, error) {
-		var buf bytes.Buffer
-		err := msgTx.Serialize(&buf)
-		require.NoError(t, err)
-
+	s.On("getrawtransaction", func(_ map[string]any) (any, error) {
 		return hex(buf.Bytes()), nil
 	}, params...)
 }

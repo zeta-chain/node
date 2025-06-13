@@ -3,25 +3,30 @@ package testrpc
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 )
+
+// RPCHandler is a function that handles a JSON RPC request.
+type RPCHandler func(params map[string]any) (any, error)
 
 // Server represents JSON RPC mock with a "real" HTTP server allocated (httptest)
 type Server struct {
 	t        *testing.T
-	handlers map[string]map[string]func(params []any) (any, error)
+	handlers map[string]map[string]RPCHandler
 	name     string
 }
 
 // New constructs Server.
 func New(t *testing.T, name string) (*Server, string) {
 	var (
-		handlers = make(map[string]map[string]func(params []any) (any, error))
+		handlers = make(map[string]map[string]RPCHandler)
 		rpc      = &Server{t, handlers, name}
 		testWeb  = httptest.NewServer(http.HandlerFunc(rpc.httpHandler))
 	)
@@ -33,19 +38,21 @@ func New(t *testing.T, name string) (*Server, string) {
 
 // On registers a handler for a given method and optional parameters.
 // If params is provided, it registers a parameter-specific handler.
-func (s *Server) On(method string, call func(params []any) (any, error), params ...any) {
+func (s *Server) On(method string, call RPCHandler, params ...any) {
 	if s.handlers[method] == nil {
-		s.handlers[method] = make(map[string]func(params []any) (any, error))
+		s.handlers[method] = make(map[string]RPCHandler)
 	}
 
-	paramKey := s.buildParamKey(params)
+	paramKey := paramsKeyFromArray(s.t, params)
 	s.handlers[method][paramKey] = call
 }
 
-// example: {"jsonrpc":"1.0","method":"ping","params":[],"id":1}
+// example: {"jsonrpc":"1.0","method":"ping","params":{},"id":1}
+// also supports array params: {"jsonrpc":"1.0","method":"ping","params":[1,2,3],"id":1}.
+// the latter would be casted to map["$idx"]any{"0": "foo" ,...}
 type rpcRequest struct {
-	Method string `json:"method"`
-	Params []any  `json:"params"`
+	Method string         `json:"method"`
+	Params map[string]any `json:"params"`
 }
 
 // example: {"result":0,"error":null,"id":"curltest"}
@@ -60,12 +67,12 @@ func (s *Server) httpHandler(w http.ResponseWriter, r *http.Request) {
 	// Make sure method matches
 	require.Equal(s.t, http.MethodPost, r.Method)
 
-	var req rpcRequest
-
 	// Decode request
 	raw, err := io.ReadAll(r.Body)
 	require.NoError(s.t, err)
-	require.NoError(s.t, json.Unmarshal(raw, &req), "unable to unmarshal request for %s", s.name)
+
+	req, err := parseRequest(raw)
+	require.NoError(s.t, err, "unable to unmarshal request for %s [%s]", s.name, string(raw))
 
 	// Process request
 	res := s.rpcHandler(req)
@@ -82,17 +89,17 @@ func (s *Server) httpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) rpcHandler(req rpcRequest) rpcResponse {
-	methodHandlers, found := s.handlers[req.Method]
-	if !found {
+	methodHandlers, ok := s.handlers[req.Method]
+	if !ok {
 		return rpcResponse{Error: errors.New("method not found")}
 	}
 
-	// Build param key for lookup
-	paramKey := s.buildParamKey(req.Params)
+	// build param key
+	paramKey := paramsKeyFromMap(s.t, req.Params)
 
-	// Look for parameter-specific handler
-	call, found := methodHandlers[paramKey]
-	if !found {
+	// look for parameter-specific handler
+	call, ok := methodHandlers[paramKey]
+	if !ok {
 		return rpcResponse{Error: errors.New("no handler found")}
 	}
 
@@ -100,13 +107,59 @@ func (s *Server) rpcHandler(req rpcRequest) rpcResponse {
 	return rpcResponse{Result: res, Error: err}
 }
 
-// buildParamKey creates a map key for the given parameters.
-func (s *Server) buildParamKey(params []any) string {
+func parseRequest(raw []byte) (rpcRequest, error) {
+	items := gjson.GetManyBytes(raw, "method", "params")
+
+	if !items[0].Exists() || items[0].Type != gjson.String {
+		return rpcRequest{}, errors.New("method string is expected")
+	}
+
+	req := rpcRequest{
+		Method: items[0].String(),
+		Params: map[string]any{},
+	}
+
+	// .params is optional
+	if !items[1].Exists() {
+		return req, nil
+	}
+
+	items[1].ForEach(func(key, value gjson.Result) bool {
+		req.Params[key.String()] = value.Value()
+
+		return true
+	})
+
+	return req, nil
+}
+
+// paramsKeyFromArray creates a key for the given parameter array.
+func paramsKeyFromArray(t *testing.T, params []any) string {
 	if len(params) == 0 {
 		return ""
 	}
+
+	// marshal params to string
 	paramBytes, err := json.Marshal(params)
-	require.NoError(s.t, err)
+	require.NoError(t, err)
 
 	return string(paramBytes)
+}
+
+// paramsKeyFromMap creates a key for the given parameter map.
+func paramsKeyFromMap(t *testing.T, params map[string]any) string {
+	if len(params) == 0 {
+		return ""
+	}
+
+	// convert map to ordered array
+	// example: {"0": "foo", "1": "bar", ...}
+	paramsOrdered := make([]any, len(params))
+	for i := range paramsOrdered {
+		param, ok := params[fmt.Sprintf("%d", i)]
+		require.True(t, ok, "param %d not found", i)
+		paramsOrdered[i] = param
+	}
+
+	return paramsKeyFromArray(t, paramsOrdered)
 }

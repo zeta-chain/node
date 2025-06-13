@@ -56,7 +56,7 @@ func ConstructWalletFromSeed(seed string, client *Client) (*AccountInit, *wallet
 func ConstructWalletFromPrivateKey(pk ed25519.PrivateKey, client *Client) (*AccountInit, *wallet.Wallet, error) {
 	const version = wallet.V5R1
 
-	w, err := wallet.New(pk, version, client)
+	w, err := wallet.New(pk, version, client.tongoAdapter())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create wallet")
 	}
