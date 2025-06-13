@@ -104,10 +104,12 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					return errors.New("invalid vesting parameters; must supply start and end time or end time")
 				}
 			} else {
+				// TODO evm
 				// genAccount = &ethermint.EthAccount{
 				// 	BaseAccount: baseAccount,
 				// 	CodeHash:    common.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
 				// }
+				genAccount = baseAccount
 			}
 
 			if err := genAccount.Validate(); err != nil {

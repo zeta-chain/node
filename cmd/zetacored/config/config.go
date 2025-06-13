@@ -3,13 +3,13 @@ package config
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/evm/cmd/evmd/config"
 )
 
 const (
-	DisplayDenom = "zeta"
-	BaseDenom    = "azeta"
-	AppName      = "zetacored"
+	DisplayDenom  = "zeta"
+	BaseDenom     = "azeta"
+	AppName       = "zetacored"
+	BaseDenomUnit = 18
 )
 
 // RegisterDenoms registers the base and display denominations to the SDK.
@@ -18,7 +18,7 @@ func RegisterDenoms() {
 		panic(err)
 	}
 
-	if err := sdk.RegisterDenom(BaseDenom, sdkmath.LegacyNewDecWithPrec(1, config.BaseDenomUnit)); err != nil {
+	if err := sdk.RegisterDenom(BaseDenom, sdkmath.LegacyNewDecWithPrec(1, BaseDenomUnit)); err != nil {
 		panic(err)
 	}
 }

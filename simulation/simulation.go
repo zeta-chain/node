@@ -13,7 +13,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	evmante "github.com/cosmos/evm/ante"
 
-	app "github.com/cosmos/evm/evmd"
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
 )
@@ -33,7 +32,7 @@ func NewSimApp(
 		nil,
 		false,
 		map[int64]bool{},
-		app.DefaultNodeHome,
+		"", // TODO evm
 		5,
 		4221,
 		appOptions,

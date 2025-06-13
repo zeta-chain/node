@@ -422,8 +422,9 @@ func AddGenesisAccount(
 	genAccounts := make([]authtypes.GenesisAccount, len(balances))
 	for i, balance := range balances {
 		totalBalanceAdded = totalBalanceAdded.Add(balance.Coins...)
-		// accAddress := sdk.MustAccAddressFromBech32(balance.Address) // TODO evm: EthAccount missing?
-		// baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
+		accAddress := sdk.MustAccAddressFromBech32(balance.Address) // TODO evm: EthAccount missing?
+		baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
+		genAccount = baseAccount
 		// genAccount = &cosmosevmtypes.EthAccount{
 		// 	BaseAccount: baseAccount,
 		// 	CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
