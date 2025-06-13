@@ -20,6 +20,7 @@ const (
 	OpDonate Op = 100 + iota
 	OpDeposit
 	OpDepositAndCall
+	OpCall
 )
 
 const OpWithdraw Op = 200
@@ -68,6 +69,13 @@ func (d Deposit) AsBody() (*boc.Cell, error) {
 type DepositAndCall struct {
 	Deposit
 	CallData []byte
+}
+
+// Call represents a call operation
+type Call struct {
+	Sender    ton.AccountID
+	Recipient eth.Address
+	CallData  []byte
 }
 
 // AsBody casts struct to internal message body.

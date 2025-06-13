@@ -55,6 +55,8 @@ func (gw *Gateway) parseInbound(tx ton.Transaction) (*Transaction, error) {
 		content, errContent = parseDeposit(tx, sender, body)
 	case OpDepositAndCall:
 		content, errContent = parseDepositAndCall(tx, sender, body)
+	case OpCall:
+		content, errContent = parseCall(tx, sender, body)
 	default:
 		// #nosec G115 always in range
 		return nil, errors.Wrapf(ErrUnknownOp, "op code %d", int64(op))
@@ -153,6 +155,34 @@ func parseDepositAndCall(tx ton.Transaction, sender ton.AccountID, body *boc.Cel
 	}
 
 	return DepositAndCall{Deposit: deposit, CallData: callData}, nil
+}
+
+func parseCall(_ ton.Transaction, sender ton.AccountID, body *boc.Cell) (Call, error) {
+	// skip query id
+	if err := body.Skip(sizeQueryID); err != nil {
+		return Call{}, err
+	}
+
+	recipient, err := UnmarshalEVMAddress(body)
+	if err != nil {
+		return Call{}, errors.Wrap(err, "unable to read recipient")
+	}
+
+	callDataCell, err := body.NextRef()
+	if err != nil {
+		return Call{}, errors.Wrap(err, "unable to read call data cell")
+	}
+
+	callData, err := UnmarshalSnakeCell(callDataCell)
+	if err != nil {
+		return Call{}, errors.Wrap(err, "unable to unmarshal call data")
+	}
+
+	return Call{
+		Sender:    sender,
+		Recipient: recipient,
+		CallData:  callData,
+	}, nil
 }
 
 // an outbound is a tx that was initiated by TSS signature with external message

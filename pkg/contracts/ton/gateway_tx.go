@@ -46,6 +46,11 @@ func (tx *Transaction) DepositAndCall() (DepositAndCall, error) {
 	return retrieveContent[DepositAndCall](tx)
 }
 
+// Call casts the transaction content to a Call.
+func (tx *Transaction) Call() (Call, error) {
+	return retrieveContent[Call](tx)
+}
+
 // Withdrawal casts the transaction content to a Withdrawal.
 func (tx *Transaction) Withdrawal() (Withdrawal, error) {
 	return retrieveContent[Withdrawal](tx)
