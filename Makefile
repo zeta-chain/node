@@ -350,6 +350,12 @@ start-legacy-test: e2e-images
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-legacy" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-connector-test: e2e-images
+	@echo "--> Starting e2e smart contracts legacy test"
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-v2-connector-contract" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+
+
 ###############################################################################
 ###                         Upgrade Tests              						###
 ###############################################################################

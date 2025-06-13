@@ -42,7 +42,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 
-	if inboundCoinType == coin.CoinType_Zeta {
+	if inboundCoinType == coin.CoinType_Zeta && cctx.ProtocolContractVersion == types.ProtocolContractVersion_V1 {
 		// In case of an error
 		// 	- Return true will revert the cctx and create a revert cctx with status PendingRevert
 		// 	- Return false will abort the cctx

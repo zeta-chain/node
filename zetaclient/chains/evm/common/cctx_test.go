@@ -81,7 +81,7 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 			expected: OutboundTypeCall,
 		},
 		{
-			name: "ZETA gives Uuknown outbound type",
+			name: "ZETA withdraw",
 			cctx: types.CrossChainTx{
 				InboundParams: &types.InboundParams{
 					CoinType: coin.CoinType_Zeta,
@@ -90,7 +90,47 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 					Status: types.CctxStatus_PendingOutbound,
 				},
 			},
-			expected: OutboundTypeUnknown,
+			expected: OutboundTypeZetaWithdraw,
+		},
+		{
+			name: "ZETA withdraw and call",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType:         coin.CoinType_Zeta,
+					IsCrossChainCall: true,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingOutbound,
+				},
+			},
+			expected: OutboundTypeZetaWithdrawAndCall,
+		},
+		{
+			name: "Zeta withdraw revert and call on revert",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_Zeta,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+				RevertOptions: types.RevertOptions{
+					CallOnRevert: true,
+				},
+			},
+			expected: OutboundTypeZetaWithdrawRevertAndCallOnRevert,
+		},
+		{
+			name: " Zeta withdraw revert",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_Zeta,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+			},
+			expected: OutboundTypeZetaWithdrawRevert,
 		},
 	}
 

@@ -458,7 +458,8 @@ func (r *E2ERunner) PrintContractAddresses() {
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
-	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEthLegacy:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEth:  %s", r.ConnectorNativeAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
@@ -502,6 +503,10 @@ func (r *E2ERunner) requireTxSuccessful(receipt *ethtypes.Receipt, msgAndArgs ..
 // EVMAddress is shorthand to get the EVM address of the account
 func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
+}
+
+func (r *E2ERunner) ZetaAddress() types.AccAddress {
+	return types.AccAddress(r.EVMAddress().Bytes())
 }
 
 func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {

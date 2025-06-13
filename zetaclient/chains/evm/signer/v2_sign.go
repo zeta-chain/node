@@ -10,6 +10,7 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
+	connector "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 )
 
 // signGatewayExecute signs a gateway execute
@@ -122,6 +123,38 @@ func (signer *Signer) signERC20CustodyWithdraw(
 		ctx,
 		data,
 		signer.er20CustodyAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("sign withdraw error: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectoryWithdraw(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	connectorABI, err := connector.ZetaConnectorNativeMetaData.GetAbi()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get ZetaConnectorNativeMetaData ABI")
+	}
+
+	data, err := connectorABI.Pack("withdraw", txData.to, txData.amount)
+	if err != nil {
+		return nil, fmt.Errorf("withdraw pack error: %w", err)
+	}
+
+	fmt.Println("signZetaConnector address:", signer.zetaConnectorAddress)
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,

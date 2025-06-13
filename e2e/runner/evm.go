@@ -137,6 +137,28 @@ func (r *E2ERunner) ERC20DepositAndCall(
 	return tx
 }
 
+// ZetaDepositAndCall calls DepositAndCall of Gateway with zeta token on EVM
+func (r *E2ERunner) ZetaDepositAndCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+	revertOptions gatewayevm.RevertOptions,
+) *ethtypes.Transaction {
+	tx, err := r.GatewayEVM.DepositAndCall0(
+		r.EVMAuth,
+		receiver,
+		amount,
+		r.ZetaEthAddr,
+		payload,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	logDepositInfoAndWaitForTxReceipt(r, tx, "zeta_deposit_and_call")
+
+	return tx
+}
+
 // EVMToZEMVCall calls Call of Gateway on EVM
 func (r *E2ERunner) EVMToZEMVCall(
 	receiver ethcommon.Address,

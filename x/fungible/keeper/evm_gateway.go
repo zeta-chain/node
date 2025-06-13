@@ -97,6 +97,52 @@ func (k Keeper) CallDepositAndCallZRC20(
 	)
 }
 
+// DepositAndCallZeta calls the depositAndCall function on the gateway contract
+// function depositAndCall(
+// MessageContext calldata context,
+// address target,
+// bytes calldata message
+// )
+func (k Keeper) DepositAndCallZeta(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	amount *big.Int,
+	target common.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, types.ErrSystemContractNotFound
+	}
+	gatewayAddr := common.HexToAddress(systemContract.Gateway)
+	if crypto.IsEmptyAddress(gatewayAddr) {
+		return nil, types.ErrGatewayContractNotSet
+	}
+
+	// NOTE:
+	// depositAndCall: ZETA version for depositAndCall method
+	// depositAndCall0: ZRC20 version for depositAndCall method
+	return k.CallEVM(
+		ctx,
+		*gatewayABI,
+		types.ModuleAddressEVM,
+		gatewayAddr,
+		amount,
+		gatewayGasLimit,
+		true,
+		false,
+		"depositAndCall",
+		context,
+		target,
+		message,
+	)
+}
+
 // CallExecute calls the execute function on the gateway contract
 // function execute(
 //

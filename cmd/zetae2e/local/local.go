@@ -56,6 +56,7 @@ const (
 	flagTestFilter               = "test-filter"
 	flagTestStaking              = "test-staking"
 	flagTestV2ConnectorMigration = "test-v2-connector-migration"
+	flagTestV2Connectorcontract  = "test-v2-connector-contract" // TODO: remove this flag after migration tests are stable
 )
 
 var (
@@ -100,6 +101,9 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 	cmd.Flags().Bool(flagTestV2ConnectorMigration, false, "set to true to run v2 connector migration tests")
+	cmd.Flags().
+		Bool(flagTestV2Connectorcontract, false, "set to true to run v2 connector contract tests")
+	// TODO: remove this flag after migration tests are stable
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -140,6 +144,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testFilterStr            = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking              = must(cmd.Flags().GetBool(flagTestStaking))
 		testV2ConnectorMigration = must(cmd.Flags().GetBool(flagTestV2ConnectorMigration))
+		testV2ConnectorContract  = must(
+			cmd.Flags().GetBool(flagTestV2Connectorcontract),
+		) // TODO: remove this flag after migration tests are stable
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -550,6 +557,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyEtherWithdrawName,
 			e2etests.TestLegacyEtherDepositAndCallName,
 			e2etests.TestLegacyEtherDepositAndCallRefundName,
+		))
+	}
+
+	if testV2ConnectorContract {
+		eg.Go(evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
+			//e2etests.TestZetaDepositName,
+			//e2etests.TestZetaDepositAndCallName,
+			e2etests.TestZetaDepositAndCallRevertName,
 		))
 	}
 

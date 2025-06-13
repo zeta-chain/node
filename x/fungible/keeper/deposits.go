@@ -23,7 +23,7 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to ethcommon.Address, amount *b
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) error {
+func (k Keeper) MintCoinsToProtocolAddress(ctx sdk.Context, amount *big.Int) error {
 	return k.MintZetaToFungibleModule(ctx, amount)
 }
 
@@ -42,9 +42,14 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// get ZRC20 contract
-	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
-	if err != nil {
-		return nil, false, err
+	zrc20Contract := ethcommon.Address{}
+	err := error(nil)
+
+	if coinType != coin.CoinType_Zeta {
+		zrc20Contract, _, err = k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
+		if err != nil {
+			return nil, false, err
+		}
 	}
 
 	// handle the deposit for protocol contract version 2
@@ -99,27 +104,80 @@ func (k Keeper) ProcessDeposit(
 	coinType coin.CoinType,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	if coinType == coin.CoinType_Zeta {
-		return nil, false, errors.New("ZETA asset is currently unsupported for deposit with V2 protocol contracts")
-	}
-
 	context := gatewayzevm.MessageContext{
 		Sender:    from,
 		SenderEVM: ethcommon.BytesToAddress(from),
 		ChainID:   big.NewInt(senderChainID),
 	}
 
-	if coinType == coin.CoinType_NoAssetCall {
-		// simple call
-		res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
-		return res, true, err
-	} else if isCrossChainCall {
-		// call with asset
+	switch coinType {
+	case coin.CoinType_NoAssetCall:
+		return k.processNoAssetCall(ctx, context, zrc20Addr, amount, to, message)
+
+	case coin.CoinType_Zeta:
+		return k.processZetaDeposit(ctx, context, amount, to, message, isCrossChainCall)
+
+	case coin.CoinType_ERC20, coin.CoinType_Gas:
+		return k.processZRC20Deposit(ctx, context, zrc20Addr, amount, to, message, isCrossChainCall)
+	default:
+		return nil, false, fmt.Errorf("unsupported coin type for deposit %s", coinType)
+	}
+}
+
+// processNoAssetCall handles deposits with no asset (simple calls)
+func (k Keeper) processNoAssetCall(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
+	return res, true, err
+}
+
+// processZetaDeposit handles ZETA coin deposits
+func (k Keeper) processZetaDeposit(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+	isCrossChainCall bool,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	if err := k.MintCoinsToProtocolAddress(ctx, amount); err != nil {
+		return nil, false, err
+	}
+
+	if isCrossChainCall {
+		// Cross-chain call with ZETA asset
+		res, err := k.DepositAndCallZeta(ctx, context, amount, to, message)
+		return res, false, err
+	}
+
+	// Simple ZETA deposit
+	res, err := k.DepositZeta(ctx, to, amount)
+	return res, false, err
+}
+
+// processZRC20Deposit handles ZRC20 token deposits
+func (k Keeper) processZRC20Deposit(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+	isCrossChainCall bool,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	if isCrossChainCall {
+		// Cross-chain call with ZRC20 asset
 		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
 		return res, true, err
 	}
 
-	// simple deposit
+	// Deposit ZRC20 to the receiver
 	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 	return res, false, err
 }

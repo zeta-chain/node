@@ -39,6 +39,14 @@ const (
 
 	// OutboundTypeERC20WithdrawRevertAndCallOnRevert is an ERC20 withdraw revert and call on revert
 	OutboundTypeERC20WithdrawRevertAndCallOnRevert
+
+	OutboundTypeZetaWithdrawRevertAndCallOnRevert
+
+	OutboundTypeZetaWithdrawRevert
+
+	OutboundTypeZetaWithdrawAndCall
+
+	OutboundTypeZetaWithdraw
 )
 
 // ParseOutboundTypeFromCCTX returns the outbound type from the CCTX
@@ -73,6 +81,19 @@ func ParseOutboundTypeFromCCTX(cctx types.CrossChainTx) OutboundType {
 			}
 
 			return OutboundTypeERC20WithdrawRevert
+		}
+	case coin.CoinType_Zeta:
+		switch cctx.CctxStatus.Status {
+		case types.CctxStatus_PendingOutbound:
+			if cctx.InboundParams.IsCrossChainCall {
+				return OutboundTypeZetaWithdrawAndCall
+			}
+			return OutboundTypeZetaWithdraw
+		case types.CctxStatus_PendingRevert:
+			if cctx.RevertOptions.CallOnRevert {
+				return OutboundTypeZetaWithdrawRevertAndCallOnRevert
+			}
+			return OutboundTypeZetaWithdrawRevert
 		}
 	case coin.CoinType_NoAssetCall:
 		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {

@@ -133,7 +133,7 @@ contract TestDAppV2 {
         uint256 amount,
         bytes calldata message
     )
-    external
+    external payable
     {
         require(!isRevertMessage(string(message)));
 

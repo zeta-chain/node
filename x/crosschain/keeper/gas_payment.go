@@ -334,6 +334,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		)
 	}
 
+	fmt.Println("PayGasInZetaAndUpdateCctx: chainID", chainID)
+
 	if _, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); !found {
 		return observertypes.ErrSupportedChains
 	}
@@ -446,6 +448,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	} else {
 		cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 	}
+
+	fmt.Println("PayGasInZetaAndUpdateCctx: newAmount", newAmount.String())
 
 	return nil
 }

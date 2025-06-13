@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/errors"
@@ -178,6 +179,12 @@ func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited)
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
+
+	if event.Asset.Hex() == ob.ChainParams().ZetaTokenContractAddress {
+		fmt.Println("ZETA deposit detected for V2")
+		coinType = coin.CoinType_Zeta
+	}
+
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
 	isCrossChainCall := len(event.Payload) > 0
 
@@ -436,8 +443,14 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
+
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
+	}
+
+	if event.Asset.Hex() == ob.ChainParams().ZetaTokenContractAddress {
+		fmt.Println("ZETA deposit and call detected for V2")
+		coinType = coin.CoinType_Zeta
 	}
 
 	return *types.NewMsgVoteInbound(

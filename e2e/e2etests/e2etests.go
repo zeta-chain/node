@@ -264,7 +264,9 @@ const (
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
-	TestV2ZetaDepositName = "v2_zeta_deposit"
+	TestZetaDepositName              = "zeta_deposit"
+	TestZetaDepositAndCallName       = "zeta_deposit_and_call"
+	TestZetaDepositAndCallRevertName = "zeta_deposit_and_call_revert"
 )
 
 const (
@@ -285,12 +287,28 @@ var AllE2ETests = []runner.E2ETest{
 	// TestV2ZetaDepositName is not used for now as the protocol logic has not yet been implemented
 	// // https://github.com/zeta-chain/node/issues/3212
 	runner.NewE2ETest(
-		TestV2ZetaDepositName,
+		TestZetaDepositName,
 		"deposit ZETA into ZEVM using v2 protocol contracts",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
-		TestV2ZetaDeposit,
+		TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallName,
+		"deposit ZETA into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestZetaDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallRevertName,
+		"deposit Zeta into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallRevert,
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
