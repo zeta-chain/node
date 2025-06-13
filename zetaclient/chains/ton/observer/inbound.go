@@ -205,12 +205,16 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	// TON doesn't use sequential block numbers
-	// because txs can happen in different shards
-	const seqno = 0
+	if inbound.tx.Operation == toncontracts.OpCall {
+		if _, err = ob.voteCall(ctx, inbound); err != nil {
+			return errors.Wrap(err, "unable to vote for call tx")
+		}
 
-	if _, err = ob.voteDeposit(ctx, inbound, seqno); err != nil {
-		return errors.Wrap(err, "unable to vote for inbound tx")
+		return nil
+	}
+
+	if _, err = ob.voteDeposit(ctx, inbound); err != nil {
+		return errors.Wrap(err, "unable to vote for deposit tx")
 	}
 
 	return nil
@@ -253,17 +257,32 @@ func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
 		in.isContractCall = true
 
 		return in, nil
+	case toncontracts.OpCall:
+		c, err := tx.Call()
+		if err != nil {
+			return inboundData{}, err
+		}
+
+		in.sender = c.Sender
+		in.receiver = c.Recipient
+		in.amount = math.NewUint(0)
+		in.message = c.CallData
+		in.isContractCall = true
+
+		return in, nil
+
 	default:
 		return inboundData{}, fmt.Errorf("unknown operation %d", tx.Operation)
 	}
 }
 
-func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno uint32) (string, error) {
+func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData) (string, error) {
 	const (
-		eventIndex    = 0 // not a smart contract call
+		seqno         = 0 // ton doesn't use sequential block numbers
+		eventIndex    = 0 // not applicable for ton
 		coinType      = coin.CoinType_Gas
 		asset         = "" // empty for gas coin
-		gasLimit      = maxGasLimit
+		gasLimit      = zetacore.PostVoteInboundCallOptionsGasLimit
 		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
 	)
 
@@ -274,7 +293,6 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno 
 		receiver        = inbound.receiver.Hex()
 	)
 
-	// create the inbound message
 	msg := types.NewMsgVoteInbound(
 		operatorAddress.String(),
 		sender,
@@ -285,7 +303,7 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno 
 		inbound.amount,
 		hex.EncodeToString(inbound.message),
 		inboundHash,
-		uint64(seqno),
+		seqno,
 		gasLimit,
 		coinType,
 		asset,
@@ -295,6 +313,48 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData, seqno 
 		types.InboundStatus_SUCCESS,
 		types.ConfirmationMode_SAFE,
 		types.WithCrossChainCall(inbound.isContractCall),
+	)
+
+	return ob.PostVoteInbound(ctx, msg, retryGasLimit)
+}
+
+func (ob *Observer) voteCall(ctx context.Context, inbound inboundData) (string, error) {
+	const (
+		seqno         = 0 // ton doesn't use sequential block numbers
+		eventIndex    = 0 // not applicable for TON
+		coinType      = coin.CoinType_NoAssetCall
+		asset         = "" // empty for gas coin
+		gasLimit      = zetacore.PostVoteInboundCallOptionsGasLimit
+		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
+	)
+
+	var (
+		operatorAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
+		inboundHash     = rpc.TransactionToHashString(inbound.tx.Transaction)
+		sender          = inbound.sender.ToRaw()
+		receiver        = inbound.receiver.Hex()
+	)
+
+	msg := types.NewMsgVoteInbound(
+		operatorAddress.String(),
+		sender,
+		ob.Chain().ChainId,
+		sender,
+		receiver,
+		ob.ZetacoreClient().Chain().ChainId,
+		inbound.amount, // zero
+		hex.EncodeToString(inbound.message),
+		inboundHash,
+		seqno,
+		gasLimit,
+		coinType,
+		asset,
+		eventIndex,
+		types.ProtocolContractVersion_V2,
+		false, // not used
+		types.InboundStatus_SUCCESS,
+		types.ConfirmationMode_SAFE,
+		// no revert options for TON
 	)
 
 	return ob.PostVoteInbound(ctx, msg, retryGasLimit)

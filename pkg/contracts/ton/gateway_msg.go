@@ -71,6 +71,13 @@ type DepositAndCall struct {
 	CallData []byte
 }
 
+// AsBody casts struct to internal message body.
+func (d DepositAndCall) AsBody() (*boc.Cell, error) {
+	b := boc.NewCell()
+
+	return b, writeDepositAndCallBody(b, d.Recipient, d.CallData)
+}
+
 // Call represents a call operation
 type Call struct {
 	Sender    ton.AccountID
@@ -78,11 +85,10 @@ type Call struct {
 	CallData  []byte
 }
 
-// AsBody casts struct to internal message body.
-func (d DepositAndCall) AsBody() (*boc.Cell, error) {
+func (c Call) AsBody() (*boc.Cell, error) {
 	b := boc.NewCell()
 
-	return b, writeDepositAndCallBody(b, d.Recipient, d.CallData)
+	return b, writeCallBody(b, c.Recipient, c.CallData)
 }
 
 func writeDepositBody(b *boc.Cell, recipient eth.Address) error {
@@ -105,6 +111,24 @@ func writeDepositAndCallBody(b *boc.Cell, recipient eth.Address, callData []byte
 
 	return ErrCollect(
 		b.WriteUint(uint64(OpDepositAndCall), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteBytes(recipient.Bytes()),
+		b.AddRef(callDataCell),
+	)
+}
+
+func writeCallBody(b *boc.Cell, recipient eth.Address, callData []byte) error {
+	if len(callData) == 0 {
+		return errors.New("call data is empty")
+	}
+
+	callDataCell, err := MarshalSnakeCell(callData)
+	if err != nil {
+		return err
+	}
+
+	return ErrCollect(
+		b.WriteUint(uint64(OpCall), sizeOpCode),
 		b.WriteUint(0, sizeQueryID),
 		b.WriteBytes(recipient.Bytes()),
 		b.AddRef(callDataCell),
