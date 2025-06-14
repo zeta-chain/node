@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
 	"github.com/cosmos/evm/evmd/eips"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
@@ -281,7 +280,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
-		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true), // TODO evm: second arg default to eth keys?
+		KeyCommands(app.DefaultNodeHome, true), // TODO evm: second arg default to eth keys?
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path

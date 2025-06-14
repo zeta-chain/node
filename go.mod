@@ -22,7 +22,7 @@ require (
 	github.com/cosmos/ibc-go/v8 v8.5.2
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/emicklei/proto v1.11.1
-	github.com/ethereum/go-ethereum v1.15.10
+	github.com/ethereum/go-ethereum v1.15.11
 	github.com/fatih/color v1.17.0
 	github.com/gagliardetto/solana-go v1.12.0
 	github.com/golang/mock v1.6.0 // indirect
@@ -79,7 +79,6 @@ require (
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/x/evidence v0.1.1
-	cosmossdk.io/x/feegrant v0.1.1 // indirect
 	cosmossdk.io/x/tx v0.14.0
 	cosmossdk.io/x/upgrade v0.2.0
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -89,7 +88,7 @@ require (
 	github.com/VictoriaMetrics/fastcache v1.12.2 // indirect
 	github.com/agl/ed25519 v0.0.0-20200225211852-fd4d107ace12 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
-	github.com/aws/aws-sdk-go v1.44.224 // indirect
+	github.com/aws/aws-sdk-go v1.49.0 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
@@ -124,9 +123,7 @@ require (
 	github.com/desertbit/timer v1.0.1 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
-	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
@@ -142,14 +139,13 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.2.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
+	github.com/golang/snappy v0.0.5-0.20231225225746-43d5d4cd4e0e // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
@@ -301,7 +297,8 @@ require (
 	github.com/block-vision/sui-go-sdk v1.0.6
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/cosmos/cosmos-db v1.1.1
-	github.com/cosmos/evm v1.0.0-rc0
+	github.com/cosmos/evm v1.0.0-rc2
+	github.com/cosmos/evm/evmd v0.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/fardream/go-bcs v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -376,7 +373,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.12.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
-	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
 	github.com/hashicorp/go-plugin v1.6.3 // indirect
@@ -397,7 +393,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/supranational/blst v0.3.14 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.58.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
@@ -417,6 +413,7 @@ replace (
 	// https://github.com/zeta-chain/tss-lib/tree/threshold-dep-updates
 	// which is a fork of https://github.com/threshold-network/tss-lib
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
+	github.com/cosmos/evm/evmd => github.com/cosmos/evm/evmd v0.0.0-20250613235838-578b3468a80b
 	// use Cosmos geth fork
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
 	github.com/libp2p/go-libp2p => github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4
