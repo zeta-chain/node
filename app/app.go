@@ -80,7 +80,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	evmante "github.com/cosmos/evm/ante"
 	evmosencoding "github.com/cosmos/evm/encoding"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
@@ -297,6 +296,7 @@ func New(
 		authzkeeper.StoreKey,
 		evmtypes.StoreKey,
 		feemarkettypes.StoreKey,
+		erc20types.StoreKey,
 		authoritytypes.StoreKey,
 		lightclienttypes.StoreKey,
 		crosschaintypes.StoreKey,
@@ -767,7 +767,7 @@ func New(
 		EvmKeeper:       app.EvmKeeper,
 		FeeMarketKeeper: app.FeeMarketKeeper,
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.SigVerificationGasConsumer,
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  TransactionGasLimit,
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(

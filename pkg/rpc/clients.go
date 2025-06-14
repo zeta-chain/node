@@ -11,7 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"google.golang.org/grpc"
 
 	etherminttypes "github.com/zeta-chain/node/rpc/types"

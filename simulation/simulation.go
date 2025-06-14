@@ -23,7 +23,7 @@ func NewSimApp(
 	appOptions servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*zetaapp.App, error) {
-	encCdc := zetaapp.MakeEncodingConfig(4221) // TODO evm: encoding config across codebase
+	encCdc := zetaapp.MakeEncodingConfig(262144) // TODO evm: encoding config across codebase
 
 	// Set load latest version to false as we manually set it later.
 	zetaApp := zetaapp.New(
@@ -34,7 +34,7 @@ func NewSimApp(
 		map[int64]bool{},
 		"", // TODO evm
 		5,
-		4221,
+		262144,
 		appOptions,
 		baseAppOptions...,
 	)

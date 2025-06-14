@@ -15,7 +15,7 @@ import (
 // if tx is ethermint, it is extracted using from and nonce field
 // if it's cosmos tx, default cosmos way using signatures is used
 func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
-	const extensionOptionsEthereumTxTypeURL = "/ethermint.evm.v1.ExtensionOptionsEthereumTx"
+	const extensionOptionsEthereumTxTypeURL = "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx"
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
 		if len(opts) > 0 && opts[0].GetTypeUrl() == extensionOptionsEthereumTxTypeURL {

@@ -712,7 +712,7 @@ func (zts *ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytyp
 
 // newCodec returns the codec for msg server
 func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
-	encodingConfig := app.MakeEncodingConfig(4221) // TODO evm: evm chain id?
+	encodingConfig := app.MakeEncodingConfig(262144) // TODO evm: evm chain id?
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 

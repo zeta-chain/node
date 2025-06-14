@@ -17,7 +17,7 @@ import (
 )
 
 func TestVesting_AnteHandle(t *testing.T) {
-	txConfig := app.MakeEncodingConfig(4221).TxConfig
+	txConfig := app.MakeEncodingConfig(262144).TxConfig
 
 	testPrivKey, testAddress := sample.PrivKeyAddressPair()
 	_, testAddress2 := sample.PrivKeyAddressPair()

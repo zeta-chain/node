@@ -111,7 +111,7 @@ func NewClient(
 		ChainRPC:     CometBFTRPC(chainIP),
 	}
 
-	encodingCfg := app.MakeEncodingConfig(4221) // TODO evm: chain id
+	encodingCfg := app.MakeEncodingConfig(262144) // TODO evm: chain id
 
 	zetacoreClients, err := zetacorerpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
 	if err != nil {

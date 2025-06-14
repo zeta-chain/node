@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -33,11 +34,12 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
+	"github.com/cosmos/evm/evmd/eips"
+	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
@@ -54,7 +56,7 @@ type emptyAppOptions struct{}
 func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 
 func NewRootCmd() *cobra.Command {
-	encodingConfig := app.MakeEncodingConfig(4221) // TODO evm: evm chain id?
+	encodingConfig := app.MakeEncodingConfig(262144) // TODO evm: evm chain id?
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -131,7 +133,7 @@ func NewRootCmd() *cobra.Command {
 		map[int64]bool{},
 		"",
 		0,
-		4221, // TODO evm: evm chain id
+		262144, // TODO evm: evm chain id
 		emptyAppOptions{},
 	)
 	autoCliOpts := tempApp.AutoCliOpts()
@@ -147,12 +149,37 @@ func NewRootCmd() *cobra.Command {
 // // initAppConfig helps to override default appConfig template and configs.
 // // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
-	return InitAppConfig(zetacoredconfig.BaseDenom, 4221) // TODO evm: evm chain id?
+	return InitAppConfig(zetacoredconfig.BaseDenom, 262144) // TODO evm: evm chain id?
 }
 
 // InitAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
+	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
+
+	// cosmosEVMActivators defines a map of opcode modifiers associated
+	// with a key defining the corresponding EIP.
+	var cosmosEVMActivators = map[int]func(*vm.JumpTable){
+		0o000: eips.Enable0000,
+		0o001: eips.Enable0001,
+		0o002: eips.Enable0002,
+	}
+
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithExtendedEips(cosmosEVMActivators).
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         denom,
+			ExtendedDenom: denom,
+			DisplayDenom:  denom,
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
+
 	type CustomAppConfig struct {
 		serverconfig.Config
 
@@ -343,7 +370,7 @@ func (ac appCreator) newApp(
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		//cosmoscmd.EncodingConfig(ac.encCfg),
-		4221, // TODO evm: evm chain id?
+		262144, // TODO evm: evm chain id?
 		appOpts,
 		baseappOptions...,
 	)
@@ -375,7 +402,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		4221, // TODO evm: evm chain id?
+		262144, // TODO evm: evm chain id?
 		appOpts,
 	)
 

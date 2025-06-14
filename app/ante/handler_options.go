@@ -65,7 +65,7 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		// TODO: enable back IBC
 		// check if this ante handler is needed in non legacy cosmos ante handlers
 		// ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
 }
 
@@ -87,7 +87,7 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		// ethante.NewCanTransferDecorator(options.EvmKeeper),
 		// ethante.NewEthGasConsumeDecorator(options.EvmKeeper, options.MaxTxGasWanted),
 		// ethante.NewEthIncrementSenderSequenceDecorator(options.AccountKeeper), // innermost AnteDecorator.
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 		evmante.NewEthEmitEventDecorator(
 			options.EvmKeeper,
 		), // emit eth tx hash and index at the very last ante handler.
@@ -118,7 +118,7 @@ func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
 }
 
@@ -149,7 +149,7 @@ func newCosmosAnteHandlerForSystemTx(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
 }
 
