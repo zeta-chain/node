@@ -12,7 +12,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
+	evmante "github.com/cosmos/evm/ante/evm"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -61,8 +61,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			if len(opts) > 0 {
 				switch typeURL := opts[0].GetTypeUrl(); typeURL {
 				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
-					// handle as *evmtypes.MsgEthereumTx
-					anteHandler = newEthAnteHandler(options)
+					anteHandler = sdk.ChainAnteDecorators(
+						evmante.NewEVMMonoDecorator(
+							options.AccountKeeper,
+							options.FeeMarketKeeper,
+							options.EvmKeeper,
+							options.MaxTxGasWanted,
+						))
 				case "/cosmos.evm.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
 					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
