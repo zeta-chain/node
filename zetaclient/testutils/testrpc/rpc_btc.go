@@ -45,8 +45,8 @@ func (s *BtcServer) SetBlockCount(count int) {
 	})
 }
 
-// SetRawTransaction mocks the raw transaction response.
-func (s *BtcServer) SetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...any) {
+// OnSetRawTransaction mocks the raw transaction response.
+func (s *BtcServer) OnSetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...any) {
 	var buf bytes.Buffer
 	err := msgTx.Serialize(&buf)
 	require.NoError(t, err)

@@ -105,7 +105,7 @@ func GetBtcEventWithWitness(
 
 		// override the sender address with the initiator of the inscription's commit tx
 		if fromAddress, err = rpc.GetTransactionInitiator(ctx, tx.Vin[0].Txid); err != nil {
-			return nil, errors.Wrapf(err, "unable to get inscription initiator")
+			return nil, errors.Wrap(err, "unable to get inscription initiator")
 		}
 	} else {
 		memo = []byte(noMemoFound)

@@ -18,7 +18,11 @@ type RPCHandler func(params map[string]any) (any, error)
 
 // Server represents JSON RPC mock with a "real" HTTP server allocated (httptest)
 type Server struct {
-	t        *testing.T
+	t *testing.T
+
+	// method => args_key => handler
+	// This allows for having different mocks for the same method based on the input provided
+	// Kinda similar to mockery.
 	handlers map[string]map[string]RPCHandler
 	name     string
 }

@@ -62,7 +62,7 @@ func Test_GetTransactionInputSpender(t *testing.T) {
 			if tt.spenderPkScriptHex != "" {
 				preTxid := sample.BtcHash().String() // any txid
 				msgTx := createMsgTx(t, preTxid, 0, tt.spenderPkScriptHex)
-				btcServer.SetRawTransaction(t, *msgTx, tt.txid)
+				btcServer.OnSetRawTransaction(t, *msgTx, tt.txid)
 			}
 
 			// ACT
@@ -129,13 +129,13 @@ func Test_GetTransactionInitiator(t *testing.T) {
 			// mock this tx
 			if tt.txid != "" {
 				msgTx := createMsgTx(t, tt.preTxid, tt.preVout, "0123") // pkScript is irrelevant
-				btcServer.SetRawTransaction(t, *msgTx, tt.txid)
+				btcServer.OnSetRawTransaction(t, *msgTx, tt.txid)
 			}
 
 			// mock the previous tx
 			if tt.preTxSpenderPkScriptHex != "" {
 				prevTx := createMsgTx(t, "4567", 0, tt.preTxSpenderPkScriptHex) // only output script matters
-				btcServer.SetRawTransaction(t, *prevTx, tt.preTxid)
+				btcServer.OnSetRawTransaction(t, *prevTx, tt.preTxid)
 			}
 
 			// ACT
