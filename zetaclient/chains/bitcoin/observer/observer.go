@@ -62,6 +62,9 @@ type RPC interface {
 	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
 	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
+
+	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
 }
 
 const (
