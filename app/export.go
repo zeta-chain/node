@@ -79,7 +79,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		if err != nil {
 			panic(err)
 		}
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
+		_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
 		if !errors.Is(err, distributiontypes.ErrNoValidatorCommission) && err != nil {
 			panic(err)
 		}
@@ -103,8 +103,10 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 		// withdraw rewards if they exist
-		// It is safe to ignore the error here
 		_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// clear validator slash events
