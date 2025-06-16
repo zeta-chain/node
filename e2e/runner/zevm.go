@@ -23,7 +23,7 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
-var gasLimit = big.NewInt(250000)
+var defaultGasLimit = big.NewInt(250000)
 
 // ApproveETHZRC20 approves ETH ZRC20 on EVM to a specific address
 func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
@@ -114,7 +114,7 @@ func (r *E2ERunner) ETHWithdrawAndArbitraryCall(
 		amount,
 		r.ETHZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gatewayzevm.CallOptions{GasLimit: defaultGasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -164,7 +164,7 @@ func (r *E2ERunner) ETHWithdrawAndCallThroughContract(
 		payload,
 		gatewayzevmcaller.CallOptions{
 			IsArbitraryCall: false,
-			GasLimit:        gasLimit,
+			GasLimit:        defaultGasLimit,
 		},
 		revertOptions,
 	)
@@ -212,7 +212,7 @@ func (r *E2ERunner) ERC20WithdrawAndArbitraryCall(
 		amount,
 		r.ERC20ZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gatewayzevm.CallOptions{GasLimit: defaultGasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -226,6 +226,7 @@ func (r *E2ERunner) ERC20WithdrawAndCall(
 	amount *big.Int,
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
+	gasLimit *big.Int,
 ) *ethtypes.Transaction {
 	// this function take more gas than default 500k
 	// so we need to increase the gas limit
@@ -260,7 +261,7 @@ func (r *E2ERunner) ZEVMToEMVArbitraryCall(
 		receiver.Bytes(),
 		r.ETHZRC20Addr,
 		payload,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gatewayzevm.CallOptions{GasLimit: defaultGasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -280,7 +281,7 @@ func (r *E2ERunner) ZEVMToEMVCall(
 		r.ETHZRC20Addr,
 		payload,
 		gatewayzevm.CallOptions{
-			GasLimit:        gasLimit,
+			GasLimit:        defaultGasLimit,
 			IsArbitraryCall: false,
 		},
 		revertOptions,
@@ -303,7 +304,7 @@ func (r *E2ERunner) ZEVMToEMVCallThroughContract(
 		r.ETHZRC20Addr,
 		payload,
 		gatewayzevmcaller.CallOptions{
-			GasLimit:        gasLimit,
+			GasLimit:        defaultGasLimit,
 			IsArbitraryCall: false,
 		},
 		revertOptions,

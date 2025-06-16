@@ -22,6 +22,10 @@
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 
+### Tests
+
+* [3972](https://github.com/zeta-chain/node/pull/3972) - add `gasLimit` argument to erc20 withdrawAndCall e2e test
+
 ## v31.0.0
 
 ### Breaking Changes
