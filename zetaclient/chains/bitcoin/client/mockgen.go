@@ -61,6 +61,9 @@ type client interface {
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *types.GetTransactionResult, error)
 	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 
+	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
+
 	ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error)
 	ListUnspentMinMaxAddresses(
 		ctx context.Context,

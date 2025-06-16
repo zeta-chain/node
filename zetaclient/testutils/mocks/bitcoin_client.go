@@ -727,6 +727,62 @@ func (_m *BitcoinClient) GetTransactionFeeAndRate(ctx context.Context, tx *btcjs
 	return r0, r1, r2
 }
 
+// GetTransactionInitiator provides a mock function with given fields: ctx, txid
+func (_m *BitcoinClient) GetTransactionInitiator(ctx context.Context, txid string) (string, error) {
+	ret := _m.Called(ctx, txid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTransactionInitiator")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return rf(ctx, txid)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = rf(ctx, txid)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, txid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTransactionInputSpender provides a mock function with given fields: ctx, txid, vout
+func (_m *BitcoinClient) GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error) {
+	ret := _m.Called(ctx, txid, vout)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTransactionInputSpender")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint32) (string, error)); ok {
+		return rf(ctx, txid, vout)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint32) string); ok {
+		r0 = rf(ctx, txid, vout)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, uint32) error); ok {
+		r1 = rf(ctx, txid, vout)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Healthcheck provides a mock function with given fields: ctx
 func (_m *BitcoinClient) Healthcheck(ctx context.Context) (time.Time, error) {
 	ret := _m.Called(ctx)

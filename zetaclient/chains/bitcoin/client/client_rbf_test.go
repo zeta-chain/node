@@ -32,8 +32,12 @@ func Test_BitcoinRBFLive(t *testing.T) {
 		t.Skip("skipping live test")
 	}
 
-	t.Run("RBFTransaction", Run_RBFTransaction)
-	t.Run("RBFTransaction_Chained_CPFP", Run_RBFTransaction_Chained_CPFP)
+	// RBF tests requires private key to be set
+	if common.IsEnvVariableSet(common.EnvBTCTestPK) {
+		t.Run("RBFTransaction", Run_RBFTransaction)
+		t.Run("RBFTransaction_Chained_CPFP", Run_RBFTransaction_Chained_CPFP)
+	}
+
 	t.Run("PendingMempoolTx", Run_PendingMempoolTx)
 }
 
@@ -49,7 +53,7 @@ func setupRBFTest(t *testing.T) (*testSuite, *secp256k1.PrivateKey, btcutil.Addr
 	}
 
 	// load test private key
-	privKeyHex := os.Getenv("TEST_PK_BTC")
+	privKeyHex := os.Getenv(common.EnvBTCTestPK)
 	privKeyBytes, err := hex.DecodeString(privKeyHex)
 	require.NoError(t, err)
 
