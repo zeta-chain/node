@@ -7,7 +7,6 @@ import (
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	hash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
@@ -62,8 +61,8 @@ type client interface {
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *types.GetTransactionResult, error)
 	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
 
-	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32, net *chaincfg.Params) (string, error)
-	GetTransactionInitiator(ctx context.Context, txid string, net *chaincfg.Params) (string, error)
+	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
 
 	ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error)
 	ListUnspentMinMaxAddresses(

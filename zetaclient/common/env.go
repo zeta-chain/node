@@ -18,8 +18,8 @@ const (
 	// EnvBtcRPCTestnet4 is the environment variable to enable testnet4 for bitcoin rpc
 	EnvBtcRPCTestnet4 = "BTC_RPC_TESTNET4"
 
-	// TEST_PK_BTC is the environment variable to configure bitcoin private key for live unit tests
-	EnvTestPKBTC = "TEST_PK_BTC"
+	// BTC_TEST_PK is the environment variable to configure bitcoin private key for live unit tests
+	EnvBTCTestPK = "TEST_PK_BTC"
 
 	EnvTONRPC = "TON_RPC"
 )

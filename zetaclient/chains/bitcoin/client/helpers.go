@@ -9,7 +9,6 @@ import (
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 
@@ -212,12 +211,7 @@ func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *types.
 }
 
 // GetTransactionInputSpender get the spender address of the given transaction input (vin)
-func (c *Client) GetTransactionInputSpender(
-	ctx context.Context,
-	txid string,
-	vout uint32,
-	net *chaincfg.Params,
-) (string, error) {
+func (c *Client) GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error) {
 	preTx, err := c.GetRawTransactionByStr(ctx, txid)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get raw transaction %s", txid)
@@ -231,12 +225,12 @@ func (c *Client) GetTransactionInputSpender(
 	// decode sender address from previous pkScript
 	pkScript := preTx.MsgTx().TxOut[vout].PkScript
 
-	return common.DecodeSenderFromScript(pkScript, net)
+	return common.DecodeSenderFromScript(pkScript, c.NetParams())
 }
 
 // GetTransactionInitiator get the transaction initiator address of the given transaction
 // The initiator is defined as the spender of the first input of the given transaction.
-func (c *Client) GetTransactionInitiator(ctx context.Context, txid string, net *chaincfg.Params) (string, error) {
+func (c *Client) GetTransactionInitiator(ctx context.Context, txid string) (string, error) {
 	tx, err := c.GetRawTransactionByStr(ctx, txid)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get raw transaction %s", txid)
@@ -251,7 +245,7 @@ func (c *Client) GetTransactionInitiator(ctx context.Context, txid string, net *
 	preVout := tx.MsgTx().TxIn[0].PreviousOutPoint.Index
 
 	// get spender of the first input
-	initiator, err := c.GetTransactionInputSpender(ctx, preTxid, preVout, net)
+	initiator, err := c.GetTransactionInputSpender(ctx, preTxid, preVout)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to get transaction input spender %s", txid)
 	}

@@ -6,8 +6,6 @@ import (
 	btcjson "github.com/btcsuite/btcd/btcjson"
 	btcutil "github.com/btcsuite/btcd/btcutil"
 
-	chaincfg "github.com/btcsuite/btcd/chaincfg"
-
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 
 	client "github.com/zeta-chain/node/zetaclient/chains/bitcoin/client"
@@ -729,9 +727,9 @@ func (_m *BitcoinClient) GetTransactionFeeAndRate(ctx context.Context, tx *btcjs
 	return r0, r1, r2
 }
 
-// GetTransactionInitiator provides a mock function with given fields: ctx, txid, net
-func (_m *BitcoinClient) GetTransactionInitiator(ctx context.Context, txid string, net *chaincfg.Params) (string, error) {
-	ret := _m.Called(ctx, txid, net)
+// GetTransactionInitiator provides a mock function with given fields: ctx, txid
+func (_m *BitcoinClient) GetTransactionInitiator(ctx context.Context, txid string) (string, error) {
+	ret := _m.Called(ctx, txid)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTransactionInitiator")
@@ -739,17 +737,17 @@ func (_m *BitcoinClient) GetTransactionInitiator(ctx context.Context, txid strin
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, *chaincfg.Params) (string, error)); ok {
-		return rf(ctx, txid, net)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return rf(ctx, txid)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, *chaincfg.Params) string); ok {
-		r0 = rf(ctx, txid, net)
+	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = rf(ctx, txid)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, *chaincfg.Params) error); ok {
-		r1 = rf(ctx, txid, net)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, txid)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -757,9 +755,9 @@ func (_m *BitcoinClient) GetTransactionInitiator(ctx context.Context, txid strin
 	return r0, r1
 }
 
-// GetTransactionInputSpender provides a mock function with given fields: ctx, txid, vout, net
-func (_m *BitcoinClient) GetTransactionInputSpender(ctx context.Context, txid string, vout uint32, net *chaincfg.Params) (string, error) {
-	ret := _m.Called(ctx, txid, vout, net)
+// GetTransactionInputSpender provides a mock function with given fields: ctx, txid, vout
+func (_m *BitcoinClient) GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error) {
+	ret := _m.Called(ctx, txid, vout)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTransactionInputSpender")
@@ -767,17 +765,17 @@ func (_m *BitcoinClient) GetTransactionInputSpender(ctx context.Context, txid st
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint32, *chaincfg.Params) (string, error)); ok {
-		return rf(ctx, txid, vout, net)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint32) (string, error)); ok {
+		return rf(ctx, txid, vout)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint32, *chaincfg.Params) string); ok {
-		r0 = rf(ctx, txid, vout, net)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint32) string); ok {
+		r0 = rf(ctx, txid, vout)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, uint32, *chaincfg.Params) error); ok {
-		r1 = rf(ctx, txid, vout, net)
+	if rf, ok := ret.Get(1).(func(context.Context, string, uint32) error); ok {
+		r1 = rf(ctx, txid, vout)
 	} else {
 		r1 = ret.Error(1)
 	}
