@@ -2,13 +2,14 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 
 	storetypes "cosmossdk.io/store/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -65,7 +66,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	for _, addr := range jailAllowedAddrs {
 		_, err := sdk.ValAddressFromBech32(addr)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		allowedAddrsMap[addr] = true
 	}
@@ -79,6 +80,9 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 			panic(err)
 		}
 		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, valBz)
+		if !errors.Is(err, distributiontypes.ErrNoValidatorCommission) && err != nil {
+			panic(err)
+		}
 		return false
 	})
 	if err != nil {
@@ -98,8 +102,9 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		}
 
 		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
-
-		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		// withdraw rewards if they exist
+		// It is safe to ignore the error here
+		_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
 
 	// clear validator slash events
@@ -223,7 +228,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Errorf("validator set update failed: %w", err))
 	}
 
 	/* Handle slashing state. */
