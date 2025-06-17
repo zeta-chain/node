@@ -1,8 +1,9 @@
 package ton
 
 import (
-	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
 	"github.com/tonkeeper/tongo/ton"
 )
 
@@ -14,6 +15,13 @@ type Transaction struct {
 
 	content any
 	inbound bool
+}
+
+// OutboundAuth contains the outbound seqno, signature and signer.
+type OutboundAuth struct {
+	Seqno  uint32
+	Sig    [65]byte
+	Signer eth.Address
 }
 
 // IsInbound returns true if the transaction is inbound.
@@ -58,6 +66,51 @@ func (tx *Transaction) Withdrawal() (Withdrawal, error) {
 
 func (tx *Transaction) IncreaseSeqno() (IncreaseSeqno, error) {
 	return retrieveContent[IncreaseSeqno](tx)
+}
+
+// OutboundAuth returns the outbound seqno and signature
+func (tx *Transaction) OutboundAuth() (OutboundAuth, error) {
+	if !tx.IsInbound() {
+		return OutboundAuth{}, errors.New("not an inbound")
+	}
+
+	if tx.Operation == OpWithdraw {
+		w, err := tx.Withdrawal()
+		if err != nil {
+			return OutboundAuth{}, errors.Wrap(err, "unable to get withdrawal")
+		}
+
+		signer, err := w.Signer()
+		if err != nil {
+			return OutboundAuth{}, errors.Wrap(err, "unable to get signer")
+		}
+
+		return OutboundAuth{
+			Seqno:  w.Seqno,
+			Sig:    w.Sig,
+			Signer: signer,
+		}, nil
+	}
+
+	if tx.Operation == OpIncreaseSeqno {
+		is, err := tx.IncreaseSeqno()
+		if err != nil {
+			return OutboundAuth{}, errors.Wrap(err, "unable to get increase seqno")
+		}
+
+		signer, err := is.Signer()
+		if err != nil {
+			return OutboundAuth{}, errors.Wrap(err, "unable to get signer")
+		}
+
+		return OutboundAuth{
+			Seqno:  is.Seqno,
+			Sig:    is.Sig,
+			Signer: signer,
+		}, nil
+	}
+
+	return OutboundAuth{}, errors.Wrapf(ErrUnknownOp, "op %d", tx.Operation)
 }
 
 func retrieveContent[T any](tx *Transaction) (T, error) {

@@ -81,23 +81,8 @@ func (s *Signer) trackOutbound(
 // creates a tx filter for this very outbound tx
 func outboundFilter(ob outbound) func(tx *toncontracts.Transaction) (found bool) {
 	return func(tx *toncontracts.Transaction) bool {
-		if !tx.IsOutbound() {
-			return false
-		}
+		auth, err := tx.OutboundAuth()
 
-		sig := ob.message.Signature()
-
-		if tx.Operation == toncontracts.OpWithdraw {
-			wd, err := tx.Withdrawal()
-
-			return err == nil && wd.Sig == sig && wd.Seqno == ob.seqno
-		}
-
-		if tx.Operation == toncontracts.OpIncreaseSeqno {
-			is, err := tx.IncreaseSeqno()
-			return err == nil && is.Sig == sig && is.Seqno == ob.seqno
-		}
-
-		return false
+		return err == nil && auth.Seqno == ob.seqno && auth.Sig == ob.message.Signature()
 	}
 }
