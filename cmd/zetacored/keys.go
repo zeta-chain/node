@@ -17,7 +17,7 @@ import (
 	clientkeys "github.com/cosmos/evm/client/keys"
 )
 
-// TODO evm: unsupported algo
+// TODO evm: unsupported algo, had to fork this command
 
 // KeyCommands registers a subtree of commands to interact with
 // local private key storage.

@@ -19,7 +19,6 @@ import (
 
 // DynamicFeeEVMKeeper is a subset of EVMKeeper interface that supports dynamic fee checker
 type DynamicFeeEVMKeeper interface {
-	// ChainID() *big.Int // TODO evm: missing methods in evm keeper in evm module
 	GetParams(ctx sdk.Context) evmtypes.Params
 	GetBaseFee(ctx sdk.Context) *big.Int
 }

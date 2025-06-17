@@ -393,7 +393,7 @@ func ERC20Keeper(
 		bankKeeper,
 		evmKeeper,
 		stakingKeeper,
-		nil, // TODO evm: transfer keeper?
+		nil,
 	)
 }
 
@@ -525,7 +525,7 @@ func NewSDKKeepersWithKeys(
 		bankKeeper,
 		evmKeeper,
 		stakingKeeper,
-		nil, // TODO evm: transfer keeper?
+		nil,
 	)
 
 	slashingKeeper := slashingkeeper.NewKeeper(

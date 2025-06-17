@@ -540,7 +540,7 @@ func New(
 		app.BankKeeper,
 		app.EvmKeeper,
 		app.StakingKeeper,
-		nil, // TODO evm: transfer keeper?
+		nil,
 	)
 
 	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
