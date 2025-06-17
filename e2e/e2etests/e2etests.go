@@ -22,6 +22,7 @@ const (
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
 	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
 	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
 	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
@@ -360,6 +361,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallBigPayloadName,
+		"withdraw Ether from ZEVM call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHWithdrawAndCallBigPayload,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,

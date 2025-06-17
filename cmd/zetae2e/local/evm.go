@@ -22,6 +22,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHWithdrawName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
+		e2etests.TestETHWithdrawAndCallBigPayloadName,
 		e2etests.TestETHWithdrawAndCallThroughContractName,
 		e2etests.TestZEVMToEVMArbitraryCallName,
 		e2etests.TestZEVMToEVMCallName,
@@ -79,8 +80,8 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			color.FgHiRed,
 			deployerRunner,
 			verbose,
-			e2etests.TestETHDepositName,   // necessary to pay fees on ZEVM
-			e2etests.TestERC20DepositName, // necessary to have assets to withdraw
+			e2etests.TestETHDepositName,               // necessary to pay fees on ZEVM
+			e2etests.TestERC20DepositName,             // necessary to have assets to withdraw
 			e2etests.TestOperationAddLiquidityETHName, // liquidity with gas and ERC20 are necessary for reverts
 			e2etests.TestOperationAddLiquidityERC20Name,
 			e2etests.TestERC20DepositAndCallRevertName,
