@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/evm/server/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // PublicAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec.
@@ -18,8 +19,8 @@ type PublicAPI struct {
 }
 
 // NewPublicAPI creates an instance of the public Net Web3 API.
-func NewPublicAPI(clientCtx client.Context) *PublicAPI {
-	cfg, err := config.GetConfig(clientCtx.Viper)
+func NewPublicAPI(ctx *server.Context, clientCtx client.Context) *PublicAPI {
+	cfg, err := config.GetConfig(ctx.Viper)
 	if err != nil {
 		panic(err)
 	}

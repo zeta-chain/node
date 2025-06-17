@@ -34,12 +34,12 @@ import (
 func (b *Backend) Accounts() ([]common.Address, error) {
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
 
-	if !b.cfg.JSONRPC.AllowInsecureUnlock {
-		b.logger.Debug("account unlock with HTTP access is forbidden")
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
 		return addresses, fmt.Errorf("account unlock with HTTP access is forbidden")
 	}
 
-	infos, err := b.clientCtx.Keyring.List()
+	infos, err := b.ClientCtx.Keyring.List()
 	if err != nil {
 		return addresses, err
 	}
@@ -64,7 +64,7 @@ func (b *Backend) Accounts() ([]common.Address, error) {
 // - pulledStates:  number of state entries processed until now
 // - knownStates:   number of known state entries that still need to be pulled
 func (b *Backend) Syncing() (interface{}, error) {
-	status, err := b.clientCtx.Client.Status(b.ctx)
+	status, err := b.ClientCtx.Client.Status(b.Ctx)
 	if err != nil {
 		return false, err
 	}
@@ -84,14 +84,14 @@ func (b *Backend) Syncing() (interface{}, error) {
 
 // SetEtherbase sets the etherbase of the miner
 func (b *Backend) SetEtherbase(etherbase common.Address) bool {
-	if !b.cfg.JSONRPC.AllowInsecureUnlock {
-		b.logger.Debug("account unlock with HTTP access is forbidden")
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
 		return false
 	}
 
 	delAddr, err := b.GetCoinbase()
 	if err != nil {
-		b.logger.Debug("failed to get coinbase address", "error", err.Error())
+		b.Logger.Debug("failed to get coinbase address", "error", err.Error())
 		return false
 	}
 
@@ -99,22 +99,22 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 	msg := distributiontypes.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
 
 	// Assemble transaction from fields
-	builder, ok := b.clientCtx.TxConfig.NewTxBuilder().(authtx.ExtensionOptionsTxBuilder)
+	builder, ok := b.ClientCtx.TxConfig.NewTxBuilder().(authtx.ExtensionOptionsTxBuilder)
 	if !ok {
-		b.logger.Debug("clientCtx.TxConfig.NewTxBuilder returns unsupported builder", "error", err.Error())
+		b.Logger.Debug("clientCtx.TxConfig.NewTxBuilder returns unsupported builder", "error", err.Error())
 		return false
 	}
 
 	err = builder.SetMsgs(msg)
 	if err != nil {
-		b.logger.Error("builder.SetMsgs failed", "error", err.Error())
+		b.Logger.Error("builder.SetMsgs failed", "error", err.Error())
 		return false
 	}
 
 	// Fetch minimum gas price to calculate fees using the configuration.
-	minGasPrices := b.cfg.GetMinGasPrices()
+	minGasPrices := b.Cfg.GetMinGasPrices()
 	if len(minGasPrices) == 0 || minGasPrices.Empty() {
-		b.logger.Debug("the minimum fee is not set")
+		b.Logger.Debug("the minimum fee is not set")
 		return false
 	}
 	minGasPriceValue := minGasPrices[0].Amount
@@ -123,21 +123,21 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 	delCommonAddr := common.BytesToAddress(delAddr.Bytes())
 	nonce, err := b.GetTransactionCount(delCommonAddr, rpctypes.EthPendingBlockNumber)
 	if err != nil {
-		b.logger.Debug("failed to get nonce", "error", err.Error())
+		b.Logger.Debug("failed to get nonce", "error", err.Error())
 		return false
 	}
 
 	txFactory := tx.Factory{}
 	txFactory = txFactory.
-		WithChainID(b.clientCtx.ChainID).
-		WithKeybase(b.clientCtx.Keyring).
-		WithTxConfig(b.clientCtx.TxConfig).
+		WithChainID(b.ClientCtx.ChainID).
+		WithKeybase(b.ClientCtx.Keyring).
+		WithTxConfig(b.ClientCtx.TxConfig).
 		WithSequence(uint64(*nonce)).
 		WithGasAdjustment(1.25)
 
-	_, gas, err := tx.CalculateGas(b.clientCtx, txFactory, msg)
+	_, gas, err := tx.CalculateGas(b.ClientCtx, txFactory, msg)
 	if err != nil {
-		b.logger.Debug("failed to calculate gas", "error", err.Error())
+		b.Logger.Debug("failed to calculate gas", "error", err.Error())
 		return false
 	}
 
@@ -148,22 +148,22 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 	builder.SetFeeAmount(fees)
 	builder.SetGasLimit(gas)
 
-	keyInfo, err := b.clientCtx.Keyring.KeyByAddress(delAddr)
+	keyInfo, err := b.ClientCtx.Keyring.KeyByAddress(delAddr)
 	if err != nil {
-		b.logger.Debug("failed to get the wallet address using the keyring", "error", err.Error())
+		b.Logger.Debug("failed to get the wallet address using the keyring", "error", err.Error())
 		return false
 	}
 
-	if err := tx.Sign(b.clientCtx.CmdContext, txFactory, keyInfo.Name, builder, false); err != nil {
-		b.logger.Debug("failed to sign tx", "error", err.Error())
+	if err := tx.Sign(b.ClientCtx.CmdContext, txFactory, keyInfo.Name, builder, false); err != nil {
+		b.Logger.Debug("failed to sign tx", "error", err.Error())
 		return false
 	}
 
 	// Encode transaction by default Tx encoder
-	txEncoder := b.clientCtx.TxConfig.TxEncoder()
+	txEncoder := b.ClientCtx.TxConfig.TxEncoder()
 	txBytes, err := txEncoder(builder.GetTx())
 	if err != nil {
-		b.logger.Debug("failed to encode eth tx using default encoder", "error", err.Error())
+		b.Logger.Debug("failed to encode eth tx using default encoder", "error", err.Error())
 		return false
 	}
 
@@ -171,17 +171,17 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 
 	// Broadcast transaction in sync mode (default)
 	// NOTE: If error is encountered on the node, the broadcast will not return an error
-	syncCtx := b.clientCtx.WithBroadcastMode(flags.BroadcastSync)
+	syncCtx := b.ClientCtx.WithBroadcastMode(flags.BroadcastSync)
 	rsp, err := syncCtx.BroadcastTx(txBytes)
 	if rsp != nil && rsp.Code != 0 {
 		err = errorsmod.ABCIError(rsp.Codespace, rsp.Code, rsp.RawLog)
 	}
 	if err != nil {
-		b.logger.Debug("failed to broadcast tx", "error", err.Error())
+		b.Logger.Debug("failed to broadcast tx", "error", err.Error())
 		return false
 	}
 
-	b.logger.Debug("broadcasted tx to set miner withdraw address (etherbase)", "hash", tmHash.String())
+	b.Logger.Debug("broadcasted tx to set miner withdraw address (etherbase)", "hash", tmHash.String())
 	return true
 }
 
@@ -202,21 +202,21 @@ func (b *Backend) ImportRawKey(privkey, password string) (common.Address, error)
 	ethereumAddr := common.BytesToAddress(addr)
 
 	// return if the key has already been imported
-	if _, err := b.clientCtx.Keyring.KeyByAddress(addr); err == nil {
+	if _, err := b.ClientCtx.Keyring.KeyByAddress(addr); err == nil {
 		return ethereumAddr, nil
 	}
 
 	// ignore error as we only care about the length of the list
-	list, _ := b.clientCtx.Keyring.List() // #nosec G703
+	list, _ := b.ClientCtx.Keyring.List() // #nosec G703
 	privKeyName := fmt.Sprintf("personal_%d", len(list))
 
 	armor := sdkcrypto.EncryptArmorPrivKey(privKey, password, ethsecp256k1.KeyType)
 
-	if err := b.clientCtx.Keyring.ImportPrivKey(privKeyName, armor, password); err != nil {
+	if err := b.ClientCtx.Keyring.ImportPrivKey(privKeyName, armor, password); err != nil {
 		return common.Address{}, err
 	}
 
-	b.logger.Info("key successfully imported", "name", privKeyName, "address", ethereumAddr.String())
+	b.Logger.Info("key successfully imported", "name", privKeyName, "address", ethereumAddr.String())
 
 	return ethereumAddr, nil
 }
@@ -225,12 +225,12 @@ func (b *Backend) ImportRawKey(privkey, password string) (common.Address, error)
 func (b *Backend) ListAccounts() ([]common.Address, error) {
 	addrs := []common.Address{}
 
-	if !b.cfg.JSONRPC.AllowInsecureUnlock {
-		b.logger.Debug("account unlock with HTTP access is forbidden")
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
 		return addrs, fmt.Errorf("account unlock with HTTP access is forbidden")
 	}
 
-	list, err := b.clientCtx.Keyring.List()
+	list, err := b.ClientCtx.Keyring.List()
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (b *Backend) NewMnemonic(uid string,
 	bip39Passphrase string,
 	algo keyring.SignatureAlgo,
 ) (*keyring.Record, error) {
-	info, _, err := b.clientCtx.Keyring.NewMnemonic(uid, keyring.English, hdPath, bip39Passphrase, algo)
+	info, _, err := b.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, hdPath, bip39Passphrase, algo)
 	if err != nil {
 		return nil, err
 	}
@@ -264,16 +264,16 @@ func (b *Backend) NewMnemonic(uid string,
 // NOTE: this function accepts only integers to have the same interface than go-eth
 // to use float values, the gas prices must be configured using the configuration file
 func (b *Backend) SetGasPrice(gasPrice hexutil.Big) bool {
-	appConf, err := config.GetConfig(b.clientCtx.Viper)
+	appConf, err := config.GetConfig(b.ClientCtx.Viper)
 	if err != nil {
-		b.logger.Debug("could not get the server config", "error", err.Error())
+		b.Logger.Debug("could not get the server config", "error", err.Error())
 		return false
 	}
 	c := b.GenerateMinGasCoin(gasPrice, appConf)
 
 	appConf.SetMinGasPrices(sdk.DecCoins{c})
-	sdkconfig.WriteConfigFile(b.clientCtx.Viper.ConfigFileUsed(), appConf)
-	b.logger.Info("Your configuration file was modified. Please RESTART your node.", "gas-price", c.String())
+	sdkconfig.WriteConfigFile(b.ClientCtx.Viper.ConfigFileUsed(), appConf)
+	b.Logger.Info("Your configuration file was modified. Please RESTART your node.", "gas-price", c.String())
 	return true
 }
 
@@ -299,42 +299,42 @@ func (b *Backend) GenerateMinGasCoin(gasPrice hexutil.Big, appConf config.Config
 // UnprotectedAllowed returns the node configuration value for allowing
 // unprotected transactions (i.e not replay-protected)
 func (b Backend) UnprotectedAllowed() bool {
-	return b.allowUnprotectedTxs
+	return b.AllowUnprotectedTxs
 }
 
 // RPCGasCap is the global gas cap for eth-call variants.
 func (b *Backend) RPCGasCap() uint64 {
-	return b.cfg.JSONRPC.GasCap
+	return b.Cfg.JSONRPC.GasCap
 }
 
 // RPCEVMTimeout is the global evm timeout for eth-call variants.
 func (b *Backend) RPCEVMTimeout() time.Duration {
-	return b.cfg.JSONRPC.EVMTimeout
+	return b.Cfg.JSONRPC.EVMTimeout
 }
 
 // RPCGasCap is the global gas cap for eth-call variants.
 func (b *Backend) RPCTxFeeCap() float64 {
-	return b.cfg.JSONRPC.TxFeeCap
+	return b.Cfg.JSONRPC.TxFeeCap
 }
 
 // RPCFilterCap is the limit for total number of filters that can be created
 func (b *Backend) RPCFilterCap() int32 {
-	return b.cfg.JSONRPC.FilterCap
+	return b.Cfg.JSONRPC.FilterCap
 }
 
 // RPCFeeHistoryCap is the limit for total number of blocks that can be fetched
 func (b *Backend) RPCFeeHistoryCap() int32 {
-	return b.cfg.JSONRPC.FeeHistoryCap
+	return b.Cfg.JSONRPC.FeeHistoryCap
 }
 
 // RPCLogsCap defines the max number of results can be returned from single `eth_getLogs` query.
 func (b *Backend) RPCLogsCap() int32 {
-	return b.cfg.JSONRPC.LogsCap
+	return b.Cfg.JSONRPC.LogsCap
 }
 
 // RPCBlockRangeCap defines the max block range allowed for `eth_getLogs` query.
 func (b *Backend) RPCBlockRangeCap() int32 {
-	return b.cfg.JSONRPC.BlockRangeCap
+	return b.Cfg.JSONRPC.BlockRangeCap
 }
 
 // RPCMinGasPrice returns the minimum gas price for a transaction obtained from
@@ -342,7 +342,7 @@ func (b *Backend) RPCBlockRangeCap() int32 {
 func (b *Backend) RPCMinGasPrice() *big.Int {
 	baseDenom := evmtypes.GetEVMCoinDenom()
 
-	minGasPrice := b.cfg.GetMinGasPrices()
+	minGasPrice := b.Cfg.GetMinGasPrices()
 	amt := minGasPrice.AmountOf(baseDenom)
 	if amt.IsNil() || amt.IsZero() {
 		return big.NewInt(constants.DefaultGasPrice)

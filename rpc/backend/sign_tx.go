@@ -24,19 +24,19 @@ import (
 // SendTransaction sends transaction based on received args using Node's key to sign it
 func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
 	// Look up the wallet containing the requested signer
-	if !b.cfg.JSONRPC.AllowInsecureUnlock {
-		b.logger.Debug("account unlock with HTTP access is forbidden")
+	if !b.Cfg.JSONRPC.AllowInsecureUnlock {
+		b.Logger.Debug("account unlock with HTTP access is forbidden")
 		return common.Hash{}, fmt.Errorf("account unlock with HTTP access is forbidden")
 	}
 
-	_, err := b.clientCtx.Keyring.KeyByAddress(sdk.AccAddress(args.GetFrom().Bytes()))
+	_, err := b.ClientCtx.Keyring.KeyByAddress(sdk.AccAddress(args.GetFrom().Bytes()))
 	if err != nil {
-		b.logger.Error("failed to find key in keyring", "address", args.GetFrom(), "error", err.Error())
+		b.Logger.Error("failed to find key in keyring", "address", args.GetFrom(), "error", err.Error())
 		return common.Hash{}, fmt.Errorf("failed to find key in the node's keyring; %s; %s", keystore.ErrNoMatch, err.Error())
 	}
 
-	if args.ChainID != nil && (b.chainID).Cmp((*big.Int)(args.ChainID)) != 0 {
-		return common.Hash{}, fmt.Errorf("chainId does not match node's (have=%v, want=%v)", args.ChainID, (*hexutil.Big)(b.chainID))
+	if args.ChainID != nil && (b.EvmChainID).Cmp((*big.Int)(args.ChainID)) != 0 {
+		return common.Hash{}, fmt.Errorf("chainId does not match node's (have=%v, want=%v)", args.ChainID, (*hexutil.Big)(b.EvmChainID))
 	}
 
 	args, err = b.SetTxDefaults(args)
@@ -46,7 +46,7 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 
 	bn, err := b.BlockNumber()
 	if err != nil {
-		b.logger.Debug("failed to fetch latest block number", "error", err.Error())
+		b.Logger.Debug("failed to fetch latest block number", "error", err.Error())
 		return common.Hash{}, err
 	}
 
@@ -57,35 +57,35 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 
 	signer := ethtypes.MakeSigner(b.ChainConfig(), new(big.Int).SetUint64(uint64(bn)), header.Time)
 
-	// LegacyTx derives chainID from the signature. To make sure the msg.ValidateBasic makes
-	// the corresponding chainID validation, we need to sign the transaction before calling it
+	// LegacyTx derives EvmChainID from the signature. To make sure the msg.ValidateBasic makes
+	// the corresponding EvmChainID validation, we need to sign the transaction before calling it
 
 	// Sign transaction
 	msg := args.ToTransaction()
-	if err := msg.Sign(signer, b.clientCtx.Keyring); err != nil {
-		b.logger.Debug("failed to sign tx", "error", err.Error())
+	if err := msg.Sign(signer, b.ClientCtx.Keyring); err != nil {
+		b.Logger.Debug("failed to sign tx", "error", err.Error())
 		return common.Hash{}, err
 	}
 
 	if err := msg.ValidateBasic(); err != nil {
-		b.logger.Debug("tx failed basic validation", "error", err.Error())
+		b.Logger.Debug("tx failed basic validation", "error", err.Error())
 		return common.Hash{}, err
 	}
 
 	baseDenom := evmtypes.GetEVMCoinDenom()
 
 	// Assemble transaction from fields
-	tx, err := msg.BuildTx(b.clientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	tx, err := msg.BuildTx(b.ClientCtx.TxConfig.NewTxBuilder(), baseDenom)
 	if err != nil {
-		b.logger.Error("build cosmos tx failed", "error", err.Error())
+		b.Logger.Error("build cosmos tx failed", "error", err.Error())
 		return common.Hash{}, err
 	}
 
 	// Encode transaction by default Tx encoder
-	txEncoder := b.clientCtx.TxConfig.TxEncoder()
+	txEncoder := b.ClientCtx.TxConfig.TxEncoder()
 	txBytes, err := txEncoder(tx)
 	if err != nil {
-		b.logger.Error("failed to encode eth tx using default encoder", "error", err.Error())
+		b.Logger.Error("failed to encode eth tx using default encoder", "error", err.Error())
 		return common.Hash{}, err
 	}
 
@@ -101,13 +101,13 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 
 	// Broadcast transaction in sync mode (default)
 	// NOTE: If error is encountered on the node, the broadcast will not return an error
-	syncCtx := b.clientCtx.WithBroadcastMode(flags.BroadcastSync)
+	syncCtx := b.ClientCtx.WithBroadcastMode(flags.BroadcastSync)
 	rsp, err := syncCtx.BroadcastTx(txBytes)
 	if rsp != nil && rsp.Code != 0 {
 		err = errorsmod.ABCIError(rsp.Codespace, rsp.Code, rsp.RawLog)
 	}
 	if err != nil {
-		b.logger.Error("failed to broadcast tx", "error", err.Error())
+		b.Logger.Error("failed to broadcast tx", "error", err.Error())
 		return txHash, err
 	}
 
@@ -119,16 +119,16 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
 	from := sdk.AccAddress(address.Bytes())
 
-	_, err := b.clientCtx.Keyring.KeyByAddress(from)
+	_, err := b.ClientCtx.Keyring.KeyByAddress(from)
 	if err != nil {
-		b.logger.Error("failed to find key in keyring", "address", address.String())
+		b.Logger.Error("failed to find key in keyring", "address", address.String())
 		return nil, fmt.Errorf("%s; %s", keystore.ErrNoMatch, err.Error())
 	}
 
 	// Sign the requested hash with the wallet
-	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, data, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+	signature, _, err := b.ClientCtx.Keyring.SignByAddress(from, data, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
-		b.logger.Error("keyring.SignByAddress failed", "address", address.Hex())
+		b.Logger.Error("keyring.SignByAddress failed", "address", address.Hex())
 		return nil, err
 	}
 
@@ -140,9 +140,9 @@ func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Byte
 func (b *Backend) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
 	from := sdk.AccAddress(address.Bytes())
 
-	_, err := b.clientCtx.Keyring.KeyByAddress(from)
+	_, err := b.ClientCtx.Keyring.KeyByAddress(from)
 	if err != nil {
-		b.logger.Error("failed to find key in keyring", "address", address.String())
+		b.Logger.Error("failed to find key in keyring", "address", address.String())
 		return nil, fmt.Errorf("%s; %s", keystore.ErrNoMatch, err.Error())
 	}
 
@@ -152,9 +152,9 @@ func (b *Backend) SignTypedData(address common.Address, typedData apitypes.Typed
 	}
 
 	// Sign the requested hash with the wallet
-	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, sigHash, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
+	signature, _, err := b.ClientCtx.Keyring.SignByAddress(from, sigHash, signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
-		b.logger.Error("keyring.SignByAddress failed", "address", address.Hex())
+		b.Logger.Error("keyring.SignByAddress failed", "address", address.Hex())
 		return nil, err
 	}
 

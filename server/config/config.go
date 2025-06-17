@@ -63,6 +63,7 @@ const (
 	// DefaultMaxTxGasWanted is the default gas wanted for each eth tx returned in ante handler in check tx mode
 	DefaultMaxTxGasWanted = 0
 
+	// DefaultEVMChainID is the default EVM Chain ID if one is not provided
 	DefaultEVMChainID = 7000
 
 	// DefaultGasCap is the default cap on gas that can be used in eth_call/estimateGas

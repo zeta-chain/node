@@ -33,7 +33,7 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 		Address: address.String(),
 	}
 
-	res, err := b.queryClient.Code(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Code(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -71,14 +71,14 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 		height = int64(bn) //#nosec G115 -- checked for int overflow already
 	}
 
-	clientCtx := b.clientCtx.WithHeight(height)
+	clientCtx := b.ClientCtx.WithHeight(height)
 
 	// query storage proofs
 	storageProofs := make([]rpctypes.StorageResult, len(storageKeys))
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.queryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
+		valueBz, proof, err := b.QueryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
 		if err != nil {
 			return nil, err
 		}
@@ -95,14 +95,14 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 		Address: address.String(),
 	}
 
-	res, err := b.queryClient.Account(ctx, req)
+	res, err := b.QueryClient.Account(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	// query account proofs
 	accountKey := bytes.HexBytes(append(authtypes.AddressStoreKeyPrefix, address.Bytes()...))
-	_, proof, err := b.queryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
+	_, proof, err := b.QueryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (b *Backend) GetStorageAt(address common.Address, key string, blockNrOrHash
 		Key:     key,
 	}
 
-	res, err := b.queryClient.Storage(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Storage(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.Bloc
 		return nil, err
 	}
 
-	res, err := b.queryClient.Balance(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Balance(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -197,16 +197,16 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	}
 	// Get nonce (sequence) from account
 	from := sdk.AccAddress(address.Bytes())
-	accRet := b.clientCtx.AccountRetriever
+	accRet := b.ClientCtx.AccountRetriever
 
-	err = accRet.EnsureExists(b.clientCtx, from)
+	err = accRet.EnsureExists(b.ClientCtx, from)
 	if err != nil {
 		// account doesn't exist yet, return 0
 		return &n, nil
 	}
 
 	includePending := blockNum == rpctypes.EthPendingBlockNumber
-	nonce, err := b.getAccountNonce(address, includePending, blockNum.Int64(), b.logger)
+	nonce, err := b.getAccountNonce(address, includePending, blockNum.Int64(), b.Logger)
 	if err != nil {
 		return nil, err
 	}

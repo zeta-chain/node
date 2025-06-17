@@ -24,11 +24,11 @@ import (
 
 // ChainID is the EIP-155 replay-protection chain id for the current ethereum chain config.
 func (b *Backend) ChainID() (*hexutil.Big, error) {
-	// if current block is at or past the EIP-155 replay-protection fork block, return chainID from config
+	// if current block is at or past the EIP-155 replay-protection fork block, return EvmChainID from config
 	bn, err := b.BlockNumber()
 	if err != nil {
-		b.logger.Debug("failed to fetch latest block number", "error", err.Error())
-		return (*hexutil.Big)(b.chainID), nil
+		b.Logger.Debug("failed to fetch latest block number", "error", err.Error())
+		return (*hexutil.Big)(b.EvmChainID), nil
 	}
 
 	if config := b.ChainConfig(); config.IsEIP155(new(big.Int).SetUint64(uint64(bn))) {
@@ -45,7 +45,7 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 
 // GlobalMinGasPrice returns MinGasPrice param from FeeMarket
 func (b *Backend) GlobalMinGasPrice() (*big.Int, error) {
-	res, err := b.queryClient.GlobalMinGasPrice(b.ctx, &evmtypes.QueryGlobalMinGasPriceRequest{})
+	res, err := b.QueryClient.GlobalMinGasPrice(b.Ctx, &evmtypes.QueryGlobalMinGasPriceRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (b *Backend) GlobalMinGasPrice() (*big.Int, error) {
 // return nil.
 func (b *Backend) BaseFee(blockRes *cmtrpctypes.ResultBlockResults) (*big.Int, error) {
 	// return BaseFee if London hard fork is activated and feemarket is enabled
-	res, err := b.queryClient.BaseFee(rpctypes.ContextWithHeight(blockRes.Height), &evmtypes.QueryBaseFeeRequest{})
+	res, err := b.QueryClient.BaseFee(rpctypes.ContextWithHeight(blockRes.Height), &evmtypes.QueryBaseFeeRequest{})
 	if err != nil || res.BaseFee == nil {
 		// we can't tell if it's london HF not enabled or the state is pruned,
 		// in either case, we'll fallback to parsing from begin blocker event,
@@ -96,19 +96,19 @@ func (b *Backend) CurrentHeader() (*ethtypes.Header, error) {
 // PendingTransactions returns the transactions that are in the transaction pool
 // and have a from address that is one of the accounts this node manages.
 func (b *Backend) PendingTransactions() ([]*sdk.Tx, error) {
-	mc, ok := b.clientCtx.Client.(cmtrpcclient.MempoolClient)
+	mc, ok := b.ClientCtx.Client.(cmtrpcclient.MempoolClient)
 	if !ok {
 		return nil, errors.New("invalid rpc client")
 	}
 
-	res, err := mc.UnconfirmedTxs(b.ctx, nil)
+	res, err := mc.UnconfirmedTxs(b.Ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]*sdk.Tx, 0, len(res.Txs))
 	for _, txBz := range res.Txs {
-		tx, err := b.clientCtx.TxConfig.TxDecoder()(txBz)
+		tx, err := b.ClientCtx.TxConfig.TxDecoder()(txBz)
 		if err != nil {
 			return nil, err
 		}
@@ -120,12 +120,12 @@ func (b *Backend) PendingTransactions() ([]*sdk.Tx, error) {
 
 // GetCoinbase is the address that staking rewards will be send to (alias for Etherbase).
 func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
-	node, err := b.clientCtx.GetNode()
+	node, err := b.ClientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := node.Status(b.ctx)
+	status, err := node.Status(b.Ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 		ConsAddress: sdk.ConsAddress(status.ValidatorInfo.Address).String(),
 	}
 
-	res, err := b.queryClient.ValidatorAccount(b.ctx, req)
+	res, err := b.QueryClient.ValidatorAccount(b.Ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 
 // FeeHistory returns data relevant for fee estimation based on the specified range of blocks.
 func (b *Backend) FeeHistory(
-	userBlockCount uint64, // number blocks to fetch, maximum is 100
+	userBlockCount, // number blocks to fetch, maximum is 100
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
@@ -160,7 +160,7 @@ func (b *Backend) FeeHistory(
 	}
 
 	blocks := int64(userBlockCount)                     // #nosec G115 -- checked for int overflow already
-	maxBlockCount := int64(b.cfg.JSONRPC.FeeHistoryCap) // #nosec G115 -- checked for int overflow already
+	maxBlockCount := int64(b.Cfg.JSONRPC.FeeHistoryCap) // #nosec G115 -- checked for int overflow already
 	if blocks > maxBlockCount {
 		return nil, fmt.Errorf("FeeHistory user block count %d higher than %d", blocks, maxBlockCount)
 	}
@@ -201,9 +201,9 @@ func (b *Backend) FeeHistory(
 		}
 
 		// tendermint block result
-		tendermintBlockResult, err := b.rpcClient.BlockResults(b.ctx, &tendermintblock.Block.Height)
+		tendermintBlockResult, err := b.RPCClient.BlockResults(b.Ctx, &tendermintblock.Block.Height)
 		if tendermintBlockResult == nil {
-			b.logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
+			b.Logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
 			return nil, err
 		}
 
@@ -249,7 +249,7 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 		return big.NewInt(0), nil
 	}
 
-	params, err := b.queryClient.FeeMarket.Params(b.ctx, &feemarkettypes.QueryParamsRequest{})
+	params, err := b.QueryClient.FeeMarket.Params(b.Ctx, &feemarkettypes.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}

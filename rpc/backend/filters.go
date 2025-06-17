@@ -15,13 +15,13 @@ func (b *Backend) GetLogs(hash common.Hash) ([][]*ethtypes.Log, error) {
 	if resBlock == nil {
 		return nil, errors.Errorf("block not found for hash %s", hash)
 	}
-	return b.GetLogsByHeight(&resBlock.Block.Header.Height)
+	return b.GetLogsByHeight(&resBlock.Block.Height)
 }
 
 // GetLogsByHeight returns all the logs from all the ethereum transactions in a block.
 func (b *Backend) GetLogsByHeight(height *int64) ([][]*ethtypes.Log, error) {
 	// NOTE: we query the state in case the tx result logs are not persisted after an upgrade.
-	blockRes, err := b.rpcClient.BlockResults(b.ctx, height)
+	blockRes, err := b.RPCClient.BlockResults(b.Ctx, height)
 	if err != nil {
 		return nil, err
 	}

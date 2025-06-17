@@ -91,7 +91,7 @@ type EVMBackend interface {
 	CurrentHeader() (*ethtypes.Header, error)
 	PendingTransactions() ([]*sdk.Tx, error)
 	GetCoinbase() (sdk.AccAddress, error)
-	FeeHistory(blockCount uint64, lastBlock rpc.BlockNumber, rewardPercentiles []float64) (*rpctypes.FeeHistoryResult, error)
+	FeeHistory(blockCount, lastBlock rpc.BlockNumber, rewardPercentiles []float64) (*rpctypes.FeeHistoryResult, error)
 	SuggestGasTipCap(baseFee *big.Int) (*big.Int, error)
 
 	// Tx Info
@@ -126,15 +126,15 @@ var _ BackendI = (*Backend)(nil)
 
 // Backend implements the BackendI interface
 type Backend struct {
-	ctx                 context.Context
-	clientCtx           client.Context
-	rpcClient           tmrpcclient.SignClient
-	queryClient         *rpctypes.QueryClient // gRPC query client
-	logger              log.Logger
-	chainID             *big.Int
-	cfg                 config.Config
-	allowUnprotectedTxs bool
-	indexer             cosmosevmtypes.EVMTxIndexer
+	Ctx                 context.Context
+	ClientCtx           client.Context
+	RPCClient           tmrpcclient.SignClient
+	QueryClient         *rpctypes.QueryClient // gRPC query client
+	Logger              log.Logger
+	EvmChainID          *big.Int
+	Cfg                 config.Config
+	AllowUnprotectedTxs bool
+	Indexer             cosmosevmtypes.EVMTxIndexer
 }
 
 // NewBackend creates a new Backend instance for cosmos and ethereum namespaces
@@ -156,14 +156,14 @@ func NewBackend(
 	}
 
 	return &Backend{
-		ctx:                 context.Background(),
-		clientCtx:           clientCtx,
-		rpcClient:           rpcClient,
-		queryClient:         rpctypes.NewQueryClient(clientCtx),
-		logger:              logger.With("module", "backend"),
-		chainID:             big.NewInt(int64(appConf.EVM.EVMChainID)), //nolint:gosec // G115 // won't exceed uint64
-		cfg:                 appConf,
-		allowUnprotectedTxs: allowUnprotectedTxs,
-		indexer:             indexer,
+		Ctx:                 context.Background(),
+		ClientCtx:           clientCtx,
+		RPCClient:           rpcClient,
+		QueryClient:         rpctypes.NewQueryClient(clientCtx),
+		Logger:              logger.With("module", "backend"),
+		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //nolint:gosec // G115 // won't exceed uint64
+		Cfg:                 appConf,
+		AllowUnprotectedTxs: allowUnprotectedTxs,
+		Indexer:             indexer,
 	}
 }

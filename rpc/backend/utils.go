@@ -48,7 +48,7 @@ func (s sortGasAndReward) Less(i, j int) bool {
 // txs in order to compute and return the pending tx sequence.
 // Todo: include the ability to specify a blockNumber
 func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height int64, logger log.Logger) (uint64, error) {
-	queryClient := authtypes.NewQueryClient(b.clientCtx)
+	queryClient := authtypes.NewQueryClient(b.ClientCtx)
 	adr := sdk.AccAddress(accAddr.Bytes()).String()
 	ctx := types.ContextWithHeight(height)
 	res, err := queryClient.Account(ctx, &authtypes.QueryAccountRequest{Address: adr})
@@ -61,7 +61,7 @@ func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height i
 		return 0, err
 	}
 	var acc sdk.AccountI
-	if err := b.clientCtx.InterfaceRegistry.UnpackAny(res.Account, &acc); err != nil {
+	if err := b.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &acc); err != nil {
 		return 0, err
 	}
 
@@ -89,7 +89,7 @@ func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height i
 				break
 			}
 
-			sender, err := ethMsg.GetSender(b.chainID)
+			sender, err := ethMsg.GetSender(b.EvmChainID)
 			if err != nil {
 				continue
 			}
@@ -166,9 +166,9 @@ func (b *Backend) processBlock(
 		eachTendermintTx := tendermintTxs[i]
 		eachTendermintTxResult := tendermintTxResults[i]
 
-		tx, err := b.clientCtx.TxConfig.TxDecoder()(eachTendermintTx)
+		tx, err := b.ClientCtx.TxConfig.TxDecoder()(eachTendermintTx)
 		if err != nil {
-			b.logger.Debug("failed to decode transaction in block", "height", blockHeight, "error", err.Error())
+			b.Logger.Debug("failed to decode transaction in block", "height", blockHeight, "error", err.Error())
 			continue
 		}
 		txGasUsed := uint64(eachTendermintTxResult.GasUsed) // #nosec G115

@@ -22,7 +22,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	// Get transaction by hash
 	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
-		b.logger.Debug("tx not found", "hash", hash)
+		b.Logger.Debug("tx not found", "hash", hash)
 		return nil, err
 	}
 
@@ -33,7 +33,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 
 	blk, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(transaction.Height))
 	if err != nil {
-		b.logger.Debug("block not found", "height", transaction.Height)
+		b.Logger.Debug("block not found", "height", transaction.Height)
 		return nil, err
 	}
 
@@ -57,12 +57,12 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return nil, fmt.Errorf("tx not found in block %d", blk.Block.Height)
 	}
 
-	nc, ok := b.clientCtx.Client.(tmrpcclient.NetworkClient)
+	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
 	if !ok {
 		return nil, errors.New("invalid rpc client")
 	}
 
-	cp, err := nc.ConsensusParams(b.ctx, &blk.Block.Height)
+	cp, err := nc.ConsensusParams(b.Ctx, &blk.Block.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		BlockTime:       blk.Block.Time,
 		BlockHash:       common.Bytes2Hex(blk.BlockID.Hash),
 		ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
-		ChainId:         b.chainID.Int64(),
+		ChainId:         b.EvmChainID.Int64(),
 		BlockMaxGas:     cp.ConsensusParams.Block.MaxGas,
 	}
 
@@ -88,7 +88,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		// 0 is a special value in `ContextWithHeight`
 		contextHeight = 1
 	}
-	traceResult, err := b.queryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
+	traceResult, err := b.QueryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
 	if err != nil {
-		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
+		b.Logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
 	}
 	msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
@@ -134,12 +134,12 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 	ctxWithHeight := rpctypes.ContextWithHeight(int64(contextHeight))
 
-	nc, ok := b.clientCtx.Client.(tmrpcclient.NetworkClient)
+	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
 	if !ok {
 		return nil, errors.New("invalid rpc client")
 	}
 
-	cp, err := nc.ConsensusParams(b.ctx, &block.Block.Height)
+	cp, err := nc.ConsensusParams(b.Ctx, &block.Block.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -151,11 +151,11 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
 		ProposerAddress: sdk.ConsAddress(block.Block.ProposerAddress),
-		ChainId:         b.chainID.Int64(),
+		ChainId:         b.EvmChainID.Int64(),
 		BlockMaxGas:     cp.ConsensusParams.Block.MaxGas,
 	}
 
-	res, err := b.queryClient.TraceBlock(ctxWithHeight, traceBlockRequest)
+	res, err := b.QueryClient.TraceBlock(ctxWithHeight, traceBlockRequest)
 	if err != nil {
 		return nil, err
 	}
