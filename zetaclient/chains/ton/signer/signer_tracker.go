@@ -23,7 +23,7 @@ import (
 func (s *Signer) trackOutbound(
 	ctx context.Context,
 	zetacore interfaces.ZetacoreClient,
-	w *toncontracts.Withdrawal,
+	outbound outbound,
 	prevState rpc.Account,
 ) error {
 	metrics.NumTrackerReporters.WithLabelValues(s.Chain().Name).Inc()
@@ -41,9 +41,9 @@ func (s *Signer) trackOutbound(
 		acc   = s.gateway.AccountID()
 		lt    = prevState.LastTxLT
 		hash  = ton.Bits256(prevState.LastTxHash)
-		nonce = uint64(w.Seqno)
+		nonce = uint64(outbound.seqno)
 
-		filter = withdrawalFilter(w)
+		filter = outboundFilter(outbound)
 	)
 
 	for time.Since(start) <= timeout {
@@ -78,18 +78,26 @@ func (s *Signer) trackOutbound(
 	return errors.Errorf("timeout exceeded (%s)", time.Since(start).String())
 }
 
-// creates a tx filter for this very withdrawal
-func withdrawalFilter(w *toncontracts.Withdrawal) func(tx *toncontracts.Transaction) bool {
+// creates a tx filter for this very outbound tx
+func outboundFilter(ob outbound) func(tx *toncontracts.Transaction) (found bool) {
 	return func(tx *toncontracts.Transaction) bool {
-		if !tx.IsOutbound() || tx.Operation != toncontracts.OpWithdraw {
+		if !tx.IsOutbound() {
 			return false
 		}
 
-		wd, err := tx.Withdrawal()
-		if err != nil {
-			return false
+		sig := ob.message.Signature()
+
+		if tx.Operation == toncontracts.OpWithdraw {
+			wd, err := tx.Withdrawal()
+
+			return err == nil && wd.Sig == sig && wd.Seqno == ob.seqno
 		}
 
-		return wd.Seqno == w.Seqno && wd.Sig == w.Sig
+		if tx.Operation == toncontracts.OpIncreaseSeqno {
+			is, err := tx.IncreaseSeqno()
+			return err == nil && is.Sig == sig && is.Seqno == ob.seqno
+		}
+
+		return false
 	}
 }

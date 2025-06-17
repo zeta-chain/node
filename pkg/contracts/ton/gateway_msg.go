@@ -147,9 +147,11 @@ type Withdrawal struct {
 	Sig       [65]byte
 }
 
-func (w *Withdrawal) emptySig() bool {
-	return w.Sig == [65]byte{}
-}
+// SetSignature sets signature to the withdrawal message.
+// Note that signature has the following order: [R, S, V (recovery ID)]
+func (w *Withdrawal) SetSignature(sig [65]byte) { copy(w.Sig[:], sig[:]) }
+func (w *Withdrawal) Signature() [65]byte       { return w.Sig }
+func (w *Withdrawal) emptySig() bool            { return w.Sig == [65]byte{} }
 
 // Hash returns hash of the withdrawal message. (used for signing)
 func (w *Withdrawal) Hash() ([32]byte, error) {
@@ -159,12 +161,6 @@ func (w *Withdrawal) Hash() ([32]byte, error) {
 	}
 
 	return payload.Hash256()
-}
-
-// SetSignature sets signature to the withdrawal message.
-// Note that signature has the following order: [R, S, V (recovery ID)]
-func (w *Withdrawal) SetSignature(sig [65]byte) {
-	copy(w.Sig[:], sig[:])
 }
 
 // Signer returns EVM address of the signer (e.g. TSS)
@@ -183,23 +179,7 @@ func (w *Withdrawal) AsBody() (*boc.Cell, error) {
 		return nil, err
 	}
 
-	var (
-		body    = boc.NewCell()
-		v, r, s = splitSignature(w.Sig)
-	)
-
-	// note that in TVM, the order of signature is different (v, r, s)
-	err = ErrCollect(
-		body.WriteUint(uint64(v), 8),
-		body.WriteBytes(r[:]),
-		body.WriteBytes(s[:]),
-		body.AddRef(payload),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+	return messageToBody(payload, w.Sig)
 }
 
 func (w *Withdrawal) payload() (*boc.Cell, error) {
@@ -227,9 +207,9 @@ type IncreaseSeqno struct {
 	Sig        [65]byte
 }
 
-func (is *IncreaseSeqno) SetSignature(sig [65]byte) {
-	is.Sig = sig
-}
+func (is *IncreaseSeqno) SetSignature(sig [65]byte) { copy(is.Sig[:], sig[:]) }
+func (is *IncreaseSeqno) Signature() [65]byte       { return is.Sig }
+func (is *IncreaseSeqno) emptySig() bool            { return is.Sig == [65]byte{} }
 
 func (is *IncreaseSeqno) Hash() ([32]byte, error) {
 	payload, err := is.payload()
@@ -238,6 +218,25 @@ func (is *IncreaseSeqno) Hash() ([32]byte, error) {
 	}
 
 	return payload.Hash256()
+}
+
+// Signer returns EVM address of the signer (e.g. TSS)
+func (is *IncreaseSeqno) Signer() (eth.Address, error) {
+	hash, err := is.Hash()
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return deriveSigner(hash, is.Sig)
+}
+
+func (is *IncreaseSeqno) AsBody() (*boc.Cell, error) {
+	payload, err := is.payload()
+	if err != nil {
+		return nil, err
+	}
+
+	return messageToBody(payload, is.Sig)
 }
 
 func (is *IncreaseSeqno) payload() (*boc.Cell, error) {
@@ -256,16 +255,6 @@ func (is *IncreaseSeqno) payload() (*boc.Cell, error) {
 	return payload, nil
 }
 
-// Signer returns EVM address of the signer (e.g. TSS)
-func (is *IncreaseSeqno) Signer() (eth.Address, error) {
-	hash, err := is.Hash()
-	if err != nil {
-		return eth.Address{}, err
-	}
-
-	return deriveSigner(hash, is.Sig)
-}
-
 func deriveSigner(hash [32]byte, sig [65]byte) (eth.Address, error) {
 	var sigCopy [65]byte
 	copy(sigCopy[:], sig[:])
@@ -282,6 +271,26 @@ func deriveSigner(hash [32]byte, sig [65]byte) (eth.Address, error) {
 	}
 
 	return crypto.PubkeyToAddress(*pub), nil
+}
+
+func messageToBody(payload *boc.Cell, sig [65]byte) (*boc.Cell, error) {
+	var (
+		body    = boc.NewCell()
+		v, r, s = splitSignature(sig)
+	)
+
+	// note that in TVM, the order of signature is different (v, r, s)
+	err := ErrCollect(
+		body.WriteUint(uint64(v), 8),
+		body.WriteBytes(r[:]),
+		body.WriteBytes(s[:]),
+		body.AddRef(payload),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 // Ton Virtual Machine (TVM) uses different order of signature params (v,r,s) instead of (r,s,v);

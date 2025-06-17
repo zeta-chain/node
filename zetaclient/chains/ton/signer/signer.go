@@ -9,7 +9,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	cc "github.com/zeta-chain/node/x/crosschain/types"
+	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
@@ -56,7 +56,7 @@ func New(baseSigner *base.Signer, rpc RPC, gateway *toncontracts.Gateway) *Signe
 // Note that this API signature will be refactored in orchestrator V2
 func (s *Signer) TryProcessOutbound(
 	ctx context.Context,
-	cctx *cc.CrossChainTx,
+	cctx *cctypes.CrossChainTx,
 	zetacore interfaces.ZetacoreClient,
 	zetaBlockHeight uint64,
 ) {
@@ -85,7 +85,7 @@ func (s *Signer) TryProcessOutbound(
 // ProcessOutbound signs and broadcasts an outbound cross-chain transaction.
 func (s *Signer) ProcessOutbound(
 	ctx context.Context,
-	cctx *cc.CrossChainTx,
+	cctx *cctypes.CrossChainTx,
 	zetacore interfaces.ZetacoreClient,
 	zetaHeight uint64,
 ) (Outcome, error) {
@@ -95,32 +95,16 @@ func (s *Signer) ProcessOutbound(
 		return Invalid, errors.New("only gas coin outbounds are supported")
 	}
 
-	params := cctx.GetCurrentOutboundParam()
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
-	// TODO: add compliance check
-	// https://github.com/zeta-chain/node/issues/2916
-
-	receiver, err := ton.ParseAccountID(params.Receiver)
+	outbound, err := s.composeOutbound(cctx)
 	if err != nil {
-		return Invalid, errors.Wrapf(err, "unable to parse recipient %q", params.Receiver)
+		return Invalid, errors.Wrap(err, "unable to compose message")
 	}
 
-	withdrawal := &toncontracts.Withdrawal{
-		Recipient: receiver,
-		Amount:    params.Amount,
-		// #nosec G115 always in range
-		Seqno: uint32(params.TssNonce),
-	}
+	s.Logger().Std.Info().Fields(outbound.logFields).Msg("Signing outbound")
 
-	lf := map[string]any{
-		"outbound.recipient": withdrawal.Recipient.ToRaw(),
-		"outbound.amount":    withdrawal.Amount.Uint64(),
-		"outbound.nonce":     withdrawal.Seqno,
-	}
-
-	s.Logger().Std.Info().Fields(lf).Msg("Signing withdrawal")
-
-	if err = s.SignMessage(ctx, withdrawal, zetaHeight, params.TssNonce); err != nil {
+	if err = s.SignMessage(ctx, outbound.message, zetaHeight, nonce); err != nil {
 		return Fail, errors.Wrap(err, "unable to sign withdrawal message")
 	}
 
@@ -134,14 +118,14 @@ func (s *Signer) ProcessOutbound(
 	//
 	// Example: If a cctx has amount of 5 TON, the recipient will receive 5 TON,
 	// and gateway's balance will be decreased by 5 TON + txFees.
-	exitCode, err := s.gateway.SendExternalMessage(ctx, s.rpc, withdrawal)
+	exitCode, err := s.gateway.SendExternalMessage(ctx, s.rpc, outbound.message)
 	if err != nil || exitCode != 0 {
-		return s.handleSendError(exitCode, err, lf)
+		return s.handleSendError(exitCode, err, outbound.logFields)
 	}
 
 	// it's okay to run this in the same goroutine
 	// because TryProcessOutbound method should be called in a goroutine
-	if err = s.trackOutbound(ctx, zetacore, withdrawal, gwState); err != nil {
+	if err = s.trackOutbound(ctx, zetacore, outbound, gwState); err != nil {
 		return Fail, errors.Wrap(err, "unable to track outbound")
 	}
 

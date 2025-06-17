@@ -23,8 +23,13 @@ type Client interface {
 }
 
 type ExternalMsg interface {
-	emptySig() bool
+	Hash() ([32]byte, error)
 	AsBody() (*boc.Cell, error)
+
+	Signature() [65]byte
+	SetSignature(sig [65]byte)
+
+	emptySig() bool
 }
 
 // See https://docs.ton.org/v3/documentation/smart-contracts/message-management/message-modes-cookbook

@@ -173,6 +173,23 @@ func TONWithdrawalProps(t *testing.T, acc ton.AccountID, w toncontracts.Withdraw
 	}
 }
 
+func TONIncreaseSeqno(t *testing.T, acc ton.AccountID, is toncontracts.IncreaseSeqno) ton.Transaction {
+	return TONTransaction(t, TONIncreaseSeqnoProps(t, acc, is))
+}
+
+func TONIncreaseSeqnoProps(t *testing.T, acc ton.AccountID, is toncontracts.IncreaseSeqno) TONTransactionProps {
+	body, err := is.AsBody()
+	require.NoError(t, err)
+
+	return TONTransactionProps{
+		Account: acc,
+		Input: &tlb.Message{
+			Info: externalMessageInfo(acc),
+			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
+		},
+	}
+}
+
 // TONTransaction creates a sample TON transaction.
 func TONTransaction(t *testing.T, p TONTransactionProps) ton.Transaction {
 	require.False(t, p.Account.IsZero(), "account address is empty")

@@ -10,11 +10,14 @@ import (
 )
 
 // IsCCTXRestricted returns true if the cctx involves restricted addresses
-func IsCCTXRestricted(cctx *crosschaintypes.CrossChainTx) bool {
-	sender := cctx.InboundParams.Sender
-	receiver := cctx.GetCurrentOutboundParam().Receiver
+func IsCCTXRestricted(cctx *crosschaintypes.CrossChainTx, additionalAddresses ...string) bool {
+	additionalAddresses = append(
+		additionalAddresses,
+		cctx.InboundParams.Sender,
+		cctx.GetCurrentOutboundParam().Receiver,
+	)
 
-	return config.ContainRestrictedAddress(sender, receiver)
+	return config.ContainRestrictedAddress(additionalAddresses...)
 }
 
 // PrintComplianceLog prints compliance log with fields [chain, cctx/inbound, chain, sender, receiver, token]
