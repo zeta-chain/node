@@ -1,12 +1,12 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/node/e2e/contracts/testdappempty"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/contracts/testdappempty"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
