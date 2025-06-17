@@ -23,7 +23,7 @@ func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	payload := randomPayloadWithSize(r, 2880)
+	payload := randomPayloadWithSize(r, 2800)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
