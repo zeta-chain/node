@@ -24,16 +24,19 @@ jobs:
   changed-files:
     runs-on: ubuntu-22.04
     outputs:
-      x_changed: ${{ steps.x-changes.outputs.any_changed }}
+      relevant_changed: ${{ steps.relevant-changes.outputs.any_changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get changed files in x directory
-        id: x-changes
+      - name: Get changed files in relevant directories
+        id: relevant-changes
         uses: zeta-chain/gh-action-changed-files@9200e69727eb73eb060652b19946b8a2fdfb654b
         with:
-          files: x/**
+          files: |
+            x/**
+            app/**
+            cmd/**
 
   matrix-conditionals:
     needs: changed-files
@@ -51,7 +54,7 @@ jobs:
             const defaultTargets = ['test-sim-nondeterminism', 'test-sim-fullappsimulation', 'test-sim-import-export', 'test-sim-after-import'];
             let makeTargets = [];
             if (context.eventName === 'pull_request') {
-              const changedFiles = ${{ needs.changed-files.outputs.x_changed }};
+              const changedFiles = ${{ needs.changed-files.outputs.relevant_changed }};
               const pull_number = context.payload.pull_request.number;
               const { data: pr } = await github.rest.pulls.get({
                   owner: context.repo.owner,

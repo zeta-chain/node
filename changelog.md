@@ -25,6 +25,7 @@
 ### Tests
 
 * [3972](https://github.com/zeta-chain/node/pull/3972) - add `gasLimit` argument to erc20 withdrawAndCall e2e test
+* [3983](https://github.com/zeta-chain/node/pull/3983) - fix simulation tests and modify `sim.yml` workflow to run sim tests on changes to `app/` and `cmd/` directories in addition to `x/`
 
 ## v31.0.0
 
