@@ -12,9 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 2)
-
+func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 	// deploy the TestDAppEmpty contract on the EVM  chain
 	testDAppAddr, _, _, err := testdappempty.DeployTestDAppEmpty(r.EVMAuth, r.EVMClient)
 	require.NoError(r, err)
