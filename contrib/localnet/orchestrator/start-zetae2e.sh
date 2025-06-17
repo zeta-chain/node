@@ -23,6 +23,8 @@ copy_operator_keys() {
 
     mkdir -p /root/$node/
     scp -r root@$node:/root/.zetacored/keyring-test/ /root/$node/keyring-test/ || continue
+    mkdir -p /root/$node/config
+    scp root@$node:/root/.zetacored/config/client.toml /root/$node/config/client.toml
 
     # Set node ID suffix
     node_num=${node//[^0-9]/}

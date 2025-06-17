@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	cosmosante "github.com/cosmos/evm/ante/cosmos"
-	evmante "github.com/cosmos/evm/ante/evm"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
@@ -66,31 +65,6 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 		// check if this ante handler is needed in non legacy cosmos ante handlers
 		// ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
-	)
-}
-
-func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
-	return sdk.ChainAnteDecorators(
-		evmante.NewEthSetUpContextDecorator(
-			options.EvmKeeper,
-		), // outermost AnteDecorator. SetUpContext must be called first
-		// evmante.NewEthMempoolFeeDecorator( // TODO evm: removed
-		// 	options.EvmKeeper,
-		// ), // Check eth effective gas price against minimal-gas-prices
-		// cosmosante.NewEthMinGasPriceDecorator(
-		// 	options.FeeMarketKeeper,
-		// 	options.EvmKeeper,
-		// ), // Check eth effective gas price against the global MinGasPrice
-		// evmante.NewEthValidateBasicDecorator(options.EvmKeeper),
-		evmante.NewEthSigVerificationDecorator(options.EvmKeeper),
-		// ethante.NewEthAccountVerificationDecorator(options.AccountKeeper, options.EvmKeeper),
-		// ethante.NewCanTransferDecorator(options.EvmKeeper),
-		// ethante.NewEthGasConsumeDecorator(options.EvmKeeper, options.MaxTxGasWanted),
-		// ethante.NewEthIncrementSenderSequenceDecorator(options.AccountKeeper), // innermost AnteDecorator.
-		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
-		evmante.NewEthEmitEventDecorator(
-			options.EvmKeeper,
-		), // emit eth tx hash and index at the very last ante handler.
 	)
 }
 

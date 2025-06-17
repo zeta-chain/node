@@ -15,6 +15,7 @@ import (
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	serverconfig "github.com/zeta-chain/node/server/config"
 )
 
 func NewSimApp(
@@ -23,7 +24,7 @@ func NewSimApp(
 	appOptions servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*zetaapp.App, error) {
-	encCdc := zetaapp.MakeEncodingConfig(262144) // TODO evm: encoding config across codebase
+	encCdc := zetaapp.MakeEncodingConfig(serverconfig.DefaultEVMChainID) // TODO evm chain id
 
 	// Set load latest version to false as we manually set it later.
 	zetaApp := zetaapp.New(
@@ -34,7 +35,7 @@ func NewSimApp(
 		map[int64]bool{},
 		"", // TODO evm
 		5,
-		262144,
+		serverconfig.DefaultEVMChainID,
 		appOptions,
 		baseAppOptions...,
 	)

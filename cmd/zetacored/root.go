@@ -32,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
 	"github.com/cosmos/evm/crypto/hd"
 	"github.com/cosmos/evm/evmd/eips"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
@@ -41,13 +42,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/chains"
 	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	zevmserver "github.com/zeta-chain/node/server"
+	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
 
 const EnvPrefix = "zetacore"
 
-// NewRootCmd creates a new root command for wasmd. It is called once in the
+// NewRootCmd creates a new root command for zetacored. It is called once in the
 // main function.
 
 type emptyAppOptions struct{}
@@ -55,7 +58,20 @@ type emptyAppOptions struct{}
 func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 
 func NewRootCmd() *cobra.Command {
-	encodingConfig := app.MakeEncodingConfig(262144) // TODO evm: evm chain id?
+	// need to create this app instance to get autocliopts
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		"",
+		0,
+		zetaserverconfig.DefaultEVMChainID, // TODO evm: should be ok to use default just for temp app?
+		emptyAppOptions{},
+	)
+
+	encodingConfig := app.MakeEncodingConfig(zetaserverconfig.DefaultEVMChainID) // TODO evm: same as above
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -87,6 +103,11 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
+			zetachain, err := chains.ZetaChainFromCosmosChainID(initClientCtx.ChainID)
+			if err != nil {
+				return err
+			}
+
 			// This needs to go after ReadFromClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
@@ -112,7 +133,7 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initAppConfig()
+			customAppTemplate, customAppConfig := InitAppConfig(zetacoredconfig.BaseDenom, uint64(zetachain.ChainId))
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
 		},
@@ -123,18 +144,6 @@ func NewRootCmd() *cobra.Command {
 		confixcmd.ConfigCommand(),
 	)
 
-	// need to create this app instance to get autocliopts
-	tempApp := app.New(
-		log.NewNopLogger(),
-		dbm.NewMemDB(),
-		nil,
-		true,
-		map[int64]bool{},
-		"",
-		0,
-		262144, // TODO evm: evm chain id
-		emptyAppOptions{},
-	)
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.ClientCtx = initClientCtx
 
@@ -143,12 +152,6 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	return rootCmd
-}
-
-// // initAppConfig helps to override default appConfig template and configs.
-// // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, interface{}) {
-	return InitAppConfig(zetacoredconfig.BaseDenom, 262144) // TODO evm: evm chain id?
 }
 
 // InitAppConfig helps to override default appConfig template and configs.
@@ -365,11 +368,20 @@ func (ac appCreator) newApp(
 		skipUpgradeHeights[int64(h)] = true
 	}
 
+	chainID, err := getChainIDFromOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		panic(err)
+	}
+
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		//cosmoscmd.EncodingConfig(ac.encCfg),
-		262144, // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), // TODO evm: evm chain id?
 		appOpts,
 		baseappOptions...,
 	)
@@ -393,6 +405,16 @@ func (ac appCreator) appExport(
 		loadLatest = true
 	}
 
+	chainID, err := getChainIDFromOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		panic(err)
+	}
+
 	zetaApp = app.New(
 		logger,
 		db,
@@ -401,7 +423,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		262144, // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), // TODO evm: evm chain id?
 		appOpts,
 	)
 
@@ -414,4 +436,22 @@ func (ac appCreator) appExport(
 	}
 
 	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+// getChainIDFromOpts returns the chain Id from app Opts
+// It first tries to get from the chainId flag, if not available
+// it will load from home
+func getChainIDFromOpts(appOpts servertypes.AppOptions) (chainID string, err error) {
+	// Get the chain Id from appOpts
+	chainID = cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// If not available load from home
+		homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+		chainID, err = evmdconfig.GetChainIDFromHome(homeDir)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return
 }

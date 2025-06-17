@@ -109,8 +109,13 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		return nil, fmt.Errorf("failed to query rpc: %s", err.Error())
 	}
 
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		return nil, err
+	}
+
 	// initialize codec
-	cdc, reg := newCodec()
+	cdc, reg := newCodec(uint64(zetachain.ChainId))
 
 	// initialize keyring
 	kr := keyring.NewInMemory(cdc, hd.EthSecp256k1Option())
@@ -711,8 +716,8 @@ func (zts *ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytyp
 }
 
 // newCodec returns the codec for msg server
-func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
-	encodingConfig := app.MakeEncodingConfig(262144) // TODO evm: evm chain id?
+func newCodec(evmChainID uint64) (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
+	encodingConfig := app.MakeEncodingConfig(evmChainID)
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
