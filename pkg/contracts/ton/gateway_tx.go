@@ -56,6 +56,10 @@ func (tx *Transaction) Withdrawal() (Withdrawal, error) {
 	return retrieveContent[Withdrawal](tx)
 }
 
+func (tx *Transaction) IncreaseSeqno() (IncreaseSeqno, error) {
+	return retrieveContent[IncreaseSeqno](tx)
+}
+
 func retrieveContent[T any](tx *Transaction) (T, error) {
 	typed, ok := tx.content.(T)
 	if !ok {

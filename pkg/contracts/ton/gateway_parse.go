@@ -210,21 +210,28 @@ func (gw *Gateway) parseOutbound(tx ton.Transaction) (*Transaction, error) {
 
 	// #nosec G115 always in range
 	opCode := Op(op)
+	content := any(nil)
 
-	if opCode != OpWithdraw {
+	switch opCode {
+	case OpWithdraw:
+		content, err = parseWithdrawal(tx, sig, payload)
+		if err != nil {
+			return nil, errParse(err, "unable to parse 'withdraw'")
+		}
+	case OpIncreaseSeqno:
+		content, err = parseIncreaseSeqno(tx, sig, payload)
+		if err != nil {
+			return nil, errParse(err, "unable to parse 'increase seqno'")
+		}
+	default:
 		return nil, errors.Wrapf(ErrUnknownOp, "op code %d", op)
-	}
-
-	withdrawal, err := parseWithdrawal(tx, sig, payload)
-	if err != nil {
-		return nil, errParse(err, "unable to parse withdrawal")
 	}
 
 	return &Transaction{
 		Transaction: tx,
 		Operation:   opCode,
 		ExitCode:    exitCodeFromTx(tx),
-		content:     withdrawal,
+		content:     content,
 	}, nil
 }
 
@@ -244,12 +251,6 @@ func parseExternalMessage(b *boc.Cell) ([65]byte, *boc.Cell, error) {
 }
 
 func parseWithdrawal(tx ton.Transaction, sig [65]byte, payload *boc.Cell) (Withdrawal, error) {
-	// Note that ECDSA sig has the following order: (v, r, s) but in EVM we have (r, s, v)
-	var sigFlipped [65]byte
-
-	copy(sigFlipped[:64], sig[1:])
-	sigFlipped[64] = sig[0]
-
 	var (
 		recipient tlb.MsgAddress
 		amount    tlb.Coins
@@ -298,7 +299,26 @@ func parseWithdrawal(tx ton.Transaction, sig [65]byte, payload *boc.Cell) (Withd
 		Recipient: recipientAddr,
 		Amount:    math.NewUint(uint64(amount)),
 		Seqno:     seqno,
-		Sig:       sigFlipped,
+		Sig:       shiftSignature(sig),
+	}, nil
+}
+
+func parseIncreaseSeqno(_ ton.Transaction, sig [65]byte, payload *boc.Cell) (IncreaseSeqno, error) {
+	reasonCode, err := payload.ReadUint(sizeSeqno)
+	if err != nil {
+		return IncreaseSeqno{}, errors.Wrap(err, "unable to read reason code")
+	}
+
+	seqno, err := payload.ReadUint(sizeSeqno)
+	if err != nil {
+		return IncreaseSeqno{}, errors.Wrap(err, "unable to read seqno")
+	}
+
+	// #nosec G115 always in range
+	return IncreaseSeqno{
+		Seqno:      uint32(seqno),
+		ReasonCode: uint32(reasonCode),
+		Sig:        shiftSignature(sig),
 	}, nil
 }
 
@@ -320,4 +340,14 @@ func errParse(err error, msg string) error {
 
 func exitCodeFromTx(tx ton.Transaction) int32 {
 	return tx.Description.TransOrd.ComputePh.TrPhaseComputeVm.Vm.ExitCode
+}
+
+// shiftSignature: shifts bytes: ECDSA sig has the following order: (v, r, s) but in EVM we have (r, s, v)
+func shiftSignature(sig [65]byte) [65]byte {
+	var sigFlipped [65]byte
+
+	copy(sigFlipped[:64], sig[1:])
+	sigFlipped[64] = sig[0]
+
+	return sigFlipped
 }

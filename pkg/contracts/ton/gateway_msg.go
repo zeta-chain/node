@@ -23,7 +23,11 @@ const (
 	OpCall
 )
 
-const OpWithdraw Op = 200
+// Outbound operations
+const (
+	OpWithdraw      Op = 200
+	OpIncreaseSeqno Op = 205
+)
 
 // ExitCode represents an error code. Might be TVM or custom.
 // TVM: https://docs.ton.org/v3/documentation/tvm/tvm-exit-codes
@@ -170,21 +174,7 @@ func (w *Withdrawal) Signer() (eth.Address, error) {
 		return eth.Address{}, err
 	}
 
-	var sig [65]byte
-	copy(sig[:], w.Sig[:])
-
-	// recovery id
-	// https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
-	if sig[64] >= 27 {
-		sig[64] -= 27
-	}
-
-	pub, err := crypto.SigToPub(hash[:], sig[:])
-	if err != nil {
-		return eth.Address{}, err
-	}
-
-	return crypto.PubkeyToAddress(*pub), nil
+	return deriveSigner(hash, w.Sig)
 }
 
 func (w *Withdrawal) AsBody() (*boc.Cell, error) {
@@ -227,6 +217,71 @@ func (w *Withdrawal) payload() (*boc.Cell, error) {
 	}
 
 	return payload, nil
+}
+
+// IncreaseSeqno represents an external message (an alternative to Withdrawal) that only
+// increases seqno (nonce) and might contain reason code. Used as a factual tx for "canceling" CCTX.
+type IncreaseSeqno struct {
+	Seqno      uint32
+	ReasonCode uint32
+	Sig        [65]byte
+}
+
+func (is *IncreaseSeqno) SetSignature(sig [65]byte) {
+	is.Sig = sig
+}
+
+func (is *IncreaseSeqno) Hash() ([32]byte, error) {
+	payload, err := is.payload()
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	return payload.Hash256()
+}
+
+func (is *IncreaseSeqno) payload() (*boc.Cell, error) {
+	payload := boc.NewCell()
+
+	err := ErrCollect(
+		payload.WriteUint(uint64(OpIncreaseSeqno), sizeOpCode),
+		payload.WriteUint(uint64(is.ReasonCode), sizeOpCode),
+		payload.WriteUint(uint64(is.Seqno), sizeSeqno),
+	)
+
+	if err != nil {
+		return nil, errors.New("unable to marshal payload as cell")
+	}
+
+	return payload, nil
+}
+
+// Signer returns EVM address of the signer (e.g. TSS)
+func (is *IncreaseSeqno) Signer() (eth.Address, error) {
+	hash, err := is.Hash()
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return deriveSigner(hash, is.Sig)
+}
+
+func deriveSigner(hash [32]byte, sig [65]byte) (eth.Address, error) {
+	var sigCopy [65]byte
+	copy(sigCopy[:], sig[:])
+
+	// recovery id
+	// https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
+	if sigCopy[64] >= 27 {
+		sigCopy[64] -= 27
+	}
+
+	pub, err := crypto.SigToPub(hash[:], sigCopy[:])
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return crypto.PubkeyToAddress(*pub), nil
 }
 
 // Ton Virtual Machine (TVM) uses different order of signature params (v,r,s) instead of (r,s,v);

@@ -276,6 +276,37 @@ func TestParsing(t *testing.T) {
 		assert.Equal(t, expectedTSS, signer.Hex())
 	})
 
+	t.Run("IncreaseSeqno", func(t *testing.T) {
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "09-increase-seqno")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+		assert.Equal(t, OpIncreaseSeqno, parsedTX.Operation)
+		assert.Zero(t, parsedTX.ExitCode)
+
+		// Check withdrawal
+		is, err := parsedTX.IncreaseSeqno()
+		require.NoError(t, err)
+
+		// Expect reason code
+		require.Equal(t, uint32(1337), is.ReasonCode)
+
+		// Expect TSS signer address
+		signer, err := is.Signer()
+		require.NoError(t, err)
+
+		const expectedTSS = "0xFA033cebd2EB4A800F74d70C10dfc8710fF0d148"
+		assert.Equal(t, expectedTSS, signer.Hex())
+	})
+
 	t.Run("Irrelevant tx", func(t *testing.T) {
 		t.Run("Failed tx", func(t *testing.T) {
 			// ARRANGE
