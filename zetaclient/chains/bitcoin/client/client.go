@@ -108,6 +108,11 @@ func New(cfg config.BTCConfig, chainID int64, logger zerolog.Logger, opts ...Opt
 	return c, nil
 }
 
+// NetParams returns the bitcoin network parameters
+func (c *Client) NetParams() *chains.Params {
+	return &c.params
+}
+
 // send sends RPC command to the server via http post request
 func (c *Client) sendCommand(ctx context.Context, cmd any) (json.RawMessage, error) {
 	method, reqBody, err := c.marshalCmd(cmd)
