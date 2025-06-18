@@ -289,7 +289,10 @@ func (s *TestSuite) TestResend() {
 }
 
 func (s *TestSuite) TestSendRawTransaction() {
+	s.SetupTest() // reset
+
 	ethTx, bz := s.buildEthereumTx()
+	ethTx.From = s.from.Hex()
 
 	emptyEvmChainIDTx := s.buildEthereumTxWithChainID(nil)
 	invalidEvmChainIDTx := s.buildEthereumTxWithChainID(big.NewInt(1))
