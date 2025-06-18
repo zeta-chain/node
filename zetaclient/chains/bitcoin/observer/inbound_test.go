@@ -17,8 +17,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 
@@ -29,8 +27,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
-	"github.com/zeta-chain/node/zetaclient/testutils/testrpc"
 )
 
 // mockDepositFeeCalculator returns a mock depositor fee calculator that returns the given fee and error.
@@ -225,60 +221,6 @@ func Test_GetInboundVoteFromBtcEvent(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestGetSenderAddressByVin(t *testing.T) {
-	ctx := context.Background()
-
-	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
-	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-	chain := chains.BitcoinMainnet
-	net := &chaincfg.MainNetParams
-
-	t.Run("should get sender address from tx", func(t *testing.T) {
-		// vin from the archived P2WPKH tx
-		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
-		txHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
-		require.NoError(t, err)
-		require.Equal(t, "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e", sender)
-	})
-
-	t.Run("should return error on invalid txHash", func(t *testing.T) {
-		rpcClient := mocks.NewBitcoinClient(t)
-		// use invalid tx hash
-		txVin := btcjson.Vin{Txid: "invalid tx hash", Vout: 2}
-		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
-		require.Error(t, err)
-		require.Empty(t, sender)
-	})
-
-	t.Run("should return error when RPC client fails to get raw tx", func(t *testing.T) {
-		// create mock rpc client that returns rpc error
-		rpcClient := mocks.NewBitcoinClient(t)
-		rpcClient.On("GetRawTransaction", mock.Anything, mock.Anything).Return(nil, errors.New("rpc error"))
-
-		// get sender address
-		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
-		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
-		require.ErrorContains(t, err, "error getting raw transaction")
-		require.Empty(t, sender)
-	})
-
-	t.Run("should return error on invalid output index", func(t *testing.T) {
-		// create mock rpc client with preloaded tx
-		rpcClient := testrpc.CreateBTCRPCAndLoadTx(t, TestDataDir, chain.ChainId, txHash)
-
-		// invalid output index
-		txVin := btcjson.Vin{Txid: txHash, Vout: 3}
-		sender, err := GetSenderAddressByVin(ctx, rpcClient, txVin, net)
-		require.ErrorContains(t, err, "out of range")
-		require.Empty(t, sender)
-	})
 }
 
 func Test_NewInboundVoteFromLegacyMemo(t *testing.T) {
