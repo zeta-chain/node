@@ -70,8 +70,8 @@ func (tx *Transaction) IncreaseSeqno() (IncreaseSeqno, error) {
 
 // OutboundAuth returns the outbound seqno and signature
 func (tx *Transaction) OutboundAuth() (OutboundAuth, error) {
-	if !tx.IsInbound() {
-		return OutboundAuth{}, errors.New("not an inbound")
+	if !tx.IsOutbound() {
+		return OutboundAuth{}, errors.New("not an outbound")
 	}
 
 	if tx.Operation == OpWithdraw {

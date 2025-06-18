@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -308,20 +309,28 @@ func (r *E2ERunner) tonEnsureCallOpts(
 func (r *E2ERunner) SendWithdrawTONZRC20(
 	to ton.AccountID,
 	amount *big.Int,
-	approveAmount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
-	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt, "approve")
+	if revertOptions.OnRevertGasLimit == nil {
+		revertOptions.OnRevertGasLimit = big.NewInt(0)
+	}
+
+	// Approve ALL TON-ZRC20 from runner's wallet to the gateway
+	r.ApproveTONZRC20(r.GatewayZEVMAddr)
 
 	// Perform the withdrawal
-	tx, err = r.TONZRC20.Withdraw(r.ZEVMAuth, []byte(to.ToRaw()), amount)
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte(to.ToRaw()),
+		amount,
+		r.TONZRC20Addr,
+		revertOptions,
+	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(*tx, "zevm ton withdraw")
 
-	// ait for tx receipt
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	// wait for tx receipt
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
@@ -329,8 +338,12 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 }
 
 // WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens and waits for the cctx to be mined
-func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
-	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
+func (r *E2ERunner) WithdrawTONZRC20(
+	recipient ton.AccountID,
+	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+) *cctypes.CrossChainTx {
+	tx := r.SendWithdrawTONZRC20(recipient, amount, revertOptions)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
