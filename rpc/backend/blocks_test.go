@@ -11,15 +11,20 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/testutil/sample"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -1629,4 +1634,109 @@ func (s *TestSuite) TestEthBlockFromTendermintBlock() {
 			}
 		})
 	}
+}
+
+func (suite *TestSuite) TestEthAndSyntheticMsgsFromTendermintBlock() {
+	// synthetic tx
+	hash := sample.Hash().Hex()
+	tx, txRes := suite.buildSyntheticTxResult(hash)
+
+	// real tx
+	msgEthereumTx, _ := suite.buildEthereumTx()
+	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+
+	suite.backend.Indexer = nil
+
+	// block contains block real and synthetic tx
+	emptyBlock := cmttypes.MakeBlock(1, []cmttypes.Tx{realTx, tx}, nil, nil)
+	emptyBlock.ChainID = ChainID.ChainID
+	blockHash := common.BigToHash(big.NewInt(1)).Bytes()
+	resBlock := &tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: cmttypes.BlockID{Hash: bytes.HexBytes(blockHash)}}
+	blockRes := &tmrpctypes.ResultBlockResults{
+		Height:     1,
+		TxsResults: []*types.ExecTxResult{{}, &txRes},
+	}
+
+	// both real and synthetic should be returned
+	msgs, additionals := suite.backend.EthMsgsFromTendermintBlock(resBlock, blockRes)
+	suite.Require().Equal(2, len(msgs))
+	suite.Require().Equal(2, len(additionals))
+	suite.Require().Nil(additionals[0])
+	suite.Require().NotNil(additionals[1])
+	suite.Require().Equal(msgEthereumTx.Hash, msgs[0].Hash)
+	suite.Require().Equal(hash, msgs[1].Hash)
+}
+
+func (suite *TestSuite) TestEthAndSyntheticEthBlockByNumber() {
+	// synthetic tx
+	hash := sample.Hash().Hex()
+	tx, txRes := suite.buildSyntheticTxResult(hash)
+
+	// real tx
+	msgEthereumTx, _ := suite.buildEthereumTx()
+	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+	validator := sdk.AccAddress(tests.GenerateAddress().Bytes())
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+
+	// block contains block real and synthetic tx
+	RegisterBlockMultipleTxs(client, 1, []cmttypes.Tx{realTx, tx})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ExecTxResult{{}, &txRes})
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
+	RegisterValidatorAccount(queryClient, validator)
+
+	// only real should be returned
+	block, err := suite.backend.EthBlockByNumber(1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, len(block.Transactions()))
+	suite.Require().Equal(msgEthereumTx.Hash, block.Transactions()[0].Hash().String())
+}
+
+func (suite *TestSuite) TestEthAndSyntheticGetBlockByNumber() {
+	// synthetic tx
+	hash := sample.Hash().Hex()
+	tx, txRes := suite.buildSyntheticTxResult(hash)
+
+	// real tx
+	msgEthereumTx, _ := suite.buildEthereumTx()
+	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+
+	// block contains block real and synthetic tx
+	RegisterBlockMultipleTxs(client, 1, []cmttypes.Tx{realTx, tx})
+	RegisterBlockResultsWithTxResults(client, 1, []*types.ExecTxResult{{}, &txRes})
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
+	RegisterValidatorAccount(queryClient, sdk.AccAddress(common.Address{}.Bytes()))
+	RegisterConsensusParams(client, 1)
+
+	// both real and synthetic should be returned
+	block, err := suite.backend.GetBlockByNumber(1, false)
+	suite.Require().NoError(err)
+	transactions := block["transactions"].([]interface{})
+	suite.Require().Equal(3, len(transactions))
+	suite.Require().Equal(common.HexToHash(msgEthereumTx.Hash), transactions[0])
+	suite.Require().Equal(common.HexToHash(hash), transactions[1])
+
+	// both real and synthetic should be returned
+	block, err = suite.backend.GetBlockByNumber(1, true)
+	suite.Require().NoError(err)
+	transactions = block["transactions"].([]interface{})
+
+	suite.Require().Equal(2, len(transactions))
+	resRealTx := transactions[0].(*ethrpc.RPCTransaction)
+	suite.Require().Equal(common.HexToHash(msgEthereumTx.Hash), resRealTx.Hash)
+
+	resSyntheticTx := transactions[1].(*ethrpc.RPCTransaction)
+	suite.Require().Equal(common.HexToHash(hash), resSyntheticTx.Hash)
+	suite.Require().Equal(hash, resSyntheticTx.Hash.Hex())
+	suite.Require().Equal("0x735b14BB79463307AAcBED86DAf3322B1e6226aB", resSyntheticTx.From.Hex())
+	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", resSyntheticTx.To.Hex())
+	suite.Require().Equal("0x58", resSyntheticTx.Type.String())
+	suite.Require().Equal("0x1", resSyntheticTx.Nonce.String())
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), resSyntheticTx.S)
 }

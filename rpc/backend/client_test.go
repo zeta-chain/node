@@ -142,6 +142,21 @@ func RegisterBlockNotFound(
 	return &cmtrpctypes.ResultBlock{Block: nil}, nil
 }
 
+func RegisterBlockResultsWithTxResults(
+	client *mocks.Client,
+	height int64,
+	txResults []*abci.ExecTxResult,
+) (*cmtrpctypes.ResultBlockResults, error) {
+	res := &cmtrpctypes.ResultBlockResults{
+		Height:     height,
+		TxsResults: txResults,
+	}
+
+	client.On("BlockResults", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).
+		Return(res, nil)
+	return res, nil
+}
+
 func TestRegisterBlock(t *testing.T) {
 	client := mocks.NewClient(t)
 	height := rpc.BlockNumber(1).Int64()

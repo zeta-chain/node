@@ -5,11 +5,13 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -28,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 type TestSuite struct {
@@ -49,6 +52,39 @@ func NewTestSuite(create network.CreateEvmApp, options ...network.ConfigOption) 
 }
 
 var ChainID = constants.ExampleChainID
+
+// testTx is a dummy implementation of cosmos Tx used for testing.
+type testTx struct {
+}
+
+func (tx testTx) GetMsgs() []sdk.Msg { return nil }
+
+func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+
+func (tx testTx) GetSigners() []sdk.AccAddress { return nil }
+
+func (tx testTx) ValidateBasic() error { return nil }
+
+func (t testTx) ProtoMessage() { panic("not implemented") }
+
+func (t testTx) Reset() { panic("not implemented") }
+
+func (t testTx) String() string { panic("not implemented") }
+
+func (t testTx) Bytes() []byte { panic("not implemented") }
+
+func (t testTx) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+
+func (t testTx) Type() string { panic("not implemented") }
+
+var (
+	_ sdk.Tx  = (*testTx)(nil)
+	_ sdk.Msg = (*testTx)(nil)
+)
+
+func TestBackendTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
+}
 
 // SetupTest is executed before every TestSuite test
 func (s *TestSuite) SetupTest() {
@@ -126,6 +162,37 @@ func (s *TestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
 	bz, err := s.backend.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 	return msgEthereumTx, bz
+}
+
+func (suite *TestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ExecTxResult) {
+	testTx := &testTx{}
+	txBuilder := suite.backend.ClientCtx.TxConfig.NewTxBuilder()
+	txBuilder.SetSignatures()
+	txBuilder.SetMsgs(testTx)
+
+	bz, _ := suite.backend.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	return bz, abci.ExecTxResult{
+		Code: 0,
+		Events: []abci.Event{
+			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+				{Key: "ethereumTxHash", Value: txHash},
+				{Key: "txIndex", Value: "8888"},
+				{Key: "txData", Value: "0x1234"},
+				{Key: "amount", Value: "1000"},
+				{Key: "txGasUsed", Value: "21000"},
+				{Key: "txGasLimit", Value: "21000"},
+				{Key: "txHash", Value: ""},
+				{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+			}},
+			{
+				Type: "message", Attributes: []abci.EventAttribute{
+					{Key: "sender", Value: "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"},
+					{Key: "txType", Value: "88"},
+					{Key: "txNonce", Value: "1"},
+				},
+			},
+		},
+	}
 }
 
 // buildEthereumTx returns an example legacy Ethereum transaction
