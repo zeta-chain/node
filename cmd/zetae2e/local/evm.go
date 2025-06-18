@@ -91,6 +91,14 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
+
+	eg.Go(
+		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositAndCallName,
+			e2etests.TestZetaDepositAndCallRevertName,
+		),
+	)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests
@@ -125,6 +133,9 @@ func evmTestRoutine(
 		// funding the account
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 10000)
 		v2Runner.WaitForTxReceiptOnEVM(txERC20Send)
+
+		txZetaSend := deployerRunner.SendZetaOnEVM(account.EVMAddress(), 10000)
+		v2Runner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// run erc20 test
 		testsToRun, err := v2Runner.GetE2ETestsToRunByName(

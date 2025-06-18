@@ -214,6 +214,21 @@ func (r *E2ERunner) SendERC20OnEVM(address ethcommon.Address, amountERC20 int64)
 	return tx
 }
 
+// SendZetaOnEVM sends ZETA to an address on EVM.This can be used to fund an account to run tests
+func (r *E2ERunner) SendZetaOnEVM(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+	// the deployer might be sending ZETA in different goroutines
+	r.Lock()
+	defer r.Unlock()
+
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(zetaAmount))
+
+	tx, err := r.ZetaEth.Transfer(r.EVMAuth, address, amount)
+	require.NoError(r, err)
+
+	return tx
+}
+
 // ApproveERC20OnEVM approves ERC20 on EVM to a specific address
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals

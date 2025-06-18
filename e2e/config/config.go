@@ -87,6 +87,7 @@ type AdditionalAccounts struct {
 	UserEtherRevert       Account `yaml:"user_ether_revert"`
 	UserERC20Revert       Account `yaml:"user_erc20_revert"`
 	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
+	UserZeta              Account `yaml:"user_zeta"`
 }
 
 type PolicyAccounts struct {

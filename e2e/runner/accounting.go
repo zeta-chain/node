@@ -188,10 +188,19 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 }
 
 func (r *E2ERunner) checkZetaTSSBalance() error {
-	zetaLocked, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
-	if err != nil {
-		return err
-	}
+	//zetaLockedLegacyConnector, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
+	//if err != nil {
+	//	return err
+	//}
+
+	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
+	require.NoError(r, err, "BalanceOf failed for legacy connector")
+
+	zetaLockedConnectorNative, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
+	require.NoError(r, err, "BalanceOf failed for new connector")
+
+	zetaLocked := big.NewInt(0).Add(zetaLockedLegacyConnector, zetaLockedConnectorNative)
+
 	resp, err := http.Get("http://zetacore0:1317/cosmos/bank/v1beta1/supply/by_denom?denom=azeta")
 	if err != nil {
 		return err

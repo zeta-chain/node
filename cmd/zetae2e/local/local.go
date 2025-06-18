@@ -29,34 +29,33 @@ import (
 )
 
 const (
-	flagContractsDeployed        = "deployed"
-	flagWaitForHeight            = "wait-for"
-	FlagConfigFile               = "config"
-	flagConfigOut                = "config-out"
-	flagVerbose                  = "verbose"
-	flagTestAdmin                = "test-admin"
-	flagTestEthStress            = "test-stress-eth"
-	flagTestSolanaStress         = "test-stress-solana"
-	flagTestSuiStress            = "test-stress-sui"
-	flagIterations               = "iterations"
-	flagTestSolana               = "test-solana"
-	flagTestTON                  = "test-ton"
-	flagTestSui                  = "test-sui"
-	flagSkipRegular              = "skip-regular"
-	flagLight                    = "light"
-	flagSetupOnly                = "setup-only"
-	flagSkipSetup                = "skip-setup"
-	flagTestTSSMigration         = "test-tss-migration"
-	flagSkipBitcoinSetup         = "skip-bitcoin-setup"
-	flagSkipHeaderProof          = "skip-header-proof"
-	flagTestLegacy               = "test-legacy"
-	flagSkipTrackerCheck         = "skip-tracker-check"
-	flagSkipPrecompiles          = "skip-precompiles"
-	flagUpgradeContracts         = "upgrade-contracts"
-	flagTestFilter               = "test-filter"
-	flagTestStaking              = "test-staking"
-	flagTestV2ConnectorMigration = "test-v2-connector-migration"
-	flagTestV2Connectorcontract  = "test-v2-connector-contract" // TODO: remove this flag after migration tests are stable
+	flagContractsDeployed      = "deployed"
+	flagWaitForHeight          = "wait-for"
+	FlagConfigFile             = "config"
+	flagConfigOut              = "config-out"
+	flagVerbose                = "verbose"
+	flagTestAdmin              = "test-admin"
+	flagTestEthStress          = "test-stress-eth"
+	flagTestSolanaStress       = "test-stress-solana"
+	flagTestSuiStress          = "test-stress-sui"
+	flagIterations             = "iterations"
+	flagTestSolana             = "test-solana"
+	flagTestTON                = "test-ton"
+	flagTestSui                = "test-sui"
+	flagSkipRegular            = "skip-regular"
+	flagLight                  = "light"
+	flagSetupOnly              = "setup-only"
+	flagSkipSetup              = "skip-setup"
+	flagTestTSSMigration       = "test-tss-migration"
+	flagSkipBitcoinSetup       = "skip-bitcoin-setup"
+	flagSkipHeaderProof        = "skip-header-proof"
+	flagTestLegacy             = "test-legacy"
+	flagSkipTrackerCheck       = "skip-tracker-check"
+	flagSkipPrecompiles        = "skip-precompiles"
+	flagUpgradeContracts       = "upgrade-contracts"
+	flagTestFilter             = "test-filter"
+	flagTestStaking            = "test-staking"
+	flagTestConnectorMigration = "test-connector-migration"
 )
 
 var (
@@ -100,10 +99,7 @@ func NewLocalCmd() *cobra.Command {
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
-	cmd.Flags().Bool(flagTestV2ConnectorMigration, false, "set to true to run v2 connector migration tests")
-	cmd.Flags().
-		Bool(flagTestV2Connectorcontract, false, "set to true to run v2 connector contract tests")
-	// TODO: remove this flag after migration tests are stable
+	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -115,38 +111,35 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight            = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed        = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose                  = must(cmd.Flags().GetBool(flagVerbose))
-		configOut                = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin                = must(cmd.Flags().GetBool(flagTestAdmin))
-		testEthStress            = must(cmd.Flags().GetBool(flagTestEthStress))
-		testSolanaStress         = must(cmd.Flags().GetBool(flagTestSolanaStress))
-		testSuiStress            = must(cmd.Flags().GetBool(flagTestSuiStress))
-		iterations               = must(cmd.Flags().GetInt(flagIterations))
-		testSolana               = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON                  = must(cmd.Flags().GetBool(flagTestTON))
-		testSui                  = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular              = must(cmd.Flags().GetBool(flagSkipRegular))
-		light                    = must(cmd.Flags().GetBool(flagLight))
-		setupOnly                = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup                = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup         = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof          = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck         = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration         = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy               = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles          = must(cmd.Flags().GetBool(flagSkipPrecompiles))
-		upgradeContracts         = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		testStress               = testEthStress || testSolanaStress || testSuiStress
-		setupSolana              = testSolana || testStress
-		setupSui                 = testSui || testStress
-		testFilterStr            = must(cmd.Flags().GetString(flagTestFilter))
-		testStaking              = must(cmd.Flags().GetBool(flagTestStaking))
-		testV2ConnectorMigration = must(cmd.Flags().GetBool(flagTestV2ConnectorMigration))
-		testV2ConnectorContract  = must(
-			cmd.Flags().GetBool(flagTestV2Connectorcontract),
-		) // TODO: remove this flag after migration tests are stable
+		waitForHeight          = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed      = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose                = must(cmd.Flags().GetBool(flagVerbose))
+		configOut              = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin              = must(cmd.Flags().GetBool(flagTestAdmin))
+		testEthStress          = must(cmd.Flags().GetBool(flagTestEthStress))
+		testSolanaStress       = must(cmd.Flags().GetBool(flagTestSolanaStress))
+		testSuiStress          = must(cmd.Flags().GetBool(flagTestSuiStress))
+		iterations             = must(cmd.Flags().GetInt(flagIterations))
+		testSolana             = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON                = must(cmd.Flags().GetBool(flagTestTON))
+		testSui                = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular            = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                  = must(cmd.Flags().GetBool(flagLight))
+		setupOnly              = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup              = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup       = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof        = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
+		skipPrecompiles        = must(cmd.Flags().GetBool(flagSkipPrecompiles))
+		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		testStress             = testEthStress || testSolanaStress || testSuiStress
+		setupSolana            = testSolana || testStress
+		setupSui               = testSui || testStress
+		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
+		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -298,7 +291,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams()
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
 
 		if testTON {
 			deployerRunner.SetupTON(
@@ -560,14 +553,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
-	if testV2ConnectorContract {
-		eg.Go(evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
-			//e2etests.TestZetaDepositName,
-			//e2etests.TestZetaDepositAndCallName,
-			e2etests.TestZetaDepositAndCallRevertName,
-		))
-	}
-
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
@@ -592,7 +577,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	noError(deployerRunner.WithdrawEmissions())
 
 	// Run the migration of funds from v1 connectors to v2 connectors.
-	if testV2ConnectorMigration {
+	if testConnectorMigration {
 		fn := evmTestRoutine(conf, "connector-migration", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestMigrateConnectorFundsName,
 			e2etests.TestLegacyZetaDepositName,

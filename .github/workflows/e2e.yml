@@ -292,7 +292,7 @@ jobs:
           - make-target: "start-legacy-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
-          - make-target: "start-v2-connector-migration-test"
+          - make-target: "start-connector-migration-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.V2_CONNECTOR_MIGRATION_TESTS == 'true' }}
     name: ${{ matrix.make-target }}
