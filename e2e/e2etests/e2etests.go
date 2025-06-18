@@ -282,11 +282,11 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 EVM chain tests
 	*/
-	// TestV2ZetaDepositName is not used for now as the protocol logic has not yet been implemented
+	// TestZetaDepositName is not used for now as the protocol logic has not yet been implemented
 	// // https://github.com/zeta-chain/node/issues/3212
 	runner.NewE2ETest(
 		TestZetaDepositName,
-		"deposit ZETA into ZEVM using v2 protocol contracts",
+		"deposit ZETA into ZEVM using connector contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},

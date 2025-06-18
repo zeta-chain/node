@@ -51,7 +51,7 @@ func transferAllFunds(r *runner.E2ERunner, ensureTxReceipt func(*ethtypes.Transa
 	require.NoError(r, err)
 
 	// Transfer all funds
-	// messaage should be empty so that there is no call triggered on the new connector
+	// message should be empty so that there is no call triggered on the new connector
 	transferTx, err := r.ConnectorEth.OnReceive(
 		r.EVMAuth,
 		[]byte{},              // empty zetaTxSenderAddress
