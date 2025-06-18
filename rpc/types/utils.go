@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -294,6 +295,11 @@ func CheckTxFee(gasPrice *big.Int, gas uint64, minCap float64) error {
 	if minCap == 0 {
 		return nil
 	}
+	// Return an error if gasPrice is nil
+	if gasPrice == nil {
+		return errors.New("gasprice is nil")
+	}
+
 	totalfee := new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas)))
 	// 1 token in atto units (1e18)
 	oneToken := new(big.Float).SetInt(big.NewInt(params.Ether))
