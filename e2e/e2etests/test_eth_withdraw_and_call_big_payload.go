@@ -23,7 +23,8 @@ func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	payload := randomPayloadWithSize(r, 2800)
+	// convert to hex string, actual size == 2880 which is current max in the gateway
+	payload := randomPayloadWithSize(r, 1440)
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -35,6 +36,8 @@ func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 		big.NewInt(200000),
 	)
+
+	r.Logger.EVMTransaction(*tx, "withdraw and call big payload")
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
