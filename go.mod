@@ -325,7 +325,7 @@ require (
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42 // indirect
 	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
-	github.com/cosmos/ibc-go/v10 v10.2.0 // indirect
+	github.com/cosmos/ibc-go/v10 v10.0.0-beta.0.0.20250528142215-7d579b91ac6b // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect

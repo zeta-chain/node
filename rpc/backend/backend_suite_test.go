@@ -1,255 +1,224 @@
 package backend
 
-// import (
-// 	"bufio"
-// 	"math/big"
-// 	"os"
-// 	"path/filepath"
-// 	"testing"
+import (
+	"bufio"
+	"math/big"
+	"os"
+	"path/filepath"
 
-// 	protov2 "google.golang.org/protobuf/proto"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/suite"
 
-// 	abci "github.com/cometbft/cometbft/abci/types"
-// 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-// 	dbm "github.com/cosmos/cosmos-db"
-// 	"github.com/cosmos/cosmos-sdk/client"
-// 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-// 	"github.com/cosmos/cosmos-sdk/server"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	evmtypes "github.com/cosmos/evm/x/vm/types"
-// 	"github.com/ethereum/go-ethereum/common"
-// 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-// 	"github.com/stretchr/testify/suite"
-// 	"github.com/zeta-chain/ethermint/app"
-// 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-// 	"github.com/zeta-chain/ethermint/crypto/hd"
-// 	"github.com/zeta-chain/ethermint/indexer"
-// 	"github.com/zeta-chain/ethermint/tests"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-// 	"github.com/zeta-chain/node/rpc/backend/mocks"
-// 	rpctypes "github.com/zeta-chain/node/rpc/types"
-// )
+	dbm "github.com/cosmos/cosmos-db"
+	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
+	"github.com/cosmos/evm/crypto/hd"
+	"github.com/cosmos/evm/encoding"
+	"github.com/cosmos/evm/indexer"
+	"github.com/cosmos/evm/testutil/constants"
+	"github.com/cosmos/evm/testutil/integration/evm/network"
+	utiltx "github.com/cosmos/evm/testutil/tx"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 
-// type BackendTestSuite struct {
-// 	suite.Suite
-// 	backend *Backend
-// 	acc     sdk.AccAddress
-// 	signer  keyring.Signer
-// }
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
-// // testTx is a dummy implementation of cosmos Tx used for testing.
-// type testTx struct {
-// }
+type TestSuite struct {
+	suite.Suite
 
-// func (tx testTx) GetMsgs() []sdk.Msg                    { return nil }
-// func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
-// func (tx testTx) GetSigners() []sdk.AccAddress          { return nil }
+	create  network.CreateEvmApp
+	options []network.ConfigOption
+	backend *Backend
+	from    common.Address
+	acc     sdk.AccAddress
+	signer  keyring.Signer
+}
 
-// func (tx testTx) ValidateBasic() error { return nil }
-// func (t testTx) ProtoMessage()         { panic("not implemented") }
-// func (t testTx) Reset()                { panic("not implemented") }
+func NewTestSuite(create network.CreateEvmApp, options ...network.ConfigOption) *TestSuite {
+	return &TestSuite{
+		create:  create,
+		options: options,
+	}
+}
 
-// func (t testTx) String() string { panic("not implemented") }
+var ChainID = constants.ExampleChainID
 
-// func (t testTx) Bytes() []byte { panic("not implemented") }
+// SetupTest is executed before every TestSuite test
+func (s *TestSuite) SetupTest() {
+	ctx := server.NewDefaultContext()
+	ctx.Viper.Set("telemetry.global-labels", []interface{}{})
+	ctx.Viper.Set("evm.evm-chain-id", evmdconfig.EVMChainID)
 
-// func (t testTx) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
+	baseDir := s.T().TempDir()
+	nodeDirName := "node"
+	clientDir := filepath.Join(baseDir, nodeDirName, "evmoscli")
+	keyRing, err := s.generateTestKeyring(clientDir)
+	if err != nil {
+		panic(err)
+	}
 
-// func (t testTx) Type() string { panic("not implemented") }
+	// Create Account with set sequence
+	s.acc = sdk.AccAddress(utiltx.GenerateAddress().Bytes())
+	accounts := map[string]client.TestAccount{}
+	accounts[s.acc.String()] = client.TestAccount{
+		Address: s.acc,
+		Num:     uint64(1),
+		Seq:     uint64(1),
+	}
 
-// var (
-// 	_ sdk.Tx  = (*testTx)(nil)
-// 	_ sdk.Msg = (*testTx)(nil)
-// )
+	from, priv := utiltx.NewAddrKey()
+	s.from = from
+	s.signer = utiltx.NewSigner(priv)
+	s.Require().NoError(err)
 
-// func TestBackendTestSuite(t *testing.T) {
-// 	suite.Run(t, new(BackendTestSuite))
-// }
+	nw := network.New(s.create, s.options...)
+	encodingConfig := nw.GetEncodingConfig()
+	clientCtx := client.Context{}.WithChainID(ChainID.ChainID).
+		WithHeight(1).
+		WithTxConfig(encodingConfig.TxConfig).
+		WithKeyringDir(clientDir).
+		WithKeyring(keyRing).
+		WithAccountRetriever(client.TestAccountRetriever{Accounts: accounts}).
+		WithClient(mocks.NewClient(s.T()))
 
-// const ChainID = "zetachain_7001-1"
+	allowUnprotectedTxs := false
+	idxer := indexer.NewKVIndexer(dbm.NewMemDB(), ctx.Logger, clientCtx)
 
-// // SetupTest is executed before every BackendTestSuite test
-// func (suite *BackendTestSuite) SetupTest() {
-// 	ctx := server.NewDefaultContext()
-// 	ctx.Viper.Set("telemetry.global-labels", []interface{}{})
+	s.backend = NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, idxer)
+	s.backend.Cfg.JSONRPC.GasCap = 0
+	s.backend.Cfg.JSONRPC.EVMTimeout = 0
+	s.backend.Cfg.JSONRPC.AllowInsecureUnlock = true
+	s.backend.Cfg.EVM.EVMChainID = 262144
+	s.backend.QueryClient.QueryClient = mocks.NewEVMQueryClient(s.T())
+	s.backend.QueryClient.FeeMarket = mocks.NewFeeMarketQueryClient(s.T())
+	s.backend.Ctx = rpctypes.ContextWithHeight(1)
 
-// 	baseDir := suite.T().TempDir()
-// 	nodeDirName := "node"
-// 	clientDir := filepath.Join(baseDir, nodeDirName, "evmoscli")
-// 	keyRing, err := suite.generateTestKeyring(clientDir)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+	// Add codec
+	s.backend.ClientCtx.Codec = encodingConfig.Codec
+}
 
-// 	// Create Account with set sequence
+// buildEthereumTx returns an example legacy Ethereum transaction
+func (s *TestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
+	ethTxParams := evmtypes.EvmTxArgs{
+		ChainID:  s.backend.EvmChainID,
+		Nonce:    uint64(0),
+		To:       &common.Address{},
+		Amount:   big.NewInt(0),
+		GasLimit: 100000,
+		GasPrice: big.NewInt(1),
+	}
+	msgEthereumTx := evmtypes.NewTx(&ethTxParams)
 
-// 	suite.acc = sdk.AccAddress(tests.GenerateAddress().Bytes())
-// 	accounts := map[string]client.TestAccount{}
-// 	accounts[suite.acc.String()] = client.TestAccount{
-// 		Address: suite.acc,
-// 		Num:     uint64(1),
-// 		Seq:     uint64(1),
-// 	}
+	// A valid msg should have empty `From`
+	msgEthereumTx.From = s.from.Hex()
 
-// 	priv, err := ethsecp256k1.GenerateKey()
-// 	suite.signer = tests.NewSigner(priv)
-// 	suite.Require().NoError(err)
+	txBuilder := s.backend.ClientCtx.TxConfig.NewTxBuilder()
+	err := txBuilder.SetMsgs(msgEthereumTx)
+	s.Require().NoError(err)
 
-// 	encodingConfig := app.MakeConfigForTest()
-// 	clientCtx := client.Context{}.WithChainID(ChainID).
-// 		WithHeight(1).
-// 		WithTxConfig(encodingConfig.TxConfig).
-// 		WithKeyringDir(clientDir).
-// 		WithKeyring(keyRing).
-// 		WithAccountRetriever(client.TestAccountRetriever{Accounts: accounts})
+	bz, err := s.backend.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+	return msgEthereumTx, bz
+}
 
-// 	allowUnprotectedTxs := false
-// 	idxer := indexer.NewKVIndexer(dbm.NewMemDB(), ctx.Logger, clientCtx)
+// buildEthereumTx returns an example legacy Ethereum transaction
+func (s *TestSuite) buildEthereumTxWithChainID(eip155ChainID *big.Int) *evmtypes.MsgEthereumTx {
+	ethTxParams := evmtypes.EvmTxArgs{
+		ChainID:  eip155ChainID,
+		Nonce:    uint64(0),
+		To:       &common.Address{},
+		Amount:   big.NewInt(0),
+		GasLimit: 100000,
+		GasPrice: big.NewInt(1),
+	}
+	msgEthereumTx := evmtypes.NewTx(&ethTxParams)
 
-// 	suite.backend = NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, idxer)
-// 	suite.backend.queryClient.QueryClient = mocks.NewEVMQueryClient(suite.T())
-// 	suite.backend.clientCtx.Client = mocks.NewClient(suite.T())
-// 	suite.backend.queryClient.FeeMarket = mocks.NewFeeMarketQueryClient(suite.T())
-// 	suite.backend.ctx = rpctypes.ContextWithHeight(1)
+	// A valid msg should have empty `From`
+	msgEthereumTx.From = s.from.Hex()
 
-// 	// Add codec
-// 	encCfg := app.MakeConfigForTest()
-// 	suite.backend.clientCtx.Codec = encCfg.Codec
-// }
+	txBuilder := s.backend.ClientCtx.TxConfig.NewTxBuilder()
+	err := txBuilder.SetMsgs(msgEthereumTx)
+	s.Require().NoError(err)
 
-// // buildEthereumTx returns an example legacy Ethereum transaction
-// func (suite *BackendTestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
-// 	msgEthereumTx := evmtypes.NewTx(
-// 		suite.backend.chainID,
-// 		uint64(0),
-// 		&common.Address{},
-// 		big.NewInt(0),
-// 		100000,
-// 		big.NewInt(1),
-// 		nil,
-// 		nil,
-// 		nil,
-// 		nil,
-// 	)
-// 	suite.signAndEncodeEthTx(msgEthereumTx)
+	return msgEthereumTx
+}
 
-// 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
-// 	txBuilder.SetSignatures()
-// 	err := txBuilder.SetMsgs(msgEthereumTx)
-// 	suite.Require().NoError(err)
+// buildFormattedBlock returns a formatted block for testing
+func (s *TestSuite) buildFormattedBlock(
+	blockRes *cmtrpctypes.ResultBlockResults,
+	resBlock *cmtrpctypes.ResultBlock,
+	fullTx bool,
+	tx *evmtypes.MsgEthereumTx,
+	validator sdk.AccAddress,
+	baseFee *big.Int,
+) map[string]interface{} {
+	header := resBlock.Block.Header
+	gasLimit := int64(^uint32(0))                                             // for `MaxGas = -1` (DefaultConsensusParams)
+	gasUsed := new(big.Int).SetUint64(uint64(blockRes.TxsResults[0].GasUsed)) //nolint:gosec // G115 // won't exceed uint64
 
-// 	bz, err := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-// 	suite.Require().NoError(err)
-// 	return msgEthereumTx, bz
-// }
+	root := common.Hash{}.Bytes()
+	receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())
+	bloom := ethtypes.CreateBloom(receipt)
 
-// func (suite *BackendTestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.ExecTxResult) {
-// 	testTx := &testTx{}
-// 	txBuilder := suite.backend.clientCtx.TxConfig.NewTxBuilder()
-// 	txBuilder.SetSignatures()
-// 	txBuilder.SetMsgs(testTx)
-// 	bz, _ := suite.backend.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-// 	return bz, abci.ExecTxResult{
-// 		Code: 0,
-// 		Events: []abci.Event{
-// 			{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 				{Key: "ethereumTxHash", Value: txHash},
-// 				{Key: "txIndex", Value: "8888"},
-// 				{Key: "txData", Value: "0x1234"},
-// 				{Key: "amount", Value: "1000"},
-// 				{Key: "txGasUsed", Value: "21000"},
-// 				{Key: "txGasLimit", Value: "21000"},
-// 				{Key: "txHash", Value: ""},
-// 				{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 			}},
-// 			{
-// 				Type: "message", Attributes: []abci.EventAttribute{
-// 					{Key: "sender", Value: "0x735b14BB79463307AAcBED86DAf3322B1e6226aB"},
-// 					{Key: "txType", Value: "88"},
-// 					{Key: "txNonce", Value: "1"},
-// 				},
-// 			},
-// 		},
-// 	}
-// }
+	ethRPCTxs := []interface{}{}
+	if tx != nil {
+		if fullTx {
+			rpcTx, err := rpctypes.NewRPCTransaction(
+				tx.AsTransaction(),
+				common.BytesToHash(header.Hash()),
+				uint64(header.Height), //nolint:gosec // G115 // won't exceed uint64
+				uint64(0),
+				baseFee,
+				s.backend.EvmChainID,
+			)
+			s.Require().NoError(err)
+			ethRPCTxs = []interface{}{rpcTx}
+		} else {
+			ethRPCTxs = []interface{}{common.HexToHash(tx.Hash)}
+		}
+	}
 
-// // buildFormattedBlock returns a formatted block for testing
-// func (suite *BackendTestSuite) buildFormattedBlock(
-// 	blockRes *tmrpctypes.ResultBlockResults,
-// 	resBlock *tmrpctypes.ResultBlock,
-// 	fullTx bool,
-// 	tx *evmtypes.MsgEthereumTx,
-// 	validator sdk.AccAddress,
-// 	baseFee *big.Int,
-// ) map[string]interface{} {
-// 	header := resBlock.Block.Header
-// 	gasLimit := int64(^uint32(0)) // for `MaxGas = -1` (DefaultConsensusParams)
-// 	gasUsed := new(big.Int).SetUint64(uint64(blockRes.TxsResults[0].GasUsed))
+	return rpctypes.FormatBlock(
+		header,
+		resBlock.Block.Size(),
+		gasLimit,
+		gasUsed,
+		ethRPCTxs,
+		bloom,
+		common.BytesToAddress(validator.Bytes()),
+		baseFee,
+	)
+}
 
-// 	root := common.Hash{}.Bytes()
-// 	receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())
-// 	bloom := ethtypes.CreateBloom(ethtypes.Receipts{receipt})
+func (s *TestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
+	buf := bufio.NewReader(os.Stdin)
+	encCfg := encoding.MakeConfig(evmdconfig.EVMChainID)
+	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
+}
 
-// 	ethRPCTxs := []interface{}{}
-// 	if tx != nil {
-// 		if fullTx {
-// 			rpcTx, err := rpctypes.NewRPCTransaction(
-// 				tx.AsTransaction(),
-// 				common.BytesToHash(header.Hash()),
-// 				uint64(header.Height),
-// 				uint64(0),
-// 				baseFee,
-// 				suite.backend.chainID,
-// 			)
-// 			suite.Require().NoError(err)
-// 			ethRPCTxs = []interface{}{rpcTx}
-// 		} else {
-// 			ethRPCTxs = []interface{}{common.HexToHash(tx.Hash)}
-// 		}
-// 	}
+func (s *TestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
+	from, priv := utiltx.NewAddrKey()
+	signer := utiltx.NewSigner(priv)
 
-// 	return rpctypes.FormatBlock(
-// 		header,
-// 		resBlock.Block.Size(),
-// 		gasLimit,
-// 		gasUsed,
-// 		ethRPCTxs,
-// 		bloom,
-// 		common.BytesToAddress(validator.Bytes()),
-// 		baseFee,
-// 	)
-// }
+	ethSigner := ethtypes.LatestSigner(s.backend.ChainConfig())
+	msgEthereumTx.From = from.String()
+	err := msgEthereumTx.Sign(ethSigner, signer)
+	s.Require().NoError(err)
 
-// func (suite *BackendTestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
-// 	buf := bufio.NewReader(os.Stdin)
-// 	encCfg := app.MakeConfigForTest()
-// 	return keyring.New(
-// 		sdk.KeyringServiceName(),
-// 		keyring.BackendTest,
-// 		clientDir,
-// 		buf,
-// 		encCfg.Codec,
-// 		[]keyring.Option{hd.EthSecp256k1Option()}...)
-// }
+	evmDenom := evmtypes.GetEVMCoinDenom()
+	tx, err := msgEthereumTx.BuildTx(s.backend.ClientCtx.TxConfig.NewTxBuilder(), evmDenom)
+	s.Require().NoError(err)
 
-// func (suite *BackendTestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
-// 	from, priv := tests.NewAddrKey()
-// 	signer := tests.NewSigner(priv)
+	txEncoder := s.backend.ClientCtx.TxConfig.TxEncoder()
+	txBz, err := txEncoder(tx)
+	s.Require().NoError(err)
 
-// 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-// 	RegisterParamsWithoutHeader(queryClient, 1)
-
-// 	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
-// 	msgEthereumTx.From = from.String()
-// 	err := msgEthereumTx.Sign(ethSigner, signer)
-// 	suite.Require().NoError(err)
-
-// 	tx, err := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
-// 	suite.Require().NoError(err)
-
-// 	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
-// 	txBz, err := txEncoder(tx)
-// 	suite.Require().NoError(err)
-
-// 	return txBz
-// }
+	return txBz
+}

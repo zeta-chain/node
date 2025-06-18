@@ -1,317 +1,266 @@
 package backend
 
-// import (
-// 	"fmt"
+import (
+	"fmt"
 
-// 	tmlog "cosmossdk.io/log"
-// 	abci "github.com/cometbft/cometbft/abci/types"
-// 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-// 	"github.com/cometbft/cometbft/types"
-// 	dbm "github.com/cosmos/cosmos-db"
-// 	"github.com/cosmos/cosmos-sdk/crypto"
-// 	evmtypes "github.com/cosmos/evm/x/vm/types"
-// 	"github.com/ethereum/go-ethereum/common"
-// 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-// 	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-// 	"github.com/zeta-chain/ethermint/indexer"
-// 	rpctypes "github.com/zeta-chain/node/rpc/types"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-// 	"github.com/zeta-chain/node/rpc/backend/mocks"
-// )
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cometbft/cometbft/types"
 
-// func (suite *BackendTestSuite) TestTraceTransaction() {
-// 	msgEthereumTx, _ := suite.buildEthereumTx()
-// 	msgEthereumTx2, _ := suite.buildEthereumTx()
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/evm/crypto/ethsecp256k1"
+	"github.com/cosmos/evm/indexer"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/backend/mocks"
 
-// 	txHash := msgEthereumTx.AsTransaction().Hash()
-// 	txHash2 := msgEthereumTx2.AsTransaction().Hash()
+	"cosmossdk.io/log"
 
-// 	priv, err := ethsecp256k1.GenerateKey()
-// 	suite.Require().NoError(err)
-// 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
+	"github.com/cosmos/cosmos-sdk/crypto"
+)
 
-// 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-// 	RegisterParamsWithoutHeader(queryClient, 1)
+func (s *TestSuite) TestTraceTransaction() {
+	msgEthereumTx, _ := s.buildEthereumTx()
+	msgEthereumTx2, _ := s.buildEthereumTx()
 
-// 	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
-// 	suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
-// 	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
+	txHash := msgEthereumTx.AsTransaction().Hash()
+	txHash2 := msgEthereumTx2.AsTransaction().Hash()
 
-// 	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
+	priv, _ := ethsecp256k1.GenerateKey()
+	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
+	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+	_ = s.backend.ClientCtx.Keyring.ImportPrivKey("test_key", armor, "")
 
-// 	msgEthereumTx.From = from.String()
-// 	msgEthereumTx.Sign(ethSigner, suite.signer)
-// 	tx, err := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
-// 	suite.Require().NoError(err)
-// 	txBz, err := txEncoder(tx)
-// 	suite.Require().NoError(err)
+	ethSigner := ethtypes.LatestSigner(s.backend.ChainConfig())
 
-// 	msgEthereumTx2.From = from.String()
-// 	msgEthereumTx2.Sign(ethSigner, suite.signer)
-// 	tx2, err := msgEthereumTx2.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "azeta")
-// 	suite.Require().NoError(err)
-// 	txBz2, err := txEncoder(tx2)
-// 	suite.Require().NoError(err)
+	txEncoder := s.backend.ClientCtx.TxConfig.TxEncoder()
 
-// 	testCases := []struct {
-// 		name          string
-// 		txHash        common.Hash
-// 		registerMock  func()
-// 		block         *types.Block
-// 		responseBlock []*abci.ExecTxResult
-// 		expResult     interface{}
-// 		expPass       bool
-// 	}{
-// 		{
-// 			"fail - tx not found",
-// 			txHash,
-// 			func() {},
-// 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
-// 			[]*abci.ExecTxResult{
-// 				{
-// 					Code: 0,
-// 					Events: []abci.Event{
-// 						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 							{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 							{Key: "txIndex", Value: "0"},
-// 							{Key: "amount", Value: "1000"},
-// 							{Key: "txGasUsed", Value: "21000"},
-// 							{Key: "txHash", Value: ""},
-// 							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 						}},
-// 					},
-// 				},
-// 			},
-// 			nil,
-// 			false,
-// 		},
-// 		{
-// 			"fail - block not found",
-// 			txHash,
-// 			func() {
-// 				// var header metadata.MD
-// 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-// 				RegisterBlockError(client, 1)
-// 			},
-// 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-// 			[]*abci.ExecTxResult{
-// 				{
-// 					Code: 0,
-// 					Events: []abci.Event{
-// 						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 							{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 							{Key: "txIndex", Value: "0"},
-// 							{Key: "amount", Value: "1000"},
-// 							{Key: "txGasUsed", Value: "21000"},
-// 							{Key: "txHash", Value: ""},
-// 							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 						}},
-// 					},
-// 				},
-// 			},
-// 			map[string]interface{}{"test": "hello"},
-// 			false,
-// 		},
-// 		{
-// 			"pass - transaction found in a block with multiple transactions",
-// 			txHash2, // tx1 is predecessor of tx2
-// 			func() {
-// 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-// 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-// 				RegisterBlock(client, 1, []types.Tx{txBz, txBz2})
-// 				RegisterTraceTransactionWithPredecessors(
-// 					queryClient,
-// 					msgEthereumTx2,
-// 					[]*evmtypes.MsgEthereumTx{msgEthereumTx},
-// 				)
-// 				txResults := []*abci.ExecTxResult{
-// 					{
-// 						Code: 0,
-// 						Events: []abci.Event{
-// 							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 								{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 								{Key: "txIndex", Value: "0"},
-// 								{Key: "amount", Value: "1000"},
-// 								{Key: "txGasUsed", Value: "21000"},
-// 								{Key: "txHash", Value: ""},
-// 								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 							}},
-// 						},
-// 					},
-// 					{
-// 						Code: 0,
-// 						Events: []abci.Event{
-// 							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 								{Key: "ethereumTxHash", Value: txHash2.Hex()},
-// 								{Key: "txIndex", Value: "1"},
-// 								{Key: "amount", Value: "1000"},
-// 								{Key: "txGasUsed", Value: "21000"},
-// 								{Key: "txHash", Value: ""},
-// 								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 							}},
-// 						},
-// 					},
-// 				}
+	msgEthereumTx.From = from.String()
+	_ = msgEthereumTx.Sign(ethSigner, s.signer)
 
-// 				RegisterBlockResultsWithTxResults(client, 1, txResults)
-// 			},
-// 			&types.Block{
-// 				Header: types.Header{Height: 1, ChainID: ChainID},
-// 				Data:   types.Data{Txs: []types.Tx{txBz, txBz2}},
-// 			},
-// 			[]*abci.ExecTxResult{
-// 				{
-// 					Code: 0,
-// 					Events: []abci.Event{
-// 						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 							{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 							{Key: "txIndex", Value: "0"},
-// 							{Key: "amount", Value: "1000"},
-// 							{Key: "txGasUsed", Value: "21000"},
-// 							{Key: "txHash", Value: ""},
-// 							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 						}},
-// 					},
-// 				},
-// 				{
-// 					Code: 0,
-// 					Events: []abci.Event{
-// 						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 							{Key: "ethereumTxHash", Value: txHash2.Hex()},
-// 							{Key: "txIndex", Value: "1"},
-// 							{Key: "amount", Value: "1000"},
-// 							{Key: "txGasUsed", Value: "21000"},
-// 							{Key: "txHash", Value: ""},
-// 							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 						}},
-// 					},
-// 				},
-// 			},
-// 			map[string]interface{}{"test": "hello"},
-// 			true,
-// 		},
-// 		{
-// 			"pass - transaction found",
-// 			txHash,
-// 			func() {
-// 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-// 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-// 				RegisterBlock(client, 1, []types.Tx{txBz})
-// 				RegisterTraceTransaction(queryClient, msgEthereumTx)
-// 				txResults := []*abci.ExecTxResult{
-// 					{
-// 						Code: 0,
-// 						Events: []abci.Event{
-// 							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 								{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 								{Key: "txIndex", Value: "0"},
-// 								{Key: "amount", Value: "1000"},
-// 								{Key: "txGasUsed", Value: "21000"},
-// 								{Key: "txHash", Value: ""},
-// 								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 							}},
-// 						},
-// 					},
-// 				}
-// 				RegisterBlockResultsWithTxResults(client, 1, txResults)
+	baseDenom := evmtypes.GetEVMCoinDenom()
 
-// 			},
-// 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-// 			[]*abci.ExecTxResult{
-// 				{
-// 					Code: 0,
-// 					Events: []abci.Event{
-// 						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
-// 							{Key: "ethereumTxHash", Value: txHash.Hex()},
-// 							{Key: "txIndex", Value: "0"},
-// 							{Key: "amount", Value: "1000"},
-// 							{Key: "txGasUsed", Value: "21000"},
-// 							{Key: "txHash", Value: ""},
-// 							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
-// 						}},
-// 					},
-// 				},
-// 			},
-// 			map[string]interface{}{"test": "hello"},
-// 			true,
-// 		},
-// 	}
+	tx, _ := msgEthereumTx.BuildTx(s.backend.ClientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	txBz, _ := txEncoder(tx)
 
-// 	for _, tc := range testCases {
-// 		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-// 			suite.SetupTest() // reset test and queries
-// 			tc.registerMock()
+	msgEthereumTx2.From = from.String()
+	_ = msgEthereumTx2.Sign(ethSigner, s.signer)
 
-// 			db := dbm.NewMemDB()
-// 			suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
+	tx2, _ := msgEthereumTx.BuildTx(s.backend.ClientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	txBz2, _ := txEncoder(tx2)
 
-// 			err := suite.backend.indexer.IndexBlock(tc.block, tc.responseBlock)
-// 			suite.Require().NoError(err)
-// 			txResult, err := suite.backend.TraceTransaction(tc.txHash, nil)
+	testCases := []struct {
+		name          string
+		registerMock  func()
+		block         *types.Block
+		responseBlock []*abci.ExecTxResult
+		expResult     interface{}
+		expPass       bool
+	}{
+		{
+			"fail - tx not found",
+			func() {},
+			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
+			[]*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			nil,
+			false,
+		},
+		{
+			"fail - block not found",
+			func() {
+				// var header metadata.MD
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				RegisterBlockError(client, 1)
+			},
+			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
+			[]*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			map[string]interface{}{"test": "hello"},
+			false,
+		},
+		{
+			"pass - transaction found in a block with multiple transactions",
+			func() {
+				var (
+					QueryClient       = s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+					client            = s.backend.ClientCtx.Client.(*mocks.Client)
+					height      int64 = 1
+				)
+				_, err := RegisterBlockMultipleTxs(client, height, []types.Tx{txBz, txBz2})
+				s.Require().NoError(err)
+				RegisterTraceTransactionWithPredecessors(QueryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterConsensusParams(client, height)
+			},
+			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID.ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
+			[]*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash2.Hex()},
+							{Key: "txIndex", Value: "1"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			map[string]interface{}{"test": "hello"},
+			true,
+		},
+		{
+			"pass - transaction found",
+			func() {
+				var (
+					QueryClient       = s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+					client            = s.backend.ClientCtx.Client.(*mocks.Client)
+					height      int64 = 1
+				)
+				_, err := RegisterBlock(client, height, txBz)
+				s.Require().NoError(err)
+				RegisterTraceTransaction(QueryClient, msgEthereumTx)
+				RegisterConsensusParams(client, height)
+			},
+			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
+			[]*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			map[string]interface{}{"test": "hello"},
+			true,
+		},
+	}
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err)
-// 				suite.Require().Equal(tc.expResult, txResult)
-// 			} else {
-// 				suite.Require().Error(err)
-// 			}
-// 		})
-// 	}
-// }
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
+			tc.registerMock()
 
-// func (suite *BackendTestSuite) TestTraceBlock() {
-// 	msgEthTx, bz := suite.buildEthereumTx()
-// 	emptyBlock := types.MakeBlock(1, []types.Tx{}, nil, nil)
-// 	emptyBlock.ChainID = ChainID
-// 	filledBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
-// 	filledBlock.ChainID = ChainID
-// 	resBlockEmpty := tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: emptyBlock.LastBlockID}
-// 	resBlockFilled := tmrpctypes.ResultBlock{Block: filledBlock, BlockID: filledBlock.LastBlockID}
+			db := dbm.NewMemDB()
+			s.backend.Indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), s.backend.ClientCtx)
 
-// 	testCases := []struct {
-// 		name            string
-// 		registerMock    func()
-// 		expTraceResults []*evmtypes.TxTraceResult
-// 		resBlock        *tmrpctypes.ResultBlock
-// 		config          *rpctypes.TraceConfig
-// 		expPass         bool
-// 	}{
-// 		{
-// 			"pass - no transaction returning empty array",
-// 			func() {},
-// 			[]*evmtypes.TxTraceResult{},
-// 			&resBlockEmpty,
-// 			&rpctypes.TraceConfig{},
-// 			true,
-// 		},
-// 		{
-// 			"fail - cannot unmarshal data",
-// 			func() {
-// 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-// 				RegisterTraceBlock(queryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
-// 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-// 				RegisterBlockResults(client, 1)
-// 			},
-// 			[]*evmtypes.TxTraceResult{},
-// 			&resBlockFilled,
-// 			&rpctypes.TraceConfig{},
-// 			false,
-// 		},
-// 	}
+			err := s.backend.Indexer.IndexBlock(tc.block, tc.responseBlock)
+			s.Require().NoError(err)
+			txResult, err := s.backend.TraceTransaction(txHash, nil)
 
-// 	for _, tc := range testCases {
-// 		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-// 			suite.SetupTest() // reset test and queries
-// 			tc.registerMock()
+			if tc.expPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expResult, txResult)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
 
-// 			traceResults, err := suite.backend.TraceBlock(1, tc.config, tc.resBlock)
+func (s *TestSuite) TestTraceBlock() {
+	msgEthTx, bz := s.buildEthereumTx()
+	emptyBlock := types.MakeBlock(1, []types.Tx{}, nil, nil)
+	emptyBlock.ChainID = ChainID.ChainID
+	filledBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
+	filledBlock.ChainID = ChainID.ChainID
+	resBlockEmpty := tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: emptyBlock.LastBlockID}
+	resBlockFilled := tmrpctypes.ResultBlock{Block: filledBlock, BlockID: filledBlock.LastBlockID}
 
-// 			if tc.expPass {
-// 				suite.Require().NoError(err)
-// 				suite.Require().Equal(tc.expTraceResults, traceResults)
-// 			} else {
-// 				suite.Require().Error(err)
-// 			}
-// 		})
-// 	}
-// }
+	testCases := []struct {
+		name            string
+		registerMock    func()
+		expTraceResults []*evmtypes.TxTraceResult
+		resBlock        *tmrpctypes.ResultBlock
+		config          *evmtypes.TraceConfig
+		expPass         bool
+	}{
+		{
+			"pass - no transaction returning empty array",
+			func() {},
+			[]*evmtypes.TxTraceResult{},
+			&resBlockEmpty,
+			&evmtypes.TraceConfig{},
+			true,
+		},
+		{
+			"fail - cannot unmarshal data",
+			func() {
+				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
+				RegisterConsensusParams(client, 1)
+			},
+			[]*evmtypes.TxTraceResult{},
+			&resBlockFilled,
+			&evmtypes.TraceConfig{},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
+			tc.registerMock()
+
+			traceResults, err := s.backend.TraceBlock(1, tc.config, tc.resBlock)
+
+			if tc.expPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expTraceResults, traceResults)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
