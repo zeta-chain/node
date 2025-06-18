@@ -305,7 +305,8 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		// They are stored in the chain database.
 		"transactionHash": hash,
 		"contractAddress": nil,
-		"gasUsed":         hexutil.Uint64(b.GetGasUsed(res, txData.GetGasPrice(), txData.GetGas())),
+		// "gasUsed":         hexutil.Uint64(b.GetGasUsed(res, txData.GetGasPrice(), txData.GetGas())),
+		"gasUsed": hexutil.Uint64(res.GasUsed),
 
 		// Inclusion information: These fields provide information about the inclusion of the
 		// transaction corresponding to this receipt.
@@ -313,12 +314,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		"blockNumber":      hexutil.Uint64(res.Height),     //nolint:gosec // G115 // won't exceed uint64
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex), //nolint:gosec // G115 // no int overflow expected here
 
-		// https://github.com/foundry-rs/foundry/issues/7640
-		"effectiveGasPrice": (*hexutil.Big)(txData.GetGasPrice()),
-
 		// sender and receiver (contract or EOA) addreses
 		"from": from,
-		"to":   txData.GetTo(),
+		"to":   to,
 		"type": hexutil.Uint(txType),
 	}
 

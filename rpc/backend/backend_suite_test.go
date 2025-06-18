@@ -149,8 +149,7 @@ func (s *TestSuite) buildEthereumTx() (*evmtypes.MsgEthereumTx, []byte) {
 	}
 	msgEthereumTx := evmtypes.NewTx(&ethTxParams)
 
-	// A valid msg should have empty `From`
-	msgEthereumTx.From = s.from.Hex()
+	s.signAndEncodeEthTx(msgEthereumTx)
 
 	txBuilder := s.backend.ClientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgEthereumTx)

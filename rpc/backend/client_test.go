@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -36,6 +37,12 @@ var _ cmtrpcclient.Client = &mocks.Client{}
 // Tx Search
 func RegisterTxSearch(client *mocks.Client, query string, txBz []byte) {
 	resulTxs := []*cmtrpctypes.ResultTx{{Tx: txBz}}
+	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
+		Return(&cmtrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
+}
+
+func RegisterTxSearchWithTxResult(client *mocks.Client, query string, txBz []byte, res abci.ExecTxResult) {
+	resulTxs := []*cmtrpctypes.ResultTx{{Tx: txBz, Height: 1, TxResult: res}}
 	client.On("TxSearch", rpc.ContextWithHeight(1), query, false, (*int)(nil), (*int)(nil), "").
 		Return(&cmtrpctypes.ResultTxSearch{Txs: resulTxs, TotalCount: 1}, nil)
 }
@@ -112,7 +119,8 @@ func RegisterBlock(
 	if tx == nil {
 		emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 		emptyBlock.ChainID = ChainID.ChainID
-		resBlock := &cmtrpctypes.ResultBlock{Block: emptyBlock}
+		blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+		resBlock := &cmtrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 		client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 		return resBlock, nil
 	}
@@ -120,7 +128,8 @@ func RegisterBlock(
 	// with tx
 	block := types.MakeBlock(height, []types.Tx{tx}, nil, nil)
 	block.ChainID = ChainID.ChainID
-	resBlock := &cmtrpctypes.ResultBlock{Block: block}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &cmtrpctypes.ResultBlock{Block: block, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	client.On("Block", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).Return(resBlock, nil)
 	return resBlock, nil
 }
@@ -167,7 +176,8 @@ func TestRegisterBlock(t *testing.T) {
 
 	emptyBlock := types.MakeBlock(height, []types.Tx{}, nil, nil)
 	emptyBlock.ChainID = ChainID.ChainID
-	resBlock := &cmtrpctypes.ResultBlock{Block: emptyBlock}
+	blockHash := common.BigToHash(big.NewInt(height)).Bytes()
+	resBlock := &cmtrpctypes.ResultBlock{Block: emptyBlock, BlockID: types.BlockID{Hash: bytes.HexBytes(blockHash)}}
 	require.Equal(t, resBlock, res)
 	require.NoError(t, err)
 }

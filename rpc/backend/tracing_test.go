@@ -48,11 +48,12 @@ func (s *TestSuite) TestTraceTransaction() {
 	msgEthereumTx2.From = from.String()
 	_ = msgEthereumTx2.Sign(ethSigner, s.signer)
 
-	tx2, _ := msgEthereumTx.BuildTx(s.backend.ClientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	tx2, _ := msgEthereumTx2.BuildTx(s.backend.ClientCtx.TxConfig.NewTxBuilder(), baseDenom)
 	txBz2, _ := txEncoder(tx2)
 
 	testCases := []struct {
 		name          string
+		txHash        common.Hash
 		registerMock  func()
 		block         *types.Block
 		responseBlock []*abci.ExecTxResult
@@ -61,6 +62,7 @@ func (s *TestSuite) TestTraceTransaction() {
 	}{
 		{
 			"fail - tx not found",
+			txHash,
 			func() {},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{}}},
 			[]*abci.ExecTxResult{
@@ -83,6 +85,7 @@ func (s *TestSuite) TestTraceTransaction() {
 		},
 		{
 			"fail - block not found",
+			txHash,
 			func() {
 				// var header metadata.MD
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
@@ -109,6 +112,7 @@ func (s *TestSuite) TestTraceTransaction() {
 		},
 		{
 			"pass - transaction found in a block with multiple transactions",
+			txHash2, // tx1 is predecessor of tx2
 			func() {
 				var (
 					QueryClient       = s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -117,8 +121,38 @@ func (s *TestSuite) TestTraceTransaction() {
 				)
 				_, err := RegisterBlockMultipleTxs(client, height, []types.Tx{txBz, txBz2})
 				s.Require().NoError(err)
-				RegisterTraceTransactionWithPredecessors(QueryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterTraceTransactionWithPredecessors(QueryClient, msgEthereumTx2, []*evmtypes.MsgEthereumTx{msgEthereumTx})
 				RegisterConsensusParams(client, height)
+				txResults := []*abci.ExecTxResult{
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash.Hex()},
+								{Key: "txIndex", Value: "0"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash2.Hex()},
+								{Key: "txIndex", Value: "1"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+				}
+
+				RegisterBlockResultsWithTxResults(client, 1, txResults)
 			},
 			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID.ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
 			[]*abci.ExecTxResult{
@@ -154,6 +188,7 @@ func (s *TestSuite) TestTraceTransaction() {
 		},
 		{
 			"pass - transaction found",
+			txHash,
 			func() {
 				var (
 					QueryClient       = s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -164,6 +199,22 @@ func (s *TestSuite) TestTraceTransaction() {
 				s.Require().NoError(err)
 				RegisterTraceTransaction(QueryClient, msgEthereumTx)
 				RegisterConsensusParams(client, height)
+				txResults := []*abci.ExecTxResult{
+					{
+						Code: 0,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: "ethereumTxHash", Value: txHash.Hex()},
+								{Key: "txIndex", Value: "0"},
+								{Key: "amount", Value: "1000"},
+								{Key: "txGasUsed", Value: "21000"},
+								{Key: "txHash", Value: ""},
+								{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+							}},
+						},
+					},
+				}
+				RegisterBlockResultsWithTxResults(client, 1, txResults)
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			[]*abci.ExecTxResult{
@@ -196,7 +247,7 @@ func (s *TestSuite) TestTraceTransaction() {
 
 			err := s.backend.Indexer.IndexBlock(tc.block, tc.responseBlock)
 			s.Require().NoError(err)
-			txResult, err := s.backend.TraceTransaction(txHash, nil)
+			txResult, err := s.backend.TraceTransaction(tc.txHash, nil)
 
 			if tc.expPass {
 				s.Require().NoError(err)
@@ -240,6 +291,7 @@ func (s *TestSuite) TestTraceBlock() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterTraceBlock(QueryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
 				RegisterConsensusParams(client, 1)
+				RegisterBlockResults(client, 1)
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,

@@ -45,7 +45,7 @@ func RegisterTraceTransactionWithPredecessors(queryClient *mocks.EVMQueryClient,
 
 func RegisterTraceTransaction(queryClient *mocks.EVMQueryClient, msgEthTx *evmtypes.MsgEthereumTx) {
 	data := []byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}
-	queryClient.On("TraceTx", rpc.ContextWithHeight(1), &evmtypes.QueryTraceTxRequest{Msg: msgEthTx, BlockNumber: 1, ChainId: evmdconfig.EVMChainID, BlockMaxGas: -1}).
+	queryClient.On("TraceTx", rpc.ContextWithHeight(1), &evmtypes.QueryTraceTxRequest{Msg: msgEthTx, BlockNumber: 1, Predecessors: []*evmtypes.MsgEthereumTx{}, ChainId: evmdconfig.EVMChainID, BlockMaxGas: -1}).
 		Return(&evmtypes.QueryTraceTxResponse{Data: data}, nil)
 }
 

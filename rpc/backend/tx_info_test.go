@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"google.golang.org/grpc/metadata"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -18,10 +17,159 @@ import (
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+	"github.com/zeta-chain/node/testutil/sample"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 )
+
+func (suite *TestSuite) TestGetSyntheticTransactionByHash() {
+	suite.SetupTest() // reset
+
+	hash := sample.Hash().Hex()
+	_, txRes := suite.buildSyntheticTxResult(hash)
+
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	query := fmt.Sprintf(
+		"%s.%s='%s'",
+		evmtypes.TypeMsgEthereumTx,
+		evmtypes.AttributeKeyEthereumTxHash,
+		common.HexToHash(hash).Hex(),
+	)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
+	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
+	RegisterBlock(client, 1, nil)
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
+
+	res, err := suite.backend.GetTransactionByHash(common.HexToHash(hash))
+	suite.Require().NoError(err)
+
+	// assert fields
+	suite.Require().Equal(hash, res.Hash.Hex())
+	nonce, _ := hexutil.DecodeUint64(res.Nonce.String())
+	suite.Require().Equal(uint64(1), nonce)
+	suite.Require().Equal(int64(1), res.BlockNumber.ToInt().Int64())
+	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
+	suite.Require().Equal("0x735b14BB79463307AAcBED86DAf3322B1e6226aB", res.From.Hex())
+	txIndex, _ := hexutil.DecodeUint64(res.TransactionIndex.String())
+	suite.Require().Equal(uint64(8888), txIndex)
+	txType, _ := hexutil.DecodeUint64(res.Type.String())
+	suite.Require().Equal(uint64(88), txType)
+	suite.Require().Equal(suite.backend.EvmChainID.Int64(), res.ChainID.ToInt().Int64())
+	suite.Require().Equal(int64(1000), res.Value.ToInt().Int64())
+	gas, _ := hexutil.DecodeUint64(res.Gas.String())
+	suite.Require().Equal(uint64(21000), gas)
+	suite.Require().Equal("0x1234", res.Input.String())
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.S)
+}
+
+func (suite *TestSuite) TestGetSyntheticTransactionReceiptByHash() {
+	suite.SetupTest() // reset
+
+	hash := sample.Hash().Hex()
+	_, txRes := suite.buildSyntheticTxResult(hash)
+
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	query := fmt.Sprintf(
+		"%s.%s='%s'",
+		evmtypes.TypeMsgEthereumTx,
+		evmtypes.AttributeKeyEthereumTxHash,
+		common.HexToHash(hash).Hex(),
+	)
+	RegisterTxSearchWithTxResult(client, query, []byte{}, txRes)
+	RegisterBlock(client, 1, nil)
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
+
+	res, err := suite.backend.GetTransactionReceipt(common.HexToHash(hash))
+	suite.Require().NoError(err)
+
+	// assert fields
+	suite.Require().Equal(common.HexToHash(hash), res["transactionHash"])
+	blockNumber, _ := hexutil.DecodeUint64(res["blockNumber"].(hexutil.Uint64).String())
+	suite.Require().Equal(uint64(1), blockNumber)
+	toAddress := common.HexToAddress("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7")
+	fromAddress := common.HexToAddress("0x735b14BB79463307AAcBED86DAf3322B1e6226aB")
+	suite.Require().Equal(&toAddress, res["to"])
+	suite.Require().Equal(fromAddress, res["from"])
+	status, _ := hexutil.DecodeUint64(res["status"].(hexutil.Uint).String())
+	suite.Require().Equal(uint64(1), status)
+	txType, _ := hexutil.DecodeUint64(res["type"].(hexutil.Uint).String())
+	suite.Require().Equal(uint64(88), txType)
+	txIndex, _ := hexutil.DecodeUint64(res["transactionIndex"].(hexutil.Uint64).String())
+	suite.Require().Equal(uint64(8888), txIndex)
+}
+
+func (suite *TestSuite) TestGetSyntheticTransactionByBlockNumberAndIndex() {
+	suite.SetupTest() // reset
+
+	hash := sample.Hash().Hex()
+	tx, txRes := suite.buildSyntheticTxResult(hash)
+
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+	RegisterBlock(client, 1, tx)
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{&txRes})
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
+
+	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 0)
+	suite.Require().NoError(err)
+
+	// assert fields
+	suite.Require().Equal(hash, res.Hash.Hex())
+	nonce, _ := hexutil.DecodeUint64(res.Nonce.String())
+	suite.Require().Equal(uint64(1), nonce)
+	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
+	suite.Require().Equal("0x735b14BB79463307AAcBED86DAf3322B1e6226aB", res.From.Hex())
+	txType, _ := hexutil.DecodeUint64(res.Type.String())
+	suite.Require().Equal(uint64(88), txType)
+	suite.Require().Equal(suite.backend.EvmChainID.Int64(), res.ChainID.ToInt().Int64())
+	suite.Require().Equal(int64(1000), res.Value.ToInt().Int64())
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.S)
+}
+
+func (suite *TestSuite) TestGetSyntheticTransactionByBlockNumberAndIndexWithRealTransaction() {
+	suite.SetupTest() // reset
+
+	hash := sample.Hash().Hex()
+	tx, txRes := suite.buildSyntheticTxResult(hash)
+	msgEthereumTx, _ := suite.buildEthereumTx()
+
+	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+
+	suite.backend.Indexer = nil
+	client := suite.backend.ClientCtx.Client.(*mocks.Client)
+	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+	// synthetic tx with real MsgEthereumTx
+	RegisterBlockMultipleTxs(client, 1, []types.Tx{realTx, tx})
+	RegisterBlockResultsWithTxResults(client, 1, []*abci.ExecTxResult{{}, &txRes})
+	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
+
+	res, err := suite.backend.GetTransactionByBlockNumberAndIndex(rpctypes.BlockNumber(1), 1)
+	suite.Require().NoError(err)
+
+	// assert fields
+	suite.Require().Equal(hash, res.Hash.Hex())
+	nonce, _ := hexutil.DecodeUint64(res.Nonce.String())
+	suite.Require().Equal(uint64(1), nonce)
+	suite.Require().Equal("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7", res.To.Hex())
+	suite.Require().Equal("0x735b14BB79463307AAcBED86DAf3322B1e6226aB", res.From.Hex())
+	txType, _ := hexutil.DecodeUint64(res.Type.String())
+	suite.Require().Equal(uint64(88), txType)
+	suite.Require().Equal(suite.backend.EvmChainID.Int64(), res.ChainID.ToInt().Int64())
+	suite.Require().Equal(int64(1000), res.Value.ToInt().Int64())
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.V)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.R)
+	suite.Require().Equal((*hexutil.Big)(big.NewInt(0)), res.S)
+}
 
 func (s *TestSuite) TestGetTransactionByHash() {
 	msgEthereumTx, _ := s.buildEthereumTx()
@@ -45,7 +193,14 @@ func (s *TestSuite) TestGetTransactionByHash() {
 		},
 	}
 
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), s.backend.EvmChainID)
+	rpcTransaction, _ := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.HexToHash("0x1"),
+		1,
+		0,
+		big.NewInt(1),
+		s.backend.EvmChainID,
+	)
 
 	testCases := []struct {
 		name         string
@@ -565,10 +720,7 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 		{
 			"fail - Receipts do not match",
 			func() {
-				var header metadata.MD
-				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
-				RegisterParams(QueryClient, &header, 1)
 				_, err := RegisterBlock(client, 1, txBz)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)
