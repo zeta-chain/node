@@ -564,10 +564,10 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee)
 	msgs, additionals := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 
-	txs := make([]*ethtypes.Transaction, len(msgs))
+	txs := []*ethtypes.Transaction{}
 	for i, ethMsg := range msgs {
 		if additionals[i] == nil {
-			txs[i] = ethMsg.AsTransaction()
+			txs = append(txs, ethMsg.AsTransaction())
 		}
 	}
 

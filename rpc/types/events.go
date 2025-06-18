@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/base64"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -100,6 +101,8 @@ type ParsedTxs struct {
 
 // ParseTxResult parse eth tx infos from cosmos-sdk events.
 // It supports two event formats, the formats are described in the comments of the format constants.
+// ParseTxResult parse eth tx infos from cosmos-sdk events.
+// It supports two event formats, the formats are described in the comments of the format constants.
 func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 	format := eventFormatUnknown
 	// the index of current ethereum_tx event in format 1 or the second part of format 2
@@ -108,8 +111,23 @@ func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 	p := &ParsedTxs{
 		TxHashes: make(map[common.Hash]int),
 	}
+	prevEventType := ""
 	for _, event := range result.Events {
-		if event.Type != evmtypes.EventTypeEthereumTx {
+		if event.Type != evmtypes.EventTypeEthereumTx &&
+			(prevEventType != evmtypes.EventTypeEthereumTx || event.Type != MessageType) {
+			continue
+		}
+
+		// Parse tendermint message after ethereum_tx event
+		if prevEventType == evmtypes.EventTypeEthereumTx && event.Type == MessageType && eventIndex != -1 {
+			err := fillTxAttributes(&p.Txs[eventIndex], event.Attributes)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if event.Type == MessageType {
+			prevEventType = MessageType
 			continue
 		}
 
@@ -142,12 +160,15 @@ func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 				}
 			}
 		}
+
+		prevEventType = evmtypes.EventTypeEthereumTx
 	}
 
 	// some old versions miss some events, fill it with tx result
-	gasUsed := uint64(result.GasUsed) // #nosec G115
+	// txs with type CosmosEVMTxType will always emit GasUsed in events so no need to override for those
 	if len(p.Txs) == 1 && p.Txs[0].Type != CosmosEVMTxType {
-		p.Txs[0].GasUsed = gasUsed
+		// #nosec G115 always positive
+		p.Txs[0].GasUsed = uint64(result.GasUsed)
 	}
 
 	// this could only happen if tx exceeds block gas limit
@@ -158,6 +179,18 @@ func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 			// replace gasUsed with gasLimit because that's what's actually deducted.
 			gasLimit := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx).GetGas()
 			p.Txs[i].GasUsed = gasLimit
+		}
+	}
+
+	// fix msg indexes, because some eth txs indexed here don't have corresponding sdk.Msg
+	currMsgIndex := 0
+	for _, tx := range p.Txs {
+		if tx.Type == CosmosEVMTxType {
+			tx.MsgIndex = math.MaxUint32
+			// todo: fix mapping as well
+		} else {
+			tx.MsgIndex = currMsgIndex
+			currMsgIndex++
 		}
 	}
 	return p, nil

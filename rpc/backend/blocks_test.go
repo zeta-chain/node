@@ -18,7 +18,6 @@ import (
 
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/zeta-chain/ethermint/tests"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/node/rpc/types"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -1637,16 +1636,15 @@ func (s *TestSuite) TestEthBlockFromTendermintBlock() {
 }
 
 func (suite *TestSuite) TestEthAndSyntheticMsgsFromTendermintBlock() {
+	suite.SetupTest() // reset test and queries
 	// synthetic tx
 	hash := sample.Hash().Hex()
 	tx, txRes := suite.buildSyntheticTxResult(hash)
 
 	// real tx
-	msgEthereumTx, _ := suite.buildEthereumTx()
-	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+	msgEthereumTx, realTx := suite.buildEthereumTx()
 
 	suite.backend.Indexer = nil
-
 	// block contains block real and synthetic tx
 	emptyBlock := cmttypes.MakeBlock(1, []cmttypes.Tx{realTx, tx}, nil, nil)
 	emptyBlock.ChainID = ChainID.ChainID
@@ -1668,14 +1666,14 @@ func (suite *TestSuite) TestEthAndSyntheticMsgsFromTendermintBlock() {
 }
 
 func (suite *TestSuite) TestEthAndSyntheticEthBlockByNumber() {
+	suite.SetupTest() // reset test and queries
 	// synthetic tx
 	hash := sample.Hash().Hex()
 	tx, txRes := suite.buildSyntheticTxResult(hash)
 
 	// real tx
-	msgEthereumTx, _ := suite.buildEthereumTx()
-	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
-	validator := sdk.AccAddress(tests.GenerateAddress().Bytes())
+	msgEthereumTx, realTx := suite.buildEthereumTx()
+
 	suite.backend.Indexer = nil
 	client := suite.backend.ClientCtx.Client.(*mocks.Client)
 	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -1684,7 +1682,6 @@ func (suite *TestSuite) TestEthAndSyntheticEthBlockByNumber() {
 	RegisterBlockMultipleTxs(client, 1, []cmttypes.Tx{realTx, tx})
 	RegisterBlockResultsWithTxResults(client, 1, []*types.ExecTxResult{{}, &txRes})
 	RegisterBaseFee(queryClient, sdkmath.NewInt(1))
-	RegisterValidatorAccount(queryClient, validator)
 
 	// only real should be returned
 	block, err := suite.backend.EthBlockByNumber(1)
@@ -1694,13 +1691,14 @@ func (suite *TestSuite) TestEthAndSyntheticEthBlockByNumber() {
 }
 
 func (suite *TestSuite) TestEthAndSyntheticGetBlockByNumber() {
+	suite.SetupTest() // reset test and queries
 	// synthetic tx
 	hash := sample.Hash().Hex()
 	tx, txRes := suite.buildSyntheticTxResult(hash)
 
 	// real tx
-	msgEthereumTx, _ := suite.buildEthereumTx()
-	realTx := suite.signAndEncodeEthTx(msgEthereumTx)
+	msgEthereumTx, realTx := suite.buildEthereumTx()
+
 	suite.backend.Indexer = nil
 	client := suite.backend.ClientCtx.Client.(*mocks.Client)
 	queryClient := suite.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
@@ -1716,7 +1714,7 @@ func (suite *TestSuite) TestEthAndSyntheticGetBlockByNumber() {
 	block, err := suite.backend.GetBlockByNumber(1, false)
 	suite.Require().NoError(err)
 	transactions := block["transactions"].([]interface{})
-	suite.Require().Equal(3, len(transactions))
+	suite.Require().Equal(2, len(transactions))
 	suite.Require().Equal(common.HexToHash(msgEthereumTx.Hash), transactions[0])
 	suite.Require().Equal(common.HexToHash(hash), transactions[1])
 

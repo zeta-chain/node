@@ -20,9 +20,9 @@ import (
 	"github.com/cosmos/evm/encoding"
 	"github.com/cosmos/evm/indexer"
 	"github.com/cosmos/evm/testutil/constants"
-	"github.com/cosmos/evm/testutil/integration/evm/network"
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 
@@ -30,25 +30,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	protov2 "google.golang.org/protobuf/proto"
 )
 
 type TestSuite struct {
 	suite.Suite
 
-	create  network.CreateEvmApp
-	options []network.ConfigOption
 	backend *Backend
 	from    common.Address
 	acc     sdk.AccAddress
 	signer  keyring.Signer
-}
-
-func NewTestSuite(create network.CreateEvmApp, options ...network.ConfigOption) *TestSuite {
-	return &TestSuite{
-		create:  create,
-		options: options,
-	}
 }
 
 var ChainID = constants.ExampleChainID
@@ -57,25 +49,16 @@ var ChainID = constants.ExampleChainID
 type testTx struct {
 }
 
-func (tx testTx) GetMsgs() []sdk.Msg { return nil }
-
-func (tx testTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
-
-func (tx testTx) GetSigners() []sdk.AccAddress { return nil }
-
-func (tx testTx) ValidateBasic() error { return nil }
-
-func (t testTx) ProtoMessage() { panic("not implemented") }
-
-func (t testTx) Reset() { panic("not implemented") }
-
-func (t testTx) String() string { panic("not implemented") }
-
-func (t testTx) Bytes() []byte { panic("not implemented") }
-
+func (tx testTx) GetMsgs() []sdk.Msg                         { return nil }
+func (tx testTx) GetMsgsV2() ([]protov2.Message, error)      { return nil, nil }
+func (tx testTx) GetSigners() []sdk.AccAddress               { return nil }
+func (tx testTx) ValidateBasic() error                       { return nil }
+func (t testTx) ProtoMessage()                               { panic("not implemented") }
+func (t testTx) Reset()                                      { panic("not implemented") }
+func (t testTx) String() string                              { panic("not implemented") }
+func (t testTx) Bytes() []byte                               { panic("not implemented") }
 func (t testTx) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
-
-func (t testTx) Type() string { panic("not implemented") }
+func (t testTx) Type() string                                { panic("not implemented") }
 
 var (
 	_ sdk.Tx  = (*testTx)(nil)
@@ -114,8 +97,7 @@ func (s *TestSuite) SetupTest() {
 	s.signer = utiltx.NewSigner(priv)
 	s.Require().NoError(err)
 
-	nw := network.New(s.create, s.options...)
-	encodingConfig := nw.GetEncodingConfig()
+	encodingConfig := app.MakeEncodingConfig(ChainID.EVMChainID)
 	clientCtx := client.Context{}.WithChainID(ChainID.ChainID).
 		WithHeight(1).
 		WithTxConfig(encodingConfig.TxConfig).
@@ -128,16 +110,31 @@ func (s *TestSuite) SetupTest() {
 	idxer := indexer.NewKVIndexer(dbm.NewMemDB(), ctx.Logger, clientCtx)
 
 	s.backend = NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, idxer)
+	s.backend.Cfg.EVM.EVMChainID = ChainID.EVMChainID
 	s.backend.Cfg.JSONRPC.GasCap = 0
 	s.backend.Cfg.JSONRPC.EVMTimeout = 0
 	s.backend.Cfg.JSONRPC.AllowInsecureUnlock = true
-	s.backend.Cfg.EVM.EVMChainID = 262144
 	s.backend.QueryClient.QueryClient = mocks.NewEVMQueryClient(s.T())
 	s.backend.QueryClient.FeeMarket = mocks.NewFeeMarketQueryClient(s.T())
 	s.backend.Ctx = rpctypes.ContextWithHeight(1)
 
 	// Add codec
 	s.backend.ClientCtx.Codec = encodingConfig.Codec
+
+	// TODO evm: rpc tests in evm module are integration tests, this workaround is needed to setup eth config
+	// consider maintaining all synthetic txs changes and tests in evm module fork, so there is no need to have
+	// only rpc forked in node repo
+	ethCfg := evmtypes.DefaultChainConfig(s.backend.Cfg.EVM.EVMChainID)
+	configurator := evmtypes.NewEVMConfigurator()
+	err = configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         zetacoredconfig.BaseDenom,
+			ExtendedDenom: zetacoredconfig.BaseDenom,
+			DisplayDenom:  zetacoredconfig.BaseDenom,
+			Decimals:      18,
+		}).
+		Configure()
 }
 
 // buildEthereumTx returns an example legacy Ethereum transaction
