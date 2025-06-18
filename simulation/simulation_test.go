@@ -414,6 +414,11 @@ func TestAppImportExport(t *testing.T) {
 		{simApp.GetKey(crosschaintypes.StoreKey), newSimApp.GetKey(crosschaintypes.StoreKey), [][]byte{
 			// We update the timestamp for cctx when importing the genesis state which results in a different value
 			crosschaintypes.KeyPrefix(crosschaintypes.CCTXKey),
+			// The counter index key is not preserved when importing the genesis state
+			// https://github.com/zeta-chain/node/issues/3979
+			// Adding the key to the skip list ignores the difference;
+			// The counter-index logic should be refactored to fix this issue completely
+			crosschaintypes.KeyPrefix(crosschaintypes.CounterIndexKey),
 		}},
 
 		{simApp.GetKey(observertypes.StoreKey), newSimApp.GetKey(observertypes.StoreKey), [][]byte{

@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/stretchr/testify/require"
 
@@ -48,6 +49,12 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	r.Logger.CCTX(*cctx, "bitcoin_std_memo_inscribed_deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
+	// sender, txOrigin should be set to the initiator of the inscription, not the commit address
+	senderAddress := r.GetBtcAddress().EncodeAddress()
+	require.False(r, strings.EqualFold(senderAddress, commitAddress))
+	require.Equal(r, senderAddress, cctx.InboundParams.Sender)
+	require.Equal(r, senderAddress, cctx.InboundParams.TxOrigin)
+
 	// check if example contract has been called, 'bar' value should be set to correct amount
 	depositFeeSats, err := common.GetSatoshis(common.DefaultDepositorFee)
 	require.NoError(r, err)
@@ -56,6 +63,6 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 		r,
 		contract,
 		big.NewInt(receiveAmount),
-		[]byte(commitAddress),
+		[]byte(senderAddress),
 	)
 }
