@@ -8,7 +8,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/testdapp"

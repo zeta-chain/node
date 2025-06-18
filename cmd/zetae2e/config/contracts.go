@@ -13,8 +13,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -166,6 +167,16 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.EVM.ConnectorNative; c != "" {
+		r.ConnectorNativeAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorNativeAddr: %w", err)
+		}
+		r.ConnectorNative, err = zetaconnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
 	// set ZEVM contracts
 	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(
 		r.Ctx,

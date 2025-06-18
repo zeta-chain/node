@@ -263,7 +263,6 @@ const (
 	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
-
 )
 
 const (

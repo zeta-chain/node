@@ -76,6 +76,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.EVM.TestDappAddr = config.DoubleQuotedString(r.EvmTestDAppAddr.Hex())
 	conf.Contracts.EVM.Gateway = config.DoubleQuotedString(r.GatewayEVMAddr.Hex())
 	conf.Contracts.EVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2EVMAddr.Hex())
+	conf.Contracts.EVM.ConnectorNative = config.DoubleQuotedString(r.ConnectorNativeAddr.Hex())
 
 	conf.Contracts.ZEVM.SystemContractAddr = config.DoubleQuotedString(r.SystemContractAddr.Hex())
 	conf.Contracts.ZEVM.ETHZRC20Addr = config.DoubleQuotedString(r.ETHZRC20Addr.Hex())

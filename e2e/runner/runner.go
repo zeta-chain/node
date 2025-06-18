@@ -29,8 +29,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -142,8 +143,6 @@ type E2ERunner struct {
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
 	ZetaEth           *zetaeth.ZetaEth
-	ConnectorEthAddr  ethcommon.Address
-	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
 	ERC20CustodyAddr  ethcommon.Address
 	ERC20Custody      *erc20custodyv2.ERC20Custody
 	ERC20Addr         ethcommon.Address
@@ -153,6 +152,12 @@ type E2ERunner struct {
 	GatewayEVM        *gatewayevm.GatewayEVM
 	TestDAppV2EVMAddr ethcommon.Address
 	TestDAppV2EVM     *testdappv2.TestDAppV2
+	// ConnectorNative is the V2 connector for EVM chains
+	ConnectorNativeAddr ethcommon.Address
+	ConnectorNative     *zetaconnnectornative.ZetaConnectorNative
+	// ConnectorEthAddr is the V1 connector for EVM chains
+	ConnectorEthAddr ethcommon.Address
+	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
 
 	// contracts zevm
 	// zrc20 contracts
@@ -397,6 +402,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 		return err
 	}
 
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -456,6 +465,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
 	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEthV2: %s", r.ConnectorNativeAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
