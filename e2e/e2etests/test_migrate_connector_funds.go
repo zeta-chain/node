@@ -93,8 +93,9 @@ func verifyMigrationSuccess(r *runner.E2ERunner, expectedBalance *big.Int) {
 	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
 	require.NoError(r, err, "BalanceOf failed for new connector")
 
-	require.Equal(r, expectedBalance, newConnectorBalance,
-		"Migration failed: old connector balance (%s) != new connector balance (%s)",
+	require.Zero(r,
+		expectedBalance.Cmp(newConnectorBalance),
+		"Migration failed: expected %s, got %s",
 		expectedBalance.String(), newConnectorBalance.String())
 
 	r.Logger.Print("✅ Migration verification successful: %s ZETA tokens migrated", newConnectorBalance.String())

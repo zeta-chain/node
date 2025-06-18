@@ -553,6 +553,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
+	if testV2ConnectorMigration {
+		// Add the v2 connector migration tests and assertions
+		// https://github.com/zeta-chain/node/issues/3947
+		deployerRunner.Logger.Info("no migration tests to run")
+	}
+
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
@@ -585,7 +591,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
-			logger.Print("❌ v2 connector migration failed")
+			logger.Print("❌connector migration failed")
 			os.Exit(1)
 		}
 	}
@@ -762,6 +768,9 @@ func waitKeygenHeight(
 		return errors.Wrap(err, "observerClient.Keygen error")
 	case resp.Keygen == nil:
 		return errors.New("keygen is nil")
+	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
+		// noop
+		return nil
 	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
 		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}

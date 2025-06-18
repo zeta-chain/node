@@ -209,7 +209,7 @@ func (r *E2ERunner) ApproveERC20OnEVM(allowed ethcommon.Address) {
 }
 
 func (r *E2ERunner) ApproveZetaOnEVM(allowed ethcommon.Address) {
-	allowance, err := r.ZetaEth.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), r.GatewayEVMAddr)
+	allowance, err := r.ZetaEth.Allowance(&bind.CallOpts{}, r.Account.EVMAddress(), allowed)
 	require.NoError(r, err)
 
 	// approve 1M*1e18 if allowance is zero

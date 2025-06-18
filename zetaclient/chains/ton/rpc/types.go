@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -32,9 +34,13 @@ type BlockHeader struct {
 	GenUtime      uint32     `json:"gen_utime"`
 }
 type Account struct {
-	ID         ton.AccountID
-	Status     tlb.AccountStatus
-	Balance    uint64
+	ID      ton.AccountID
+	Status  tlb.AccountStatus
+	Balance uint64
+
+	Code *boc.Cell
+	Data *boc.Cell
+
 	LastTxHash tlb.Bits256
 	LastTxLT   uint64
 }
@@ -42,44 +48,51 @@ type Account struct {
 func (acc *Account) UnmarshalJSON(data []byte) error {
 	items := gjson.GetManyBytes(
 		data,
-		"address.account_address",
+		"state",
 		"balance",
+		"code",
+		"data",
+		"frozen_hash",
 		"last_transaction_id.lt",
 		"last_transaction_id.hash",
-		"account_state.@type",
-		"account_state.frozen_hash",
 	)
 
 	var (
-		addrRaw       = items[0].String()
-		balanceRaw    = items[1].String()
-		ltRaw         = items[2].String()
-		hashRaw       = items[3].String()
-		stateRaw      = items[4].String()
-		frozenHashRaw = items[5].String()
+		state      = items[0].String()
+		balance    = items[1].Uint()
+		codeRaw    = items[2].String()
+		dataRaw    = items[3].String()
+		frozenHash = items[4].String()
+		lt         = items[5].Uint()
+		hashRaw    = items[6].String()
+		err        error
 	)
 
-	id, err := ton.ParseAccountID(addrRaw)
-	if err != nil {
-		return errors.Wrapf(err, "unable to parse account id from %q", addrRaw)
+	acc.Balance = balance
+
+	if codeRaw != "" {
+		acc.Code, err = cellFromBase64(codeRaw)
+		if err != nil {
+			return errors.Wrapf(err, "code")
+		}
 	}
 
-	acc.ID = id
-
-	if balanceRaw != "-1" {
-		acc.Balance = items[1].Uint()
+	if dataRaw != "" {
+		acc.Data, err = cellFromBase64(dataRaw)
+		if err != nil {
+			return errors.Wrapf(err, "data")
+		}
 	}
 
 	switch {
-	case ltRaw == "0" && strings.Contains(stateRaw, "uninit"):
-		acc.Status = tlb.AccountNone
-		return nil
-	case strings.Contains(stateRaw, "uninit"):
-		acc.Status = tlb.AccountUninit
-	case stateRaw == "raw.accountState":
-		acc.Status = tlb.AccountActive
-	case frozenHashRaw != "":
+	case frozenHash != "":
 		acc.Status = tlb.AccountFrozen
+	case strings.Contains(state, "uninit"):
+		acc.Status = tlb.AccountUninit
+	case state == "active":
+		acc.Status = tlb.AccountActive
+	default:
+		return errors.New("unable to parse account status")
 	}
 
 	hashBytes, err := base64.StdEncoding.DecodeString(hashRaw)
@@ -88,22 +101,63 @@ func (acc *Account) UnmarshalJSON(data []byte) error {
 	}
 
 	copy(acc.LastTxHash[:], hashBytes)
-	acc.LastTxLT = items[2].Uint()
+	acc.LastTxLT = lt
 
 	return nil
 }
 
+// ToShardAccount partially converts Account to tongo's tlb.ShardAccount
+func (acc *Account) ToShardAccount() tlb.ShardAccount {
+	if acc.Status == tlb.AccountNone {
+		return tlb.ShardAccount{
+			Account: tlb.Account{SumType: "AccountNone"},
+		}
+	}
+
+	return tlb.ShardAccount{
+		Account: tlb.Account{
+			SumType: "Account",
+			Account: tlb.ExistedAccount{
+				Addr:        acc.ID.ToMsgAddress(),
+				StorageStat: tlb.StorageInfo{},
+				Storage: tlb.AccountStorage{
+					State:       tlbAccountState(acc),
+					LastTransLt: acc.LastTxLT,
+					Balance: tlb.CurrencyCollection{
+						Grams: tlb.Grams(acc.Balance),
+					},
+				},
+			},
+		},
+		LastTransHash: acc.LastTxHash,
+		LastTransLt:   acc.LastTxLT,
+	}
+}
+
 // takes base64 encoded BOC and decodes it into v
 func unmarshalFromBase64(b64 string, v any) error {
+	cell, err := cellFromBase64(b64)
+	if err != nil {
+		return err
+	}
+
+	return tlb.Unmarshal(cell, v)
+}
+
+func cellFromBase64(b64 string) (*boc.Cell, error) {
+	if b64 == "" {
+		return nil, errors.New("empty boc")
+	}
+
 	cells, err := boc.DeserializeBocBase64(b64)
 	switch {
 	case err != nil:
-		return errors.Wrapf(err, "unable to deserialize boc from %q", b64)
+		return nil, errors.Wrapf(err, "unable to deserialize boc from %q", b64)
 	case len(cells) == 0:
-		return errors.Errorf("expected at least one cell, got 0")
-	default:
-		return tlb.Unmarshal(cells[0], v)
+		return nil, errors.Errorf("expected at least one cell, got 0 (raw: %q)", b64)
 	}
+
+	return cells[0], nil
 }
 
 type rpcRequest struct {
@@ -140,4 +194,71 @@ type rpcResponse struct {
 	Result  json.RawMessage `json:"result"`
 	Error   string          `json:"error"`
 	Code    int             `json:"code"`
+}
+
+// TransactionToHashString converts transaction's logicalTime and hash to string
+// This string is used to store the last scanned hash (e.g. "123:0x123...")
+func TransactionToHashString(tx ton.Transaction) string {
+	return TransactionHashToString(tx.Lt, ton.Bits256(tx.Hash()))
+}
+
+// TransactionHashToString converts logicalTime and hash to string
+func TransactionHashToString(lt uint64, hash ton.Bits256) string {
+	return fmt.Sprintf("%d:%s", lt, hash.Hex())
+}
+
+// TransactionHashFromString parses encoded string into logicalTime and hash
+func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
+	parts := strings.Split(encoded, ":")
+	if len(parts) != 2 {
+		return 0, ton.Bits256{}, fmt.Errorf("invalid encoded string format")
+	}
+
+	lt, err := strconv.ParseUint(parts[0], 10, 64)
+	if err != nil {
+		return 0, ton.Bits256{}, fmt.Errorf("invalid logical time: %w", err)
+	}
+
+	var hashBits ton.Bits256
+
+	if err = hashBits.FromHex(parts[1]); err != nil {
+		return 0, ton.Bits256{}, fmt.Errorf("invalid hash: %w", err)
+	}
+
+	return lt, hashBits, nil
+}
+
+func tlbAccountState(a *Account) tlb.AccountState {
+	switch a.Status {
+	case tlb.AccountActive:
+		return tlb.AccountState{
+			SumType: "AccountActive",
+			AccountActive: struct {
+				StateInit tlb.StateInit
+			}{
+				StateInit: tlb.StateInit{
+					Code: wrapCell(a.Code),
+					Data: wrapCell(a.Data),
+				},
+			},
+		}
+	case tlb.AccountFrozen:
+		return tlb.AccountState{SumType: "AccountFrozen"}
+	case tlb.AccountUninit:
+		return tlb.AccountState{SumType: "AccountUninit"}
+	default:
+		// should not happen
+		return tlb.AccountState{}
+	}
+}
+
+func wrapCell(v *boc.Cell) tlb.Maybe[tlb.Ref[boc.Cell]] {
+	if v == nil {
+		return tlb.Maybe[tlb.Ref[boc.Cell]]{}
+	}
+
+	return tlb.Maybe[tlb.Ref[boc.Cell]]{
+		Exists: true,
+		Value:  tlb.Ref[boc.Cell]{Value: *v},
+	}
 }

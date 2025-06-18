@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/rand"
 	"sync"
+	"time"
 
 	"cosmossdk.io/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -60,10 +61,13 @@ func TestTONWithdrawConcurrent(r *runner.E2ERunner, _ []string) {
 			utils.RequireCCTXStatus(r, cctx, cc.CctxStatus_OutboundMined)
 			r.Logger.Info("Withdrawal #%d complete! cctx index: %s", number, cctx.Index)
 
+			// rpc might lag a bit from the real state, let's wait a bit
+			time.Sleep(time.Second)
+
 			// Check recipient's balance ON TON
 			balance, err := r.Clients.TON.GetBalanceOf(r.Ctx, recipient, false)
 			require.NoError(r, err, "failed to get balance of %s", recipient.ToRaw())
-			require.Equal(r, amount.Uint64(), balance.Uint64())
+			require.Equal(r, amount.Uint64(), balance.Uint64(), recipient.ToRaw())
 		}(i+1, recipient, amount, tx)
 	}
 

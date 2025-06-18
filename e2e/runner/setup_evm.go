@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -110,13 +111,21 @@ func (r *E2ERunner) SetupEVM() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
+	// deploy test dapp v2
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	r.TestDAppV2EVMAddr = testDAppV2Addr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
+	require.NoError(r, err)
+
 	// Deploy zetaConnectorNative contract
-	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
 		r.EVMAuth,
 		r.EVMClient,
 	)
 	require.NoError(r, err)
-	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
+	ensureTxReceipt(txZetaConnectorNativeHash, "ZetaConnectorNative deployment failed")
 
 	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
 	require.NoError(r, err)
@@ -134,7 +143,7 @@ func (r *E2ERunner) SetupEVM() {
 	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
-		zetaConnnectorNativeAddress,
+		zetaConnectorNativeAddress,
 		initializerData,
 	)
 	require.NoError(r, err)
@@ -145,22 +154,14 @@ func (r *E2ERunner) SetupEVM() {
 	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
 	require.NoError(r, err)
 
-	txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, zetaConnnectorNativeProxyAddress)
-	require.NoError(r, err)
+	//txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, zetaConnnectorNativeProxyAddress)
+	//require.NoError(r, err)
 
 	r.Logger.Info(
 		"ZetaConnectorNative contract address: %s, tx hash: %s",
-		zetaConnnectorNativeAddress.Hex(),
-		txZetaConnnectorNativeHash.Hash().Hex(),
+		zetaConnectorNativeAddress.Hex(),
+		txZetaConnectorNativeHash.Hash().Hex(),
 	)
-
-	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
-	require.NoError(r, err)
-
-	r.TestDAppV2EVMAddr = testDAppV2Addr
-	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
-	require.NoError(r, err)
 
 	// check contract deployment receipt
 	ensureTxReceipt(txERC20, "ERC20 deployment failed")
@@ -169,7 +170,7 @@ func (r *E2ERunner) SetupEVM() {
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
-	ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
+	//ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
 
 	// check isZetaChain is false
 	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
@@ -186,4 +187,11 @@ func (r *E2ERunner) SetupEVM() {
 
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
 	ensureTxReceipt(txSetLegacySupported, "Set legacy support failed")
+
+	r.Logger.Info("Granting PAUSER_ROLE to TSS address")
+	pauserRoleHash := crypto.Keccak256Hash([]byte("PAUSER_ROLE"))
+	txGrantPauserRole, err := r.ERC20Custody.GrantRole(r.EVMAuth, pauserRoleHash, r.TSSAddress)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txGrantPauserRole, "Failed to grant PAUSER_ROLE to TSS address")
 }

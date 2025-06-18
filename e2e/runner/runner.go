@@ -143,8 +143,6 @@ type E2ERunner struct {
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
 	ZetaEth           *zetaeth.ZetaEth
-	ConnectorEthAddr  ethcommon.Address
-	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
 	ERC20CustodyAddr  ethcommon.Address
 	ERC20Custody      *erc20custodyv2.ERC20Custody
 	ERC20Addr         ethcommon.Address
@@ -154,6 +152,12 @@ type E2ERunner struct {
 	GatewayEVM        *gatewayevm.GatewayEVM
 	TestDAppV2EVMAddr ethcommon.Address
 	TestDAppV2EVM     *testdappv2.TestDAppV2
+	// ConnectorNative is the V2 connector for EVM chains
+	ConnectorNativeAddr ethcommon.Address
+	ConnectorNative     *zetaconnnectornative.ZetaConnectorNative
+	// ConnectorEthAddr is the V1 connector for EVM chains
+	ConnectorEthAddr ethcommon.Address
+	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
 
 	// contracts zevm
 	// zrc20 contracts
@@ -194,8 +198,6 @@ type E2ERunner struct {
 	GatewayZEVM          *gatewayzevm.GatewayZEVM
 	TestDAppV2ZEVMAddr   ethcommon.Address
 	TestDAppV2ZEVM       *testdappv2.TestDAppV2
-	ConnectorNativeAddr  ethcommon.Address
-	ConnectorNative      *zetaconnnectornative.ZetaConnectorNative
 
 	// config
 	CctxTimeout    time.Duration
@@ -399,7 +401,11 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-
+	r.ConnectorNativeAddr = other.ConnectorNativeAddr
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -458,7 +464,8 @@ func (r *E2ERunner) PrintContractAddresses() {
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
-	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEthLegacy:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEth: %s", r.ConnectorNativeAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())

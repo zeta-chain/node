@@ -1,19 +1,16 @@
 package testrpc
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
-	"path"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/zetaclient/config"
-	"github.com/zeta-chain/node/zetaclient/testutils"
-	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
 // BtcServer represents httptest for Bitcoin RPC.
@@ -35,7 +32,7 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 		RPCParams:   "mainnet",
 	}
 
-	rpc.On("ping", func(_ []any) (any, error) {
+	rpc.On("ping", func(_ map[string]any) (any, error) {
 		return nil, nil
 	})
 
@@ -43,9 +40,23 @@ func NewBtcServer(t *testing.T) (*BtcServer, config.BTCConfig) {
 }
 
 func (s *BtcServer) SetBlockCount(count int) {
-	s.On("getblockcount", func(_ []any) (any, error) {
+	s.On("getblockcount", func(_ map[string]any) (any, error) {
 		return count, nil
 	})
+}
+
+// OnSetRawTransaction mocks the raw transaction response.
+func (s *BtcServer) OnSetRawTransaction(t *testing.T, msgTx wire.MsgTx, params ...any) {
+	var buf bytes.Buffer
+	err := msgTx.Serialize(&buf)
+	require.NoError(t, err)
+
+	// append the default 'verbose' parameter, otherwise the calculated params key won't match
+	params = append(params, btcjson.Int(0))
+
+	s.On("getrawtransaction", func(_ map[string]any) (any, error) {
+		return hex(buf.Bytes(), false), nil
+	}, params...)
 }
 
 func formatBitcoinRPCHost(serverURL string) (string, error) {
@@ -55,26 +66,4 @@ func formatBitcoinRPCHost(serverURL string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s:%s", u.Hostname(), u.Port()), nil
-}
-
-// CreateBTCRPCAndLoadTx is a helper function to load raw txs and feed them to mock rpc client
-func CreateBTCRPCAndLoadTx(t *testing.T, dir string, chainID int64, txHashes ...string) *mocks.BitcoinClient {
-	// create mock rpc client
-	rpcClient := mocks.NewBitcoinClient(t)
-
-	// feed txs to mock rpc client
-	for _, txHash := range txHashes {
-		// file name for the archived MsgTx
-		nameMsgTx := path.Join(dir, testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainID, txHash))
-
-		// load archived MsgTx
-		var msgTx wire.MsgTx
-		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
-
-		// mock rpc response
-		tx := btcutil.NewTx(&msgTx)
-		rpcClient.On("GetRawTransaction", mock.Anything, tx.Hash()).Return(tx, nil)
-	}
-
-	return rpcClient
 }

@@ -11,7 +11,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestV2ZetaDeposit(r *runner.E2ERunner, args []string) {
+func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// NOTE, updating the chain params disables the V1 flow and enables the V2 flow.
