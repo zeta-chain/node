@@ -298,7 +298,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams()
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
 
 		if testTON {
 			deployerRunner.SetupTON(
@@ -562,8 +562,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if testV2ConnectorContract {
 		eg.Go(evmTestRoutine(conf, "zeta", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
-			//e2etests.TestZetaDepositName,
-			//e2etests.TestZetaDepositAndCallName,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositAndCallName,
 			e2etests.TestZetaDepositAndCallRevertName,
 		))
 	}

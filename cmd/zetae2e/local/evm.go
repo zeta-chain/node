@@ -126,6 +126,10 @@ func evmTestRoutine(
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 10000)
 		v2Runner.WaitForTxReceiptOnEVM(txERC20Send)
 
+		// funding the account
+		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 1000)
+		v2Runner.WaitForTxReceiptOnEVM(txZetaSend)
+
 		// run erc20 test
 		testsToRun, err := v2Runner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,

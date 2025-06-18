@@ -15,9 +15,9 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// NOTE, updating the chain params disables the V1 flow and enables the V2 flow.
-	chainID, err := r.EVMClient.ChainID(r.Ctx)
-	require.NoError(r, err)
-	updateChainParams(r, chainID.Int64())
+	//chainID, err := r.EVMClient.ChainID(r.Ctx)
+	//require.NoError(r, err)
+	//updateChainParams(r, chainID.Int64())
 
 	amount := utils.ParseBigInt(r, args[0])
 	receiverAddress := r.EVMAddress()

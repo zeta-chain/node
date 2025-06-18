@@ -18,11 +18,6 @@ func TestZetaDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	// NOTE, updating the chain params disables the V1 flow and enables the V2 flow.
-	chainID, err := r.EVMClient.ChainID(r.Ctx)
-	require.NoError(r, err)
-	updateChainParams(r, chainID.Int64())
-
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 
 	// use a random address to get the revert amount

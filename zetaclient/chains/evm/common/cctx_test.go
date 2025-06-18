@@ -54,6 +54,58 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 			expected: OutboundTypeERC20WithdrawAndCall,
 		},
 		{
+			name: "ERC20 withdraw",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType:         coin.CoinType_ERC20,
+					IsCrossChainCall: false,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingOutbound,
+				},
+			},
+			expected: OutboundTypeERC20Withdraw,
+		},
+		{
+			name: "Gas withdraw revert",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_Gas,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+			},
+			expected: OutboundTypeGasWithdrawRevert,
+		},
+		{
+			name: "Gas withdraw revert and call on revert",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_Gas,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+				RevertOptions: types.RevertOptions{
+					CallOnRevert: true,
+				},
+			},
+			expected: OutboundTypeGasWithdrawRevertAndCallOnRevert,
+		},
+		{
+			name: "ERC20 withdraw revert",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_ERC20,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+			},
+			expected: OutboundTypeERC20WithdrawRevert,
+		},
+		{
 			name: "ERC20 withdraw revert and call on revert",
 			cctx: types.CrossChainTx{
 				InboundParams: &types.InboundParams{
@@ -131,6 +183,30 @@ func TestParseOutboundTypeFromCCTX(t *testing.T) {
 				},
 			},
 			expected: OutboundTypeZetaWithdrawRevert,
+		},
+		{
+			name: "Unknown outbound type",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_Cmd,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingOutbound,
+				},
+			},
+			expected: OutboundTypeUnknown,
+		},
+		{
+			name: "No asset call with non-pending outbound status",
+			cctx: types.CrossChainTx{
+				InboundParams: &types.InboundParams{
+					CoinType: coin.CoinType_NoAssetCall,
+				},
+				CctxStatus: &types.Status{
+					Status: types.CctxStatus_PendingRevert,
+				},
+			},
+			expected: OutboundTypeUnknown,
 		},
 	}
 

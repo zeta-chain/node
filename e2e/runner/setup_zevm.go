@@ -316,7 +316,7 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 // UpdateProtocolContractsInChainParams update the erc20 custody contract and gateway address in the chain params
 // TODO: should be used for all protocol contracts including the ZETA connector
 // https://github.com/zeta-chain/node/issues/3257
-func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
+func (r *E2ERunner) UpdateProtocolContractsInChainParams(testLegacy bool) {
 	res, err := r.ObserverClient.GetChainParams(r.Ctx, &observertypes.QueryGetChainParamsRequest{})
 	require.NoError(r, err)
 
@@ -342,6 +342,11 @@ func (r *E2ERunner) UpdateProtocolContractsInChainParams() {
 
 	// update with the new gateway address
 	chainParams.GatewayAddress = r.GatewayEVMAddr.Hex()
+
+	// update with the new connector address
+	if !testLegacy {
+		chainParams.ZetaTokenContractAddress = r.ConnectorNativeAddr.Hex()
+	}
 
 	// update the chain params
 	err = r.ZetaTxServer.UpdateChainParams(chainParams)
