@@ -764,6 +764,9 @@ func waitKeygenHeight(
 		return errors.New("keygen is nil")
 	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
 		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
+	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
+		// noop
+		return nil
 	}
 
 	keygenHeight := resp.Keygen.BlockNumber

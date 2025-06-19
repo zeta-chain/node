@@ -20,17 +20,20 @@ func TestMigrateConnectorFunds(r *runner.E2ERunner, _ []string) {
 		utils.RequireTxSuccessful(r, receipt, failMessage)
 	}
 
+	// Pause the connectors before migration
 	pauseConnectors(r, ensureTxReceipt)
-	defer unpauseConnectors(r, ensureTxReceipt)
+	updateTSSAddress(r, r.EVMAddress(), ensureTxReceipt)
 
-	updateTssAddress(r, r.EVMAddress(), ensureTxReceipt)
-	defer updateTssAddress(r, r.TSSAddress, ensureTxReceipt)
-
+	// Transfer all funds from the old connector to the new connector
 	balanceTransferred := transferAllFunds(r, ensureTxReceipt)
 	verifyMigrationSuccess(r, balanceTransferred)
+
+	// Unpause the connectors after migration and reset the TSS address
+	unpauseConnectors(r, ensureTxReceipt)
+	updateTSSAddress(r, r.TSSAddress, ensureTxReceipt)
 }
 
-func updateTssAddress(
+func updateTSSAddress(
 	r *runner.E2ERunner,
 	tssAddress common.Address,
 	ensureTxReceipt func(*ethtypes.Transaction, string),
@@ -47,7 +50,7 @@ func transferAllFunds(r *runner.E2ERunner, ensureTxReceipt func(*ethtypes.Transa
 	require.NoError(r, err)
 
 	// Transfer all funds
-	// messaage should be empty so that there is no call triggered on the new connector
+	// message should be empty so that there is no call triggered on the new connector
 	transferTx, err := r.ConnectorEth.OnReceive(
 		r.EVMAuth,
 		[]byte{},              // empty zetaTxSenderAddress
@@ -89,8 +92,9 @@ func verifyMigrationSuccess(r *runner.E2ERunner, expectedBalance *big.Int) {
 	newConnectorBalance, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
 	require.NoError(r, err, "BalanceOf failed for new connector")
 
-	require.Equal(r, expectedBalance, newConnectorBalance,
-		"Migration failed: old connector balance (%s) != new connector balance (%s)",
+	require.Zero(r,
+		expectedBalance.Cmp(newConnectorBalance),
+		"Migration failed: expected %s, got %s",
 		expectedBalance.String(), newConnectorBalance.String())
 
 	r.Logger.Print("✅ Migration verification successful: %s ZETA tokens migrated", newConnectorBalance.String())

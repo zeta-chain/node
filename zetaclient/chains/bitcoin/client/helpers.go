@@ -210,6 +210,49 @@ func (c *Client) GetTransactionFeeAndRate(ctx context.Context, rawResult *types.
 	return fee, feeRate, nil
 }
 
+// GetTransactionInputSpender get the spender address of the given transaction input (vin)
+func (c *Client) GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error) {
+	preTx, err := c.GetRawTransactionByStr(ctx, txid)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to get raw transaction %s", txid)
+	}
+
+	// #nosec G115 - always in range
+	if len(preTx.MsgTx().TxOut) <= int(vout) {
+		return "", fmt.Errorf("vout index %d out of range for tx %s", vout, txid)
+	}
+
+	// decode sender address from previous pkScript
+	pkScript := preTx.MsgTx().TxOut[vout].PkScript
+
+	return common.DecodeSenderFromScript(pkScript, c.NetParams())
+}
+
+// GetTransactionInitiator get the transaction initiator address of the given transaction
+// The initiator is defined as the spender of the first input of the given transaction.
+func (c *Client) GetTransactionInitiator(ctx context.Context, txid string) (string, error) {
+	tx, err := c.GetRawTransactionByStr(ctx, txid)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to get raw transaction %s", txid)
+	}
+
+	if len(tx.MsgTx().TxIn) == 0 {
+		return "", fmt.Errorf("tx %s has no inputs", txid)
+	}
+
+	// the first input
+	preTxid := tx.MsgTx().TxIn[0].PreviousOutPoint.Hash.String()
+	preVout := tx.MsgTx().TxIn[0].PreviousOutPoint.Index
+
+	// get spender of the first input
+	initiator, err := c.GetTransactionInputSpender(ctx, preTxid, preVout)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to get transaction input spender %s", txid)
+	}
+
+	return initiator, nil
+}
+
 // Healthcheck returns the latest block timestamp
 func (c *Client) Healthcheck(ctx context.Context) (time.Time, error) {
 	bn, err := c.GetBlockCount(ctx)

@@ -282,7 +282,7 @@ func (k Keeper) CallDepositAndRevert(
 		gatewayGasLimit,
 		true,
 		false,
-		"depositAndRevert",
+		"depositAndRevert0",
 		zrc20,
 		amount,
 		target,

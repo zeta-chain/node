@@ -215,7 +215,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
-			TON:          "http://ton:8000/lite-client.json",
+			TON:          "http://ton:8081",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{

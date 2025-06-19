@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
@@ -186,4 +187,11 @@ func (r *E2ERunner) SetupEVM() {
 
 	ensureTxReceipt(txWhitelist, "ERC20 whitelist failed")
 	ensureTxReceipt(txSetLegacySupported, "Set legacy support failed")
+
+	r.Logger.Info("Granting PAUSER_ROLE to TSS address")
+	pauserRoleHash := crypto.Keccak256Hash([]byte("PAUSER_ROLE"))
+	txGrantPauserRole, err := r.ERC20Custody.GrantRole(r.EVMAuth, pauserRoleHash, r.TSSAddress)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txGrantPauserRole, "Failed to grant PAUSER_ROLE to TSS address")
 }

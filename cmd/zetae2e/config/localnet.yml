@@ -117,8 +117,8 @@ rpcs:
     disable_tls: true
     params: regnet
   solana: "http://solana:8899"
-  # ton lite-server config url or path
-  ton: "http://ton:8000/lite-client.json"
+  # ton center v2 rpc
+  ton: "http://ton:8081"
   ton_faucet: "http://ton:8000/faucet.json"
   sui: "http://sui:9000"
   sui_faucet: "http://sui:9123"
