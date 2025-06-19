@@ -40,6 +40,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -103,11 +104,6 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			zetachain, err := chains.ZetaChainFromCosmosChainID(initClientCtx.ChainID)
-			if err != nil {
-				return err
-			}
-
 			// This needs to go after ReadFromClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
@@ -130,6 +126,17 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+				return err
+			}
+
+			// TODO evm: need to check about evm chain id, getting it like this is generally fine, but some commands
+			// like docs are halting because of it
+			if initClientCtx.ChainID == "" {
+				return nil
+			}
+
+			zetachain, err := chains.ZetaChainFromCosmosChainID(initClientCtx.ChainID)
+			if err != nil {
 				return err
 			}
 

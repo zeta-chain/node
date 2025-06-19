@@ -447,7 +447,10 @@ func (s *TestSuite) TestDoCall() {
 				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				_, err := RegisterBlock(client, 1, bz)
 				s.Require().NoError(err)
-				RegisterEthCallError(QueryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: s.backend.EvmChainID.Int64()})
+				RegisterEthCallError(
+					QueryClient,
+					&evmtypes.EthCallRequest{Args: argsBz, ChainId: s.backend.EvmChainID.Int64()},
+				)
 			},
 			rpctypes.BlockNumber(1),
 			callArgs,
@@ -461,7 +464,10 @@ func (s *TestSuite) TestDoCall() {
 				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				_, err := RegisterBlock(client, 1, bz)
 				s.Require().NoError(err)
-				RegisterEthCall(QueryClient, &evmtypes.EthCallRequest{Args: argsBz, ChainId: s.backend.EvmChainID.Int64()})
+				RegisterEthCall(
+					QueryClient,
+					&evmtypes.EthCallRequest{Args: argsBz, ChainId: s.backend.EvmChainID.Int64()},
+				)
 			},
 			rpctypes.BlockNumber(1),
 			callArgs,

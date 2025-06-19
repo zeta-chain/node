@@ -287,7 +287,14 @@ func (s *TestSuite) TestGetTransactionByHash() {
 
 func (s *TestSuite) TestGetTransactionsByHashPending() {
 	msgEthereumTx, bz := s.buildEthereumTx()
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), s.backend.EvmChainID)
+	rpcTransaction, _ := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.Hash{},
+		0,
+		0,
+		big.NewInt(1),
+		s.backend.EvmChainID,
+	)
 
 	testCases := []struct {
 		name         string
@@ -347,7 +354,14 @@ func (s *TestSuite) TestGetTransactionsByHashPending() {
 
 func (s *TestSuite) TestGetTxByEthHash() {
 	msgEthereumTx, bz := s.buildEthereumTx()
-	rpcTransaction, _ := rpctypes.NewRPCTransaction(msgEthereumTx.AsTransaction(), common.Hash{}, 0, 0, big.NewInt(1), s.backend.EvmChainID)
+	rpcTransaction, _ := rpctypes.NewRPCTransaction(
+		msgEthereumTx.AsTransaction(),
+		common.Hash{},
+		0,
+		0,
+		big.NewInt(1),
+		s.backend.EvmChainID,
+	)
 
 	testCases := []struct {
 		name         string
@@ -361,7 +375,12 @@ func (s *TestSuite) TestGetTxByEthHash() {
 			func() {
 				s.backend.Indexer = nil
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
-				query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, common.HexToHash(msgEthereumTx.Hash).Hex())
+				query := fmt.Sprintf(
+					"%s.%s='%s'",
+					evmtypes.TypeMsgEthereumTx,
+					evmtypes.AttributeKeyEthereumTxHash,
+					common.HexToHash(msgEthereumTx.Hash).Hex(),
+				)
 				RegisterTxSearch(client, query, bz)
 			},
 			msgEthereumTx,
@@ -509,7 +528,10 @@ func (s *TestSuite) TestGetTransactionByBlockAndIndex() {
 				db := dbm.NewMemDB()
 				s.backend.Indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), s.backend.ClientCtx)
 				txBz := s.signAndEncodeEthTx(msgEthTx)
-				block := &types.Block{Header: types.Header{Height: 1, ChainID: "test"}, Data: types.Data{Txs: []types.Tx{txBz}}}
+				block := &types.Block{
+					Header: types.Header{Height: 1, ChainID: "test"},
+					Data:   types.Data{Txs: []types.Tx{txBz}},
+				}
 				err := s.backend.Indexer.IndexBlock(block, defaultExecTxResult)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)

@@ -313,7 +313,13 @@ func RegisterHeaderByHashNotFound(client *mocks.Client, _ common.Hash, _ []byte)
 		Return(nil, nil)
 }
 
-func RegisterABCIQueryWithOptions(client *mocks.Client, height int64, path string, data bytes.HexBytes, opts cmtrpcclient.ABCIQueryOptions) {
+func RegisterABCIQueryWithOptions(
+	client *mocks.Client,
+	height int64,
+	path string,
+	data bytes.HexBytes,
+	opts cmtrpcclient.ABCIQueryOptions,
+) {
 	client.On("ABCIQueryWithOptions", context.Background(), path, data, opts).
 		Return(&cmtrpctypes.ResultABCIQuery{
 			Response: abci.ResponseQuery{
@@ -323,13 +329,28 @@ func RegisterABCIQueryWithOptions(client *mocks.Client, height int64, path strin
 		}, nil)
 }
 
-func RegisterABCIQueryWithOptionsError(clients *mocks.Client, path string, data bytes.HexBytes, opts cmtrpcclient.ABCIQueryOptions) {
+func RegisterABCIQueryWithOptionsError(
+	clients *mocks.Client,
+	path string,
+	data bytes.HexBytes,
+	opts cmtrpcclient.ABCIQueryOptions,
+) {
 	clients.On("ABCIQueryWithOptions", context.Background(), path, data, opts).
 		Return(nil, errortypes.ErrInvalidRequest)
 }
 
-func RegisterABCIQueryAccount(clients *mocks.Client, data bytes.HexBytes, opts cmtrpcclient.ABCIQueryOptions, acc client.Account) {
-	baseAccount := authtypes.NewBaseAccount(acc.GetAddress(), acc.GetPubKey(), acc.GetAccountNumber(), acc.GetSequence())
+func RegisterABCIQueryAccount(
+	clients *mocks.Client,
+	data bytes.HexBytes,
+	opts cmtrpcclient.ABCIQueryOptions,
+	acc client.Account,
+) {
+	baseAccount := authtypes.NewBaseAccount(
+		acc.GetAddress(),
+		acc.GetPubKey(),
+		acc.GetAccountNumber(),
+		acc.GetSequence(),
+	)
 	accAny, _ := codectypes.NewAnyWithValue(baseAccount)
 	accResponse := authtypes.QueryAccountResponse{Account: accAny}
 	respBz, _ := accResponse.Marshal()

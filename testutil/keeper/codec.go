@@ -13,9 +13,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
-	cosmosevmtypes "github.com/cosmos/evm/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"

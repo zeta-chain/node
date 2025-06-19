@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
 )
 

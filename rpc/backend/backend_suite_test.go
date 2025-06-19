@@ -223,8 +223,13 @@ func (s *TestSuite) buildFormattedBlock(
 	baseFee *big.Int,
 ) map[string]interface{} {
 	header := resBlock.Block.Header
-	gasLimit := int64(^uint32(0))                                             // for `MaxGas = -1` (DefaultConsensusParams)
-	gasUsed := new(big.Int).SetUint64(uint64(blockRes.TxsResults[0].GasUsed)) //nolint:gosec // G115 // won't exceed uint64
+	gasLimit := int64(
+		^uint32(0),
+	) // for `MaxGas = -1` (DefaultConsensusParams)
+	gasUsed := new(
+		big.Int,
+	).SetUint64(uint64(blockRes.TxsResults[0].GasUsed))
+	//nolint:gosec // G115 // won't exceed uint64
 
 	root := common.Hash{}.Bytes()
 	receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())
@@ -263,7 +268,13 @@ func (s *TestSuite) buildFormattedBlock(
 func (s *TestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
 	encCfg := encoding.MakeConfig(evmdconfig.EVMChainID)
-	return keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Codec, []keyring.Option{hd.EthSecp256k1Option()}...)
+	return keyring.New(
+		sdk.KeyringServiceName(),
+		keyring.BackendTest,
+		clientDir,
+		buf,
+		encCfg.Codec,
+		[]keyring.Option{hd.EthSecp256k1Option()}...)
 }
 
 func (s *TestSuite) signAndEncodeEthTx(msgEthereumTx *evmtypes.MsgEthereumTx) []byte {

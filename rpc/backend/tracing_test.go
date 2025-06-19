@@ -121,7 +121,11 @@ func (s *TestSuite) TestTraceTransaction() {
 				)
 				_, err := RegisterBlockMultipleTxs(client, height, []types.Tx{txBz, txBz2})
 				s.Require().NoError(err)
-				RegisterTraceTransactionWithPredecessors(QueryClient, msgEthereumTx2, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterTraceTransactionWithPredecessors(
+					QueryClient,
+					msgEthereumTx2,
+					[]*evmtypes.MsgEthereumTx{msgEthereumTx},
+				)
 				RegisterConsensusParams(client, height)
 				txResults := []*abci.ExecTxResult{
 					{
@@ -154,7 +158,10 @@ func (s *TestSuite) TestTraceTransaction() {
 
 				RegisterBlockResultsWithTxResults(client, 1, txResults)
 			},
-			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID.ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
+			&types.Block{
+				Header: types.Header{Height: 1, ChainID: ChainID.ChainID},
+				Data:   types.Data{Txs: []types.Tx{txBz, txBz2}},
+			},
 			[]*abci.ExecTxResult{
 				{
 					Code: 0,

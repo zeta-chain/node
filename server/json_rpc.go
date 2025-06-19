@@ -5,16 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
+	serverconfig "github.com/cosmos/evm/server/config"
+	cosmosevmtypes "github.com/cosmos/evm/types"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
-	serverconfig "github.com/cosmos/evm/server/config"
-	cosmosevmtypes "github.com/cosmos/evm/types"
 	"github.com/zeta-chain/node/rpc"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // StartJSONRPC starts the JSON-RPC server

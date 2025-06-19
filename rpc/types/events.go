@@ -8,16 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // EventFormat is the format version of the events.
@@ -197,15 +194,28 @@ func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
 }
 
 // ParseTxIndexerResult parse tm tx result to a format compatible with the custom tx indexer.
-func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(*ParsedTxs) *ParsedTx) (*types.TxResult, *TxResultAdditionalFields, error) {
+func ParseTxIndexerResult(
+	txResult *tmrpctypes.ResultTx,
+	tx sdk.Tx,
+	getter func(*ParsedTxs) *ParsedTx,
+) (*types.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", txResult.Height, txResult.Index, err)
+		return nil, nil, fmt.Errorf(
+			"failed to parse tx events: block %d, index %d, %v",
+			txResult.Height,
+			txResult.Index,
+			err,
+		)
 	}
 
 	parsedTx := getter(txs)
 	if parsedTx == nil {
-		return nil, nil, fmt.Errorf("ethereum tx not found in msgs: block %d, index %d", txResult.Height, txResult.Index)
+		return nil, nil, fmt.Errorf(
+			"ethereum tx not found in msgs: block %d, index %d",
+			txResult.Height,
+			txResult.Index,
+		)
 	}
 	if parsedTx.Type == CosmosEVMTxType {
 		return &types.TxResult{

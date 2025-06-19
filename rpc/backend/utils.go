@@ -7,6 +7,13 @@ import (
 	"sort"
 	"strings"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
@@ -14,17 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/log"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type txGasAndReward struct {
@@ -47,7 +44,12 @@ func (s sortGasAndReward) Less(i, j int) bool {
 // If the pending value is true, it will iterate over the mempool (pending)
 // txs in order to compute and return the pending tx sequence.
 // Todo: include the ability to specify a blockNumber
-func (b *Backend) getAccountNonce(accAddr common.Address, pending bool, height int64, logger log.Logger) (uint64, error) {
+func (b *Backend) getAccountNonce(
+	accAddr common.Address,
+	pending bool,
+	height int64,
+	logger log.Logger,
+) (uint64, error) {
 	queryClient := authtypes.NewQueryClient(b.ClientCtx)
 	adr := sdk.AccAddress(accAddr.Bytes()).String()
 	ctx := types.ContextWithHeight(height)
@@ -142,7 +144,11 @@ func (b *Backend) processBlock(
 	gasusedfloat, _ := new(big.Float).SetInt(gasUsedBig.ToInt()).Float64()
 
 	if gasLimitUint64 <= 0 {
-		return fmt.Errorf("gasLimit of block height %d should be bigger than 0 , current gaslimit %d", blockHeight, gasLimitUint64)
+		return fmt.Errorf(
+			"gasLimit of block height %d should be bigger than 0 , current gaslimit %d",
+			blockHeight,
+			gasLimitUint64,
+		)
 	}
 
 	gasUsedRatio := gasusedfloat / float64(gasLimitUint64)

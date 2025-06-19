@@ -5,20 +5,17 @@ import (
 	"fmt"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
-
-	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // SendTransaction sends transaction based on received args using Node's key to sign it
@@ -32,11 +29,19 @@ func (b *Backend) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, e
 	_, err := b.ClientCtx.Keyring.KeyByAddress(sdk.AccAddress(args.GetFrom().Bytes()))
 	if err != nil {
 		b.Logger.Error("failed to find key in keyring", "address", args.GetFrom(), "error", err.Error())
-		return common.Hash{}, fmt.Errorf("failed to find key in the node's keyring; %s; %s", keystore.ErrNoMatch, err.Error())
+		return common.Hash{}, fmt.Errorf(
+			"failed to find key in the node's keyring; %s; %s",
+			keystore.ErrNoMatch,
+			err.Error(),
+		)
 	}
 
 	if args.ChainID != nil && (b.EvmChainID).Cmp((*big.Int)(args.ChainID)) != 0 {
-		return common.Hash{}, fmt.Errorf("chainId does not match node's (have=%v, want=%v)", args.ChainID, (*hexutil.Big)(b.EvmChainID))
+		return common.Hash{}, fmt.Errorf(
+			"chainId does not match node's (have=%v, want=%v)",
+			args.ChainID,
+			(*hexutil.Big)(b.EvmChainID),
+		)
 	}
 
 	args, err = b.SetTxDefaults(args)

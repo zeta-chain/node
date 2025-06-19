@@ -1091,8 +1091,13 @@ func (s *TestSuite) TestGetEthBlockFromTendermint() {
 
 			var expBlock map[string]interface{}
 			header := tc.resBlock.Block.Header
-			gasLimit := int64(^uint32(0))                                                // for `MaxGas = -1` (DefaultConsensusParams)
-			gasUsed := new(big.Int).SetUint64(uint64(tc.blockRes.TxsResults[0].GasUsed)) //nolint:gosec // G115 // won't exceed uint64
+			gasLimit := int64(
+				^uint32(0),
+			) // for `MaxGas = -1` (DefaultConsensusParams)
+			gasUsed := new(
+				big.Int,
+			).SetUint64(uint64(tc.blockRes.TxsResults[0].GasUsed))
+			//nolint:gosec // G115 // won't exceed uint64
 
 			root := common.Hash{}.Bytes()
 			receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())

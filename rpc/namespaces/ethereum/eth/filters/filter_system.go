@@ -6,24 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/pkg/errors"
-
+	"cosmossdk.io/log"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	cmttypes "github.com/cometbft/cometbft/types"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/evm/rpc/ethereum/pubsub"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-
-	"cosmossdk.io/log"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/pkg/errors"
 )
 
 var (

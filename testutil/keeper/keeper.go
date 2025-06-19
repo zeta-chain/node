@@ -33,6 +33,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
 	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
@@ -50,7 +51,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
-	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"

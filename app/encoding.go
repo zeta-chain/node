@@ -19,9 +19,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmosencoding "github.com/cosmos/evm/encoding"
-	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-
 	cosmosevmtypes "github.com/cosmos/evm/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"

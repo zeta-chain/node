@@ -431,7 +431,14 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+				Reward: [][]*hexutil.Big{
+					{
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+						(*hexutil.Big)(big.NewInt(0)),
+					},
+				},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,

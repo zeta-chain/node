@@ -7,22 +7,18 @@ import (
 	"math/big"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
+	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
-	cmttypes "github.com/cometbft/cometbft/types"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
-
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ExceedBlockGasLimitError defines the error message when tx execution exceeds the block gas limit.

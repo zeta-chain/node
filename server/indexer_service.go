@@ -7,7 +7,6 @@ import (
 	"github.com/cometbft/cometbft/libs/service"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/types"
-
 	cosmosevmtypes "github.com/cosmos/evm/types"
 )
 

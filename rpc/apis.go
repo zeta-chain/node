@@ -3,11 +3,12 @@ package rpc
 import (
 	"fmt"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/evm/types"
 	"github.com/ethereum/go-ethereum/rpc"
 
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-
-	"github.com/cosmos/evm/types"
 	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/eth"
@@ -17,9 +18,6 @@ import (
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/personal"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/txpool"
 	"github.com/zeta-chain/node/rpc/namespaces/ethereum/web3"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // RPC namespaces and API version

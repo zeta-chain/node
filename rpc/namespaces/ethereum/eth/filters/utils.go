@@ -13,7 +13,12 @@ import (
 // [null, B] -> anything in first position, B in second position
 // [A, B] -> A in first position and B in second position
 // [[A, B], [A, B]] -> A or B in first position, A or B in second position
-func FilterLogs(logs []*ethtypes.Log, fromBlock, toBlock *big.Int, addresses []common.Address, topics [][]common.Hash) []*ethtypes.Log {
+func FilterLogs(
+	logs []*ethtypes.Log,
+	fromBlock, toBlock *big.Int,
+	addresses []common.Address,
+	topics [][]common.Hash,
+) []*ethtypes.Log {
 	var ret []*ethtypes.Log
 Logs:
 	for _, log := range logs {

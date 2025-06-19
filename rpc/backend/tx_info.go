@@ -5,22 +5,19 @@ import (
 	"math"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	"github.com/cosmos/evm/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	errorsmod "cosmossdk.io/errors"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetTransactionByHash returns the Ethereum format transaction identified by Ethereum transaction hash
@@ -97,7 +94,13 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", blockRes.Height, "error", err)
+		b.Logger.Error(
+			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
+			"height",
+			blockRes.Height,
+			"error",
+			err,
+		)
 	}
 
 	height := uint64(res.Height)    //#nosec G115 -- checked for int overflow already
@@ -371,7 +374,10 @@ func (b *Backend) GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error) 
 }
 
 // GetTransactionByBlockHashAndIndex returns the transaction identified by hash and index.
-func (b *Backend) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockHashAndIndex(
+	hash common.Hash,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	b.Logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
 	sc, ok := b.ClientCtx.Client.(tmrpcclient.SignClient)
 	if !ok {
@@ -393,7 +399,10 @@ func (b *Backend) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexuti
 }
 
 // GetTransactionByBlockNumberAndIndex returns the transaction identified by number and index.
-func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockNumberAndIndex(
+	blockNum rpctypes.BlockNumber,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	b.Logger.Debug("eth_getTransactionByBlockNumberAndIndex", "number", blockNum, "index", idx)
 
 	block, err := b.TendermintBlockByNumber(blockNum)
@@ -434,7 +443,10 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*types.TxResult, *rpctypes.T
 }
 
 // GetTxByTxIndex uses `/tx_query` to find transaction by tx index of valid ethereum txs
-func (b *Backend) GetTxByTxIndex(height int64, index uint) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+func (b *Backend) GetTxByTxIndex(
+	height int64,
+	index uint,
+) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	int32Index := int32(index) //#nosec G115 -- checked for int overflow already
 	if b.Indexer != nil {
 		// #nosec G115 always in range
@@ -459,7 +471,10 @@ func (b *Backend) GetTxByTxIndex(height int64, index uint) (*types.TxResult, *rp
 }
 
 // QueryTendermintTxIndexer query tx in tendermint tx indexer
-func (b *Backend) QueryTendermintTxIndexer(query string, txGetter func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
+func (b *Backend) QueryTendermintTxIndexer(
+	query string,
+	txGetter func(*rpctypes.ParsedTxs) *rpctypes.ParsedTx,
+) (*types.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	resTxs, err := b.ClientCtx.Client.TxSearch(b.Ctx, query, false, nil, nil, "")
 	if err != nil {
 		return nil, nil, err
@@ -485,7 +500,10 @@ func (b *Backend) QueryTendermintTxIndexer(query string, txGetter func(*rpctypes
 }
 
 // GetTransactionByBlockAndIndex is the common code shared by `GetTransactionByBlockNumberAndIndex` and `GetTransactionByBlockHashAndIndex`.
-func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
+func (b *Backend) GetTransactionByBlockAndIndex(
+	block *tmrpctypes.ResultBlock,
+	idx hexutil.Uint,
+) (*rpctypes.RPCTransaction, error) {
 	blockRes, err := b.RPCClient.BlockResults(b.Ctx, &block.Block.Height)
 	if err != nil {
 		return nil, nil

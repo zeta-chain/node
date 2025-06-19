@@ -11,19 +11,17 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/server"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	stderrors "github.com/pkg/errors"
 
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // HandlerT keeps track of the cpu profiler and trace execution
@@ -65,7 +63,10 @@ func (a *API) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (
 
 // TraceBlockByNumber returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByNumber(height rpctypes.BlockNumber, config *evmtypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByNumber(
+	height rpctypes.BlockNumber,
+	config *evmtypes.TraceConfig,
+) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByNumber", "height", height)
 	if height == 0 {
 		return nil, errors.New("genesis is not traceable")
@@ -285,7 +286,9 @@ func (a *API) SetGCPercent(v int) int {
 
 // GetHeaderRlp retrieves the RLP encoded for of a single header.
 func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
-	header, err := a.backend.HeaderByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	header, err := a.backend.HeaderByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +298,9 @@ func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
 
 // GetBlockRlp retrieves the RLP encoded for of a single block.
 func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +310,9 @@ func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
 
 // PrintBlock retrieves a block and returns its pretty printed form.
 func (a *API) PrintBlock(number uint64) (string, error) {
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number)) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return "", err
 	}

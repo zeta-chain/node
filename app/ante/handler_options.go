@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	cosmosante "github.com/cosmos/evm/ante/cosmos"
+	evmante "github.com/cosmos/evm/ante/evm"
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
-	evmante "github.com/cosmos/evm/ante/evm"
 	observerkeeper "github.com/zeta-chain/node/x/observer/keeper"
 )
 

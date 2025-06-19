@@ -4,16 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TraceTransaction returns the structured logs created during the execution of EVM

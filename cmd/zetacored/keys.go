@@ -3,18 +3,15 @@ package main
 import (
 	"bufio"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cometbft/cometbft/libs/cli"
-
-	"github.com/cosmos/evm/crypto/hd"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	evmclient "github.com/cosmos/evm/client"
 	clientkeys "github.com/cosmos/evm/client/keys"
+	"github.com/cosmos/evm/crypto/hd"
+	"github.com/spf13/cobra"
 )
 
 // TODO evm: unsupported algo, had to fork this command
@@ -87,7 +84,8 @@ The pass backend requires GnuPG: https://gnupg.org/
 	)
 
 	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.PersistentFlags().String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
+	cmd.PersistentFlags().
+		String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
 	cmd.PersistentFlags().String(flags.FlagKeyringBackend, keyring.BackendOS, "Select keyring's backend (os|file|test)")
 	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
 	return cmd
