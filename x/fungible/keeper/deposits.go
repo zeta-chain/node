@@ -29,6 +29,8 @@ func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) e
 
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
 // returns [txResponse, isContractCall, error]
+// This function should be renamed to DepositAndCallContract as it now handles both ZRC20 and ZETA deposits
+// TODO : https://github.com/zeta-chain/node/issues/3988
 func (k Keeper) ZRC20DepositAndCallContract(
 	ctx sdk.Context,
 	from []byte,
@@ -45,6 +47,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	zrc20Contract := ethcommon.Address{}
 	err := error(nil)
 
+	// We don't need to fetch the foreign coin for Zeta, GatewavZEVM automatically handles it
 	if coinType != coin.CoinType_Zeta {
 		zrc20Contract, _, err = k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
 		if err != nil {
@@ -146,22 +149,21 @@ func (k Keeper) processZetaDeposit(
 	message []byte,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	// Deposit/Mint ZETA to the protocol address which will then be used to make the calls below
 	if err := k.DepositCoinsToFungibleModule(ctx, amount); err != nil {
 		return nil, false, err
 	}
 
 	if isCrossChainCall {
-		// Cross-chain call with ZETA asset
 		res, err := k.DepositAndCallZeta(ctx, context, amount, to, message)
 		return res, false, err
 	}
 
-	// Simple ZETA deposit
 	res, err := k.DepositZeta(ctx, to, amount)
 	return res, false, err
 }
 
-// processZRC20Deposit handles ZRC20 token deposits
+// processZRC20Deposit handles ZRC20 token deposits [ZRC20 tokens exist for ERC20 and GAS tokens]
 func (k Keeper) processZRC20Deposit(
 	ctx sdk.Context,
 	context gatewayzevm.MessageContext,
@@ -172,12 +174,10 @@ func (k Keeper) processZRC20Deposit(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	if isCrossChainCall {
-		// Cross-chain call with ZRC20 asset
 		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
 		return res, true, err
 	}
 
-	// Deposit ZRC20 to the receiver
 	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 	return res, false, err
 }
