@@ -205,7 +205,7 @@ func (ts *testSuite) OnGetTransactionsSince(
 		Return(txs, err)
 }
 
-func (ts *testSuite) Sign(msg Signable) {
+func (ts *testSuite) Sign(msg toncontracts.ExternalMsg) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 

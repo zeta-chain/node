@@ -866,15 +866,17 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestTONWithdrawRestrictedName,
-		"withdraw TON from ZEVM to restricted address",
+		"withdraw TON from ZEVM to restricted address (compliance check)",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
 		},
 		TestTONWithdrawRestricted,
 	),
 	runner.NewE2ETest(
+		// TON address starts with an chain index (0:... or -1:...)
+		// Zetachain operates only on base chain (0:)
 		TestTONWithdrawMasterchainName,
-		"withdraw TON from ZEVM to masterchain",
+		"withdraw TON from ZEVM to masterchain that is a consensus chain rather than a base workchain",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
 		},

@@ -262,11 +262,6 @@ func statusWithAmount(o outbound, cctx *cctypes.CrossChainTx) (chains.ReceiveSta
 
 		return o.receiveStatus, wd.Amount, nil
 	case toncontracts.OpIncreaseSeqno:
-		_, err := o.tx.IncreaseSeqno()
-		if err != nil {
-			return 0, math.Uint{}, errors.Wrap(err, "unable to get increase seqno")
-		}
-
 		// force failure to revert the CCTX in zetacore (similarly to SUI)
 		return chains.ReceiveStatus_failed, cctx.GetCurrentOutboundParam().Amount, nil
 	}

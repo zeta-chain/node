@@ -13,7 +13,11 @@ import (
 type CancelReason uint32
 
 const (
-	InvalidWorkchain    CancelReason = 1
+	// InvalidWorkchain tx cancelled due to attempt to withdraw to masterchain account
+	// https://docs.ton.org/v3/documentation/smart-contracts/shards/shards-intro
+	InvalidWorkchain CancelReason = 1
+
+	// ComplianceViolation tx cancelled due to attempt to withdraw to a restricted address
 	ComplianceViolation CancelReason = 2
 )
 

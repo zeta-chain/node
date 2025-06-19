@@ -205,7 +205,7 @@ func (ob *Observer) voteInbound(ctx context.Context, tx *toncontracts.Transactio
 		return nil
 	}
 
-	if inbound.tx.Operation == toncontracts.OpCall {
+	if inbound.coinType == coin.CoinType_NoAssetCall {
 		if _, err = ob.voteCall(ctx, inbound); err != nil {
 			return errors.Wrap(err, "unable to vote for call tx")
 		}
@@ -263,6 +263,7 @@ func extractInboundData(tx *toncontracts.Transaction) (inboundData, error) {
 			return inboundData{}, err
 		}
 
+		in.coinType = coin.CoinType_NoAssetCall
 		in.sender = c.Sender
 		in.receiver = c.Recipient
 		in.amount = math.NewUint(0)
@@ -320,9 +321,8 @@ func (ob *Observer) voteDeposit(ctx context.Context, inbound inboundData) (strin
 
 func (ob *Observer) voteCall(ctx context.Context, inbound inboundData) (string, error) {
 	const (
-		seqno         = 0 // ton doesn't use sequential block numbers
-		eventIndex    = 0 // not applicable for TON
-		coinType      = coin.CoinType_NoAssetCall
+		seqno         = 0  // ton doesn't use sequential block numbers
+		eventIndex    = 0  // not applicable for TON
 		asset         = "" // empty for gas coin
 		gasLimit      = zetacore.PostVoteInboundCallOptionsGasLimit
 		retryGasLimit = zetacore.PostVoteInboundExecutionGasLimit
@@ -347,7 +347,7 @@ func (ob *Observer) voteCall(ctx context.Context, inbound inboundData) (string, 
 		inboundHash,
 		seqno,
 		gasLimit,
-		coinType,
+		coin.CoinType_NoAssetCall,
 		asset,
 		eventIndex,
 		types.ProtocolContractVersion_V2,

@@ -28,12 +28,6 @@ type Signer struct {
 	gateway *toncontracts.Gateway
 }
 
-// Signable represents a message that can be signed.
-type Signable interface {
-	Hash() ([32]byte, error)
-	SetSignature(sig [65]byte)
-}
-
 // Outcome possible outbound processing outcomes.
 type Outcome string
 
@@ -134,7 +128,7 @@ func (s *Signer) ProcessOutbound(
 
 // SignMessage signs TON external message using TSS
 // Note that TSS has in-mem cache for existing signatures to abort duplicate signing requests.
-func (s *Signer) SignMessage(ctx context.Context, msg Signable, zetaHeight, nonce uint64) error {
+func (s *Signer) SignMessage(ctx context.Context, msg toncontracts.ExternalMsg, zetaHeight, nonce uint64) error {
 	hash, err := msg.Hash()
 	if err != nil {
 		return errors.Wrap(err, "unable to hash message")
