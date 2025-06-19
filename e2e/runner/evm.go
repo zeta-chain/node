@@ -97,8 +97,8 @@ func (r *E2ERunner) ERC20Deposit(
 	return tx
 }
 
-// ZetaDeposit calls Deposit of Gateway with zeta token
-func (r *E2ERunner) ZetaDeposit(
+// ZETADeposit calls Deposit of Gateway with zeta token
+func (r *E2ERunner) ZETADeposit(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	revertOptions gatewayevm.RevertOptions,

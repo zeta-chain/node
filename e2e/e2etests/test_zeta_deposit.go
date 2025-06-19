@@ -22,7 +22,7 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
 	// perform the deposit
-	tx := r.ZetaDeposit(receiverAddress, amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ZETADeposit(receiverAddress, amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
