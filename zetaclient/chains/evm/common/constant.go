@@ -72,5 +72,6 @@ const (
 	// [signature, recipient, asset]
 	TopicsERC20CustodyWithdrawAndCall = 3
 
-	TopicsZetaConnectorWithdraw = 2 // [signature, recipient, asset] (ZetaConnectorNative.withdraw
+	// TopicsZetaConnectorWithdraw is the number of topics for a Zeta connector withdraw event
+	TopicsZetaConnectorWithdraw = 2 // [to, amount]
 )

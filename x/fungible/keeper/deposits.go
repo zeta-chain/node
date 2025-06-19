@@ -23,7 +23,7 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to ethcommon.Address, amount *b
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) MintCoinsToProtocolAddress(ctx sdk.Context, amount *big.Int) error {
+func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) error {
 	return k.MintZetaToFungibleModule(ctx, amount)
 }
 
@@ -146,7 +146,7 @@ func (k Keeper) processZetaDeposit(
 	message []byte,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	if err := k.MintCoinsToProtocolAddress(ctx, amount); err != nil {
+	if err := k.DepositCoinsToFungibleModule(ctx, amount); err != nil {
 		return nil, false, err
 	}
 

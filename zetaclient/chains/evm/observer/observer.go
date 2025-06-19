@@ -69,14 +69,14 @@ func New(baseObserver *base.Observer, client interfaces.EVMRPCClient) (*Observer
 	return ob, nil
 }
 
-// getConnectorContract returns the non-Eth connector address and binder
-func (ob *Observer) getConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
+// getConnectorLegacyContract returns the non-Eth connector address and binder
+func (ob *Observer) getConnectorLegacyContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *Observer) getConnectorV2Contract() (ethcommon.Address, *zetaconnectornative.ZetaConnectorNative, error) {
+func (ob *Observer) getConnectorContract() (ethcommon.Address, *zetaconnectornative.ZetaConnectorNative, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnectornative.NewZetaConnectorNative(addr, ob.evmClient)
 	return addr, contract, err

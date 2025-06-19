@@ -26,6 +26,8 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 		return signer.signERC20CustodyWithdrawAndCall(ctx, outboundData)
 	case common.OutboundTypeZetaWithdrawRevert:
 		return signer.signZetaConnectoryWithdraw(ctx, outboundData)
+	// Add when implementing Zeta withdraws
+	// common.OutboundTypeZetaWithdraw and common.OutboundTypeZetaWithdrawAndCall
 	case common.OutboundTypeGasWithdrawAndCall, common.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
@@ -34,7 +36,6 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 		return signer.signGatewayExecuteRevert(ctx, cctx.InboundParams.Sender, outboundData)
 	case common.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
 		return signer.signERC20CustodyWithdrawRevert(ctx, cctx.InboundParams.Sender, outboundData)
-
 	}
 	return nil, fmt.Errorf("unsupported outbound type %d", outboundType)
 }

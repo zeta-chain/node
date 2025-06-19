@@ -149,8 +149,6 @@ func (signer *Signer) signZetaConnectoryWithdraw(
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
 
-	fmt.Println("signZetaConnector address:", signer.zetaConnectorAddress)
-
 	tx, _, _, err := signer.Sign(
 		ctx,
 		data,

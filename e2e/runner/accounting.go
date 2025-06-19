@@ -188,11 +188,6 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 }
 
 func (r *E2ERunner) checkZetaTSSBalance() error {
-	//zetaLockedLegacyConnector, err := r.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
-	//if err != nil {
-	//	return err
-	//}
-
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
 

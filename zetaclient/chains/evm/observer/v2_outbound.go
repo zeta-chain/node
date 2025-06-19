@@ -45,6 +45,8 @@ func parseOutboundEventV2(
 		return parseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case common.OutboundTypeZetaWithdrawRevert:
 		return parseAndCheckZetaCustodyWithdraw(cctx, receipt, connectorNativeAddress, connectorNative)
+	// Add when implementing Zeta withdraws
+	// common.OutboundTypeZetaWithdrawAndCall, common.OutboundTypeZetaWithdraw:
 	case common.OutboundTypeERC20WithdrawAndCall:
 		return parseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
 	case common.OutboundTypeGasWithdrawAndCall, common.OutboundTypeCall:

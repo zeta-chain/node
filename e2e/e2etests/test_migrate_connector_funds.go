@@ -10,7 +10,6 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // TestMigrateConnectorFunds tests the migration of funds from the old ZetaConnectorEth (V1) to the new ZetaConnectorNative (V2)
@@ -95,22 +94,4 @@ func verifyMigrationSuccess(r *runner.E2ERunner, expectedBalance *big.Int) {
 		expectedBalance.String(), newConnectorBalance.String())
 
 	r.Logger.Print("✅ Migration verification successful: %s ZETA tokens migrated", newConnectorBalance.String())
-}
-
-// updateChainParams updates the chain parameters to use the new connector address
-func updateChainParams(r *runner.E2ERunner, chainID int64) {
-	params, err := r.ObserverClient.GetChainParamsForChain(r.Ctx, &observertypes.QueryGetChainParamsForChainRequest{
-		ChainId: chainID,
-	})
-	require.NoError(r, err)
-
-	newChainParams := params.GetChainParams()
-	newChainParams.ConnectorContractAddress = r.ConnectorNativeAddr.Hex()
-
-	msgUpdateChainParams := observertypes.NewMsgUpdateChainParams(
-		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
-		newChainParams)
-
-	_, err = r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msgUpdateChainParams)
-	require.NoError(r, err)
 }

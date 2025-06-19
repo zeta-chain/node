@@ -163,16 +163,13 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
-
-	fmt.Println("Fetching connector", ob.ChainParams().ConnectorContractAddress)
-
 	// get connector and erc20Custody contracts
-	connectorAddr, connector, err := ob.getConnectorContract()
+	connectorLegacyAddr, connectorLegacy, err := ob.getConnectorLegacyContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
 	}
 
-	connectorNativeAddr, connectorNative, err := ob.getConnectorV2Contract()
+	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
 		return true, errors.Wrapf(err, "error getting zeta connector v2 for chain %d", ob.Chain().ChainId)
 	}
@@ -213,15 +210,15 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		receipt,
 		transaction,
 		cointype,
-		connectorAddr,
-		connector,
+		connectorLegacyAddr,
+		connectorLegacy,
 		custodyAddr,
 		custody,
 		custodyV2,
 		gatewayAddr,
 		gateway,
-		connectorNativeAddr,
-		connectorNative,
+		connectorAddr,
+		connector,
 	)
 	if err != nil {
 		logger.Error().
@@ -266,7 +263,17 @@ func parseOutboundReceivedValue(
 
 	// parse outbound event for protocol contract v2
 	if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return parseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway, connectorNativeAddress, connectorNative)
+		return parseOutboundEventV2(
+			cctx,
+			receipt,
+			transaction,
+			custodyAddress,
+			custodyV2,
+			gatewayAddress,
+			gateway,
+			connectorNativeAddress,
+			connectorNative,
+		)
 	}
 
 	// parse receive value from the outbound receipt for Zeta and ERC20
