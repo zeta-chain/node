@@ -38,7 +38,7 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%dm%.1fs", minutes, seconds)
 }
 
-func requireCctxStatus(
+func requireCCTXStatus(
 	r *runner.E2ERunner,
 	expectedStatus crosschaintypes.CctxStatus,
 	cctx *crosschaintypes.CrossChainTx,

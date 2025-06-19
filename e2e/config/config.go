@@ -167,15 +167,15 @@ type Sui struct {
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
 type EVM struct {
-	ZetaEthAddr         DoubleQuotedString `yaml:"zeta_eth"`
-	ConnectorEthAddr    DoubleQuotedString `yaml:"connector_eth"`
-	CustodyAddr         DoubleQuotedString `yaml:"custody"`
-	ERC20               DoubleQuotedString `yaml:"erc20"`
-	TestDappAddr        DoubleQuotedString `yaml:"test_dapp"`
-	Gateway             DoubleQuotedString `yaml:"gateway"`
-	ERC20CustodyNew     DoubleQuotedString `yaml:"erc20_custody_new"`
-	TestDAppV2Addr      DoubleQuotedString `yaml:"test_dapp_v2"`
-	ConnectorNativeAddr DoubleQuotedString `yaml:"connector_native"`
+	ZetaEthAddr      DoubleQuotedString `yaml:"zeta_eth"`
+	ConnectorEthAddr DoubleQuotedString `yaml:"connector_eth"`
+	CustodyAddr      DoubleQuotedString `yaml:"custody"`
+	ERC20            DoubleQuotedString `yaml:"erc20"`
+	TestDappAddr     DoubleQuotedString `yaml:"test_dapp"`
+	Gateway          DoubleQuotedString `yaml:"gateway"`
+	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
+	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
+	ConnectorNative  DoubleQuotedString `yaml:"connector_native"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain

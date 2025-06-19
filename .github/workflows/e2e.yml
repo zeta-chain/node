@@ -295,6 +295,7 @@ jobs:
           - make-target: "start-connector-migration-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.V2_CONNECTOR_MIGRATION_TESTS == 'true' }}
+            timeout-minutes: 40
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:

@@ -585,7 +585,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
-			logger.Print("❌ v2 connector migration failed")
+			logger.Print("❌ connector migration failed")
 			os.Exit(1)
 		}
 	}
@@ -762,11 +762,11 @@ func waitKeygenHeight(
 		return errors.Wrap(err, "observerClient.Keygen error")
 	case resp.Keygen == nil:
 		return errors.New("keygen is nil")
-	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
-		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
 		// noop
 		return nil
+	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
+		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}
 
 	keygenHeight := resp.Keygen.BlockNumber

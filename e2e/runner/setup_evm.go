@@ -111,13 +111,21 @@ func (r *E2ERunner) SetupEVM() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
+	// deploy test dapp v2
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	r.TestDAppV2EVMAddr = testDAppV2Addr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
+	require.NoError(r, err)
+
 	// Deploy zetaConnectorNative contract
-	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
 		r.EVMAuth,
 		r.EVMClient,
 	)
 	require.NoError(r, err)
-	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
+	ensureTxReceipt(txZetaConnectorNativeHash, "ZetaConnectorNative deployment failed")
 
 	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
 	require.NoError(r, err)
@@ -135,7 +143,7 @@ func (r *E2ERunner) SetupEVM() {
 	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
-		zetaConnnectorNativeAddress,
+		zetaConnectorNativeAddress,
 		initializerData,
 	)
 	require.NoError(r, err)
@@ -151,17 +159,9 @@ func (r *E2ERunner) SetupEVM() {
 
 	r.Logger.Info(
 		"ZetaConnectorNative contract address: %s, tx hash: %s",
-		zetaConnnectorNativeAddress.Hex(),
-		txZetaConnnectorNativeHash.Hash().Hex(),
+		zetaConnectorNativeAddress.Hex(),
+		txZetaConnectorNativeHash.Hash().Hex(),
 	)
-
-	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
-	require.NoError(r, err)
-
-	r.TestDAppV2EVMAddr = testDAppV2Addr
-	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
-	require.NoError(r, err)
 
 	// check contract deployment receipt
 	ensureTxReceipt(txERC20, "ERC20 deployment failed")

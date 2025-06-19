@@ -463,13 +463,13 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
-	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
-	r.Logger.Print("ConnectorEthLegacy:   %s", r.ConnectorEthAddr.Hex())
-	r.Logger.Print("ConnectorEth:  %s", r.ConnectorNativeAddr.Hex())
-	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
-	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
-	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
+	r.Logger.Print("ZetaEth:           	%s", r.ZetaEthAddr.Hex())
+	r.Logger.Print("ConnectorEthLegacy:	%s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEth:  		%s", r.ConnectorNativeAddr.Hex())
+	r.Logger.Print("ERC20Custody:   	%s", r.ERC20CustodyAddr.Hex())
+	r.Logger.Print("ERC20:            	%s", r.ERC20Addr.Hex())
+	r.Logger.Print("GatewayEVM:       	%s", r.GatewayEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2EVM:     	%s", r.TestDAppV2EVMAddr.Hex())
 
 	r.Logger.Print(" --- 📜Legacy contracts ---")
 
