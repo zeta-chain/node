@@ -174,6 +174,7 @@ type EVM struct {
 	Gateway          DoubleQuotedString `yaml:"gateway"`
 	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
 	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
+	ConnectorNative  DoubleQuotedString `yaml:"connector_native"` // The native connector contract is the V2 version of the connector contract
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
@@ -213,7 +214,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
-			TON:          "http://ton:8000/lite-client.json",
+			TON:          "http://ton:8081",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{

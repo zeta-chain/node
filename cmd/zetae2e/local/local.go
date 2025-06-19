@@ -29,31 +29,32 @@ import (
 )
 
 const (
-	flagContractsDeployed = "deployed"
-	flagWaitForHeight     = "wait-for"
-	FlagConfigFile        = "config"
-	flagConfigOut         = "config-out"
-	flagVerbose           = "verbose"
-	flagTestAdmin         = "test-admin"
-	flagTestEthStress     = "test-stress-eth"
-	flagTestSolanaStress  = "test-stress-solana"
-	flagTestSuiStress     = "test-stress-sui"
-	flagIterations        = "iterations"
-	flagTestSolana        = "test-solana"
-	flagTestTON           = "test-ton"
-	flagTestSui           = "test-sui"
-	flagSkipRegular       = "skip-regular"
-	flagLight             = "light"
-	flagSetupOnly         = "setup-only"
-	flagSkipSetup         = "skip-setup"
-	flagTestTSSMigration  = "test-tss-migration"
-	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
-	flagSkipHeaderProof   = "skip-header-proof"
-	flagTestLegacy        = "test-legacy"
-	flagSkipTrackerCheck  = "skip-tracker-check"
-	flagUpgradeContracts  = "upgrade-contracts"
-	flagTestFilter        = "test-filter"
-	flagTestStaking       = "test-staking"
+	flagContractsDeployed        = "deployed"
+	flagWaitForHeight            = "wait-for"
+	FlagConfigFile               = "config"
+	flagConfigOut                = "config-out"
+	flagVerbose                  = "verbose"
+	flagTestAdmin                = "test-admin"
+	flagTestEthStress            = "test-stress-eth"
+	flagTestSolanaStress         = "test-stress-solana"
+	flagTestSuiStress            = "test-stress-sui"
+	flagIterations               = "iterations"
+	flagTestSolana               = "test-solana"
+	flagTestTON                  = "test-ton"
+	flagTestSui                  = "test-sui"
+	flagSkipRegular              = "skip-regular"
+	flagLight                    = "light"
+	flagSetupOnly                = "setup-only"
+	flagSkipSetup                = "skip-setup"
+	flagTestTSSMigration         = "test-tss-migration"
+	flagSkipBitcoinSetup         = "skip-bitcoin-setup"
+	flagSkipHeaderProof          = "skip-header-proof"
+	flagTestLegacy               = "test-legacy"
+	flagSkipTrackerCheck         = "skip-tracker-check"
+	flagUpgradeContracts         = "upgrade-contracts"
+	flagTestFilter               = "test-filter"
+	flagTestStaking              = "test-staking"
+	flagTestV2ConnectorMigration = "test-v2-connector-migration"
 )
 
 var (
@@ -96,6 +97,7 @@ func NewLocalCmd() *cobra.Command {
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
+	cmd.Flags().Bool(flagTestV2ConnectorMigration, false, "set to true to run v2 connector migration tests")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -107,33 +109,34 @@ func NewLocalCmd() *cobra.Command {
 func localE2ETest(cmd *cobra.Command, _ []string) {
 	// fetch flags
 	var (
-		waitForHeight     = must(cmd.Flags().GetInt64(flagWaitForHeight))
-		contractsDeployed = must(cmd.Flags().GetBool(flagContractsDeployed))
-		verbose           = must(cmd.Flags().GetBool(flagVerbose))
-		configOut         = must(cmd.Flags().GetString(flagConfigOut))
-		testAdmin         = must(cmd.Flags().GetBool(flagTestAdmin))
-		testEthStress     = must(cmd.Flags().GetBool(flagTestEthStress))
-		testSolanaStress  = must(cmd.Flags().GetBool(flagTestSolanaStress))
-		testSuiStress     = must(cmd.Flags().GetBool(flagTestSuiStress))
-		iterations        = must(cmd.Flags().GetInt(flagIterations))
-		testSolana        = must(cmd.Flags().GetBool(flagTestSolana))
-		testTON           = must(cmd.Flags().GetBool(flagTestTON))
-		testSui           = must(cmd.Flags().GetBool(flagTestSui))
-		skipRegular       = must(cmd.Flags().GetBool(flagSkipRegular))
-		light             = must(cmd.Flags().GetBool(flagLight))
-		setupOnly         = must(cmd.Flags().GetBool(flagSetupOnly))
-		skipSetup         = must(cmd.Flags().GetBool(flagSkipSetup))
-		skipBitcoinSetup  = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
-		skipHeaderProof   = must(cmd.Flags().GetBool(flagSkipHeaderProof))
-		skipTrackerCheck  = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
-		testTSSMigration  = must(cmd.Flags().GetBool(flagTestTSSMigration))
-		testLegacy        = must(cmd.Flags().GetBool(flagTestLegacy))
-		upgradeContracts  = must(cmd.Flags().GetBool(flagUpgradeContracts))
-		testStress        = testEthStress || testSolanaStress || testSuiStress
-		setupSolana       = testSolana || testStress
-		setupSui          = testSui || testStress
-		testFilterStr     = must(cmd.Flags().GetString(flagTestFilter))
-		testStaking       = must(cmd.Flags().GetBool(flagTestStaking))
+		waitForHeight            = must(cmd.Flags().GetInt64(flagWaitForHeight))
+		contractsDeployed        = must(cmd.Flags().GetBool(flagContractsDeployed))
+		verbose                  = must(cmd.Flags().GetBool(flagVerbose))
+		configOut                = must(cmd.Flags().GetString(flagConfigOut))
+		testAdmin                = must(cmd.Flags().GetBool(flagTestAdmin))
+		testEthStress            = must(cmd.Flags().GetBool(flagTestEthStress))
+		testSolanaStress         = must(cmd.Flags().GetBool(flagTestSolanaStress))
+		testSuiStress            = must(cmd.Flags().GetBool(flagTestSuiStress))
+		iterations               = must(cmd.Flags().GetInt(flagIterations))
+		testSolana               = must(cmd.Flags().GetBool(flagTestSolana))
+		testTON                  = must(cmd.Flags().GetBool(flagTestTON))
+		testSui                  = must(cmd.Flags().GetBool(flagTestSui))
+		skipRegular              = must(cmd.Flags().GetBool(flagSkipRegular))
+		light                    = must(cmd.Flags().GetBool(flagLight))
+		setupOnly                = must(cmd.Flags().GetBool(flagSetupOnly))
+		skipSetup                = must(cmd.Flags().GetBool(flagSkipSetup))
+		skipBitcoinSetup         = must(cmd.Flags().GetBool(flagSkipBitcoinSetup))
+		skipHeaderProof          = must(cmd.Flags().GetBool(flagSkipHeaderProof))
+		skipTrackerCheck         = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
+		testTSSMigration         = must(cmd.Flags().GetBool(flagTestTSSMigration))
+		testLegacy               = must(cmd.Flags().GetBool(flagTestLegacy))
+		upgradeContracts         = must(cmd.Flags().GetBool(flagUpgradeContracts))
+		testStress               = testEthStress || testSolanaStress || testSuiStress
+		setupSolana              = testSolana || testStress
+		setupSui                 = testSui || testStress
+		testFilterStr            = must(cmd.Flags().GetString(flagTestFilter))
+		testStaking              = must(cmd.Flags().GetBool(flagTestStaking))
+		testV2ConnectorMigration = must(cmd.Flags().GetBool(flagTestV2ConnectorMigration))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -396,7 +399,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSPLDepositName,
 		}
 
-		if !deployerRunner.IsRunningUpgrade() {
+		if !deployerRunner.IsRunningUpgrade() && !light {
 			solanaTests = append(solanaTests, []string{
 				e2etests.TestSolanaDepositThroughProgramName,
 				e2etests.TestSolanaDepositAndCallName,
@@ -467,6 +470,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
+			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
@@ -516,6 +520,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyEtherDepositAndCallName,
 			e2etests.TestLegacyEtherDepositAndCallRefundName,
 		))
+	}
+
+	if testV2ConnectorMigration {
+		// Add the v2 connector migration tests and assertions
+		// https://github.com/zeta-chain/node/issues/3947
+		deployerRunner.Logger.Info("no migration tests to run")
 	}
 
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
@@ -712,6 +722,9 @@ func waitKeygenHeight(
 		return errors.Wrap(err, "observerClient.Keygen error")
 	case resp.Keygen == nil:
 		return errors.New("keygen is nil")
+	case resp.Keygen.Status == observertypes.KeygenStatus_KeyGenSuccess:
+		// noop
+		return nil
 	case resp.Keygen.Status != observertypes.KeygenStatus_PendingKeygen:
 		return errors.Errorf("keygen is not pending (status: %s)", resp.Keygen.Status.String())
 	}

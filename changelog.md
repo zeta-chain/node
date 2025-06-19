@@ -5,12 +5,29 @@
 ### Features
 
 * [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 * [3961](https://github.com/zeta-chain/node/pull/3961) - cosmos v53 upgrade
+* [3991](https://github.com/zeta-chain/node/pull/3991) - cosmos evm integration
 
 ### Fixes
 
 * [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
 * [3957](https://github.com/zeta-chain/node/pull/3957) - remove tx format assumption from solana parse gateway instruction
+* [3956](https://github.com/zeta-chain/node/pull/3956) - use the latest nonce to perform pre-broadcast check to make evm tx replacement possible
+* [3954](https://github.com/zeta-chain/node/pull/3954) - fail sui withdrawal event in the ZEVM if it carries invalid receiver address
+* [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
+* [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
+* [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
+
+### Refactor
+
+* [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
+
+### Tests
+
+* [3972](https://github.com/zeta-chain/node/pull/3972) - add `gasLimit` argument to erc20 withdrawAndCall e2e test
+* [3983](https://github.com/zeta-chain/node/pull/3983) - fix simulation tests and modify `sim.yml` workflow to run sim tests on changes to `app/` and `cmd/` directories in addition to `x/`
+* [3975](https://github.com/zeta-chain/node/pull/3975) - add v2 connector deployment to the e2e test
 
 ## v31.0.0
 
@@ -49,7 +66,7 @@
 * [3709](https://github.com/zeta-chain/node/pull/3709) - improve cctx error message for out of gas errors when creating outbound
 * [3777](https://github.com/zeta-chain/node/pull/3777) - use SignBatch keysign for solana outbound tx and fallback tx
 * [3813](https://github.com/zeta-chain/node/pull/3813) - set ZETA protocol fee to 0
-* [3848g](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
+* [3848](https://github.com/zeta-chain/node/pull/3848) - extend min gas limit check to prevent intrinsic low gas limit
 
 ### Fixes
 

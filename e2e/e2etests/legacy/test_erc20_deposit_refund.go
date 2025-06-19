@@ -125,7 +125,8 @@ func sendInvalidERC20Deposit(r *runner.E2ERunner, amount *big.Int) (string, erro
 	if err != nil {
 		return "", err
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+
+	utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = r.ERC20Custody.Deposit(
@@ -140,7 +141,7 @@ func sendInvalidERC20Deposit(r *runner.E2ERunner, amount *big.Int) (string, erro
 	}
 
 	r.Logger.Info("EVM tx sent: %s; to %s, nonce %d", tx.Hash().String(), tx.To().Hex(), tx.Nonce())
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		return "", errors.New("expected the tx receipt to have status 1; got 0")
 	}

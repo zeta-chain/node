@@ -20,6 +20,9 @@ const (
 
 	// EnvTONRPC is the environment variable to enable ton rpc
 	EnvTONRPC = "TON_RPC"
+
+	// BTC_TEST_PK is the environment variable to configure bitcoin private key for live unit tests
+	EnvBTCTestPK = "BTC_TEST_PK"
 )
 
 // LiveTestEnabled returns true if live tests are enabled
@@ -33,4 +36,10 @@ func LiveTestEnabled() bool {
 	}
 
 	return enabled
+}
+
+// IsEnvVariableSet returns true if the environment variable is set
+func IsEnvVariableSet(envVar string) bool {
+	value := os.Getenv(envVar)
+	return value != ""
 }

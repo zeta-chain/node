@@ -1976,10 +1976,10 @@ github.com/zeta-chain/ethermint v0.0.0-20250606151045-75716891f3f0 h1:GhAp/3conI
 github.com/zeta-chain/ethermint v0.0.0-20250606151045-75716891f3f0/go.mod h1:QpRrg2yTkfVk1PYQknBw6IaAW4PG/XgPb1uewxQktoA=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4 h1:FmO3HfVdZ7LzxBUfg6sVzV7ilKElQU2DZm8PxJ7KcYI=
 github.com/zeta-chain/go-libp2p v0.0.0-20240710192637-567fbaacc2b4/go.mod h1:TBv5NY/CqWYIfUstXO1fDWrt4bDoqgCw79yihqBspg8=
-github.com/zeta-chain/go-tss v0.6.2 h1:cFXKVd+mSHr8Sc5xheARIBUwK2N4Fx/Qr/hIhb0Ce5E=
-github.com/zeta-chain/go-tss v0.6.2/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da h1:QxpqQTfFPloM8wlr59TIHA1wI9SpCvFNJ4b7PQGXucE=
-github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250505190744-1b0bce7ec4da/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
+github.com/zeta-chain/go-tss v0.6.3 h1:c/zSEvI0h7MJ+xxu42M58uBdEWrlzfD3NI1kP/FlWBE=
+github.com/zeta-chain/go-tss v0.6.3/go.mod h1:xLssidNiAP/fcdcw+cUPA2VS7Td2bnPMS/8x0jnde8w=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250603154140-a2b6c07814ed h1:RUbcQOysSgiCzx07UzrMwHjwLe0Pi3pRgirt9VBe7X8=
+github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20250603154140-a2b6c07814ed/go.mod h1:SjT7QirtJE8stnAe1SlNOanxtfSfijJm3MGJ+Ax7w7w=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46 h1:xbgrVDXWkZaWhMAuD3Q5A13jmRKYQbjZMPBaCkv3cns=
 github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46/go.mod h1:DcDY828o773soiU/h0XpC+naxitrIMFVZqEvq/EJxMA=
 github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901 h1:9whtN5fjYHfk4yXIuAsYP2EHxImwDWDVUOnZJ2pfL3w=

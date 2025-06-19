@@ -3,13 +3,11 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -223,36 +221,6 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// create inbound vote message for standard memo
 	return ob.NewInboundVoteFromStdMemo(event, amountInt)
-}
-
-// GetSenderAddressByVin get the sender address from the transaction input (vin)
-func GetSenderAddressByVin(
-	ctx context.Context,
-	rpc RPC,
-	vin btcjson.Vin,
-	net *chaincfg.Params,
-) (string, error) {
-	// query previous raw transaction by txid
-	hash, err := chainhash.NewHashFromStr(vin.Txid)
-	if err != nil {
-		return "", err
-	}
-
-	// this requires running bitcoin node with 'txindex=1'
-	tx, err := rpc.GetRawTransaction(ctx, hash)
-	if err != nil {
-		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
-	}
-
-	// #nosec G115 - always in range
-	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
-		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
-	}
-
-	// decode sender address from previous pkScript
-	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
-
-	return common.DecodeSenderFromScript(pkScript, net)
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

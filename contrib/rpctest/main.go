@@ -17,7 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 )
 
 var (
@@ -152,7 +152,7 @@ func main() {
 	//time.Sleep(10 * time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
-	receipt = MustWaitForReceipt(ctx, zevmClient, tx2.Hash())
+	MustWaitForReceipt(ctx, zevmClient, tx2.Hash())
 	receipt, err = zevmClient.TransactionReceipt(context.Background(), tx2.Hash())
 	if err != nil {
 		panic(err)

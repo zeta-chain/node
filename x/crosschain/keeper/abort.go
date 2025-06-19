@@ -103,8 +103,6 @@ func (k Keeper) ProcessAbort(
 	commit()
 
 	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
-
-	return
 }
 
 // LegacyRefundAbortedAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
