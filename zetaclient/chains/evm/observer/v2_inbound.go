@@ -174,7 +174,6 @@ func (ob *Observer) parseAndValidateDepositEvents(
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
 	coinType := coin.CoinType_ERC20
-
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
