@@ -34,12 +34,12 @@ type outbound struct {
 func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cctypes.CrossChainTx) (bool, error) {
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
-	outboundRes, exists := ob.getOutboundByNonce(nonce)
+	res, exists := ob.getOutboundByNonce(nonce)
 	if !exists {
 		return true, nil
 	}
 
-	if err := ob.postVoteOutbound(ctx, cctx, outboundRes); err != nil {
+	if err := ob.postVoteOutbound(ctx, cctx, res); err != nil {
 		return false, errors.Wrap(err, "unable to post vote")
 	}
 
@@ -96,6 +96,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 // by VoteOutboundIfConfirmed. Note that restricted txs (increase_seqno txs) are considered as success
 // because they are committed on-chain.
 func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.CrossChainTx, txHash string) error {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
 		return errors.New("only gas cctxs are supported")
 	}
@@ -105,39 +107,34 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
 
-	rawTX, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
+	rawTx, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
-		return errors.Wrap(err, "unable to get transaction")
+		return errors.Wrap(err, "unable to get tx")
 	}
 
-	tx, err := ob.gateway.ParseTransaction(rawTX)
+	tx, err := ob.gateway.ParseTransaction(rawTx)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse transaction")
+		return errors.Wrap(err, "unable to parse tx")
 	}
 
-	receiveStatus, err := ob.determineReceiveStatus(tx)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine outbound outcome")
+	receiveStatus := chains.ReceiveStatus_success
+
+	out, err := tx.OutboundAuth()
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to get outbound auth")
+	case out.Signer != ob.TSS().PubKey().AddressEVM():
+		return errors.Errorf("signer mismatch (got %s, want %s)", out.Signer, ob.TSS().PubKey().AddressEVM())
+	case uint64(out.Seqno) != nonce:
+		return errors.Errorf("nonce mismatch (got %d, want %d)", out.Seqno, nonce)
+	case !tx.IsSuccess():
+		receiveStatus = chains.ReceiveStatus_failed
 	}
 
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	// will be used by VoteOutboundIfConfirmed
 	ob.setOutboundByNonce(outbound{tx, receiveStatus, nonce})
 
 	return nil
-}
-
-func (ob *Observer) determineReceiveStatus(tx *toncontracts.Transaction) (chains.ReceiveStatus, error) {
-	auth, err := tx.OutboundAuth()
-	switch {
-	case err != nil:
-		return 0, err
-	case auth.Signer != ob.TSS().PubKey().AddressEVM():
-		return 0, errors.New("withdrawal signer is not TSS")
-	case !tx.IsSuccess():
-		return chains.ReceiveStatus_failed, nil
-	default:
-		return chains.ReceiveStatus_success, nil
-	}
 }
 
 // addOutboundTracker publishes outbound tracker to Zetacore.
@@ -179,9 +176,8 @@ func (ob *Observer) getOutboundByNonce(nonce uint64) (outbound, bool) {
 	return v.(outbound), true
 }
 
-// setOutboundByNonce stores outbound by nonce
-func (ob *Observer) setOutboundByNonce(o outbound) {
-	ob.outbounds.Add(o.nonce, o)
+func (ob *Observer) setOutboundByNonce(entry outbound) {
+	ob.outbounds.Add(entry.nonce, entry)
 }
 
 func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx, res outbound) error {
@@ -193,16 +189,14 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 		coinType      = cctx.InboundParams.CoinType
 	)
 
-	status, amount, err := statusWithAmount(res, cctx)
+	receiveStatus, amount, err := receiveStatusWithAmount(res, cctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get status and amount")
 	}
 
-	gasPrice, ok := ob.getLatestGasPrice()
-
-	// should not happen
-	if !ok {
-		return errors.New("gas price is not set (call PostGasPrice first)")
+	gasPrice, err := ob.getLatestGasPrice()
+	if err != nil {
+		return errors.Wrap(err, "unable to get gas price")
 	}
 
 	// #nosec G115 len always in range
@@ -217,7 +211,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 		gasPriceInt,
 		maxGasLimit,
 		amount,
-		status,
+		receiveStatus,
 		chainID,
 		nonce,
 		coinType,
@@ -252,7 +246,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 	return nil
 }
 
-func statusWithAmount(o outbound, cctx *cctypes.CrossChainTx) (chains.ReceiveStatus, math.Uint, error) {
+func receiveStatusWithAmount(o outbound, cctx *cctypes.CrossChainTx) (chains.ReceiveStatus, math.Uint, error) {
 	switch o.tx.Operation {
 	case toncontracts.OpWithdraw:
 		wd, err := o.tx.Withdrawal()
