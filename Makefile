@@ -39,7 +39,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR ?= "./..."
-TEST_BUILD_FLAGS := -tags pebbledb,ledger
+TEST_BUILD_FLAGS := -tags pebbledb,ledger,test
 
 export DOCKER_BUILDKIT := 1
 

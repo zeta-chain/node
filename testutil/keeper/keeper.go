@@ -43,14 +43,15 @@ import (
 	capabilitymodule "github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
+	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
@@ -110,6 +111,7 @@ type SDKKeepers struct {
 	SlashingKeeper       slashingkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
 	EvmKeeper            *evmkeeper.Keeper
+	ERC20Keeper          erc20keeper.Keeper
 	CapabilityKeeper     *capabilitykeeper.Keeper
 	IBCKeeper            *ibckeeper.Keeper
 	TransferKeeper       ibctransferkeeper.Keeper
@@ -516,6 +518,22 @@ func NewSDKKeepersWithKeys(
 		&erc20Keeper,
 		"",
 	)
+	ethCfg := evmtypes.DefaultChainConfig(7000)
+	configurator := evmtypes.NewEVMConfigurator()
+	// reset configuration to set the new one
+	configurator.ResetTestConfig()
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         zetacoredconfig.BaseDenom,
+			ExtendedDenom: zetacoredconfig.BaseDenom,
+			DisplayDenom:  zetacoredconfig.BaseDenom,
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
 
 	erc20Keeper = erc20keeper.NewKeeper(
 		keys[erc20types.StoreKey],
@@ -621,15 +639,11 @@ func IBCKeeper(
 	storeKey := storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-
 	return ibckeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		paramKeeper.Subspace(ibcexported.ModuleName),
-		stakingKeeper,
 		uppgradeKeeper,
-		scopedIBCKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
@@ -649,18 +663,15 @@ func TransferKeeper(
 	storeKey := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		paramKeeper.Subspace(ibctransfertypes.ModuleName),
 		ibcKeeper.ChannelKeeper,
 		ibcKeeper.ChannelKeeper,
-		ibcKeeper.PortKeeper,
+		nil,
 		authKeeper,
 		bankKeeper,
-		scopedTransferKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -726,6 +737,7 @@ func NewSDKKeepers(
 		IBCKeeper:        ibcKeeper,
 		TransferKeeper:   transferKeeper,
 		IBCRouter:        ibcRouter,
+		ERC20Keeper:      erc20Keeper,
 	}
 }
 

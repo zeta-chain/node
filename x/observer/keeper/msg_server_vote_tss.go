@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"context"
+	"math"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/common/math"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
@@ -118,7 +118,7 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	keygenSuccess := false
 	if ballot.BallotStatus == types.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = types.KeygenStatus_KeyGenFailed
-		keygen.BlockNumber = math.MaxBig256.Int64()
+		keygen.BlockNumber = math.MaxInt64
 	} else {
 		tss := types.TSS{
 			TssPubkey:           msg.TssPubkey,

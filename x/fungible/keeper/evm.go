@@ -21,6 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
@@ -744,6 +745,14 @@ func (k Keeper) CallEVMWithData(
 		})
 		if err != nil {
 			return nil, err
+		}
+		// TODO evm: handle case where there's a revert related error
+		// (backwards compatibility with ethermint, otherwise it will attempt tx with gas cap 0)
+		if gasRes.Failed() {
+			if (gasRes.VmError != vm.ErrExecutionReverted.Error()) || len(gasRes.Ret) == 0 {
+				return nil, errors.New(gasRes.VmError)
+			}
+			return nil, evmtypes.NewExecErrorWithReason(gasRes.Ret)
 		}
 		gasCap = gasRes.Gas
 		k.Logger(ctx).Info("call evm", "EstimateGas", gasCap)
