@@ -50,4 +50,5 @@ var (
 		1138,
 		"error depositing ZETA to fungible module account",
 	)
+	ErrProcessDeposit = cosmoserrors.Register(ModuleName, 1139, "error processing deposit")
 )

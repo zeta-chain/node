@@ -23,10 +23,6 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to ethcommon.Address, amount *b
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) error {
-	return k.MintZetaToFungibleModule(ctx, amount)
-}
-
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
 // returns [txResponse, isContractCall, error]
 // This function should be renamed to DepositAndCallContract as it now handles both ZRC20 and ZETA deposits
@@ -118,7 +114,7 @@ func (k Keeper) ProcessDeposit(
 	case coin.CoinType_ERC20, coin.CoinType_Gas:
 		return k.processZRC20Deposit(ctx, context, zrc20Addr, amount, to, message, isCrossChainCall)
 	default:
-		return nil, false, fmt.Errorf("unsupported coin type for deposit %s", coinType)
+		return nil, false, errorspkg.Wrapf(types.ErrProcessDeposit, " unsupported coin type %s", coinType)
 	}
 }
 
@@ -145,7 +141,8 @@ func (k Keeper) processZetaDeposit(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// Deposit/Mint ZETA to the protocol address which will then be used to make the calls below
-	if err := k.DepositCoinsToFungibleModule(ctx, amount); err != nil {
+	// NOTE: DepositZeta and DepositAndCallZeta expect the fungible module account to have enough ZETA
+	if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
 		return nil, false, err
 	}
 
@@ -270,7 +267,7 @@ func (k Keeper) ProcessAbort(
 		}
 	}
 	if coinType == coin.CoinType_Zeta {
-		if err := k.DepositCoinsToFungibleModule(ctx, amount); err != nil {
+		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
 			return nil, err
 		}
 		_, err := k.DepositZeta(ctx, abortAddress, amount)

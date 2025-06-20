@@ -408,7 +408,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
-	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
+	err = k.MintZetaToFungibleModule(ctx, zetaValue)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
@@ -455,7 +455,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	err = k.DepositCoinsToFungibleModule(ctx, remainingZetaValue)
+	err = k.MintZetaToFungibleModule(ctx, remainingZetaValue)
 	if err != nil {
 		return nil, err
 	}

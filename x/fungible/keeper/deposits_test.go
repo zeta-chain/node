@@ -598,6 +598,34 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 }
 
 func TestKeeper_ProcessDeposit(t *testing.T) {
+	t.Run("should not process deposit of unsupported cointype", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+		receiver := sample.EthAddress()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, _, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			receiver,
+			big.NewInt(42),
+			[]byte{},
+			coin.CoinType_Cmd,
+			false,
+		)
+
+		// ASSERT
+		require.ErrorIs(t, err, types.ErrProcessDeposit)
+	})
 	t.Run("should process no-call deposit", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
@@ -734,6 +762,42 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
 	})
 
+	t.Run("should process no asset call", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		testDapp := deployTestDAppV2(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			zrc20,
+			testDapp,
+			big.NewInt(82),
+			[]byte("foo"),
+			coin.CoinType_NoAssetCall,
+			false,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.True(t, contractCall)
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(0), balance)
+		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
+	})
+
 	t.Run("should process deposit and call for cointype Zeta", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
@@ -767,6 +831,40 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		require.True(t, contractCall)
 		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, testDapp.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
+	})
+
+	t.Run("should process deposit for cointype Zeta", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		receiverAdddress := sample.EthAddress()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		_ = setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+		amount := big.NewInt(82)
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			common.Address{},
+			receiverAdddress,
+			amount,
+			[]byte("foo"),
+			coin.CoinType_Zeta,
+			false,
+		)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.False(t, contractCall)
+		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, receiverAdddress.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
 	})
 
 	t.Run("should process deposit and call with no message", func(t *testing.T) {

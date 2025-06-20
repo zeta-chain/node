@@ -123,7 +123,6 @@ func (k Keeper) DepositAndCallZeta(
 	if crypto.IsEmptyAddress(gatewayAddr) {
 		return nil, types.ErrGatewayContractNotSet
 	}
-
 	// NOTE:
 	// depositAndCall: ZETA version for depositAndCall method
 	// depositAndCall0: ZRC20 version for depositAndCall method
