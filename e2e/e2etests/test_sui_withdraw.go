@@ -26,7 +26,7 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 
 	// perform the withdraw
 	tx := r.SuiWithdrawSUI(signer.Address(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

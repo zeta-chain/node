@@ -33,7 +33,7 @@ func TestSuiWithdrawInvalidReceiver(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
-	r.Logger.EVMTransaction(*tx, "withdraw to invalid sui address")
+	r.Logger.EVMTransaction(tx, "withdraw to invalid sui address")
 
 	// ASSERT
 	// withdraw tx should fail in ZEVM

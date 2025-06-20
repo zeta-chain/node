@@ -249,7 +249,7 @@ func approveTokens(r *runner.E2ERunner) error {
 	if err != nil {
 		return fmt.Errorf("error approving ETH: %w", err)
 	}
-	r.Logger.EVMTransaction(*tx, "approve")
+	r.Logger.EVMTransaction(tx, "approve")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
@@ -263,7 +263,7 @@ func approveTokens(r *runner.E2ERunner) error {
 		return fmt.Errorf("error approving ERC20: %w", err)
 	}
 
-	r.Logger.EVMTransaction(*tx, "approve")
+	r.Logger.EVMTransaction(tx, "approve")
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {

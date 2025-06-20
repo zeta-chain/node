@@ -3,7 +3,6 @@ package v11
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
 )
@@ -25,7 +24,7 @@ const (
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
 	// TODO evm: ParseChainID is removed, but since this is old migration probably we can remove it completely
-	zetachain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
+	zetachain, err := pkgchains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		// Its fine to return nil here and not try to execute the migration at all if the parsing fails
 		ctx.Logger().Error("failed to parse chain ID", "chain_id", ctx.ChainID(), "error", err)

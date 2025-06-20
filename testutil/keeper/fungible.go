@@ -82,15 +82,12 @@ func FungibleKeeperWithMocks(
 	t testing.TB,
 	mockOptions FungibleMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	keys, memKeys, tkeys, allKeys := StoreKeys()
+	keys, memKeys, tkeys, _ := StoreKeys()
 
-	// Initialize local store
-	db := tmdb.NewMemDB()
-	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	// Create regular keepers
-	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
+	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys)
 
 	// Create authority keeper
 	authorityKeeperTmp := authoritykeeper.NewKeeper(
@@ -130,6 +127,9 @@ func FungibleKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 
+	// Initialize local store
+	db := tmdb.NewMemDB()
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	// Create the fungible keeper
 	for _, key := range keys {
 		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)

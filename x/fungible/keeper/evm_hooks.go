@@ -4,7 +4,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -23,7 +22,12 @@ func (k Keeper) EVMHooks() EVMHooks {
 }
 
 // PostTxProcessing is a wrapper for calling the EVM PostTxProcessing hook on the module keeper
-func (h EVMHooks) PostTxProcessing(ctx sdk.Context, _ common.Address, _ core.Message, receipt *ethtypes.Receipt) error {
+func (h EVMHooks) PostTxProcessing(
+	ctx sdk.Context,
+	_ ethcommon.Address,
+	_ core.Message,
+	receipt *ethtypes.Receipt,
+) error {
 	return h.k.checkPausedZRC20(ctx, receipt)
 }
 

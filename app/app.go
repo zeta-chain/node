@@ -1046,26 +1046,3 @@ func (app *App) BlockedAddrs() map[string]bool {
 
 	return blockList
 }
-
-// aggregateAllKeys aggregates all the keys in a single map.
-func aggregateAllKeys(
-	keys map[string]*storetypes.KVStoreKey,
-	tKeys map[string]*storetypes.TransientStoreKey,
-	memKeys map[string]*storetypes.MemoryStoreKey,
-) map[string]storetypes.StoreKey {
-	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tKeys)+len(memKeys))
-
-	for k, v := range keys {
-		allKeys[k] = v
-	}
-
-	for k, v := range tKeys {
-		allKeys[k] = v
-	}
-
-	for k, v := range memKeys {
-		allKeys[k] = v
-	}
-
-	return allKeys
-}

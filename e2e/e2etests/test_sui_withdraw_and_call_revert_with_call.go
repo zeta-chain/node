@@ -55,7 +55,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
-	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+	r.Logger.EVMTransaction(tx, "withdraw_and_call")
 
 	// ASSERT
 	// wait for the cctx to be reverted

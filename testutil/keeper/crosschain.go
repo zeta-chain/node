@@ -96,16 +96,11 @@ func CrosschainKeeperWithMocks(
 	t testing.TB,
 	mockOptions CrosschainMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	keys, memKeys, tkeys, allKeys := StoreKeys()
-
-	// Initialize local store
-	db := tmdb.NewMemDB()
-	logger := log.NewNopLogger()
-	stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
+	keys, memKeys, tkeys, _ := StoreKeys()
 	cdc := NewCodec()
 
 	// Create regular keepers
-	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
+	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys)
 
 	// Create zeta keepers
 	authorityKeeperTmp := authoritykeeper.NewKeeper(
@@ -156,6 +151,10 @@ func CrosschainKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
+	// Initialize local store
+	db := tmdb.NewMemDB()
+	logger := log.NewNopLogger()
+	stateStore := rootmulti.NewStore(db, logger, metrics.NewNoOpMetrics())
 	for _, key := range keys {
 		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	}

@@ -449,14 +449,24 @@ func NewSDKKeepersWithKeys(
 	keys map[string]*storetypes.KVStoreKey,
 	memKeys map[string]*storetypes.MemoryStoreKey,
 	tKeys map[string]*storetypes.TransientStoreKey,
-	allKeys map[string]storetypes.StoreKey,
 ) SDKKeepers {
-	authorityKeeper := authoritykeeper.NewKeeper(
-		cdc,
-		keys[authoritytypes.StoreKey],
-		memKeys[authoritytypes.MemStoreKey],
-		AuthorityGovAddress,
-	)
+	configurator := evmtypes.NewEVMConfigurator()
+	// reset configuration to set the new one
+	configurator.ResetTestConfig()
+	ethCfg := evmtypes.DefaultChainConfig(7000)
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         zetacoredconfig.BaseDenom,
+			ExtendedDenom: zetacoredconfig.BaseDenom,
+			DisplayDenom:  zetacoredconfig.BaseDenom,
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
@@ -466,12 +476,7 @@ func NewSDKKeepersWithKeys(
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
 	)
-	paramsKeeper := paramskeeper.NewKeeper(
-		cdc,
-		fungibletypes.Amino,
-		keys[paramstypes.StoreKey],
-		tKeys[paramstypes.TStoreKey],
-	)
+
 	authKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
@@ -518,23 +523,6 @@ func NewSDKKeepersWithKeys(
 		&erc20Keeper,
 		"",
 	)
-	ethCfg := evmtypes.DefaultChainConfig(7000)
-	configurator := evmtypes.NewEVMConfigurator()
-	// reset configuration to set the new one
-	configurator.ResetTestConfig()
-	err := configurator.
-		WithChainConfig(ethCfg).
-		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
-			Denom:         zetacoredconfig.BaseDenom,
-			ExtendedDenom: zetacoredconfig.BaseDenom,
-			DisplayDenom:  zetacoredconfig.BaseDenom,
-			Decimals:      18,
-		}).
-		Configure()
-	if err != nil {
-		panic(err)
-	}
-
 	erc20Keeper = erc20keeper.NewKeeper(
 		keys[erc20types.StoreKey],
 		cdc,
@@ -567,6 +555,12 @@ func NewSDKKeepersWithKeys(
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
 	)
+	authorityKeeper := authoritykeeper.NewKeeper(
+		cdc,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
+	)
 	lightclientKeeper := lightclientkeeper.NewKeeper(
 		cdc,
 		keys[lightclienttypes.StoreKey],
@@ -595,6 +589,12 @@ func NewSDKKeepersWithKeys(
 		observerKeeper,
 		authKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	paramsKeeper := paramskeeper.NewKeeper(
+		cdc,
+		fungibletypes.Amino,
+		keys[paramstypes.StoreKey],
+		tKeys[paramstypes.TStoreKey],
 	)
 
 	return SDKKeepers{
@@ -632,9 +632,7 @@ func IBCKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	paramKeeper paramskeeper.Keeper,
-	stakingKeeper stakingkeeper.Keeper,
 	uppgradeKeeper upgradekeeper.Keeper,
-	capabilityKeeper capabilitykeeper.Keeper,
 ) *ibckeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -657,7 +655,6 @@ func TransferKeeper(
 	ibcKeeper *ibckeeper.Keeper,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
-	capabilityKeeper capabilitykeeper.Keeper,
 	ibcRouter *porttypes.Router,
 ) ibctransferkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
@@ -712,7 +709,7 @@ func NewSDKKeepers(
 	erc20Keeper = ERC20Keeper(cdc, db, ss, authKeeper, bankKeeper, &stakingKeeper, evmKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
-	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, stakingKeeper, UpgradeKeeper(cdc, db, ss), *capabilityKeeper)
+	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, UpgradeKeeper(cdc, db, ss))
 	transferKeeper := TransferKeeper(
 		cdc,
 		db,
@@ -721,7 +718,6 @@ func NewSDKKeepers(
 		ibcKeeper,
 		authKeeper,
 		bankKeeper,
-		*capabilityKeeper,
 		ibcRouter,
 	)
 
