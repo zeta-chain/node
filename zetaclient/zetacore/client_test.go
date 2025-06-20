@@ -83,7 +83,7 @@ func withDummyServer(zetaBlockHeight int64) []grpcmock.ServerOption {
 				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: zetaBlockHeight})
 
 			// London Base Fee
-			s.ExpectUnary("/ethermint.feemarket.v1.Query/Params").
+			s.ExpectUnary("/cosmos.evm.feemarket.v1.Query/Params").
 				UnlimitedTimes().
 				Return(feemarkettypes.QueryParamsResponse{
 					Params: feemarkettypes.Params{BaseFee: sdkmath.LegacyNewDec(100)},

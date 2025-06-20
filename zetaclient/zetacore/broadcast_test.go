@@ -60,7 +60,7 @@ func TestBroadcast(t *testing.T) {
 				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
 				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 0})
 
-			method = "/ethermint.feemarket.v1.Query/Params"
+			method = "/cosmos.evm.feemarket.v1.Query/Params"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(feemarkettypes.QueryParamsRequest{}).

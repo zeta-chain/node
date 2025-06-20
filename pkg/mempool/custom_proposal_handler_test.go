@@ -380,7 +380,7 @@ func buildEthMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [
 	msgEthereumTx := evmtypes.NewTx(&evmtypes.EvmTxArgs{
 		Nonce:     nonces[0],
 		GasLimit:  0,
-		Input:     nil,
+		Input:     value,
 		GasFeeCap: nil,
 		GasPrice:  nil,
 		ChainID:   nil,
