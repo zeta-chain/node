@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -23,8 +25,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/keys"

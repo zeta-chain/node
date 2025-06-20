@@ -264,9 +264,11 @@ const (
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
-	TestZetaDepositName              = "zeta_deposit"
-	TestZetaDepositAndCallName       = "zeta_deposit_and_call"
-	TestZetaDepositAndCallRevertName = "zeta_deposit_and_call_revert"
+	TestZetaDepositName                      = "zeta_deposit"
+	TestZetaDepositAndCallName               = "zeta_deposit_and_call"
+	TestZetaDepositAndCallRevertName         = "zeta_deposit_and_call_revert"
+	TestZetaDepositRevertAndAbortName        = "zeta_deposit_revert_and_abort"
+	TestZetaDepositAndCallRevertWithCallName = "zeta_deposit_and_call_revert_with_call"
 )
 
 const (
@@ -309,6 +311,22 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositRevertAndAbortName,
+		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
+		[]runner.ArgDefinition{},
+		TestZetaDepositRevertAndAbort,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallRevertWithCallName,
+		"deposit ERC20 into ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(

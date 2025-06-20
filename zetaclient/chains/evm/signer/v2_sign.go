@@ -135,7 +135,7 @@ func (signer *Signer) signERC20CustodyWithdraw(
 	return tx, nil
 }
 
-func (signer *Signer) signZetaConnectoryWithdraw(
+func (signer *Signer) signZetaConnectorWithdraw(
 	ctx context.Context,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
@@ -250,6 +250,48 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		ctx,
 		data,
 		signer.er20CustodyAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("sign withdrawAndRevert error: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectorWithdrawRevert(
+	ctx context.Context,
+	inboundSender string,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	connectorABI, err := connector.ZetaConnectorNativeMetaData.GetAbi()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get connector ABI")
+	}
+
+	data, err := connectorABI.Pack(
+		"withdrawAndRevert",
+		txData.to,
+		txData.amount,
+		txData.message,
+		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
+			Asset:         txData.asset,
+			Amount:        txData.amount,
+			RevertMessage: txData.revertOptions.RevertMessage,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("withdraw pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
 		zeroValue,
 		txData.gas,
 		txData.nonce,
