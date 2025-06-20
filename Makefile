@@ -384,6 +384,7 @@ start-upgrade-test-light: zetanode-upgrade
 	export UPGRADE_HEIGHT=90 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"
 	export LOCALNET_MODE=upgrade && \
@@ -399,6 +400,12 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export UPGRADE_HEIGHT=225 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+start-connector-migration-test: zetanode-upgrade
+	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="${E2E_ARGS} --test-connector-migration --test-legacy" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 ###############################################################################
 ###                         Simulation Tests              					###

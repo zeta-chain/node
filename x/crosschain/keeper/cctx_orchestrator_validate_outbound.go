@@ -430,7 +430,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 			return errors.Wrap(err, "revert transaction reverted")
 		} else if err != nil {
 			// this should not happen and we don't commit the state to avoid inconsistent state
-			return errors.Wrap(err, "revert transaction couldn't be processed")
+			return errors.Wrap(err, "revert transaction could not be processed")
 		}
 
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
