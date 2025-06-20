@@ -342,7 +342,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 
 	if !skipRegular {
-		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
@@ -576,7 +575,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// Withdraw emissions from the deployer account
 	noError(deployerRunner.WithdrawEmissions())
 
-	// Run the migration of funds from v1 connectors to v2 connectors.
+	// Run the v2 connector migration tests if the flag is set
+	// This migrates the funds from the v1(ConnectorEth) connector contract to the v2(ConnectorNative)
 	if testConnectorMigration {
 		fn := evmTestRoutine(conf, "connector-migration", conf.DefaultAccount, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestMigrateConnectorFundsName,

@@ -177,7 +177,6 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return err
 		}
 	}
-
 	// set ZEVM contracts
 	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(
 		r.Ctx,

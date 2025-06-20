@@ -99,6 +99,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestZetaDepositAndCallRevertName,
 			e2etests.TestZetaDepositRevertAndAbortName,
 			e2etests.TestZetaDepositAndCallRevertWithCallName,
+			e2etests.TestZetaDepositAndCallNoMessageName,
 		),
 	)
 }

@@ -164,14 +164,16 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
 	// get connector and erc20Custody contracts
+	// Only one of these connector contracts will be used at one time.
+	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2
 	connectorLegacyAddr, connectorLegacy, err := ob.getConnectorLegacyContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrapf(err, "error getting legacy zeta connector for chain %d", ob.Chain().ChainId)
 	}
 
 	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting zeta connector v2 for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrapf(err, "error getting zeta connectorfor chain %d", ob.Chain().ChainId)
 	}
 
 	custodyAddr, custody, err := ob.getERC20CustodyContract()

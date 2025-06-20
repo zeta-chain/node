@@ -24,7 +24,7 @@ func TestZetaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
 	// perform the deposit
-	// Deposit reverts and call EVM contract
+	// Deposit reverts and calls EVM contract
 	tx := r.ZetaDepositAndCall(r.TestDAppV2ZEVMAddr, amount, []byte("revert"), gatewayevm.RevertOptions{
 		RevertAddress:    r.TestDAppV2EVMAddr,
 		CallOnRevert:     true,
@@ -34,7 +34,7 @@ func TestZetaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit_and_call")
+	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
 	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
 
 	// check the payload was received on the contract

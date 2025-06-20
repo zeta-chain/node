@@ -269,6 +269,7 @@ const (
 	TestZetaDepositAndCallRevertName         = "zeta_deposit_and_call_revert"
 	TestZetaDepositRevertAndAbortName        = "zeta_deposit_revert_and_abort"
 	TestZetaDepositAndCallRevertWithCallName = "zeta_deposit_and_call_revert_with_call"
+	TestZetaDepositAndCallNoMessageName      = "zeta_deposit_and_call_no_message"
 )
 
 const (
@@ -327,6 +328,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallNoMessageName,
+		"deposit Zeta into ZEVM and call a contract using no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallNoMessage,
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(

@@ -45,7 +45,6 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// get ZRC20 contract
-
 	zrc20Contract, _, err := k.getAndCheckZRC20(ctx, amount, senderChainID, coinType, asset)
 	if err != nil {
 		return nil, false, err
@@ -274,7 +273,6 @@ func (k Keeper) ProcessAbort(
 		if err := k.DepositCoinsToFungibleModule(ctx, amount); err != nil {
 			return nil, err
 		}
-		// if the coin type is Zeta, we simply mint Zeta to the abort address
 		_, err := k.DepositZeta(ctx, abortAddress, amount)
 		if err != nil {
 			return nil, err
@@ -329,7 +327,7 @@ func (k Keeper) getAndCheckZRC20(
 				return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
 			}
 		}
-	case coin.CoinType_ERC20:
+	default:
 		{
 			foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
 			if !found {
@@ -339,24 +337,8 @@ func (k Keeper) getAndCheckZRC20(
 				)
 			}
 		}
-	default:
-		return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrInvalidCoinType
 	}
 
-	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
-		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
-		if !found {
-			return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
-		}
-	} else {
-		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
-		if !found {
-			return ethcommon.Address{}, types.ForeignCoins{}, errorspkg.Wrapf(
-				crosschaintypes.ErrForeignCoinNotFound,
-				"asset: %s, chainID %d", asset, chainID,
-			)
-		}
-	}
 	zrc20Contract = ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)
 
 	// check if foreign coin is paused

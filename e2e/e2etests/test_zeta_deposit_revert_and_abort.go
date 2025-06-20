@@ -27,7 +27,7 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// perform the deposit
 	// Deposit (Fails as the address is non-existing)
 	// Revert (Fails as the amount is too small to pay for the revert fee)
-	// Abort (Called )
+	// Zeta deposited and onAbort called
 	tx := r.ZetaDepositAndCall(
 		sample.EthAddress(), // non-existing address
 		big.NewInt(
@@ -45,7 +45,7 @@ func TestZetaDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "deposit_and_call")
+	r.Logger.CCTX(*cctx, "zeta_deposit_and_call")
 	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
 
 	// check onAbort was called
