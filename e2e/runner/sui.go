@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -249,13 +250,13 @@ func (r *E2ERunner) SuiMintUSDC(
 
 // SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
 // The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPayload, error) {
+func (r *E2ERunner) SuiCreateExampleWACPayload(example config.SuiExample, suiAddress string) (sui.CallPayload, error) {
 	// only the CCTX's coinType is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
+		example.GlobalConfigID.String(),
+		example.PartnerID.String(),
+		example.ClockID.String(),
 	}
 
 	// create the payload message from the sui address
@@ -269,13 +270,13 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPaylo
 
 // SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
 // function in Sui the example package
-func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {
+func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExample) (sui.CallPayload, error) {
 	// only the CCTX's coinType is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
+		example.GlobalConfigID.String(),
+		example.PartnerID.String(),
+		example.ClockID.String(),
 	}
 
 	// the 'on_call' method of the "connected" contract specifically throws an error
@@ -286,10 +287,10 @@ func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, erro
 }
 
 // SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
-func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
+func (r *E2ERunner) SuiGetConnectedCalledCount(example config.SuiExample) uint64 {
 	// Get object data
 	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
-		ObjectId: r.SuiExample.GlobalConfigID.String(),
+		ObjectId: example.GlobalConfigID.String(),
 		Options:  models.SuiObjectDataOptions{ShowContent: true},
 	})
 

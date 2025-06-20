@@ -21,13 +21,14 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	// ARRANGE
 	// Given target package ID (example package) and a SUI amount
-	targetPackageID := r.SuiExample.PackageID.String()
+	targetPackage := r.SuiExampleArbiCall
+	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// create the payload for 'on_call' with invalid address
 	// taking the first 10 letters to form an invalid payload
 	invalidAddress := sample.SuiAddress(r)[:10]
-	invalidPayloadOnCall, err := r.SuiCreateExampleWACPayload(invalidAddress)
+	invalidPayloadOnCall, err := r.SuiCreateExampleWACPayload(targetPackage, invalidAddress)
 	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)

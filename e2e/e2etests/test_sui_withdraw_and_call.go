@@ -16,7 +16,8 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// ARRANGE
 	// Given target package ID (example package) and a SUI amount
-	targetPackageID := r.SuiExample.PackageID.String()
+	targetPackage := r.SuiExampleArbiCall
+	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// use the deployer address as on_call payload message
@@ -26,10 +27,10 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given initial balance and called_count
 	balanceBefore := r.SuiGetSUIBalance(suiAddress)
-	calledCountBefore := r.SuiGetConnectedCalledCount()
+	calledCountBefore := r.SuiGetConnectedCalledCount(targetPackage)
 
 	// create the on_call payload
-	payloadOnCall, err := r.SuiCreateExampleWACPayload(suiAddress)
+	payloadOnCall, err := r.SuiCreateExampleWACPayload(targetPackage, suiAddress)
 	require.NoError(r, err)
 
 	// ACT
@@ -56,6 +57,6 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
-	calledCountAfter := r.SuiGetConnectedCalledCount()
+	calledCountAfter := r.SuiGetConnectedCalledCount(targetPackage)
 	require.Equal(r, calledCountBefore+1, calledCountAfter)
 }

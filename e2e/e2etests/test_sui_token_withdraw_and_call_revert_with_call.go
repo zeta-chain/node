@@ -20,11 +20,12 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 
 	// ARRANGE
 	// Given target package ID (example package) and a token amount
-	targetPackageID := r.SuiExample.PackageID.String()
+	targetPackage := r.SuiExampleArbiCall
+	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
 	// create the special revert payload for 'on_call'
-	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert()
+	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert(targetPackage)
 	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)

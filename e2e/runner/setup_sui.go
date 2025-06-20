@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
-	suicontract "github.com/zeta-chain/node/e2e/contracts/sui"
+	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/chains"
@@ -128,7 +128,7 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 		filterUpgradeCapType,
 	}
 	packageID, objectIDs := r.suiDeployPackage(
-		[]string{suicontract.GatewayBytecodeBase64(), suicontract.EVMBytecodeBase64()},
+		[]string{suibin.GatewayBytecodeBase64(), suibin.EVMBytecodeBase64()},
 		objectTypeFilters,
 	)
 
@@ -175,7 +175,7 @@ func (r *E2ERunner) deploySUIZRC20() {
 // suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the treasuryCap object ID that allows to mint tokens
 func (r *E2ERunner) suiDeployFakeUSDC() string {
-	packageID, objectIDs := r.suiDeployPackage([]string{suicontract.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
+	packageID, objectIDs := r.suiDeployPackage([]string{suibin.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
 
 	treasuryCap, ok := objectIDs["TreasuryCap"]
 	require.True(r, ok, "treasuryCap not found")
@@ -202,7 +202,7 @@ func (r *E2ERunner) suiDeployExample() {
 
 	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
 	packageID, objectIDs := r.suiDeployPackage(
-		[]string{suicontract.ExampleFungibleTokenBytecodeBase64(), suicontract.ExampleConnectedBytecodeBase64()},
+		[]string{suibin.ExampleArbiCallFungibleTokenBytecodeBase64(), suibin.ExampleArbiCallConnectedBytecodeBase64()},
 		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)
@@ -216,7 +216,7 @@ func (r *E2ERunner) suiDeployExample() {
 	clockID, ok := objectIDs[filterClockType]
 	require.True(r, ok, "clock object not found")
 
-	r.SuiExample = config.SuiExample{
+	r.SuiExampleArbiCall = config.SuiExample{
 		PackageID:      config.DoubleQuotedString(packageID),
 		TokenType:      config.DoubleQuotedString(packageID + "::token::TOKEN"),
 		GlobalConfigID: config.DoubleQuotedString(globalConfigID),

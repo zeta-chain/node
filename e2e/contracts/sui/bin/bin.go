@@ -14,11 +14,11 @@ var fakeUSDC []byte
 //go:embed evm.mv
 var evmBinary []byte
 
-//go:embed token.mv
-var tokenBinary []byte
+//go:embed arbi_call_token.mv
+var arbiCallTokenBinary []byte
 
-//go:embed connected.mv
-var connectedBinary []byte
+//go:embed arbi_call_connected.mv
+var arbiCallConnectedBinary []byte
 
 // GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
 func GatewayBytecodeBase64() string {
@@ -35,12 +35,12 @@ func EVMBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(evmBinary)
 }
 
-// ExampleFungibleTokenBytecodeBase64 gets the example package's fungible token binary encoded as base64 for deployment
-func ExampleFungibleTokenBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(tokenBinary)
+// ExampleArbiCallFungibleTokenBytecodeBase64 gets the arbitrary call example package's fungible token binary encoded as base64 for deployment
+func ExampleArbiCallFungibleTokenBytecodeBase64() string {
+	return base64.StdEncoding.EncodeToString(arbiCallTokenBinary)
 }
 
-// ExampleConnectedBytecodeBase64 gets the example package's connected binary encoded as base64 for deployment
-func ExampleConnectedBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(connectedBinary)
+// ExampleArbiCallConnectedBytecodeBase64 gets the arbitrary call example package's connected binary encoded as base64 for deployment
+func ExampleArbiCallConnectedBytecodeBase64() string {
+	return base64.StdEncoding.EncodeToString(arbiCallConnectedBinary)
 }
