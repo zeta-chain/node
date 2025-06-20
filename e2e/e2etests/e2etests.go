@@ -203,6 +203,7 @@ const (
 	TestZetaclientRestartHeightName      = "zetaclient_restart_height"
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
+	TestMigrateConnectorFundsName        = "migrate_connector_funds"
 
 	/*
 	 Operational tests
@@ -265,6 +266,8 @@ const (
 	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+
+	TestZetaDepositName = "zeta_deposit"
 )
 
 const (
@@ -282,6 +285,16 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 EVM chain tests
 	*/
+	// TestZetaDepositName is not used for now as the protocol logic has not yet been implemented
+	// // https://github.com/zeta-chain/node/issues/3212
+	runner.NewE2ETest(
+		TestZetaDepositName,
+		"deposit ZETA into ZEVM using connector contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
+		},
+		TestZetaDeposit,
+	),
 	runner.NewE2ETest(
 		TestETHDepositName,
 		"deposit Ether into ZEVM",
@@ -1425,6 +1438,12 @@ var AllE2ETests = []runner.E2ETest{
 		"migrate ERC20 custody funds",
 		[]runner.ArgDefinition{},
 		TestMigrateERC20CustodyFunds,
+	),
+	runner.NewE2ETest(
+		TestMigrateConnectorFundsName,
+		"migrate connector funds from V1 to V2 connector",
+		[]runner.ArgDefinition{},
+		TestMigrateConnectorFunds,
 	),
 	runner.NewE2ETest(
 		TestUpdateZRC20NameName,

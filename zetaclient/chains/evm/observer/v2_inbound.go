@@ -173,12 +173,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
-	// if event.Asset is zero, it's a native token
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(event.Asset) {
 		coinType = coin.CoinType_Gas
 	}
-
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
 	isCrossChainCall := len(event.Payload) > 0
 

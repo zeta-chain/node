@@ -3,6 +3,7 @@ package runner
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -49,6 +50,10 @@ func (r *E2ERunner) LegacyDepositZetaWithAmount(to ethcommon.Address, amount *bi
 	// query the chain ID using zevm client
 	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
+
+	paused, err := r.ConnectorEth.Paused(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, paused, "ZetaConnectorEth is paused, cannot send ZETA")
 
 	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id

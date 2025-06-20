@@ -120,12 +120,12 @@ func (r *E2ERunner) SetupEVM() {
 	require.NoError(r, err)
 
 	// Deploy zetaConnectorNative contract
-	zetaConnnectorNativeAddress, txZetaConnnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
 		r.EVMAuth,
 		r.EVMClient,
 	)
 	require.NoError(r, err)
-	ensureTxReceipt(txZetaConnnectorNativeHash, "ZetaConnectorNative deployment failed")
+	ensureTxReceipt(txZetaConnectorNativeHash, "ZetaConnectorNative deployment failed")
 
 	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
 	require.NoError(r, err)
@@ -143,7 +143,7 @@ func (r *E2ERunner) SetupEVM() {
 	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
-		zetaConnnectorNativeAddress,
+		zetaConnectorNativeAddress,
 		initializerData,
 	)
 	require.NoError(r, err)
@@ -159,8 +159,8 @@ func (r *E2ERunner) SetupEVM() {
 
 	r.Logger.Info(
 		"ZetaConnectorNative contract address: %s, tx hash: %s",
-		zetaConnnectorNativeAddress.Hex(),
-		txZetaConnnectorNativeHash.Hash().Hex(),
+		zetaConnectorNativeAddress.Hex(),
+		txZetaConnectorNativeHash.Hash().Hex(),
 	)
 
 	// check contract deployment receipt
