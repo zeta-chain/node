@@ -347,7 +347,7 @@ func startInProcess(svrCtx *server.Context, clientCtx client.Context, opts Start
 			return err
 		}
 
-		f, err := os.Create(fp)
+		f, err := os.Create(fp) //#nosec G304 forked code
 		if err != nil {
 			return err
 		}

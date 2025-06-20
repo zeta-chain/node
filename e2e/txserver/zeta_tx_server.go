@@ -115,7 +115,7 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 	}
 
 	// initialize codec
-	cdc, reg := newCodec(uint64(zetachain.ChainId))
+	cdc, reg := newCodec(uint64(zetachain.ChainId)) //#nosec G115 chain id won't exceed uint64
 
 	// initialize keyring
 	kr := keyring.NewInMemory(cdc, hd.EthSecp256k1Option())

@@ -44,7 +44,7 @@ func writeProfile(name, file string, log log.Logger) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(fp)
+	f, err := os.Create(fp) //#nosec G304 forked code
 	if err != nil {
 		return err
 	}

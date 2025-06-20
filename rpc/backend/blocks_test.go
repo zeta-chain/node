@@ -1096,8 +1096,7 @@ func (s *TestSuite) TestGetEthBlockFromTendermint() {
 			) // for `MaxGas = -1` (DefaultConsensusParams)
 			gasUsed := new(
 				big.Int,
-			).SetUint64(uint64(tc.blockRes.TxsResults[0].GasUsed))
-			//nolint:gosec // G115 // won't exceed uint64
+			).SetUint64(uint64(tc.blockRes.TxsResults[0].GasUsed)) //#nosec won't exceed uint64
 
 			root := common.Hash{}.Bytes()
 			receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())
@@ -1110,7 +1109,7 @@ func (s *TestSuite) TestGetEthBlockFromTendermint() {
 					rpcTx, err := ethrpc.NewRPCTransaction(
 						msgEthereumTx.AsTransaction(),
 						common.BytesToHash(header.Hash()),
-						uint64(header.Height), //nolint:gosec // G115 // won't exceed uint64
+						uint64(header.Height), //#nosec G115 won't exceed uint64
 						uint64(0),
 						tc.baseFee,
 						s.backend.EvmChainID,

@@ -228,8 +228,7 @@ func (s *TestSuite) buildFormattedBlock(
 	) // for `MaxGas = -1` (DefaultConsensusParams)
 	gasUsed := new(
 		big.Int,
-	).SetUint64(uint64(blockRes.TxsResults[0].GasUsed))
-	//nolint:gosec // G115 // won't exceed uint64
+	).SetUint64(uint64(blockRes.TxsResults[0].GasUsed)) //#nosec G115 won't exceed uint64
 
 	root := common.Hash{}.Bytes()
 	receipt := ethtypes.NewReceipt(root, false, gasUsed.Uint64())
@@ -241,7 +240,7 @@ func (s *TestSuite) buildFormattedBlock(
 			rpcTx, err := rpctypes.NewRPCTransaction(
 				tx.AsTransaction(),
 				common.BytesToHash(header.Hash()),
-				uint64(header.Height), //nolint:gosec // G115 // won't exceed uint64
+				uint64(header.Height), //#nosec G115 won't exceed uint64
 				uint64(0),
 				baseFee,
 				s.backend.EvmChainID,

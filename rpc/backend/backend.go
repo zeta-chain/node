@@ -184,7 +184,7 @@ func NewBackend(
 		RPCClient:           rpcClient,
 		QueryClient:         rpctypes.NewQueryClient(clientCtx),
 		Logger:              logger.With("module", "backend"),
-		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //nolint:gosec // G115 // won't exceed uint64
+		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //#nosec G115 won't exceed uint64
 		Cfg:                 appConf,
 		AllowUnprotectedTxs: allowUnprotectedTxs,
 		Indexer:             indexer,

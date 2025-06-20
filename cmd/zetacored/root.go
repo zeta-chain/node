@@ -141,6 +141,7 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
+			//#nosec G115 chain id won't exceed uint64
 			customAppTemplate, customAppConfig := InitAppConfig(zetacoredconfig.BaseDenom, uint64(zetachain.ChainId))
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
@@ -389,7 +390,7 @@ func (ac appCreator) newApp(
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		uint64(zetachain.ChainId), // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64 // TODO evm: evm chain id?
 		appOpts,
 		baseappOptions...,
 	)
@@ -428,7 +429,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		uint64(zetachain.ChainId), // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64 // TODO evm: evm chain id?
 		appOpts,
 	)
 
