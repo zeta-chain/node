@@ -56,7 +56,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(
+		evmTxResponse, err := k.fungibleKeeper.LegacyZETADepositAndCallContract(
 			ctx,
 			sender,
 			to,

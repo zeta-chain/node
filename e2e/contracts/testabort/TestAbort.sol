@@ -50,7 +50,7 @@ contract TestAbort {
         return aborted;
     }
 
-    function onAbort(AbortContext calldata abortContext) external payable {
+    function onAbort(AbortContext calldata abortContext) external {
         setAbortedWithMessage(string(abortContext.revertMessage), abortContext);
 
         // withdraw funds to the sender on connected chain

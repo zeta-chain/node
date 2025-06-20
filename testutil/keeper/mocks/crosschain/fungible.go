@@ -682,11 +682,11 @@ func (_m *CrosschainFungibleKeeper) WithdrawFromGasStabilityPool(ctx types.Conte
 }
 
 // ZETADepositAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes
-func (_m *CrosschainFungibleKeeper) ZETADepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
+func (_m *CrosschainFungibleKeeper) LegacyZETADepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ZETADepositAndCallContract")
+		panic("no return value specified for LegacyZETADepositAndCallContract")
 	}
 
 	var r0 *evmtypes.MsgEthereumTxResponse
