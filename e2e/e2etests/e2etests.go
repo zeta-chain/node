@@ -298,7 +298,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
-		"deposit ZETA into ZEVM and call a contract",
+		"deposit Zeta into ZEVM and call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
@@ -323,7 +323,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
-		"deposit ERC20 into ZEVM and call a contract that reverts with a onRevert call",
+		"deposit Zeta into ZEVM and call a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
