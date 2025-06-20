@@ -153,7 +153,7 @@ func Test_GetTransactionInitiator(t *testing.T) {
 	}
 }
 
-// msgTxFromPkScriptHex creates a new MsgTx with a single input and output.
+// createMsgTx creates a new MsgTx with a single input and output.
 func createMsgTx(t *testing.T, preTxid string, preVout uint32, outPkScriptHex string) *wire.MsgTx {
 	preHash, err := chainhash.NewHashFromStr(preTxid)
 	require.NoError(t, err)
