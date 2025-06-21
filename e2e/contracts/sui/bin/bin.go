@@ -20,6 +20,12 @@ var arbiCallTokenBinary []byte
 //go:embed arbi_call_connected.mv
 var arbiCallConnectedBinary []byte
 
+//go:embed auth_call_token.mv
+var authCallTokenBinary []byte
+
+//go:embed auth_call_connected.mv
+var authCallConnectedBinary []byte
+
 // GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
 func GatewayBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(gatewayBinary)
@@ -43,4 +49,14 @@ func ExampleArbiCallFungibleTokenBytecodeBase64() string {
 // ExampleArbiCallConnectedBytecodeBase64 gets the arbitrary call example package's connected binary encoded as base64 for deployment
 func ExampleArbiCallConnectedBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(arbiCallConnectedBinary)
+}
+
+// ExampleAuthCallFungibleTokenBytecodeBase64 gets the authenticated call example package's fungible token binary encoded as base64 for deployment
+func ExampleAuthCallFungibleTokenBytecodeBase64() string {
+	return base64.StdEncoding.EncodeToString(authCallTokenBinary)
+}
+
+// ExampleAuthCallConnectedBytecodeBase64 gets the authenticated call example package's connected binary encoded as base64 for deployment
+func ExampleAuthCallConnectedBytecodeBase64() string {
+	return base64.StdEncoding.EncodeToString(authCallConnectedBinary)
 }

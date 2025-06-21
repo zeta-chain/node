@@ -35,6 +35,10 @@ import (
 const (
 	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
 	BTCRegnetBlockTime = 6 * time.Second
+
+	// BTCDepositTxFee is the fixed deposit transaction fee (0.00003 BTC) for E2E tests
+	// Given one UTXO input, the deposit transaction fee rate is approximately 10 sat/vB
+	BTCDepositTxFee = 0.00003
 )
 
 // ListUTXOs list the deployer's UTXOs
@@ -290,7 +294,7 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	allUTXOs := r.ListUTXOs()
 
 	// Calculate required amount including fee
-	feeSats := btcutil.Amount(0.0005 * btcutil.SatoshiPerBitcoin)
+	feeSats := btcutil.Amount(BTCDepositTxFee * btcutil.SatoshiPerBitcoin)
 	amountInt, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 	amountSats := btcutil.Amount(amountInt)

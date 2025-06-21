@@ -1,11 +1,22 @@
 module example::connected;
 
+use std::ascii;
+use std::ascii::String;
 use sui::address::from_bytes;
 use sui::coin::Coin;
+use gateway::gateway::{Gateway, MessageContext, message_context_sender, message_context_target};
+
+// === Errors ===
+
+const EInvalidPayload: u64 = 1;
+
+const EUnauthorizedSender: u64 = 2;
 
 // ENonceMismatch is a fabricated nonce mismatch error code emitted from the on_call function
 // zetaclient should be able to differentiate this error from real withdraw_impl nonce mismatch
 const ENonceMismatch: u64 = 3;
+
+const EPackageMismatch: u64 = 4;
 
 // stub for shared objects
 public struct GlobalConfig has key {
@@ -48,6 +59,8 @@ fun init(ctx: &mut TxContext) {
 }
 
 public entry fun on_call<SOURCE_COIN>(
+    _gateway: &Gateway,
+    message_context: &MessageContext,
     in_coins: Coin<SOURCE_COIN>,
     cetus_config: &mut GlobalConfig,
     // Note: this pool type is hardcoded as <SUI, TOKEN> and therefore causes type mismatch error in the
@@ -64,7 +77,17 @@ public entry fun on_call<SOURCE_COIN>(
         assert!(false, ENonceMismatch);
     };
 
-    let receiver = decode_receiver(data);
+    // decode the sender, target package, and receiver from the payload
+    let (authenticated_sender, target_package, receiver) = decode_sender_target_and_receiver(data);
+
+    // check if the sender is the authorized sender
+    let actual_sender = message_context_sender(message_context);
+    assert!(authenticated_sender == actual_sender, EUnauthorizedSender);
+
+    // check if the target package is my own package
+    // this prevents other package routing TSS calls to my package
+    let actual_target = message_context_target(message_context);
+    assert!(actual_target == target_package, EPackageMismatch);
 
     // transfer the coins to the provided address
     transfer::public_transfer(in_coins, receiver);
@@ -73,6 +96,36 @@ public entry fun on_call<SOURCE_COIN>(
     cetus_config.called_count = cetus_config.called_count + 1;
 }
 
-fun decode_receiver(data: vector<u8>): address {
-    from_bytes(data)
+// decode the sender, target package, and receiver from the payload data
+fun decode_sender_target_and_receiver(data: vector<u8>): (String, address, address) {
+    // [42-byte ZEVM sender] + [32-byte Sui target package] + [32-byte Sui receiver] = 106 bytes
+    assert!(vector::length(&data) >= 106, EInvalidPayload);
+
+    // extract ZEVM sender address (first 42 bytes)
+    // this allows E2E test to feed a custom authenticated address
+    let sender_bytes = extract_bytes(&data, 0, 42);
+    let sender_str = ascii::string(sender_bytes);
+
+    // extract target package address (bytes 42-74)
+    let target_bytes = extract_bytes(&data, 42, 74);
+    let target_package = from_bytes(target_bytes);
+
+    // extract receiver address (bytes 74-106)
+    let receiver_bytes = extract_bytes(&data, 74, 106);
+    let receiver = from_bytes(receiver_bytes);
+    
+    (sender_str, target_package, receiver)
+}
+
+// helper function to extract a subslice of bytes from a vector
+fun extract_bytes(data: &vector<u8>, start: u64, end: u64): vector<u8> {
+    let mut result = vector::empty<u8>();
+    let mut i = start;
+    
+    while (i < end) {
+        vector::push_back(&mut result, *vector::borrow(data, i));
+        i = i + 1;
+    };
+    
+    result
 }

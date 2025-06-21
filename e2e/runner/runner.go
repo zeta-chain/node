@@ -405,7 +405,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-
+	r.ConnectorNativeAddr = other.ConnectorNativeAddr
 	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
 	if err != nil {
 		return err
@@ -468,8 +468,8 @@ func (r *E2ERunner) PrintContractAddresses() {
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
 	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
-	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
-	r.Logger.Print("ConnectorEthV2: %s", r.ConnectorNativeAddr.Hex())
+	r.Logger.Print("ConnectorEthLegacy:   %s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEth: %s", r.ConnectorNativeAddr.Hex())
 	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
 	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
 	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
