@@ -25,8 +25,7 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	amount := utils.ParseBigInt(r, args[0])
 
 	// create the special revert payload for 'on_call'
-	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert(targetPackage)
-	require.NoError(r, err)
+	revertPayloadOnCall := r.SuiCreateExampleWACPayloadForRevert(targetPackage)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -47,6 +46,7 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 		targetPackageID,
 		amount,
 		revertPayloadOnCall,
+		true,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

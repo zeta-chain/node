@@ -81,6 +81,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 	receiver string,
 	amount *big.Int,
 	payload sui.CallPayload,
+	arbitraryCall bool,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
@@ -97,7 +98,7 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		r.SUIZRC20Addr,
 		payloadBytes,
 		gatewayzevm.CallOptions{
-			IsArbitraryCall: false,
+			IsArbitraryCall: arbitraryCall,
 			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
@@ -132,6 +133,7 @@ func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
 	receiver string,
 	amount *big.Int,
 	payload sui.CallPayload,
+	arbitraryCall bool,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
@@ -147,7 +149,7 @@ func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
 		r.SuiTokenZRC20Addr,
 		payloadBytes,
 		gatewayzevm.CallOptions{
-			IsArbitraryCall: false,
+			IsArbitraryCall: arbitraryCall,
 			GasLimit:        big.NewInt(100000),
 		},
 		revertOptions,
@@ -250,7 +252,7 @@ func (r *E2ERunner) SuiMintUSDC(
 
 // SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
 // The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayload(example config.SuiExample, suiAddress string) (sui.CallPayload, error) {
+func (r *E2ERunner) SuiCreateExampleWACPayload(example config.SuiExample, suiAddress string) sui.CallPayload {
 	// only the CCTX's coinType is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
@@ -261,16 +263,14 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(example config.SuiExample, suiAdd
 
 	// create the payload message from the sui address
 	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	if err != nil {
-		return sui.CallPayload{}, err
-	}
+	require.NoError(r, err)
 
-	return sui.NewCallPayload(argumentTypes, objects, message), nil
+	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
 // SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
 // function in Sui the example package
-func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExample) (sui.CallPayload, error) {
+func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExample) sui.CallPayload {
 	// only the CCTX's coinType is needed, no additional arguments
 	argumentTypes := []string{}
 	objects := []string{
@@ -283,7 +283,45 @@ func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExampl
 	// for this message to trigger "tx revert" test case
 	message := []byte(onCallRevertMessage)
 
-	return sui.NewCallPayload(argumentTypes, objects, message), nil
+	return sui.NewCallPayload(argumentTypes, objects, message)
+}
+
+// SuiCreateExampleAuthenticatedWACPayload creates a payload for on_call function in Sui the example authenticated call package
+// The payload message contains below fielss in order:
+// field 0: [42-byte ZEVM sender], checksum address, with 0x prefix
+// field 1: [32-byte Sui target package], without 0x prefix
+// field 2: [32-byte Sui receiver], without 0x prefix
+//
+// The first two fields are used by E2E test to easily mock up the verifications against 'MessageContext' passed to the 'on_call'.
+// A real-world use case will just encode useful data that meets its needs, and it is only the receiver 'suiAddress' in this case.
+func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
+	example config.SuiExample,
+	suiAddress string,
+) sui.CallPayload {
+	// only the CCTX's coinType is needed, no additional type argument
+	argumentTypes := []string{}
+	objects := []string{
+		example.GlobalConfigID.String(),
+		example.PartnerID.String(),
+		example.ClockID.String(),
+	}
+
+	message := make([]byte, 106)
+
+	// field 0
+	copy(message[:42], []byte(r.EVMAddress().Hex()))
+
+	// field 1
+	target, err := hex.DecodeString(example.PackageID.String()[2:])
+	require.NoError(r, err)
+	copy(message[42:74], target)
+
+	// field 2
+	receiver, err := hex.DecodeString(suiAddress[2:])
+	require.NoError(r, err)
+	copy(message[74:], receiver)
+
+	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
 // SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module

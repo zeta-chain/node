@@ -28,8 +28,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	// create the payload for 'on_call' with invalid address
 	// taking the first 10 letters to form an invalid payload
 	invalidAddress := sample.SuiAddress(r)[:10]
-	invalidPayloadOnCall, err := r.SuiCreateExampleWACPayload(targetPackage, invalidAddress)
-	require.NoError(r, err)
+	invalidPayloadOnCall := r.SuiCreateExampleWACPayload(targetPackage, invalidAddress)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -49,6 +48,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		invalidPayloadOnCall,
+		true,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

@@ -11,11 +11,11 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
+func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example authenticated call package) and a SUI amount
 	targetPackage := r.SuiExampleArbiCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
@@ -30,7 +30,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	calledCountBefore := r.SuiGetConnectedCalledCount(targetPackage)
 
 	// create the on_call payload
-	payloadOnCall := r.SuiCreateExampleWACPayload(targetPackage, suiAddress)
+	payloadOnCall := r.SuiCreateExampleAuthenticatedWACPayload(targetPackage, suiAddress)
 
 	// ACT
 	// approve SUI ZRC20 token
@@ -41,15 +41,15 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		payloadOnCall,
-		true,
+		false,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+	r.Logger.EVMTransaction(*tx, "withdraw_and_authenticated_call")
 
 	// ASSERT
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_authenticated_call")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// balance after
