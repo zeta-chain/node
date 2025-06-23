@@ -72,6 +72,20 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // The following test certifies that , for the same set of operations ( irrespective of what the operations are ) ,
 // we would reach the same final state if the initial state is the same
 func TestAppStateDeterminism(t *testing.T) {
+	// TODO evm: this configuration should be in app init() or something like that
+	ethCfg := evmtypes.DefaultChainConfig(777)
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         "azeta",
+			ExtendedDenom: "azeta",
+			DisplayDenom:  "azeta",
+			Decimals:      18,
+		}).
+		Configure()
+	require.NoError(t, err)
+
 	if !zetasimulation.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
@@ -186,6 +200,19 @@ func TestAppStateDeterminism(t *testing.T) {
 // 2. It exports the state and validators
 // 3. Verifies that the run and export were successful
 func TestFullAppSimulation(t *testing.T) {
+	// TODO evm: this configuration should be in app init() or something like that
+	ethCfg := evmtypes.DefaultChainConfig(777)
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         "azeta",
+			ExtendedDenom: "azeta",
+			DisplayDenom:  "azeta",
+			Decimals:      18,
+		}).
+		Configure()
+	require.NoError(t, err)
 
 	config := zetasimulation.NewConfigFromFlags()
 
@@ -267,6 +294,20 @@ func TestFullAppSimulation(t *testing.T) {
 
 // This can verify the export and import process do not modify the state in anyway irrespective of the operations performed
 func TestAppImportExport(t *testing.T) {
+	// TODO evm: this configuration should be in app init() or something like that
+	ethCfg := evmtypes.DefaultChainConfig(777)
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         "azeta",
+			ExtendedDenom: "azeta",
+			DisplayDenom:  "azeta",
+			Decimals:      18,
+		}).
+		Configure()
+	require.NoError(t, err)
+
 	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
@@ -457,6 +498,19 @@ func TestAppImportExport(t *testing.T) {
 // 3. It imports the exported state into the new app
 // 4. It runs a simulation on the new app and verifies that there is no error in the second simulation
 func TestAppSimulationAfterImport(t *testing.T) {
+	ethCfg := evmtypes.DefaultChainConfig(777)
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         "azeta",
+			ExtendedDenom: "azeta",
+			DisplayDenom:  "azeta",
+			Decimals:      18,
+		}).
+		Configure()
+	require.NoError(t, err)
+
 	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
