@@ -22,7 +22,7 @@ formatters:
       max-len: 120
 
   exclusions:
-    generated: lax
+    generated: strict
     paths:
       - ".*_test\\.go$"
       - ".*\\.pb\\.go$"
@@ -63,7 +63,7 @@ linters:
       disable:
         - composites
   exclusions:
-    generated: lax
+    generated: strict
     presets:
       - comments
       - common-false-positives

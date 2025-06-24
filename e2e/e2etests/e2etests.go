@@ -94,7 +94,10 @@ const (
 	TestTONDepositAndCallName       = "ton_deposit_and_call"
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
 	TestTONDepositRestrictedName    = "ton_deposit_restricted"
+	TestTONCallName                 = "ton_to_zevm_call"
 	TestTONWithdrawName             = "ton_withdraw"
+	TestTONWithdrawRestrictedName   = "ton_withdraw_restricted"
+	TestTONWithdrawMasterchainName  = "ton_withdraw_masterchain"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
@@ -847,12 +850,36 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositRestricted,
 	),
 	runner.NewE2ETest(
+		TestTONCallName,
+		"call TON into ZEVM",
+		[]runner.ArgDefinition{},
+		TestTONToZEVMCall,
+	),
+	runner.NewE2ETest(
 		TestTONWithdrawName,
 		"withdraw TON from ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
 		},
 		TestTONWithdraw,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawRestrictedName,
+		"withdraw TON from ZEVM to restricted address (compliance check)",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		// TON address starts with an chain index (0:... or -1:...)
+		// Zetachain operates only on base chain (0:)
+		TestTONWithdrawMasterchainName,
+		"withdraw TON from ZEVM to masterchain that is a consensus chain rather than a base workchain",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONWithdrawMasterchain,
 	),
 	runner.NewE2ETest(
 		TestTONWithdrawConcurrentName,

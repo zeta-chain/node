@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/node/pkg/coin"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
@@ -171,6 +172,63 @@ func TestInbound(t *testing.T) {
 
 		// Check hash & block height
 		expectedHash := rpc.TransactionHashToString(depositAndCallTX.Lt, txHash(depositAndCallTX))
+		assert.Equal(t, expectedHash, cctx.InboundHash)
+		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
+	})
+
+	t.Run("Call", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t)
+
+		// Given observer
+		ob, err := New(ts.baseObserver, ts.rpc, ts.gateway)
+		require.NoError(t, err)
+
+		lastScanned := ts.SetupLastScannedTX(ts.gateway.AccountID())
+
+		// Given mocked lite client calls
+		const callData = "ping pong"
+		call := toncontracts.Call{
+			Sender:    sample.GenerateTONAccountID(),
+			Recipient: sample.EthAddress(),
+			CallData:  []byte(callData),
+		}
+
+		callTX := sample.TONCall(t, ts.gateway.AccountID(), call)
+		txs := []ton.Transaction{callTX}
+
+		ts.
+			OnGetTransactionsSince(ts.gateway.AccountID(), lastScanned.Lt, txHash(lastScanned), txs, nil).
+			Once()
+
+		ts.MockGetCctxByHash()
+
+		// ACT
+		// Observe inbounds once
+		err = ob.ObserveInbound(ts.ctx)
+
+		// ASSERT
+		assert.NoError(t, err)
+
+		// Check that cctx was sent to zetacore
+		require.Len(t, ts.votesBag, 1)
+
+		// Check CCTX
+		cctx := ts.votesBag[0]
+
+		assert.NotNil(t, cctx)
+
+		assert.Equal(t, call.Sender.ToRaw(), cctx.Sender)
+		assert.Equal(t, ts.chain.ChainId, cctx.SenderChainId)
+
+		assert.Equal(t, "", cctx.Asset)
+		assert.Equal(t, uint64(0), cctx.Amount.Uint64())
+		assert.Equal(t, hex.EncodeToString([]byte(callData)), cctx.Message)
+		assert.Equal(t, call.Recipient.Hex(), cctx.Receiver)
+		assert.Equal(t, coin.CoinType_NoAssetCall, cctx.CoinType)
+
+		// Check hash & block height
+		expectedHash := rpc.TransactionHashToString(callTX.Lt, txHash(callTX))
 		assert.Equal(t, expectedHash, cctx.InboundHash)
 		assert.Equal(t, uint64(0), cctx.InboundBlockHeight)
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -21,6 +20,10 @@ import (
 // This might changes in the future by TON's gov proposal (very unlikely though)
 const maxGasLimit = 1_000_000
 
+// There's no sequential block height. Also, different txs might end up in different shards.
+// tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height, thus zero.
+const tonBlockHeight = 0
+
 type outbound struct {
 	tx            *toncontracts.Transaction
 	receiveStatus chains.ReceiveStatus
@@ -31,20 +34,12 @@ type outbound struct {
 func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *cctypes.CrossChainTx) (bool, error) {
 	nonce := cctx.GetCurrentOutboundParam().TssNonce
 
-	outboundRes, exists := ob.getOutboundByNonce(nonce)
+	res, exists := ob.getOutboundByNonce(nonce)
 	if !exists {
 		return true, nil
 	}
 
-	withdrawal, err := outboundRes.tx.Withdrawal()
-	if err != nil {
-		return false, errors.Wrap(err, "unable to get withdrawal")
-	}
-
-	// TODO: Add compliance check
-	// https://github.com/zeta-chain/node/issues/2916
-
-	if err = ob.postVoteOutbound(ctx, cctx, outboundRes, withdrawal); err != nil {
+	if err := ob.postVoteOutbound(ctx, cctx, res); err != nil {
 		return false, errors.Wrap(err, "unable to post vote")
 	}
 
@@ -98,8 +93,11 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 }
 
 // processOutboundTracker checks TON tx and stores it in memory for further processing
-// by VoteOutboundIfConfirmed.
+// by VoteOutboundIfConfirmed. Note that restricted txs (increase_seqno txs) are considered as success
+// because they are committed on-chain.
 func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.CrossChainTx, txHash string) error {
+	nonce := cctx.GetCurrentOutboundParam().TssNonce
+
 	if cctx.InboundParams.CoinType != coin.CoinType_Gas {
 		return errors.New("only gas cctxs are supported")
 	}
@@ -109,64 +107,56 @@ func (ob *Observer) processOutboundTracker(ctx context.Context, cctx *cctypes.Cr
 		return errors.Wrap(err, "unable to parse tx hash")
 	}
 
-	rawTX, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
+	rawTx, err := ob.rpc.GetTransaction(ctx, ob.gateway.AccountID(), lt, hash)
 	if err != nil {
-		return errors.Wrap(err, "unable to get transaction")
+		return errors.Wrap(err, "unable to get tx")
 	}
 
-	tx, err := ob.gateway.ParseTransaction(rawTX)
+	tx, err := ob.gateway.ParseTransaction(rawTx)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse transaction")
+		return errors.Wrap(err, "unable to parse tx")
 	}
 
-	receiveStatus, err := ob.determineReceiveStatus(tx)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine outbound outcome")
+	receiveStatus := chains.ReceiveStatus_success
+
+	out, err := tx.OutboundAuth()
+	switch {
+	case err != nil:
+		return errors.Wrap(err, "unable to get outbound auth")
+	case out.Signer != ob.TSS().PubKey().AddressEVM():
+		return errors.Errorf("signer mismatch (got %s, want %s)", out.Signer, ob.TSS().PubKey().AddressEVM())
+	case uint64(out.Seqno) != nonce:
+		return errors.Errorf("nonce mismatch (got %d, want %d)", out.Seqno, nonce)
+	case !tx.IsSuccess():
+		receiveStatus = chains.ReceiveStatus_failed
 	}
 
-	// TODO: Add compliance check
-	// https://github.com/zeta-chain/node/issues/2916
-
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	// will be used by VoteOutboundIfConfirmed
 	ob.setOutboundByNonce(outbound{tx, receiveStatus, nonce})
 
 	return nil
-}
-
-func (ob *Observer) determineReceiveStatus(tx *toncontracts.Transaction) (chains.ReceiveStatus, error) {
-	_, evmSigner, err := extractWithdrawal(tx)
-	switch {
-	case err != nil:
-		return 0, err
-	case evmSigner != ob.TSS().PubKey().AddressEVM():
-		return 0, errors.New("withdrawal signer is not TSS")
-	case !tx.IsSuccess():
-		return chains.ReceiveStatus_failed, nil
-	default:
-		return chains.ReceiveStatus_success, nil
-	}
 }
 
 // addOutboundTracker publishes outbound tracker to Zetacore.
 // In most cases will be a noop because the tracker is already published by the signer.
 // See Signer{}.trackOutbound(...) for more details.
 func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Transaction) error {
-	w, evmSigner, err := extractWithdrawal(tx)
+	auth, err := tx.OutboundAuth()
 	switch {
 	case err != nil:
 		return err
-	case evmSigner != ob.TSS().PubKey().AddressEVM():
+	case auth.Signer != ob.TSS().PubKey().AddressEVM():
 		ob.Logger().Inbound.Warn().
 			Fields(txLogFields(tx)).
-			Str("transaction.ton.signer", evmSigner.String()).
-			Msg("observeGateway: addOutboundTracker: withdrawal signer is not TSS. Skipping")
+			Str("transaction.ton.signer", auth.Signer.String()).
+			Msg("observeGateway: addOutboundTracker: signer is not TSS. Skipping")
 
 		return nil
 	}
 
 	var (
 		chainID = ob.Chain().ChainId
-		nonce   = uint64(w.Seqno)
+		nonce   = uint64(auth.Seqno)
 		hash    = rpc.TransactionToHashString(tx.Transaction)
 	)
 
@@ -174,21 +164,6 @@ func (ob *Observer) addOutboundTracker(ctx context.Context, tx *toncontracts.Tra
 	_, err = ob.ZetacoreClient().PostOutboundTracker(ctx, chainID, nonce, hash)
 
 	return err
-}
-
-// return withdrawal and tx signer
-func extractWithdrawal(tx *toncontracts.Transaction) (toncontracts.Withdrawal, eth.Address, error) {
-	w, err := tx.Withdrawal()
-	if err != nil {
-		return toncontracts.Withdrawal{}, eth.Address{}, errors.Wrap(err, "not a withdrawal")
-	}
-
-	s, err := w.Signer()
-	if err != nil {
-		return toncontracts.Withdrawal{}, eth.Address{}, errors.Wrap(err, "unable to get signer")
-	}
-
-	return w, s, nil
 }
 
 // getOutboundByNonce returns outbound by nonce
@@ -201,34 +176,27 @@ func (ob *Observer) getOutboundByNonce(nonce uint64) (outbound, bool) {
 	return v.(outbound), true
 }
 
-// setOutboundByNonce stores outbound by nonce
-func (ob *Observer) setOutboundByNonce(o outbound) {
-	ob.outbounds.Add(o.nonce, o)
+func (ob *Observer) setOutboundByNonce(entry outbound) {
+	ob.outbounds.Add(entry.nonce, entry)
 }
 
-func (ob *Observer) postVoteOutbound(
-	ctx context.Context,
-	cctx *cctypes.CrossChainTx,
-	outboundRes outbound,
-	w toncontracts.Withdrawal,
-) error {
-	// There's no sequential block height. Also, different txs might end up in different shards.
-	// tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height, thus zero.
-	const tonBlockHeight = 0
-
+func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx, res outbound) error {
 	var (
 		chainID       = ob.Chain().ChainId
-		txHash        = rpc.TransactionToHashString(outboundRes.tx.Transaction)
+		txHash        = rpc.TransactionToHashString(res.tx.Transaction)
 		nonce         = cctx.GetCurrentOutboundParam().TssNonce
 		signerAddress = ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 		coinType      = cctx.InboundParams.CoinType
 	)
 
-	gasPrice, ok := ob.getLatestGasPrice()
+	receiveStatus, amount, err := receiveStatusWithAmount(res, cctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get status and amount")
+	}
 
-	// should not happen
-	if !ok {
-		return errors.New("gas price is not set (call PostGasPrice first)")
+	gasPrice, err := ob.getLatestGasPrice()
+	if err != nil {
+		return errors.Wrap(err, "unable to get gas price")
 	}
 
 	// #nosec G115 len always in range
@@ -239,11 +207,11 @@ func (ob *Observer) postVoteOutbound(
 		cctx.Index,
 		txHash,
 		tonBlockHeight,
-		outboundRes.tx.GasUsed().Uint64(),
+		res.tx.GasUsed().Uint64(),
 		gasPriceInt,
 		maxGasLimit,
-		w.Amount,
-		outboundRes.receiveStatus,
+		amount,
+		receiveStatus,
 		chainID,
 		nonce,
 		coinType,
@@ -276,4 +244,21 @@ func (ob *Observer) postVoteOutbound(
 	}
 
 	return nil
+}
+
+func receiveStatusWithAmount(o outbound, cctx *cctypes.CrossChainTx) (chains.ReceiveStatus, math.Uint, error) {
+	switch o.tx.Operation {
+	case toncontracts.OpWithdraw:
+		wd, err := o.tx.Withdrawal()
+		if err != nil {
+			return 0, math.Uint{}, errors.Wrap(err, "unable to get withdrawal")
+		}
+
+		return o.receiveStatus, wd.Amount, nil
+	case toncontracts.OpIncreaseSeqno:
+		// force failure to revert the CCTX in zetacore (similarly to SUI)
+		return chains.ReceiveStatus_failed, cctx.GetCurrentOutboundParam().Amount, nil
+	}
+
+	return 0, math.Uint{}, errors.Errorf("unknown operation %d", o.tx.Operation)
 }

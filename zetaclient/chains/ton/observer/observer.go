@@ -116,10 +116,14 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	return nil
 }
 
-func (ob *Observer) getLatestGasPrice() (uint64, bool) {
+func (ob *Observer) getLatestGasPrice() (uint64, error) {
 	price := ob.latestGasPrice.Load()
 
-	return price, price != 0
+	if price > 0 {
+		return price, nil
+	}
+
+	return 0, errors.New("latest gas price is not set")
 }
 
 func (ob *Observer) setLatestGasPrice(price uint64) {
