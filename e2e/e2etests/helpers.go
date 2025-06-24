@@ -22,8 +22,16 @@ func randomPayloadWithSize(r *runner.E2ERunner, size int) string {
 	bytes := make([]byte, size)
 	_, err := rand.Read(bytes)
 	require.NoError(r, err)
+	
+	return hex.EncodeToString(randomPayloadBytes(r))
+}
 
-	return hex.EncodeToString(bytes)
+func randomPayloadBytes(r *runner.E2ERunner) []byte {
+	bytes := make([]byte, 50)
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+
+	return bytes
 }
 
 // bigAdd is shorthand for new(big.Int).Add(x, y)
