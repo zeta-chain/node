@@ -451,7 +451,6 @@ func NewSDKKeepersWithKeys(
 	tKeys map[string]*storetypes.TransientStoreKey,
 ) SDKKeepers {
 	configurator := evmtypes.NewEVMConfigurator()
-	// reset configuration to set the new one
 	configurator.ResetTestConfig()
 	ethCfg := evmtypes.DefaultChainConfig(7000)
 	err := configurator.

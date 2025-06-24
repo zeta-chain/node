@@ -126,6 +126,7 @@ func (s *TestSuite) SetupTest() {
 	// only rpc forked in node repo
 	ethCfg := evmtypes.DefaultChainConfig(s.backend.Cfg.EVM.EVMChainID)
 	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
 	err = configurator.
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{

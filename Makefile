@@ -434,7 +434,7 @@ $(BINDIR)/runsim:
 # Timeout: Timeout for the simulation test
 define run-sim-test
 	@echo "Running $(1)"
-	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
+	@go test ${TEST_BUILD_FLAGS} -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
 		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
 endef
 

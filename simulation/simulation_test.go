@@ -75,6 +75,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	// TODO evm: this configuration should be in app init() or something like that
 	ethCfg := evmtypes.DefaultChainConfig(777)
 	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
 	err := configurator.
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
@@ -203,6 +204,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// TODO evm: this configuration should be in app init() or something like that
 	ethCfg := evmtypes.DefaultChainConfig(777)
 	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
 	err := configurator.
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
@@ -297,6 +299,7 @@ func TestAppImportExport(t *testing.T) {
 	// TODO evm: this configuration should be in app init() or something like that
 	ethCfg := evmtypes.DefaultChainConfig(777)
 	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
 	err := configurator.
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
@@ -500,6 +503,7 @@ func TestAppImportExport(t *testing.T) {
 func TestAppSimulationAfterImport(t *testing.T) {
 	ethCfg := evmtypes.DefaultChainConfig(777)
 	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
 	err := configurator.
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
