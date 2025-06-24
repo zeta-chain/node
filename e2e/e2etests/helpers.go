@@ -15,11 +15,15 @@ import (
 
 // randomPayload generates a random payload to be used in gateway calls for testing purposes
 func randomPayload(r *runner.E2ERunner) string {
+	return hex.EncodeToString(randomPayloadBytes(r))
+}
+
+func randomPayloadBytes(r *runner.E2ERunner) []byte {
 	bytes := make([]byte, 50)
 	_, err := rand.Read(bytes)
 	require.NoError(r, err)
 
-	return hex.EncodeToString(bytes)
+	return bytes
 }
 
 // bigAdd is shorthand for new(big.Int).Add(x, y)

@@ -43,10 +43,10 @@ func TestSigner(t *testing.T) {
 
 	amount := tonCoins(t, "5")
 
-	// Given CCTX
-	cctx := sample.CrossChainTx(t, "123")
-	cctx.InboundParams.CoinType = coin.CoinType_Gas
-	cctx.OutboundParams = []*cc.OutboundParams{{
+	// Given CCTX#1
+	cctx1 := sample.CrossChainTx(t, "123")
+	cctx1.InboundParams.CoinType = coin.CoinType_Gas
+	cctx1.OutboundParams = []*cc.OutboundParams{{
 		Receiver:        receiver.ToRaw(),
 		ReceiverChainId: ts.chain.ChainId,
 		CoinType:        coin.CoinType_Gas,
@@ -63,26 +63,61 @@ func TestSigner(t *testing.T) {
 
 	ts.Sign(&withdrawal)
 
-	// Given expected liteapi calls
+	// Given CCTX#2 (invalid receiver -1)
+	cctx2 := sample.CrossChainTx(t, "456")
+	cctx2.InboundParams.CoinType = coin.CoinType_Gas
+	cctx2.OutboundParams = []*cc.OutboundParams{{
+		Receiver:        "-1:3eb9fbd865df68188ea84d6615086c26a7b5912a60bc55fded2cdb029b67ff0e",
+		ReceiverChainId: ts.chain.ChainId,
+		CoinType:        coin.CoinType_Gas,
+		Amount:          amount,
+		TssNonce:        nonce + 1,
+	}}
+
+	// Given expected increase_seqno
+	increaseSeqno := toncontracts.IncreaseSeqno{
+		ReasonCode: uint32(InvalidWorkchain),
+		Seqno:      nonce + 1,
+	}
+
+	ts.Sign(&increaseSeqno)
+
+	// Given expected rpc calls
 	lt, hash := uint64(400), decodeHash(t, "df8a01053f50a74503dffe6802f357bf0e665bd1f3d082faccfebdea93cddfeb")
 	ts.OnGetAccountState(ts.gw.AccountID(), rpc.Account{LastTxLT: lt, LastTxHash: hash})
 
 	ts.OnSendMessage(0, nil)
 
-	withdrawalTX := sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
-	ts.OnGetTransactionsSince(ts.gw.AccountID(), lt, ton.Bits256(hash), []ton.Transaction{withdrawalTX}, nil)
+	var (
+		withdrawalTx    = sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
+		increaseSeqnoTx = sample.TONIncreaseSeqno(t, ts.gw.AccountID(), increaseSeqno)
+	)
+
+	// returns both txs
+	ts.OnGetTransactionsSince(
+		ts.gw.AccountID(),
+		lt,
+		ton.Bits256(hash),
+		[]ton.Transaction{withdrawalTx, increaseSeqnoTx},
+		nil,
+	)
 
 	// ACT
-	signer.TryProcessOutbound(ts.ctx, cctx, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx1, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx2, ts.zetacore, zetaHeight)
 
 	// ASSERT
 	// Make sure signer send the tx the chain AND published the outbound tracker
-	require.Len(t, ts.trackerBag, 1)
+	require.Len(t, ts.trackerBag, 2)
 
-	tracker := ts.trackerBag[0]
+	tracker1 := ts.trackerBag[0]
 
-	require.Equal(t, uint64(nonce), tracker.nonce)
-	require.Equal(t, rpc.TransactionToHashString(withdrawalTX), tracker.hash)
+	require.Equal(t, uint64(nonce), tracker1.nonce)
+	require.Equal(t, rpc.TransactionToHashString(withdrawalTx), tracker1.hash)
+
+	tracker2 := ts.trackerBag[1]
+	require.Equal(t, uint64(nonce+1), tracker2.nonce)
+	require.Equal(t, rpc.TransactionToHashString(increaseSeqnoTx), tracker2.hash)
 }
 
 type testSuite struct {
@@ -170,7 +205,7 @@ func (ts *testSuite) OnGetTransactionsSince(
 		Return(txs, err)
 }
 
-func (ts *testSuite) Sign(msg Signable) {
+func (ts *testSuite) Sign(msg toncontracts.ExternalMsg) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 
