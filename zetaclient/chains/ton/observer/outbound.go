@@ -234,13 +234,13 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 
 	switch {
 	case err != nil:
-		log.Error().Err(err).Msg("PostVoteOutbound: failed to post vote")
+		log.Error().Err(err).Msg("Unable to post outbound vote")
 		return err
 	case zetaTxHash != "":
 		log.Info().
-			Str("outbound.vote_tx_hash", zetaTxHash).
-			Str("outbound.ballot_id", ballot).
-			Msg("PostVoteOutbound: posted vote")
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldBallot, ballot).
+			Msg("Outbound vote posted")
 	}
 
 	return nil

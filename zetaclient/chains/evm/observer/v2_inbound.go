@@ -134,7 +134,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Deposited event")
+				Msg("Invalid Deposited event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -161,7 +161,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple Deposited events in same tx")
+				Msg("Multiple Deposited events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -271,7 +271,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Called event")
+				Msg("Invalid Called event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -394,7 +394,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid DepositedAndCalled event")
+				Msg("Invalid DepositedAndCalled event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)
@@ -421,7 +421,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple DepositedAndCalled events in same tx")
+				Msg("Multiple DepositedAndCalled events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
