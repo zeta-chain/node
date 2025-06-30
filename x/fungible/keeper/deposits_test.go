@@ -794,7 +794,7 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		require.True(t, contractCall)
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, testDapp)
 		require.NoError(t, err)
-		require.Equal(t, big.NewInt(0), balance)
+		require.Equal(t, int64(0), balance.Int64())
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
 	})
 
