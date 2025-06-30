@@ -69,7 +69,6 @@ jobs:
                 makeTargets = defaultTargets;
               }
             } else if (context.eventName === 'schedule') {
-              // Run all simulation tests nightly
               makeTargets = defaultTargets;
             } else {
               const makeTargetsInput = context.payload.inputs ? context.payload.inputs['make-targets'] : null;
