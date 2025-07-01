@@ -293,8 +293,11 @@ func (k Keeper) ProcessAbort(
 	return txRes, nil
 }
 
-// getAndCheckZRC20 returns the ZRC20 contract address and foreign coin for the given chainID and asset
-// it also checks if the foreign coin is paused and if the cap is reached
+// getAndCheckZRC20 returns the ZRC20 contract address and the foreign coin information
+// It handles the logic based on CoinType
+// - For Zeta coin type,it returns an empty address and no foreign coin.Zeta is the native token of the chain.
+// - For NoAssetCall and Gas coin types, it retrieves the gas coin for the foreign coin and checks if it is paused or has a liquidity cap.
+// - For other coin types(ERC20), it retrieves the foreign coin from the asset and checks if it is paused or has a liquidity cap.
 func (k Keeper) getAndCheckZRC20(
 	ctx sdk.Context,
 	amount *big.Int,
@@ -311,7 +314,6 @@ func (k Keeper) getAndCheckZRC20(
 	// this simplify the current workflow and allow to pause calls by pausing the gas token
 	// TODO: refactor this logic and create specific workflow for no asset call
 	// https://github.com/zeta-chain/node/issues/2627
-
 	switch coinType {
 	case coin.CoinType_Zeta:
 		{
