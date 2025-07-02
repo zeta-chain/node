@@ -12,6 +12,7 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
 	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
@@ -311,6 +312,12 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHDepositAndCallBigPayloadName,
+		"deposit Ether to ZetaChain call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHDepositAndCallBigPayload,
 	),
 	runner.NewE2ETest(
 		TestETHDepositFastConfirmationName,

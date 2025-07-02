@@ -1,46 +1,42 @@
 package e2etests
 
 import (
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-
 	"github.com/zeta-chain/node/e2e/contracts/testdappempty"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
-	// deploy the TestDAppEmpty contract on the EVM chain
-	testDAppAddr, _, _, err := testdappempty.DeployTestDAppEmpty(r.EVMAuth, r.EVMClient)
+func TestETHDepositAndCallBigPayload(r *runner.E2ERunner, _ []string) {
+	// deploy the TestDAppEmpty contract on the ZetaChain
+	testDAppAddr, _, _, err := testdappempty.DeployTestDAppEmpty(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 
-	previousGasLimit := r.ZEVMAuth.GasLimit
-	r.ZEVMAuth.GasLimit = 10000000
+	previousGasLimit := r.EVMAuth.GasLimit
+	r.EVMAuth.GasLimit = 10000000
 	defer func() {
-		r.ZEVMAuth.GasLimit = previousGasLimit
+		r.EVMAuth.GasLimit = previousGasLimit
 	}()
 
 	// convert to hex string, actual size == 2880 which is current max in the gateway
 	payload := randomPayloadWithSize(r, 1440)
 
-	r.ApproveETHZRC20(r.GatewayZEVMAddr)
-
 	// perform the withdraw
-	tx := r.ETHWithdrawAndCall(
+	tx := r.ETHDepositAndCall(
 		testDAppAddr,
 		big.NewInt(1),
 		[]byte(payload),
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
-		big.NewInt(200000),
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 
-	r.Logger.EVMTransaction(*tx, "withdraw and call big payload")
+	r.Logger.EVMTransaction(*tx, "deposit and call big payload")
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 }
