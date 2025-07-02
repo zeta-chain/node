@@ -22,7 +22,7 @@ func randomPayloadWithSize(r *runner.E2ERunner, size int) string {
 	bytes := make([]byte, size)
 	_, err := rand.Read(bytes)
 	require.NoError(r, err)
-	
+
 	return hex.EncodeToString(randomPayloadBytes(r))
 }
 
