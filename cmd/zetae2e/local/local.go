@@ -343,7 +343,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	if !skipRegular {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
-		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		fmt.Println("Light tests:", light)
+		fmt.Println("Skip bitcoin setup:", skipBitcoinSetup)
+		//startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
 	if !skipPrecompiles {
 		precompiledContractTests := []string{

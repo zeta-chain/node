@@ -65,6 +65,10 @@ func (r *E2ERunner) ApproveTONZRC20(allowed ethcommon.Address) {
 	r.approveZRC20(allowed, r.TONZRC20)
 }
 
+func (r *E2ERunner) ApproveWzeta(allowed ethcommon.Address) {
+	r.approveZRC20(allowed, r.WZeta)
+}
+
 // approveZRC20 approves ZRC20 on EVM to a specific address
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
