@@ -1,10 +1,11 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+
 	"github.com/zeta-chain/node/e2e/contracts/testdappempty"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
