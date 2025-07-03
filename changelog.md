@@ -29,6 +29,7 @@
 * [3983](https://github.com/zeta-chain/node/pull/3983) - fix simulation tests and modify `sim.yml` workflow to run sim tests on changes to `app/` and `cmd/` directories in addition to `x/`
 * [3975](https://github.com/zeta-chain/node/pull/3975) - add v2 connector deployment to the e2e test.
 * [3976](https://github.com/zeta-chain/node/pull/3976) - add connector fund migration e2e test using contracts only.
+* [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
 
 ## v31.0.0
 
