@@ -115,6 +115,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger     = ob.logger.Outbound.With().
 				Uint64(logs.FieldNonce, nonce).
 				Str(logs.FieldOutboundID, outboundID).
+				Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
 				Logger()
 	)
 
@@ -155,7 +156,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger.Debug().
 			Int64("confirmations.current", res.Confirmations).
 			Uint64("confirmations.required", ob.ChainParams().OutboundConfirmationSafe()).
-			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
+			Msg("Outbound not confirmed yet")
 
 		return false, nil
 	}
@@ -203,7 +204,6 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	logFields := map[string]any{
 		logs.FieldTx:     res.TxID,
-		logs.FieldNonce:  nonce,
 		logs.FieldZetaTx: zetaHash,
 		logs.FieldBallot: ballot,
 	}
@@ -212,9 +212,9 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		logger.Error().
 			Err(err).
 			Fields(logFields).
-			Msg("VoteOutboundIfConfirmed: error confirming outbound")
+			Msg("Error confirming outbound")
 	} else if zetaHash != "" {
-		logger.Info().Fields(logFields).Msg("VoteOutboundIfConfirmed: confirmed outbound")
+		logger.Info().Fields(logFields).Msg("Outbound confirmed")
 	}
 
 	return false, nil
