@@ -73,8 +73,8 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 		case txCount == 1:
 			ob.setTxNReceipt(nonce, outboundReceipt, outbound)
 		case txCount > 1:
-			// should not happen. We can't tell which txHash is true.
-			// It might happen (e.g. bug, glitchy/hacked endpoint)
+			// Unexpected state: multiple transactions exist for a single nonce.
+// This could indicate duplicate transaction broadcasting or unreliable RPC data
 			logger.Error().Uint64(logs.FieldNonce, nonce).Msgf("Confirmed multiple (%d) outbound", txCount)
 		case tracker.MaxReached():
 			logger.Error().Uint64(logs.FieldNonce, nonce).Msg("Outbound tracker is full of hashes")
