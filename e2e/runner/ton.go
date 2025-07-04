@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
 	"github.com/tonkeeper/tongo/wallet"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
@@ -136,26 +137,14 @@ func (r *E2ERunner) TONDepositAndCall(
 	callData []byte,
 	opts ...TONOpt,
 ) (*cctypes.CrossChainTx, error) {
-	cfg := &tonOpts{
-		expectedStatus: cctypes.CctxStatus_OutboundMined,
-	}
-
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
-	require.NotNil(r, sender, "Sender wallet is nil")
-	require.False(r, amount.IsZero(), "amount is zero")
-	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String(), "empty zevm recipient")
-	require.NotEmpty(r, callData, "empty call data")
+	cfg := r.tonEnsureCallOpts(sender, amount, zevmRecipient, callData, opts...)
 
 	r.Logger.Info(
-		"Sending deposit of %s TON from %s to zEVM %s and calling contract with %q",
+		"Sending deposit of %s TON from %s to zEVM %s and calling contract with 0x%x",
 		amount.String(),
 		sender.GetAddress().ToRaw(),
 		zevmRecipient.Hex(),
-		string(callData),
+		callData,
 	)
 
 	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
@@ -169,7 +158,7 @@ func (r *E2ERunner) TONDepositAndCall(
 	)
 
 	// Log pre-transaction info
-	r.Logger.Info("TON depositAndCall: gateway tx before (last): hash=%v, lt=%v", lastTxHash, lastLt)
+	r.Logger.Info("TON depositAndCall: gateway tx before (last): hash=%s, lt=%v", lastTxHash.Hex(), lastLt)
 
 	// Send TX
 	err = gw.SendDepositAndCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
@@ -216,24 +205,132 @@ func (r *E2ERunner) TONDepositAndCall(
 	return cctx, nil
 }
 
+func (r *E2ERunner) TONCall(
+	gw *toncontracts.Gateway,
+	sender *wallet.Wallet,
+	amount math.Uint,
+	zevmRecipient eth.Address,
+	callData []byte,
+	opts ...TONOpt,
+) (*cctypes.CrossChainTx, error) {
+	cfg := r.tonEnsureCallOpts(sender, amount, zevmRecipient, callData, opts...)
+
+	r.Logger.Info(
+		"Sending call with %s TON from %s to zEVM %s with data 0x%x",
+		amount.String(),
+		sender.GetAddress().ToRaw(),
+		zevmRecipient.Hex(),
+		callData,
+	)
+
+	gwState, err := r.Clients.TON.GetAccountState(r.Ctx, gw.AccountID())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get TON Gateway account state")
+	}
+
+	var (
+		lastTxHash = gwState.LastTxHash
+		lastLt     = gwState.LastTxLT
+	)
+
+	// Log pre-transaction info
+	r.Logger.Info("TON call: gateway tx before (last): hash=%s, lt=%v", lastTxHash.Hex(), lastLt)
+
+	// Send TX
+	err = gw.SendCall(r.Ctx, sender, amount, zevmRecipient, callData, tonDepositSendCode)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send TON call")
+	}
+
+	filter := func(tx *ton.Transaction) bool {
+		msgInfo := tx.Msgs.InMsg.Value.Value.Info.IntMsgInfo
+		if msgInfo == nil {
+			return false
+		}
+
+		from, err := ton.AccountIDFromTlb(msgInfo.Src)
+		if err != nil {
+			return false
+		}
+
+		return from.ToRaw() == sender.GetAddress().ToRaw()
+	}
+
+	waitFrom := tonWaitFrom{
+		accountID:  gw.AccountID(),
+		lastTxHash: ton.Bits256(lastTxHash),
+		lastLt:     lastLt,
+	}
+
+	// Wait for tx
+	tx := r.tonWaitForTx(waitFrom, filter)
+
+	txHash := rpc.TransactionToHashString(tx)
+
+	// Wait for cctx
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	utils.RequireCCTXStatus(r, cctx, cfg.expectedStatus)
+
+	// The relayed message might be stored as a hex string, so check both formats
+	require.Contains(r,
+		[]string{string(callData), fmt.Sprintf("%x", callData)},
+		cctx.RelayedMessage,
+		"CCTX relayed message mismatch",
+	)
+
+	return cctx, nil
+}
+
+func (r *E2ERunner) tonEnsureCallOpts(
+	sender *wallet.Wallet,
+	amount math.Uint,
+	zevmRecipient eth.Address,
+	callData []byte,
+	opts ...TONOpt,
+) *tonOpts {
+	cfg := &tonOpts{
+		expectedStatus: cctypes.CctxStatus_OutboundMined,
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	require.NotNil(r, r.TONGateway, "TON Gateway is not initialized")
+	require.NotNil(r, sender, "Sender wallet is nil")
+	require.False(r, amount.IsZero(), "amount is zero")
+	require.NotEqual(r, (eth.Address{}).String(), zevmRecipient.String(), "empty zevm recipient")
+	require.NotEmpty(r, callData, "empty call data")
+
+	return cfg
+}
+
 // SendWithdrawTONZRC20 sends withdraw tx of TON ZRC20 tokens
 func (r *E2ERunner) SendWithdrawTONZRC20(
 	to ton.AccountID,
 	amount *big.Int,
-	approveAmount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.TONZRC20.Approve(r.ZEVMAuth, r.TONZRC20Addr, approveAmount)
-	require.NoError(r, err)
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt, "approve")
+	if revertOptions.OnRevertGasLimit == nil {
+		revertOptions.OnRevertGasLimit = big.NewInt(0)
+	}
+
+	// Approve ALL TON-ZRC20 from runner's wallet to the gateway
+	r.ApproveTONZRC20(r.GatewayZEVMAddr)
 
 	// Perform the withdrawal
-	tx, err = r.TONZRC20.Withdraw(r.ZEVMAuth, []byte(to.ToRaw()), amount)
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		[]byte(to.ToRaw()),
+		amount,
+		r.TONZRC20Addr,
+		revertOptions,
+	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(*tx, "zevm ton withdraw")
 
-	// ait for tx receipt
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
+	// wait for tx receipt
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt, "withdraw")
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
@@ -241,8 +338,12 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 }
 
 // WithdrawTONZRC20 withdraws an amount of ZRC20 TON tokens and waits for the cctx to be mined
-func (r *E2ERunner) WithdrawTONZRC20(to ton.AccountID, amount *big.Int, approveAmount *big.Int) *cctypes.CrossChainTx {
-	tx := r.SendWithdrawTONZRC20(to, amount, approveAmount)
+func (r *E2ERunner) WithdrawTONZRC20(
+	recipient ton.AccountID,
+	amount *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+) *cctypes.CrossChainTx {
+	tx := r.SendWithdrawTONZRC20(recipient, amount, revertOptions)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -262,6 +363,7 @@ func (r *E2ERunner) tonWaitForTx(from tonWaitFrom, filter func(tx *ton.Transacti
 	var (
 		timeout  = 2 * time.Minute
 		interval = time.Second
+		attempts = 0
 	)
 
 	ctx, cancel := context.WithTimeout(r.Ctx, timeout)
@@ -273,25 +375,29 @@ func (r *E2ERunner) tonWaitForTx(from tonWaitFrom, filter func(tx *ton.Transacti
 		txs, err := client.GetTransactionsSince(ctx, from.accountID, from.lastLt, from.lastTxHash)
 		require.NoError(r, err, "failed to getTransactionsSince")
 
-		r.Logger.Info("tonWaitForInboundCCTX: Found %d transactions since last hash", len(txs))
+		r.Logger.Info("tonWaitForInboundCCTX[%d]: Found %d transactions since last hash", attempts, len(txs))
 
 		for i := range txs {
 			tx := txs[i]
 
 			// Apply the filter
 			if !filter(&tx) {
-				r.Logger.Info("tonWaitForInboundCCTX: Transaction %d filtered out", i)
+				r.Logger.Info("tonWaitForInboundCCTX[%d]: Transaction %d filtered out", attempts, i)
 				continue
 			}
 
 			r.Logger.Info(
-				"tonWaitForInboundCCTX: Found matching transaction: %s",
+				"tonWaitForInboundCCTX[%d]: Found matching transaction: %s",
+				attempts,
 				rpc.TransactionToHashString(tx),
 			)
 
 			return tx
 		}
 
-		time.Sleep(interval)
+		inc := 500 * time.Millisecond * time.Duration(attempts)
+		time.Sleep(interval + inc)
+
+		attempts++
 	}
 }

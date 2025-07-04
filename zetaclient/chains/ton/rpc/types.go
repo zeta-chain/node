@@ -211,7 +211,7 @@ func TransactionHashToString(lt uint64, hash ton.Bits256) string {
 func TransactionHashFromString(encoded string) (uint64, ton.Bits256, error) {
 	parts := strings.Split(encoded, ":")
 	if len(parts) != 2 {
-		return 0, ton.Bits256{}, fmt.Errorf("invalid encoded string format")
+		return 0, ton.Bits256{}, fmt.Errorf("invalid encoded string format %q", encoded)
 	}
 
 	lt, err := strconv.ParseUint(parts[0], 10, 64)
