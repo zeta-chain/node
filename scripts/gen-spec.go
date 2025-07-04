@@ -243,7 +243,7 @@ func writeToSingleFile(outputFile string, modules []ModuleData) error {
 	/* #nosec G307 */
 	defer file.Close()
 
-	_, err = file.WriteString("# ZetaChain Protocol Specification\n\n")
+	_, err = file.WriteString("---\ntitle: Node Modules Specification\n---\n\n")
 	if err != nil {
 		fmt.Printf("Error writing to file %q: %v\n", outputFile, err)
 		return err
