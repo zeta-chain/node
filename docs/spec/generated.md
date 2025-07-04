@@ -1,10 +1,10 @@
 # ZetaChain Protocol Specification
 
-# authority
+## authority
 
-## Messages
+### Messages
 
-### MsgUpdatePolicies
+#### MsgUpdatePolicies
 
 UpdatePolicies updates policies
 
@@ -15,7 +15,7 @@ message MsgUpdatePolicies {
 }
 ```
 
-### MsgUpdateChainInfo
+#### MsgUpdateChainInfo
 
 UpdateChainInfo updates the chain info object
 If the provided chain does not exist in the chain info object, it is added
@@ -28,7 +28,7 @@ message MsgUpdateChainInfo {
 }
 ```
 
-### MsgRemoveChainInfo
+#### MsgRemoveChainInfo
 
 RemoveChainInfo removes the chain info for the specified chain id
 
@@ -39,7 +39,7 @@ message MsgRemoveChainInfo {
 }
 ```
 
-### MsgAddAuthorization
+#### MsgAddAuthorization
 
 AddAuthorization defines a method to add an authorization.If the authorization already exists, it will be overwritten with the provided policy.
 This should be called by the admin policy account.
@@ -52,7 +52,7 @@ message MsgAddAuthorization {
 }
 ```
 
-### MsgRemoveAuthorization
+#### MsgRemoveAuthorization
 
 RemoveAuthorization removes the authorization from the list. It should be called by the admin policy account.
 
@@ -63,9 +63,9 @@ message MsgRemoveAuthorization {
 }
 ```
 
-# crosschain
+## crosschain
 
-## Overview
+### Overview
 
 The `crosschain` module tracks inbound and outbound cross-chain transactions
 (CCTX).
@@ -79,7 +79,7 @@ for outbound transactions.
 After observing an inbound or an outbound transaction, an observer participates
 in a voting process.
 
-### Voting
+#### Voting
 
 When an observer submits a vote for a transaction a `ballot` is created (if it
 wasn't created before). Observers are allowed to cast votes that will be
@@ -91,7 +91,7 @@ and pays the gas costs of the cross-chain transaction.
 
 Any votes cast after the ballot has been finalized are discarded.
 
-### Inbound Transaction
+#### Inbound Transaction
 
 Inbound transactions are cross-chain transactions observed on connected chains.
 To vote on an inbound transaction an observer broadcasts `MsgVoteInbound`.
@@ -110,16 +110,16 @@ If the destination chain is not ZetaChain, the status of a transaction is
 changed to "pending outbound" and the CCTX to be processed as an outbound
 transaction.
 
-### Outbound Transaction
+#### Outbound Transaction
 
-#### Pending Outbound
+###### Pending Outbound
 
 Observers watch ZetaChain for pending outbound transactions. To process a
 pending outbound transactions observers enter into a TSS keysign ceremony to
 sign the transaction, and then broadcast the signed transaction to the connected
 blockchains.
 
-#### Observed Outbound
+###### Observed Outbound
 
 Observers watch connected blockchains for the broadcasted outbound transactions.
 Once a transaction is "confirmed" (or "mined") on a connected blockchains,
@@ -128,7 +128,7 @@ observers vote on ZetaChain by sending a `VoteOutbound` message.
 After the vote passes the threshold, the voting is finalized and a transaction's
 status is changed to final.
 
-### Permissions
+#### Permissions
 
 | Message                  | Admin policy account | Observer validator |
 | ------------------------ | -------------------- | ------------------ |
@@ -139,7 +139,7 @@ status is changed to final.
 | MsgAddOutboundTracker    | ✅                   | ✅                 |
 | MsgRemoveOutboundTracker | ✅                   |                    |
 
-### State
+#### State
 
 The module stores the following information in the state:
 
@@ -152,9 +152,9 @@ The module stores the following information in the state:
 - Gas prices on connected chains submitted by observers
 
 
-## Messages
+### Messages
 
-### MsgAddOutboundTracker
+#### MsgAddOutboundTracker
 
 AddOutboundTracker adds a new record to the outbound transaction tracker.
 only the admin policy account and the observer validators are authorized to broadcast this message without proof.
@@ -172,7 +172,7 @@ message MsgAddOutboundTracker {
 }
 ```
 
-### MsgAddInboundTracker
+#### MsgAddInboundTracker
 
 AddInboundTracker adds a new record to the inbound transaction tracker.
 
@@ -188,7 +188,7 @@ message MsgAddInboundTracker {
 }
 ```
 
-### MsgRemoveInboundTracker
+#### MsgRemoveInboundTracker
 
 RemoveInboundTracker removes the inbound tracker if it exists.
 
@@ -200,7 +200,7 @@ message MsgRemoveInboundTracker {
 }
 ```
 
-### MsgRemoveOutboundTracker
+#### MsgRemoveOutboundTracker
 
 RemoveOutboundTracker removes a record from the outbound transaction tracker by chain ID and nonce.
 
@@ -214,7 +214,7 @@ message MsgRemoveOutboundTracker {
 }
 ```
 
-### MsgVoteGasPrice
+#### MsgVoteGasPrice
 
 VoteGasPrice submits information about the connected chain's gas price at a specific block
 height. Gas price submitted by each validator is recorded separately and a
@@ -233,7 +233,7 @@ message MsgVoteGasPrice {
 }
 ```
 
-### MsgVoteOutbound
+#### MsgVoteOutbound
 
 VoteOutbound casts a vote on an outbound transaction observed on a connected chain (after
 it has been broadcasted to and finalized on a connected chain). If this is
@@ -295,7 +295,7 @@ message MsgVoteOutbound {
 }
 ```
 
-### MsgVoteInbound
+#### MsgVoteInbound
 
 VoteInbound casts a vote on an inbound transaction observed on a connected chain. If this
 is the first vote, a new ballot is created. When a threshold of votes is
@@ -364,7 +364,7 @@ message MsgVoteInbound {
 }
 ```
 
-### MsgWhitelistERC20
+#### MsgWhitelistERC20
 
 WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
 and emit a crosschain tx to whitelist the ERC20 on the external chain
@@ -384,7 +384,7 @@ message MsgWhitelistERC20 {
 }
 ```
 
-### MsgUpdateTssAddress
+#### MsgUpdateTssAddress
 
 UpdateTssAddress updates the TSS address.
 
@@ -395,7 +395,7 @@ message MsgUpdateTssAddress {
 }
 ```
 
-### MsgMigrateTssFunds
+#### MsgMigrateTssFunds
 
 MigrateTssFunds migrates the funds from the current TSS to the new TSS
 
@@ -407,7 +407,7 @@ message MsgMigrateTssFunds {
 }
 ```
 
-### MsgAbortStuckCCTX
+#### MsgAbortStuckCCTX
 
 AbortStuckCCTX aborts a stuck CCTX
 Authorized: admin policy group 2
@@ -419,7 +419,7 @@ message MsgAbortStuckCCTX {
 }
 ```
 
-### MsgRefundAbortedCCTX
+#### MsgRefundAbortedCCTX
 
 RefundAbortedCCTX refunds the aborted CCTX.
 It verifies if the CCTX is aborted and not refunded, and if the refund address is valid.
@@ -435,7 +435,7 @@ message MsgRefundAbortedCCTX {
 }
 ```
 
-### MsgUpdateRateLimiterFlags
+#### MsgUpdateRateLimiterFlags
 
 UpdateRateLimiterFlags updates the rate limiter flags.
 Authorized: admin policy operational.
@@ -447,7 +447,7 @@ message MsgUpdateRateLimiterFlags {
 }
 ```
 
-### MsgMigrateERC20CustodyFunds
+#### MsgMigrateERC20CustodyFunds
 
 MigrateERC20CustodyFunds migrates the funds from the current ERC20Custody contract to the new ERC20Custody contract
 
@@ -461,7 +461,7 @@ message MsgMigrateERC20CustodyFunds {
 }
 ```
 
-### MsgUpdateERC20CustodyPauseStatus
+#### MsgUpdateERC20CustodyPauseStatus
 
 UpdateERC20CustodyPauseStatus creates a admin cmd cctx to update the pause status of the ERC20 custody contract
 
@@ -473,9 +473,9 @@ message MsgUpdateERC20CustodyPauseStatus {
 }
 ```
 
-# emissions
+## emissions
 
-## Overview
+### Overview
 
 The `emissions` module is responsible for orchestrating rewards distribution for
 observers, validators and TSS signers. Currently, it only distributes rewards to
@@ -496,9 +496,9 @@ The module keeps track of parameters used for calculating rewards:
 - Duration factor constant
 
 
-## Messages
+### Messages
 
-### MsgUpdateParams
+#### MsgUpdateParams
 
 UpdateParams defines a governance operation for updating the x/emissions module parameters.
 The authority is hard-coded to the x/gov module account.
@@ -510,7 +510,7 @@ message MsgUpdateParams {
 }
 ```
 
-### MsgWithdrawEmission
+#### MsgWithdrawEmission
 
 WithdrawEmission allows the user to withdraw from their withdrawable emissions.
 on a successful withdrawal, the amount is transferred from the undistributed rewards pool to the user's account.
@@ -524,9 +524,9 @@ message MsgWithdrawEmission {
 }
 ```
 
-# fungible
+## fungible
 
-## Overview
+### Overview
 
 The `fungible` module facilitates the deployment of fungible tokens of connected
 blockchains (called "foreign coins") on ZetaChain.
@@ -547,7 +547,7 @@ The module contains the logic for:
 the module depends heavily on the [protocol
 contracts](https://github.com/zeta-chain/protocol-contracts).
 
-### State
+#### State
 
 The `fungible` module keeps track of the following state:
 
@@ -555,9 +555,9 @@ The `fungible` module keeps track of the following state:
 - A list of foreign coins
 
 
-## Messages
+### Messages
 
-### MsgDeploySystemContracts
+#### MsgDeploySystemContracts
 
 DeploySystemContracts deploy new instances of the system contracts
 
@@ -569,7 +569,7 @@ message MsgDeploySystemContracts {
 }
 ```
 
-### MsgDeployFungibleCoinZRC20
+#### MsgDeployFungibleCoinZRC20
 
 DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
 
@@ -604,7 +604,7 @@ message MsgDeployFungibleCoinZRC20 {
 }
 ```
 
-### MsgRemoveForeignCoin
+#### MsgRemoveForeignCoin
 
 RemoveForeignCoin removes a coin from the list of foreign coins in the
 module's state.
@@ -618,7 +618,7 @@ message MsgRemoveForeignCoin {
 }
 ```
 
-### MsgUpdateSystemContract
+#### MsgUpdateSystemContract
 
 UpdateSystemContract updates the system contract
 
@@ -629,7 +629,7 @@ message MsgUpdateSystemContract {
 }
 ```
 
-### MsgUpdateContractBytecode
+#### MsgUpdateContractBytecode
 
 UpdateContractBytecode updates the bytecode of a contract from the bytecode
 of an existing contract Only a ZRC20 contract or the WZeta connector contract
@@ -647,7 +647,7 @@ message MsgUpdateContractBytecode {
 }
 ```
 
-### MsgUpdateZRC20WithdrawFee
+#### MsgUpdateZRC20WithdrawFee
 
 UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
 
@@ -660,7 +660,7 @@ message MsgUpdateZRC20WithdrawFee {
 }
 ```
 
-### MsgUpdateZRC20LiquidityCap
+#### MsgUpdateZRC20LiquidityCap
 
 UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
 
@@ -674,7 +674,7 @@ message MsgUpdateZRC20LiquidityCap {
 }
 ```
 
-### MsgPauseZRC20
+#### MsgPauseZRC20
 
 PauseZRC20 pauses a list of ZRC20 tokens
 Authorized: admin policy group groupEmergency.
@@ -686,7 +686,7 @@ message MsgPauseZRC20 {
 }
 ```
 
-### MsgUnpauseZRC20
+#### MsgUnpauseZRC20
 
 UnpauseZRC20 unpauses the ZRC20 token
 Authorized: admin policy group groupOperational.
@@ -698,7 +698,7 @@ message MsgUnpauseZRC20 {
 }
 ```
 
-### MsgUpdateGatewayContract
+#### MsgUpdateGatewayContract
 
 UpdateGatewayContract updates the zevm gateway contract used by the ZetaChain protocol to read inbounds and process outbounds
 
@@ -709,7 +709,7 @@ message MsgUpdateGatewayContract {
 }
 ```
 
-### MsgUpdateZRC20Name
+#### MsgUpdateZRC20Name
 
 UpdateZRC20Name updates the name and/or the symbol of a zrc20 token
 
@@ -722,11 +722,11 @@ message MsgUpdateZRC20Name {
 }
 ```
 
-# lightclient
+## lightclient
 
-## Messages
+### Messages
 
-### MsgEnableHeaderVerification
+#### MsgEnableHeaderVerification
 
 EnableHeaderVerification enables the verification flags for the given chain IDs
 Enabled chains allow the submissions of block headers and using it to verify the correctness of proofs
@@ -738,7 +738,7 @@ message MsgEnableHeaderVerification {
 }
 ```
 
-### MsgDisableHeaderVerification
+#### MsgDisableHeaderVerification
 
 DisableHeaderVerification disables the verification flags for the given chain IDs
 Disabled chains do not allow the submissions of block headers or using it to verify the correctness of proofs
@@ -750,9 +750,9 @@ message MsgDisableHeaderVerification {
 }
 ```
 
-# observer
+## observer
 
-## Overview
+### Overview
 
 The `observer` module keeps track of ballots for voting, a mapping between
 chains and observer accounts, a list of supported connected chains, core
@@ -776,9 +776,9 @@ validator is authorized to vote on a transaction coming in/out of a specific
 connected chain.
 
 
-## Messages
+### Messages
 
-### MsgAddObserver
+#### MsgAddObserver
 
 AddObserver adds an observer address to the observer set
 
@@ -791,7 +791,7 @@ message MsgAddObserver {
 }
 ```
 
-### MsgUpdateObserver
+#### MsgUpdateObserver
 
 UpdateObserver handles updating an observer address
 Authorized: admin policy (admin update), old observer address (if the
@@ -806,7 +806,7 @@ message MsgUpdateObserver {
 }
 ```
 
-### MsgUpdateChainParams
+#### MsgUpdateChainParams
 
 UpdateChainParams updates chain parameters for a specific chain, or add a new one.
 Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
@@ -820,7 +820,7 @@ message MsgUpdateChainParams {
 }
 ```
 
-### MsgRemoveChainParams
+#### MsgRemoveChainParams
 
 RemoveChainParams removes chain parameters for a specific chain.
 
@@ -831,7 +831,7 @@ message MsgRemoveChainParams {
 }
 ```
 
-### MsgVoteBlame
+#### MsgVoteBlame
 
 ```proto
 message MsgVoteBlame {
@@ -841,7 +841,7 @@ message MsgVoteBlame {
 }
 ```
 
-### MsgUpdateKeygen
+#### MsgUpdateKeygen
 
 UpdateKeygen updates the block height of the keygen and sets the status to
 "pending keygen".
@@ -855,7 +855,7 @@ message MsgUpdateKeygen {
 }
 ```
 
-### MsgVoteBlockHeader
+#### MsgVoteBlockHeader
 
 VoteBlockHeader vote for a new block header to the storers
 
@@ -869,7 +869,7 @@ message MsgVoteBlockHeader {
 }
 ```
 
-### MsgResetChainNonces
+#### MsgResetChainNonces
 
 ResetChainNonces handles resetting chain nonces
 
@@ -882,7 +882,7 @@ message MsgResetChainNonces {
 }
 ```
 
-### MsgVoteTSS
+#### MsgVoteTSS
 
 VoteTSS votes on creating a TSS key and recording the information about it (public
 key, participant and operator addresses, finalized and keygen heights).
@@ -904,7 +904,7 @@ message MsgVoteTSS {
 }
 ```
 
-### MsgEnableCCTX
+#### MsgEnableCCTX
 
 EnableCCTX enables the IsInboundEnabled and IsOutboundEnabled flags.These flags control the creation of inbounds and outbounds.
 The flags are enabled by the policy account with the groupOperational policy type.
@@ -917,7 +917,7 @@ message MsgEnableCCTX {
 }
 ```
 
-### MsgDisableCCTX
+#### MsgDisableCCTX
 
 DisableCCTX disables the IsInboundEnabled and IsOutboundEnabled flags. These flags control the creation of inbounds and outbounds.
 The flags are disabled by the policy account with the groupEmergency policy type.
@@ -930,7 +930,7 @@ message MsgDisableCCTX {
 }
 ```
 
-### MsgDisableFastConfirmation
+#### MsgDisableFastConfirmation
 
 DisableFastConfirmation disables fast confirmation for the given chain ID
 Inbound and outbound will be only confirmed using SAFE confirmation count on disabled chains
@@ -942,7 +942,7 @@ message MsgDisableFastConfirmation {
 }
 ```
 
-### MsgUpdateGasPriceIncreaseFlags
+#### MsgUpdateGasPriceIncreaseFlags
 
 UpdateGasPriceIncreaseFlags updates the GasPriceIncreaseFlags. These flags control the increase of gas prices.
 The flags are updated by the policy account with the groupOperational policy type.
@@ -954,7 +954,7 @@ message MsgUpdateGasPriceIncreaseFlags {
 }
 ```
 
-### MsgUpdateOperationalFlags
+#### MsgUpdateOperationalFlags
 
 ```proto
 message MsgUpdateOperationalFlags {
@@ -963,7 +963,7 @@ message MsgUpdateOperationalFlags {
 }
 ```
 
-### MsgUpdateOperationalChainParams
+#### MsgUpdateOperationalChainParams
 
 UpdateOperationalChainParams updates the operational-related chain params
 Unlike MsgUpdateChainParams, this message doesn't allow updated sensitive values such as the gateway contract to listen to on connected chains

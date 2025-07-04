@@ -1,4 +1,4 @@
-## Overview
+### Overview
 
 The `crosschain` module tracks inbound and outbound cross-chain transactions
 (CCTX).
@@ -12,7 +12,7 @@ for outbound transactions.
 After observing an inbound or an outbound transaction, an observer participates
 in a voting process.
 
-### Voting
+#### Voting
 
 When an observer submits a vote for a transaction a `ballot` is created (if it
 wasn't created before). Observers are allowed to cast votes that will be
@@ -24,7 +24,7 @@ and pays the gas costs of the cross-chain transaction.
 
 Any votes cast after the ballot has been finalized are discarded.
 
-### Inbound Transaction
+#### Inbound Transaction
 
 Inbound transactions are cross-chain transactions observed on connected chains.
 To vote on an inbound transaction an observer broadcasts `MsgVoteInbound`.
@@ -43,16 +43,16 @@ If the destination chain is not ZetaChain, the status of a transaction is
 changed to "pending outbound" and the CCTX to be processed as an outbound
 transaction.
 
-### Outbound Transaction
+#### Outbound Transaction
 
-#### Pending Outbound
+###### Pending Outbound
 
 Observers watch ZetaChain for pending outbound transactions. To process a
 pending outbound transactions observers enter into a TSS keysign ceremony to
 sign the transaction, and then broadcast the signed transaction to the connected
 blockchains.
 
-#### Observed Outbound
+###### Observed Outbound
 
 Observers watch connected blockchains for the broadcasted outbound transactions.
 Once a transaction is "confirmed" (or "mined") on a connected blockchains,
@@ -61,7 +61,7 @@ observers vote on ZetaChain by sending a `VoteOutbound` message.
 After the vote passes the threshold, the voting is finalized and a transaction's
 status is changed to final.
 
-### Permissions
+#### Permissions
 
 | Message                  | Admin policy account | Observer validator |
 | ------------------------ | -------------------- | ------------------ |
@@ -72,7 +72,7 @@ status is changed to final.
 | MsgAddOutboundTracker    | ✅                   | ✅                 |
 | MsgRemoveOutboundTracker | ✅                   |                    |
 
-### State
+#### State
 
 The module stores the following information in the state:
 

@@ -1,4 +1,4 @@
-## Overview
+### Overview
 
 The `fungible` module facilitates the deployment of fungible tokens of connected
 blockchains (called "foreign coins") on ZetaChain.
@@ -19,7 +19,7 @@ The module contains the logic for:
 the module depends heavily on the [protocol
 contracts](https://github.com/zeta-chain/protocol-contracts).
 
-### State
+#### State
 
 The `fungible` module keeps track of the following state:
 

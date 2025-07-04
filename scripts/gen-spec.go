@@ -252,7 +252,7 @@ func writeToSingleFile(outputFile string, modules []ModuleData) error {
 	for _, module := range modules {
 		// Write module heading
 		moduleName := getLastSegmentOfPackageName(module.PackageName)
-		_, err = fmt.Fprintf(file, "# %s\n\n", moduleName)
+		_, err = fmt.Fprintf(file, "## %s\n\n", moduleName)
 		if err != nil {
 			fmt.Printf("Error writing module heading to file %q: %v\n", outputFile, err)
 			return err
@@ -274,7 +274,7 @@ func writeToSingleFile(outputFile string, modules []ModuleData) error {
 
 		// Write messages section
 		if len(module.Messages) > 0 {
-			_, err = fmt.Fprintf(file, "## Messages\n\n")
+			_, err = fmt.Fprintf(file, "### Messages\n\n")
 			if err != nil {
 				fmt.Printf("Error writing messages section to file %q: %v\n", outputFile, err)
 				return err
@@ -282,7 +282,7 @@ func writeToSingleFile(outputFile string, modules []ModuleData) error {
 
 			// Write messages for this module
 			for _, message := range module.Messages {
-				_, err = fmt.Fprintf(file, "### %s\n\n", message.Name)
+				_, err = fmt.Fprintf(file, "#### %s\n\n", message.Name)
 				if err != nil {
 					return err
 				}
