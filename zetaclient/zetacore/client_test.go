@@ -260,13 +260,13 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 		},
 	}
 
+	newBlockChan, err := client.NewBlockSubscriber(ctx)
+	require.NoError(t, err)
+
 	go func() {
 		time.Sleep(10 * time.Millisecond)
 		cometBFTClient.PublishToSubscribers(blockEvent)
 	}()
-
-	newBlockChan, err := client.NewBlockSubscriber(ctx)
-	require.NoError(t, err)
 
 	receivedBlock := <-newBlockChan
 	require.Equal(t, expectedHeight, receivedBlock.Block.Header.Height)

@@ -42,8 +42,7 @@ func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
 	err = r.checkERC20TSSBalance()
 	require.NoError(r, err, "ERC20 balance check failed")
 
-	err = r.checkZetaTSSBalance()
-	require.NoError(r, err, "ZETA balance check failed")
+	r.checkZetaTSSBalance()
 
 	err = r.CheckBTCTSSBalance()
 	require.NoError(r, err, "BTC balance check failed")
@@ -187,7 +186,7 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 	return nil
 }
 
-func (r *E2ERunner) checkZetaTSSBalance() error {
+func (r *E2ERunner) checkZetaTSSBalance() {
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
 
@@ -197,24 +196,17 @@ func (r *E2ERunner) checkZetaTSSBalance() error {
 	zetaLocked := big.NewInt(0).Add(zetaLockedLegacyConnector, zetaLockedConnectorNative)
 
 	resp, err := http.Get("http://zetacore0:1317/cosmos/bank/v1beta1/supply/by_denom?denom=azeta")
-	if err != nil {
-		return err
-	}
+	require.NoError(r, err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	require.NoError(r, err)
 	var result Response
 	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return err
-	}
+	require.NoError(r, err)
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
 		r.Logger.Info("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	} else {
 		r.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}
-	return nil
 }

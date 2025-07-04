@@ -372,13 +372,13 @@ func (s *Service) blameFailure(
 }
 
 func (s *Service) getSignatureCached(chainID int64, req keysign.Request) ([][65]byte, bool) {
-	key := must(req.MsgID())
+	key := Must(req.MsgID())
 
 	return s.getChainSignatureCache(chainID).Get(key)
 }
 
 func (s *Service) setSignatureCached(chainID int64, req keysign.Request, sigs [][65]byte) {
-	key := must(req.MsgID())
+	key := Must(req.MsgID())
 
 	s.getChainSignatureCache(chainID).Add(key, sigs)
 }
@@ -411,17 +411,14 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 	blockHeight := uint64(req.BlockHeight)
 
 	return map[string]any{
-		msgField:           must(req.MsgID()),
+		msgField:           Must(req.MsgID()),
 		"tss.chain_id":     chainID,
 		"tss.block_height": blockHeight,
 		"tss.nonce":        nonce,
 	}
 }
 
-// must should never fail. used for request.MsgID() which calls
-// crypto/sha256/sha256.go: (*digest).Write()
-// It implements Writer but never fails.
-func must[T any](v T, err error) T {
+func Must[T any](v T, err error) T {
 	if err != nil {
 		panic(errors.Wrap(err, "must"))
 	}

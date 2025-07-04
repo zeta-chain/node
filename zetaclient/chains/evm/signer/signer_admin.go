@@ -8,6 +8,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 
 	"github.com/zeta-chain/node/pkg/constant"
@@ -90,7 +91,7 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 	}
 	data, err := custodyAbi.Pack("withdraw", newCustody, erc20, amount)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(

@@ -316,25 +316,19 @@ func (k Keeper) getAndCheckZRC20(
 	// https://github.com/zeta-chain/node/issues/2627
 	switch coinType {
 	case coin.CoinType_Zeta:
-		{
-			return ethcommon.Address{}, types.ForeignCoins{}, nil
-		}
+		return ethcommon.Address{}, types.ForeignCoins{}, nil
 	case coin.CoinType_NoAssetCall, coin.CoinType_Gas:
-		{
-			foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
-			if !found {
-				return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
-			}
+		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
+		if !found {
+			return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
 		}
 	default:
-		{
-			foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
-			if !found {
-				return ethcommon.Address{}, types.ForeignCoins{}, errorspkg.Wrapf(
-					crosschaintypes.ErrForeignCoinNotFound,
-					"asset: %s, chainID %d", asset, chainID,
-				)
-			}
+		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
+		if !found {
+			return ethcommon.Address{}, types.ForeignCoins{}, errorspkg.Wrapf(
+				crosschaintypes.ErrForeignCoinNotFound,
+				"asset: %s, chainID %d", asset, chainID,
+			)
 		}
 	}
 

@@ -157,7 +157,7 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 
 	data, err = erc20CustodyV1ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
