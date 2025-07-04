@@ -119,6 +119,14 @@ func (signer *Signer) signERC20CustodyWithdraw(
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
 	}
 
+	// Add this debug line to print the cast command
+	fmt.Printf("Debug cast command: cast call %s \"withdraw(address,address,uint256)\" %s %s %s --from %s --rpc-url http://127.0.0.1:8545\n",
+		signer.er20CustodyAddress.Hex(),
+		txData.to.Hex(),
+		txData.asset.Hex(),
+		txData.amount.String(),
+		"TSS ADDRESS") // assuming signer has an address field
+
 	tx, _, _, err := signer.Sign(
 		ctx,
 		data,
@@ -147,6 +155,41 @@ func (signer *Signer) signZetaConnectorWithdraw(
 	data, err := connectorABI.Pack("withdraw", txData.to, txData.amount)
 	if err != nil {
 		return nil, fmt.Errorf("withdraw pack error: %w", err)
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("sign withdraw error: %w", err)
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectorWithdrawAndCall(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	connectorABI, err := connector.ZetaConnectorNativeMetaData.GetAbi()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get ZetaConnectorNativeMetaData ABI")
+	}
+
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := connectorABI.Pack("withdrawAndCall", messageContext, txData.to, txData.amount, txData.message)
+	if err != nil {
+		return nil, fmt.Errorf("withdraw and call pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(

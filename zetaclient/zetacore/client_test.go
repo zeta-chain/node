@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"testing"
-	"time"
 
 	sdkmath "cosmossdk.io/math"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -249,25 +248,21 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 		withCometBFT(cometBFTClient),
 	)
 
-	expectedHeight := int64(10)
-	blockEvent := coretypes.ResultEvent{
-		Data: cometbfttypes.EventDataNewBlock{
-			Block: &cometbfttypes.Block{
-				Header: cometbfttypes.Header{
-					Height: expectedHeight,
-				},
-			},
-		},
-	}
-
-	go func() {
-		time.Sleep(10 * time.Millisecond)
-		cometBFTClient.PublishToSubscribers(blockEvent)
-	}()
-
 	newBlockChan, err := client.NewBlockSubscriber(ctx)
 	require.NoError(t, err)
 
-	receivedBlock := <-newBlockChan
-	require.Equal(t, expectedHeight, receivedBlock.Block.Header.Height)
+	height := int64(10)
+
+	cometBFTClient.PublishToSubscribers(coretypes.ResultEvent{
+		Data: cometbfttypes.EventDataNewBlock{
+			Block: &cometbfttypes.Block{
+				Header: cometbfttypes.Header{
+					Height: height,
+				},
+			},
+		},
+	})
+
+	newBlockEvent := <-newBlockChan
+	require.Equal(t, height, newBlockEvent.Block.Header.Height)
 }

@@ -65,10 +65,6 @@ func (r *E2ERunner) ApproveTONZRC20(allowed ethcommon.Address) {
 	r.approveZRC20(allowed, r.TONZRC20)
 }
 
-func (r *E2ERunner) ApproveWzeta(allowed ethcommon.Address) {
-	r.approveZRC20(allowed, r.WZeta)
-}
-
 // approveZRC20 approves ZRC20 on EVM to a specific address
 // check if allowance is zero before calling this method
 // allow a high amount to avoid multiple approvals
@@ -93,7 +89,7 @@ func (r *E2ERunner) ETHWithdraw(
 	amount *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Withdraw(
+	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -112,7 +108,7 @@ func (r *E2ERunner) ETHWithdrawAndArbitraryCall(
 	payload []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -134,7 +130,7 @@ func (r *E2ERunner) ETHWithdrawAndCall(
 	revertOptions gatewayzevm.RevertOptions,
 	gasLimit *big.Int,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -183,7 +179,9 @@ func (r *E2ERunner) ERC20Withdraw(
 	amount *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-	tx, err := r.GatewayZEVM.Withdraw(
+
+	r.Logger.Print("Creating ERC20 withdraw :", r.ERC20ZRC20Addr)
+	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -192,6 +190,28 @@ func (r *E2ERunner) ERC20Withdraw(
 	)
 	require.NoError(r, err)
 
+	return tx
+}
+
+// ZetaWithdraw calls Withdraw of Gateway with Zeta token on ZEVM
+func (r *E2ERunner) ZetaWithdraw(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	chainId *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	oldAmount := r.ZEVMAuth.Value
+	defer func() {
+		r.ZEVMAuth.Value = oldAmount
+	}()
+	r.ZEVMAuth.Value = amount
+	tx, err := r.GatewayZEVM.Withdraw(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		chainId,
+		revertOptions,
+	)
+	require.NoError(r, err)
 	return tx
 }
 
@@ -210,7 +230,7 @@ func (r *E2ERunner) ERC20WithdrawAndArbitraryCall(
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
@@ -240,13 +260,78 @@ func (r *E2ERunner) ERC20WithdrawAndCall(
 		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiver.Bytes(),
 		amount,
 		r.ERC20ZRC20Addr,
 		payload,
 		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+func (r *E2ERunner) ZetaWithdrawAndCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+	chainID *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
+	gasLimit *big.Int,
+) *ethtypes.Transaction {
+	// this function take more gas than default 500k
+	// so we need to increase the gas limit
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	oldAmount := r.ZEVMAuth.Value
+	r.ZEVMAuth.GasLimit = 10000000
+	r.ZEVMAuth.Value = amount
+
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+		r.ZEVMAuth.Value = oldAmount
+	}()
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		chainID,
+		payload,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	return tx
+}
+
+func (r *E2ERunner) ZetaWithdrawAndArbitraryCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	chainID *big.Int,
+	payload []byte,
+	revertOptions gatewayzevm.RevertOptions,
+) *ethtypes.Transaction {
+	// this function take more gas than default 500k
+	// so we need to increase the gas limit
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	oldAmount := r.ZEVMAuth.Value
+	r.ZEVMAuth.GasLimit = 10000000
+	r.ZEVMAuth.Value = amount
+
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+		r.ZEVMAuth.Value = oldAmount
+	}()
+
+	tx, err := r.GatewayZEVM.WithdrawAndCall0(
+		r.ZEVMAuth,
+		receiver.Bytes(),
+		chainID,
+		payload,
+		gatewayzevm.CallOptions{GasLimit: defaultGasLimit, IsArbitraryCall: true},
 		revertOptions,
 	)
 	require.NoError(r, err)

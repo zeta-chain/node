@@ -586,7 +586,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.GatewayZEVM.Withdraw(
+	tx, err = r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		[]byte(to.String()),
 		amount,
@@ -619,7 +619,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// withdraw
-	tx, err = r.GatewayZEVM.WithdrawAndCall0(
+	tx, err = r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		[]byte(to.String()),
 		amount,
@@ -755,7 +755,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	require.NoError(r, err)
 
 	// withdraw
-	tx, err = r.GatewayZEVM.WithdrawAndCall0(
+	tx, err = r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		[]byte(to.String()),
 		amount,

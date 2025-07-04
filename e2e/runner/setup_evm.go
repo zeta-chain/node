@@ -138,7 +138,6 @@ func (r *E2ERunner) SetupEVM() {
 		r.Account.EVMAddress(),
 	)
 	require.NoError(r, err)
-
 	// Deploy zetaConnnectorNative proxy contract
 	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,

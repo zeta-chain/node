@@ -186,9 +186,9 @@ func (k Keeper) ProcessRevert(
 	callOnRevert bool,
 	revertMessage []byte,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	if coinType == coin.CoinType_Zeta {
-		return nil, errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
-	}
+	//if coinType == coin.CoinType_Zeta {
+	//	return nil, errors.New("ZETA asset is currently unsupported for revert with V2 protocol contracts")
+	//}
 
 	// get the zrc20 contract
 	zrc20Addr, _, err := k.getAndCheckZRC20(
@@ -228,6 +228,25 @@ func (k Keeper) ProcessRevert(
 
 		// simply deposit back to the revert address
 		res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
+		return res, err
+	case coin.CoinType_Zeta:
+		// if the coin type is Zeta, handle this as a deposit ZETA to zEVM.
+		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
+			return nil, err
+		}
+		if callOnRevert {
+			res, err := k.CallZetaDepositAndRevert(
+				ctx,
+				inboundSender,
+				amount,
+				revertAddress,
+				revertMessage,
+			)
+			return res, err
+		}
+
+		// deposit ZETA to the revert address
+		res, err := k.DepositZeta(ctx, revertAddress, amount)
 		return res, err
 	}
 

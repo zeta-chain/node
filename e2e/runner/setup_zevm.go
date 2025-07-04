@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"encoding/hex"
 	"math/big"
 	"time"
 
@@ -9,11 +10,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
@@ -65,6 +68,25 @@ func (r *E2ERunner) SetTSSAddresses() error {
 	return nil
 }
 
+func (r *E2ERunner) decodeErrorSelector() {
+	errors := er()
+
+	targetSelector := "fe382aa7"
+	r.Logger.Print("Decoding error selector: 0x%s", targetSelector)
+
+	for _, errorSig := range errors {
+		hash := sha3.NewLegacyKeccak256()
+		hash.Write([]byte(errorSig))
+		selector := hex.EncodeToString(hash.Sum(nil)[:4])
+
+		r.Logger.Print("%-40s -> 0x%s", errorSig, selector)
+
+		if selector == targetSelector {
+			r.Logger.Print("*** MATCH FOUND: %s ***", errorSig)
+		}
+	}
+}
+
 // SetupZEVMZRC20s setup ZRC20 for the ZEVM
 func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.Logger.Print("⚙️ deploying ZRC20s on ZEVM")
@@ -97,6 +119,22 @@ func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
+
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	_, err = r.CoreRegistry.ChangeChainStatus(r.ZEVMAuth, evmChainID, r.ETHZRC20Addr, []byte{}, true)
+	require.NoError(r, err)
+	r.Logger.Print("CoreRegistry address: %s", r.CoreRegistryAddr.Hex())
+	r.Logger.Print("GasZRC20 registered: %s", r.ETHZRC20Addr.Hex())
+	r.Logger.Print("EVM Chain ID: %d", evmChainID)
+	time.Sleep(6 * time.Second)
+
+	cn, err := r.CoreRegistry.GetAllChains(&bind.CallOpts{})
+	require.NoError(r, err)
+	for _, chain := range cn {
+		r.Logger.Print("Chain ID: %s GasZRC20: %s ", chain.ChainId, chain.GasZRC20.Hex())
+	}
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
@@ -291,6 +329,40 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	err = r.ZetaTxServer.UpdateGatewayAddress(e2eutils.AdminPolicyName, r.GatewayZEVMAddr.Hex())
 	require.NoError(r, err)
 
+	// Deploy the contract registry
+	r.Logger.Print("Deploying CoreRegistry contract")
+	coreRegistryAddr, txCoreRegistry, _, err := coreregistry.DeployCoreRegistry(r.ZEVMAuth, r.ZEVMClient)
+	require.NoError(r, err)
+	ensureTxReceipt(txCoreRegistry, "CoreRegistry deployment failed")
+
+	conreRegistryABI, err := coreregistry.CoreRegistryMetaData.GetAbi()
+	require.NoError(r, err)
+	// Encode the initializer data
+	initializerData, err = conreRegistryABI.Pack("initialize", r.Account.EVMAddress(), r.Account.EVMAddress(), r.GatewayZEVMAddr)
+	require.NoError(r, err)
+
+	// Deploy the proxy contract for the CoreRegistry
+	r.Logger.Info(
+		"Deploying CoreRegistry proxy with admin %s gateway %s, address: %s",
+		r.Account.EVMAddress().Hex(),
+		r.GatewayZEVMAddr.Hex(),
+		coreRegistryAddr.Hex(),
+	)
+	proxyCoreRegistryAddr, txProxyCoreRegistry, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.ZEVMAuth,
+		r.ZEVMClient,
+		coreRegistryAddr,
+		initializerData,
+	)
+	require.NoError(r, err)
+	r.CoreRegistryAddr = proxyCoreRegistryAddr
+	r.CoreRegistry, err = coreregistry.NewCoreRegistry(proxyCoreRegistryAddr, r.ZEVMClient)
+	require.NoError(r, err)
+
+	updateRegistryTx, err := r.GatewayZEVM.SetRegistryAddress(r.ZEVMAuth, proxyCoreRegistryAddr)
+	require.NoError(r, err)
+	ensureTxReceipt(updateRegistryTx, "Gateway set registry address failed")
+
 	// deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
 		r.ZEVMAuth,
@@ -306,6 +378,7 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+	ensureTxReceipt(txProxyCoreRegistry, "CoreRegistry proxy deployment failed")
 
 	// check isZetaChain is true
 	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})

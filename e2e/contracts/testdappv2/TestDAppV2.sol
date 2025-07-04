@@ -144,6 +144,20 @@ contract TestDAppV2 {
         setSenderWithMessage(messageStr, context.sender);
     }
 
+    // Universal contract interface for zeta token
+    function onCall(
+        zContext calldata context,
+        bytes calldata message
+    ) external payable {
+        require(!isRevertMessage(string(message)));
+
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(context.senderEVM) : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, msg.value); // Use msg.value since no amount parameter
+        setSenderWithMessage(messageStr, context.sender);
+    }
+
     // called with gas token
     function gasCall(string memory message) external payable {
         // Revert if the message is "revert"
@@ -176,7 +190,7 @@ contract TestDAppV2 {
     }
 
     // Revertable interface
-    function onRevert(RevertContext calldata revertContext) external {
+    function onRevert(RevertContext calldata revertContext) external payable {
         require(!isRevertMessage(string(revertContext.revertMessage)));
 
         // if the chain is ZetaChain, consume gas to test the gas consumption
