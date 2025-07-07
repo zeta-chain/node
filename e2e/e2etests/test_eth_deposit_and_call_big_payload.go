@@ -33,7 +33,7 @@ func TestETHDepositAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		[]byte(payload),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
-	
+
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
