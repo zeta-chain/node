@@ -24,6 +24,10 @@ type Gateway struct {
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
 
+	// messageContextID is the object ID of the active message context
+	// It is only used for withdraw and authenticated call
+	messageContextID string
+
 	mu sync.RWMutex
 }
 
@@ -52,19 +56,23 @@ const (
 const moduleName = "gateway"
 
 // NewGatewayFromPairID creates a new Sui Gateway
-// from pair of `$packageID,$gatewayObjectID`
-func NewGatewayFromPairID(pair string) (*Gateway, error) {
-	packageID, gatewayObjectID, err := parsePair(pair)
+// from triplet of `$packageID,$gatewayObjectID,$messageContextID`
+func NewGatewayFromTriplet(triplet string) (*Gateway, error) {
+	packageID, gatewayObjectID, messageContextID, err := parseTriplet(triplet)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewGateway(packageID, gatewayObjectID), nil
+	return NewGateway(packageID, gatewayObjectID, messageContextID), nil
 }
 
 // NewGateway creates a new Sui Gateway.
-func NewGateway(packageID string, gatewayObjectID string) *Gateway {
-	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
+func NewGateway(packageID string, gatewayObjectID, messageContextID string) *Gateway {
+	return &Gateway{
+		packageID:        packageID,
+		objectID:         gatewayObjectID,
+		messageContextID: messageContextID,
+	}
 }
 
 // Event represents generic event wrapper
@@ -132,6 +140,13 @@ func (gw *Gateway) ObjectID() string {
 	return gw.objectID
 }
 
+// MessageContextID returns the object ID of the active message context
+func (gw *Gateway) MessageContextID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
+	return gw.messageContextID
+}
+
 // Module returns Gateway's module name
 func (gw *Gateway) Module() string {
 	return moduleName
@@ -142,9 +157,9 @@ func (gw *Gateway) WithdrawCapType() string {
 	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), moduleName)
 }
 
-// UpdateIDs updates packageID and objectID.
-func (gw *Gateway) UpdateIDs(pair string) error {
-	packageID, gatewayObjectID, err := parsePair(pair)
+// UpdateIDs updates packageID, objectID and messageContextID.
+func (gw *Gateway) UpdateIDs(triplet string) error {
+	packageID, gatewayObjectID, messageContextID, err := parseTriplet(triplet)
 	if err != nil {
 		return err
 	}
@@ -154,6 +169,7 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
+	gw.messageContextID = messageContextID
 
 	return nil
 }
@@ -385,11 +401,11 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
-func parsePair(pair string) (string, string, error) {
-	parts := strings.Split(pair, ",")
-	if len(parts) != 2 {
-		return "", "", errors.Errorf("invalid pair %q", pair)
+func parseTriplet(triplet string) (string, string, string, error) {
+	parts := strings.Split(triplet, ",")
+	if len(parts) != 3 {
+		return "", "", "", errors.Errorf("invalid triplet %q", triplet)
 	}
 
-	return parts[0], parts[1], nil
+	return parts[0], parts[1], parts[2], nil
 }

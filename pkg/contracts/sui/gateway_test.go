@@ -21,7 +21,7 @@ func TestParseEvent(t *testing.T) {
 		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw := NewGateway(packageID, gatewayID)
+	gw := NewGateway(packageID, gatewayID, "0x0")
 
 	eventType := func(t string) string {
 		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
@@ -366,7 +366,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 		receiver  = "0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7"
 	)
 
-	gw := NewGateway(packageID, gatewayID)
+	gw := NewGateway(packageID, gatewayID, "0x0")
 
 	eventType := func(t string) string {
 		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)

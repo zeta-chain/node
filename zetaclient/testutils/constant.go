@@ -54,7 +54,9 @@ var GatewayAddresses = map[int64]string{
 	chains.TONMainnet.ChainId: tonGatewayID,
 
 	// stub, will be replaced with real address later
-	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff,0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa",
+	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff," +
+		"0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa," +
+		"0x7d8c42a0e8fb657965bb9a73a5cb74cc945f7c46d485fbd9e513bf9c0fa51209",
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing

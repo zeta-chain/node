@@ -5,17 +5,13 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
-	suiGatewayUpgradedPath = "/work/protocol-contracts-sui-upgrade"
 )
 
 // SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
@@ -45,10 +41,8 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 
 // suiUpgradeGatewayPackage upgrades the Sui gateway package by deploying new compiled gateway package
 func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
-	// build the CLI command for package upgrade
-	cmdBuild := exec.Command("sui", "move", "build")
-	cmdBuild.Dir = suiGatewayUpgradedPath
-	require.NoError(r, cmdBuild.Run(), "unable to build sui gateway package")
+	// build the upgraded gateway package
+	r.suiBuildGatewayUpgraded()
 
 	// construct the CLI command for package upgrade
 	// #nosec G204, inputs are controlled in E2E test
@@ -103,23 +97,21 @@ func (r *E2ERunner) moveCallUpgraded(ctx context.Context, gatewayPackageID strin
 	r.suiExecuteTx(signer, tx)
 }
 
-// suiPatchMoveConfig updates the 'published-at' field in the 'Move.toml' file
-// with the original published gateway package ID
-func (r *E2ERunner) suiPatchMoveConfig() {
-	const moveTomlPath = suiGatewayUpgradedPath + "/Move.toml"
+// suiPatchMoveConfig replaces the given 'text' in the 'Move.toml' file with the given 'value'
+func (r *E2ERunner) suiPatchMoveConfig(path, text, value string) {
+	moveTomlFile := filepath.Join(path, "Move.toml")
 
 	// read the entire Move.toml file
-	content, err := os.ReadFile(moveTomlPath)
-	require.NoError(r, err, "unable to read Move.toml")
+	content, err := os.ReadFile(moveTomlFile)
+	require.NoError(r, err, "unable to read "+moveTomlFile)
 	contentStr := string(content)
 
-	// Replace the placeholder with the actual published gateway package ID
-	publishedAt := r.SuiGateway.PackageID()
-	updatedContent := strings.Replace(contentStr, "ORIGINAL-PACKAGE-ID", publishedAt, 1)
+	// replace the text with the specified value
+	updatedContent := strings.Replace(contentStr, text, value, 1)
 
-	// Write the updated content back to the file
-	err = os.WriteFile(moveTomlPath, []byte(updatedContent), 0600)
-	require.NoError(r, err, "unable to write to Move.toml")
+	// write the updated content back to the file
+	err = os.WriteFile(moveTomlFile, []byte(updatedContent), 0600)
+	require.NoError(r, err, "unable to write to "+moveTomlFile)
 }
 
 // suiGetObjectData retrieves the object data for the given object ID

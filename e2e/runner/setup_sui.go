@@ -24,9 +24,19 @@ import (
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
+	suiclient "github.com/zeta-chain/node/zetaclient/chains/sui/client"
 )
 
-const changeTypeCreated = "created"
+const (
+	// changeTypeCreated is the type of change that indicates a new object was created
+	changeTypeCreated = "created"
+
+	// suiExampleAuthCallPath is the path to the example authenticated call package
+	suiExampleAuthCallPath = "/work/example-authenticated-call"
+
+	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
+	suiGatewayUpgradedPath = "/work/protocol-contracts-sui-upgrade"
+)
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
 func (r *E2ERunner) RequestSuiFromFaucet(faucetURL, recipient string) {
@@ -56,10 +66,7 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package
-	whitelistCapID, withdrawCapID := r.suiDeployGateway()
-
-	// update gateway package ID in Move.toml
-	r.suiPatchMoveConfig()
+	whitelistCapID, withdrawCapID, messageContextID := r.suiDeployGateway()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -68,11 +75,24 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
-	// deploy example contract with on_call function
-	r.suiDeployExample()
+	// deploy arbitrary call example contract with on_call function
+	r.suiDeployExample(
+		suibin.ExampleArbiCallFungibleTokenBytecodeBase64(),
+		suibin.ExampleArbiCallConnectedBytecodeBase64(),
+	)
+
+	// deploy authenticated call example contract with on_call function
+	r.suiBuildExampleAuthCall()
+	// r.suiDeployExample(
+	// 	suibin.ExampleAuthCallFungibleTokenBytecodeBase64(),
+	// 	suibin.ExampleAuthCallConnectedBytecodeBase64(),
+	// )
 
 	// send withdraw cap to TSS
-	r.suiSendWithdrawCapToTSS(deployerSigner, withdrawCapID)
+	r.suiTransferObjectToTSS(deployerSigner, withdrawCapID)
+
+	// send message context to TSS
+	r.suiTransferObjectToTSS(deployerSigner, messageContextID)
 
 	// set the chain params
 	err = r.setSuiChainParams()
@@ -112,19 +132,64 @@ func (r *E2ERunner) suiSetupDeployerAccount() {
 	require.Equal(r, deployerAddress, strings.TrimSpace(string(output)))
 }
 
+// suiBuildPackage builds the Sui package under the given path using CLI command
+func (r *E2ERunner) suiBuildPackage(path string) {
+	tStart := time.Now()
+
+	// build the CLI command for package upgrade
+	cmdBuild := exec.Command("sui", "move", "build")
+	cmdBuild.Dir = path
+
+	// run command and show output
+	output, err := cmdBuild.CombinedOutput()
+	r.Logger.Info("sui move build output for: %s\n%s", path, string(output))
+	require.NoError(r, err, "unable to build sui package: "+path)
+
+	r.Logger.Info("sui package build took %f seconds", time.Since(tStart).Seconds())
+}
+
+// suiBuildGatewayUpgraded builds the upgraded gateway package
+func (r *E2ERunner) suiBuildGatewayUpgraded() {
+	// in order to upgrade the gateway package, we need to do two things:
+	// 1. SUI needs to know which deployed gateway package (`published-at`) the upgrade applies to.
+	// 2. use `gateway = 0x0` as a placeholder that will be replaced by new gateway package address.
+	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
+	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
+	r.suiPatchMoveConfig(suiGatewayUpgradedPath, `published-at = "0x0"`, publishedAt)
+	r.suiPatchMoveConfig(suiGatewayUpgradedPath, gatewayAddress, `gateway = "0x0"`)
+
+	// build the upgraded gateway package
+	r.suiBuildPackage(suiGatewayUpgradedPath)
+}
+
+// suiBuildExampleAuthCall builds the example authenticated call package
+func (r *E2ERunner) suiBuildExampleAuthCall() {
+	// the example package relies on gateway types and functions, so we need to set actual
+	// gateway address in each Move.toml file to be matching, otherwise the build will fail
+	// 1. the gateway address in the example authenticated call package as a dependency
+	// 2. the gateway address in the upgraded gateway package
+	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
+	r.suiPatchMoveConfig(suiGatewayUpgradedPath, `gateway = "0x0"`, gatewayAddress)
+	r.suiPatchMoveConfig(suiExampleAuthCallPath, `gateway = "0x0"`, gatewayAddress)
+
+	r.suiBuildPackage(suiExampleAuthCallPath)
+}
+
 // suiDeployGateway deploys the SUI gateway package on Sui
-func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageContextID string) {
 	const (
-		filterGatewayType      = "gateway::Gateway"
-		filterWithdrawCapType  = "gateway::WithdrawCap"
-		filterWhitelistCapType = "gateway::WhitelistCap"
-		filterUpgradeCapType   = "0x2::package::UpgradeCap"
+		filterGatewayType        = "gateway::Gateway"
+		filterWithdrawCapType    = "gateway::WithdrawCap"
+		filterWhitelistCapType   = "gateway::WhitelistCap"
+		filterMessageContextType = "gateway::MessageContext"
+		filterUpgradeCapType     = "0x2::package::UpgradeCap"
 	)
 
 	objectTypeFilters := []string{
 		filterGatewayType,
 		filterWhitelistCapType,
 		filterWithdrawCapType,
+		filterMessageContextType,
 		filterUpgradeCapType,
 	}
 	packageID, objectIDs := r.suiDeployPackage(
@@ -141,13 +206,16 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
 
+	messageContextID, ok = objectIDs[filterMessageContextType]
+	require.True(r, ok, "messageContext object not found")
+
 	r.SuiGatewayUpgradeCap, ok = objectIDs[filterUpgradeCapType]
 	require.True(r, ok, "upgradeCap object not found")
 
 	// set sui gateway
-	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
+	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID, messageContextID)
 
-	return whitelistCapID, withdrawCapID
+	return whitelistCapID, withdrawCapID, messageContextID
 }
 
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
@@ -193,7 +261,7 @@ func (r *E2ERunner) suiDeployFakeUSDC() string {
 }
 
 // suiDeployExample deploys the example package on Sui
-func (r *E2ERunner) suiDeployExample() {
+func (r *E2ERunner) suiDeployExample(fungibleTokenBytecodeBase64, connectedBytecodeBase64 string) {
 	const (
 		filterGlobalConfigType = "connected::GlobalConfig"
 		filterPartnerType      = "connected::Partner"
@@ -202,7 +270,7 @@ func (r *E2ERunner) suiDeployExample() {
 
 	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
 	packageID, objectIDs := r.suiDeployPackage(
-		[]string{suibin.ExampleArbiCallFungibleTokenBytecodeBase64(), suibin.ExampleArbiCallConnectedBytecodeBase64()},
+		[]string{fungibleTokenBytecodeBase64, connectedBytecodeBase64},
 		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)
@@ -260,6 +328,7 @@ func (r *E2ERunner) suiDeployPackage(bytecodeBase64s []string, objectTypeFilters
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
+	require.True(r, resp.Effects.Status.Status == suiclient.TxStatusSuccess, resp.Effects.Status.Error)
 
 	// find packageID
 	var packageID string
@@ -352,7 +421,12 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
+		GatewayAddress: fmt.Sprintf(
+			"%s,%s,%s",
+			r.SuiGateway.PackageID(),
+			r.SuiGateway.ObjectID(),
+			r.SuiGateway.MessageContextID(),
+		),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,
@@ -387,10 +461,11 @@ func (r *E2ERunner) setSuiChainParams() error {
 	return errors.New("unable to set Sui chain params")
 }
 
-func (r *E2ERunner) suiSendWithdrawCapToTSS(signer *zetasui.SignerSecp256k1, withdrawCapID string) {
+// suiTransferObjectToTSS transfers an object to the TSS
+func (r *E2ERunner) suiTransferObjectToTSS(signer *zetasui.SignerSecp256k1, objectID string) {
 	tx, err := r.Clients.Sui.TransferObject(r.Ctx, models.TransferObjectRequest{
 		Signer:    signer.Address(),
-		ObjectId:  withdrawCapID,
+		ObjectId:  objectID,
 		Recipient: r.SuiTSSAddress,
 		GasBudget: "5000000000",
 	})

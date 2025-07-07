@@ -549,7 +549,7 @@ func newTestSuite(t *testing.T) *testSuite {
 
 	suiMock := mocks.NewSuiClient(t)
 
-	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
+	gw, err := sui.NewGatewayFromTriplet(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	observer := New(baseObserver, suiMock, gw)

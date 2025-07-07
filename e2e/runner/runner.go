@@ -442,6 +442,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	if r.SuiGateway != nil {
 		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
 		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("MessageContextID: %s", r.SuiGateway.MessageContextID())
 		r.Logger.Print("GatewayUpgradeCap: %s", r.SuiGatewayUpgradeCap)
 	} else {
 		r.Logger.Print("💤 Sui tests disabled")

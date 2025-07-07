@@ -16,7 +16,7 @@ func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 
 	// ARRANGE
 	// Given target package ID (example authenticated call package) and a SUI amount
-	targetPackage := r.SuiExampleArbiCall
+	targetPackage := r.SuiExampleAuthCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 
