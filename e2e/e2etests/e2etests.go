@@ -318,6 +318,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Ether to ZetaChain call a contract with a big payload",
 		[]runner.ArgDefinition{},
 		TestETHDepositAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositFastConfirmationName,
@@ -389,6 +390,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract with a big payload",
 		[]runner.ArgDefinition{},
 		TestETHWithdrawAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,
