@@ -50,7 +50,7 @@ func (signer *Signer) signWhitelistERC20Cmd(
 	}
 	data, err := custodyAbi.Pack("whitelist", erc20)
 	if err != nil {
-		return nil, fmt.Errorf("whitelist pack error: %w", err)
+		return nil, errors.Wrap(err, "whitelist pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -63,7 +63,7 @@ func (signer *Signer) signWhitelistERC20Cmd(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign whitelist error: %w", err)
+		return nil, errors.Wrap(err, "sign whitelist error")
 	}
 	return tx, nil
 }
@@ -104,7 +104,7 @@ func (signer *Signer) signMigrateERC20CustodyFundsCmd(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("signMigrateERC20CustodyFundsCmd error: %w", err)
+		return nil, errors.Wrap(err, "signMigrateERC20CustodyFundsCmd error")
 	}
 	return tx, nil
 }
@@ -135,7 +135,7 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 
 	data, err := custodyAbi.Pack(functionName)
 	if err != nil {
-		return nil, fmt.Errorf("pause/unpause pack error: %w", err)
+		return nil, errors.Wrap(err, "pause/unpause pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -148,7 +148,7 @@ func (signer *Signer) signUpdateERC20CustodyPauseStatusCmd(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("signUpdateERC20CustodyPauseStatusCmd error: %w", err)
+		return nil, errors.Wrap(err, "signUpdateERC20CustodyPauseStatusCmd error")
 	}
 	return tx, nil
 }
@@ -165,7 +165,7 @@ func (signer *Signer) signMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("signMigrateTssFundsCmd error: %w", err)
+		return nil, errors.Wrap(err, "signMigrateTssFundsCmd error")
 	}
 	return tx, nil
 }
