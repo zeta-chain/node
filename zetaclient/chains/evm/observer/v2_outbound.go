@@ -77,7 +77,12 @@ func parseAndCheckGatewayExecuted(
 		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayExecuted); err != nil {
-			return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate gateway executed event")
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate gateway executed event",
+				)
 		}
 		// destination
 		if !strings.EqualFold(executed.Destination.Hex(), params.Receiver) {
@@ -122,7 +127,12 @@ func parseAndCheckGatewayReverted(
 		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(vLog, gatewayAddr, receipt.TxHash.Hex(), common.TopicsGatewayReverted); err != nil {
-			return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate gateway reverte event")
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate gateway reverte event",
+				)
 		}
 		// destination
 		if !strings.EqualFold(reverted.To.Hex(), params.Receiver) {
@@ -171,7 +181,12 @@ func parseAndCheckZetaConnectorWithdraw(
 		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaConnectorWithdraw); err != nil {
-			return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate zeta connector withdrawn event")
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate zeta connector withdrawn event",
+				)
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
@@ -212,7 +227,12 @@ func parseAndCheckERC20CustodyWithdraw(
 		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdraw); err != nil {
-			return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdrawn event")
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate erc20 custody withdrawn event",
+				)
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
@@ -261,7 +281,12 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 		}
 		// basic event check
 		if err := common.ValidateEvmTxLog(vLog, custodyAddr, receipt.TxHash.Hex(), common.TopicsERC20CustodyWithdrawAndCall); err != nil {
-			return big.NewInt(0), chains.ReceiveStatus_failed, errors.Wrap(err, "failed to validate erc20 custody withdraw and call event")
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate erc20 custody withdraw and call event",
+				)
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {

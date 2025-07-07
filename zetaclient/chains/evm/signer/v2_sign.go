@@ -7,11 +7,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/node/zetaclient/tss"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
 	connector "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
+
+	"github.com/zeta-chain/node/zetaclient/tss"
 )
 
 var connectorABI = tss.Must(connector.ZetaConnectorNativeMetaData.GetAbi())

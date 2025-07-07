@@ -598,7 +598,7 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 }
 
 func TestKeeper_ProcessDeposit(t *testing.T) {
-	t.Run("should not process deposit of unsupported cointype", func(t *testing.T) {
+	t.Run("should not process deposit of unsupported coin-type", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -798,7 +798,7 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
 	})
 
-	t.Run("should process deposit and call for cointype Zeta", func(t *testing.T) {
+	t.Run("should process deposit and call for coinType Zeta", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -833,7 +833,7 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		assertTestDAppV2MessageAndAmount(t, ctx, k, testDapp, "foo", 82)
 	})
 
-	t.Run("should process deposit for cointype Zeta", func(t *testing.T) {
+	t.Run("should process deposit for coinType Zeta", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -865,6 +865,36 @@ func TestKeeper_ProcessDeposit(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, contractCall)
 		require.Equal(t, sdkk.BankKeeper.GetBalance(ctx, receiverAdddress.Bytes(), config.BaseDenom).Amount.Int64(), amount.Int64())
+	})
+
+	t.Run("should not process deposit for coinType Zeta if system contract is not present", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := chains.DefaultChainsList()[0].ChainId
+
+		// deploy test dapp
+		receiverAdddress := sample.EthAddress()
+
+		amount := big.NewInt(82)
+
+		// ACT
+		_, contractCall, err := k.ProcessDeposit(
+			ctx,
+			sample.EthAddress().Bytes(),
+			chainID,
+			common.Address{},
+			receiverAdddress,
+			amount,
+			[]byte("foo"),
+			coin.CoinType_Zeta,
+			false,
+		)
+
+		// ASSERT
+		require.False(t, contractCall)
+		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
 	})
 
 	t.Run("should process deposit and call with no message", func(t *testing.T) {
