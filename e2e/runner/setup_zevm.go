@@ -119,22 +119,15 @@ func (r *E2ERunner) SetupZEVMZRC20s(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
+	r.activateChainsOnRegistry()
 
+}
+
+func (r *E2ERunner) activateChainsOnRegistry() {
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
-
 	_, err = r.CoreRegistry.ChangeChainStatus(r.ZEVMAuth, evmChainID, r.ETHZRC20Addr, []byte{}, true)
 	require.NoError(r, err)
-	r.Logger.Print("CoreRegistry address: %s", r.CoreRegistryAddr.Hex())
-	r.Logger.Print("GasZRC20 registered: %s", r.ETHZRC20Addr.Hex())
-	r.Logger.Print("EVM Chain ID: %d", evmChainID)
-	time.Sleep(6 * time.Second)
-
-	cn, err := r.CoreRegistry.GetAllChains(&bind.CallOpts{})
-	require.NoError(r, err)
-	for _, chain := range cn {
-		r.Logger.Print("Chain ID: %s GasZRC20: %s ", chain.ChainId, chain.GasZRC20.Hex())
-	}
 }
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
@@ -335,10 +328,12 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	require.NoError(r, err)
 	ensureTxReceipt(txCoreRegistry, "CoreRegistry deployment failed")
 
-	conreRegistryABI, err := coreregistry.CoreRegistryMetaData.GetAbi()
+	r.Logger.Print("CoreRegistry deployed at: %s", coreRegistryAddr.Hex())
+
+	coreRegistryABI, err := coreregistry.CoreRegistryMetaData.GetAbi()
 	require.NoError(r, err)
 	// Encode the initializer data
-	initializerData, err = conreRegistryABI.Pack("initialize", r.Account.EVMAddress(), r.Account.EVMAddress(), r.GatewayZEVMAddr)
+	initializerData, err = coreRegistryABI.Pack("initialize", r.Account.EVMAddress(), r.Account.EVMAddress(), r.GatewayZEVMAddr)
 	require.NoError(r, err)
 
 	// Deploy the proxy contract for the CoreRegistry

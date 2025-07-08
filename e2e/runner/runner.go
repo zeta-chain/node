@@ -463,6 +463,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
 	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
 	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
+	r.Logger.Print("CoreRegistry:   %s", r.CoreRegistryAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
