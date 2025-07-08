@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v32.0.0
+
+### Chores
+
+* [4003](https://github.com/zeta-chain/node/pull/4003) - upgrade Cosmos SDK to v0.50.14
+
 ## v31.1
 
 ### Features
