@@ -36,6 +36,12 @@ const (
 
 	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
 	suiGatewayUpgradedPath = "/work/protocol-contracts-sui-upgrade"
+
+	// suiExampleAuthCallBinToken is the path to the example authenticated call token binary file
+	suiExampleAuthCallBinToken = "/work/example-authenticated-call/build/example/bytecode_modules/token.mv"
+
+	// suiExampleAuthCallBinConnected is the path to the example authenticated call connected binary file
+	suiExampleAuthCallBinConnected = "/work/example-authenticated-call/build/example/bytecode_modules/connected.mv"
 )
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
@@ -75,18 +81,22 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
-	// deploy arbitrary call example contract with on_call function
+	// deploy arbitrary call example package with on_call function
 	r.suiDeployExample(
+		&r.SuiExampleArbiCall,
 		suibin.ExampleArbiCallFungibleTokenBytecodeBase64(),
 		suibin.ExampleArbiCallConnectedBytecodeBase64(),
+		[]string{},
 	)
 
-	// deploy authenticated call example contract with on_call function
+	// build and deploy authenticated call example package with on_call function
 	r.suiBuildExampleAuthCall()
-	// r.suiDeployExample(
-	// 	suibin.ExampleAuthCallFungibleTokenBytecodeBase64(),
-	// 	suibin.ExampleAuthCallConnectedBytecodeBase64(),
-	// )
+	r.suiDeployExample(
+		&r.SuiExampleAuthCall,
+		suibin.ReadMoveBinaryBase64(r, suiExampleAuthCallBinToken),
+		suibin.ReadMoveBinaryBase64(r, suiExampleAuthCallBinConnected),
+		[]string{r.SuiGateway.PackageID()},
+	)
 
 	// send withdraw cap to TSS
 	r.suiTransferObjectToTSS(deployerSigner, withdrawCapID)
@@ -150,8 +160,8 @@ func (r *E2ERunner) suiBuildPackage(path string) {
 
 // suiBuildGatewayUpgraded builds the upgraded gateway package
 func (r *E2ERunner) suiBuildGatewayUpgraded() {
-	// in order to upgrade the gateway package, we need to do two things:
-	// 1. SUI needs to know which deployed gateway package (`published-at`) the upgrade applies to.
+	// in order to upgrade the gateway package, we need 2 patches to the Move.toml files:
+	// 1. set the `published-at` so that SUI knows which deployed gateway package the upgrade applies to.
 	// 2. use `gateway = 0x0` as a placeholder that will be replaced by new gateway package address.
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
@@ -164,11 +174,13 @@ func (r *E2ERunner) suiBuildGatewayUpgraded() {
 
 // suiBuildExampleAuthCall builds the example authenticated call package
 func (r *E2ERunner) suiBuildExampleAuthCall() {
-	// the example package relies on gateway types and functions, so we need to set actual
-	// gateway address in each Move.toml file to be matching, otherwise the build will fail
-	// 1. the gateway address in the example authenticated call package as a dependency
-	// 2. the gateway address in the upgraded gateway package
+	// in order to import the gateway package, we need 3 patches to the Move.toml files:
+	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
+	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
+	// 3. set the actual gateway address in the example authenticated call package, otherwise the build will fail.
+	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
+	r.suiPatchMoveConfig(suiGatewayUpgradedPath, `published-at = "0x0"`, publishedAt)
 	r.suiPatchMoveConfig(suiGatewayUpgradedPath, `gateway = "0x0"`, gatewayAddress)
 	r.suiPatchMoveConfig(suiExampleAuthCallPath, `gateway = "0x0"`, gatewayAddress)
 
@@ -194,6 +206,7 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	}
 	packageID, objectIDs := r.suiDeployPackage(
 		[]string{suibin.GatewayBytecodeBase64(), suibin.EVMBytecodeBase64()},
+		[]string{},
 		objectTypeFilters,
 	)
 
@@ -243,7 +256,11 @@ func (r *E2ERunner) deploySUIZRC20() {
 // suiDeployFakeUSDC deploys the FakeUSDC contract on Sui
 // it returns the treasuryCap object ID that allows to mint tokens
 func (r *E2ERunner) suiDeployFakeUSDC() string {
-	packageID, objectIDs := r.suiDeployPackage([]string{suibin.FakeUSDCBytecodeBase64()}, []string{"TreasuryCap"})
+	packageID, objectIDs := r.suiDeployPackage(
+		[]string{suibin.FakeUSDCBytecodeBase64()},
+		[]string{},
+		[]string{"TreasuryCap"},
+	)
 
 	treasuryCap, ok := objectIDs["TreasuryCap"]
 	require.True(r, ok, "treasuryCap not found")
@@ -261,7 +278,11 @@ func (r *E2ERunner) suiDeployFakeUSDC() string {
 }
 
 // suiDeployExample deploys the example package on Sui
-func (r *E2ERunner) suiDeployExample(fungibleTokenBytecodeBase64, connectedBytecodeBase64 string) {
+func (r *E2ERunner) suiDeployExample(
+	example *config.SuiExample,
+	fungibleTokenBytecodeBase64, connectedBytecodeBase64 string,
+	extraDependencies []string,
+) {
 	const (
 		filterGlobalConfigType = "connected::GlobalConfig"
 		filterPartnerType      = "connected::Partner"
@@ -271,6 +292,7 @@ func (r *E2ERunner) suiDeployExample(fungibleTokenBytecodeBase64, connectedBytec
 	objectTypeFilters := []string{filterGlobalConfigType, filterPartnerType, filterClockType}
 	packageID, objectIDs := r.suiDeployPackage(
 		[]string{fungibleTokenBytecodeBase64, connectedBytecodeBase64},
+		extraDependencies,
 		objectTypeFilters,
 	)
 	r.Logger.Info("deployed example package with packageID: %s", packageID)
@@ -284,7 +306,8 @@ func (r *E2ERunner) suiDeployExample(fungibleTokenBytecodeBase64, connectedBytec
 	clockID, ok := objectIDs[filterClockType]
 	require.True(r, ok, "clock object not found")
 
-	r.SuiExampleArbiCall = config.SuiExample{
+	// save the example package info
+	*example = config.SuiExample{
 		PackageID:      config.DoubleQuotedString(packageID),
 		TokenType:      config.DoubleQuotedString(packageID + "::token::TOKEN"),
 		GlobalConfigID: config.DoubleQuotedString(globalConfigID),
@@ -295,27 +318,36 @@ func (r *E2ERunner) suiDeployExample(fungibleTokenBytecodeBase64, connectedBytec
 
 // suiDeployPackage is a helper function that deploys a package on Sui
 // It returns the packageID and a map of object types to their IDs
-func (r *E2ERunner) suiDeployPackage(bytecodeBase64s []string, objectTypeFilters []string) (string, map[string]string) {
+func (r *E2ERunner) suiDeployPackage(
+	bytecodeBase64s []string,
+	extraDependencies []string,
+	objectTypeFilters []string,
+) (string, map[string]string) {
 	client := r.Clients.Sui
 
 	deployerSigner, err := r.Account.SuiSigner()
 	require.NoError(r, err, "get deployer signer")
 	deployerAddress := deployerSigner.Address()
 
+	// aside from the standard framework dependencies, add extra dependencies if provided
+	dependencies := append([]string{
+		"0x1", // Sui Framework
+		"0x2", // Move Standard Library
+	}, extraDependencies...) // other dependencies
+
+	// build the publish transaction and sign it with deployer key
 	publishTx, err := client.Publish(r.Ctx, models.PublishRequest{
 		Sender:          deployerAddress,
 		CompiledModules: bytecodeBase64s,
-		Dependencies: []string{
-			"0x1", // Sui Framework
-			"0x2", // Move Standard Library
-		},
-		GasBudget: "5000000000",
+		Dependencies:    dependencies,
+		GasBudget:       "5000000000",
 	})
 	require.NoError(r, err, "create publish tx")
 
 	signature, err := deployerSigner.SignTxBlock(publishTx)
 	require.NoError(r, err, "sign transaction")
 
+	// execute the publish transaction and wait for it to be executed
 	resp, err := client.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
 		TxBytes:   publishTx.TxBytes,
 		Signature: []string{signature},

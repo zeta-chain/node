@@ -3,6 +3,9 @@ package sui
 import (
 	_ "embed"
 	"encoding/base64"
+	"os"
+
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed gateway.mv
@@ -19,12 +22,6 @@ var arbiCallTokenBinary []byte
 
 //go:embed arbi_call_connected.mv
 var arbiCallConnectedBinary []byte
-
-//go:embed auth_call_token.mv
-var authCallTokenBinary []byte
-
-//go:embed auth_call_connected.mv
-var authCallConnectedBinary []byte
 
 // GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
 func GatewayBytecodeBase64() string {
@@ -51,12 +48,10 @@ func ExampleArbiCallConnectedBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(arbiCallConnectedBinary)
 }
 
-// ExampleAuthCallFungibleTokenBytecodeBase64 gets the authenticated call example package's fungible token binary encoded as base64 for deployment
-func ExampleAuthCallFungibleTokenBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(authCallTokenBinary)
-}
+// ReadMoveBinaryBase64 reads a given move binary file and returns it as base64 encoded string
+func ReadMoveBinaryBase64(t require.TestingT, binaryName string) string {
+	binaryBytes, err := os.ReadFile(binaryName)
+	require.NoError(t, err)
 
-// ExampleAuthCallConnectedBytecodeBase64 gets the authenticated call example package's connected binary encoded as base64 for deployment
-func ExampleAuthCallConnectedBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(authCallConnectedBinary)
+	return base64.StdEncoding.EncodeToString(binaryBytes)
 }
