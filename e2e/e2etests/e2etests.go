@@ -1197,7 +1197,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,
