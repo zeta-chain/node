@@ -61,10 +61,6 @@ additional_accounts:
     bech32_address: "zeta1pvtxa708yvdmszn687nne6nl8qn704daf420xz"
     evm_address: "0x0B166ef9e7231Bb80A7A3FA73CEA7F3827E7D5BD"
     private_key: "0bcc2fa28b526f90e1d54648d612db901e860bf68248555593f91ea801c6b482"
-  user_precompile:
-    bech32_address: "zeta1k4f0l2e9qqjccxnstwj0uaarxvn44lj990she9"
-    evm_address: "0xb552FFAb2500258C1A705Ba4Fe77A333275AFE45"
-    private_key: "bd6b74387f11b31d21e87c2ae7a23ec269aee08a355dad6c508a6fceb79d1f48"
   user_ether:
     bech32_address: "zeta1erlqlpl5da7a9r3emzw60kax9fxc3h0r3z7c5e"
     evm_address: "0xC8fe0F87f46F7Dd28e39D89Da7Dba62A4D88dde3"
