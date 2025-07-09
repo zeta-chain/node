@@ -375,6 +375,7 @@ start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
+	export USE_ZETAE2E_ANTE=true && \
 	export E2E_ARGS="--test-solana" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana -f docker-compose-upgrade.yml up -d
 
@@ -382,8 +383,8 @@ start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=90 && \
+	export USE_ZETAE2E_ANTE=true && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
-
 
 start-upgrade-test-admin: zetanode-upgrade
 	@echo "--> Starting admin upgrade test"

@@ -213,70 +213,85 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
     [[ -n $CI ]] && echo "::group::setup"
     zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" --skip-header-proof
     if [ $? -ne 0 ]; then
-      echo "e2e setup failed"
+      echo "E2E setup failed"
       exit 1
     fi
     [[ -n $CI ]] && echo -e "\n::endgroup::"
   else
-    echo "skipping e2e setup because it has already been completed"
+    echo "Skipping E2E setup because it has already been completed"
   fi
 
-  echo "running e2e test before migrating TSS"
+  echo "Running E2E test before migrating TSS"
   zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"  --skip-header-proof --light --test-tss-migration
   if [ $? -ne 0 ]; then
-    echo "first e2e failed"
+    echo "First E2E failed"
     exit 1
   fi
 
-  echo "waiting 10 seconds for node to restart"
-    sleep 10
+  echo "Waiting 10 seconds for node to restart"
+  sleep 10
 
   zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" \
-    --skip-bitcoin-setup --light --skip-header-proof
+      --skip-bitcoin-setup --light --skip-header-proof
+
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after migration"
     exit 0
-  else
-    echo "E2E failed after migration"
-    exit 1
   fi
+
+  echo "E2E failed after migration"
+  exit 1
 fi
 
-
-# Mode upgrade is used to run the e2e tests before and after the upgrade
-# It runs the e2e tests , waits for the upgrade height to be reached, and then runs the e2e tests again once the ungrade is done.
-# The second e2e test is run after the upgrade to ensure the network is still working as expected with the new version
+# Mode `upgrade` is used to run the E2E before and after chain upgrade. Flow:
+# 1. Setup e2e and run tests (optionally using the prev. zetae2e)
+# 2. Wait for upgrade height to be reached 
+#  - cosmovisor will restart zetaclientd;
+#  - zetaclient-supervisor will download the new version of zetaclientd
+# 3. Run e2e tests again
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
-
-  # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
-
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
   OLD_VERSION=$(get_zetacored_version)
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
+  USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE:=false}
+
+  # if enabled, fetches zetae2e binary from the previous version
+  # ante means "before" in Latin (used in Cosmos terminology)
+  if [ "$USE_ZETAE2E_ANTE" = true ]; then
+    echo "zetae2e-ante: using the PREVIOUS binary ($OLD_VERSION)"
+    scp root@zetacore0:/usr/local/bin/zetae2e /usr/local/bin/zetae2e-ante
+    chmod +x /usr/local/bin/zetae2e-ante
+  else
+    echo "zetae2e-ante: using the LATEST binary"
+    # Here we just aliasing zetae2e-ante to zetae2e
+    zetae2e-ante() {
+      zetae2e "$@"
+    }
+  fi
 
   if [[ ! -f "$deployed_config_path"  ]]; then
     [[ -n $CI ]] && echo "::group::setup"
-    zetae2e local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path"  ${COMMON_ARGS}
+    zetae2e-ante local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
-      echo "e2e setup failed"
+      echo "E2E setup failed"
       exit 1
     fi
     [[ -n $CI ]] && echo -e "\n::endgroup::"
   else
-    echo "skipping e2e setup because it has already been completed"
+    echo "Skipping E2E setup because it has already been completed"
   fi
 
   # Run zetae2e, if the upgrade height is greater than 100 to populate the state
   if [ "$UPGRADE_HEIGHT" -gt 100 ]; then
-    echo "running E2E command to setup the networks and populate the state..."
+    echo "Running E2E command to setup the networks and populate the state..."
 
     # Use light flag to ensure tests can complete before the upgrade height
     # skip-bitcoin-dust-withdraw flag can be removed after v23 is released
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
+    zetae2e-ante local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
-      echo "first e2e failed"
+      echo "First E2E failed"
       exit 1
     fi
   fi
@@ -288,26 +303,25 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   while [[ $CURRENT_HEIGHT -lt $WAIT_HEIGHT ]]
   do
     CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq -r '.result.sync_info.latest_block_height')
-    echo current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
+    echo Current height is "$CURRENT_HEIGHT", waiting for "$WAIT_HEIGHT"
     sleep 2
   done
 
-  echo "waiting 10 seconds for node to restart..."
+  echo "Waiting 10 seconds for node to restart..."
   sleep 10
 
   NEW_VERSION=$(get_zetacored_version)
 
-  echo "upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
+  echo "Upgrade result: ${OLD_VERSION} -> ${NEW_VERSION}"
 
   if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
-    echo "version did not change after upgrade height, maybe the upgrade did not run?"
+    echo "Version did not change after upgrade height, maybe the upgrade did not run?"
     exit 2
   fi
 
   # wait for zevm endpoint to come up
   sleep 10
-
-  echo "running E2E command to test the network after upgrade..."
+  echo "Running E2E command to test the network after upgrade..."
 
   # Run zetae2e again
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
@@ -322,42 +336,42 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
     echo "E2E passed after upgrade"
     exit 0
-  else
-    echo "E2E failed after upgrade"
-    exit 1
   fi
 
-else
-  # If no mode is passed, run the e2e tests normally
-  if [[ ! -f "$deployed_config_path"  ]]; then
-    [[ -n $CI ]] && echo "::group::setup"
-    echo "running e2e setup..."
-    zetae2e local $E2E_ARGS --config config.yml --setup-only --config-out "$deployed_config_path"
-    if [ $? -ne 0 ]; then
-      echo "e2e setup failed"
-      exit 1
-    fi
-    [[ -n $CI ]] && echo -e "\n::endgroup::"
-  else
-    echo "skipping e2e setup because it has already been completed"
-  fi
-
-  if [ "$LOCALNET_MODE" == "setup-only" ]; then
-    exit 0
-  fi
-
-  echo "running e2e tests with arguments: $E2E_ARGS"
-
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"
-  ZETAE2E_EXIT_CODE=$?
-
-  # if e2e passed, exit with 0, otherwise exit with 1
-  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
-    echo "e2e passed"
-    exit 0
-  else
-    echo "e2e failed"
-    exit 1
-  fi
-
+  echo "E2E failed after upgrade"
+  exit 1
 fi
+
+# No mode is passed, run the e2e tests normally
+
+if [[ ! -f "$deployed_config_path"  ]]; then
+  [[ -n $CI ]] && echo "::group::setup"
+  echo "Running E2E setup..."
+  zetae2e local $E2E_ARGS --config config.yml --setup-only --config-out "$deployed_config_path"
+  if [ $? -ne 0 ]; then
+    echo "e2e setup failed"
+    exit 1
+  fi
+  [[ -n $CI ]] && echo -e "\n::endgroup::"
+else
+  echo "Skipping E2E setup because it has already been completed"
+fi
+
+if [ "$LOCALNET_MODE" == "setup-only" ]; then
+  exit 0
+fi
+
+echo "Running e2e tests with arguments: $E2E_ARGS"
+
+zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path"
+ZETAE2E_EXIT_CODE=$?
+
+# if e2e passed, exit with 0, otherwise exit with 1
+if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+  echo "E2E passed"
+  exit 0
+fi
+
+echo "E2E failed"
+exit 1
+

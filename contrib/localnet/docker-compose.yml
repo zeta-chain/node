@@ -323,6 +323,7 @@ services:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+      - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh
