@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"sort"
+	"strings"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -173,10 +174,8 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
-	coinType := coin.CoinType_ERC20
-	if crypto.IsEmptyAddress(event.Asset) {
-		coinType = coin.CoinType_Gas
-	}
+	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
+
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
 	isCrossChainCall := len(event.Payload) > 0
 
@@ -434,10 +433,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
-	coinType := coin.CoinType_ERC20
-	if crypto.IsEmptyAddress(event.Asset) {
-		coinType = coin.CoinType_Gas
-	}
+	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
 
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -461,4 +457,16 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
 	)
+}
+
+// determineCoinType determines the coin type of the inbound event
+func determineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
+	coinType := coin.CoinType_ERC20
+	if crypto.IsEmptyAddress(asset) {
+		return coin.CoinType_Gas
+	}
+	if strings.EqualFold(asset.Hex(), zetaTokenAddress) {
+		return coin.CoinType_Zeta
+	}
+	return coinType
 }

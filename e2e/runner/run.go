@@ -19,7 +19,7 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}
-		if err := r.RunE2ETest(e2eTest, true); err != nil {
+		if err := r.RunE2ETest(e2eTest, false); err != nil {
 			return err
 		}
 	}

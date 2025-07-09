@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -162,15 +163,22 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
-
 	// get connector and erc20Custody contracts
+	// Only one of these connector contracts will be used at one time.
+	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2
+	connectorLegacyAddr, connectorLegacy, err := ob.getConnectorLegacyContract()
+	if err != nil {
+		return true, errors.Wrap(err, "error getting legacy zeta connector")
+	}
+
 	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting zeta connector")
 	}
+
 	custodyAddr, custody, err := ob.getERC20CustodyContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody")
 	}
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
@@ -178,7 +186,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	_, custodyV2, err := ob.getERC20CustodyV2Contract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody v2 for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody v2 for chain")
 	}
 
 	// define a few common variables
@@ -204,13 +212,15 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		receipt,
 		transaction,
 		cointype,
-		connectorAddr,
-		connector,
+		connectorLegacyAddr,
+		connectorLegacy,
 		custodyAddr,
 		custody,
 		custodyV2,
 		gatewayAddr,
 		gateway,
+		connectorAddr,
+		connector,
 	)
 	if err != nil {
 		logger.Error().
@@ -241,6 +251,8 @@ func parseOutboundReceivedValue(
 	custodyV2 *erc20custody.ERC20Custody,
 	gatewayAddress ethcommon.Address,
 	gateway *gatewayevm.GatewayEVM,
+	connectorNativeAddress ethcommon.Address,
+	connectorNative *zetaconnectornative.ZetaConnectorNative,
 ) (*big.Int, chains.ReceiveStatus, error) {
 	// determine the receive status and value
 	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
@@ -253,7 +265,17 @@ func parseOutboundReceivedValue(
 
 	// parse outbound event for protocol contract v2
 	if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return parseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway)
+		return parseOutboundEventV2(
+			cctx,
+			receipt,
+			transaction,
+			custodyAddress,
+			custodyV2,
+			gatewayAddress,
+			gateway,
+			connectorNativeAddress,
+			connectorNative,
+		)
 	}
 
 	// parse receive value from the outbound receipt for Zeta and ERC20

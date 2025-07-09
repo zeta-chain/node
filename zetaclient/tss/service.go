@@ -418,9 +418,6 @@ func keysignLogFields(req keysign.Request, nonce uint64, chainID int64) map[stri
 	}
 }
 
-// must should never fail. used for request.MsgID() which calls
-// crypto/sha256/sha256.go: (*digest).Write()
-// It implements Writer but never fails.
 func must[T any](v T, err error) T {
 	if err != nil {
 		panic(errors.Wrap(err, "must"))
