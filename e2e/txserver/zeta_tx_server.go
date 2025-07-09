@@ -13,6 +13,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cenkalti/backoff/v4"
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -40,6 +41,7 @@ import (
 	"github.com/zeta-chain/ethermint/crypto/hd"
 	etherminttypes "github.com/zeta-chain/ethermint/types"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/node/pkg/retry"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -244,39 +246,55 @@ func (zts *ZetaTxServer) GetAccountMnemonic(index int) string {
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
 // and waiting for blockTime for tx to be included in the block
 func (zts *ZetaTxServer) BroadcastTx(account string, msgs ...sdktypes.Msg) (*sdktypes.TxResponse, error) {
-	// Find number and sequence and set it
-	acc, err := zts.clientCtx.Keyring.Key(account)
-	if err != nil {
-		return nil, err
-	}
-	addr, err := acc.GetAddress()
-	if err != nil {
-		return nil, err
-	}
-	accountNumber, accountSeq, err := zts.clientCtx.AccountRetriever.GetAccountNumberSequence(zts.clientCtx, addr)
-	if err != nil {
-		return nil, err
-	}
-	zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
+	bo := backoff.NewConstantBackOff(5 * time.Second)
+	boWithMaxRetries := backoff.WithMaxRetries(bo, 5)
 
-	txBuilder, err := zts.txFactory.BuildUnsignedTx(msgs...)
-	if err != nil {
-		return nil, err
-	}
-	// increase gas and fees if multiple messages are provided
-	txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
-	txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
+	return retry.DoTypedWithBackoff(func() (*sdktypes.TxResponse, error) {
+		// Find number and sequence and set it
+		acc, err := zts.clientCtx.Keyring.Key(account)
+		if err != nil {
+			return nil, err
+		}
 
-	// Sign tx
-	err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
-	if err != nil {
-		return nil, err
-	}
-	txBytes, err := zts.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	if err != nil {
-		return nil, err
-	}
-	return broadcastWithBlockTimeout(zts, txBytes)
+		addr, err := acc.GetAddress()
+		if err != nil {
+			return nil, err
+		}
+
+		accountNumber, accountSeq, err := zts.clientCtx.AccountRetriever.GetAccountNumberSequence(zts.clientCtx, addr)
+		if err != nil {
+			return nil, retry.Retry(err)
+		}
+
+		zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
+
+		txBuilder, err := zts.txFactory.BuildUnsignedTx(msgs...)
+		if err != nil {
+			return nil, retry.Retry(err)
+		}
+
+		// increase gas and fees if multiple messages are provided
+		txBuilder.SetGasLimit(zts.txFactory.Gas() * uint64(len(msgs)))
+		txBuilder.SetFeeAmount(zts.txFactory.Fees().MulInt(sdkmath.NewInt(int64(len(msgs)))))
+
+		// Sign tx
+		err = tx.Sign(context.TODO(), zts.txFactory, account, txBuilder, true)
+		if err != nil {
+			return nil, retry.Retry(err)
+		}
+
+		txBytes, err := zts.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+		if err != nil {
+			return nil, retry.Retry(err)
+		}
+
+		result, err := broadcastWithBlockTimeout(zts, txBytes)
+		if err != nil {
+			return nil, retry.Retry(err)
+		}
+
+		return result, nil
+	}, boWithMaxRetries)
 }
 
 func broadcastWithBlockTimeout(zts *ZetaTxServer, txBytes []byte) (*sdktypes.TxResponse, error) {
