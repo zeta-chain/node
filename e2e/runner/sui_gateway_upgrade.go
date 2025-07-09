@@ -102,6 +102,7 @@ func (r *E2ERunner) suiPatchMoveConfig(path, text, value string) {
 	moveTomlFile := filepath.Join(path, "Move.toml")
 
 	// read the entire Move.toml file
+	// #nosec G304 -- this is a config file for example package
 	content, err := os.ReadFile(moveTomlFile)
 	require.NoError(r, err, "unable to read "+moveTomlFile)
 	contentStr := string(content)

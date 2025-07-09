@@ -50,6 +50,7 @@ func ExampleArbiCallConnectedBytecodeBase64() string {
 
 // ReadMoveBinaryBase64 reads a given move binary file and returns it as base64 encoded string
 func ReadMoveBinaryBase64(t require.TestingT, binaryName string) string {
+	// #nosec G304 -- this is a binary for E2E test
 	binaryBytes, err := os.ReadFile(binaryName)
 	require.NoError(t, err)
 
