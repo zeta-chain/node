@@ -12,6 +12,7 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
 	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
@@ -22,6 +23,7 @@ const (
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
 	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
 	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
 	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
@@ -359,6 +361,13 @@ var AllE2ETests = []runner.E2ETest{
 		TestETHDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestETHDepositAndCallBigPayloadName,
+		"deposit Ether to ZetaChain call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHDepositAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
 		TestETHDepositFastConfirmationName,
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
@@ -422,6 +431,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallBigPayloadName,
+		"withdraw Ether from ZEVM call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHWithdrawAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,
