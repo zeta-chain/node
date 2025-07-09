@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -198,6 +199,43 @@ func TestParsing(t *testing.T) {
 		assert.Equal(t, callData, "0x"+hex.EncodeToString(depositAndCall.CallData))
 	})
 
+	t.Run("Call ABI", func(t *testing.T) {
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "08-call-abi")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+
+		// Check tx props
+		assert.Equal(t, int(OpCall), int(parsedTX.Operation))
+
+		// Check call
+		call, err := parsedTX.Call()
+		assert.NoError(t, err)
+
+		// Check that call data is valid and also is ABI encoded
+		// cast abi-encode "fn(string)" "ping-pong"
+		const abiDef = `[{"name":"fn", "type":"function", "inputs":[{"type":"string"}]}]`
+
+		parsedABI, err := abi.JSON(strings.NewReader(abiDef))
+		require.NoError(t, err)
+
+		args, err := parsedABI.Methods["fn"].Inputs.Unpack(call.CallData)
+		require.NoError(t, err)
+		require.Len(t, args, 1)
+
+		assert.Equal(t, "ping-pong", args[0].(string))
+		assert.Equal(t, "0:74a36900b786949a60c95ee20a56e583f908f2e957f3ffcb1e9770cc9edd408d", call.Sender.ToRaw())
+		assert.Equal(t, "0xA1eb8D65b765D259E7520B791bc4783AdeFDd998", call.Recipient.Hex())
+	})
+
 	t.Run("Withdrawal", func(t *testing.T) {
 		// ARRANGE
 		// Given a tx
@@ -232,6 +270,37 @@ func TestParsing(t *testing.T) {
 
 		// Expect TSS signer address
 		signer, err := w.Signer()
+		require.NoError(t, err)
+
+		const expectedTSS = "0xFA033cebd2EB4A800F74d70C10dfc8710fF0d148"
+		assert.Equal(t, expectedTSS, signer.Hex())
+	})
+
+	t.Run("IncreaseSeqno", func(t *testing.T) {
+		// ARRANGE
+		// Given a tx
+		tx, fx := getFixtureTX(t, "09-increase-seqno")
+
+		// Given a gateway contract
+		gw := NewGateway(ton.MustParseAccountID(fx.Account))
+
+		// ACT
+		parsedTX, err := gw.ParseTransaction(tx)
+
+		// ASSERT
+		require.NoError(t, err)
+		assert.Equal(t, OpIncreaseSeqno, parsedTX.Operation)
+		assert.Zero(t, parsedTX.ExitCode)
+
+		// Check withdrawal
+		is, err := parsedTX.IncreaseSeqno()
+		require.NoError(t, err)
+
+		// Expect reason code
+		require.Equal(t, uint32(1337), is.ReasonCode)
+
+		// Expect TSS signer address
+		signer, err := is.Signer()
 		require.NoError(t, err)
 
 		const expectedTSS = "0xFA033cebd2EB4A800F74d70C10dfc8710fF0d148"

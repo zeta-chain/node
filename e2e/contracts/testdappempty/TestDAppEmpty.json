@@ -1,0 +1,125 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes",
+              "name": "sender",
+              "type": "bytes"
+            },
+            {
+              "internalType": "address",
+              "name": "senderEVM",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "chainID",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct TestDAppEmpty.zContext",
+          "name": "context",
+          "type": "tuple"
+        },
+        {
+          "internalType": "address",
+          "name": "_zrc20",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "message",
+          "type": "bytes"
+        }
+      ],
+      "name": "onCall",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct TestDAppEmpty.MessageContext",
+          "name": "messageContext",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "message",
+          "type": "bytes"
+        }
+      ],
+      "name": "onCall",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "asset",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "revertMessage",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct TestDAppEmpty.RevertContext",
+          "name": "revertContext",
+          "type": "tuple"
+        }
+      ],
+      "name": "onRevert",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bin": "6080604052348015600f57600080fd5b506104858061001f6000396000f3fe6080604052600436106100385760003560e01c80635bcfd61614610044578063676cc0541461006d578063c9028a361461009d5761003f565b3661003f57005b600080fd5b34801561005057600080fd5b5061006b60048036038101906100669190610212565b6100c6565b005b610087600480360381019061008291906102d5565b6100cd565b60405161009491906103c5565b60405180910390f35b3480156100a957600080fd5b506100c460048036038101906100bf9190610406565b6100e8565b005b5050505050565b60606040518060200160405280600081525090509392505050565b50565b600080fd5b600080fd5b600080fd5b6000606082840312156101105761010f6100f5565b5b81905092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600061014482610119565b9050919050565b61015481610139565b811461015f57600080fd5b50565b6000813590506101718161014b565b92915050565b6000819050919050565b61018a81610177565b811461019557600080fd5b50565b6000813590506101a781610181565b92915050565b600080fd5b600080fd5b600080fd5b60008083601f8401126101d2576101d16101ad565b5b8235905067ffffffffffffffff8111156101ef576101ee6101b2565b5b60208301915083600182028301111561020b5761020a6101b7565b5b9250929050565b60008060008060006080868803121561022e5761022d6100eb565b5b600086013567ffffffffffffffff81111561024c5761024b6100f0565b5b610258888289016100fa565b955050602061026988828901610162565b945050604061027a88828901610198565b935050606086013567ffffffffffffffff81111561029b5761029a6100f0565b5b6102a7888289016101bc565b92509250509295509295909350565b6000602082840312156102cc576102cb6100f5565b5b81905092915050565b6000806000604084860312156102ee576102ed6100eb565b5b60006102fc868287016102b6565b935050602084013567ffffffffffffffff81111561031d5761031c6100f0565b5b610329868287016101bc565b92509250509250925092565b600081519050919050565b600082825260208201905092915050565b60005b8381101561036f578082015181840152602081019050610354565b60008484015250505050565b6000601f19601f8301169050919050565b600061039782610335565b6103a18185610340565b93506103b1818560208601610351565b6103ba8161037b565b840191505092915050565b600060208201905081810360008301526103df818461038c565b905092915050565b6000608082840312156103fd576103fc6100f5565b5b81905092915050565b60006020828403121561041c5761041b6100eb565b5b600082013567ffffffffffffffff81111561043a576104396100f0565b5b610446848285016103e7565b9150509291505056fea26469706673582212200137f7f41c83c091d3d75f57459459833158a855c08d2ba7413098558ee6322964736f6c634300081a0033"
+}

@@ -12,6 +12,7 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
 	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
@@ -22,6 +23,7 @@ const (
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
 	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
 	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
 	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
@@ -94,7 +96,10 @@ const (
 	TestTONDepositAndCallName       = "ton_deposit_and_call"
 	TestTONDepositAndCallRefundName = "ton_deposit_refund"
 	TestTONDepositRestrictedName    = "ton_deposit_restricted"
+	TestTONCallName                 = "ton_to_zevm_call"
 	TestTONWithdrawName             = "ton_withdraw"
+	TestTONWithdrawRestrictedName   = "ton_withdraw_restricted"
+	TestTONWithdrawMasterchainName  = "ton_withdraw_masterchain"
 	TestTONWithdrawConcurrentName   = "ton_withdraw_concurrent"
 
 	/*
@@ -310,6 +315,13 @@ var AllE2ETests = []runner.E2ETest{
 		TestETHDepositAndCall,
 	),
 	runner.NewE2ETest(
+		TestETHDepositAndCallBigPayloadName,
+		"deposit Ether to ZetaChain call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHDepositAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
 		TestETHDepositFastConfirmationName,
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
@@ -373,6 +385,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallBigPayloadName,
+		"withdraw Ether from ZEVM call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHWithdrawAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,
@@ -862,12 +881,36 @@ var AllE2ETests = []runner.E2ETest{
 		TestTONDepositRestricted,
 	),
 	runner.NewE2ETest(
+		TestTONCallName,
+		"call TON into ZEVM",
+		[]runner.ArgDefinition{},
+		TestTONToZEVMCall,
+	),
+	runner.NewE2ETest(
 		TestTONWithdrawName,
 		"withdraw TON from ZEVM",
 		[]runner.ArgDefinition{
 			{Description: "amount in nano tons", DefaultValue: "2000000000"}, // 2.0 TON
 		},
 		TestTONWithdraw,
+	),
+	runner.NewE2ETest(
+		TestTONWithdrawRestrictedName,
+		"withdraw TON from ZEVM to restricted address (compliance check)",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		// TON address starts with an chain index (0:... or -1:...)
+		// Zetachain operates only on base chain (0:)
+		TestTONWithdrawMasterchainName,
+		"withdraw TON from ZEVM to masterchain that is a consensus chain rather than a base workchain",
+		[]runner.ArgDefinition{
+			{Description: "amount in nano tons", DefaultValue: "100000000"}, // 0.1 TON
+		},
+		TestTONWithdrawMasterchain,
 	),
 	runner.NewE2ETest(
 		TestTONWithdrawConcurrentName,
@@ -1133,7 +1176,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,
