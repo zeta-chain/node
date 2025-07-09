@@ -38,3 +38,6 @@ process_files() {
 
 # Start processing from the given directory
 process_files $DIR
+
+# Rename all .md files to .mdx in the output directory
+find "$DIR" -type f -name '*.md' -exec sh -c 'mv "$0" "${0%.md}.mdx"' {} \;

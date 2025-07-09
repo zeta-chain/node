@@ -98,7 +98,7 @@ func processProtoFile(path string, outputBaseDir string) error {
 		}
 
 		// Constructing safeOutputFile using filepath.Join to avoid file inclusion
-		safeOutputFile := filepath.Join(outputDir, "messages.md")
+		safeOutputFile := filepath.Join(outputDir, "messages.mdx")
 		// #nosec G304
 		file, err := os.Create(safeOutputFile)
 		if err != nil {
