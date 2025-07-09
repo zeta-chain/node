@@ -305,7 +305,7 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 		r.Account.EVMAddress().Hex(),
 		gatewayZEVMAddr.Hex(),
 	)
-	proxyAddress, txProxy, _, err := erc1967proxy.DeployERC1967Proxy(
+	proxyAddress, txProxyGatewayZEVM, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.ZEVMAuth,
 		r.ZEVMClient,
 		gatewayZEVMAddr,
@@ -327,8 +327,6 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	coreRegistryAddr, txCoreRegistry, _, err := coreregistry.DeployCoreRegistry(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
 	ensureTxReceipt(txCoreRegistry, "CoreRegistry deployment failed")
-
-	r.Logger.Print("CoreRegistry deployed at: %s", coreRegistryAddr.Hex())
 
 	coreRegistryABI, err := coreregistry.CoreRegistryMetaData.GetAbi()
 	require.NoError(r, err)
@@ -371,7 +369,7 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
 	require.NoError(r, err)
 
-	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
+	ensureTxReceipt(txProxyGatewayZEVM, "GatewayZEVM proxy deployment failed")
 	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 	ensureTxReceipt(txProxyCoreRegistry, "CoreRegistry proxy deployment failed")
 
