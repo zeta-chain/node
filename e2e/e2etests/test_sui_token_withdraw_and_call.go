@@ -12,13 +12,14 @@ import (
 )
 
 func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
 	// Given target package ID (example package) and a token amount
 	targetPackage := r.SuiExampleArbiCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// use the deployer address as on_call payload message
 	signer, err := r.Account.SuiSigner()
@@ -38,11 +39,12 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
 	// perform the fungible token withdraw and call
-	tx := r.SuiWithdrawAndCallFungibleToken(
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
+		r.SuiTokenZRC20Addr,
 		payloadOnCall,
-		true,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")

@@ -16,13 +16,14 @@ import (
 // The outbound is rejected by the connected module due to the special payload message "revert" and the
 // 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
 	// Given target package ID (example package) and a token amount
 	targetPackage := r.SuiExampleArbiCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// create the special revert payload for 'on_call'
 	revertPayloadOnCall := r.SuiCreateExampleWACPayloadForRevert(targetPackage)
@@ -42,11 +43,12 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call with revert options
-	tx := r.SuiWithdrawAndCallFungibleToken(
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
+		r.SuiTokenZRC20Addr,
 		revertPayloadOnCall,
-		true,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

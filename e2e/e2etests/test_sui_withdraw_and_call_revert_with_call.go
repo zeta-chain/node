@@ -17,13 +17,14 @@ import (
 // The outbound is rejected by the connected module due to invalid payload (invalid address),
 // and the 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example package), SUI amount and gas limit
 	targetPackage := r.SuiExampleArbiCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// create the payload for 'on_call' with invalid address
 	// taking the first 10 letters to form an invalid payload
@@ -44,11 +45,12 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call with revert options
-	tx := r.SuiWithdrawAndCallSUI(
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
+		r.SUIZRC20Addr,
 		invalidPayloadOnCall,
-		true,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

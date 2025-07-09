@@ -12,13 +12,14 @@ import (
 )
 
 func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example authenticated call package) and a SUI amount
+	// Given target package ID (example authenticated call package), SUI amount and gas limit
 	targetPackage := r.SuiExampleAuthCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// use the deployer address as on_call payload message
 	signer, err := r.Account.SuiSigner()
@@ -37,11 +38,12 @@ func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw and call
-	tx := r.SuiWithdrawAndCallSUI(
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
+		r.SUIZRC20Addr,
 		payloadOnCall,
-		false,
+		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_authenticated_call")

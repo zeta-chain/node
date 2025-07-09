@@ -989,6 +989,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SUI from ZEVM and call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCall,
 		runner.WithMinimumVersion("v30.0.0"),
@@ -1007,6 +1008,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SUI from ZEVM and call a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCallRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
@@ -1016,6 +1018,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw SUI from ZEVM and makes an authenticated call to a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndAuthenticatedCall,
 		runner.WithMinimumVersion("v32.0.0"),
@@ -1034,6 +1037,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw fungible token from ZEVM and call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCall,
 		runner.WithMinimumVersion("v30.0.0"),
@@ -1043,6 +1047,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw fungible token from ZEVM and call a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
 			{Description: "amount in base unit", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
