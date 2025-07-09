@@ -180,7 +180,7 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 		return err
 	}
 	if custodyBalance.Cmp(erc20zrc20Supply) < 0 {
-		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", custodyBalance, erc20zrc20Supply)
+		return fmt.Errorf("ERC20: custody balance (%d) < ZRC20 TotalSupply (%d) ", custodyBalance, erc20zrc20Supply)
 	}
 	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyBalance, erc20zrc20Supply)
 	return nil
