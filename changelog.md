@@ -4,8 +4,6 @@
 
 ### Features
 
-* [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
-* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 * [3961](https://github.com/zeta-chain/node/pull/3961) - cosmos v53 upgrade
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 
