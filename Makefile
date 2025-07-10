@@ -350,16 +350,15 @@ start-legacy-test: e2e-images
 ###############################################################################
 
 # build from source only if requested
-# NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on lastest-runtime
+# NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on latest-runtime
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
 		--build-arg OLD_VERSION='release/v31' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
-		--build-arg NODE_COMMIT=$(NODE_COMMIT)
+		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
-.PHONY: zetanode-upgrade
 else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
@@ -368,8 +367,9 @@ zetanode-upgrade: e2e-images
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
-.PHONY: zetanode-upgrade
 endif
+
+.PHONY: zetanode-upgrade
 
 start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"

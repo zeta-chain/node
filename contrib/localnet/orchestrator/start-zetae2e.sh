@@ -268,14 +268,12 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
     chmod +x /usr/local/bin/zetae2e-ante
   else
     echo "zetae2e-ante: using the LATEST binary"
-    # Here we just aliasing zetae2e-ante to zetae2e
-    zetae2e-ante() {
-      zetae2e "$@"
-    }
+    ln -sf "$(command -v zetae2e)" /usr/local/bin/zetae2e-ante
   fi
 
   if [[ ! -f "$deployed_config_path"  ]]; then
     [[ -n $CI ]] && echo "::group::setup"
+    echo "Running E2E setup..."
     zetae2e-ante local $E2E_ARGS --setup-only --config config.yml --config-out "$deployed_config_path" ${COMMON_ARGS}
     if [ $? -ne 0 ]; then
       echo "E2E setup failed"
