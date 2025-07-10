@@ -84,6 +84,23 @@ builds:
     flags: *default_flags
     ldflags: *default_ldflags
 
+  - id: "zetae2e"
+    main: ./cmd/zetae2e
+    binary: "zetae2e-{{ .Os }}-{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: *default_flags
+    ldflags: *default_ldflags
+
 archives:
   - format: binary
     name_template: "{{ .Binary }}"
