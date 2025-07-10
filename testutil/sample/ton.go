@@ -126,6 +126,28 @@ func TONDepositAndCallProps(t *testing.T, acc ton.AccountID, d toncontracts.Depo
 	}
 }
 
+func TONCall(t *testing.T, acc ton.AccountID, c toncontracts.Call) ton.Transaction {
+	return TONTransaction(t, TONCallProps(t, acc, c))
+}
+
+func TONCallProps(t *testing.T, acc ton.AccountID, c toncontracts.Call) TONTransactionProps {
+	body, err := c.AsBody()
+	require.NoError(t, err)
+
+	return TONTransactionProps{
+		Account: acc,
+		Input: &tlb.Message{
+			Info: internalMessageInfo(&intMsgInfo{
+				Bounce: true,
+				Src:    c.Sender.ToMsgAddress(),
+				Dest:   acc.ToMsgAddress(),
+				Value:  tlb.CurrencyCollection{Grams: tlb.Coins(tonSampleTxFee)},
+			}),
+			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
+		},
+	}
+}
+
 func TONWithdrawal(t *testing.T, acc ton.AccountID, w toncontracts.Withdrawal) ton.Transaction {
 	return TONTransaction(t, TONWithdrawalProps(t, acc, w))
 }
@@ -147,6 +169,23 @@ func TONWithdrawalProps(t *testing.T, acc ton.AccountID, w toncontracts.Withdraw
 				Dest:        w.Recipient.ToMsgAddress(),
 				Value:       tlb.CurrencyCollection{Grams: tlb.Coins(w.Amount.Uint64())},
 			}),
+		},
+	}
+}
+
+func TONIncreaseSeqno(t *testing.T, acc ton.AccountID, is toncontracts.IncreaseSeqno) ton.Transaction {
+	return TONTransaction(t, TONIncreaseSeqnoProps(t, acc, is))
+}
+
+func TONIncreaseSeqnoProps(t *testing.T, acc ton.AccountID, is toncontracts.IncreaseSeqno) TONTransactionProps {
+	body, err := is.AsBody()
+	require.NoError(t, err)
+
+	return TONTransactionProps{
+		Account: acc,
+		Input: &tlb.Message{
+			Info: externalMessageInfo(acc),
+			Body: tlb.EitherRef[tlb.Any]{Value: tlb.Any(*body)},
 		},
 	}
 }

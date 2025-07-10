@@ -7,17 +7,18 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+
 	"github.com/zeta-chain/node/e2e/contracts/erc1967proxy"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	e2eutils "github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/node/pkg/contracts/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
-	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 )
 
 // SetupZEVM setup protocol contracts for the ZEVM
@@ -157,7 +158,12 @@ func (r *E2ERunner) deployCoreRegistry() {
 	require.NoError(r, err)
 
 	// Encode the initializer data
-	initializerData, err := coreRegistryABI.Pack("initialize", r.Account.EVMAddress(), r.Account.EVMAddress(), r.GatewayZEVMAddr)
+	initializerData, err := coreRegistryABI.Pack(
+		"initialize",
+		r.Account.EVMAddress(),
+		r.Account.EVMAddress(),
+		r.GatewayZEVMAddr,
+	)
 	require.NoError(r, err)
 
 	// Deploy the proxy contract for the CoreRegistry

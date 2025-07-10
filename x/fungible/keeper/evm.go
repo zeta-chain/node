@@ -280,11 +280,11 @@ func (k Keeper) DepositZeta(
 		return nil, err
 	}
 
-	systemcontract, found := k.GetSystemContract(ctx)
+	systemContract, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "GetSystemContract address not found")
 	}
-	gateway := common.HexToAddress(systemcontract.Gateway)
+	gateway := common.HexToAddress(systemContract.Gateway)
 	return k.CallEVM(
 		ctx,
 		*gatewayAbi,

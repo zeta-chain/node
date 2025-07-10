@@ -19,7 +19,7 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}
-		if err := r.RunE2ETest(e2eTest, true); err != nil {
+		if err := r.RunE2ETest(e2eTest, false); err != nil {
 			return err
 		}
 	}
@@ -50,15 +50,13 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	go func() {
 		defer func() {
 			if recoverVal := recover(); recoverVal != nil {
-				switch recoverVal.(type) {
-				case runtime.Error:
-					// this is a probably a nil dereference or divide by zero which we would want to log
-					buf := make([]byte, 4096)
-					n := runtime.Stack(buf, false)
-					r.Logger.Info("panic: %s", string(buf[:n]))
-				}
+				buf := make([]byte, 4096)
+				n := runtime.Stack(buf, false)
+				r.Logger.Print("panic: %+v. Stack: %s", recoverVal, string(buf[:n]))
+
 				errChan <- fmt.Errorf("panic: %v", recoverVal)
 			}
+
 			close(errChan)
 		}()
 		e2eTest.E2ETest(r, args)

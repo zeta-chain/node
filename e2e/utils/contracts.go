@@ -44,17 +44,13 @@ func MustHaveCalledExampleContractWithMsg(
 ) {
 	bar, err := contract.Bar(&bind.CallOpts{})
 	require.NoError(t, err)
-	require.Equal(
-		t,
-		amount.Uint64(),
-		bar.Uint64(),
-	)
+	require.Equal(t, amount.Uint64(), bar.Uint64(), "amount mismatch")
 
 	lastMsg, err := contract.LastMessage(&bind.CallOpts{})
 	require.NoError(t, err)
-	require.Equal(t, string(msg), string(lastMsg))
+	require.Equal(t, string(msg), string(lastMsg), "message mismatch")
 
 	actualSender, err := contract.LastSender(&bind.CallOpts{})
 	require.NoError(t, err)
-	require.EqualValues(t, sender, actualSender)
+	require.EqualValues(t, sender, actualSender, "sender mismatch")
 }

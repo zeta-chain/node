@@ -88,23 +88,19 @@ func parseAndCheckGatewayExecuted(
 		}
 		// destination
 		if !strings.EqualFold(executed.Destination.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					executed.Destination.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				executed.Destination.Hex(),
+			)
 		}
 		// amount
 		if executed.Value.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					executed.Value.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				executed.Value.String(),
+			)
 		}
 		// data
 		if err := checkCCTXMessage(executed.Data, cctx.RelayedMessage); err != nil {
@@ -142,33 +138,27 @@ func parseAndCheckGatewayReverted(
 		}
 		// destination
 		if !strings.EqualFold(reverted.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					reverted.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				reverted.To.Hex(),
+			)
 		}
 		// token
 		if !strings.EqualFold(reverted.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					reverted.Token.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				reverted.Token.Hex(),
+			)
 		}
 		// amount
 		if reverted.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					reverted.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				reverted.Amount.String(),
+			)
 		}
 
 		return reverted.Amount, chains.ReceiveStatus_success, nil
@@ -202,23 +192,19 @@ func parseAndCheckZetaConnectorWithdraw(
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					withdrawn.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
 		}
 		// amount
 		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					withdrawn.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
 		}
 
 		return withdrawn.Amount, chains.ReceiveStatus_success, nil
@@ -252,33 +238,27 @@ func parseAndCheckERC20CustodyWithdraw(
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					withdrawn.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
 		}
 		// token
 		if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					withdrawn.Token.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				withdrawn.Token.Hex(),
+			)
 		}
 		// amount
 		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					withdrawn.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
 		}
 
 		return withdrawn.Amount, chains.ReceiveStatus_success, nil
@@ -312,33 +292,27 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					withdrawn.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
 		}
 		// token
 		if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					withdrawn.Token.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				withdrawn.Token.Hex(),
+			)
 		}
 		// amount
 		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					withdrawn.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
 		}
 		// data
 		if err := checkCCTXMessage(withdrawn.Data, cctx.RelayedMessage); err != nil {
