@@ -10,6 +10,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -24,9 +25,10 @@ func (c *Client) MonitorVoteOutboundResult(
 	defer func() {
 		if r := recover(); r != nil {
 			c.logger.Error().
-				Interface("panic", r).
-				Str("outbound.hash", zetaTxHash).
-				Msg("monitorVoteOutboundResult: recovered from panic")
+				Any("panic", r).
+				Str(logs.FieldZetaTx, zetaTxHash).
+				Str(logs.FieldMethod, "monitorVoteOutboundResult").
+				Msg("Recovered from panic")
 		}
 	}()
 
@@ -37,8 +39,9 @@ func (c *Client) MonitorVoteOutboundResult(
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)
 	if err != nil {
 		c.logger.Error().Err(err).
-			Str("outbound.hash", zetaTxHash).
-			Msg("monitorVoteOutboundResult: unable to query tx result")
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldMethod, "monitorVoteOutboundResult").
+			Msg("Unable to query tx result")
 
 		return err
 	}
@@ -59,7 +62,7 @@ func (c *Client) monitorVoteOutboundResult(
 	}
 
 	logFields := map[string]any{
-		"outbound.hash":    zetaTxHash,
+		logs.FieldZetaTx:   zetaTxHash,
 		"outbound.raw_log": txResult.RawLog,
 	}
 

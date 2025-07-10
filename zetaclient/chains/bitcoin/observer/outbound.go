@@ -108,12 +108,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		gasRetryLimit = 0
 	)
 
-	params := *cctx.GetCurrentOutboundParam()
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	var (
+		params     = *cctx.GetCurrentOutboundParam()
+		nonce      = cctx.GetCurrentOutboundParam().TssNonce
+		outboundID = ob.OutboundID(nonce)
+		logger     = ob.logger.Outbound.With().
+				Uint64(logs.FieldNonce, nonce).
+				Str(logs.FieldOutboundID, outboundID).
+				Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
+				Logger()
+	)
 
-	// get broadcasted outbound and tx result
-	outboundID := ob.OutboundID(nonce)
-	ob.Logger().Outbound.Info().Msgf("VoteOutboundIfConfirmed %s", outboundID)
+	logger.Info().Msg("VoteOutboundIfConfirmed")
 
 	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
@@ -133,7 +139,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
-			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is nonce 0", outboundID)
+			logger.Info().Msg("VoteOutboundIfConfirmed: outbound is nonce 0")
 			return false, nil
 		}
 
@@ -147,10 +153,10 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 
 	// #nosec G115 always in range
 	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
-		ob.logger.Outbound.Debug().
-			Int64("currentConfirmations", res.Confirmations).
-			Uint64("requiredConfirmations", ob.ChainParams().OutboundConfirmationSafe()).
-			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
+		logger.Debug().
+			Int64("confirmations.current", res.Confirmations).
+			Uint64("confirmations.required", ob.ChainParams().OutboundConfirmationSafe()).
+			Msg("Outbound not confirmed yet")
 
 		return false, nil
 	}
@@ -158,11 +164,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	// Get outbound block height
 	blockHeight, err := ob.rpc.GetBlockHeightByStr(ctx, res.BlockHash)
 	if err != nil {
-		return false, errors.Wrapf(
-			err,
-			"VoteOutboundIfConfirmed: error getting block height by hash %s",
-			res.BlockHash,
-		)
+		return false, errors.Wrapf(err, "error getting block height by hash %s", res.BlockHash)
 	}
 
 	var (
@@ -201,20 +203,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
 	logFields := map[string]any{
-		"outbound.external_tx_hash": res.TxID,
-		"outbound.nonce":            nonce,
-		"outbound.zeta_tx_hash":     zetaHash,
-		"outbound.ballot":           ballot,
+		logs.FieldTx:     res.TxID,
+		logs.FieldZetaTx: zetaHash,
+		logs.FieldBallot: ballot,
 	}
 
 	if err != nil {
-		ob.Logger().
-			Outbound.Error().
+		logger.Error().
 			Err(err).
 			Fields(logFields).
-			Msg("VoteOutboundIfConfirmed: error confirming bitcoin outbound")
+			Msg("Error confirming outbound")
 	} else if zetaHash != "" {
-		ob.Logger().Outbound.Info().Fields(logFields).Msgf("VoteOutboundIfConfirmed: confirmed Bitcoin outbound")
+		logger.Info().Fields(logFields).Msg("Outbound confirmed")
 	}
 
 	return false, nil

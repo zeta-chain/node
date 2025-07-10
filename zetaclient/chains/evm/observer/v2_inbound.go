@@ -135,7 +135,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Deposited event")
+				Msg("Invalid Deposit event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -162,7 +162,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple Deposited events in same tx")
+				Msg("Multiple Deposited events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -270,7 +270,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Called event")
+				Msg("Invalid Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -294,9 +294,13 @@ func (ob *Observer) parseAndValidateCallEvents(
 	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().Stringer(logs.FieldTx, event.Raw.TxHash).Msg("multiple Called events in same tx")
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("Multiple Call events in same tx")
+
 			continue
 		}
+
 		guard[event.Raw.TxHash.Hex()] = true
 		filtered = append(filtered, event)
 	}
@@ -393,7 +397,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid DepositedAndCalled event")
+				Msg("Invalid DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)
@@ -420,7 +424,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple DepositedAndCalled events in same tx")
+				Msg("Multiple DepositedAndCalled events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
