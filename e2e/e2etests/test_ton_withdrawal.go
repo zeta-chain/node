@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -41,10 +42,9 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
 	amount := utils.ParseUint(r, args[0])
 	r.Logger.Info("Amount to withdraw: %s", toncontracts.FormatCoins(amount))
-	approvedAmount := amount.Add(toncontracts.Coins(1))
 
 	// ACT
-	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), approvedAmount.BigInt())
+	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), gatewayzevm.RevertOptions{})
 
 	// ASSERT
 	r.Logger.Info(

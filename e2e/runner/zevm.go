@@ -179,8 +179,6 @@ func (r *E2ERunner) ERC20Withdraw(
 	amount *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
-
-	r.Logger.Print("Creating ERC20 withdraw :", r.ERC20ZRC20Addr)
 	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		receiver.Bytes(),
@@ -197,7 +195,7 @@ func (r *E2ERunner) ERC20Withdraw(
 func (r *E2ERunner) ZetaWithdraw(
 	receiver ethcommon.Address,
 	amount *big.Int,
-	chainId *big.Int,
+	chainID *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	oldAmount := r.ZEVMAuth.Value
@@ -208,7 +206,7 @@ func (r *E2ERunner) ZetaWithdraw(
 	tx, err := r.GatewayZEVM.Withdraw(
 		r.ZEVMAuth,
 		receiver.Bytes(),
-		chainId,
+		chainID,
 		revertOptions,
 	)
 	require.NoError(r, err)

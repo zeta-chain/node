@@ -7,9 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
+
 	"github.com/zeta-chain/node/e2e/txserver"
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 )
 
 // SetupZRC20 setup ZRC20 for the ZEVM
@@ -45,7 +46,6 @@ func (r *E2ERunner) SetupZRC20(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
 	r.activateChainsOnRegistry()
-
 }
 
 func (r *E2ERunner) activateChainsOnRegistry() {

@@ -168,17 +168,17 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2
 	connectorLegacyAddr, connectorLegacy, err := ob.getConnectorLegacyContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting legacy zeta connector for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting legacy zeta connector")
 	}
 
 	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting zeta connectorfor chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting zeta connector")
 	}
 
 	custodyAddr, custody, err := ob.getERC20CustodyContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody")
 	}
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
@@ -186,7 +186,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	_, custodyV2, err := ob.getERC20CustodyV2Contract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody v2 for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody v2 for chain")
 	}
 
 	// define a few common variables

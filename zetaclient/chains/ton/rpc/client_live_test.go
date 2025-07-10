@@ -179,5 +179,6 @@ func simplifyTx(tx ton.Transaction) map[string]any {
 		"time":             time.Unix(int64(tx.Transaction.Now), 0).UTC().String(),
 		"outMessagesCount": tx.OutMsgCnt,
 		"gasUsed":          tx.TotalFees.Grams,
+		"exitCode":         tx.Transaction.Description.TransOrd.ComputePh.TrPhaseComputeVm.Vm.ExitCode,
 	}
 }

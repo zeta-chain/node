@@ -162,7 +162,7 @@ func ParseScriptFromWitness(witness []string, logger zerolog.Logger) []byte {
 	return script
 }
 
-// / Try to extract the memo from the OP_RETURN
+// Try to extract the memo from the OP_RETURN
 func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	if len(tx.Vout) < 2 {
 		logger.Debug().Msgf("txn %s has fewer than 2 outputs, not target OP_RETURN txn", tx.Txid)
@@ -181,7 +181,7 @@ func tryExtractOpRet(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	return nil
 }
 
-// / Try to extract the memo from inscription
+// Try to extract the memo from inscription
 func tryExtractInscription(tx btcjson.TxRawResult, logger zerolog.Logger) []byte {
 	for i, input := range tx.Vin {
 		script := ParseScriptFromWitness(input.Witness, logger)

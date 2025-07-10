@@ -459,13 +459,14 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 	)
 }
 
+// determineCoinType determines the coin type of the inbound event
 func determineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
 	coinType := coin.CoinType_ERC20
 	if crypto.IsEmptyAddress(asset) {
-		coinType = coin.CoinType_Gas
+		return coin.CoinType_Gas
 	}
 	if strings.EqualFold(asset.Hex(), zetaTokenAddress) {
-		coinType = coin.CoinType_Zeta
+		return coin.CoinType_Zeta
 	}
 	return coinType
 }
