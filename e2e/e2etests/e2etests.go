@@ -353,6 +353,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdraw,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallName,
@@ -362,6 +363,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestZetaWithdrawAndCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertName,
@@ -370,6 +372,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevert,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertWithCallName,
@@ -378,6 +381,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevertWithCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawRevertAndAbortName,
@@ -387,7 +391,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestZetaWithdrawRevertAndAbort,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndArbitraryCallName,
@@ -396,6 +400,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndArbitraryCall,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallNoMessageName,
@@ -405,6 +410,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
 		},
 		TestZetaWithdrawAndCallNoMessage,
+		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
