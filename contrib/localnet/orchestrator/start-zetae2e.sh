@@ -170,6 +170,9 @@ fund_eth_from_config '.additional_accounts.user_ether_revert.evm_address' 10000 
 # unlock erc20 revert tests accounts
 fund_eth_from_config '.additional_accounts.user_erc20_revert.evm_address' 10000 "V2 ERC20 revert tester"
 
+# unlock zeta tests accounts
+fund_eth_from_config '.additional_accounts.user_zeta.evm_address' 10000 "V2 zeta tester"
+
 # unlock emissions withdraw tests accounts
 fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 10000 "emissions withdraw tester"
 

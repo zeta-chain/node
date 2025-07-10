@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 type RPC interface {
@@ -61,9 +62,9 @@ func (s *Signer) TryProcessOutbound(
 	outcome, err := s.ProcessOutbound(ctx, cctx, zetacore, zetaBlockHeight)
 
 	lf := map[string]any{
-		"outbound.id":      outboundID,
-		"outbound.nonce":   cctx.GetCurrentOutboundParam().TssNonce,
-		"outbound.outcome": string(outcome),
+		logs.FieldOutboundID: outboundID,
+		logs.FieldNonce:      cctx.GetCurrentOutboundParam().TssNonce,
+		"outcome":            string(outcome),
 	}
 
 	switch {

@@ -12,6 +12,7 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
 	TestETHDepositAndCallNoMessageName      = "eth_deposit_and_call_no_message"
@@ -22,6 +23,7 @@ const (
 	TestETHWithdrawName                          = "eth_withdraw"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
+	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
 	TestETHWithdrawAndCallNoMessageName          = "eth_withdraw_and_call_no_message"
 	TestETHWithdrawAndCallThroughContractName    = "eth_withdraw_and_call_through_contract"
 	TestETHWithdrawAndCallRevertName             = "eth_withdraw_and_call_revert"
@@ -253,7 +255,12 @@ const (
 	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
 	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
-	TestZetaDepositName = "zeta_deposit"
+	TestZetaDepositName                      = "zeta_deposit"
+	TestZetaDepositAndCallName               = "zeta_deposit_and_call"
+	TestZetaDepositAndCallRevertName         = "zeta_deposit_and_call_revert"
+	TestZetaDepositRevertAndAbortName        = "zeta_deposit_revert_and_abort"
+	TestZetaDepositAndCallRevertWithCallName = "zeta_deposit_and_call_revert_with_call"
+	TestZetaDepositAndCallNoMessageName      = "zeta_deposit_and_call_no_message"
 )
 
 const (
@@ -271,8 +278,6 @@ var AllE2ETests = []runner.E2ETest{
 	/*
 	 EVM chain tests
 	*/
-	// TestZetaDepositName is not used for now as the protocol logic has not yet been implemented
-	// // https://github.com/zeta-chain/node/issues/3212
 	runner.NewE2ETest(
 		TestZetaDepositName,
 		"deposit ZETA into ZEVM using connector contract",
@@ -280,6 +285,50 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallName,
+		"deposit Zeta into ZEVM and call a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestZetaDepositAndCall,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallRevertName,
+		"deposit Zeta into ZEVM and call a contract that reverts",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallRevert,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositRevertAndAbortName,
+		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
+		[]runner.ArgDefinition{},
+		TestZetaDepositRevertAndAbort,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallRevertWithCallName,
+		"deposit Zeta into ZEVM and call a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallRevertWithCall,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestZetaDepositAndCallNoMessageName,
+		"deposit Zeta into ZEVM and call a contract using no message content",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "10000000000000000000"},
+		},
+		TestZetaDepositAndCallNoMessage,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
@@ -296,6 +345,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "10000000000000000"},
 		},
 		TestETHDepositAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHDepositAndCallBigPayloadName,
+		"deposit Ether to ZetaChain call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHDepositAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositFastConfirmationName,
@@ -361,6 +417,13 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw", DefaultValue: "250000"},
 		},
 		TestETHWithdrawAndCall,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawAndCallBigPayloadName,
+		"withdraw Ether from ZEVM call a contract with a big payload",
+		[]runner.ArgDefinition{},
+		TestETHWithdrawAndCallBigPayload,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndCallNoMessageName,
@@ -1136,7 +1199,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndAbortWithLowDepositFeeName,

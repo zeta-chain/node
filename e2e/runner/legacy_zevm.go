@@ -7,6 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
 
@@ -34,6 +35,13 @@ func (r *E2ERunner) LegacyDepositZeta() ethcommon.Hash {
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
 	return r.LegacyDepositZetaWithAmount(r.EVMAddress(), amount)
+}
+
+func (r *E2ERunner) ZetaDeposit() *ethtypes.Transaction {
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
+
+	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
 // LegacyDepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount using legacy protocol contracts

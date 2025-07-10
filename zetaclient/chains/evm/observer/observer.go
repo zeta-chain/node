@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/evm/client"
@@ -68,10 +69,16 @@ func New(baseObserver *base.Observer, client interfaces.EVMRPCClient) (*Observer
 	return ob, nil
 }
 
-// getConnectorContract returns the non-Eth connector address and binder
-func (ob *Observer) getConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
+// getConnectorLegacyContract returns the non-Eth connector address and binder
+func (ob *Observer) getConnectorLegacyContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
 	contract, err := zetaconnector.NewZetaConnectorNonEth(addr, ob.evmClient)
+	return addr, contract, err
+}
+
+func (ob *Observer) getConnectorContract() (ethcommon.Address, *zetaconnectornative.ZetaConnectorNative, error) {
+	addr := ethcommon.HexToAddress(ob.ChainParams().ConnectorContractAddress)
+	contract, err := zetaconnectornative.NewZetaConnectorNative(addr, ob.evmClient)
 	return addr, contract, err
 }
 

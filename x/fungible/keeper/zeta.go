@@ -32,6 +32,8 @@ func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, coins)
 }
 
+// MintZetaToFungibleModule mints ZETA (gas token) to the fungible module account
+// Fungible module account is the protocol address used in the smart contracts
 func (k *Keeper) MintZetaToFungibleModule(ctx sdk.Context, amount *big.Int) error {
 	if err := k.validateZetaSupply(ctx, amount); err != nil {
 		return err

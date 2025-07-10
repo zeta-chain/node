@@ -133,7 +133,7 @@ contract TestDAppV2 {
         uint256 amount,
         bytes calldata message
     )
-    external
+    external payable
     {
         require(!isRevertMessage(string(message)));
 
@@ -141,6 +141,20 @@ contract TestDAppV2 {
 
         setCalledWithMessage(messageStr);
         setAmountWithMessage(messageStr, amount);
+        setSenderWithMessage(messageStr, context.sender);
+    }
+
+    // Universal contract interface for zeta token
+    function onCall(
+        zContext calldata context,
+        bytes calldata message
+    ) external payable {
+        require(!isRevertMessage(string(message)));
+
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(context.senderEVM) : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, msg.value); // Use msg.value since no amount parameter
         setSenderWithMessage(messageStr, context.sender);
     }
 

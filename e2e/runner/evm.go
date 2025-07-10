@@ -137,6 +137,28 @@ func (r *E2ERunner) ERC20DepositAndCall(
 	return tx
 }
 
+// ZetaDepositAndCall calls DepositAndCall of Gateway with zeta token on EVM
+func (r *E2ERunner) ZetaDepositAndCall(
+	receiver ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+	revertOptions gatewayevm.RevertOptions,
+) *ethtypes.Transaction {
+	tx, err := r.GatewayEVM.DepositAndCall0(
+		r.EVMAuth,
+		receiver,
+		amount,
+		r.ZetaEthAddr,
+		payload,
+		revertOptions,
+	)
+	require.NoError(r, err)
+
+	logDepositInfoAndWaitForTxReceipt(r, tx, "zeta_deposit_and_call")
+
+	return tx
+}
+
 // EVMToZEMVCall calls Call of Gateway on EVM
 func (r *E2ERunner) EVMToZEMVCall(
 	receiver ethcommon.Address,
@@ -187,6 +209,21 @@ func (r *E2ERunner) SendERC20OnEVM(address ethcommon.Address, amountERC20 int64)
 
 	// transfer
 	tx, err := r.ERC20.Transfer(r.EVMAuth, address, amount)
+	require.NoError(r, err)
+
+	return tx
+}
+
+// SendZetaOnEVM sends ZETA to an address on EVM.This can be used to fund an account to run tests
+func (r *E2ERunner) SendZetaOnEVM(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+	// the deployer might be sending ZETA in different goroutines
+	r.Lock()
+	defer r.Unlock()
+
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(zetaAmount))
+
+	tx, err := r.ZetaEth.Transfer(r.EVMAuth, address, amount)
 	require.NoError(r, err)
 
 	return tx

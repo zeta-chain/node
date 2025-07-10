@@ -23,6 +23,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
@@ -269,6 +270,36 @@ func (k Keeper) DepositZRC20(
 	)
 }
 
+// DepositZeta deposits ZETA tokens into and account using the gateway contract;
+func (k Keeper) DepositZeta(
+	ctx sdk.Context,
+	to common.Address,
+	amount *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayAbi, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "GetSystemContract address not found")
+	}
+	gateway := common.HexToAddress(systemContract.Gateway)
+	return k.CallEVM(
+		ctx,
+		*gatewayAbi,
+		types.ModuleAddressEVM,
+		gateway,
+		amount,
+		DefaultGasLimit,
+		true,
+		false,
+		"deposit",
+		to,
+	)
+}
+
 // UpdateZRC20ProtocolFlatFee updates the protocol flat fee for a given ZRC20 contract
 func (k Keeper) UpdateZRC20ProtocolFlatFee(
 	ctx sdk.Context,
@@ -378,7 +409,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
-	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
+	err = k.MintZetaToFungibleModule(ctx, zetaValue)
 	if err != nil {
 		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
@@ -425,7 +456,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	err = k.DepositCoinsToFungibleModule(ctx, remainingZetaValue)
+	err = k.MintZetaToFungibleModule(ctx, remainingZetaValue)
 	if err != nil {
 		return nil, err
 	}

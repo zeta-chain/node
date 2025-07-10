@@ -122,7 +122,6 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			// use same gas limit of outbound as a fallback -- should not happen
 			gasLimit = cctx.OutboundParams[0].CallOptions.GasLimit
 		}
-
 		// create new OutboundParams for the revert
 		err = cctx.AddRevertOutbound(gasLimit)
 		if err != nil {

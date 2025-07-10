@@ -23,12 +23,11 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to ethcommon.Address, amount *b
 	return k.MintZetaToEVMAccount(ctx, zetaToAddress, amount)
 }
 
-func (k Keeper) DepositCoinsToFungibleModule(ctx sdk.Context, amount *big.Int) error {
-	return k.MintZetaToFungibleModule(ctx, amount)
-}
-
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
 // returns [txResponse, isContractCall, error]
+// This function should be renamed to DepositAndCallContract as it now handles both ZRC20 and ZETA deposits
+// It would be better to split into two functions V1 and Legacy logic flow
+// TODO : https://github.com/zeta-chain/node/issues/3988
 func (k Keeper) ZRC20DepositAndCallContract(
 	ctx sdk.Context,
 	from []byte,
@@ -99,27 +98,78 @@ func (k Keeper) ProcessDeposit(
 	coinType coin.CoinType,
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-	if coinType == coin.CoinType_Zeta {
-		return nil, false, errors.New("ZETA asset is currently unsupported for deposit with V2 protocol contracts")
-	}
-
 	context := gatewayzevm.MessageContext{
 		Sender:    from,
 		SenderEVM: ethcommon.BytesToAddress(from),
 		ChainID:   big.NewInt(senderChainID),
 	}
 
-	if coinType == coin.CoinType_NoAssetCall {
-		// simple call
-		res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
+	switch coinType {
+	case coin.CoinType_NoAssetCall:
+		return k.processNoAssetCall(ctx, context, zrc20Addr, amount, to, message)
+
+	case coin.CoinType_Zeta:
+		return k.processZetaDeposit(ctx, context, amount, to, message, isCrossChainCall)
+
+	case coin.CoinType_ERC20, coin.CoinType_Gas:
+		return k.processZRC20Deposit(ctx, context, zrc20Addr, amount, to, message, isCrossChainCall)
+	default:
+		return nil, false, errorspkg.Wrapf(types.ErrProcessDeposit, " unsupported coin type %s", coinType)
+	}
+}
+
+// processNoAssetCall handles deposits with no asset (simple calls)
+func (k Keeper) processNoAssetCall(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	res, err := k.CallExecute(ctx, context, zrc20Addr, amount, to, message)
+	return res, true, err
+}
+
+// processZetaDeposit handles ZETA coin deposits
+func (k Keeper) processZetaDeposit(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+	isCrossChainCall bool,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	// Deposit/Mint ZETA to the protocol address which will then be used to make the calls below
+	// NOTE: DepositZeta and DepositAndCallZeta expect the fungible module account to have enough ZETA
+	if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
+		return nil, false, err
+	}
+
+	if isCrossChainCall {
+		res, err := k.DepositAndCallZeta(ctx, context, amount, to, message)
 		return res, true, err
-	} else if isCrossChainCall {
-		// call with asset
+	}
+
+	res, err := k.DepositZeta(ctx, to, amount)
+	return res, false, err
+}
+
+// processZRC20Deposit handles ZRC20 token deposits [ZRC20 tokens exist for ERC20 and GAS tokens]
+func (k Keeper) processZRC20Deposit(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	to ethcommon.Address,
+	message []byte,
+	isCrossChainCall bool,
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	if isCrossChainCall {
 		res, err := k.CallDepositAndCallZRC20(ctx, context, zrc20Addr, amount, to, message)
 		return res, true, err
 	}
 
-	// simple deposit
 	res, err := k.DepositZRC20(ctx, zrc20Addr, to, amount)
 	return res, false, err
 }
@@ -196,11 +246,6 @@ func (k Keeper) ProcessAbort(
 	abortAddress ethcommon.Address,
 	revertMessage []byte,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	if coinType == coin.CoinType_Zeta {
-		return nil, errors.New("ZETA asset is currently unsupported for abort with V2 protocol contracts")
-	}
-
-	// get the zrc20 contract
 	zrc20Addr, _, err := k.getAndCheckZRC20(
 		ctx,
 		amount,
@@ -218,6 +263,15 @@ func (k Keeper) ProcessAbort(
 		// if the deposit fails, processing the abort entirely fails
 		// MsgRefundAbort can still be used to retry the operation later on
 		if _, err := k.DepositZRC20(ctx, zrc20Addr, abortAddress, amount); err != nil {
+			return nil, err
+		}
+	}
+	if coinType == coin.CoinType_Zeta {
+		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
+			return nil, err
+		}
+		_, err := k.DepositZeta(ctx, abortAddress, amount)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -239,8 +293,11 @@ func (k Keeper) ProcessAbort(
 	return txRes, nil
 }
 
-// getAndCheckZRC20 returns the ZRC20 contract address and foreign coin for the given chainID and asset
-// it also checks if the foreign coin is paused and if the cap is reached
+// getAndCheckZRC20 returns the ZRC20 contract address and the foreign coin information
+// It handles the logic based on CoinType
+// - For Zeta coin type,it returns an empty address and no foreign coin.Zeta is the native token of the chain.
+// - For NoAssetCall and Gas coin types, it retrieves the gas coin for the foreign coin and checks if it is paused or has a liquidity cap.
+// - For other coin types(ERC20), it retrieves the foreign coin from the asset and checks if it is paused or has a liquidity cap.
 func (k Keeper) getAndCheckZRC20(
 	ctx sdk.Context,
 	amount *big.Int,
@@ -257,13 +314,15 @@ func (k Keeper) getAndCheckZRC20(
 	// this simplify the current workflow and allow to pause calls by pausing the gas token
 	// TODO: refactor this logic and create specific workflow for no asset call
 	// https://github.com/zeta-chain/node/issues/2627
-
-	if coinType == coin.CoinType_Gas || coinType == coin.CoinType_NoAssetCall {
+	switch coinType {
+	case coin.CoinType_Zeta:
+		return ethcommon.Address{}, types.ForeignCoins{}, nil
+	case coin.CoinType_NoAssetCall, coin.CoinType_Gas:
 		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, chainID)
 		if !found {
 			return ethcommon.Address{}, types.ForeignCoins{}, crosschaintypes.ErrGasCoinNotFound
 		}
-	} else {
+	default:
 		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, chainID)
 		if !found {
 			return ethcommon.Address{}, types.ForeignCoins{}, errorspkg.Wrapf(
@@ -272,6 +331,7 @@ func (k Keeper) getAndCheckZRC20(
 			)
 		}
 	}
+
 	zrc20Contract = ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)
 
 	// check if foreign coin is paused

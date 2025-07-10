@@ -14,7 +14,7 @@ import (
 
 // ZETADepositAndCallContract deposits native ZETA to the to address if its an account or if the account does not exist yet
 // If it's not an account it calls onReceive function of the connector contract and provides the address as the destinationAddress .The amount of tokens is minted to the fungible module account, wrapped and sent to the contract
-func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
+func (k Keeper) LegacyZETADepositAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	inboundSenderChainID int64,
