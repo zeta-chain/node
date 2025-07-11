@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -95,7 +96,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(ctx, cctx, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
 	}
 
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
@@ -133,12 +134,14 @@ func (s *Signer) buildWithdrawTx(
 // a withdrawAndCall is a PTB transaction that contains a withdraw_impl call and a on_call call
 func (s *Signer) buildWithdrawAndCallTx(
 	ctx context.Context,
-	params *cctypes.OutboundParams,
+	cctx *cctypes.CrossChainTx,
 	coinType string,
 	gasBudget uint64,
 	withdrawCapID string,
 	payloadHex string,
 ) (models.TxnMetaData, error) {
+	params := cctx.GetCurrentOutboundParam()
+
 	// decode and parse the payload into object IDs and on_call arguments
 	payloadBytes, err := hex.DecodeString(payloadHex)
 	if err != nil {
@@ -164,7 +167,12 @@ func (s *Signer) buildWithdrawAndCallTx(
 		nonce:                  params.TssNonce,
 		gasBudget:              gasBudget,
 		receiver:               params.Receiver,
-		payload:                cp,
+		isArbitraryCall:        params.CallOptions.IsArbitraryCall,
+		msgContext: sui.MessageContext{
+			Sender: ethcommon.HexToAddress(cctx.InboundParams.Sender).Hex(),
+			Target: params.Receiver,
+		},
+		payload: cp,
 	}
 
 	// print PTB transaction parameters
@@ -173,6 +181,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
 		Uint64("tx.amount", args.amount).
+		Str("tx.sender", args.msgContext.Sender).
 		Str("tx.receiver", args.receiver).
 		Uint64("tx.gas_budget", args.gasBudget).
 		Strs("tx.type_args", args.payload.TypeArgs).

@@ -19,21 +19,24 @@ import (
 
 // withdrawAndCallObjRefs contains all the object references needed for withdraw and call
 type withdrawAndCallObjRefs struct {
-	gateway     sui.ObjectRef
-	withdrawCap sui.ObjectRef
-	onCall      []sui.ObjectRef
-	suiCoins    []*sui.ObjectRef
+	gateway       sui.ObjectRef
+	withdrawCap   sui.ObjectRef
+	msgContextRef sui.ObjectRef
+	onCall        []sui.ObjectRef
+	suiCoins      []*sui.ObjectRef
 }
 
 // withdrawAndCallPTBArgs contains all the arguments needed for withdraw and call
 type withdrawAndCallPTBArgs struct {
 	withdrawAndCallObjRefs
-	coinType  string
-	amount    uint64
-	nonce     uint64
-	gasBudget uint64
-	receiver  string
-	payload   zetasui.CallPayload
+	coinType        string
+	amount          uint64
+	nonce           uint64
+	gasBudget       uint64
+	receiver        string
+	isArbitraryCall bool
+	msgContext      zetasui.MessageContext
+	payload         zetasui.CallPayload
 }
 
 // withdrawAndCallPTB builds unsigned withdraw and call PTB Sui transaction
@@ -44,11 +47,17 @@ type withdrawAndCallPTBArgs struct {
 // The function returns a TxnMetaData object with tx bytes, the other fields are ignored
 func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnMetaData, err error) {
 	var (
-		tssAddress       = s.TSS().PubKey().AddressSui()
-		gatewayPackageID = s.gateway.PackageID()
-		gatewayModule    = s.gateway.Module()
-		ptb              = suiptb.NewTransactionDataTransactionBuilder()
+		tssAddress          = s.TSS().PubKey().AddressSui()
+		gatewayPackageIDStr = s.gateway.PackageID()
+		gatewayModule       = s.gateway.Module()
+		ptb                 = suiptb.NewTransactionDataTransactionBuilder()
 	)
+
+	// Parse gateway package ID
+	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
+	if err != nil {
+		return tx, errors.Wrapf(err, "invalid gateway package ID %s", gatewayPackageIDStr)
+	}
 
 	// Parse signer address
 	signerAddr, err := sui.AddressFromHex(tssAddress)
@@ -57,17 +66,7 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 	}
 
 	// Add withdraw_impl command and get its command index
-	if err := ptbAddCmdWithdrawImpl(
-		ptb,
-		gatewayPackageID,
-		gatewayModule,
-		args.gateway,
-		args.withdrawCap,
-		args.coinType,
-		args.amount,
-		args.nonce,
-		args.gasBudget,
-	); err != nil {
+	if err := ptbAddCmdWithdrawImpl(ptb, gatewayPackageID, gatewayModule, args); err != nil {
 		return tx, err
 	}
 
@@ -93,15 +92,12 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 		return tx, err
 	}
 
-	// Add on_call command
-	err = ptbAddCmdOnCall(
-		ptb,
-		args.receiver,
-		args.coinType,
-		argWithdrawnCoins,
-		args.onCall,
-		args.payload,
-	)
+	// Add on_call command for arbitrary/authenticated call
+	if args.isArbitraryCall {
+		err = ptbAddCmdOnCallArbitrary(ptb, argWithdrawnCoins, args)
+	} else {
+		err = ptbAddCmdOnCallAuthenticated(ptb, gatewayPackageID, gatewayModule, argWithdrawnCoins, args)
+	}
 	if err != nil {
 		return tx, err
 	}
@@ -131,14 +127,18 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 
 // getWithdrawAndCallObjectRefs returns the SUI object references for withdraw and call
 //   - Initial shared version will be used for shared objects
-//   - Current version will be used for non-shared objects, e.g. withdraw cap
+//   - Current version will be used for non-shared objects, e.g. withdraw cap, message context
 func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	withdrawCapID string,
 	onCallObjectIDs []string,
 	gasBudget uint64,
 ) (withdrawAndCallObjRefs, error) {
-	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID}, onCallObjectIDs...)
+	var (
+		onCallObjectIndex = 3
+		messageContextID  = s.gateway.MessageContextID()
+		objectIDs         = append([]string{s.gateway.ObjectID(), withdrawCapID, messageContextID}, onCallObjectIDs...)
+	)
 
 	// query objects in batch
 	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
@@ -158,7 +158,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	// ensure no owned objects are used for on_call
-	if err := client.CheckContainOwnedObject(suiObjects[2:]); err != nil {
+	if err := client.CheckContainOwnedObject(suiObjects[onCallObjectIndex:]); err != nil {
 		return withdrawAndCallObjRefs{}, errors.Wrapf(err, "objects used for on_call must be shared")
 	}
 
@@ -177,8 +177,8 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 		}
 
 		// must use initial version for shared object, not the current version
-		// withdraw cap is not a shared object, so we must use current version
-		if object.Data.ObjectId != withdrawCapID {
+		// withdraw cap and message context are owned objects, so we must use current version
+		if object.Data.ObjectId != withdrawCapID && object.Data.ObjectId != messageContextID {
 			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
 			if err != nil {
 				return withdrawAndCallObjRefs{}, errors.Wrapf(
@@ -208,30 +208,29 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	}
 
 	return withdrawAndCallObjRefs{
-		gateway:     objectRefs[0],
-		withdrawCap: objectRefs[1],
-		onCall:      objectRefs[2:],
-		suiCoins:    suiCoinObjRefs,
+		gateway:       objectRefs[0],
+		withdrawCap:   objectRefs[1],
+		msgContextRef: objectRefs[2],
+		onCall:        objectRefs[onCallObjectIndex:],
+		suiCoins:      suiCoinObjRefs,
 	}, nil
 }
 
 // ptbAddCmdWithdrawImpl adds the withdraw_impl command to the PTB
 func ptbAddCmdWithdrawImpl(
 	ptb *suiptb.ProgrammableTransactionBuilder,
-	gatewayPackageIDStr string,
+	gatewayPackageID *sui.PackageId,
 	gatewayModule string,
-	gatewayObjRef sui.ObjectRef,
-	withdrawCapObjRef sui.ObjectRef,
-	coinType string,
-	amount uint64,
-	nonce uint64,
-	gasBudget uint64,
+	args withdrawAndCallPTBArgs,
 ) error {
-	// Parse gateway package ID
-	gatewayPackageID, err := sui.PackageIdFromHex(gatewayPackageIDStr)
-	if err != nil {
-		return errors.Wrapf(err, "invalid gateway package ID %s", gatewayPackageIDStr)
-	}
+	var (
+		gatewayObjRef     = args.gateway
+		withdrawCapObjRef = args.withdrawCap
+		coinType          = args.coinType
+		amount            = args.amount
+		nonce             = args.nonce
+		gasBudget         = args.gasBudget
+	)
 
 	// Parse coin type
 	tagCoinType, err := zetasui.TypeTagFromString(coinType)
@@ -320,15 +319,19 @@ func ptbAddCmdGasBudgetTransfer(
 	return nil
 }
 
-// ptbAddCmdOnCall adds the on_call command to the PTB
-func ptbAddCmdOnCall(
+// ptbAddCmdOnCallArbitrary adds the on_call command to the PTB for arbitrary call
+func ptbAddCmdOnCallArbitrary(
 	ptb *suiptb.ProgrammableTransactionBuilder,
-	receiver string,
-	coinTypeStr string,
 	argWithdrawnCoins suiptb.Argument,
-	onCallObjectRefs []sui.ObjectRef,
-	cp zetasui.CallPayload,
+	args withdrawAndCallPTBArgs,
 ) error {
+	var (
+		receiver         = args.receiver
+		coinTypeStr      = args.coinType
+		onCallObjectRefs = args.onCall
+		cp               = args.payload
+	)
+
 	// Parse target package ID
 	targetPackageID, err := sui.PackageIdFromHex(receiver)
 	if err != nil {
@@ -353,7 +356,7 @@ func ptbAddCmdOnCall(
 	}
 
 	// Build the args for on_call: [withdrawns coins + payload objects + message]
-	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+1)
+	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+2)
 	onCallArgs = append(onCallArgs, argWithdrawnCoins)
 
 	// Add the payload objects, objects are all shared
@@ -386,6 +389,182 @@ func ptbAddCmdOnCall(
 			Function:      zetasui.FuncOnCall,
 			TypeArguments: onCallTypeArgs,
 			Arguments:     onCallArgs,
+		},
+	})
+
+	return nil
+}
+
+// ptbAddCmdOnCallAuthenticated adds the on_call command to the PTB for authenticated call
+func ptbAddCmdOnCallAuthenticated(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	gatewayPackageID *sui.PackageId,
+	gatewayModule string,
+	argWithdrawnCoins suiptb.Argument,
+	args withdrawAndCallPTBArgs,
+) error {
+	var (
+		gatewayObjRef    = args.gateway
+		msgContextObjRef = args.msgContextRef
+		msgContext       = args.msgContext
+		targetPackage    = args.receiver
+		coinTypeStr      = args.coinType
+		onCallObjectRefs = args.onCall
+		cp               = args.payload
+	)
+
+	// set message context
+	if err := ptbAddCmdSetMessageContext(ptb, gatewayPackageID, gatewayModule, msgContextObjRef, msgContext); err != nil {
+		return errors.Wrapf(err, "unable to add set_message_context command")
+	}
+
+	// Parse target package ID
+	targetPackageID, err := sui.PackageIdFromHex(targetPackage)
+	if err != nil {
+		return errors.Wrapf(err, "invalid target package ID %s", targetPackage)
+	}
+
+	// Parse coin type
+	coinType, err := zetasui.TypeTagFromString(coinTypeStr)
+	if err != nil {
+		return errors.Wrapf(err, "invalid coin type %s", coinTypeStr)
+	}
+
+	// Create immutable gateway object argument
+	argGateway, err := ptb.Obj(suiptb.ObjectArg{
+		SharedObject: &suiptb.SharedObjectArg{
+			Id:                   gatewayObjRef.ObjectId,
+			InitialSharedVersion: gatewayObjRef.Version,
+			Mutable:              false,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "unable to create gateway object argument")
+	}
+
+	// Create message context argument
+	argMsgContext, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &msgContextObjRef})
+	if err != nil {
+		return errors.Wrapf(err, "unable to create message context object argument")
+	}
+
+	// Build the type arguments for on_call in order: [withdrawn coin type, ... payload type arguments]
+	onCallTypeArgs := make([]sui.TypeTag, 0, len(cp.TypeArgs)+1)
+	onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: &coinType})
+	for _, typeArg := range cp.TypeArgs {
+		typeStruct, err := zetasui.TypeTagFromString(typeArg)
+		if err != nil {
+			return errors.Wrapf(err, "invalid type argument %s", typeArg)
+		}
+		onCallTypeArgs = append(onCallTypeArgs, sui.TypeTag{Struct: &typeStruct})
+	}
+
+	// Build the args for on_call: [gateway + message context + withdrawns coins + payload objects + message]
+	onCallArgs := make([]suiptb.Argument, 0, len(cp.ObjectIDs)+4)
+	onCallArgs = append(onCallArgs, argGateway)
+	onCallArgs = append(onCallArgs, argMsgContext)
+	onCallArgs = append(onCallArgs, argWithdrawnCoins)
+
+	// Add the payload objects, objects are all shared
+	for _, onCallObjectRef := range onCallObjectRefs {
+		objectArg, err := ptb.Obj(suiptb.ObjectArg{
+			SharedObject: &suiptb.SharedObjectArg{
+				Id:                   onCallObjectRef.ObjectId,
+				InitialSharedVersion: onCallObjectRef.Version,
+				Mutable:              true,
+			},
+		})
+		if err != nil {
+			return errors.Wrapf(err, "unable to create object argument: %v", onCallObjectRef)
+		}
+		onCallArgs = append(onCallArgs, objectArg)
+	}
+
+	// Add any additional message arguments
+	messageArg, err := ptb.Pure(cp.Message)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create message argument: %x", cp.Message)
+	}
+	onCallArgs = append(onCallArgs, messageArg)
+
+	// Call the target contract on_call
+	ptb.Command(suiptb.Command{
+		MoveCall: &suiptb.ProgrammableMoveCall{
+			Package:       targetPackageID,
+			Module:        zetasui.ModuleConnected,
+			Function:      zetasui.FuncOnCall,
+			TypeArguments: onCallTypeArgs,
+			Arguments:     onCallArgs,
+		},
+	})
+
+	// reset message context
+	if err := ptbAddCmdResetMessageContext(ptb, gatewayPackageID, gatewayModule, msgContextObjRef); err != nil {
+		return errors.Wrapf(err, "unable to add reset_message_context command")
+	}
+
+	return nil
+}
+
+// ptbAddCmdSetMessageContext adds the set_message_context command to the PTB
+func ptbAddCmdSetMessageContext(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	gatewayPackageID *sui.PackageId,
+	gatewayModule string,
+	msgContextObjRef sui.ObjectRef,
+	msgContext zetasui.MessageContext,
+) error {
+	// Create message context argument
+	argMsgContext, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &msgContextObjRef})
+	if err != nil {
+		return errors.Wrapf(err, "unable to create message context object argument")
+	}
+
+	// Create sender argument
+	argSender, err := ptb.Pure(msgContext.Sender)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create sender argument")
+	}
+
+	// Create target package argument
+	argTarget, err := ptb.Pure(msgContext.Target)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create target package argument")
+	}
+
+	ptb.Command(suiptb.Command{
+		MoveCall: &suiptb.ProgrammableMoveCall{
+			Package:       gatewayPackageID,
+			Module:        gatewayModule,
+			Function:      zetasui.FuncSetMessageContext,
+			TypeArguments: []sui.TypeTag{},
+			Arguments:     []suiptb.Argument{argMsgContext, argSender, argTarget},
+		},
+	})
+
+	return nil
+}
+
+// ptbAddCmdResetMessageContext adds the reset_message_context command to the PTB
+func ptbAddCmdResetMessageContext(
+	ptb *suiptb.ProgrammableTransactionBuilder,
+	gatewayPackageID *sui.PackageId,
+	gatewayModule string,
+	msgContextObjRef sui.ObjectRef,
+) error {
+	// Create message context argument
+	argMsgContext, err := ptb.Obj(suiptb.ObjectArg{ImmOrOwnedObject: &msgContextObjRef})
+	if err != nil {
+		return errors.Wrapf(err, "unable to create message context object argument")
+	}
+
+	ptb.Command(suiptb.Command{
+		MoveCall: &suiptb.ProgrammableMoveCall{
+			Package:       gatewayPackageID,
+			Module:        gatewayModule,
+			Function:      zetasui.FuncResetMessageContext,
+			TypeArguments: []sui.TypeTag{},
+			Arguments:     []suiptb.Argument{argMsgContext},
 		},
 	})
 

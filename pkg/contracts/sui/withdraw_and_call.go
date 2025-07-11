@@ -14,6 +14,12 @@ const (
 	// FuncWithdrawImpl is the gateway function name withdraw_impl
 	FuncWithdrawImpl = "withdraw_impl"
 
+	// FuncSetMessageContext is the gateway function name set_message_context
+	FuncSetMessageContext = "set_message_context"
+
+	// FuncResetMessageContext is the gateway function name reset_message_context
+	FuncResetMessageContext = "reset_message_context"
+
 	// ModuleConnected is the Sui connected module name
 	ModuleConnected = "connected"
 
