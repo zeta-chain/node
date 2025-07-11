@@ -31,7 +31,6 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 
-	//r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw

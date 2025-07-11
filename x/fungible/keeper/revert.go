@@ -34,48 +34,80 @@ func (k Keeper) ProcessRevert(
 	if err != nil {
 		return nil, err
 	}
+
 	switch coinType {
 	case coin.CoinType_NoAssetCall:
-		if callOnRevert {
-			// no asset, call simple revert
-			res, err := k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
-			return res, err
-		}
-		return nil, nil
-	case coin.CoinType_ERC20, coin.CoinType_Gas:
-		if callOnRevert {
-			// revert with a ZRC20 asset
-			res, err := k.CallDepositAndRevert(
-				ctx,
-				inboundSender,
-				zrc20Addr,
-				amount,
-				revertAddress,
-				revertMessage,
-			)
-			return res, err
-		}
-		// simply deposit back to the revert address
-		res, err := k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
-		return res, err
+		return k.processNoAssetCallRevert(
+			ctx,
+			inboundSender,
+			zrc20Addr,
+			amount,
+			revertAddress,
+			revertMessage,
+			callOnRevert,
+		)
+
 	case coin.CoinType_Zeta:
-		// if the coin type is Zeta, handle this as a deposit ZETA to zEVM.
-		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
-			return nil, err
-		}
-		if callOnRevert {
-			res, err := k.CallZetaDepositAndRevert(
-				ctx,
-				inboundSender,
-				amount,
-				revertAddress,
-				revertMessage,
-			)
-			return res, err
-		}
-		// deposit ZETA to the revert address
-		res, err := k.DepositZeta(ctx, revertAddress, amount)
-		return res, err
+		return k.processZetaRevert(ctx, inboundSender, amount, revertAddress, revertMessage, callOnRevert)
+
+	case coin.CoinType_ERC20, coin.CoinType_Gas:
+		return k.processZRC20Revert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage, callOnRevert)
+
+	default:
+		return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
 	}
-	return nil, fmt.Errorf("unsupported coin type for revert %s", coinType)
+}
+
+// processNoAssetCallRevert handles reverts with no asset (simple calls)
+func (k Keeper) processNoAssetCallRevert(
+	ctx sdk.Context,
+	inboundSender string,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	revertAddress ethcommon.Address,
+	revertMessage []byte,
+	callOnRevert bool,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	if callOnRevert {
+		return k.CallExecuteRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
+	}
+	return nil, nil
+}
+
+// processZetaRevert handles ZETA coin reverts
+func (k Keeper) processZetaRevert(
+	ctx sdk.Context,
+	inboundSender string,
+	amount *big.Int,
+	revertAddress ethcommon.Address,
+	revertMessage []byte,
+	callOnRevert bool,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	// Mint ZETA to the fungible module for revert operations
+	if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
+		return nil, err
+	}
+
+	if callOnRevert {
+		return k.CallZetaDepositAndRevert(ctx, inboundSender, amount, revertAddress, revertMessage)
+	}
+
+	return k.DepositZeta(ctx, revertAddress, amount)
+}
+
+// processZRC20Revert handles ZRC20 token reverts [ZRC20 tokens exist for ERC20 and GAS tokens]
+func (k Keeper) processZRC20Revert(
+	ctx sdk.Context,
+	inboundSender string,
+	zrc20Addr ethcommon.Address,
+	amount *big.Int,
+	revertAddress ethcommon.Address,
+	revertMessage []byte,
+	callOnRevert bool,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	if callOnRevert {
+		return k.CallDepositAndRevert(ctx, inboundSender, zrc20Addr, amount, revertAddress, revertMessage)
+	}
+
+	return k.DepositZRC20(ctx, zrc20Addr, revertAddress, amount)
 }

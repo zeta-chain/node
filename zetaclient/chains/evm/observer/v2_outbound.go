@@ -45,8 +45,6 @@ func parseOutboundEventV2(
 		return parseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
 	case common.OutboundTypeZetaWithdraw, common.OutboundTypeZetaWithdrawRevert:
 		return parseAndCheckZetaConnectorWithdraw(cctx, receipt, connectorNativeAddress, connectorNative)
-	// Add when implementing Zeta withdraws
-	// common.OutboundTypeZetaWithdrawAndCall
 	case common.OutboundTypeERC20WithdrawAndCall:
 		return parseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
 	case common.OutboundTypeZetaWithdrawAndCall:
@@ -376,7 +374,7 @@ func parseAndZetaConnectorWithdrawAndCall(
 		return withdrawn.Amount, chains.ReceiveStatus_success, nil
 	}
 
-	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw and call event not found")
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("connector withdraw and call event not found")
 }
 
 // checkCCTXMessage checks the message of cctx with the emitted data of the event

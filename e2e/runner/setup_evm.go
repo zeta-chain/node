@@ -35,7 +35,6 @@ func (r *E2ERunner) SetupEVM() {
 	r.finalizeEVMSetup()
 }
 
-// ensureTxReceiptEVM is a helper function to ensure transaction success on EVM
 func (r *E2ERunner) ensureTxReceiptEVM(tx *ethtypes.Transaction, failMessage string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.requireTxSuccessful(receipt, failMessage)
@@ -52,7 +51,6 @@ func (r *E2ERunner) deployERC20Contract() {
 	r.ERC20Addr = erc20Addr
 	r.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
 
-	// Ensure deployment success
 	r.ensureTxReceiptEVM(txERC20, "ERC20 deployment failed")
 }
 
@@ -72,20 +70,16 @@ func (r *E2ERunner) prepareTSSForDeployment() {
 func (r *E2ERunner) deployGatewayEVM() {
 	r.Logger.Info("Deploying Gateway EVM")
 
-	// Deploy the gateway implementation
 	gatewayEVMAddr, txGateway, _, err := gatewayevm.DeployGatewayEVM(r.EVMAuth, r.EVMClient)
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(txGateway, "Gateway deployment failed")
 
-	// Get ABI for initialization
 	gatewayEVMABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
 	require.NoError(r, err)
 
-	// Encode the initializer data
 	initializerData, err := gatewayEVMABI.Pack("initialize", r.TSSAddress, r.ZetaEthAddr, r.Account.EVMAddress())
 	require.NoError(r, err)
 
-	// Deploy gateway proxy contract
 	gatewayProxyAddress, gatewayProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
 		r.EVMAuth,
 		r.EVMClient,
@@ -95,7 +89,6 @@ func (r *E2ERunner) deployGatewayEVM() {
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(gatewayProxyTx, "Gateway proxy deployment failed")
 
-	// Initialize the gateway contract instance
 	r.GatewayEVMAddr = gatewayProxyAddress
 	r.GatewayEVM, err = gatewayevm.NewGatewayEVM(gatewayProxyAddress, r.EVMClient)
 	require.NoError(r, err)
@@ -106,16 +99,13 @@ func (r *E2ERunner) deployGatewayEVM() {
 func (r *E2ERunner) deployERC20Custody() {
 	r.Logger.Info("Deploying ERC20Custody contract")
 
-	// Deploy the custody implementation
 	erc20CustodyAddr, txCustody, _, err := erc20custodyv2.DeployERC20Custody(r.EVMAuth, r.EVMClient)
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(txCustody, "ERC20Custody deployment failed")
 
-	// Get ABI for initialization
 	erc20CustodyABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
 	require.NoError(r, err)
 
-	// Encode the initializer data
 	initializerData, err := erc20CustodyABI.Pack("initialize", r.GatewayEVMAddr, r.TSSAddress, r.Account.EVMAddress())
 	require.NoError(r, err)
 
@@ -147,7 +137,6 @@ func (r *E2ERunner) deployERC20Custody() {
 
 // deployTestDAppV2EVM deploys the test DApp V2 contract for EVM
 func (r *E2ERunner) deployTestDAppV2EVM() {
-	// Deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(txTestDAppV2, "TestDAppV2 deployment failed")
@@ -157,7 +146,6 @@ func (r *E2ERunner) deployTestDAppV2EVM() {
 	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
 	require.NoError(r, err)
 
-	// Verify isZetaChain is false (this is EVM, not ZetaChain)
 	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.False(r, isZetaChain)

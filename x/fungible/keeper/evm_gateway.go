@@ -305,12 +305,6 @@ func (k Keeper) CallZetaDepositAndRevert(
 	if err != nil {
 		return nil, err
 	}
-
-	//wzetaAddress, err := k.GetWZetaContractAddress(ctx)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	systemContract, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, types.ErrSystemContractNotFound
@@ -335,7 +329,7 @@ func (k Keeper) CallZetaDepositAndRevert(
 		target,
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
-			Asset:         common.Address{},
+			Asset:         common.Address{}, // TODO : Should we set this to WZETA?
 			Amount:        amount,
 			RevertMessage: message,
 		},

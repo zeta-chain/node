@@ -221,7 +221,6 @@ func (r *E2ERunner) ERC20WithdrawAndArbitraryCall(
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// this function take more gas than default 500k
-	// so we need to increase the gas limit
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
 	defer func() {
@@ -313,7 +312,6 @@ func (r *E2ERunner) ZetaWithdrawAndArbitraryCall(
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	// this function take more gas than default 500k
-	// so we need to increase the gas limit
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	oldAmount := r.ZEVMAuth.Value
 	r.ZEVMAuth.GasLimit = 10000000

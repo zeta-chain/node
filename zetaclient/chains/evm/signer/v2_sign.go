@@ -2,7 +2,6 @@ package signer
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -172,7 +171,7 @@ func (signer *Signer) signZetaConnectorWithdrawAndCall(
 
 	data, err := connectorABI.Pack("withdrawAndCall", messageContext, txData.to, txData.amount, txData.message)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw and call pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw and call pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -185,9 +184,8 @@ func (signer *Signer) signZetaConnectorWithdrawAndCall(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
+		return nil, errors.Wrap(err, "sign withdrawAndCall error")
 	}
-
 	return tx, nil
 }
 

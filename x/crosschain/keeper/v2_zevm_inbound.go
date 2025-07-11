@@ -18,7 +18,7 @@ import (
 )
 
 type InboundDetails struct {
-	cointype        coin.CoinType
+	coinType        coin.CoinType
 	asset           string
 	receiverChain   chains.Chain
 	gasLimitQueried *big.Int
@@ -36,7 +36,6 @@ func (k Keeper) parseZetaInbound(
 			"receiver chain ID is nil or zero for ZETA withdrawal",
 		)
 	}
-
 	parsedReceiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(
 		ctx,
 		receiverChainID.Int64(),
@@ -55,7 +54,7 @@ func (k Keeper) parseZetaInbound(
 	}
 
 	return InboundDetails{
-		cointype:        coin.CoinType_Zeta,
+		coinType:        coin.CoinType_Zeta,
 		asset:           wzetaContractAddress,
 		receiverChain:   parsedReceiverChain,
 		gasLimitQueried: gasLimit,
@@ -98,7 +97,7 @@ func (k Keeper) parseErc20Inbound(
 	return InboundDetails{
 		receiverChain:   receiverChain,
 		gasLimitQueried: gasLimitQueried,
-		cointype:        coinType,
+		coinType:        coinType,
 		asset:           foreignCoin.Asset,
 	}, nil
 }
@@ -141,7 +140,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 			receiverChainID = withdrawalAndCallEvent.ChainId
 			callOptions = withdrawalAndCallEvent.CallOptions
 		}
-
 		wzetaContractAddress, err := k.fungibleKeeper.GetWZetaContractAddress(ctx)
 		if err != nil {
 			return errorsmod.Wrapf(
@@ -166,7 +164,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		// validate data of the withdrawal event
-		if err := k.validateOutbound(ctx, inboundDetails.receiverChain.ChainId, inboundDetails.cointype, value, receiver); err != nil {
+		if err := k.validateOutbound(ctx, inboundDetails.receiverChain.ChainId, inboundDetails.coinType, value, receiver); err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidWithdrawalEvent,
 				"failed to validate withdrawal event: %v", err,
@@ -178,7 +176,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 			inbound, err = types.NewWithdrawalInbound(
 				ctx,
 				txOrigin,
-				inboundDetails.cointype,
+				inboundDetails.coinType,
 				inboundDetails.asset,
 				withdrawalEvent,
 				inboundDetails.receiverChain,
@@ -202,7 +200,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 			inbound, err = types.NewWithdrawAndCallInbound(
 				ctx,
 				txOrigin,
-				inboundDetails.cointype,
+				inboundDetails.coinType,
 				inboundDetails.asset,
 				withdrawalAndCallEvent,
 				inboundDetails.receiverChain,
@@ -216,7 +214,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 		if inbound == nil {
 			return errors.New("ParseGatewayEvent: invalid log - no event found")
 		}
-
 		// validate inbound for processing
 		// V2 inbounds always pay gas directly at the contract call
 		cctx, err := k.ValidateInbound(ctx, inbound, false)
