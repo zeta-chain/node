@@ -62,7 +62,7 @@ const (
 	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
 
-const moduleName = "gateway"
+const GatewayModule = "gateway"
 
 // NewGatewayFromPairID creates a new Sui Gateway
 // from triplet of `$packageID,$gatewayObjectID,$messageContextID`
@@ -156,14 +156,9 @@ func (gw *Gateway) MessageContextID() string {
 	return gw.messageContextID
 }
 
-// Module returns Gateway's module name
-func (gw *Gateway) Module() string {
-	return moduleName
-}
-
 // WithdrawCapType returns struct type of the WithdrawCap
 func (gw *Gateway) WithdrawCapType() string {
-	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), moduleName)
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), GatewayModule)
 }
 
 // UpdateIDs updates packageID, objectID and messageContextID.
@@ -214,7 +209,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 
 	// Note that event.TransactionModule can be different because it represents
 	// the module BY WHICH the gateway was called.
-	if descriptor.module != moduleName {
+	if descriptor.module != GatewayModule {
 		return Event{}, errors.Wrapf(ErrParseEvent, "module mismatch %q", descriptor.module)
 	}
 
@@ -251,9 +246,10 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
-	// a simple withdraw contains one single command, if it contains 3 commands,
+	// a simple withdraw contains one single command, if it contains 3 or 5 commands,
 	// we try passing the transaction as a withdraw and call with PTB
-	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
+	txCmdCount := len(res.Transaction.Data.Transaction.Transactions)
+	if txCmdCount == ptbWithdrawAndArbiCallCmdCount || txCmdCount == ptbWithdrawAndAuthCallCmdCount {
 		return gw.parseWithdrawAndCallPTB(res)
 	}
 

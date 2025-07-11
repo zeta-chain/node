@@ -24,7 +24,7 @@ func TestParseEvent(t *testing.T) {
 	gw := NewGateway(packageID, gatewayID, "0x0")
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
 	}
 
 	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
@@ -369,7 +369,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 	gw := NewGateway(packageID, gatewayID, "0x0")
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
 	}
 
 	for _, tt := range []struct {
@@ -420,7 +420,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 				content: WithdrawAndCallPTB{
 					MoveCall: MoveCall{
 						PackageID:  packageID,
-						Module:     moduleName,
+						Module:     GatewayModule,
 						Function:   FuncWithdrawImpl,
 						ArgIndexes: ptbWithdrawImplArgIndexes,
 					},

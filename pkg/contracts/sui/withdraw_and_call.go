@@ -29,9 +29,13 @@ const (
 	// typeSeparator is the separator for Sui package and module
 	typeSeparator = "::"
 
-	// ptbWithdrawAndCallCmdCount is the number of commands in the PTB withdraw and call
+	// ptbWithdrawAndArbiCallCmdCount is the number of commands in the PTB withdraw and arbitrary call
 	// the three commands are: [withdraw_impl, transfer_objects, on_call]
-	ptbWithdrawAndCallCmdCount = 3
+	ptbWithdrawAndArbiCallCmdCount = 3
+
+	// ptbWithdrawAndAuthCallCmdCount is the number of commands in the PTB withdraw and authenticated call
+	// the five commands are: [withdraw_impl, transfer_objects, set_message_context, on_call, reset_message_context]
+	ptbWithdrawAndAuthCallCmdCount = 5
 
 	// ptbWithdrawImplInputCount is the number of inputs in the withdraw_impl command
 	// the inputs are: [gatewayObject, amount, nonce, gasBudget, withdrawCap]
@@ -99,15 +103,6 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 ) (event Event, content OutboundEventContent, err error) {
 	tx := res.Transaction.Data.Transaction
 
-	// the number of PTB commands should be 3
-	if len(tx.Transactions) != ptbWithdrawAndCallCmdCount {
-		return event, nil, errors.Wrapf(
-			ErrParseEvent,
-			"invalid number of commands(%d) in the PTB",
-			len(tx.Transactions),
-		)
-	}
-
 	// the number of PTB inputs should be >= 5
 	if len(tx.Inputs) < ptbWithdrawImplInputCount {
 		return event, nil, errors.Wrapf(
@@ -127,7 +122,7 @@ func (gw *Gateway) parseWithdrawAndCallPTB(
 		return event, nil, errors.Wrapf(ErrParseEvent, "invalid package id %s in the PTB", moveCall.PackageID)
 	}
 
-	if moveCall.Module != moduleName {
+	if moveCall.Module != GatewayModule {
 		return event, nil, errors.Wrapf(ErrParseEvent, "invalid module name %s in the PTB", moveCall.Module)
 	}
 

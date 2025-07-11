@@ -12,6 +12,8 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 // SuiVerifyGatewayPackageUpgrade upgrades the Sui gateway package and verifies the upgrade
@@ -86,7 +88,7 @@ func (r *E2ERunner) moveCallUpgraded(ctx context.Context, gatewayPackageID strin
 	tx, err := r.Clients.Sui.MoveCall(ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
 		PackageObjectId: gatewayPackageID,
-		Module:          r.SuiGateway.Module(),
+		Module:          sui.GatewayModule,
 		Function:        "upgraded",
 		TypeArguments:   []any{},
 		Arguments:       []any{},

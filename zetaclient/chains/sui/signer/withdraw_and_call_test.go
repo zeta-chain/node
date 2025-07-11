@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/testutil/sample"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // newTestWACPTBArgs creates a withdrawAndCallPTBArgs struct for testing
@@ -17,6 +18,7 @@ func newTestWACPTBArgs(
 	t *testing.T,
 	gatewayObjRef, suiCoinObjRef, withdrawCapObjRef sui.ObjectRef,
 	onCallObjectRefs []sui.ObjectRef,
+	isArbitraryCall bool,
 ) withdrawAndCallPTBArgs {
 	return withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: withdrawAndCallObjRefs{
@@ -25,11 +27,13 @@ func newTestWACPTBArgs(
 			onCall:      onCallObjectRefs,
 			suiCoins:    []*sui.ObjectRef{&suiCoinObjRef},
 		},
-		coinType:  string(zetasui.SUI),
-		amount:    1000000,
-		nonce:     1,
-		gasBudget: 2000000,
-		receiver:  sample.SuiAddress(t),
+		coinType:        string(zetasui.SUI),
+		amount:          1000000,
+		nonce:           1,
+		gasBudget:       2000000,
+		sender:          sample.EthAddress().Hex(),
+		target:          sample.SuiAddress(t),
+		isArbitraryCall: isArbitraryCall,
 		payload: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
@@ -55,7 +59,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 	}{
 		{
 			name: "successful withdraw and call",
-			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, []sui.ObjectRef{onCallObjRef}),
+			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, []sui.ObjectRef{onCallObjRef}, true),
 		},
 		{
 			name: "successful withdraw and call with empty payload",
@@ -66,6 +70,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					suiCoinObjRef,
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
+					true,
 				)
 				args.payload.Message = []byte{}
 				return args
@@ -80,6 +85,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					suiCoinObjRef,
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
+					true,
 				)
 				args.coinType = "invalid_coin_type"
 				return args
@@ -95,8 +101,9 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					suiCoinObjRef,
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
+					true,
 				)
-				args.receiver = "invalid_target_package_id"
+				args.target = "invalid_target_package_id"
 				return args
 			}(),
 			errMsg: "invalid target package ID",
@@ -110,6 +117,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					suiCoinObjRef,
 					withdrawCapObjRef,
 					[]sui.ObjectRef{onCallObjRef},
+					true,
 				)
 				args.payload.TypeArgs[0] = "invalid_type_argument"
 				return args
@@ -139,6 +147,8 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	withdrawCapID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
+	msgContextID, err := sui.ObjectIdFromHex(testutils.SUIMsgContextID)
+	require.NoError(t, err)
 	onCallObjectID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
 	suiCoinID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
@@ -153,13 +163,15 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	digest4, err := sui.NewBase58(sample.SuiDigest(t))
 	require.NoError(t, err)
+	digest5, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
 
 	// create SUI coin object reference
 	suiCoinObjRefs := []*sui.ObjectRef{
 		{
 			ObjectId: suiCoinID,
 			Version:  1,
-			Digest:   digest4,
+			Digest:   digest5,
 		},
 	}
 
@@ -200,9 +212,16 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				},
 				{
 					Data: &models.SuiObjectData{
+						ObjectId: msgContextID.String(),
+						Version:  "7",
+						Digest:   digest3.String(),
+					},
+				},
+				{
+					Data: &models.SuiObjectData{
 						ObjectId: onCallObjectID.String(),
 						Version:  "3",
-						Digest:   digest3.String(),
+						Digest:   digest4.String(),
 						Owner: map[string]any{
 							"Shared": map[string]any{
 								"initial_shared_version": float64(1),
@@ -222,11 +241,16 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 					Version:  2,
 					Digest:   digest2,
 				},
+				msgContextRef: sui.ObjectRef{
+					ObjectId: msgContextID,
+					Version:  7,
+					Digest:   digest3,
+				},
 				onCall: []sui.ObjectRef{
 					{
 						ObjectId: onCallObjectID,
 						Version:  1,
-						Digest:   digest3,
+						Digest:   digest4,
 					},
 				},
 				suiCoins: suiCoinObjRefs,
@@ -259,6 +283,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				{
 					Data: sampleSharedObjectData(t),
 				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
 			},
 			errMsg: "failed to parse object ID",
 		},
@@ -274,6 +301,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 						Version:  "invalid_version",
 						Digest:   digest1.String(),
 					},
+				},
+				{
+					Data: sampleSharedObjectData(t),
 				},
 				{
 					Data: sampleSharedObjectData(t),
@@ -301,6 +331,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 							},
 						},
 					},
+				},
+				{
+					Data: sampleSharedObjectData(t),
 				},
 				{
 					Data: sampleSharedObjectData(t),

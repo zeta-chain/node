@@ -43,7 +43,10 @@ func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 		amount,
 		r.SUIZRC20Addr,
 		payloadOnCall,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: false},
+		gatewayzevm.CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false, // authenticated call
+		},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_authenticated_call")

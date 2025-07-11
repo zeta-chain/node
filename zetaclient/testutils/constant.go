@@ -41,6 +41,7 @@ const (
 const OldSolanaGatewayAddressDevnet = "94U5AHQMKkV5txNJ17QPXWoh474PheGou6cNP2FEuL1d"
 
 // stub
+const SUIMsgContextID = "0x7d8c42a0e8fb657965bb9a73a5cb74cc945f7c46d485fbd9e513bf9c0fa51209"
 const tonGatewayID = "0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"
 
 // GatewayAddresses contains constants gateway addresses for testing
@@ -55,8 +56,7 @@ var GatewayAddresses = map[int64]string{
 
 	// stub, will be replaced with real address later
 	chains.SuiMainnet.ChainId: "0x5d4b302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9fff," +
-		"0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa," +
-		"0x7d8c42a0e8fb657965bb9a73a5cb74cc945f7c46d485fbd9e513bf9c0fa51209",
+		"0xffff302506645c37ff133b98fff50a5ae14841659738d6d733d59d0d217a9aaa," + SUIMsgContextID,
 }
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing
