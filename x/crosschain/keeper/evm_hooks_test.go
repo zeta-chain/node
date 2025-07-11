@@ -783,7 +783,7 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 }
 
 func TestKeeper_ProcessLogs(t *testing.T) {
-	t.Run("successfully process Zeta Withdrawal to ETH chain", func(t *testing.T) {
+	t.Run("successfully process Zeta Withdraw to ETH chain", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -816,6 +816,54 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		})
 
 		block := sample.ValidZetaWithdrawToEthReceipt(t)
+		zk.FungibleKeeper.SetSystemContract(ctx, fungibletypes.SystemContract{
+			SystemContract: systemContract.Hex(),
+			ConnectorZevm:  sample.EthAddress().String(),
+			Gateway:        gatewayFromLog,
+		})
+
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		err = k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+	})
+
+	t.Run("successfully process Zeta Withdraw and call to ETH chain", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		gatewayFromLog := "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+		zrc20FromLog := "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
+
+		systemContract, err := zk.FungibleKeeper.DeploySystemContract(ctx, ethcommon.HexToAddress(zrc20FromLog), ethcommon.Address{}, ethcommon.Address{})
+		require.NoError(t, err)
+
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+			ChainId: chain.ChainId,
+			Prices:  []uint64{100},
+		})
+
+		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+			ChainId: chain.ChainId,
+			Nonce:   0,
+		})
+		zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+			NonceLow:  0,
+			NonceHigh: 0,
+			ChainId:   chain.ChainId,
+			Tss:       tss.TssPubkey,
+		})
+
+		block := sample.ValidZetaWithdrawAndCallReceipt(t)
 		zk.FungibleKeeper.SetSystemContract(ctx, fungibletypes.SystemContract{
 			SystemContract: systemContract.Hex(),
 			ConnectorZevm:  sample.EthAddress().String(),

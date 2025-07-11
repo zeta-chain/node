@@ -133,7 +133,7 @@ func (r *E2ERunner) deployGatewayZEVM() {
 
 // deployCoreRegistry deploys the CoreRegistry contract with proxy
 func (r *E2ERunner) deployCoreRegistry() {
-	r.Logger.Print("Deploying CoreRegistry contract")
+	r.Logger.Info("deploying CoreRegistry contract")
 
 	coreRegistryAddr, txCoreRegistry, _, err := coreregistry.DeployCoreRegistry(r.ZEVMAuth, r.ZEVMClient)
 	require.NoError(r, err)
@@ -151,7 +151,7 @@ func (r *E2ERunner) deployCoreRegistry() {
 	require.NoError(r, err)
 
 	r.Logger.Info(
-		"Deploying CoreRegistry proxy with admin %s gateway %s, address: %s",
+		"deploying CoreRegistry proxy with admin %s gateway %s, address: %s",
 		r.Account.EVMAddress().Hex(),
 		r.GatewayZEVMAddr.Hex(),
 		coreRegistryAddr.Hex(),

@@ -24,7 +24,7 @@ type InboundDetails struct {
 	gasLimitQueried *big.Int
 }
 
-func (k Keeper) parseZetaInbound(
+func (k Keeper) getZetaInboundDetails(
 	ctx sdk.Context,
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
@@ -50,7 +50,8 @@ func (k Keeper) parseZetaInbound(
 
 	gasLimit := callOptions.GasLimit
 	if gasLimit.Int64() == 0 {
-		gasLimit = big.NewInt(100_000)
+		return InboundDetails{}, errorsmod.Wrapf(
+			types.ErrInvalidWithdrawalEvent, " gas limit is zero for ZETA withdrawal")
 	}
 
 	return InboundDetails{
@@ -61,7 +62,7 @@ func (k Keeper) parseZetaInbound(
 	}, nil
 }
 
-func (k Keeper) parseErc20Inbound(
+func (k Keeper) getErc20InboundDetails(
 	ctx sdk.Context,
 	zrc20 ethcommon.Address,
 	callEvent bool,
@@ -140,6 +141,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 			receiverChainID = withdrawalAndCallEvent.ChainId
 			callOptions = withdrawalAndCallEvent.CallOptions
 		}
+
 		wzetaContractAddress, err := k.fungibleKeeper.GetWZetaContractAddress(ctx)
 		if err != nil {
 			return errorsmod.Wrapf(
@@ -149,11 +151,14 @@ func (k Keeper) ProcessZEVMInboundV2(
 		}
 
 		var inboundDetails InboundDetails
+		// The following condition checks if the withdrawal is for ZETA or ZRC20.
+		// ZRC20 cointype can be further classified as ZRC20 or Gas , based on foreign coin or NoAssetCall.
+		// Note: NoAssetCall is not supported for ZETA
 		switch {
 		case zrc20 == wzetaContractAddress:
-			inboundDetails, err = k.parseZetaInbound(ctx, receiverChainID, callOptions, wzetaContractAddress.Hex())
+			inboundDetails, err = k.getZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress.Hex())
 		default:
-			inboundDetails, err = k.parseErc20Inbound(ctx, zrc20, callEvent != nil)
+			inboundDetails, err = k.getErc20InboundDetails(ctx, zrc20, callEvent != nil)
 		}
 
 		if err != nil {

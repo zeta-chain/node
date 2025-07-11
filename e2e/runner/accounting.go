@@ -34,7 +34,7 @@ type Response struct {
 }
 
 func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
-	r.Logger.Print("Checking ZRC20 Balance vs. Supply")
+	r.Logger.Info("Checking ZRC20 Balance vs Supply")
 
 	err := r.checkETHTSSBalance()
 	require.NoError(r, err, "ETH balance check failed")
