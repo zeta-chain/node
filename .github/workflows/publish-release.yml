@@ -90,7 +90,7 @@ jobs:
             sleep 5
             echo "Re-Create Tag."
             git tag ${GITHUB_TAG_VERSION}
-            git push --tags      
+            git push --tags
           fi
 
       - name: Create GitHub Release
@@ -117,6 +117,7 @@ jobs:
           subject-path: |
             dist/zetacored_**/*
             dist/zetaclientd_**/*
+            dist/zetae2e_**/*
             dist/checksums.txt
 
       - name: Upload Attestation Bundle
