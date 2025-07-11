@@ -39,7 +39,7 @@ func (k Keeper) ProcessAbort(
 
 	// if the cctx contains asset, the asset is first deposited to the abort address, separately from onAbort call
 	if coinType == coin.CoinType_ERC20 || coinType == coin.CoinType_Gas {
-		// simply deposit back to the revert address
+		// simply deposit back to the abort address
 		// if the deposit fails, processing the abort entirely fails
 		// MsgRefundAbort can still be used to retry the operation later on
 		if _, err := k.DepositZRC20(ctx, zrc20Addr, abortAddress, amount); err != nil {

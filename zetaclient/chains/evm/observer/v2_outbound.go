@@ -323,7 +323,7 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw and call event not found")
 }
 
-// parseAndCheckERC20CustodyWithdrawAndCall parses and checks the ERC20 custody withdraw and call event
+// parseAndZetaConnectorWithdrawAndCall parses and checks the Zeta connector withdraw and call event
 func parseAndZetaConnectorWithdrawAndCall(
 	cctx *crosschaintypes.CrossChainTx,
 	receipt *ethtypes.Receipt,
