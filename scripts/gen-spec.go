@@ -23,10 +23,10 @@ type ModuleData struct {
 
 // MessageData holds the documentation for a single message
 type MessageData struct {
-	Name           string
-	Comment        string
-	ProtoMessage   string
-	HasComment     bool
+	Name         string
+	Comment      string
+	ProtoMessage string
+	HasComment   bool
 }
 
 // FileData holds information about files from docs/spec
@@ -133,7 +133,7 @@ func processProtoFile(path string, modules *[]ModuleData, docsSpecDir string) er
 
 	if packageName != "" && len(msgServices) > 0 {
 		moduleName := getLastSegmentOfPackageName(packageName)
-		
+
 		// Read all files from docs/spec for this module
 		files := readAllFilesFromDocsSpec(docsSpecDir, moduleName)
 
@@ -188,48 +188,48 @@ func processProtoFile(path string, modules *[]ModuleData, docsSpecDir string) er
 func readAllFilesFromDocsSpec(docsSpecDir, moduleName string) []FileData {
 	var files []FileData
 	moduleDir := filepath.Join(docsSpecDir, moduleName)
-	
+
 	// Check if module directory exists
 	if _, err := os.Stat(moduleDir); os.IsNotExist(err) {
 		return files
 	}
-	
+
 	// Read all files in the module directory
 	err := filepath.Walk(moduleDir, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if f.IsDir() {
 			return nil
 		}
-		
+
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
 			fmt.Printf("Error reading file %q: %v\n", path, err)
 			return nil
 		}
-		
+
 		// Get relative path from module directory
 		relPath, err := filepath.Rel(moduleDir, path)
 		if err != nil {
 			fmt.Printf("Error getting relative path for %q: %v\n", path, err)
 			return nil
 		}
-		
+
 		files = append(files, FileData{
 			Name:     f.Name(),
 			Content:  string(content),
 			FilePath: relPath,
 		})
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		fmt.Printf("Error walking module directory %q: %v\n", moduleDir, err)
 	}
-	
+
 	return files
 }
 
