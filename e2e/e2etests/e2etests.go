@@ -115,6 +115,7 @@ const (
 	TestSuiTokenWithdrawName                      = "sui_token_withdraw"                           // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiTokenWithdrawAndCallName               = "sui_token_withdraw_and_call"                  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiTokenWithdrawAndCallRevertWithCallName = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndAuthenticatedCallName  = "sui_token_withdraw_and_authenticated_call"
 	TestSuiWithdrawAndCallName                    = "sui_withdraw_and_call"
 	TestSuiWithdrawRevertWithCallName             = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
@@ -1051,6 +1052,16 @@ var AllE2ETests = []runner.E2ETest{
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
 		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawAndAuthenticatedCallName,
+		"withdraw fungible token from ZEVM and makes an authenticated call to a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdrawAndAuthenticatedCall,
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositRestrictedName,

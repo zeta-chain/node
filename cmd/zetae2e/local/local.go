@@ -500,6 +500,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenWithdrawName,
 			e2etests.TestSuiTokenWithdrawAndCallName,
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiTokenWithdrawAndAuthenticatedCallName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,
