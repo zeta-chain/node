@@ -41,8 +41,9 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// #nosec G115 always positive
 		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
-
-	if inboundCoinType == coin.CoinType_Zeta {
+	// Refactor HandleEVMDeposit to have two clear branches of logic for V1 and V2 protocol versions
+	// TODO : https://github.com/zeta-chain/node/issues/3988
+	if inboundCoinType == coin.CoinType_Zeta && cctx.ProtocolContractVersion == types.ProtocolContractVersion_V1 {
 		// In case of an error
 		// 	- Return true will revert the cctx and create a revert cctx with status PendingRevert
 		// 	- Return false will abort the cctx
@@ -55,7 +56,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(
+		evmTxResponse, err := k.fungibleKeeper.LegacyZETADepositAndCallContract(
 			ctx,
 			sender,
 			to,

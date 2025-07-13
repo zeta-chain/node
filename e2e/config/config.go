@@ -87,6 +87,7 @@ type AdditionalAccounts struct {
 	UserEtherRevert       Account `yaml:"user_ether_revert"`
 	UserERC20Revert       Account `yaml:"user_erc20_revert"`
 	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
+	UserZeta              Account `yaml:"user_zeta"`
 }
 
 type PolicyAccounts struct {
@@ -298,6 +299,7 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserEtherRevert,
 		a.UserERC20Revert,
 		a.UserEmissionsWithdraw,
+		a.UserZeta,
 	}
 }
 
@@ -430,7 +432,10 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-
+	c.AdditionalAccounts.UserZeta, err = generateAccount()
+	if err != nil {
+		return err
+	}
 	c.PolicyAccounts.EmergencyPolicyAccount, err = generateAccount()
 	if err != nil {
 		return err
@@ -477,7 +482,7 @@ func (a Account) AsTONWallet(client *ton.Client) (*ton.AccountInit, *tonwallet.W
 	return ton.ConstructWalletFromPrivateKey(rawPk, client)
 }
 
-// config actually match
+// Validate configs actually match
 func (a Account) Validate() error {
 	privateKey, err := a.PrivateKey()
 	if err != nil {

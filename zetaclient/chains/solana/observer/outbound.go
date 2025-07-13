@@ -57,8 +57,7 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
-		Str("method", "ProcessOutboundTrackers").
-		Int64("chain", chainID).
+		Str(logs.FieldMethod, "ProcessOutboundTrackers").
 		Logger()
 
 	// process outbound trackers
@@ -84,19 +83,23 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 			if result, ok := ob.CheckFinalizedTx(ctx, txHash.TxHash, nonce, coinType); ok {
 				txCount++
 				txResult = result
-				logger.Info().Msgf("confirmed outbound %s for chain %d nonce %d", txHash.TxHash, chainID, nonce)
-				if txCount > 1 {
-					logger.Error().
-						Msgf("checkFinalizedTx passed, txCount %d chain %d nonce %d txResult %v", txCount, chainID, nonce, txResult)
-				}
+
+				logger.Info().
+					Str(logs.FieldTx, txHash.TxHash).
+					Uint64(logs.FieldNonce, nonce).
+					Msg("Confirmed outbound")
 			}
 		}
+
 		// should be only one finalized txHash for each nonce
 		if txCount == 1 {
 			ob.SetTxResult(nonce, txResult)
 		} else if txCount > 1 {
-			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
-			ob.Logger().Outbound.Error().Msgf("finalized multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
+			// Should not happen. We can't tell which txHash is true.
+			// It might happen (e.g. bug, glitchy/hacked endpoint)
+			logger.Error().
+				Uint64(logs.FieldNonce, nonce).
+				Msgf("Finalized multiple (%d) outbound", txCount)
 		}
 	}
 
@@ -169,9 +172,8 @@ func (ob *Observer) PostVoteOutbound(
 
 	// prepare logger fields
 	logFields := map[string]any{
-		"chain": ob.Chain().ChainId,
-		"nonce": nonce,
-		"tx":    outboundHash,
+		logs.FieldNonce: nonce,
+		logs.FieldTx:    outboundHash,
 	}
 
 	// so we set retryGasLimit to 0 because the solana gateway withdrawal will always succeed
@@ -194,9 +196,9 @@ func (ob *Observer) PostVoteOutbound(
 
 	// print vote tx hash and ballot
 	if zetaTxHash != "" {
-		logFields["vote"] = zetaTxHash
-		logFields["ballot"] = ballot
-		ob.Logger().Outbound.Info().Fields(logFields).Msg("PostVoteOutbound: posted outbound vote successfully")
+		logFields[logs.FieldZetaTx] = zetaTxHash
+		logFields[logs.FieldBallot] = ballot
+		ob.Logger().Outbound.Info().Fields(logFields).Msg("PostVoteOutbound: posted outbound vote")
 	}
 }
 

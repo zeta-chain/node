@@ -33,8 +33,8 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 
-		// mock up ZETADepositAndCallContract
-		fungibleMock.On("ZETADepositAndCallContract", mock.Anything,
+		// mock up LegacyZETADepositAndCallContract
+		fungibleMock.On("LegacyZETADepositAndCallContract", mock.Anything,
 			mock.Anything,
 			receiver, int64(1), amount, mock.Anything, mock.Anything).Return(nil, nil)
 
@@ -178,8 +178,8 @@ func TestKeeper_InitiateOutboundZEVM(t *testing.T) {
 			receiver := sample.EthAddress()
 			amount := big.NewInt(42)
 
-			// mock up ZETADepositAndCallContract
-			fungibleMock.On("ZETADepositAndCallContract", mock.Anything,
+			// mock up LegacyZETADepositAndCallContract
+			fungibleMock.On("LegacyZETADepositAndCallContract", mock.Anything,
 				mock.Anything,
 				receiver, int64(1), amount, mock.Anything, mock.Anything).Return(nil, sample.ErrSample)
 

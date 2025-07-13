@@ -65,6 +65,7 @@ func adminTestRoutine(
 		}
 
 		adminRunner.Logger.Print("🍾 admin tests completed in %s", time.Since(startTime).String())
+		deployerRunner.ERC20CustodyAddr = adminRunner.ERC20CustodyAddr // update the address as ERC20MigrateFunds migrates funds to the new address
 
 		return err
 	}

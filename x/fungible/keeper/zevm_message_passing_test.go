@@ -22,7 +22,7 @@ import (
 )
 
 func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
-	t.Run("successfully call ZETADepositAndCallContract on connector contract ", func(t *testing.T) {
+	t.Run("successfully call LegacyZETADepositAndCallContract on connector contract ", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -38,7 +38,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err = k.ZETADepositAndCallContract(
+		_, err = k.LegacyZETADepositAndCallContract(
 			ctx,
 			zetaTxSender,
 			zetaTxReceiver,
@@ -90,7 +90,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = k.ZETADepositAndCallContract(
+		_, err = k.LegacyZETADepositAndCallContract(
 			ctx,
 			zetaTxSender,
 			zetaTxReceiver,
@@ -115,7 +115,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		data := []byte("message")
 		cctxIndexBytes := [32]byte{}
 
-		_, err := k.ZETADepositAndCallContract(
+		_, err := k.LegacyZETADepositAndCallContract(
 			ctx,
 			zetaTxSender,
 			zetaTxReceiver,
@@ -129,7 +129,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 		require.Equal(t, inboundAmount.Int64(), b.Amount.Int64())
 	})
 
-	t.Run("fail ZETADepositAndCallContract if Deposit Fails", func(t *testing.T) {
+	t.Run("fail LegacyZETADepositAndCallContract if Deposit Fails", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseBankMock: true})
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -154,7 +154,7 @@ func TestKeeper_ZEVMDepositAndCallContract(t *testing.T) {
 			Once()
 		bankMock.On("MintCoins", ctx, types.ModuleName, mock.Anything).Return(errorMint).Once()
 
-		_, err = k.ZETADepositAndCallContract(
+		_, err = k.LegacyZETADepositAndCallContract(
 			ctx,
 			zetaTxSender,
 			zetaTxReceiver,

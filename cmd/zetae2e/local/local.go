@@ -265,7 +265,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupBitcoinAccounts(true)
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy || testAdmin)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -291,7 +291,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams()
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
 
 		if testTON {
 			deployerRunner.SetupTON(
@@ -342,7 +342,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 
 	if !skipRegular {
-		// start the EVM tests
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
@@ -372,7 +371,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
-
+	// TODO : update all admin tests to use ZETA v2 flow instead of legacy
+	// https://github.com/zeta-chain/node/issues/4005
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestUpdateZRC20NameName,
@@ -558,12 +558,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		))
 	}
 
-	if testConnectorMigration {
-		// Add the v2 connector migration tests and assertions
-		// https://github.com/zeta-chain/node/issues/3947
-		deployerRunner.Logger.Info("no migration tests to run")
-	}
-
 	// while tests are executed, monitor blocks in parallel to check if system txs are on top and they have biggest priority
 	txPriorityErrCh := make(chan error, 1)
 	ctx, monitorPriorityCancel := context.WithCancel(context.Background())
@@ -576,6 +570,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
+
+	deployerRunner.CheckZRC20BalanceAndSupply()
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.
@@ -597,7 +593,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 		if err := fn(); err != nil {
 			logger.Print("❌ %v", err)
-			logger.Print("❌connector migration failed")
+			logger.Print("❌ connector migration failed")
 			os.Exit(1)
 		}
 	}

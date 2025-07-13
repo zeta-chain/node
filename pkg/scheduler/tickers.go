@@ -26,7 +26,7 @@ func newIntervalTicker(
 ) *intervalTicker {
 	wrapper := func(ctx context.Context, t *ticker.Ticker) error {
 		if err := task(ctx); err != nil {
-			logger.Error().Err(err).Msg("task failed")
+			logger.Error().Err(err).Msgf("Task %s failed", taskName)
 		}
 
 		if intervalUpdater != nil {

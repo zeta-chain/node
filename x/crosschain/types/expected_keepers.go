@@ -217,7 +217,7 @@ type FungibleKeeper interface {
 	) (ethcommon.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
-	ZETADepositAndCallContract(ctx sdk.Context,
+	LegacyZETADepositAndCallContract(ctx sdk.Context,
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		inboundSenderChainID int64,
