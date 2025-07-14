@@ -275,6 +275,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
@@ -345,6 +346,7 @@ func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	t.Run("monitor outbound vote", func(t *testing.T) {

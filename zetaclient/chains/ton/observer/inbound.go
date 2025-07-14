@@ -19,12 +19,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-const (
-	// maximum number of transactions to process on a ticker
-	// TODO: move to config
-	// https://github.com/zeta-chain/node/issues/3086
-	maxTransactionsPerTick = 100
-)
+const paginationLimit = 100
 
 // ObserveInbound observes Gateway's account for new transactions [INBOUND AND OUTBOUND]
 //
@@ -48,11 +43,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	case len(txs) == 0:
 		// noop
 		return nil
-	case len(txs) > maxTransactionsPerTick:
+	case len(txs) > paginationLimit:
 		ob.Logger().Inbound.Info().
-			Msgf("observeGateway: got %d transactions. Taking first %d", len(txs), maxTransactionsPerTick)
+			Msgf("observeGateway: got %d transactions. Taking first %d", len(txs), paginationLimit)
 
-		txs = txs[:maxTransactionsPerTick]
+		txs = txs[:paginationLimit]
 	default:
 		ob.Logger().Inbound.Info().Msgf("observeGateway: got %d transactions", len(txs))
 	}
