@@ -406,10 +406,18 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
+// parseTriplet parses triplet ID from a string of the format `$packageID,$gatewayObjectID,$messageContextID`
 func parseTriplet(triplet string) (string, string, string, error) {
 	parts := strings.Split(triplet, ",")
 	if len(parts) != 3 {
 		return "", "", "", errors.Errorf("invalid triplet %q", triplet)
+	}
+
+	// each part should be a valid Sui address
+	for _, part := range parts {
+		if err := ValidateAddress(part); err != nil {
+			return "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
+		}
 	}
 
 	return parts[0], parts[1], parts[2], nil

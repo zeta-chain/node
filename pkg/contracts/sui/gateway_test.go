@@ -12,6 +12,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewGatewayFromTriplet(t *testing.T) {
+	// stubs
+	const (
+		packageID        = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID        = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		messageContextID = "0x56bf44bc227b28e532c908eea9ad8929960cf7f0eb9c4591179a94975789b260"
+	)
+
+	tests := []struct {
+		name    string
+		triplet string
+		wantErr string
+	}{
+		{
+			name:    "valid triplet",
+			triplet: fmt.Sprintf("%s,%s,%s", packageID, gatewayID, messageContextID),
+		},
+		{
+			name:    "invalid triplet, missing message context",
+			triplet: "0x123,0x456",
+			wantErr: "invalid triplet",
+		},
+		{
+			name:    "invalid Sui address",
+			triplet: fmt.Sprintf("%s,%s,0xabc", packageID, gatewayID),
+			wantErr: "invalid Sui address",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gw, err := NewGatewayFromTriplet(tt.triplet)
+			if tt.wantErr != "" {
+				require.Nil(t, gw)
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, packageID, gw.PackageID())
+			assert.Equal(t, gatewayID, gw.ObjectID())
+			assert.Equal(t, messageContextID, gw.MessageContextID())
+		})
+	}
+}
+
 func TestParseEvent(t *testing.T) {
 	// stubs
 	const (
