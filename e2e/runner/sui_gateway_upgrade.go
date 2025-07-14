@@ -56,7 +56,7 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
 	}...)
-	cmdUpgrade.Dir = suiGatewayUpgradedPath
+	cmdUpgrade.Dir = r.WorkDirPrefixed(suiGatewayUpgradedPath)
 
 	// run command and show output
 	startTime := time.Now()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -534,4 +535,10 @@ func (r *E2ERunner) GetZetacoredVersion() string {
 	require.NoError(r, err, "get node info")
 	r.zetacoredVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
 	return r.zetacoredVersion
+}
+
+func (r *E2ERunner) WorkDirPrefixed(path string) string {
+	prefix := utils.WorkDir(r)
+	r.Logger.Print("WorkDirPrefixed: %s", filepath.Join(prefix, path))
+	return filepath.Join(prefix, path)
 }
