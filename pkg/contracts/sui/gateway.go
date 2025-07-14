@@ -31,15 +31,6 @@ type Gateway struct {
 	mu sync.RWMutex
 }
 
-// MessageContext contains the context for authenticated call
-type MessageContext struct {
-	// Sender is the zevm address who initiated the authenticated call
-	Sender string
-
-	// Target is the Sui package where the 'on_call' function is defined
-	Target string
-}
-
 // OutboundEventContent is the interface of gateway outbound event content
 type OutboundEventContent interface {
 	// TokenAmount returns the amount of the outbound

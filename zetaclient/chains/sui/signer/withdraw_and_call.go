@@ -200,10 +200,12 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 	onCallObjectIDs []string,
 	gasBudget uint64,
 ) (withdrawAndCallObjRefs, error) {
+	// given below layout of 'objectIDs', on_call objects start from index 3
+	const onCallObjectIndex = 3
+
 	var (
-		onCallObjectIndex = 3
-		messageContextID  = s.gateway.MessageContextID()
-		objectIDs         = append([]string{s.gateway.ObjectID(), withdrawCapID, messageContextID}, onCallObjectIDs...)
+		messageContextID = s.gateway.MessageContextID()
+		objectIDs        = append([]string{s.gateway.ObjectID(), withdrawCapID, messageContextID}, onCallObjectIDs...)
 	)
 
 	// query objects in batch

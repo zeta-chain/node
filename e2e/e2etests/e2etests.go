@@ -112,11 +112,11 @@ const (
 	TestSuiTokenDepositAndCallName                  = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiTokenDepositAndCallRevertName            = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawName                             = "sui_withdraw"
-	TestSuiTokenWithdrawName                        = "sui_token_withdraw"                           // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndCallName                 = "sui_token_withdraw_and_call"                  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndCallRevertWithCallName   = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenAuthenticatedCallName               = "sui_token_authenticated_call"
-	TestSuiTokenAuthenticatedCallRevertWithCallName = "sui_token_authenticated_call_revert_with_call"
+	TestSuiTokenWithdrawName                        = "sui_token_withdraw"                            // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallName                 = "sui_token_withdraw_and_call"                   // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallRevertWithCallName   = "sui_token_withdraw_and_call_revert_with_call"  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenAuthenticatedCallName               = "sui_token_authenticated_call"                  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenAuthenticatedCallRevertWithCallName = "sui_token_authenticated_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallName                      = "sui_withdraw_and_call"
 	TestSuiWithdrawRevertWithCallName               = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallRevertWithCallName        = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
