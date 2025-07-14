@@ -95,4 +95,6 @@ ARG BUILDARCH
 RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
     curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
-    chmod 755 /usr/local/bin/zetaclientd
+    chmod 755 /usr/local/bin/zetaclientd && \
+    curl -Lo /usr/local/bin/zetae2e ${OLD_VERSION}/zetae2e-linux-${BUILDARCH} && \
+    chmod 755 /usr/local/bin/zetae2e;
