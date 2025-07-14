@@ -105,24 +105,26 @@ const (
 	/*
 	 Sui tests
 	*/
-	TestSuiDepositName                            = "sui_deposit"
-	TestSuiDepositAndCallName                     = "sui_deposit_and_call"
-	TestSuiDepositAndCallRevertName               = "sui_deposit_and_call_revert"
-	TestSuiTokenDepositName                       = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallName                = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenDepositAndCallRevertName          = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawName                           = "sui_withdraw"
-	TestSuiTokenWithdrawName                      = "sui_token_withdraw"                           // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndCallName               = "sui_token_withdraw_and_call"                  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndCallRevertWithCallName = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiTokenWithdrawAndAuthenticatedCallName  = "sui_token_withdraw_and_authenticated_call"
-	TestSuiWithdrawAndCallName                    = "sui_withdraw_and_call"
-	TestSuiWithdrawRevertWithCallName             = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestSuiWithdrawAndAuthenticatedCallName       = "sui_withdraw_and_authenticated_call"
-	TestSuiDepositRestrictedName                  = "sui_deposit_restricted"
-	TestSuiWithdrawRestrictedName                 = "sui_withdraw_restricted"
-	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
+	TestSuiDepositName                              = "sui_deposit"
+	TestSuiDepositAndCallName                       = "sui_deposit_and_call"
+	TestSuiDepositAndCallRevertName                 = "sui_deposit_and_call_revert"
+	TestSuiTokenDepositName                         = "sui_token_deposit"                 // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallName                  = "sui_token_deposit_and_call"        // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenDepositAndCallRevertName            = "sui_token_deposit_and_call_revert" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawName                             = "sui_withdraw"
+	TestSuiTokenWithdrawName                        = "sui_token_withdraw"                           // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallName                 = "sui_token_withdraw_and_call"                  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallRevertWithCallName   = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenAuthenticatedCallName               = "sui_token_authenticated_call"
+	TestSuiTokenAuthenticatedCallRevertWithCallName = "sui_token_authenticated_call_revert_with_call"
+	TestSuiWithdrawAndCallName                      = "sui_withdraw_and_call"
+	TestSuiWithdrawRevertWithCallName               = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawAndCallRevertWithCallName        = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiAuthenticatedCallName                    = "sui_authenticated_call"
+	TestSuiAuthenticatedCallRevertWithCallName      = "sui_authenticated_call_revert_with_call"
+	TestSuiDepositRestrictedName                    = "sui_deposit_restricted"
+	TestSuiWithdrawRestrictedName                   = "sui_withdraw_restricted"
+	TestSuiWithdrawInvalidReceiverName              = "sui_withdraw_invalid_receiver"
 
 	/*
 	 Bitcoin tests
@@ -1062,13 +1064,23 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
-		TestSuiWithdrawAndAuthenticatedCallName,
+		TestSuiAuthenticatedCallName,
 		"withdraw SUI from ZEVM and makes an authenticated call to a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndAuthenticatedCall,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiAuthenticatedCallRevertWithCallName,
+		"withdraw SUI from ZEVM and makes an authenticated call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiWithdrawAndAuthenticatedCallRevertWithCall,
 		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
@@ -1101,13 +1113,23 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v30.0.0"),
 	),
 	runner.NewE2ETest(
-		TestSuiTokenWithdrawAndAuthenticatedCallName,
+		TestSuiTokenAuthenticatedCallName,
 		"withdraw fungible token from ZEVM and makes an authenticated call to a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in base unit", DefaultValue: "100000"},
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndAuthenticatedCall,
+		runner.WithMinimumVersion("v32.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenAuthenticatedCallRevertWithCallName,
+		"withdraw fungible token from ZEVM and makes an authenticated call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenAuthenticatedCallRevertWithCall,
 		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(

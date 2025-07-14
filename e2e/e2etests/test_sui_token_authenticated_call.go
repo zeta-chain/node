@@ -11,11 +11,11 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
+func TestSuiTokenWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example authenticated call package), SUI amount and gas limit
+	// Given target package ID (example authenticated call package), token amount and gas limit
 	targetPackage := r.SuiExampleAuthCall
 	targetPackageID := targetPackage.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
@@ -27,21 +27,23 @@ func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	suiAddress := signer.Address()
 
 	// Given initial balance and called_count
-	balanceBefore := r.SuiGetSUIBalance(suiAddress)
+	balanceBefore := r.SuiGetFungibleTokenBalance(suiAddress)
 	calledCountBefore := r.SuiGetConnectedCalledCount(targetPackage)
 
 	// create the on_call payload
-	payloadOnCall := r.SuiCreateExampleAuthenticatedWACPayload(targetPackage, suiAddress)
+	authorizedSender := r.EVMAddress()
+	payloadOnCall := r.SuiCreateExampleAuthenticatedWACPayload(targetPackage, authorizedSender, suiAddress)
 
 	// ACT
-	// approve SUI ZRC20 token
+	// approve both SUI gas budget token and fungible token ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
+	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and authenticated call
+	// perform the fungible token withdraw and authenticated call
 	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
-		r.SUIZRC20Addr,
+		r.SuiTokenZRC20Addr,
 		payloadOnCall,
 		gatewayzevm.CallOptions{
 			GasLimit:        gasLimit,
@@ -57,9 +59,9 @@ func TestSuiWithdrawAndAuthenticatedCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw_and_authenticated_call")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// balance after
-	balanceAfter := r.SuiGetSUIBalance(suiAddress)
-	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
+	// check the balance after the withdraw
+	balanceAfter := r.SuiGetFungibleTokenBalance(signer.Address())
+	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
 	calledCountAfter := r.SuiGetConnectedCalledCount(targetPackage)

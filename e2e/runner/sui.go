@@ -244,6 +244,7 @@ func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExampl
 // A real-world use case will just encode useful data that meets its needs, and it is only the receiver 'suiAddress' in this case.
 func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
 	example config.SuiExample,
+	authorizedSender ethcommon.Address,
 	suiAddress string,
 ) sui.CallPayload {
 	// only the CCTX's coinType is needed, no additional type argument
@@ -257,7 +258,7 @@ func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
 	message := make([]byte, 106)
 
 	// field 0
-	copy(message[:42], []byte(r.EVMAddress().Hex()))
+	copy(message[:42], []byte(authorizedSender.Hex()))
 
 	// field 1
 	target, err := hex.DecodeString(example.PackageID.String()[2:])

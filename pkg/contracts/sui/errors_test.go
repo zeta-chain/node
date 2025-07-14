@@ -79,6 +79,11 @@ func Test_IsRetryableExecutionError(t *testing.T) {
 			want:         false,
 		},
 		{
+			name:         "non-retryable: MoveAbort from authenticated on_call",
+			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: 59de7e9ac98a1228da0d1b1e0d2221449adad40daf810d3193907d30c702796f, name: Identifier(\"connected\") }, function: 1, instruction: 43, function_name: Some(\"on_call\") }, 2) in command 3",
+			want:         false,
+		},
+		{
 			name:         "non-retryable: command index not present",
 			errorMsgExec: "InsufficientGas", // command index is not present
 			want:         false,
@@ -89,8 +94,8 @@ func Test_IsRetryableExecutionError(t *testing.T) {
 			want:         false,
 		},
 		{
-			name:         "non-retryable: command index >= 3",
-			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: a5f027339b7e04e5d55c2ac90ea71d616870aa21d9f16fd0237a2a42e67c9f3e, name: Identifier(\"gateway\") }, function: 11, instruction: 37, function_name: Some(\"withdraw_impl\") }, 3) in command 3",
+			name:         "non-retryable: command index >= 5",
+			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: a5f027339b7e04e5d55c2ac90ea71d616870aa21d9f16fd0237a2a42e67c9f3e, name: Identifier(\"gateway\") }, function: 11, instruction: 37, function_name: Some(\"withdraw_impl\") }, 3) in command 5",
 			want:         false,
 			errMsg:       "invalid command index",
 		},
