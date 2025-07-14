@@ -52,6 +52,7 @@ func setupGasCoin(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
+
 	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 

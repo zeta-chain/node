@@ -15,6 +15,14 @@ import (
 
 // randomPayload generates a random payload to be used in gateway calls for testing purposes
 func randomPayload(r *runner.E2ERunner) string {
+	return randomPayloadWithSize(r, 50)
+}
+
+func randomPayloadWithSize(r *runner.E2ERunner, size int) string {
+	bytes := make([]byte, size)
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+
 	return hex.EncodeToString(randomPayloadBytes(r))
 }
 

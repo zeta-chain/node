@@ -10,7 +10,109 @@ import (
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 )
+
+func TestKeeper_DepositAndCallZeta(t *testing.T) {
+	t.Run("DepositAndCallZeta successfully", func(t *testing.T) {
+		// Arrange
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		chainID := chains.Ethereum.ChainId
+		inboundSender := sample.EthAddress()
+		amount := big.NewInt(1000)
+		testMessage := "test message"
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		err := k.MintZetaToFungibleModule(ctx, amount)
+		require.NoError(t, err)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		_ = deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", sample.EthAddress().String(), "foo")
+
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotEmpty(t, testDAppV2)
+
+		// Act
+		res, err := k.DepositAndCallZeta(
+			ctx,
+			gatewayzevm.MessageContext{
+				Sender:    inboundSender.Bytes(),
+				SenderEVM: inboundSender,
+				ChainID:   big.NewInt(chainID),
+			},
+			amount,
+			testDAppV2,
+			[]byte(testMessage),
+		)
+		// Assert
+		require.NoError(t, err)
+		require.NotEmpty(t, res)
+		assertTestDAppV2MessageAndAmount(t, ctx, k, testDAppV2, testMessage, amount.Int64())
+	})
+
+	t.Run("DepositAndCallZeta fails if system contract is not present", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		inboundSender := sample.EthAddress()
+		amount := big.NewInt(1000)
+		message := []byte("test message")
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotEmpty(t, testDAppV2)
+
+		// Act
+		_, err = k.DepositAndCallZeta(
+			ctx,
+			gatewayzevm.MessageContext{
+				Sender:    inboundSender.Bytes(),
+				SenderEVM: inboundSender,
+				ChainID:   big.NewInt(chains.Ethereum.ChainId),
+			},
+			amount,
+			testDAppV2,
+			message,
+		)
+
+		// Assert
+		require.ErrorIs(t, types.ErrSystemContractNotFound, err)
+	})
+
+	t.Run("DepositAndCallZeta fails if gateway is not set", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		inboundSender := sample.EthAddress()
+		amount := big.NewInt(1000)
+		message := []byte("test message")
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		k.SetSystemContract(ctx, types.SystemContract{
+			ConnectorZevm:  sample.EthAddress().Hex(),
+			SystemContract: sample.EthAddress().Hex(),
+		})
+
+		testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotEmpty(t, testDAppV2)
+
+		// Act
+		_, err = k.DepositAndCallZeta(
+			ctx,
+			gatewayzevm.MessageContext{
+				Sender:    inboundSender.Bytes(),
+				SenderEVM: inboundSender,
+				ChainID:   big.NewInt(chains.Ethereum.ChainId),
+			},
+			amount,
+			testDAppV2,
+			message,
+		)
+
+		// Assert
+		require.ErrorIs(t, types.ErrGatewayContractNotSet, err)
+	})
+}
 
 func TestKeeper_CallDepositAndRevert(t *testing.T) {
 	t.Run("CallDepositAndRevert successfully", func(t *testing.T) {
