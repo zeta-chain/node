@@ -153,6 +153,7 @@ The module stores the following information in the state:
 - TSS key
 - Gas prices on connected chains submitted by observers
 
+
 ### Messages
 
 #### MsgAddOutboundTracker
@@ -496,6 +497,7 @@ The module keeps track of parameters used for calculating rewards:
 - TSS Signer emission percentage
 - Duration factor constant
 
+
 ### Messages
 
 #### MsgUpdateParams
@@ -554,6 +556,7 @@ The `fungible` module keeps track of the following state:
 - System contract address
 - A list of foreign coins
 
+
 ### Messages
 
 #### MsgDeploySystemContracts
@@ -574,18 +577,18 @@ DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC
 
 If this is a gas coin, the following happens:
 
-- ZRC20 contract for the coin is deployed
-- contract address of ZRC20 is set as a token address in the system
-  contract
-- ZETA tokens are minted and deposited into the module account
-- setGasZetaPool is called on the system contract to add the information
-  about the pool to the system contract
-- addLiquidityETH is called to add liquidity to the pool
+* ZRC20 contract for the coin is deployed
+* contract address of ZRC20 is set as a token address in the system
+contract
+* ZETA tokens are minted and deposited into the module account
+* setGasZetaPool is called on the system contract to add the information
+about the pool to the system contract
+* addLiquidityETH is called to add liquidity to the pool
 
 If this is a non-gas coin, the following happens:
 
-- ZRC20 contract for the coin is deployed
-- The coin is added to the list of foreign coins in the module's state
+* ZRC20 contract for the coin is deployed
+* The coin is added to the list of foreign coins in the module's state
 
 Authorized: admin policy group 2.
 
@@ -773,6 +776,7 @@ A mapping between chains and observer accounts right now is set during genesis
 and is used in the `crosschain` module to determine whether an observer
 validator is authorized to vote on a transaction coming in/out of a specific
 connected chain.
+
 
 ### Messages
 
@@ -980,3 +984,4 @@ message MsgUpdateOperationalChainParams {
 	bool disable_tss_block_scan = 10;
 }
 ```
+
