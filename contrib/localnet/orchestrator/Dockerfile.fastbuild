@@ -2,7 +2,7 @@
 # check=error=true
 FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 AS geth
 FROM ghcr.io/zeta-chain/solana-docker:1.18.15 AS solana
-FROM ghcr.io/zeta-chain/sui-docker@sha256:66019d0f1cffa2bd301b03893c33a4fe254684f8e4ad7043583fbe32df9f4f6d AS sui
+FROM ghcr.io/zeta-chain/sui-docker:mainnet-v1.51.5-dev AS sui
 FROM zetanode:latest
 
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/

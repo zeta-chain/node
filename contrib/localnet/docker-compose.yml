@@ -285,7 +285,7 @@ services:
         ipv4_address: 172.20.0.104
 
   sui:
-    image: ghcr.io/zeta-chain/sui-docker@sha256:66019d0f1cffa2bd301b03893c33a4fe254684f8e4ad7043583fbe32df9f4f6d
+    image: ghcr.io/zeta-chain/sui-docker:mainnet-v1.51.5-dev
     container_name: sui
     hostname: sui
     profiles:
