@@ -24,10 +24,6 @@ type Gateway struct {
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
 
-	// messageContextID is the object ID of the active message context
-	// It is only used for withdraw and authenticated call
-	messageContextID string
-
 	mu sync.RWMutex
 }
 
@@ -56,23 +52,19 @@ const (
 const GatewayModule = "gateway"
 
 // NewGatewayFromPairID creates a new Sui Gateway
-// from triplet of `$packageID,$gatewayObjectID,$messageContextID`
-func NewGatewayFromTriplet(triplet string) (*Gateway, error) {
-	packageID, gatewayObjectID, messageContextID, err := parseTriplet(triplet)
+// from pair of `$packageID,$gatewayObjectID`
+func NewGatewayFromPairID(pair string) (*Gateway, error) {
+	packageID, gatewayObjectID, err := parsePair(pair)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewGateway(packageID, gatewayObjectID, messageContextID), nil
+	return NewGateway(packageID, gatewayObjectID), nil
 }
 
 // NewGateway creates a new Sui Gateway.
-func NewGateway(packageID string, gatewayObjectID, messageContextID string) *Gateway {
-	return &Gateway{
-		packageID:        packageID,
-		objectID:         gatewayObjectID,
-		messageContextID: messageContextID,
-	}
+func NewGateway(packageID string, gatewayObjectID string) *Gateway {
+	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
 // Event represents generic event wrapper
@@ -140,31 +132,27 @@ func (gw *Gateway) ObjectID() string {
 	return gw.objectID
 }
 
-// MessageContextID returns the object ID of the active message context
-func (gw *Gateway) MessageContextID() string {
-	gw.mu.RLock()
-	defer gw.mu.RUnlock()
-	return gw.messageContextID
-}
-
 // WithdrawCapType returns struct type of the WithdrawCap
 func (gw *Gateway) WithdrawCapType() string {
 	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), GatewayModule)
 }
 
-// UpdateIDs updates packageID, objectID and messageContextID.
-func (gw *Gateway) UpdateIDs(triplet string) error {
-	packageID, gatewayObjectID, messageContextID, err := parseTriplet(triplet)
+// MessageContextType returns struct type of the MessageContext
+func (gw *Gateway) MessageContextType() string {
+	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
+}
+
+// UpdateIDs updates packageID and objectID.
+func (gw *Gateway) UpdateIDs(pair string) error {
+	packageID, gatewayObjectID, err := parsePair(pair)
 	if err != nil {
 		return err
 	}
-
 	gw.mu.Lock()
 	defer gw.mu.Unlock()
 
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
-	gw.messageContextID = messageContextID
 
 	return nil
 }
@@ -397,19 +385,18 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
-// parseTriplet parses triplet ID from a string of the format `$packageID,$gatewayObjectID,$messageContextID`
-func parseTriplet(triplet string) (string, string, string, error) {
-	parts := strings.Split(triplet, ",")
-	if len(parts) != 3 {
-		return "", "", "", errors.Errorf("invalid triplet %q", triplet)
+func parsePair(pair string) (string, string, error) {
+	parts := strings.Split(pair, ",")
+	if len(parts) != 2 {
+		return "", "", errors.Errorf("invalid pair %q", pair)
 	}
 
 	// each part should be a valid Sui address
 	for _, part := range parts {
 		if err := ValidateAddress(part); err != nil {
-			return "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
+			return "", "", errors.Wrapf(err, "invalid Sui address %q", part)
 		}
 	}
 
-	return parts[0], parts[1], parts[2], nil
+	return parts[0], parts[1], nil
 }

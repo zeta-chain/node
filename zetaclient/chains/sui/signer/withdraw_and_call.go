@@ -197,16 +197,13 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 func (s *Signer) getWithdrawAndCallObjectRefs(
 	ctx context.Context,
 	withdrawCapID string,
+	msgContextID string,
 	onCallObjectIDs []string,
 	gasBudget uint64,
 ) (withdrawAndCallObjRefs, error) {
 	// given below layout of 'objectIDs', on_call objects start from index 3
 	const onCallObjectIndex = 3
-
-	var (
-		messageContextID = s.gateway.MessageContextID()
-		objectIDs        = append([]string{s.gateway.ObjectID(), withdrawCapID, messageContextID}, onCallObjectIDs...)
-	)
+	objectIDs := append([]string{s.gateway.ObjectID(), withdrawCapID, msgContextID}, onCallObjectIDs...)
 
 	// query objects in batch
 	suiObjects, err := s.client.SuiMultiGetObjects(ctx, models.SuiMultiGetObjectsRequest{
@@ -246,7 +243,7 @@ func (s *Signer) getWithdrawAndCallObjectRefs(
 
 		// must use initial version for shared object, not the current version
 		// withdraw cap and message context are owned objects, so we must use current version
-		if object.Data.ObjectId != withdrawCapID && object.Data.ObjectId != messageContextID {
+		if object.Data.ObjectId != withdrawCapID && object.Data.ObjectId != msgContextID {
 			objectVersion, err = zetasui.ExtractInitialSharedVersion(*object.Data)
 			if err != nil {
 				return withdrawAndCallObjRefs{}, errors.Wrapf(

@@ -226,7 +226,7 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	require.True(r, ok, "upgradeCap object not found")
 
 	// set sui gateway
-	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID, messageContextID)
+	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
 	return whitelistCapID, withdrawCapID, messageContextID
 }
@@ -453,12 +453,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress: fmt.Sprintf(
-			"%s,%s,%s",
-			r.SuiGateway.PackageID(),
-			r.SuiGateway.ObjectID(),
-			r.SuiGateway.MessageContextID(),
-		),
+		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,

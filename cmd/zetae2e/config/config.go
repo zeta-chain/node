@@ -62,7 +62,6 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	if r.SuiGateway != nil {
 		conf.Contracts.Sui.GatewayPackageID = config.DoubleQuotedString(r.SuiGateway.PackageID())
 		conf.Contracts.Sui.GatewayObjectID = config.DoubleQuotedString(r.SuiGateway.ObjectID())
-		conf.Contracts.Sui.MessageContextID = config.DoubleQuotedString(r.SuiGateway.MessageContextID())
 	}
 	conf.Contracts.Sui.GatewayUpgradeCap = config.DoubleQuotedString(r.SuiGatewayUpgradeCap)
 

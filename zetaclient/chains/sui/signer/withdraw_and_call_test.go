@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 // newTestWACPTBArgs creates a withdrawAndCallPTBArgs struct for testing
@@ -173,7 +172,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	withdrawCapID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
-	msgContextID, err := sui.ObjectIdFromHex(testutils.SUIMsgContextID)
+	msgContextID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
 	onCallObjectID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
@@ -205,6 +204,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 		name            string
 		gatewayID       string
 		withdrawCapID   string
+		msgContextID    string
 		onCallObjectIDs []string
 		mockObjects     []*models.SuiObjectResponse
 		mockError       error
@@ -215,6 +215,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "successful get object refs",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -286,6 +287,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "rpc call fails",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockError:       sample.ErrSample,
 			errMsg:          "failed to get objects",
@@ -294,6 +296,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid object ID",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -319,6 +322,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid object version",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -344,6 +348,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid initial shared version",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -383,7 +388,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			ts.SuiMock.On("GetSuiCoinObjectRefs", ctx, mock.Anything, mock.Anything).Maybe().Return(suiCoinObjRefs, nil)
 
 			// ACT
-			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs, 100)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.msgContextID, tt.onCallObjectIDs, 100)
 
 			// ASSERT
 			if tt.errMsg != "" {

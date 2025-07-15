@@ -158,7 +158,6 @@ type SuiExample struct {
 type Sui struct {
 	GatewayPackageID DoubleQuotedString `yaml:"gateway_package_id"`
 	GatewayObjectID  DoubleQuotedString `yaml:"gateway_object_id"`
-	MessageContextID DoubleQuotedString `yaml:"message_context_id"`
 	// GatewayUpgradeCap is the capability object used to upgrade the gateway
 	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`

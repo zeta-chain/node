@@ -127,10 +127,9 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	// set Sui contracts
 	suiPackageID := conf.Contracts.Sui.GatewayPackageID
 	suiGatewayID := conf.Contracts.Sui.GatewayObjectID
-	suiMessageContextID := conf.Contracts.Sui.MessageContextID
 
-	if suiPackageID != "" && suiGatewayID != "" && suiMessageContextID != "" {
-		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String(), suiMessageContextID.String())
+	if suiPackageID != "" && suiGatewayID != "" {
+		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
 	if c := conf.Contracts.Sui.GatewayUpgradeCap; c != "" {
 		r.SuiGatewayUpgradeCap = c.String()

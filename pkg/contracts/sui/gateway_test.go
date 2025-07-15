@@ -12,12 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewGatewayFromTriplet(t *testing.T) {
+func TestNewGatewayFromPairID(t *testing.T) {
 	// stubs
 	const (
-		packageID        = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID        = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
-		messageContextID = "0x56bf44bc227b28e532c908eea9ad8929960cf7f0eb9c4591179a94975789b260"
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
 	)
 
 	tests := []struct {
@@ -26,24 +25,24 @@ func TestNewGatewayFromTriplet(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name:    "valid triplet",
-			triplet: fmt.Sprintf("%s,%s,%s", packageID, gatewayID, messageContextID),
+			name:    "valid pair",
+			triplet: fmt.Sprintf("%s,%s", packageID, gatewayID),
 		},
 		{
-			name:    "invalid triplet, missing message context",
-			triplet: "0x123,0x456",
-			wantErr: "invalid triplet",
+			name:    "invalid pair, missing gateway object id",
+			triplet: "0x123",
+			wantErr: "invalid pair",
 		},
 		{
 			name:    "invalid Sui address",
-			triplet: fmt.Sprintf("%s,%s,0xabc", packageID, gatewayID),
+			triplet: fmt.Sprintf("%s,0xabc", packageID),
 			wantErr: "invalid Sui address",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gw, err := NewGatewayFromTriplet(tt.triplet)
+			gw, err := NewGatewayFromPairID(tt.triplet)
 			if tt.wantErr != "" {
 				require.Nil(t, gw)
 				require.ErrorContains(t, err, tt.wantErr)
@@ -53,7 +52,6 @@ func TestNewGatewayFromTriplet(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, packageID, gw.PackageID())
 			assert.Equal(t, gatewayID, gw.ObjectID())
-			assert.Equal(t, messageContextID, gw.MessageContextID())
 		})
 	}
 }
@@ -67,7 +65,7 @@ func TestParseEvent(t *testing.T) {
 		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw := NewGateway(packageID, gatewayID, "0x0")
+	gw := NewGateway(packageID, gatewayID)
 
 	eventType := func(t string) string {
 		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
@@ -412,7 +410,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 		receiver  = "0xd4bED9bf67143d3B4A012B868E6A9566922cFDf7"
 	)
 
-	gw := NewGateway(packageID, gatewayID, "0x0")
+	gw := NewGateway(packageID, gatewayID)
 
 	eventType := func(t string) string {
 		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)

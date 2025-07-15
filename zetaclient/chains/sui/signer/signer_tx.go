@@ -94,9 +94,23 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
+	// Retrieve message context ID
+	msgContextID, err := s.getMessageContextIDCached(ctx)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to get message context ID")
+	}
+
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(ctx, cctx, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(
+			ctx,
+			cctx,
+			coinType,
+			gasBudget,
+			withdrawCapID,
+			msgContextID,
+			cctx.RelayedMessage,
+		)
 	}
 
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
@@ -138,6 +152,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	coinType string,
 	gasBudget uint64,
 	withdrawCapID string,
+	msgContextID string,
 	payloadHex string,
 ) (models.TxnMetaData, error) {
 	params := cctx.GetCurrentOutboundParam()
@@ -154,7 +169,7 @@ func (s *Signer) buildWithdrawAndCallTx(
 	}
 
 	// get all needed object references
-	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs, gasBudget)
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, msgContextID, cp.ObjectIDs, gasBudget)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
