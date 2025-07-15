@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"golang.org/x/mod/semver"
 
+	erc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
@@ -32,6 +33,12 @@ func GetDefaultUpgradeHandlerVersion() string {
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{
+			{
+				index: 1752528615,
+				storeUpgrade: &storetypes.StoreUpgrades{
+					Added: []string{erc20types.ModuleName},
+				},
+			},
 			// TODO: enable back IBC
 			// these commented lines allow for the IBC modules to be added to the upgrade tracker
 			// https://github.com/zeta-chain/node/issues/2573
