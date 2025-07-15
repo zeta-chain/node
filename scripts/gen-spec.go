@@ -204,16 +204,20 @@ func readAllFilesFromDocsSpec(docsSpecDir, moduleName string) []FileData {
 			return nil
 		}
 
-		content, err := ioutil.ReadFile(path)
-		if err != nil {
-			fmt.Printf("Error reading file %q: %v\n", path, err)
-			return nil
-		}
-
-		// Get relative path from module directory
 		relPath, err := filepath.Rel(moduleDir, path)
 		if err != nil {
 			fmt.Printf("Error getting relative path for %q: %v\n", path, err)
+			return nil
+		}
+		if strings.HasPrefix(relPath, "..") {
+			fmt.Printf("Skipping suspicious file path: %q\n", path)
+			return nil
+		}
+
+		// #nosec G304 -- path is validated to be within moduleDir above
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			fmt.Printf("Error reading file %q: %v\n", path, err)
 			return nil
 		}
 
