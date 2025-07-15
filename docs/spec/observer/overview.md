@@ -1,8 +1,4 @@
----
-sidebar_position: 1
----
-
-# Overview
+### Overview
 
 The `observer` module keeps track of ballots for voting, a mapping between
 chains and observer accounts, a list of supported connected chains, core
