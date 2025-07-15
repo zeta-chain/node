@@ -49,7 +49,7 @@ func (k Keeper) getZetaInboundDetails(
 	}
 
 	gasLimit := callOptions.GasLimit
-	if gasLimit.Int64() == 0 || gasLimit == nil {
+	if gasLimit == nil || gasLimit.Int64() == 0 {
 		return InboundDetails{}, errorsmod.Wrapf(
 			types.ErrInvalidWithdrawalEvent, "gas limit not provided for ZETA withdrawal")
 	}
