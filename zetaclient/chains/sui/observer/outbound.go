@@ -19,7 +19,6 @@ import (
 
 // 50 SUI
 // https://docs.sui.io/concepts/tokenomics/gas-in-sui#gas-budgets
-const maxGasLimit = 50_000_000_000
 
 // OutboundCreated checks if the outbound tx exists in the memory
 // and has valid nonce & signature
@@ -134,6 +133,9 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		return errors.Wrap(err, "unable to parse gas used")
 	}
 
+	// TODO : Update the effective gas limit and gas used.
+	// Setting the effective gas limit to the gas used disables the gas stability pool funding
+	// https://github.com/zeta-chain/node/issues/4015
 	// Create message
 	msg := cctypes.NewMsgVoteOutbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -142,7 +144,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		checkpoint,
 		outboundGasUsed,
 		outboundGasPrice,
-		maxGasLimit,
+		outboundGasUsed,
 		amount,
 		status,
 		chainID,
