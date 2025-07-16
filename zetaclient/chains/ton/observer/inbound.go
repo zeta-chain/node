@@ -20,6 +20,10 @@ import (
 )
 
 const (
+	// https://tonscan.com/config-parameters (N21: "Computation costs")
+	// This might changes in the future by TON's gov proposal (very unlikely though)
+	maxGasLimit = 1_000_000
+
 	// maximum number of transactions to process on a ticker
 	// TODO: move to config
 	// https://github.com/zeta-chain/node/issues/3086

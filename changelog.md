@@ -1,12 +1,18 @@
 # CHANGELOG
 
+## v32.0.3
+
+### Fixes
+
+* [4019](https://github.com/zeta-chain/node/pull/4019) - use 0 for effective gas limit for Sui and TON
+
 ## v32.0.0
 
 ### Chores
 
 * [4003](https://github.com/zeta-chain/node/pull/4003) - upgrade Cosmos SDK to v0.50.14
 
-## v31.1
+## v31.0.1
 
 ### Features
 
