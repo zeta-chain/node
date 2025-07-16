@@ -54,6 +54,46 @@ func TestMigrateStore(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, int64(1000000), fetchedBalance.Int64(), "Eth balance should remain after migration")
 	})
+
+	t.Run("returns error if gas zrc20 not found", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		ctx = ctx.WithChainID("zetachain_7000-1")
+		deploySystemContracts(t, ctx, k)
+		ethGasZRC20 := setupGasCoin(t, ctx, k, chains.Ethereum.ChainId, "ETH", "ETH")
+		k.EnsureGasStabilityPoolAccountCreated(ctx)
+
+		stabilityPoolAddress := types.GasStabilityPoolAddressEVM()
+		suiBalance := big.NewInt(1000000)
+
+		_, err := k.DepositZRC20(ctx, ethGasZRC20, stabilityPoolAddress, suiBalance)
+		require.NoError(t, err)
+
+		// ACT
+		err = v4.MigrateStore(ctx, k)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to query SUI gas coin ZRC20 for chain ID")
+	})
+
+	t.Run("returns error if unable to burn tokens", func(t *testing.T) {
+		// ARRANGE
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		ctx = ctx.WithChainID("zetachain_7000-1")
+		deploySystemContracts(t, ctx, k)
+		chainID := chains.SuiMainnet.ChainId
+		_ = setupGasCoin(t, ctx, k, chainID, "SUI", "SUI")
+
+		// ACT
+		err := v4.MigrateStore(ctx, k)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "contract call error")
+	})
 }
 
 // deploySystemContracts deploys the system contracts and returns their addresses.
@@ -113,4 +153,55 @@ func setupGasCoin(
 	k.SetForeignCoins(ctx, foreignCoin)
 
 	return addr
+}
+
+func TestGetSuiChain(t *testing.T) {
+	t.Run("returns SuiMainnet for ZetaChainMainnet", func(t *testing.T) {
+		// ARRANGE
+		chainID := chains.ZetaChainMainnet.ChainId
+
+		// ACT
+		chain, err := v4.GetSuiChain(chainID)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, chains.SuiMainnet, chain)
+	})
+
+	t.Run("returns SuiTestnet for ZetaChainTestnet", func(t *testing.T) {
+		// ARRANGE
+		chainID := chains.ZetaChainTestnet.ChainId
+
+		// ACT
+		chain, err := v4.GetSuiChain(chainID)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, chains.SuiTestnet, chain)
+	})
+
+	t.Run("returns SuiLocalnet for ZetaChainPrivnet", func(t *testing.T) {
+		// ARRANGE
+		chainID := chains.ZetaChainPrivnet.ChainId
+
+		// ACT
+		chain, err := v4.GetSuiChain(chainID)
+
+		// ASSERT
+		require.NoError(t, err)
+		require.Equal(t, chains.SuiLocalnet, chain)
+	})
+
+	t.Run("returns error for unsupported chain ID", func(t *testing.T) {
+		// ARRANGE
+		unsupportedChainID := int64(999999)
+
+		// ACT
+		chain, err := v4.GetSuiChain(unsupportedChainID)
+
+		// ASSERT
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unsupported chain ID: 999999")
+		require.Equal(t, chains.Chain{}, chain)
+	})
 }

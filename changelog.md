@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v33.0.0
+
+## Fixes
+
+* [4016—](https://github.com/zeta-chain/node/pull/4016) - fixes minting of extra tokens to the SUI stability pool
+
 ## v32.0.0
 
 ### Chores
