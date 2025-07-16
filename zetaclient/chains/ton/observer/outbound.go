@@ -16,10 +16,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// https://tonscan.com/config-parameters (N21: "Computation costs")
-// This might changes in the future by TON's gov proposal (very unlikely though)
-const maxGasLimit = 1_000_000
-
 // There's no sequential block height. Also, different txs might end up in different shards.
 // tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height, thus zero.
 const tonBlockHeight = 0
@@ -209,7 +205,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 		tonBlockHeight,
 		res.tx.GasUsed().Uint64(),
 		gasPriceInt,
-		maxGasLimit,
+		0, // We don't specify an effective gas limit for TON outbound, this value is used for the gas stability pool funding, which is not used for TON
 		amount,
 		receiveStatus,
 		chainID,

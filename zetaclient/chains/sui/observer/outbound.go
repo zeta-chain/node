@@ -138,7 +138,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		checkpoint,
 		outboundGasUsed,
 		outboundGasPrice,
-		outboundGasUsed,
+		0, // We don't specify an effective gas limit for Sui outbound, this value is used for the gas stability pool funding, which is not used for Sui
 		amount,
 		status,
 		chainID,
