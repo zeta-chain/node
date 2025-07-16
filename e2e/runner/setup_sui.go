@@ -32,16 +32,21 @@ const (
 	changeTypeCreated = "created"
 
 	// suiExampleAuthCallPath is the path to the example authenticated call package
-	suiExampleAuthCallPath = "example-authenticated-call"
+	suiExampleAuthCallPath = "sui/example-authenticated-call"
 
 	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
-	suiGatewayUpgradedPath = "protocol-contracts-sui-upgrade"
+	suiGatewayUpgradedPath = "sui/protocol-contracts-sui-upgrade"
+)
 
+var (
 	// suiExampleAuthCallBinToken is the path to the example authenticated call token binary file
-	suiExampleAuthCallBinToken = "example-authenticated-call/build/example/bytecode_modules/token.mv"
+	suiExampleAuthCallBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExampleAuthCallPath)
 
 	// suiExampleAuthCallBinConnected is the path to the example authenticated call connected binary file
-	suiExampleAuthCallBinConnected = "example-authenticated-call/build/example/bytecode_modules/connected.mv"
+	suiExampleAuthCallBinConnected = fmt.Sprintf(
+		"%s/build/example/bytecode_modules/connected.mv",
+		suiExampleAuthCallPath,
+	)
 )
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
