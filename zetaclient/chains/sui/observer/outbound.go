@@ -17,10 +17,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// 50 SUI
-// https://docs.sui.io/concepts/tokenomics/gas-in-sui#gas-budgets
-const maxGasLimit = 50_000_000_000
-
 // OutboundCreated checks if the outbound tx exists in the memory
 // and has valid nonce & signature
 func (ob *Observer) OutboundCreated(nonce uint64) bool {
@@ -142,7 +138,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		checkpoint,
 		outboundGasUsed,
 		outboundGasPrice,
-		maxGasLimit,
+		outboundGasUsed,
 		amount,
 		status,
 		chainID,

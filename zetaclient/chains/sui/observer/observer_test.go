@@ -420,7 +420,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(maxGasLimit), vote.ObservedOutboundEffectiveGasLimit)
+		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundEffectiveGasLimit) // same value as gas used for sui
 		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
 		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
@@ -499,7 +499,7 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, uint64(200), vote.ValueReceived.Uint64())
 
 		// gas
-		assert.Equal(t, uint64(maxGasLimit), vote.ObservedOutboundEffectiveGasLimit)
+		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundEffectiveGasLimit) // same value as gas used for sui
 		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
 		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
