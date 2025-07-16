@@ -131,12 +131,12 @@ func (c *Client) Broadcast(
 
 		expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
 		if err != nil {
-			return "", fmt.Errorf("code 32, cannot parse expected seq %s: %w", matches[1], err)
+			return "", errors.Wrapf(err, "code 32, cannot parse expected seq %q", matches[1])
 		}
 
-		gotSeq, err := strconv.Atoi(matches[2])
+		gotSeq, err := strconv.ParseUint(matches[2], 10, 64)
 		if err != nil {
-			return "", errors.Wrapf(err, "code 32, cannot parse got seq %s", matches[2])
+			return "", errors.Wrapf(err, "code 32, cannot parse got seq %q", matches[2])
 		}
 
 		c.seqNumber[authzSigner.KeyType] = expectedSeq
