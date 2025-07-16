@@ -28,36 +28,46 @@ type fungibleKeeper interface {
 // MigrateStore migrates the store from consensus version 3 to 4.
 // It burns the SUI gas ZRC20 from the stability pool address.
 func MigrateStore(ctx sdk.Context, fungibleKeeper fungibleKeeper) error {
-	chainID, err := ethermint.ParseChainID(ctx.ChainID())
-	if err != nil {
-		// It's fine to return nil here and not try to execute the migration at all if the parsing fails
-		ctx.Logger().Error("failed to parse chain ID", "chain_id", ctx.ChainID(), "error", err)
+	logAndSkip := func(msg string, err error, fields ...interface{}) error {
+		ctx.Logger().Error(msg, append(fields, "error", err)...)
 		return nil
 	}
+
+	chainID, err := ethermint.ParseChainID(ctx.ChainID())
+	if err != nil {
+		return logAndSkip("failed to parse chain ID", err, "chain_id", ctx.ChainID())
+	}
+
 	chain, err := GetSuiChain(chainID.Int64())
 	if err != nil {
-		ctx.Logger().Error("failed to get Sui chain", "chain_id", chainID.Int64(), "error", err)
-		return nil
+		return logAndSkip("failed to get Sui chain", err, "chain_id", chainID.Int64())
 	}
 
 	suiGasZRC20, err := fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
-		ctx.Logger().Error("failed to query SUI gas coin ZRC20 ", "chain_id", chainID.Int64(), "error", err)
-		return nil
+		return logAndSkip("failed to query SUI gas coin ZRC20 ", err, "chain_id", chainID.Int64())
 	}
+
 	stabilityPoolAddress := types.GasStabilityPoolAddressEVM()
 
 	suiBalance, err := fungibleKeeper.ZRC20BalanceOf(ctx, suiGasZRC20, stabilityPoolAddress)
 	if err != nil {
-		ctx.Logger().
-			Error("failed to get SUI balance for stability pool", "stability_pool_address", stabilityPoolAddress, "error", err)
-		return nil
+		return logAndSkip(
+			"failed to get SUI balance for stability pool",
+			err,
+			"stability_pool_address",
+			stabilityPoolAddress,
+		)
 	}
 
 	err = fungibleKeeper.CallZRC20Burn(ctx, stabilityPoolAddress, suiGasZRC20, suiBalance, true)
 	if err != nil {
-		ctx.Logger().
-			Error("failed to burn SUI gas ZRC20 from stability pool", "stability_pool_address", stabilityPoolAddress, "error", err)
+		return logAndSkip(
+			"failed to burn SUI gas ZRC20 from stability pool",
+			err,
+			"stability_pool_address",
+			stabilityPoolAddress,
+		)
 	}
 
 	ctx.Logger().
