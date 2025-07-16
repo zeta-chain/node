@@ -4,7 +4,7 @@
 
 ## Fixes
 
-* [4016—](https://github.com/zeta-chain/node/pull/4016) - fixes minting of extra tokens to the SUI stability pool
+* [4016—](https://github.com/zeta-chain/node/pull/4016) - adds a migration script to burn all SUI Gas tokens minted to the gas stability pool and disables further minting.
 
 ## v32.0.0
 
