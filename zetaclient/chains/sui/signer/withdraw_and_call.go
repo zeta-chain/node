@@ -460,7 +460,7 @@ func ptbAddCmdSetMessageContext(
 		return errors.Wrap(err, "unable to create sender argument")
 	}
 
-	// parse target package address
+	// Parse target package address
 	address, err := sui.AddressFromHex(target)
 	if err != nil {
 		return errors.Wrap(err, "invalid target package address")
