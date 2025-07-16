@@ -16,8 +16,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// ARRANGE
 	// Given target package ID (example package), SUI amount and gas limit
-	targetPackage := r.SuiExampleArbiCall
-	targetPackageID := targetPackage.PackageID.String()
+	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 	gasLimit := utils.ParseBigInt(r, args[1])
 
@@ -28,22 +27,23 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given initial balance and called_count
 	balanceBefore := r.SuiGetSUIBalance(suiAddress)
-	calledCountBefore := r.SuiGetConnectedCalledCount(targetPackage)
+	calledCountBefore := r.SuiGetConnectedCalledCount()
 
 	// create the on_call payload
-	payloadOnCall := r.SuiCreateExampleWACPayload(targetPackage, suiAddress)
+	authorizedSender := r.EVMAddress()
+	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
 
 	// ACT
 	// approve SUI ZRC20 token
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call
+	// perform the withdraw and authenticated call
 	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
 		r.SUIZRC20Addr,
 		payloadOnCall,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gasLimit,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
@@ -51,7 +51,7 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// ASSERT
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// balance after
@@ -59,6 +59,6 @@ func TestSuiWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
-	calledCountAfter := r.SuiGetConnectedCalledCount(targetPackage)
+	calledCountAfter := r.SuiGetConnectedCalledCount()
 	require.Equal(r, calledCountBefore+1, calledCountAfter)
 }

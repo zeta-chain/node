@@ -31,22 +31,19 @@ const (
 	// changeTypeCreated is the type of change that indicates a new object was created
 	changeTypeCreated = "created"
 
-	// suiExampleAuthCallPath is the path to the example authenticated call package
-	suiExampleAuthCallPath = "sui/example-authenticated-call"
+	// suiExamplePath is the path to the example package
+	suiExamplePath = "sui/example"
 
 	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
 	suiGatewayUpgradedPath = "sui/protocol-contracts-sui-upgrade"
 )
 
 var (
-	// suiExampleAuthCallBinToken is the path to the example authenticated call token binary file
-	suiExampleAuthCallBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExampleAuthCallPath)
+	// suiExampleBinToken is the path to the example token binary file
+	suiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
 
-	// suiExampleAuthCallBinConnected is the path to the example authenticated call connected binary file
-	suiExampleAuthCallBinConnected = fmt.Sprintf(
-		"%s/build/example/bytecode_modules/connected.mv",
-		suiExampleAuthCallPath,
-	)
+	// suiExampleBinConnected is the path to the example connected binary file
+	suiExampleBinConnected = fmt.Sprintf("%s/build/example/bytecode_modules/connected.mv", suiExamplePath)
 )
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
@@ -86,20 +83,12 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	fakeUSDCCoinType := r.suiDeployFakeUSDC()
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
-	// deploy arbitrary call example package with on_call function
+	// build and deploy example package with on_call function
+	r.suiBuildExample()
 	r.suiDeployExample(
-		&r.SuiExampleArbiCall,
-		suibin.ExampleArbiCallFungibleTokenBytecodeBase64(),
-		suibin.ExampleArbiCallConnectedBytecodeBase64(),
-		[]string{},
-	)
-
-	// build and deploy authenticated call example package with on_call function
-	r.suiBuildExampleAuthCall()
-	r.suiDeployExample(
-		&r.SuiExampleAuthCall,
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleAuthCallBinToken)),
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleAuthCallBinConnected)),
+		&r.SuiExample,
+		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinToken)),
+		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinConnected)),
 		[]string{r.SuiGateway.PackageID()},
 	)
 
@@ -177,19 +166,19 @@ func (r *E2ERunner) suiBuildGatewayUpgraded() {
 	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPath))
 }
 
-// suiBuildExampleAuthCall builds the example authenticated call package
-func (r *E2ERunner) suiBuildExampleAuthCall() {
+// suiBuildExample builds the example package
+func (r *E2ERunner) suiBuildExample() {
 	// in order to import the gateway package, we need 3 patches to the Move.toml files:
 	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
 	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
-	// 3. set the actual gateway address in the example authenticated call package, otherwise the build will fail.
+	// 3. set the actual gateway address in the example package, otherwise the build will fail.
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `gateway = "0x0"`, gatewayAddress)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiExampleAuthCallPath), `gateway = "0x0"`, gatewayAddress)
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiExamplePath), `gateway = "0x0"`, gatewayAddress)
 
-	r.suiBuildPackage(r.WorkDirPrefixed(suiExampleAuthCallPath))
+	r.suiBuildPackage(r.WorkDirPrefixed(suiExamplePath))
 }
 
 // suiDeployGateway deploys the SUI gateway package on Sui

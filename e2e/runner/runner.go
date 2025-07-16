@@ -138,11 +138,8 @@ type E2ERunner struct {
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
 
-	// SuiExampleArbiCall contains the example package information for Sui arbitrary call
-	SuiExampleArbiCall config.SuiExample
-
-	// SuiExampleAuthCall contains the example package information for Sui authenticated call
-	SuiExampleAuthCall config.SuiExample
+	// SuiExample contains the example package information for Sui authenticated call
+	SuiExample config.SuiExample
 
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
@@ -304,8 +301,7 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.SuiGatewayUpgradeCap = other.SuiGatewayUpgradeCap
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
-	r.SuiExampleArbiCall = other.SuiExampleArbiCall
-	r.SuiExampleAuthCall = other.SuiExampleAuthCall
+	r.SuiExample = other.SuiExample
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)

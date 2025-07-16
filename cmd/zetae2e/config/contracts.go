@@ -140,8 +140,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
 		r.SuiTokenTreasuryCap = c.String()
 	}
-	r.SuiExampleArbiCall = conf.Contracts.Sui.ExampleArbiCall
-	r.SuiExampleAuthCall = conf.Contracts.Sui.ExampleAuthCall
+	r.SuiExample = conf.Contracts.Sui.Example
 
 	// set EVM contracts
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)

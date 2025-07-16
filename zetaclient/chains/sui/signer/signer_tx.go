@@ -183,7 +183,6 @@ func (s *Signer) buildWithdrawAndCallTx(
 		gasBudget:              gasBudget,
 		sender:                 ethcommon.HexToAddress(cctx.InboundParams.Sender).Hex(),
 		target:                 params.Receiver,
-		isArbitraryCall:        params.CallOptions.IsArbitraryCall,
 		payload:                cp,
 	}
 

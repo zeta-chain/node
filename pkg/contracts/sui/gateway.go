@@ -225,10 +225,9 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
-	// a simple withdraw contains one single command, if it contains 3 or 5 commands,
+	// a simple withdraw contains one single command, if it contains 5 commands,
 	// we try passing the transaction as a withdraw and call with PTB
-	txCmdCount := len(res.Transaction.Data.Transaction.Transactions)
-	if txCmdCount == ptbWithdrawAndArbiCallCmdCount || txCmdCount == ptbWithdrawAndAuthCallCmdCount {
+	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
 		return gw.parseWithdrawAndCallPTB(res)
 	}
 

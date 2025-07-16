@@ -75,12 +75,7 @@ func Test_IsRetryableExecutionError(t *testing.T) {
 		},
 		{
 			name:         "non-retryable: MoveAbort from on_call",
-			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: 0d553a3393a41e2fd88eae86f4f0423b86f8d76d57d7a427442244e2d8919761, name: Identifier(\"connected\") }, function: 1, instruction: 7, function_name: Some(\"on_call\") }, 3) in command 2",
-			want:         false,
-		},
-		{
-			name:         "non-retryable: MoveAbort from authenticated on_call",
-			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: 59de7e9ac98a1228da0d1b1e0d2221449adad40daf810d3193907d30c702796f, name: Identifier(\"connected\") }, function: 1, instruction: 43, function_name: Some(\"on_call\") }, 2) in command 3",
+			errorMsgExec: "MoveAbort(MoveLocation { module: ModuleId { address: 0d553a3393a41e2fd88eae86f4f0423b86f8d76d57d7a427442244e2d8919761, name: Identifier(\"connected\") }, function: 1, instruction: 7, function_name: Some(\"on_call\") }, 3) in command 3",
 			want:         false,
 		},
 		{

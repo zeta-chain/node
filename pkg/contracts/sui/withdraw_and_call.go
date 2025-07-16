@@ -29,13 +29,9 @@ const (
 	// typeSeparator is the separator for Sui package and module
 	typeSeparator = "::"
 
-	// ptbWithdrawAndArbiCallCmdCount is the number of commands in the PTB withdraw and arbitrary call
-	// the three commands are: [withdraw_impl, transfer_objects, on_call]
-	ptbWithdrawAndArbiCallCmdCount = 3
-
-	// ptbWithdrawAndAuthCallCmdCount is the number of commands in the PTB withdraw and authenticated call
+	// ptbWithdrawAndCallCmdCount is the number of commands in the PTB withdraw and call
 	// the five commands are: [withdraw_impl, transfer_objects, set_message_context, on_call, reset_message_context]
-	ptbWithdrawAndAuthCallCmdCount = 5
+	ptbWithdrawAndCallCmdCount = 5
 
 	// ptbWithdrawImplInputCount is the number of inputs in the withdraw_impl command
 	// the inputs are: [gatewayObject, amount, nonce, gasBudget, withdrawCap]

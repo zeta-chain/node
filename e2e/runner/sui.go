@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
-	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -83,7 +82,7 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	amount *big.Int,
 	zrc20 ethcommon.Address,
 	payload sui.CallPayload,
-	callOptions gatewayzevm.CallOptions,
+	gasLimit *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
@@ -99,7 +98,10 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 		amount,
 		zrc20,
 		payloadBytes,
-		callOptions,
+		gatewayzevm.CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false, // always authenticated call
+		},
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -199,60 +201,20 @@ func (r *E2ERunner) SuiMintUSDC(
 }
 
 // SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
-// The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayload(example config.SuiExample, suiAddress string) sui.CallPayload {
-	// only the CCTX's coinType is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		example.GlobalConfigID.String(),
-		example.PartnerID.String(),
-		example.ClockID.String(),
-	}
-
-	// create the payload message from the sui address
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	require.NoError(r, err)
-
-	return sui.NewCallPayload(argumentTypes, objects, message)
-}
-
-// SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
-// function in Sui the example package
-func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert(example config.SuiExample) sui.CallPayload {
-	// only the CCTX's coinType is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		example.GlobalConfigID.String(),
-		example.PartnerID.String(),
-		example.ClockID.String(),
-	}
-
-	// the 'on_call' method of the "connected" contract specifically throws an error
-	// for this message to trigger "tx revert" test case
-	message := []byte(onCallRevertMessage)
-
-	return sui.NewCallPayload(argumentTypes, objects, message)
-}
-
-// SuiCreateExampleAuthenticatedWACPayload creates a payload for on_call function in Sui the example authenticated call package
-// The payload message contains below fielss in order:
+// The payload message contains below three fields in order:
 // field 0: [42-byte ZEVM sender], checksum address, with 0x prefix
 // field 1: [32-byte Sui target package], without 0x prefix
 // field 2: [32-byte Sui receiver], without 0x prefix
 //
 // The first two fields are used by E2E test to easily mock up the verifications against 'MessageContext' passed to the 'on_call'.
-// A real-world use case will just encode useful data that meets its needs, and it is only the receiver 'suiAddress' in this case.
-func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
-	example config.SuiExample,
-	authorizedSender ethcommon.Address,
-	suiAddress string,
-) sui.CallPayload {
+// A real-world app just encodes useful data that meets its needs, and it will be only the receiver 'suiAddress' in this case.
+func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Address, suiAddress string) sui.CallPayload {
 	// only the CCTX's coinType is needed, no additional type argument
 	argumentTypes := []string{}
 	objects := []string{
-		example.GlobalConfigID.String(),
-		example.PartnerID.String(),
-		example.ClockID.String(),
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
 	}
 
 	message := make([]byte, 106)
@@ -261,7 +223,7 @@ func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
 	copy(message[:42], []byte(authorizedSender.Hex()))
 
 	// field 1
-	target, err := hex.DecodeString(example.PackageID.String()[2:])
+	target, err := hex.DecodeString(r.SuiExample.PackageID.String()[2:])
 	require.NoError(r, err)
 	copy(message[42:74], target)
 
@@ -273,11 +235,29 @@ func (r *E2ERunner) SuiCreateExampleAuthenticatedWACPayload(
 	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
+// SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
+// function in Sui the example package
+func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {
+	// only the CCTX's coinType is needed, no additional arguments
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	// the 'on_call' method of the "connected" contract specifically throws an error
+	// for this message to trigger "tx revert" test case
+	message := []byte(onCallRevertMessage)
+
+	return sui.NewCallPayload(argumentTypes, objects, message), nil
+}
+
 // SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
-func (r *E2ERunner) SuiGetConnectedCalledCount(example config.SuiExample) uint64 {
+func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
 	// Get object data
 	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
-		ObjectId: example.GlobalConfigID.String(),
+		ObjectId: r.SuiExample.GlobalConfigID.String(),
 		Options:  models.SuiObjectDataOptions{ShowContent: true},
 	})
 

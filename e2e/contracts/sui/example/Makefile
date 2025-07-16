@@ -10,8 +10,8 @@ clean:
 # Build the package and generate bytecode
 build:
 	sui move build
-	cp build/example/bytecode_modules/token.mv ../bin/auth_call_token.mv
-	cp build/example/bytecode_modules/connected.mv ../bin/auth_call_connected.mv
+	cp build/example/bytecode_modules/token.mv ../bin/token.mv
+	cp build/example/bytecode_modules/connected.mv ../bin/connected.mv
 
 # Help target
 help:

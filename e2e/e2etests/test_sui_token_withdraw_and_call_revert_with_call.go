@@ -19,14 +19,14 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example package) and a token amount
-	targetPackage := r.SuiExampleArbiCall
-	targetPackageID := targetPackage.PackageID.String()
+	// Given target package ID (example package), token amount and gas limit
+	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// create the special revert payload for 'on_call'
-	revertPayloadOnCall := r.SuiCreateExampleWACPayloadForRevert(targetPackage)
+	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert()
+	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -42,13 +42,13 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call with revert options
+	// perform the withdraw and authenticated call with revert options
 	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
 		r.SuiTokenZRC20Addr,
 		revertPayloadOnCall,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gasLimit,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,
@@ -59,9 +59,9 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
 
 	// ASSERT
-	// wait for the cctx to be reverted
+	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// should have called 'onRevert'

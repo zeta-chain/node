@@ -17,12 +17,6 @@ var fakeUSDC []byte
 //go:embed evm.mv
 var evmBinary []byte
 
-//go:embed arbi_call_token.mv
-var arbiCallTokenBinary []byte
-
-//go:embed arbi_call_connected.mv
-var arbiCallConnectedBinary []byte
-
 // GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
 func GatewayBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(gatewayBinary)
@@ -36,16 +30,6 @@ func FakeUSDCBytecodeBase64() string {
 // EVMBytecodeBase64 gets the EVM binary encoded as base64 for deployment
 func EVMBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(evmBinary)
-}
-
-// ExampleArbiCallFungibleTokenBytecodeBase64 gets the arbitrary call example package's fungible token binary encoded as base64 for deployment
-func ExampleArbiCallFungibleTokenBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(arbiCallTokenBinary)
-}
-
-// ExampleArbiCallConnectedBytecodeBase64 gets the arbitrary call example package's connected binary encoded as base64 for deployment
-func ExampleArbiCallConnectedBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(arbiCallConnectedBinary)
 }
 
 // ReadMoveBinaryBase64 reads a given move binary file and returns it as base64 encoded string

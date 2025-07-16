@@ -17,7 +17,6 @@ func newTestWACPTBArgs(
 	t *testing.T,
 	gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef sui.ObjectRef,
 	onCallObjectRefs []sui.ObjectRef,
-	isArbitraryCall bool,
 ) withdrawAndCallPTBArgs {
 	return withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: withdrawAndCallObjRefs{
@@ -27,13 +26,12 @@ func newTestWACPTBArgs(
 			onCall:        onCallObjectRefs,
 			suiCoins:      []*sui.ObjectRef{&suiCoinObjRef},
 		},
-		coinType:        string(zetasui.SUI),
-		amount:          1000000,
-		nonce:           1,
-		gasBudget:       2000000,
-		sender:          sample.EthAddress().Hex(),
-		target:          sample.SuiAddress(t),
-		isArbitraryCall: isArbitraryCall,
+		coinType:  string(zetasui.SUI),
+		amount:    1000000,
+		nonce:     1,
+		gasBudget: 2000000,
+		sender:    sample.EthAddress().Hex(),
+		target:    sample.SuiAddress(t),
 		payload: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
@@ -59,15 +57,11 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 		errMsg string
 	}{
 		{
-			name: "successful withdraw and arbitrary call",
-			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef, []sui.ObjectRef{onCallObjRef}, true),
+			name: "successful withdraw and call",
+			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef, []sui.ObjectRef{onCallObjRef}),
 		},
 		{
-			name: "successful withdraw and authenticated call",
-			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef, []sui.ObjectRef{onCallObjRef}, false),
-		},
-		{
-			name: "successful withdraw and arbitrary call with empty payload",
+			name: "successful withdraw and call with empty payload",
 			args: func() withdrawAndCallPTBArgs {
 				args := newTestWACPTBArgs(
 					t,
@@ -76,23 +70,6 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
-					true,
-				)
-				args.payload.Message = []byte{}
-				return args
-			}(),
-		},
-		{
-			name: "successful withdraw and authenticated call with empty payload",
-			args: func() withdrawAndCallPTBArgs {
-				args := newTestWACPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					msgContextObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-					false,
 				)
 				args.payload.Message = []byte{}
 				return args
@@ -108,7 +85,6 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
-					true,
 				)
 				args.target = "invalid_target_package_id"
 				return args
@@ -125,7 +101,6 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
-					true,
 				)
 				args.coinType = "invalid_coin_type"
 				return args
@@ -142,7 +117,6 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					withdrawCapObjRef,
 					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
-					true,
 				)
 				args.payload.TypeArgs[0] = "invalid_type_argument"
 				return args

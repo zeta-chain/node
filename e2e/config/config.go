@@ -162,8 +162,7 @@ type Sui struct {
 	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
-	ExampleArbiCall          SuiExample         `yaml:"example_arbi_call"`
-	ExampleAuthCall          SuiExample         `yaml:"example_auth_call"`
+	Example                  SuiExample         `yaml:"example"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain

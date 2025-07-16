@@ -271,9 +271,25 @@ func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransa
 						map[string]any{
 							"MoveCall": map[string]any{
 								"arguments": []any{},
+								"function":  FuncSetMessageContext,
+								"module":    GatewayModule,
+								"package":   packageID,
+							},
+						},
+						map[string]any{
+							"MoveCall": map[string]any{
+								"arguments": []any{},
 								"function":  FuncOnCall,
 								"module":    ModuleConnected,
 								"package":   "target_package_id",
+							},
+						},
+						map[string]any{
+							"MoveCall": map[string]any{
+								"arguments": []any{},
+								"function":  FuncResetMessageContext,
+								"module":    GatewayModule,
+								"package":   packageID,
 							},
 						},
 					},

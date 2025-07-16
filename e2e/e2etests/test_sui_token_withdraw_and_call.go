@@ -15,9 +15,8 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example package) and a token amount
-	targetPackage := r.SuiExampleArbiCall
-	targetPackageID := targetPackage.PackageID.String()
+	// Given target package ID (example package), token amount and gas limit
+	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
 	gasLimit := utils.ParseBigInt(r, args[1])
 
@@ -28,23 +27,24 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// Given initial balance and called_count
 	balanceBefore := r.SuiGetFungibleTokenBalance(suiAddress)
-	calledCountBefore := r.SuiGetConnectedCalledCount(targetPackage)
+	calledCountBefore := r.SuiGetConnectedCalledCount()
 
 	// create the on_call payload
-	payloadOnCall := r.SuiCreateExampleWACPayload(targetPackage, suiAddress)
+	authorizedSender := r.EVMAddress()
+	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
 
 	// ACT
 	// approve both SUI gas budget token and fungible token ZRC20
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the fungible token withdraw and call
+	// perform the fungible token withdraw and authenticated call
 	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
 		r.SuiTokenZRC20Addr,
 		payloadOnCall,
-		gatewayzevm.CallOptions{GasLimit: gasLimit, IsArbitraryCall: true},
+		gasLimit,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)
 	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
@@ -52,7 +52,7 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// ASSERT
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check the balance after the withdraw
@@ -60,6 +60,6 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, balanceBefore+amount.Uint64(), balanceAfter)
 
 	// verify the called_count increased by 1
-	calledCountAfter := r.SuiGetConnectedCalledCount(targetPackage)
+	calledCountAfter := r.SuiGetConnectedCalledCount()
 	require.Equal(r, calledCountBefore+1, calledCountAfter)
 }

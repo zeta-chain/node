@@ -29,14 +29,13 @@ type withdrawAndCallObjRefs struct {
 // withdrawAndCallPTBArgs contains all the arguments needed for withdraw and call
 type withdrawAndCallPTBArgs struct {
 	withdrawAndCallObjRefs
-	coinType        string
-	amount          uint64
-	nonce           uint64
-	gasBudget       uint64
-	sender          string
-	target          string
-	isArbitraryCall bool
-	payload         zetasui.CallPayload
+	coinType  string
+	amount    uint64
+	nonce     uint64
+	gasBudget uint64
+	sender    string
+	target    string
+	payload   zetasui.CallPayload
 }
 
 // ptbOnCallTypeArgs builds the type arguments for on_call function
@@ -153,18 +152,12 @@ func (s *Signer) withdrawAndCallPTB(args withdrawAndCallPTBArgs) (tx models.TxnM
 	}
 
 	// Add gas budget transfer command
-	err = ptbAddCmdGasBudgetTransfer(ptb, argBudgetCoins, *signerAddr)
-	if err != nil {
+	if err := ptbAddCmdGasBudgetTransfer(ptb, argBudgetCoins, *signerAddr); err != nil {
 		return tx, err
 	}
 
-	// Add on_call command for arbitrary/authenticated call
-	if args.isArbitraryCall {
-		err = ptbAddCmdOnCallArbitrary(ptb, targetPackageID, argWithdrawnCoins, args)
-	} else {
-		err = ptbAddCmdOnCallAuthenticated(ptb, gatewayPackageID, targetPackageID, argWithdrawnCoins, args)
-	}
-	if err != nil {
+	// Add on_call command
+	if err := ptbAddCmdOnCall(ptb, gatewayPackageID, targetPackageID, argWithdrawnCoins, args); err != nil {
 		return tx, err
 	}
 
@@ -383,42 +376,8 @@ func ptbAddCmdGasBudgetTransfer(
 	return nil
 }
 
-// ptbAddCmdOnCallArbitrary adds the on_call command to the PTB for arbitrary call
-func ptbAddCmdOnCallArbitrary(
-	ptb *suiptb.ProgrammableTransactionBuilder,
-	targetPackageID *sui.PackageId,
-	argWithdrawnCoins suiptb.Argument,
-	args withdrawAndCallPTBArgs,
-) error {
-	// Build the type arguments for on_call function
-	onCallTypeArgs, err := args.onCallTypeArgs()
-	if err != nil {
-		return errors.Wrap(err, "unable to build on_call type arguments")
-	}
-
-	// Build the arguments for on_call
-	onCallArgs, err := args.onCallArgs(ptb)
-	if err != nil {
-		return errors.Wrap(err, "unable to build on_call arguments")
-	}
-
-	// Call the target contract on_call
-	ptb.Command(suiptb.Command{
-		MoveCall: &suiptb.ProgrammableMoveCall{
-			Package:       targetPackageID,
-			Module:        zetasui.ModuleConnected,
-			Function:      zetasui.FuncOnCall,
-			TypeArguments: onCallTypeArgs,
-			// [withdrawns coins + payload objects + message]
-			Arguments: append([]suiptb.Argument{argWithdrawnCoins}, onCallArgs...),
-		},
-	})
-
-	return nil
-}
-
-// ptbAddCmdOnCallAuthenticated adds the on_call command to the PTB for authenticated call
-func ptbAddCmdOnCallAuthenticated(
+// ptbAddCmdOnCall adds the on_call command to the PTB
+func ptbAddCmdOnCall(
 	ptb *suiptb.ProgrammableTransactionBuilder,
 	gatewayPackageID *sui.PackageId,
 	targetPackageID *sui.PackageId,
