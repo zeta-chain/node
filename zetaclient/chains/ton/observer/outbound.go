@@ -17,10 +17,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-// https://tonscan.com/config-parameters (N21: "Computation costs")
-// This might changes in the future by TON's gov proposal (very unlikely though)
-const maxGasLimit = 1_000_000
-
 type outbound struct {
 	tx            *toncontracts.Transaction
 	receiveStatus chains.ReceiveStatus
@@ -241,7 +237,7 @@ func (ob *Observer) postVoteOutbound(
 		tonBlockHeight,
 		outboundRes.tx.GasUsed().Uint64(),
 		gasPriceInt,
-		maxGasLimit,
+		0, // We don't specify an effective gas limit for TON outbound, this value is used for the gas stability pool funding, which is not used for TON
 		w.Amount,
 		outboundRes.receiveStatus,
 		chainID,
