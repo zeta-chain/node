@@ -46,6 +46,7 @@ func (k Keeper) ProcessAbort(
 			return nil, err
 		}
 	}
+	// Deposit native zeta to the abort address
 	if coinType == coin.CoinType_Zeta {
 		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
 			return nil, err

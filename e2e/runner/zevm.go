@@ -271,6 +271,7 @@ func (r *E2ERunner) ERC20WithdrawAndCall(
 	return tx
 }
 
+// ZetaWithdrawAndCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM
 func (r *E2ERunner) ZetaWithdrawAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
@@ -304,6 +305,7 @@ func (r *E2ERunner) ZetaWithdrawAndCall(
 	return tx
 }
 
+// ZetaWithdrawAndArbitraryCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM using arbitrary call
 func (r *E2ERunner) ZetaWithdrawAndArbitraryCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
@@ -482,6 +484,7 @@ func (r *E2ERunner) WaitForMinedCCTXFromIndex(index string) *types.CrossChainTx 
 	return r.waitForMinedCCTXFromIndex(index, types.CctxStatus_OutboundMined)
 }
 
+// waitForMinedCCTXFromIndex waits for a cctx to be mined from its index and checks its status
 func (r *E2ERunner) waitForMinedCCTXFromIndex(index string, status types.CctxStatus) *types.CrossChainTx {
 	r.Lock()
 	defer r.Unlock()

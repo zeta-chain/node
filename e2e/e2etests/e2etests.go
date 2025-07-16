@@ -362,7 +362,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallName,
-		"withdraw and call from ZEVM using Zeta token",
+		"withdraw zeta from ZEVM and call a contract on connected eth chain",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
@@ -372,7 +372,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertName,
-		"withdraw Zeta from ZEVM and call a contract that reverts",
+		"withdraw Zeta from ZEVM and call a contract on connected eth chain that reverts",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},
@@ -381,7 +381,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertWithCallName,
-		"withdraw Zeta from ZEVM and call a contract that reverts with a onRevert call",
+		"withdraw Zeta from ZEVM and call a contract on connected eth chain that reverts with a onRevert call",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
 		},

@@ -53,4 +53,8 @@ func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+
+	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, r.TestDAppV2ZEVMAddr, nil)
+	require.NoError(r, err)
+	require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
 }

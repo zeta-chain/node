@@ -31,7 +31,7 @@ func (k Keeper) getZetaInboundDetails(
 	wzetaContractAddress string,
 ) (InboundDetails, error) {
 	if receiverChainID == nil || receiverChainID.Int64() == 0 {
-		return InboundDetails{}, errorsmod.Wrapf(
+		return InboundDetails{}, errorsmod.Wrap(
 			types.ErrInvalidWithdrawalEvent,
 			"receiver chain ID is nil or zero for ZETA withdrawal",
 		)
@@ -50,7 +50,7 @@ func (k Keeper) getZetaInboundDetails(
 
 	gasLimit := callOptions.GasLimit
 	if gasLimit == nil || gasLimit.Int64() == 0 {
-		return InboundDetails{}, errorsmod.Wrapf(
+		return InboundDetails{}, errorsmod.Wrap(
 			types.ErrInvalidWithdrawalEvent, "gas limit not provided for ZETA withdrawal")
 	}
 
