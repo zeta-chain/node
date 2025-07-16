@@ -287,6 +287,8 @@ var (
 	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
+const V2ZetaVersion = "v33.0.0"
+
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
 	/*
@@ -299,7 +301,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
@@ -308,7 +310,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestZetaDepositAndCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertName,
@@ -317,14 +319,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositRevertAndAbortName,
 		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestZetaDepositRevertAndAbort,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
@@ -333,7 +335,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallNoMessageName,
@@ -342,7 +344,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallNoMessage,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
