@@ -9,6 +9,8 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
+
+	legacysecp256k1 "github.com/cosmos/evm/legacy/ethsecp256k1"
 )
 
 const (
@@ -29,6 +31,9 @@ func DefaultSigVerificationGasConsumer(
 	switch pubkey := pubkey.(type) {
 	case *ethsecp256k1.PubKey:
 		meter.ConsumeGas(secp256k1VerifyCost, "ante verify: eth_secp256k1")
+		return nil
+	case *legacysecp256k1.PubKey:
+		meter.ConsumeGas(secp256k1VerifyCost, "ante verify: legacy eth_secp256k1")
 		return nil
 	case multisig.PubKey:
 		// Multisig keys
