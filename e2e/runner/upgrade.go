@@ -30,11 +30,15 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
+	// Skip upgrades if this is the second run of the upgrade tests
+	if strings.Contains(r.GetZetacoredVersion(), "dirty") {
+		return
+	}
 	if opts.TestSolana {
 		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	}
 
-	if opts.TestSui && !r.IsRunningUpgrade() {
+	if opts.TestSui {
 		r.SuiVerifyGatewayPackageUpgrade()
 	}
 }
@@ -98,7 +102,8 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
 	// run these assertions only on the second run of the upgrade
-	if !r.IsRunningUpgrade() || !strings.Contains(r.GetZetacoredVersion(), "dirty") || assertVersion != os.Getenv("OLD_VERSION") {
+	if !r.IsRunningUpgrade() || !strings.Contains(r.GetZetacoredVersion(), "dirty") ||
+		assertVersion != os.Getenv("OLD_VERSION") {
 		return
 	}
 	r.Logger.Print("🏃 Running assertions after upgrade for version: %s", assertVersion)

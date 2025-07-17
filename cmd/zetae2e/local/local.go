@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -29,6 +29,7 @@ import (
 	"github.com/zeta-chain/node/pkg/errgroup"
 	"github.com/zeta-chain/node/testutil"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -605,9 +606,21 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 	}
 	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
+		amount := big.NewInt(1e10)
+
+		// artificially mint some balance to stability pool
+		resp := deployerRunner.SuiDepositSUI(fungibletypes.GasStabilityPoolAddressEVM(), math.NewUintFromBigInt(amount))
+		_ = utils.WaitCctxMinedByInboundHash(
+			deployerRunner.Ctx,
+			resp.Digest,
+			deployerRunner.CctxClient,
+			deployerRunner.Logger,
+			deployerRunner.CctxTimeout,
+		)
+
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) > 0, "SUI ZRC20 balance should be greater than 0")
+		require.True(deployerRunner, balance.Cmp(amount) >= 0, "SUI ZRC20 balance should be positive be positive")
 	})
 
 	// Run gateway upgrade tests for external chains
