@@ -17,90 +17,13 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
+// InboundDetails holds the details required to process an inbound transaction
+// It is used internally to encapsulate the information needed for processing withdrawals and calls
 type InboundDetails struct {
 	coinType        coin.CoinType
 	asset           string
 	receiverChain   chains.Chain
 	gasLimitQueried *big.Int
-}
-
-func (k Keeper) getZetaInboundDetails(
-	ctx sdk.Context,
-	receiverChainID *big.Int,
-	callOptions gatewayzevm.CallOptions,
-	wzetaContractAddress string,
-) (InboundDetails, error) {
-	if receiverChainID == nil || receiverChainID.Int64() == 0 {
-		return InboundDetails{}, errorsmod.Wrap(
-			types.ErrInvalidWithdrawalEvent,
-			"receiver chain ID is nil or zero for ZETA withdrawal",
-		)
-	}
-	parsedReceiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(
-		ctx,
-		receiverChainID.Int64(),
-	)
-	if !found {
-		return InboundDetails{}, errorsmod.Wrapf(
-			observertypes.ErrSupportedChains,
-			"chain with chainID %d not supported",
-			receiverChainID.Int64(),
-		)
-	}
-
-	gasLimit := callOptions.GasLimit
-	if gasLimit == nil || gasLimit.Int64() == 0 {
-		return InboundDetails{}, errorsmod.Wrap(
-			types.ErrInvalidWithdrawalEvent, "gas limit not provided for ZETA withdrawal")
-	}
-
-	return InboundDetails{
-		coinType:        coin.CoinType_Zeta,
-		asset:           wzetaContractAddress,
-		receiverChain:   parsedReceiverChain,
-		gasLimitQueried: gasLimit,
-	}, nil
-}
-
-func (k Keeper) getErc20InboundDetails(
-	ctx sdk.Context,
-	zrc20 ethcommon.Address,
-	callEvent bool,
-) (InboundDetails, error) {
-	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
-	if !found {
-		ctx.Logger().Info(fmt.Sprintf("cannot find foreign coin associated to the zrc20 address %s", zrc20.Hex()))
-		return InboundDetails{}, nil
-	}
-
-	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
-	if !found {
-		return InboundDetails{}, errorsmod.Wrapf(
-			observertypes.ErrSupportedChains,
-			"chain with chainID %d not supported",
-			foreignCoin.ForeignChainId,
-		)
-	}
-
-	gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
-		ctx,
-		ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
-	)
-	if err != nil {
-		return InboundDetails{}, err
-	}
-
-	coinType := foreignCoin.CoinType
-	if callEvent {
-		coinType = coin.CoinType_NoAssetCall
-	}
-
-	return InboundDetails{
-		receiverChain:   receiverChain,
-		gasLimitQueried: gasLimitQueried,
-		coinType:        coinType,
-		asset:           foreignCoin.Asset,
-	}, nil
 }
 
 // ProcessZEVMInboundV2 processes the logs emitted by the zEVM contract for V2 protocol contracts
@@ -156,7 +79,7 @@ func (k Keeper) ProcessZEVMInboundV2(
 		// Note: NoAssetCall is not supported for ZETA
 		switch {
 		case zrc20 == wzetaContractAddress:
-			inboundDetails, err = k.getZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress.Hex())
+			inboundDetails, err = k.getZetaInboundDetails(ctx, receiverChainID, callOptions)
 		default:
 			inboundDetails, err = k.getErc20InboundDetails(ctx, zrc20, callEvent != nil)
 		}
@@ -232,4 +155,84 @@ func (k Keeper) ProcessZEVMInboundV2(
 		EmitZRCWithdrawCreated(ctx, *cctx)
 	}
 	return nil
+}
+
+// getZetaInboundDetails retrieves the details for a ZETA withdrawal event, it returns an InboundDetails object
+func (k Keeper) getZetaInboundDetails(
+	ctx sdk.Context,
+	receiverChainID *big.Int,
+	callOptions gatewayzevm.CallOptions,
+) (InboundDetails, error) {
+	if receiverChainID == nil || receiverChainID.Int64() == 0 {
+		return InboundDetails{}, errorsmod.Wrap(
+			types.ErrInvalidWithdrawalEvent,
+			"receiver chain ID is nil or zero for ZETA withdrawal",
+		)
+	}
+	parsedReceiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(
+		ctx,
+		receiverChainID.Int64(),
+	)
+	if !found {
+		return InboundDetails{}, errorsmod.Wrapf(
+			observertypes.ErrSupportedChains,
+			"chain with chainID %d not supported",
+			receiverChainID.Int64(),
+		)
+	}
+
+	gasLimit := callOptions.GasLimit
+	if gasLimit == nil || gasLimit.Int64() == 0 {
+		return InboundDetails{}, errorsmod.Wrap(
+			types.ErrInvalidWithdrawalEvent, "gas limit not provided for ZETA withdrawal")
+	}
+
+	return InboundDetails{
+		coinType:        coin.CoinType_Zeta,
+		asset:           ethcommon.Address{}.Hex(),
+		receiverChain:   parsedReceiverChain,
+		gasLimitQueried: gasLimit,
+	}, nil
+}
+
+// getErc20InboundDetails retrieves the details for a ZRC20 withdrawal event, it returns an InboundDetails object
+func (k Keeper) getErc20InboundDetails(
+	ctx sdk.Context,
+	zrc20 ethcommon.Address,
+	callEvent bool,
+) (InboundDetails, error) {
+	foreignCoin, found := k.fungibleKeeper.GetForeignCoins(ctx, zrc20.Hex())
+	if !found {
+		ctx.Logger().Info(fmt.Sprintf("cannot find foreign coin associated to the zrc20 address %s", zrc20.Hex()))
+		return InboundDetails{}, nil
+	}
+
+	receiverChain, found := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
+	if !found {
+		return InboundDetails{}, errorsmod.Wrapf(
+			observertypes.ErrSupportedChains,
+			"chain with chainID %d not supported",
+			foreignCoin.ForeignChainId,
+		)
+	}
+
+	gasLimitQueried, err := k.fungibleKeeper.QueryGasLimit(
+		ctx,
+		ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress),
+	)
+	if err != nil {
+		return InboundDetails{}, err
+	}
+
+	coinType := foreignCoin.CoinType
+	if callEvent {
+		coinType = coin.CoinType_NoAssetCall
+	}
+
+	return InboundDetails{
+		receiverChain:   receiverChain,
+		gasLimitQueried: gasLimitQueried,
+		coinType:        coinType,
+		asset:           foreignCoin.Asset,
+	}, nil
 }

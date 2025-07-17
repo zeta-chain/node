@@ -31,9 +31,8 @@ func (k Keeper) GetZetaInboundDetails(
 	ctx sdk.Context,
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
-	wzetaContractAddress string,
 ) (InboundDetails, error) {
-	return k.getZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+	return k.getZetaInboundDetails(ctx, receiverChainID, callOptions)
 }
 
 func (k Keeper) GetErc20InboundDetails(

@@ -30,7 +30,6 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(100000),
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		expectedChain := chains.Chain{
@@ -40,7 +39,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -57,10 +56,9 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(100000),
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		// ACT
-		result, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		result, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -80,10 +78,9 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(100000),
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -102,13 +99,12 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(100000),
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(999)).Return(chains.Chain{}, false)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -127,7 +123,6 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        nil,
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		expectedChain := chains.Chain{
@@ -137,7 +132,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -156,7 +151,6 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			GasLimit:        big.NewInt(0),
 			IsArbitraryCall: false,
 		}
-		wzetaContractAddress := sample.EthAddress().Hex()
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		expectedChain := chains.Chain{
@@ -166,7 +160,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions, wzetaContractAddress)
+		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
