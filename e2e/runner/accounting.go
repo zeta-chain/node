@@ -171,37 +171,19 @@ func (r *E2ERunner) CheckSolanaTSSBalance() error {
 
 // CheckSUITSSBalance checks the TSS balance on Sui against the ZRC20 total supply
 func (r *E2ERunner) CheckSUITSSBalance() error {
-	allTssAddress, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
+	gatewayBalance, err := r.SuiGetGatewaySUIBalance()
 	if err != nil {
-		return err
-	}
-
-	tssTotalBalance := big.NewInt(0)
-
-	for _, tssAddress := range allTssAddress.TssList {
-		tssAddressFinalizedHeight, err := r.ObserverClient.GetTssAddressByFinalizedHeight(
-			r.Ctx,
-			&observertypes.QueryGetTssAddressByFinalizedHeightRequest{
-				FinalizedZetaHeight: tssAddress.FinalizedZetaHeight,
-			},
-		)
-		if err != nil {
-			continue
-		}
-
-		tssBal := r.SuiGetSUIBalance(tssAddressFinalizedHeight.Sui)
-		// #nosec G115 test - always in range
-		tssTotalBalance.Add(tssTotalBalance, big.NewInt(int64(tssBal)))
+		return fmt.Errorf("failed to get SUI balance for Sui gateway: %w", err)
 	}
 
 	zrc20Supply, err := r.SUIZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if tssTotalBalance.Cmp(zrc20Supply) < 0 {
-		return fmt.Errorf("SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssTotalBalance, zrc20Supply)
+	if gatewayBalance.Cmp(zrc20Supply) < 0 {
+		return fmt.Errorf("SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", gatewayBalance, zrc20Supply)
 	}
-	r.Logger.Info("SUI: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
+	r.Logger.Info("SUI: TSS balance (%d) >= ZRC20 TotalSupply (%d)", gatewayBalance, zrc20Supply)
 	return nil
 }
 
