@@ -1112,6 +1112,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawInvalidReceiver,
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	/*
 	 Bitcoin tests
