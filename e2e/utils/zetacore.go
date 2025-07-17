@@ -101,10 +101,6 @@ func WaitCctxsMinedByInboundHash(
 		// declare cctxs here so we can print the last fetched one if we reach timeout
 		var cctxs []*crosschaintypes.CrossChainTx
 
-		if i%10 == 0 {
-			fmt.Printf("waiting for cctxs mined by inboundHash: %s\n", inboundHash)
-		}
-
 		timedOut := time.Since(startTime) > timeout
 		require.False(t, timedOut, "waiting cctx timeout, cctx not mined, inbound hash: %s", inboundHash)
 
@@ -119,9 +115,8 @@ func WaitCctxsMinedByInboundHash(
 		res, err := client.InTxHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
-			if i%10 == 0 {
+			if i%20 == 0 {
 				logger.Info("Error getting cctx by inboundHash: %s", err.Error())
-				fmt.Printf("Error getting cctx by inboundHash: %s\n", err.Error())
 			}
 			continue
 		}
@@ -130,12 +125,6 @@ func WaitCctxsMinedByInboundHash(
 			if i%10 == 0 {
 				logger.Info(
 					"not enough cctxs found by inboundHash: %s, expected: %d, found: %d",
-					inboundHash,
-					cctxsCount,
-					len(res.CrossChainTxs),
-				)
-				fmt.Printf(
-					"not enough cctxs found by inboundHash: %s, expected: %d, found: %d\n",
 					inboundHash,
 					cctxsCount,
 					len(res.CrossChainTxs),
@@ -149,16 +138,9 @@ func WaitCctxsMinedByInboundHash(
 			cctx := cctx
 			if !cctx.CctxStatus.Status.IsTerminal() {
 				// prevent spamming logs
-				if i%10 == 0 {
+				if i%20 == 0 {
 					logger.Info(
 						"waiting for cctx index %d to be mined by inboundHash: %s, cctx status: %s, message: %s",
-						j,
-						inboundHash,
-						cctx.CctxStatus.Status.String(),
-						cctx.CctxStatus.StatusMessage,
-					)
-					fmt.Printf(
-						"waiting for cctx index %d to be mined by inboundHash: %s, cctx status: %s, message: %s\n",
 						j,
 						inboundHash,
 						cctx.CctxStatus.Status.String(),
