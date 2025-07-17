@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"os"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -103,14 +104,10 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
 	version := r.GetZetacoredVersion()
 	versionMajorIsZero := semver.Major(version) == "v0"
-	r.Logger.Print("Current Zetacored version: %s", version)
-	r.Logger.Print("Assert version: %s", assertVersion)
-	r.Logger.Print("Is running upgrade: %t", r.IsRunningUpgrade())
-	r.Logger.Print("Is version major zero: %t", versionMajorIsZero)
-	r.Logger.Print("OLD_VERSION: %s", os.Getenv("OLD_VERSION"))
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
 
 	// run these assertions only on the second run of the upgrade
-	if !r.IsRunningUpgrade() || !versionMajorIsZero || assertVersion != os.Getenv("OLD_VERSION") {
+	if !r.IsRunningUpgrade() || !versionMajorIsZero || assertVersion != oldVersion {
 		return
 	}
 	r.Logger.Print("🏃 Running assertions after upgrade for version: %s", assertVersion)
