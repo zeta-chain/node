@@ -326,6 +326,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.PrintContractAddresses()
 	deployerRunner.AssertAfterUpgrade("v32.0.0", func() {
+		if !testSui {
+			return
+		}
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
@@ -606,6 +609,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 	}
 	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
+		if !testSui {
+			return
+		}
 		amount := big.NewInt(1e10)
 
 		// artificially mint some balance to stability pool
