@@ -32,7 +32,7 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
 	// Skip upgrades if this is the second run of the upgrade tests
-	if strings.Contains(r.GetZetacoredVersion(), "dirty") || semver.Major(r.GetZetacoredVersion()) == "" {
+	if strings.Contains(r.GetZetacoredVersion(), "dirty") || semver.Major(r.GetZetacoredVersion()) == "v0" {
 		return
 	}
 	if opts.TestSolana {
@@ -104,11 +104,11 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
 	version := r.GetZetacoredVersion()
 	versionIsDirty := strings.Contains(version, "dirty")
-	versionMajorIsEmpty := semver.Major(version) == ""
+	versionMajorIsZero := semver.Major(version) == "v0"
 
 	// run these assertions only on the second run of the upgrade
 	if !r.IsRunningUpgrade() ||
-		(!versionIsDirty && !versionMajorIsEmpty) ||
+		(!versionIsDirty && !versionMajorIsZero) ||
 		assertVersion != os.Getenv("OLD_VERSION") {
 		return
 	}
