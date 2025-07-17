@@ -14,21 +14,26 @@ import (
 )
 
 // TestSuiWithdrawAndCallRevertWithCall executes withdrawAndCall on zevm gateway with SUI token.
-// The outbound is rejected by the connected module due to invalid payload (invalid address),
+// The outbound authenticated call is rejected by the connected module due to unauthorized sender address,
 // and the 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example package) and a SUI amount
+	// Given target package ID (example package), SUI amount and gas limit
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
-	// create the payload for 'on_call' with invalid address
-	// taking the first 10 letters to form an invalid payload
-	invalidAddress := sample.SuiAddress(r)[:10]
-	invalidPayloadOnCall, err := r.SuiCreateExampleWACPayload(invalidAddress)
-	require.NoError(r, err)
+	// use the deployer address as on_call payload message
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
+	suiAddress := signer.Address()
+
+	// create a 'on_call' payload that gives authorization to a random address,
+	// such that the 'r.EVMAddress()' becomes an unauthorized sender in the 'on_call'
+	authorizedSender := sample.EthAddress()
+	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -43,11 +48,13 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	// approve SUI ZRC20 token
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call with revert options
-	tx := r.SuiWithdrawAndCallSUI(
+	// perform the withdraw and authenticated call with revert options
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
-		invalidPayloadOnCall,
+		r.SUIZRC20Addr,
+		payloadOnCall,
+		gasLimit,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,
@@ -60,7 +67,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	// ASSERT
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// should have called 'onRevert'

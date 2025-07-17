@@ -16,12 +16,13 @@ import (
 // The outbound is rejected by the connected module due to the special payload message "revert" and the
 // 'onRevert' method is called in the ZEVM to handle the revert.
 func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	// ARRANGE
-	// Given target package ID (example package) and a token amount
+	// Given target package ID (example package), token amount and gas limit
 	targetPackageID := r.SuiExample.PackageID.String()
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	// create the special revert payload for 'on_call'
 	revertPayloadOnCall, err := r.SuiCreateExampleWACPayloadForRevert()
@@ -41,11 +42,13 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 	r.ApproveFungibleTokenZRC20(r.GatewayZEVMAddr)
 
-	// perform the withdraw and call with revert options
-	tx := r.SuiWithdrawAndCallFungibleToken(
+	// perform the withdraw and authenticated call with revert options
+	tx := r.SuiWithdrawAndCall(
 		targetPackageID,
 		amount,
+		r.SuiTokenZRC20Addr,
 		revertPayloadOnCall,
+		gasLimit,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,
@@ -58,7 +61,7 @@ func TestSuiTokenWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []strin
 	// ASSERT
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx, "withdraw")
+	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	// should have called 'onRevert'

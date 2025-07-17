@@ -25,9 +25,10 @@ func TestSuiWithdrawInvalidReceiver(r *runner.E2ERunner, args []string) {
 
 	// ACT
 	// perform the withdraw to invalid receiver
-	tx := r.SuiWithdrawSUI(
+	tx := r.SuiWithdraw(
 		receiver,
 		amount,
+		r.SUIZRC20Addr,
 		gatewayzevm.RevertOptions{
 			RevertAddress:    revertAddress,
 			OnRevertGasLimit: big.NewInt(0),

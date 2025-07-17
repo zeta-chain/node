@@ -7,7 +7,9 @@
 * [3961](https://github.com/zeta-chain/node/pull/3961) - cosmos v53 upgrade
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
+* [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
 * [3991](https://github.com/zeta-chain/node/pull/3991) - cosmos evm integration
+
 
 ### Fixes
 

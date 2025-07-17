@@ -12,6 +12,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewGatewayFromPairID(t *testing.T) {
+	// stubs
+	const (
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+	)
+
+	tests := []struct {
+		name    string
+		triplet string
+		wantErr string
+	}{
+		{
+			name:    "valid pair",
+			triplet: fmt.Sprintf("%s,%s", packageID, gatewayID),
+		},
+		{
+			name:    "invalid pair, missing gateway object id",
+			triplet: "0x123",
+			wantErr: "invalid pair",
+		},
+		{
+			name:    "invalid Sui address",
+			triplet: fmt.Sprintf("%s,0xabc", packageID),
+			wantErr: "invalid Sui address",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gw, err := NewGatewayFromPairID(tt.triplet)
+			if tt.wantErr != "" {
+				require.Nil(t, gw)
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, packageID, gw.PackageID())
+			assert.Equal(t, gatewayID, gw.ObjectID())
+		})
+	}
+}
+
 func TestParseEvent(t *testing.T) {
 	// stubs
 	const (
@@ -24,7 +68,7 @@ func TestParseEvent(t *testing.T) {
 	gw := NewGateway(packageID, gatewayID)
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
 	}
 
 	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
@@ -369,7 +413,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 	gw := NewGateway(packageID, gatewayID)
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, gw.Module(), t)
+		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
 	}
 
 	for _, tt := range []struct {
@@ -420,7 +464,7 @@ func Test_ParseOutboundEvent(t *testing.T) {
 				content: WithdrawAndCallPTB{
 					MoveCall: MoveCall{
 						PackageID:  packageID,
-						Module:     moduleName,
+						Module:     GatewayModule,
 						Function:   FuncWithdrawImpl,
 						ArgIndexes: ptbWithdrawImplArgIndexes,
 					},

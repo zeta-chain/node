@@ -54,10 +54,11 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 	return balance
 }
 
-// SuiWithdrawSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
-func (r *E2ERunner) SuiWithdrawSUI(
+// SuiWithdraw calls Withdraw on ZEVM Gateway with given ZRC20
+func (r *E2ERunner) SuiWithdraw(
 	receiver string,
 	amount *big.Int,
+	zrc20 ethcommon.Address,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
@@ -67,7 +68,7 @@ func (r *E2ERunner) SuiWithdrawSUI(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
-		r.SUIZRC20Addr,
+		zrc20,
 		revertOptions,
 	)
 	require.NoError(r, err)
@@ -75,11 +76,13 @@ func (r *E2ERunner) SuiWithdrawSUI(
 	return tx
 }
 
-// SuiWithdrawAndCallSUI calls Withdraw of Gateway with SUI ZRC20 on ZEVM
-func (r *E2ERunner) SuiWithdrawAndCallSUI(
+// SuiWithdrawAndCall calls WithdrawAndCall on ZEVM Gateway with given ZRC20
+func (r *E2ERunner) SuiWithdrawAndCall(
 	receiver string,
 	amount *big.Int,
+	zrc20 ethcommon.Address,
 	payload sui.CallPayload,
+	gasLimit *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
@@ -93,61 +96,11 @@ func (r *E2ERunner) SuiWithdrawAndCallSUI(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
-		r.SUIZRC20Addr,
+		zrc20,
 		payloadBytes,
 		gatewayzevm.CallOptions{
-			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(100000),
-		},
-		revertOptions,
-	)
-	require.NoError(r, err)
-
-	return tx
-}
-
-// SuiWithdrawFungibleToken calls Withdraw of Gateway with Sui fungible token ZRC20 on ZEVM
-func (r *E2ERunner) SuiWithdrawFungibleToken(
-	receiver string,
-	amount *big.Int,
-) *ethtypes.Transaction {
-	receiverBytes, err := hex.DecodeString(receiver[2:])
-	require.NoError(r, err, "receiver: "+receiver[2:])
-
-	tx, err := r.GatewayZEVM.Withdraw(
-		r.ZEVMAuth,
-		receiverBytes,
-		amount,
-		r.SuiTokenZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
-	)
-	require.NoError(r, err)
-
-	return tx
-}
-
-// SuiWithdrawAndCallFungibleToken calls WithdrawAndCall of Gateway with Sui fungible token ZRC20 on ZEVM
-func (r *E2ERunner) SuiWithdrawAndCallFungibleToken(
-	receiver string,
-	amount *big.Int,
-	payload sui.CallPayload,
-	revertOptions gatewayzevm.RevertOptions,
-) *ethtypes.Transaction {
-	receiverBytes, err := hex.DecodeString(receiver[2:])
-	require.NoError(r, err, "receiver: "+receiver[2:])
-
-	payloadBytes, err := payload.PackABI()
-	require.NoError(r, err)
-
-	tx, err := r.GatewayZEVM.WithdrawAndCall0(
-		r.ZEVMAuth,
-		receiverBytes,
-		amount,
-		r.SuiTokenZRC20Addr,
-		payloadBytes,
-		gatewayzevm.CallOptions{
-			IsArbitraryCall: false,
-			GasLimit:        big.NewInt(100000),
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false, // always authenticated call
 		},
 		revertOptions,
 	)
@@ -248,9 +201,15 @@ func (r *E2ERunner) SuiMintUSDC(
 }
 
 // SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
-// The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPayload, error) {
-	// only the CCTX's coinType is needed, no additional arguments
+// The payload message contains below three fields in order:
+// field 0: [42-byte ZEVM sender], checksum address, with 0x prefix
+// field 1: [32-byte Sui target package], without 0x prefix
+// field 2: [32-byte Sui receiver], without 0x prefix
+//
+// The first two fields are used by E2E test to easily mock up the verifications against 'MessageContext' passed to the 'on_call'.
+// A real-world app just encodes useful data that meets its needs, and it will be only the receiver 'suiAddress' in this case.
+func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Address, suiAddress string) sui.CallPayload {
+	// only the CCTX's coinType is needed, no additional type argument
 	argumentTypes := []string{}
 	objects := []string{
 		r.SuiExample.GlobalConfigID.String(),
@@ -258,13 +217,22 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(suiAddress string) (sui.CallPaylo
 		r.SuiExample.ClockID.String(),
 	}
 
-	// create the payload message from the sui address
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	if err != nil {
-		return sui.CallPayload{}, err
-	}
+	message := make([]byte, 106)
 
-	return sui.NewCallPayload(argumentTypes, objects, message), nil
+	// field 0
+	copy(message[:42], []byte(authorizedSender.Hex()))
+
+	// field 1
+	target, err := hex.DecodeString(r.SuiExample.PackageID.String()[2:])
+	require.NoError(r, err)
+	copy(message[42:74], target)
+
+	// field 2
+	receiver, err := hex.DecodeString(suiAddress[2:])
+	require.NoError(r, err)
+	copy(message[74:], receiver)
+
+	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
 // SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -137,7 +138,7 @@ type E2ERunner struct {
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
 
-	// SuiExample contains the example package information for Sui
+	// SuiExample contains the example package information for Sui authenticated call
 	SuiExample config.SuiExample
 
 	// contracts evm
@@ -529,4 +530,9 @@ func (r *E2ERunner) GetZetacoredVersion() string {
 	require.NoError(r, err, "get node info")
 	r.zetacoredVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
 	return r.zetacoredVersion
+}
+
+func (r *E2ERunner) WorkDirPrefixed(path string) string {
+	prefix := utils.WorkDir(r)
+	return filepath.Join(prefix, path)
 }
