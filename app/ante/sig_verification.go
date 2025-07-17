@@ -9,7 +9,6 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/evm/crypto/ethsecp256k1"
-
 	legacysecp256k1 "github.com/cosmos/evm/legacy/ethsecp256k1"
 )
 
