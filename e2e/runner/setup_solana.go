@@ -68,8 +68,10 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	_, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize gateway logs: %v", out.Meta.LogMessages)
 
-	// initialize connected program
-	r.ConnectedProgram = ConnectedProgramID
+	// initialize connected program, use hardcoded program ID if not set
+	if (r.ConnectedProgram == solana.PublicKey{}) {
+		r.ConnectedProgram = ConnectedProgramID
+	}
 	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
@@ -96,8 +98,10 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	_, out = r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize connected logs: %v", out.Meta.LogMessages)
 
-	// initialize connected_spl program
-	r.ConnectedSPLProgram = ConnectedSPLProgramID
+	// initialize connected_spl program, use hardcoded program ID if not set
+	if (r.ConnectedSPLProgram == solana.PublicKey{}) {
+		r.ConnectedSPLProgram = ConnectedSPLProgramID
+	}
 	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedSPLProgram)
 	require.NoError(r, err)
 
