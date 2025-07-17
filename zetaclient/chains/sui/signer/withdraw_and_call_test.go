@@ -15,21 +15,23 @@ import (
 // newTestWACPTBArgs creates a withdrawAndCallPTBArgs struct for testing
 func newTestWACPTBArgs(
 	t *testing.T,
-	gatewayObjRef, suiCoinObjRef, withdrawCapObjRef sui.ObjectRef,
+	gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef sui.ObjectRef,
 	onCallObjectRefs []sui.ObjectRef,
 ) withdrawAndCallPTBArgs {
 	return withdrawAndCallPTBArgs{
 		withdrawAndCallObjRefs: withdrawAndCallObjRefs{
-			gateway:     gatewayObjRef,
-			withdrawCap: withdrawCapObjRef,
-			onCall:      onCallObjectRefs,
-			suiCoins:    []*sui.ObjectRef{&suiCoinObjRef},
+			gateway:       gatewayObjRef,
+			withdrawCap:   withdrawCapObjRef,
+			msgContextRef: msgContextObjRef,
+			onCall:        onCallObjectRefs,
+			suiCoins:      []*sui.ObjectRef{&suiCoinObjRef},
 		},
 		coinType:  string(zetasui.SUI),
 		amount:    1000000,
 		nonce:     1,
 		gasBudget: 2000000,
-		receiver:  sample.SuiAddress(t),
+		sender:    sample.EthAddress().Hex(),
+		target:    sample.SuiAddress(t),
 		payload: zetasui.CallPayload{
 			TypeArgs:  []string{string(zetasui.SUI)},
 			ObjectIDs: []string{sample.SuiAddress(t)},
@@ -46,6 +48,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 	gatewayObjRef := sampleObjectRef(t)
 	suiCoinObjRef := sampleObjectRef(t)
 	withdrawCapObjRef := sampleObjectRef(t)
+	msgContextObjRef := sampleObjectRef(t)
 	onCallObjRef := sampleObjectRef(t)
 
 	tests := []struct {
@@ -55,7 +58,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 	}{
 		{
 			name: "successful withdraw and call",
-			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, []sui.ObjectRef{onCallObjRef}),
+			args: newTestWACPTBArgs(t, gatewayObjRef, suiCoinObjRef, withdrawCapObjRef, msgContextObjRef, []sui.ObjectRef{onCallObjRef}),
 		},
 		{
 			name: "successful withdraw and call with empty payload",
@@ -65,26 +68,12 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					gatewayObjRef,
 					suiCoinObjRef,
 					withdrawCapObjRef,
+					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
 				args.payload.Message = []byte{}
 				return args
 			}(),
-		},
-		{
-			name: "invalid coin type",
-			args: func() withdrawAndCallPTBArgs {
-				args := newTestWACPTBArgs(
-					t,
-					gatewayObjRef,
-					suiCoinObjRef,
-					withdrawCapObjRef,
-					[]sui.ObjectRef{onCallObjRef},
-				)
-				args.coinType = "invalid_coin_type"
-				return args
-			}(),
-			errMsg: "invalid coin type",
 		},
 		{
 			name: "invalid target package ID",
@@ -94,12 +83,29 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					gatewayObjRef,
 					suiCoinObjRef,
 					withdrawCapObjRef,
+					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
-				args.receiver = "invalid_target_package_id"
+				args.target = "invalid_target_package_id"
 				return args
 			}(),
 			errMsg: "invalid target package ID",
+		},
+		{
+			name: "invalid coin type",
+			args: func() withdrawAndCallPTBArgs {
+				args := newTestWACPTBArgs(
+					t,
+					gatewayObjRef,
+					suiCoinObjRef,
+					withdrawCapObjRef,
+					msgContextObjRef,
+					[]sui.ObjectRef{onCallObjRef},
+				)
+				args.coinType = "invalid_coin_type"
+				return args
+			}(),
+			errMsg: "invalid coin type",
 		},
 		{
 			name: "invalid type argument",
@@ -109,6 +115,7 @@ func Test_withdrawAndCallPTB(t *testing.T) {
 					gatewayObjRef,
 					suiCoinObjRef,
 					withdrawCapObjRef,
+					msgContextObjRef,
 					[]sui.ObjectRef{onCallObjRef},
 				)
 				args.payload.TypeArgs[0] = "invalid_type_argument"
@@ -139,6 +146,8 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	withdrawCapID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
+	msgContextID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
+	require.NoError(t, err)
 	onCallObjectID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
 	require.NoError(t, err)
 	suiCoinID, err := sui.ObjectIdFromHex(sample.SuiAddress(t))
@@ -153,13 +162,15 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 	require.NoError(t, err)
 	digest4, err := sui.NewBase58(sample.SuiDigest(t))
 	require.NoError(t, err)
+	digest5, err := sui.NewBase58(sample.SuiDigest(t))
+	require.NoError(t, err)
 
 	// create SUI coin object reference
 	suiCoinObjRefs := []*sui.ObjectRef{
 		{
 			ObjectId: suiCoinID,
 			Version:  1,
-			Digest:   digest4,
+			Digest:   digest5,
 		},
 	}
 
@@ -167,6 +178,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 		name            string
 		gatewayID       string
 		withdrawCapID   string
+		msgContextID    string
 		onCallObjectIDs []string
 		mockObjects     []*models.SuiObjectResponse
 		mockError       error
@@ -177,6 +189,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "successful get object refs",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -200,9 +213,16 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				},
 				{
 					Data: &models.SuiObjectData{
+						ObjectId: msgContextID.String(),
+						Version:  "7",
+						Digest:   digest3.String(),
+					},
+				},
+				{
+					Data: &models.SuiObjectData{
 						ObjectId: onCallObjectID.String(),
 						Version:  "3",
-						Digest:   digest3.String(),
+						Digest:   digest4.String(),
 						Owner: map[string]any{
 							"Shared": map[string]any{
 								"initial_shared_version": float64(1),
@@ -222,11 +242,16 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 					Version:  2,
 					Digest:   digest2,
 				},
+				msgContextRef: sui.ObjectRef{
+					ObjectId: msgContextID,
+					Version:  7,
+					Digest:   digest3,
+				},
 				onCall: []sui.ObjectRef{
 					{
 						ObjectId: onCallObjectID,
 						Version:  1,
-						Digest:   digest3,
+						Digest:   digest4,
 					},
 				},
 				suiCoins: suiCoinObjRefs,
@@ -236,6 +261,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "rpc call fails",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockError:       sample.ErrSample,
 			errMsg:          "failed to get objects",
@@ -244,6 +270,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid object ID",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -259,6 +286,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				{
 					Data: sampleSharedObjectData(t),
 				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
 			},
 			errMsg: "failed to parse object ID",
 		},
@@ -266,6 +296,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid object version",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -281,6 +312,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 				{
 					Data: sampleSharedObjectData(t),
 				},
+				{
+					Data: sampleSharedObjectData(t),
+				},
 			},
 			errMsg: "failed to parse object version",
 		},
@@ -288,6 +322,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			name:            "invalid initial shared version",
 			gatewayID:       gatewayID.String(),
 			withdrawCapID:   withdrawCapID.String(),
+			msgContextID:    msgContextID.String(),
 			onCallObjectIDs: []string{onCallObjectID.String()},
 			mockObjects: []*models.SuiObjectResponse{
 				{
@@ -301,6 +336,9 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 							},
 						},
 					},
+				},
+				{
+					Data: sampleSharedObjectData(t),
 				},
 				{
 					Data: sampleSharedObjectData(t),
@@ -324,7 +362,7 @@ func Test_getWithdrawAndCallObjectRefs(t *testing.T) {
 			ts.SuiMock.On("GetSuiCoinObjectRefs", ctx, mock.Anything, mock.Anything).Maybe().Return(suiCoinObjRefs, nil)
 
 			// ACT
-			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.onCallObjectIDs, 100)
+			got, err := ts.Signer.getWithdrawAndCallObjectRefs(ctx, tt.withdrawCapID, tt.msgContextID, tt.onCallObjectIDs, 100)
 
 			// ASSERT
 			if tt.errMsg != "" {

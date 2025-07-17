@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/block-vision/sui-go-sdk/models"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/pkg/contracts/sui"
+	zetasui "github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
 	"github.com/zeta-chain/node/zetaclient/logs"
@@ -72,7 +73,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	case cctx.InboundParams == nil:
 		return tx, errors.New("inbound params are nil")
 	case params.CoinType == coin.CoinType_Gas:
-		coinType = string(sui.SUI)
+		coinType = string(zetasui.SUI)
 	case params.CoinType == coin.CoinType_ERC20:
 		// NOTE: 0x prefix is required for coin type other than SUI
 		coinType = "0x" + cctx.InboundParams.Asset
@@ -93,9 +94,23 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
+	// Retrieve message context ID
+	msgContextID, err := s.getMessageContextIDCached(ctx)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to get message context ID")
+	}
+
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
-		return s.buildWithdrawAndCallTx(ctx, params, coinType, gasBudget, withdrawCapID, cctx.RelayedMessage)
+		return s.buildWithdrawAndCallTx(
+			ctx,
+			cctx,
+			coinType,
+			gasBudget,
+			withdrawCapID,
+			msgContextID,
+			cctx.RelayedMessage,
+		)
 	}
 
 	return s.buildWithdrawTx(ctx, params, coinType, gasBudget, withdrawCapID)
@@ -119,7 +134,7 @@ func (s *Signer) buildWithdrawTx(
 	req := models.MoveCallRequest{
 		Signer:          s.TSS().PubKey().AddressSui(),
 		PackageObjectId: s.gateway.PackageID(),
-		Module:          s.gateway.Module(),
+		Module:          zetasui.GatewayModule,
 		Function:        funcWithdraw,
 		TypeArguments:   []any{coinType},
 		Arguments:       []any{s.gateway.ObjectID(), amount, nonce, recipient, gasBudgetStr, withdrawCapID},
@@ -133,25 +148,28 @@ func (s *Signer) buildWithdrawTx(
 // a withdrawAndCall is a PTB transaction that contains a withdraw_impl call and a on_call call
 func (s *Signer) buildWithdrawAndCallTx(
 	ctx context.Context,
-	params *cctypes.OutboundParams,
+	cctx *cctypes.CrossChainTx,
 	coinType string,
 	gasBudget uint64,
 	withdrawCapID string,
+	msgContextID string,
 	payloadHex string,
 ) (models.TxnMetaData, error) {
+	params := cctx.GetCurrentOutboundParam()
+
 	// decode and parse the payload into object IDs and on_call arguments
 	payloadBytes, err := hex.DecodeString(payloadHex)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to decode payload hex bytes")
 	}
 
-	var cp sui.CallPayload
+	var cp zetasui.CallPayload
 	if err := cp.UnpackABI(payloadBytes); err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to parse withdrawAndCall payload")
 	}
 
 	// get all needed object references
-	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, cp.ObjectIDs, gasBudget)
+	wacRefs, err := s.getWithdrawAndCallObjectRefs(ctx, withdrawCapID, msgContextID, cp.ObjectIDs, gasBudget)
 	if err != nil {
 		return models.TxnMetaData{}, errors.Wrap(err, "unable to get object references")
 	}
@@ -163,7 +181,8 @@ func (s *Signer) buildWithdrawAndCallTx(
 		amount:                 params.Amount.Uint64(),
 		nonce:                  params.TssNonce,
 		gasBudget:              gasBudget,
-		receiver:               params.Receiver,
+		sender:                 ethcommon.HexToAddress(cctx.InboundParams.Sender).Hex(),
+		target:                 params.Receiver,
 		payload:                cp,
 	}
 
@@ -173,7 +192,8 @@ func (s *Signer) buildWithdrawAndCallTx(
 		Uint64(logs.FieldNonce, args.nonce).
 		Str(logs.FieldCoinType, args.coinType).
 		Uint64("tx.amount", args.amount).
-		Str("tx.receiver", args.receiver).
+		Str("tx.sender", args.sender).
+		Str("tx.target", args.target).
 		Uint64("tx.gas_budget", args.gasBudget).
 		Strs("tx.type_args", args.payload.TypeArgs).
 		Strs("tx.object_ids", args.payload.ObjectIDs).
@@ -214,7 +234,7 @@ func (s *Signer) createCancelTxBuilder(
 	req := models.MoveCallRequest{
 		Signer:          s.TSS().PubKey().AddressSui(),
 		PackageObjectId: s.gateway.PackageID(),
-		Module:          s.gateway.Module(),
+		Module:          zetasui.GatewayModule,
 		Function:        funcIncreaseNonce,
 		TypeArguments:   []any{},
 		Arguments:       []any{s.gateway.ObjectID(), nonce, withdrawCapID},
@@ -253,7 +273,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
 	switch {
-	case errors.Is(err, sui.ErrObjectOwnership):
+	case errors.Is(err, zetasui.ErrObjectOwnership):
 		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
 		return s.broadcastCancelTx(ctx, cancelTxBuilder)
 	case err != nil:
@@ -286,7 +306,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
-	isRetryable, err := sui.IsRetryableExecutionError(res.Effects.Status.Error)
+	isRetryable, err := zetasui.IsRetryableExecutionError(res.Effects.Status.Error)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "unable to check tx execution status error: %s", res.Effects.Status.Error)
@@ -349,5 +369,5 @@ func (s *Signer) getGatewayNonce(ctx context.Context) (uint64, error) {
 		return 0, errors.Wrap(err, "unable to get parsed data of gateway object")
 	}
 
-	return sui.ParseGatewayNonce(data)
+	return zetasui.ParseGatewayNonce(data)
 }
