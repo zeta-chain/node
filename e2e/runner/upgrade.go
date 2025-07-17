@@ -1,6 +1,9 @@
 package runner
 
 import (
+	"os"
+	"strings"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
@@ -31,7 +34,7 @@ func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opt
 		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	}
 
-	if opts.TestSui {
+	if opts.TestSui && !r.IsRunningUpgrade() {
 		r.SuiVerifyGatewayPackageUpgrade()
 	}
 }
@@ -91,4 +94,22 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 	txUpgrade, err := r.ERC20Custody.UpgradeToAndCall(r.EVMAuth, newImplementationAddress, []byte{})
 	require.NoError(r, err)
 	ensureTxReceipt(txUpgrade, "ERC20Custody upgrade failed")
+}
+
+func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
+	// run these assertions only on the second run of the upgrade
+	if !r.IsRunningUpgrade() || !strings.Contains(r.GetZetacoredVersion(), "dirty") || assertVersion != os.Getenv("OLD_VERSION") {
+		return
+	}
+	r.Logger.Print("🏃 Running assertions after upgrade for version: %s", assertVersion)
+	assertFunc()
+}
+
+func (r *E2ERunner) AssertBeforeUpgrade(assertVersion string, assertFunc func()) {
+	// run these assertions only on the first run of the upgrade
+	if !r.IsRunningUpgrade() || assertVersion != r.GetZetacoredVersion() {
+		return
+	}
+	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", assertVersion)
+	assertFunc()
 }

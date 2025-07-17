@@ -258,6 +258,7 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
   OLD_VERSION=$(get_zetacored_version)
+  export OLD_VERSION
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
 
   if [[ ! -f "$deployed_config_path"  ]]; then

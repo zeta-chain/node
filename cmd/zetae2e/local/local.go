@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -10,10 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/stretchr/testify/require"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -320,6 +324,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.PrintContractAddresses()
+	deployerRunner.AssertAfterUpgrade("v32.0.0", func() {
+		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
+		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
+	})
 
 	// if setup only, quit
 	if setupOnly {
@@ -595,6 +604,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
+	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
+		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
+		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) > 0, "SUI ZRC20 balance should be greater than 0")
+	})
 
 	// Run gateway upgrade tests for external chains
 	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
