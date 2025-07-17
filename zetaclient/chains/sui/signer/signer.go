@@ -20,9 +20,10 @@ import (
 // Signer Sui outbound transaction signer.
 type Signer struct {
 	*base.Signer
-	client      RPC
-	gateway     *sui.Gateway
-	withdrawCap *withdrawCap
+	client         RPC
+	gateway        *sui.Gateway
+	withdrawCap    *tssOwnedObject
+	messageContext *tssOwnedObject
 
 	zetacore interfaces.ZetacoreClient
 }
@@ -58,11 +59,12 @@ func New(
 	zetacore interfaces.ZetacoreClient,
 ) *Signer {
 	return &Signer{
-		Signer:      baseSigner,
-		client:      client,
-		gateway:     gateway,
-		zetacore:    zetacore,
-		withdrawCap: &withdrawCap{},
+		Signer:         baseSigner,
+		client:         client,
+		gateway:        gateway,
+		zetacore:       zetacore,
+		withdrawCap:    &tssOwnedObject{},
+		messageContext: &tssOwnedObject{},
 	}
 }
 

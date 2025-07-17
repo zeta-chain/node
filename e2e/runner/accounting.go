@@ -33,6 +33,8 @@ type Response struct {
 	Amount Amount `json:"amount"`
 }
 
+// TODO : https://github.com/zeta-chain/node/issues/4023
+// Add a check for ZETA tokens.
 func (r *E2ERunner) CheckZRC20BalanceAndSupply() {
 	r.Logger.Info("Checking ZRC20 Balance vs Supply")
 

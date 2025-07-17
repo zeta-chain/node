@@ -57,6 +57,10 @@ func TestSigner(t *testing.T) {
 		const withdrawCapID = "0xWithdrawCapID"
 		ts.MockWithdrawCapID(withdrawCapID)
 
+		// Given mocked MessageContextID
+		const messageContextID = "0xMessageContextID"
+		ts.MockMessageContextID(messageContextID)
+
 		// Given expected MoveCall
 		txBytes := base64.StdEncoding.EncodeToString([]byte("raw_tx_bytes"))
 
@@ -367,6 +371,11 @@ func (ts *testSuite) MockGatewayNonce(nonce uint64) {
 
 func (ts *testSuite) MockWithdrawCapID(id string) {
 	tss, structType := ts.TSS.PubKey().AddressSui(), ts.Gateway.WithdrawCapType()
+	ts.SuiMock.On("GetOwnedObjectID", mock.Anything, tss, structType).Return(id, nil)
+}
+
+func (ts *testSuite) MockMessageContextID(id string) {
+	tss, structType := ts.TSS.PubKey().AddressSui(), ts.Gateway.MessageContextType()
 	ts.SuiMock.On("GetOwnedObjectID", mock.Anything, tss, structType).Return(id, nil)
 }
 

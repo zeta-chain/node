@@ -3,6 +3,9 @@ package sui
 import (
 	_ "embed"
 	"encoding/base64"
+	"os"
+
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed gateway.mv
@@ -13,12 +16,6 @@ var fakeUSDC []byte
 
 //go:embed evm.mv
 var evmBinary []byte
-
-//go:embed token.mv
-var tokenBinary []byte
-
-//go:embed connected.mv
-var connectedBinary []byte
 
 // GatewayBytecodeBase64 gets the gateway binary encoded as base64 for deployment
 func GatewayBytecodeBase64() string {
@@ -35,12 +32,11 @@ func EVMBytecodeBase64() string {
 	return base64.StdEncoding.EncodeToString(evmBinary)
 }
 
-// ExampleFungibleTokenBytecodeBase64 gets the example package's fungible token binary encoded as base64 for deployment
-func ExampleFungibleTokenBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(tokenBinary)
-}
+// ReadMoveBinaryBase64 reads a given move binary file and returns it as base64 encoded string
+func ReadMoveBinaryBase64(t require.TestingT, binaryName string) string {
+	// #nosec G304 -- this is a binary for E2E test
+	binaryBytes, err := os.ReadFile(binaryName)
+	require.NoError(t, err)
 
-// ExampleConnectedBytecodeBase64 gets the example package's connected binary encoded as base64 for deployment
-func ExampleConnectedBytecodeBase64() string {
-	return base64.StdEncoding.EncodeToString(connectedBinary)
+	return base64.StdEncoding.EncodeToString(binaryBytes)
 }
