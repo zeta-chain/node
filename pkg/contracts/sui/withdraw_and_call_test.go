@@ -111,22 +111,13 @@ func Test_parseWithdrawAndCallPTB(t *testing.T) {
 			want: WithdrawAndCallPTB{
 				MoveCall: MoveCall{
 					PackageID:  packageID,
-					Module:     moduleName,
+					Module:     GatewayModule,
 					Function:   FuncWithdrawImpl,
 					ArgIndexes: ptbWithdrawImplArgIndexes,
 				},
 				Amount: math.NewUint(100),
 				Nonce:  2,
 			},
-		},
-		{
-			name: "invalid number of commands",
-			response: func() models.SuiTransactionBlockResponse {
-				res := createPTBResponse(txHash, packageID, amountStr, nonceStr)
-				res.Transaction.Data.Transaction.Transactions = res.Transaction.Data.Transaction.Transactions[:2]
-				return res
-			}(),
-			errMsg: "invalid number of commands",
 		},
 		{
 			name: "invalid number of inputs",
@@ -270,7 +261,7 @@ func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransa
 									map[string]any{"Input": float64(4)},
 								},
 								"function": FuncWithdrawImpl,
-								"module":   moduleName,
+								"module":   GatewayModule,
 								"package":  packageID,
 							},
 						},
@@ -280,9 +271,25 @@ func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransa
 						map[string]any{
 							"MoveCall": map[string]any{
 								"arguments": []any{},
+								"function":  FuncSetMessageContext,
+								"module":    GatewayModule,
+								"package":   packageID,
+							},
+						},
+						map[string]any{
+							"MoveCall": map[string]any{
+								"arguments": []any{},
 								"function":  FuncOnCall,
 								"module":    ModuleConnected,
 								"package":   "target_package_id",
+							},
+						},
+						map[string]any{
+							"MoveCall": map[string]any{
+								"arguments": []any{},
+								"function":  FuncResetMessageContext,
+								"module":    GatewayModule,
+								"package":   packageID,
 							},
 						},
 					},

@@ -1032,12 +1032,13 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawAndCallName,
-		"withdraw SUI from ZEVM and call a contract",
+		"withdraw SUI from ZEVM and makes an authenticated call to a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawRevertWithCallName,
@@ -1050,12 +1051,13 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawAndCallRevertWithCallName,
-		"withdraw SUI from ZEVM and call a contract that reverts with a onRevert call",
+		"withdraw SUI from ZEVM and makes an authenticated call to a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
 			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawName,
@@ -1068,21 +1070,23 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallName,
-		"withdraw fungible token from ZEVM and call a contract",
+		"withdraw fungible token from ZEVM and makes an authenticated call to a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallRevertWithCallName,
-		"withdraw fungible token from ZEVM and call a contract that reverts with a onRevert call",
+		"withdraw fungible token from ZEVM and makes an authenticated call to a contract that reverts with a onRevert call",
 		[]runner.ArgDefinition{
-			{Description: "amount in base unit", DefaultValue: "1000000"},
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v32.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositRestrictedName,

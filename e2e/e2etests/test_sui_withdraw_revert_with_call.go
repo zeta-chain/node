@@ -54,9 +54,10 @@ func TestSuiWithdrawRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw with revert options
-	tx := r.SuiWithdrawSUI(
+	tx := r.SuiWithdraw(
 		signer.Address(),
 		amount,
+		r.SUIZRC20Addr,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    dAppAddress,

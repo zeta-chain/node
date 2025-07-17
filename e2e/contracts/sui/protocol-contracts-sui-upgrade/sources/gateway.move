@@ -1,6 +1,7 @@
 module gateway::gateway;
 
 use gateway::evm;
+use std::ascii;
 use std::ascii::String;
 use std::type_name::{get, into_string};
 use sui::bag::{Self, Bag};
@@ -19,6 +20,7 @@ const EPayloadTooLong: u64 = 4;
 const EInactiveWithdrawCap: u64 = 5;
 const EInactiveWhitelistCap: u64 = 6;
 const EDepositPaused: u64 = 7;
+const EInvalidSenderAddress: u64 = 8;
 
 const PayloadMaxLength: u64 = 1024;
 
@@ -37,6 +39,7 @@ public struct Gateway has key {
     nonce: u64,
     active_withdraw_cap: ID,
     active_whitelist_cap: ID,
+    active_message_context: ID,
     deposit_paused: bool,
 }
 
@@ -53,6 +56,13 @@ public struct WhitelistCap has key, store {
 // AdminCap is a capability object that allows to issue new capabilities
 public struct AdminCap has key, store {
     id: UID,
+}
+
+// MessageContext is the message context object passed to on_call function
+public struct MessageContext has key, store {
+    id: UID,
+    sender: String,  // zevm address of the sender
+    target: address, // package address being called
 }
 
 // === Events ===
@@ -105,6 +115,13 @@ fun init(ctx: &mut TxContext) {
         id: object::new(ctx),
     };
 
+    // to set/reset the message context during authenticated calls, the caller must have the MessageContextCap
+    let message_context = MessageContext {
+        id: object::new(ctx),
+        sender: ascii::string(b""),
+        target: @0x0,
+    };
+
     // create and share the gateway object
     let mut gateway = Gateway {
         id: object::new(ctx),
@@ -112,6 +129,7 @@ fun init(ctx: &mut TxContext) {
         nonce: 0,
         active_withdraw_cap: object::id(&withdraw_cap),
         active_whitelist_cap: object::id(&whitelist_cap),
+        active_message_context: object::id(&message_context),
         deposit_paused: false,
     };
 
@@ -121,6 +139,7 @@ fun init(ctx: &mut TxContext) {
     transfer::transfer(withdraw_cap, tx_context::sender(ctx));
     transfer::transfer(whitelist_cap, tx_context::sender(ctx));
     transfer::transfer(admin_cap, tx_context::sender(ctx));
+    transfer::transfer(message_context, tx_context::sender(ctx));
     transfer::share_object(gateway);
 }
 
@@ -190,6 +209,33 @@ entry fun issue_withdraw_and_whitelist_cap(
     let (withdraw_cap, whitelist_cap) = issue_withdraw_and_whitelist_cap_impl(gateway, _cap, ctx);
     transfer::transfer(withdraw_cap, tx_context::sender(ctx));
     transfer::transfer(whitelist_cap, tx_context::sender(ctx));
+}
+
+// set_message_context sets the message context for authenticated call
+// it is called automatically by the tss immediately before 'on_call'
+entry fun set_message_context(message_context: &mut MessageContext, sender: String, target: address) {
+    assert!(evm::is_valid_evm_address(sender), EInvalidSenderAddress);
+    assert!(target != @0x0, EInvalidReceiverAddress);
+
+    message_context.sender = sender;
+    message_context.target = target;
+}
+
+// reset_message_context resets the message context for authenticated call
+// it is called automatically by the tss immediately after 'on_call'
+entry fun reset_message_context(message_context: &mut MessageContext) {
+    message_context.sender = ascii::string(b"");
+    message_context.target = @0x0;
+}
+
+// issue_message_context issues a new message context and revokes the old one
+entry fun issue_message_context(
+    gateway: &mut Gateway,
+    _cap: &AdminCap,
+    ctx: &mut TxContext,
+) {
+    let message_context = issue_message_context_impl(gateway, _cap, ctx);
+    transfer::transfer(message_context, tx_context::sender(ctx));
 }
 
 // pause pauses the deposit functionality
@@ -343,6 +389,20 @@ public fun issue_withdraw_and_whitelist_cap_impl(
     (withdraw_cap, whitelist_cap)
 }
 
+public fun issue_message_context_impl(
+    gateway: &mut Gateway,
+    _cap: &AdminCap,
+    ctx: &mut TxContext,
+): MessageContext {
+    let message_context = MessageContext {
+        id: object::new(ctx),
+        sender: ascii::string(b""),
+        target: @0x0,
+    };
+    gateway.active_message_context = object::id(&message_context);
+    message_context
+}
+
 public fun pause_impl(gateway: &mut Gateway, _cap: &AdminCap) {
     gateway.deposit_paused = true;
 }
@@ -363,6 +423,18 @@ public fun active_withdraw_cap(gateway: &Gateway): ID {
 
 public fun active_whitelist_cap(gateway: &Gateway): ID {
     gateway.active_whitelist_cap
+}
+
+public fun active_message_context(gateway: &Gateway): ID {
+    gateway.active_message_context
+}
+
+public fun message_context_sender(message_context: &MessageContext): String {
+    message_context.sender
+}
+
+public fun message_context_target(message_context: &MessageContext): address {
+    message_context.target
 }
 
 public fun vault_balance<T>(gateway: &Gateway): u64 {

@@ -2,10 +2,11 @@ package client
 
 import (
 	"context"
-	"github.com/zeta-chain/node/zetaclient/common"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/zeta-chain/node/zetaclient/common"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/stretchr/testify/require"
