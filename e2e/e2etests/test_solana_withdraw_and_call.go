@@ -46,7 +46,7 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	privkey := r.GetSolanaPrivKey()
 
 	// check balances before withdraw
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
@@ -72,7 +72,6 @@ func TestSolanaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
-		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
 		msgEncoded,
