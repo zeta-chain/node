@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
@@ -23,7 +24,21 @@ func NewSimApp(
 	appOptions servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*zetaapp.App, error) {
-	encCdc := zetaapp.MakeEncodingConfig(serverconfig.DefaultEVMChainID) // TODO evm chain id
+	// TODO evm: check 0.3 version if this can be simplified
+	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
+	err := configurator.
+		WithChainConfig(evmtypes.DefaultChainConfig(777)).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         "azeta",
+			ExtendedDenom: "azeta",
+			DisplayDenom:  "azeta",
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
 
 	// Set load latest version to false as we manually set it later.
 	zetaApp := zetaapp.New(
@@ -40,6 +55,7 @@ func NewSimApp(
 	)
 
 	// use zeta antehandler
+	encCdc := zetaapp.MakeEncodingConfig(777)
 	options := ante.HandlerOptions{
 		AccountKeeper:   zetaApp.AccountKeeper,
 		BankKeeper:      zetaApp.BankKeeper,

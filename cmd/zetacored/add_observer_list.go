@@ -417,18 +417,12 @@ func AddGenesisAccount(
 	balances []banktypes.Balance,
 	appState map[string]json.RawMessage,
 ) (map[string]json.RawMessage, error) {
-	var genAccount authtypes.GenesisAccount
 	totalBalanceAdded := sdk.Coins{}
 	genAccounts := make([]authtypes.GenesisAccount, len(balances))
 	for i, balance := range balances {
 		totalBalanceAdded = totalBalanceAdded.Add(balance.Coins...)
-		accAddress := sdk.MustAccAddressFromBech32(balance.Address) // TODO evm: EthAccount missing?
-		baseAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
-		genAccount = baseAccount
-		// genAccount = &cosmosevmtypes.EthAccount{
-		// 	BaseAccount: baseAccount,
-		// 	CodeHash:    ethcommon.BytesToHash(evmtypes.EmptyCodeHash).Hex(),
-		// }
+		accAddress := sdk.MustAccAddressFromBech32(balance.Address)
+		genAccount := authtypes.NewBaseAccount(accAddress, nil, 0, 0)
 		if err := genAccount.Validate(); err != nil {
 			return appState, fmt.Errorf("failed to validate new genesis account: %w", err)
 		}
