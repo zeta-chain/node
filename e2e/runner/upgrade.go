@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -31,7 +32,7 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
 	// Skip upgrades if this is the second run of the upgrade tests
-	if strings.Contains(r.GetZetacoredVersion(), "dirty") {
+	if strings.Contains(r.GetZetacoredVersion(), "dirty") || semver.Major(r.GetZetacoredVersion()) == "" {
 		return
 	}
 	if opts.TestSolana {
@@ -101,8 +102,13 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 }
 
 func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
+	version := r.GetZetacoredVersion()
+	versionIsDirty := strings.Contains(version, "dirty")
+	versionMajorIsEmpty := semver.Major(version) == ""
+
 	// run these assertions only on the second run of the upgrade
-	if !r.IsRunningUpgrade() || !strings.Contains(r.GetZetacoredVersion(), "dirty") ||
+	if !r.IsRunningUpgrade() ||
+		(!versionIsDirty && !versionMajorIsEmpty) ||
 		assertVersion != os.Getenv("OLD_VERSION") {
 		return
 	}
