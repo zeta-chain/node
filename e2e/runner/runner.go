@@ -426,6 +426,8 @@ func (r *E2ERunner) Unlock() {
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
 func (r *E2ERunner) PrintContractAddresses() {
+	r.Logger.Print("Zetacored version: %s ", r.GetZetacoredVersion())
+
 	r.Logger.Print(" --- 📜Solana addresses ---")
 	r.Logger.Print("GatewayProgram:      %s", r.GatewayProgram.String())
 	r.Logger.Print("SPL:                 %s", r.SPLAddr.String())

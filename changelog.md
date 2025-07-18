@@ -19,6 +19,7 @@
 * [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
 * [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
+* [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 
 ### Refactor
 

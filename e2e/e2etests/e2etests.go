@@ -287,6 +287,8 @@ var (
 	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
+const V2ZetaVersion = "v33.0.0"
+
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
 	/*
@@ -299,7 +301,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
@@ -308,7 +310,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestZetaDepositAndCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertName,
@@ -317,14 +319,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositRevertAndAbortName,
 		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestZetaDepositRevertAndAbort,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
@@ -333,7 +335,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallNoMessageName,
@@ -342,7 +344,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallNoMessage,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
@@ -1028,7 +1030,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdraw,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawAndCallName,
@@ -1038,7 +1040,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawRevertWithCallName,
@@ -1047,7 +1049,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRevertWithCall,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawAndCallRevertWithCallName,
@@ -1057,7 +1059,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawName,
@@ -1066,7 +1068,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in base unit", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdraw,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallName,
@@ -1076,7 +1078,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallRevertWithCallName,
@@ -1086,7 +1088,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v32.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositRestrictedName,
@@ -1104,7 +1106,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRestrictedAddress,
-		runner.WithMinimumVersion("v30.0.0"),
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawInvalidReceiverName,
@@ -1114,6 +1116,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawInvalidReceiver,
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	/*
 	 Bitcoin tests
