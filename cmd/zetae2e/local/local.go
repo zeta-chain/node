@@ -608,7 +608,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 	}
 	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
-
 		// Run gateway upgrade tests for external chains
 		deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
 			TestSolana: testSolana,
