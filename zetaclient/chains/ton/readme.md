@@ -2,11 +2,12 @@
 
 This document provides an overview for fellow Zeta contributors on how this integration is implemented 🙌
 
-Contracts are located here: [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton)
+- Contracts are located in [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton)
+- TON is also supported in [zeta-chain/localnet](https://github.com/zeta-chain/localnet)
 
-> ⚠️ Please check the contracts repository first, along with the test spec, as it contains practical examples.
-
-> ⚠️ Please read some TON basics before moving to this document.
+> ⚠️ Please read some TON [basics](https://docs.ton.org/v3/concepts/dive-into-ton/introduction) 
+> before moving to this document. Then check the contracts repository, along with the test spec, 
+> as it contains practical examples.
 
 ## `Gateway`
 
@@ -37,23 +38,35 @@ The logic is similar to other ZetaChain's observer-signers.
 
 ### Transactions
 
-Technically, each "action" in TON is async, following the Actor Model. One logical action (e.g., swapping TON for USDT) is actually a chain of multiple messages between smart contracts, resulting in multiple transactions across different blocks and shards. This process might take a while to fully execute (sometimes 30+ seconds).
+Technically, each "action" in TON is async, following the Actor Model. 
+One logical action (e.g., swapping TON for USDT) is actually a chain of multiple messages between smart contracts, 
+resulting in multiple transactions across different blocks and shards. 
+This process might take a while to fully execute (sometimes 30+ seconds).
 
-Even a simple TON transfer from Alice to Bob consists of two transactions: "Alice sends a message with 1 TON to Bob" and "Bob receives a message from Alice with 1 TON".
+Even a simple TON transfer from Alice to Bob consists of two transactions: 
+"Alice sends a message with 1 TON to Bob" and "Bob receives a message from Alice with 1 TON".
 
 A cool property of this is that each "physical transaction" that mutates a single account has **instant finality**.
 
 ### Transaction Retrieval
 
-**It's not possible to retrieve a transaction by its hash from RPC!** A transaction can only be uniquely identified and retrieved with a combination of `account_address` + `lt` (Logical Time) + `tx_hash`.
+**It's not possible to retrieve a transaction by its hash from RPC!** 
+A transaction can only be uniquely identified and retrieved with 
+a combination of `account_address` + `lt` (Logical Time) + `tx_hash`.
 
-Another implication from TON's async nature is that because there are multiple in/out messages between different accounts, we don't know the destination's transaction hash. So it's not possible to perform a classical flow of `tx = build(); send(tx); rpc.get(tx.hash())`.
+Another implication from TON's async nature is that because there are multiple in/out messages between
+different accounts, we don't know the destination's transaction hash. So it's not possible to 
+perform a classical flow of `tx = build(); send(tx); rpc.get(tx.hash())`.
 
-As of now, we only rely on the Gateway's address (so the account is always known), but instead of the transaction hash, we use `$logical_time:$hash` in the cross-chain module to have the full arguments for retrieving a transaction.
+As of now, we only rely on the Gateway's address (so the account is always known), but instead of the transaction hash, 
+we use `$logical_time:$hash` in the cross-chain module to have the full arguments for retrieving a transaction.
 
-Also, because EACH account is considered a "shard-chain", we can't filter by inbound or outbound transactions. This can be implemented only in the runtime, i.e., we simply scroll all new Gateway transactions, then parse them and determine whether this is an inbound, outbound, or other transaction.
+Also, because EACH account is considered a "shard-chain", we can't filter by inbound or outbound transactions. 
+This can be implemented only in the runtime, i.e., we simply scroll all new Gateway transactions, then parse them 
+and determine whether this is an inbound, outbound, or other transaction.
 
-This is why `observe_inbound` might also process a finalized withdrawal that was invoked by another goroutine in `schedule_cctx`.
+This is why `observe_inbound` might also process a finalized withdrawal that was invoked
+by another goroutine in `schedule_cctx`.
 
 ```sh
 # https://athens.explorer.zetachain.com/cc/tx/0x865e8bf2292872a5b5cc7dacc45739812ee37b8db03fa4dcc5b1765c6b48c17f
@@ -127,21 +140,32 @@ curl -s \
 
 ### RPC
 
-For more details on the RPC API, see the official documentation: https://docs.ton.org/v3/guidelines/dapps/apis-sdks/api-types
+For more details on the RPC API, 
+see the official documentation: https://docs.ton.org/v3/guidelines/dapps/apis-sdks/api-types
 
-TON provides a binary `lite-server` protocol for data access and transaction submission. The initial integration was implemented using a lite-client, but we eventually encountered infrastructure issues: not many RPC providers support lite-server and know how to operate it.
+TON provides a binary `lite-server` protocol for data access and transaction submission. 
+The initial integration was implemented using a lite-client, but we eventually encountered infrastructure issues: 
+not many RPC providers support lite-server and know how to operate it.
 
-That's why we switched to the widely adopted toncenter-v2 RPC implementation. Technically, it is a Python webserver with a lite-client wrapper and a JSON API hosted by node providers.
+That's why we switched to the widely adopted toncenter-v2 RPC implementation. Technically, it is a Python webserver 
+with a lite-client wrapper and a JSON API hosted by node providers.
 
-The pruning period differs from provider to provider. Most non-archival nodes prune transactions after approximately 14 days, which is an important consideration for the observer (specifically for `process_inbound_trackers` and `process_outbound_trackers`)
+The pruning period differs from provider to provider. Most non-archival nodes prune transactions 
+after ~14 days, which is an important consideration for the observer 
+(specifically for `process_inbound_trackers` and `process_outbound_trackers`)
 
 ### Gas
 
-TON has a complex [gas model](https://docs.ton.org/v3/documentation/smart-contracts/transaction-fees/fees) with dynamic pricing. Also, all outbound operations are paid by the **contract**, i.e., the Gateway pays the gas fee for withdrawing to end recipients.
+TON has a complex [gas model](https://docs.ton.org/v3/documentation/smart-contracts/transaction-fees/fees) 
+with dynamic pricing. Also, all outbound operations are paid by the **contract**, i.e., the Gateway pays 
+the gas fee for withdrawing to end recipients.
 
-In order to keep gas calculation manageable, we measured the gas cost for all operations empirically and placed a "ceiling" that we treat as the gas fee. This is also a suggested approach by the TON team.
+In order to keep gas calculation manageable, we measured the gas cost for all operations empirically and 
+placed a "ceiling" that we treat as the gas fee. This is also a suggested approach by the TON team.
 
-Also, the TON gas price can only be changed via a governance proposal, and all VM operations have a predefined gas price, so it should not be an issue. Yes, we make transactions slightly overpriced due to such an approximation, but the difference is less than a cent.
+Also, the TON gas price can only be changed via a governance proposal, and all VM operations
+have a predefined gas price, so it should not be an issue. Yes, we make transactions slightly "overpriced"
+due to such an approximation, but the real difference in tx cost should be less than a cent ($0.01).
 
 The Gateway has a getter `int calculate_gas_fee(int op) method_id` for retrieving the transaction gas cost in nanoTON.
 
@@ -149,12 +173,21 @@ See [gateway.fc](https://github.com/zeta-chain/protocol-contracts-ton/blob/main/
 
 ### Event Logs
 
-There are no event logs in TON like in EVM. For `deposit` and `deposit_and_call`, we need an equivalent mechanism. This is achieved using a feature of TON called an "external message" — an outbound message with no destination. The Gateway wrapper's parsing logic relies on this to detect inbound events.
+There are no event logs in TON like in EVM. For `deposit` and `deposit_and_call`, 
+we need an equivalent mechanism. This is achieved using a feature of TON called an "external message" 
+— an outbound message with no destination. The Gateway wrapper's parsing logic relies on this to detect inbound events.
 
-This is documented as a "raw message" or "external message" in the official TON documentation: https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#types-of-messages
+This is documented as a "raw message" or "external message" in the official TON documentation: 
+https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#types-of-messages
 
 ### Withdrawals
 
-TON uses EdDSA for cryptography, but TSS uses ECDSA. TVM provides the `ECRECOVER` opcode that performs ECDSA recovery of the TSS signature. The `protocol-contracts-ton` repository explains how this signature scheme works in detail. The encoding is implemented in the Gateway wrapper within this repository.
+TON uses EdDSA for cryptography, but TSS uses ECDSA. TVM provides the `ECRECOVER` opcode that performs 
+ECDSA recovery of the TSS signature. The `protocol-contracts-ton` repository explains how this 
+signature scheme works in detail. The encoding is implemented in the Gateway wrapper within this repository.
+
+- See [`func (w *Withdrawal) AsBody() (*boc.Cell, error)`](https://github.com/zeta-chain/node/blob/9fbdb7767674e12add976b1f25b2fba94c4361c3/pkg/contracts/ton/gateway_msg.go#L176)
+- See [`async Gateway.sendTSSCommand`](https://github.com/zeta-chain/protocol-contracts-ton/blob/5898b04fffc937864f441623b45834a5250aa2e6/wrappers/Gateway.ts#L143)
 
 We also implemented a sequential `seqno` in the Gateway contract that acts similarly to an EVM nonce.
+
