@@ -608,46 +608,46 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 	}
 	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
-		// Run gateway upgrade tests for external chains
-		deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
-			TestSolana: testSolana,
-			TestSui:    testSui,
-		})
-
-		// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
-		logger.Print("⏳ e2e tests passed, checking tx priority")
-		monitorPriorityCancel()
-		if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
-			logger.Print("❌ %v", err)
-			logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
-			os.Exit(1)
-		}
-		if !skipRegular {
-			noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
-		}
-
-		logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
-
-		if testTSSMigration {
-			addNewObserver(deployerRunner)
-			triggerTSSMigration(deployerRunner, logger, verbose, conf)
-		}
-
-		// Verify that there are no trackers left over after tests complete
-		if !skipTrackerCheck {
-			deployerRunner.EnsureNoTrackers()
-		}
-
-		// Verify that the balance of restricted address is zero
-		deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
-		if !testSui {
-			return
-		}
-
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
 	})
+
+	// Run gateway upgrade tests for external chains
+	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
+		TestSolana: testSolana,
+		TestSui:    testSui,
+	})
+
+	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
+	logger.Print("⏳ e2e tests passed, checking tx priority")
+	monitorPriorityCancel()
+	if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
+		logger.Print("❌ %v", err)
+		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
+		os.Exit(1)
+	}
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
+	}
+
+	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	if testTSSMigration {
+		addNewObserver(deployerRunner)
+		triggerTSSMigration(deployerRunner, logger, verbose, conf)
+	}
+
+	// Verify that there are no trackers left over after tests complete
+	if !skipTrackerCheck {
+		deployerRunner.EnsureNoTrackers()
+	}
+
+	// Verify that the balance of restricted address is zero
+	deployerRunner.EnsureZeroBalanceOnRestrictedAddressZEVM()
+	if !testSui {
+		return
+	}
 
 	if !deployerRunner.IsRunningUpgrade() {
 		// Verify that there are no stale ballots left over after tests complete
