@@ -37,7 +37,7 @@ The logic is similar to other ZetaChain's observer-signers.
 
 ### Transactions
 
-Technically, each "action" in TON is async. One logical action (e.g., swapping TON for USDT) is actually multiple transactions in different blocks and shards that might take a while to execute (sometimes 30+ seconds).
+Technically, each "action" in TON is async, following the Actor Model. One logical action (e.g., swapping TON for USDT) is actually a chain of multiple messages between smart contracts, resulting in multiple transactions across different blocks and shards. This process might take a while to fully execute (sometimes 30+ seconds).
 
 Even a simple TON transfer from Alice to Bob consists of two transactions: "Alice sends a message with 1 TON to Bob" and "Bob receives a message from Alice with 1 TON".
 
@@ -45,7 +45,7 @@ A cool property of this is that each "physical transaction" that mutates a singl
 
 ### Transaction Retrieval
 
-**It's not possible to retrieve a transaction by its hash from RPC!** A transaction can be retrieved with a combination of `account` + `tx_hash` + `logical_time` (think of it as a virtual timestamp in TON's distributed system).
+**It's not possible to retrieve a transaction by its hash from RPC!** A transaction can only be uniquely identified and retrieved with a combination of `account_address` + `lt` (Logical Time) + `tx_hash`.
 
 Another implication from TON's async nature is that because there are multiple in/out messages between different accounts, we don't know the destination's transaction hash. So it's not possible to perform a classical flow of `tx = build(); send(tx); rpc.get(tx.hash())`.
 
@@ -133,9 +133,7 @@ TON provides a binary `lite-server` protocol for data access and transaction sub
 
 That's why we switched to the widely adopted toncenter-v2 RPC implementation. Technically, it is a Python webserver with a lite-client wrapper and a JSON API hosted by node providers.
 
-The pruning period differs from provider to provider.
-
-I assume most non-archival nodes prune transactions after ~14 days.
+The pruning period differs from provider to provider. Most non-archival nodes prune transactions after approximately 14 days, which is an important consideration for the observer (specifically for `process_inbound_trackers` and `process_outbound_trackers`)
 
 ### Gas
 
@@ -151,7 +149,7 @@ See [gateway.fc](https://github.com/zeta-chain/protocol-contracts-ton/blob/main/
 
 ### Event Logs
 
-There are no event logs in TON like in EVM. But for `deposit` and `deposit_and_call`, we need something similar, thus we use an "external log message". Technically, it is just an outbound message without a destination. The Gateway wrapper depends on this.
+There are no event logs in TON like in EVM. For `deposit` and `deposit_and_call`, we need an equivalent mechanism. This is achieved using a feature of TON called an "external message" — an outbound message with no destination. The Gateway wrapper's parsing logic relies on this to detect inbound events.
 
 This is documented as a "raw message" or "external message" in the official TON documentation: https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#types-of-messages
 
