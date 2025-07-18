@@ -1,13 +1,10 @@
 # TON Observer-Signer
 
-This document provides an overview for fellow Zeta contributors on how this integration is implemented 🙌
+This document provides an overview for fellow Zeta contributors on how the TON integration is implemented 🙌.
 
-- Contracts are located in [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton)
-- TON is also supported in [zeta-chain/localnet](https://github.com/zeta-chain/localnet)
+The core smart contracts are located in the [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton) repository. For local dev and testing, TON is also supported in our [localnet](https://github.com/zeta-chain/localnet).
 
-> ⚠️ Please read some TON [basics](https://docs.ton.org/v3/concepts/dive-into-ton/introduction) 
-> before moving to this document. Then check the contracts repository, along with the test spec, 
-> as it contains practical examples.
+> ⚠️ Before proceeding, please familiarize yourself with TON's [basic concepts](https://docs.ton.org/v3/concepts/dive-into-ton/introduction). Afterward, it's highly recommended to review the contracts repository and its test specs for practical examples.
 
 ## `Gateway`
 
@@ -164,8 +161,7 @@ In order to keep gas calculation manageable, we measured the gas cost for all op
 placed a "ceiling" that we treat as the gas fee. This is also a suggested approach by the TON team.
 
 Also, the TON gas price can only be changed via a governance proposal, and all VM operations
-have a predefined gas price, so it should not be an issue. Yes, we make transactions slightly "overpriced"
-due to such an approximation, but the real difference in tx cost should be less than a cent ($0.01).
+have a predefined gas price, so it should not be an issue. This approach makes transactions slightly "overpriced," but the actual difference in tx cost is typically less than a cent ($0.01).
 
 The Gateway has a getter `int calculate_gas_fee(int op) method_id` for retrieving the transaction gas cost in nanoTON.
 
