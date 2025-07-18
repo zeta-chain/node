@@ -13,10 +13,10 @@ import (
 
 // SuiGetGatewaySUIBalance retrieves the SUI balance of the Sui gateway by its ID.
 func (r *E2ERunner) SuiGetGatewaySUIBalance() (*big.Int, error) {
-	return getSuiGatewaySUIBalance(r.Ctx, r.Clients.Sui, r.SuiGateway.ObjectID())
+	return suiGetGatewaySUIBalance(r.Ctx, r.Clients.Sui, r.SuiGateway.ObjectID())
 }
 
-func getSuiGatewaySUIBalance(ctx context.Context, client sui.ISuiAPI, gatewayID string) (*big.Int, error) {
+func suiGetGatewaySUIBalance(ctx context.Context, client sui.ISuiAPI, gatewayID string) (*big.Int, error) {
 	// get gateway object
 	gatewayObject, err := client.SuiGetObject(ctx, models.SuiGetObjectRequest{
 		ObjectId: gatewayID,

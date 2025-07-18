@@ -17,6 +17,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
+// We don't specify an effective gas limit for Sui outbound, this value is used for the gas stability pool funding, which is not used for Sui
+const effectiveGasLimit = 0
+
 // OutboundCreated checks if the outbound tx exists in the memory
 // and has valid nonce & signature
 func (ob *Observer) OutboundCreated(nonce uint64) bool {
@@ -138,7 +141,7 @@ func (ob *Observer) VoteOutbound(ctx context.Context, cctx *cctypes.CrossChainTx
 		checkpoint,
 		outboundGasUsed,
 		outboundGasPrice,
-		0, // We don't specify an effective gas limit for Sui outbound, this value is used for the gas stability pool funding, which is not used for Sui
+		effectiveGasLimit,
 		amount,
 		status,
 		chainID,

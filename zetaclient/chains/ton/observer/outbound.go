@@ -16,6 +16,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
+// We don't specify an effective gas limit for TON outbound, this value is used for the gas stability pool funding, which is not used for TON
+const effectiveGasLimit = 0
+
 // There's no sequential block height. Also, different txs might end up in different shards.
 // tlb.BlockID is essentially a workchain+shard+seqno tuple. We can't use it as a block height, thus zero.
 const tonBlockHeight = 0
@@ -205,7 +208,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, cctx *cctypes.CrossCha
 		tonBlockHeight,
 		res.tx.GasUsed().Uint64(),
 		gasPriceInt,
-		0, // We don't specify an effective gas limit for TON outbound, this value is used for the gas stability pool funding, which is not used for TON
+		effectiveGasLimit,
 		amount,
 		receiveStatus,
 		chainID,
