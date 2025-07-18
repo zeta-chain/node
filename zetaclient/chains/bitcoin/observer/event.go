@@ -97,13 +97,10 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 	}
 
 	// try to decode the standard memo as the preferred format
-	// the standard memo is NOT enabled for Bitcoin mainnet
-
-	if chainID != chains.BitcoinMainnet.ChainId {
-		memoStd, isStandardMemo, err = memo.DecodeFromBytes(event.MemoBytes)
-	}
-
-	// process standard memo or fallback to legacy memo
+	// then process standard memo or fallback to legacy memo
+	// TODO: improve this logic, err should be handled if isStandardMemo is false
+	// https://github.com/zeta-chain/node/issues/4024
+	memoStd, isStandardMemo, err = memo.DecodeFromBytes(event.MemoBytes)
 	if isStandardMemo {
 		// skip standard memo that carries improper data
 		if err != nil {
