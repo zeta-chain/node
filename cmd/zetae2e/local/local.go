@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -612,21 +611,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !testSui {
 			return
 		}
-		amount := big.NewInt(1e10)
-
-		// artificially mint some balance to stability pool
-		resp := deployerRunner.SuiDepositSUI(fungibletypes.GasStabilityPoolAddressEVM(), math.NewUintFromBigInt(amount))
-		_ = utils.WaitCctxMinedByInboundHash(
-			deployerRunner.Ctx,
-			resp.Digest,
-			deployerRunner.CctxClient,
-			deployerRunner.Logger,
-			deployerRunner.CctxTimeout,
-		)
 
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(amount) >= 0, "SUI ZRC20 balance should be positive be positive")
+		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) > 0, "SUI ZRC20 balance should be positive")
 	})
 
 	// Run gateway upgrade tests for external chains
