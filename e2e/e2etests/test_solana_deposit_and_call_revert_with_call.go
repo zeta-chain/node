@@ -30,7 +30,7 @@ func TestSolanaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	data := []byte("hello deposit and call")
 
 	// check balances before deposit
-	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 	connectedPdaInfoBefore, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)
@@ -49,7 +49,7 @@ func TestSolanaDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	require.NoError(r, err)
 
 	sig := r.SOLDepositAndCall(nil, reverterAddr, depositAmount, data, &solanacontracts.RevertOptions{
-		RevertAddress: runner.ConnectedProgramID,
+		RevertAddress: r.ConnectedProgram,
 		CallOnRevert:  true,
 		RevertMessage: msgEncoded,
 	})
