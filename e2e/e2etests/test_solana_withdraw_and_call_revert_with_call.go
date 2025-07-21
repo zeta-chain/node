@@ -48,7 +48,7 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	payload := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payload, withdrawAmount)
 
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
 	// encode msg
@@ -68,7 +68,6 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
-		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
 		msgEncoded,

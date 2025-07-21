@@ -29,7 +29,7 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
 
 	data := []byte("hello spl deposit and call")
-	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(runner.ConnectedSPLProgramID)
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedSPLProgram)
 	require.NoError(r, err)
 
 	connectedPdaAta := r.ResolveSolanaATA(r.GetSolanaPrivKey(), connectedPda, r.SPLAddr)
@@ -59,7 +59,7 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 
 	// #nosec G115 e2eTest - always in range
 	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, reverterAddr, data, &solanacontracts.RevertOptions{
-		RevertAddress:    runner.ConnectedSPLProgramID,
+		RevertAddress:    r.ConnectedSPLProgram,
 		CallOnRevert:     true,
 		RevertMessage:    msgEncoded,
 		OnRevertGasLimit: 500000,
@@ -69,7 +69,7 @@ func TestSPLDepositAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_deposit_spl_and_call_revert_with_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
-	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, runner.ConnectedSPLProgramID.String())
+	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.ConnectedSPLProgram.String())
 
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, utils.ErrHashRevertFoo)
 

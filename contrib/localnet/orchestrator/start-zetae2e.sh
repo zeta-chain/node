@@ -256,6 +256,7 @@ fi
 if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
+  # shellcheck disable=SC2155
   OLD_VERSION=$(get_zetacored_version)
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
   USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE:=false}
