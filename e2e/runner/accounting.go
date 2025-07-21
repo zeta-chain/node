@@ -192,6 +192,8 @@ func (r *E2ERunner) CheckSUITSSBalance() error {
 	zrc20Supply = zrc20Supply.Sub(zrc20Supply, gasStabiltiyPoolBalance)
 
 	// Subtract 0.1 SUI to take in consideration the 0.1 SUI minted in the gas pool
+	// TODO: a proper implementation is to implement a donate method in Sui Contract and use it to donate 0.1 SUI
+	// https://github.com/zeta-chain/protocol-contracts-sui/issues/58
 	zrc20Supply = zrc20Supply.Sub(zrc20Supply, big.NewInt(100000000))
 
 	if gatewayBalance.Cmp(zrc20Supply) < 0 {
