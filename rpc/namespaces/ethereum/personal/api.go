@@ -95,7 +95,7 @@ func (api *PrivateAccountAPI) NewAccount(password string) (common.Address, error
 	api.logger.Info(
 		"Please backup your key file!",
 		"path",
-		os.Getenv("HOME")+"/.evmos/"+name,
+		os.Getenv("HOME")+"/.zetacored/"+name,
 	) // TODO: pass the correct binary
 	api.logger.Info("Please remember your password!")
 	return addr, nil

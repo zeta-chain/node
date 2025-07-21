@@ -604,7 +604,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 		}
 	}
 
-	// TODO: add tx receipts
+	// TODO evm: add tx receipts
 	ethBlock := ethtypes.NewBlock(
 		ethHeader,
 		&ethtypes.Body{Transactions: txs, Uncles: nil, Withdrawals: nil},
