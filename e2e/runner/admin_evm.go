@@ -34,9 +34,9 @@ func (r *E2ERunner) UpdateTSSAddressForConnectorNative() {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)
 
-	tssAddressOnConnector, err := r.ConnectorEth.TssAddress(&bind.CallOpts{Context: r.Ctx})
+	tssAddressOnConnectorNative, err := r.ConnectorNative.TssAddress(&bind.CallOpts{Context: r.Ctx})
 	require.NoError(r, err)
-	require.Equal(r, r.TSSAddress, tssAddressOnConnector)
+	require.Equal(r, r.TSSAddress, tssAddressOnConnectorNative)
 }
 
 // UpdateTSSAddressForERC20custody updates the TSS address for the ERC20 custody contract
