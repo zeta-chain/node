@@ -1,16 +1,13 @@
 package runner
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"math/big"
-	"net/http"
-
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+	"math/big"
 
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -187,6 +184,7 @@ func (r *E2ERunner) checkERC20TSSBalance() error {
 }
 
 func (r *E2ERunner) checkZetaTSSBalance() {
+	// get total ZETA locked
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
 
@@ -195,15 +193,14 @@ func (r *E2ERunner) checkZetaTSSBalance() {
 
 	zetaLocked := big.NewInt(0).Add(zetaLockedLegacyConnector, zetaLockedConnectorNative)
 
-	resp, err := http.Get("http://zetacore0:1317/cosmos/bank/v1beta1/supply/by_denom?denom=azeta")
-	require.NoError(r, err)
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	require.NoError(r, err)
-	var result Response
-	err = json.Unmarshal(body, &result)
-	require.NoError(r, err)
-	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
+	// get ZETA supply
+	res, err := r.Clients.Zetacore.Bank.SupplyOf(r.Ctx, &banktypes.QuerySupplyOfRequest{
+		Denom: "azeta",
+	})
+	require.NoError(r, err, "SupplyOf failed for azeta")
+	require.NotNil(r, res, "SupplyOf response is nil")
+	zetaSupply := res.Amount.Amount.BigInt()
+
 	if zetaLocked.Cmp(zetaSupply) < 0 {
 		r.Logger.Info("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	} else {
