@@ -61,6 +61,11 @@ func suiTestRoutine(
 			return fmt.Errorf("sui tests failed: %v", err)
 		}
 
+		// check gateway SUI balance against ZRC20 total supply
+		if err := suiRunner.CheckSUITSSBalance(); err != nil {
+			return err
+		}
+
 		suiRunner.Logger.Print("🍾 sui tests completed in %s", time.Since(startTime).String())
 
 		return err
