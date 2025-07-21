@@ -10,8 +10,25 @@ import (
 // UpdateTSSAddressForConnector updates the TSS address for the connector contract
 func (r *E2ERunner) UpdateTSSAddressForConnector() {
 	require.NoError(r, r.SetTSSAddresses())
+	require.NotNil(r, r.ConnectorEth, "ConnectorNative is not initialized")
 
 	tx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, r.TSSAddress)
+	require.NoError(r, err)
+	r.Logger.Info("TSS Address Update Tx: %s", tx.Hash().String())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	utils.RequireTxSuccessful(r, receipt)
+
+	tssAddressOnConnector, err := r.ConnectorEth.TssAddress(&bind.CallOpts{Context: r.Ctx})
+	require.NoError(r, err)
+	require.Equal(r, r.TSSAddress, tssAddressOnConnector)
+}
+
+// UpdateTSSAddressForConnectorNative updates the TSS address for V2 connector contract
+func (r *E2ERunner) UpdateTSSAddressForConnectorNative() {
+	require.NoError(r, r.SetTSSAddresses())
+	require.NotNil(r, r.ConnectorNative, "ConnectorNative is not initialized")
+
+	tx, err := r.ConnectorNative.UpdateTSSAddress(r.EVMAuth, r.TSSAddress)
 	require.NoError(r, err)
 	r.Logger.Info("TSS Address Update Tx: %s", tx.Hash().String())
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)

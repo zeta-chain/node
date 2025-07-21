@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -613,10 +614,22 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
 	})
 
+	runSuiGatewayUpgradeTests := func() bool {
+		// do not if we are running and upgrade and this is the second run
+		if deployerRunner.IsRunningUpgrade() && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
+			return false
+		}
+		// do not run if we are running TSS migration tests and this is the second run
+		if testTSSMigration && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
+			return false
+		}
+		return testSui
+	}
+
 	// Run gateway upgrade tests for external chains
 	deployerRunner.RunGatewayUpgradeTestsExternalChains(conf, runner.UpgradeGatewayOptions{
 		TestSolana: testSolana,
-		TestSui:    testSui,
+		TestSui:    runSuiGatewayUpgradeTests(),
 	})
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
