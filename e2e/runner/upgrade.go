@@ -1,11 +1,15 @@
 package runner
 
 import (
+	"fmt"
+	"os"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
+	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -27,6 +31,10 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
+	// Skip upgrades if this is the second run of the upgrade tests
+	if semver.Major(r.GetZetacoredVersion()) == "v0" {
+		return
+	}
 	if opts.TestSolana {
 		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	}
@@ -91,4 +99,26 @@ func (r *E2ERunner) UpgradeERC20Custody() {
 	txUpgrade, err := r.ERC20Custody.UpgradeToAndCall(r.EVMAuth, newImplementationAddress, []byte{})
 	require.NoError(r, err)
 	ensureTxReceipt(txUpgrade, "ERC20Custody upgrade failed")
+}
+
+func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) {
+	version := r.GetZetacoredVersion()
+	versionMajorIsZero := semver.Major(version) == "v0"
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+
+	// run these assertions only on the second run of the upgrade
+	if !r.IsRunningUpgrade() || !versionMajorIsZero || assertVersion != oldVersion {
+		return
+	}
+	r.Logger.Print("🏃 Running assertions after upgrade for version: %s", assertVersion)
+	assertFunc()
+}
+
+func (r *E2ERunner) AssertBeforeUpgrade(assertVersion string, assertFunc func()) {
+	// run these assertions only on the first run of the upgrade
+	if !r.IsRunningUpgrade() || assertVersion != r.GetZetacoredVersion() {
+		return
+	}
+	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", assertVersion)
+	assertFunc()
 }

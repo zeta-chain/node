@@ -68,8 +68,11 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	_, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize gateway logs: %v", out.Meta.LogMessages)
 
-	// initialize connected program
-	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedProgramID)
+	// initialize connected program, use hardcoded program ID if not set
+	if (r.ConnectedProgram == solana.PublicKey{}) {
+		r.ConnectedProgram = ConnectedProgramID
+	}
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
 	var instConnected solana.GenericInstruction
@@ -77,7 +80,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(connectedPda).WRITE())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(solana.SystemProgramID))
-	instConnected.ProgID = ConnectedProgramID
+	instConnected.ProgID = r.ConnectedProgram
 	instConnected.AccountValues = accountSliceConnected
 
 	type InitializeConnected struct {
@@ -95,8 +98,11 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	_, out = r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize connected logs: %v", out.Meta.LogMessages)
 
-	// initialize connected_spl program
-	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedSPLProgramID)
+	// initialize connected_spl program, use hardcoded program ID if not set
+	if (r.ConnectedSPLProgram == solana.PublicKey{}) {
+		r.ConnectedSPLProgram = ConnectedSPLProgramID
+	}
+	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedSPLProgram)
 	require.NoError(r, err)
 
 	var instConnectedSPL solana.GenericInstruction
@@ -104,7 +110,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivate
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(connectedSPLPda).WRITE())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(solana.SystemProgramID))
-	instConnectedSPL.ProgID = ConnectedSPLProgramID
+	instConnectedSPL.ProgID = r.ConnectedSPLProgram
 	instConnectedSPL.AccountValues = accountSliceConnectedSPL
 
 	type InitializeConnectedSPL struct {
