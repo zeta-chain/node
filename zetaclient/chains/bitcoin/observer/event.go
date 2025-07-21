@@ -98,8 +98,7 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 
 	// try to decode the standard memo as the preferred format
 	// then process standard memo or fallback to legacy memo
-	// TODO: improve this logic, err should be handled if isStandardMemo is false
-	// https://github.com/zeta-chain/node/issues/4024
+	// note: err is guaranteed to be nil when 'isStandardMemo == false'
 	memoStd, isStandardMemo, err = memo.DecodeFromBytes(event.MemoBytes)
 	if isStandardMemo {
 		// skip standard memo that carries improper data
