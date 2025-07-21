@@ -2,12 +2,13 @@ package runner
 
 import (
 	"fmt"
+	"math/big"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
-	"math/big"
 
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
