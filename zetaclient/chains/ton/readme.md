@@ -2,9 +2,11 @@
 
 This document provides an overview for fellow Zeta contributors on how the TON integration is implemented 🙌.
 
-The core smart contracts are located in the [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton) repository. For local dev and testing, TON is also supported in our [localnet](https://github.com/zeta-chain/localnet).
+The core smart contracts are located in the [zeta-chain/protocol-contracts-ton](https://github.com/zeta-chain/protocol-contracts-ton) repository. 
+For local dev and testing, TON is also supported in our [localnet](https://github.com/zeta-chain/localnet).
 
-> ⚠️ Before proceeding, please familiarize yourself with TON's [basic concepts](https://docs.ton.org/v3/concepts/dive-into-ton/introduction). Afterward, it's highly recommended to review the contracts repository and its test specs for practical examples.
+> ⚠️ Before proceeding, please familiarize yourself with TON's [basic concepts](https://docs.ton.org/v3/concepts/dive-into-ton/introduction). 
+> Afterward, it's highly recommended to review the contracts repository and its test specs for practical examples.
 
 ## `Gateway`
 
