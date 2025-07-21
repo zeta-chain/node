@@ -9740,7 +9740,7 @@ zetacored start [flags]
       --json-rpc.ws-address string                      the JSON-RPC WS server address to listen on 
       --metrics                                         Define if EVM rpc metrics server should be enabled
       --min-retain-blocks uint                          Minimum block height offset during ABCI commit to prune CometBFT blocks
-      --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000aatom)
+      --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000azeta)
       --moniker string                                  node name 
       --p2p.external-address string                     ip:port address to advertise to peers for them to dial
       --p2p.laddr string                                node listen address. (0.0.0.0:0 means any interface, any port) 
