@@ -66,6 +66,8 @@ func DecodeFromBytes(data []byte) (*InboundMemo, bool, error) {
 	memo := &InboundMemo{}
 
 	// decode header
+	// the 'err' is interpreted as 'not a standard memo', so
+	// there is no need to propagate the 'err' to the caller
 	err := memo.Header.DecodeFromBytes(data)
 	if err != nil {
 		return nil, false, nil
