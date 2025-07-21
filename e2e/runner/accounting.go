@@ -191,6 +191,9 @@ func (r *E2ERunner) CheckSUITSSBalance() error {
 	}
 	zrc20Supply = zrc20Supply.Sub(zrc20Supply, gasStabiltiyPoolBalance)
 
+	// Subtract 0.1 SUI to take in consideration the 0.1 SUI minted in the gas pool
+	zrc20Supply = zrc20Supply.Sub(zrc20Supply, big.NewInt(100000000))
+
 	if gatewayBalance.Cmp(zrc20Supply) < 0 {
 		return fmt.Errorf("SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", gatewayBalance, zrc20Supply)
 	}
