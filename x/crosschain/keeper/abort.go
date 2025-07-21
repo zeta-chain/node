@@ -141,16 +141,23 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainGas(
 	if refundAmount.IsNil() || refundAmount.IsZero() {
 		return errors.New("no amount to refund")
 	}
-	chainID := cctx.InboundParams.SenderChainId
+
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
 		return types.ErrForeignCoinNotFound
 	}
+
 	zrc20 := ethcommon.HexToAddress(fcSenderChain.Zrc20ContractAddress)
 	if zrc20 == (ethcommon.Address{}) {
 		return errorsmod.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
+
 	// deposit the amount to the tx origin instead of receiver as this is a refund
 	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
@@ -168,18 +175,26 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainZeta(
 ) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
 	refundAmount := GetAbortedAmount(cctx)
-	chainID := cctx.InboundParams.SenderChainId
+
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// check if chain is an EVM chain
 	if !chains.IsEVMChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		return errors.New("only EVM chains are supported for refund when coin type is Zeta")
 	}
+
 	if cctx.InboundParams.Amount.IsNil() || cctx.InboundParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
 	}
+
 	// deposit the amount to refund address
 	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, refundAmount.BigInt()); err != nil {
 		return fmt.Errorf("failed to refund zeta on ZetaChain: %w", err)
 	}
+
 	return nil
 }
 
