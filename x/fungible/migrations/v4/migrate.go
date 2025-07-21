@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethermint "github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -33,19 +32,20 @@ func MigrateStore(ctx sdk.Context, fungibleKeeper fungibleKeeper) error {
 		return nil
 	}
 
-	chainID, err := ethermint.ParseChainID(ctx.ChainID())
+	// TODO evm: ParseChainID is removed, check if this is ok
+	zetachain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return logAndSkip("failed to parse chain ID", err, "chain_id", ctx.ChainID())
 	}
 
-	chain, err := GetSuiChain(chainID.Int64())
+	chain, err := GetSuiChain(zetachain.ChainId)
 	if err != nil {
-		return logAndSkip("failed to get Sui chain", err, "chain_id", chainID.Int64())
+		return logAndSkip("failed to get Sui chain", err, "chain_id", zetachain.ChainId)
 	}
 
 	suiGasZRC20, err := fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
-		return logAndSkip("failed to query SUI gas coin ZRC20 ", err, "chain_id", chainID.Int64())
+		return logAndSkip("failed to query SUI gas coin ZRC20 ", err, "chain_id", zetachain.ChainId)
 	}
 
 	stabilityPoolAddress := types.GasStabilityPoolAddressEVM()
