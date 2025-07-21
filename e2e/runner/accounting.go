@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -180,6 +181,15 @@ func (r *E2ERunner) CheckSUITSSBalance() error {
 	if err != nil {
 		return err
 	}
+
+	// subtract value from the gas stability pool because of the artificial minting bug
+	// TODO: remove on the chain upgrade to v33
+	gasStabiltiyPoolBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+	if err != nil {
+		return fmt.Errorf("failed to get SUI gas stability pool balance: %w", err)
+	}
+	zrc20Supply = zrc20Supply.Sub(zrc20Supply, gasStabiltiyPoolBalance)
+
 	if gatewayBalance.Cmp(zrc20Supply) < 0 {
 		return fmt.Errorf("SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", gatewayBalance, zrc20Supply)
 	}
