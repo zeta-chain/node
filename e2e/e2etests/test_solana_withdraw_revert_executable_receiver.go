@@ -38,7 +38,7 @@ func TestSolanaWithdrawRevertExecutableReceiver(r *runner.E2ERunner, args []stri
 
 	// withdraw using example connected program as receiver
 	tx := r.WithdrawSOLZRC20(
-		runner.ConnectedProgramID,
+		r.ConnectedProgram,
 		withdrawAmount,
 		approvedAmount,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},

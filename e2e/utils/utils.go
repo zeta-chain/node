@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -110,4 +111,12 @@ func FetchHotkeyAddress(host string) (parsers.ObserverInfoReader, error) {
 	}
 
 	return observerInfo, nil
+}
+
+// WorkDir gets the current working directory of E2E test
+func WorkDir(t require.TestingT) string {
+	dir, err := os.Getwd()
+	require.NoError(t, err)
+
+	return dir
 }

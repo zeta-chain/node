@@ -26,7 +26,7 @@ var (
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
-		Module:    ob.gateway.Module(),
+		Module:    sui.GatewayModule,
 		Cursor:    ob.getCursor(),
 		Limit:     client.DefaultEventsLimit,
 	}

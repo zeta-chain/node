@@ -71,7 +71,7 @@ func TestObserver(t *testing.T) {
 		// Given list of gateway events...
 		expectedQuery := client.EventQuery{
 			PackageID: ts.gateway.PackageID(),
-			Module:    ts.gateway.Module(),
+			Module:    sui.GatewayModule,
 			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
 		}
@@ -177,7 +177,7 @@ func TestObserver(t *testing.T) {
 		// Given a deposit containing restricted address
 		expectedQuery := client.EventQuery{
 			PackageID: ts.gateway.PackageID(),
-			Module:    ts.gateway.Module(),
+			Module:    sui.GatewayModule,
 			Cursor:    "",
 			Limit:     client.DefaultEventsLimit,
 		}
@@ -376,7 +376,7 @@ func TestObserver(t *testing.T) {
 				Id:        models.EventId{TxDigest: digest, EventSeq: "1"},
 				PackageId: gw.PackageID(),
 				Sender:    ts.TSS().PubKey().AddressSui(),
-				Type:      fmt.Sprintf("%s::%s::%s", gw.PackageID(), gw.Module(), "WithdrawEvent"),
+				Type:      fmt.Sprintf("%s::%s::%s", gw.PackageID(), sui.GatewayModule, "WithdrawEvent"),
 				ParsedJson: map[string]any{
 					"coin_type": string(sui.SUI),
 					"amount":    "200",
@@ -567,7 +567,7 @@ func newTestSuite(t *testing.T) *testSuite {
 }
 
 func (ts *testSuite) SampleEvent(txHash, event string, kv map[string]any) models.SuiEventResponse {
-	eventType := fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), ts.gateway.Module(), event)
+	eventType := fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), sui.GatewayModule, event)
 
 	return models.SuiEventResponse{
 		Id: models.EventId{
@@ -640,7 +640,7 @@ func (ts *testSuite) MockOutboundTrackers(trackers []cctypes.OutboundTracker) *m
 }
 
 func (ts *testSuite) EventType(event string) string {
-	return fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), ts.gateway.Module(), event)
+	return fmt.Sprintf("%s::%s::%s", ts.gateway.PackageID(), sui.GatewayModule, event)
 }
 
 func preparePayload(payload []byte) []any {

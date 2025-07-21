@@ -405,7 +405,7 @@ func (inst *ExecuteRevertInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// ParseInstructionExecute tries to parse the instruction as a 'execute_revert'.
+// ParseInstructionExecuteRevert tries to parse the instruction as a 'execute_revert'.
 // It returns nil if the instruction can't be parsed as a 'execute_revert'.
 func ParseInstructionExecuteRevert(instruction solana.CompiledInstruction) (*ExecuteRevertInstructionParams, error) {
 	// try deserializing instruction as a 'execute_revert'
@@ -618,7 +618,7 @@ func (inst *ExecuteSPLRevertInstructionParams) TokenAmount() uint64 {
 	return inst.Amount
 }
 
-// ParseInstructionExecuteSPL tries to parse the instruction as a 'execute_spl_token_revert'.
+// ParseInstructionExecuteSPLRevert tries to parse the instruction as a 'execute_spl_token_revert'.
 // It returns nil if the instruction can't be parsed as a 'execute_spl_token_revert'.
 func ParseInstructionExecuteSPLRevert(
 	instruction solana.CompiledInstruction,
