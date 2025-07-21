@@ -184,6 +184,7 @@ func (r *E2ERunner) CheckSUITSSBalance() error {
 
 	// subtract value from the gas stability pool because of the artificial minting bug
 	// TODO: remove on the chain upgrade to v33
+	// https://github.com/zeta-chain/node/issues/4034
 	gasStabiltiyPoolBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 	if err != nil {
 		return fmt.Errorf("failed to get SUI gas stability pool balance: %w", err)
