@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -166,6 +167,39 @@ func (r *E2ERunner) CheckSolanaTSSBalance() error {
 		zrc20Supply.Int64()-ZRC20SOLInitialSupply,
 	)
 
+	return nil
+}
+
+// CheckSUITSSBalance checks the TSS balance on Sui against the ZRC20 total supply
+func (r *E2ERunner) CheckSUITSSBalance() error {
+	gatewayBalance, err := r.SuiGetGatewaySUIBalance()
+	if err != nil {
+		return fmt.Errorf("failed to get SUI balance for Sui gateway: %w", err)
+	}
+
+	zrc20Supply, err := r.SUIZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		return err
+	}
+
+	// subtract value from the gas stability pool because of the artificial minting bug
+	// TODO: remove on the chain upgrade to v33
+	// https://github.com/zeta-chain/node/issues/4034
+	gasStabiltiyPoolBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+	if err != nil {
+		return fmt.Errorf("failed to get SUI gas stability pool balance: %w", err)
+	}
+	zrc20Supply = zrc20Supply.Sub(zrc20Supply, gasStabiltiyPoolBalance)
+
+	// Subtract 0.1 SUI to take in consideration the 0.1 SUI minted in the gas pool
+	// TODO: a proper implementation is to implement a donate method in Sui Contract and use it to donate 0.1 SUI
+	// https://github.com/zeta-chain/protocol-contracts-sui/issues/58
+	zrc20Supply = zrc20Supply.Sub(zrc20Supply, big.NewInt(100000000))
+
+	if gatewayBalance.Cmp(zrc20Supply) < 0 {
+		return fmt.Errorf("SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", gatewayBalance, zrc20Supply)
+	}
+	r.Logger.Info("SUI: TSS balance (%d) >= ZRC20 TotalSupply (%d)", gatewayBalance, zrc20Supply)
 	return nil
 }
 
