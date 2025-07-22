@@ -44,6 +44,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 
 	// ACT
 	// Send BTC to TSS address with memo
+	// #nosec G115 test - checked in range
 	rawTx, depositedAmount, commitAddress := r.InscribeToTSSWithMemo(amount, memoBytes, int64(feeRate))
 
 	// ASSERT

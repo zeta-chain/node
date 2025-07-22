@@ -39,6 +39,9 @@ const (
 	// BTCDepositTxFee is the fixed deposit transaction fee (0.00003 BTC) for E2E tests
 	// Given one UTXO input, the deposit transaction fee rate is approximately 10 sat/vB
 	BTCDepositTxFee = 0.00003
+
+	// feeRateCap is the maximum fee rate to avoid excessive fees in E2E tests
+	feeRateCap = 100
 )
 
 // ListUTXOs list the deployer's UTXOs
@@ -543,6 +546,9 @@ func (r *E2ERunner) EstimateFeeRate(confTarget int64) uint64 {
 
 	satPerByte, err := zetabtc.FeeRateToSatPerByte(feeRate)
 	require.NoError(r, err)
+
+	// ensure the fee rate is within the cap
+	require.LessOrEqual(r, satPerByte, feeRateCap)
 
 	return satPerByte
 }
