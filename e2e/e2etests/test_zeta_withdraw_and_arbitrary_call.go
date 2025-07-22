@@ -11,19 +11,32 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
+func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 
-	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
+	payload := randomPayload(r)
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	r.AssertTestDAppEVMCalled(false, payload, amount)
+
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ERC20Withdraw(r.EVMAddress(), amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ZetaWithdrawAndArbitraryCall(
+		r.TestDAppV2EVMAddr,
+		amount,
+		evmChainID,
+		r.EncodeERC20Call(r.ZetaEthAddr, amount, payload),
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
+
+	r.AssertTestDAppEVMCalled(true, payload, amount)
 }

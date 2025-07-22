@@ -12,40 +12,46 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
+	require.Len(r, args, 2)
+
+	previousGasLimit := r.ZEVMAuth.GasLimit
+	r.ZEVMAuth.GasLimit = 10000000
+	defer func() {
+		r.ZEVMAuth.GasLimit = previousGasLimit
+	}()
+
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
 
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	payload := randomPayload(r)
 
-	r.AssertTestDAppZEVMCalled(false, payload, amount)
+	r.AssertTestDAppEVMCalled(false, payload, amount)
 
-	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ERC20WithdrawAndArbitraryCall(
+	tx := r.ZetaWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeERC20CallRevert(r.ERC20Addr, amount),
-		gatewayzevm.RevertOptions{
-			RevertAddress:    r.TestDAppV2ZEVMAddr,
-			CallOnRevert:     true,
-			RevertMessage:    []byte(payload),
-			OnRevertGasLimit: big.NewInt(0),
-		},
+		[]byte(payload),
+		evmChainID,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
 
 	// check expected sender was used
-	senderForMsg, err := r.TestDAppV2ZEVM.SenderWithMessage(
+	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
 		&bind.CallOpts{},
 		[]byte(payload),
 	)

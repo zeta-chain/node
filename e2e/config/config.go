@@ -200,6 +200,7 @@ type ZEVM struct {
 	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
 	Gateway            DoubleQuotedString `yaml:"gateway"`
 	TestDAppV2Addr     DoubleQuotedString `yaml:"test_dapp_v2"`
+	CoreRegistry       DoubleQuotedString `yaml:"core_registry"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing

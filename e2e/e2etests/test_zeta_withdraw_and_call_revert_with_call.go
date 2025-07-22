@@ -12,23 +12,25 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-func TestERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
+func TestZetaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
 	amount := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
 
 	r.AssertTestDAppZEVMCalled(false, payload, amount)
 
-	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ERC20WithdrawAndArbitraryCall(
+	tx := r.ZetaWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
-		r.EncodeERC20CallRevert(r.ERC20Addr, amount),
+		evmChainID,
+		r.EncodeERC20CallRevert(r.ZetaEthAddr, amount),
 		gatewayzevm.RevertOptions{
 			RevertAddress:    r.TestDAppV2ZEVMAddr,
 			CallOnRevert:     true,
@@ -51,4 +53,8 @@ func TestERC20WithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) 
 	)
 	require.NoError(r, err)
 	require.Equal(r, r.ZEVMAuth.From, senderForMsg)
+
+	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, r.TestDAppV2ZEVMAddr, nil)
+	require.NoError(r, err)
+	require.True(r, newBalance.Cmp(big.NewInt(0)) > 0)
 }

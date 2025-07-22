@@ -190,7 +190,7 @@ contract TestDAppV2 {
     }
 
     // Revertable interface
-    function onRevert(RevertContext calldata revertContext) external {
+    function onRevert(RevertContext calldata revertContext) external payable {
         require(!isRevertMessage(string(revertContext.revertMessage)));
 
         // if the chain is ZetaChain, consume gas to test the gas consumption
