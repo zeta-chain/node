@@ -19,6 +19,8 @@
 * [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
 * [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
+* [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
+* [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 
 ### Refactor
 
@@ -31,7 +33,8 @@
 * [3975](https://github.com/zeta-chain/node/pull/3975) - add v2 connector deployment to the e2e test.
 * [3976](https://github.com/zeta-chain/node/pull/3976) - add connector fund migration e2e test using contracts only.
 * [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
-* [3985](https://github.com/zeta-chain/node/pull/3985)- add e2e tests for deposit and withdraw with big payload
+* [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
+* [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
 
 ## v32.0.0
 

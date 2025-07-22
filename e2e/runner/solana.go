@@ -94,7 +94,7 @@ func (r *E2ERunner) CreateDepositInstructionThroughProgram(
 	require.NoError(r, err)
 
 	return &solana.GenericInstruction{
-		ProgID:    ConnectedProgramID,
+		ProgID:    r.ConnectedProgram,
 		DataBytes: depositData,
 		AccountValues: []*solana.AccountMeta{
 			solana.Meta(signer).WRITE().SIGNER(),
@@ -606,12 +606,13 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 
 // WithdrawAndCallSOLZRC20 withdraws an amount of ZRC20 SOL tokens and calls program on solana
 func (r *E2ERunner) WithdrawAndCallSOLZRC20(
-	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
 	msgEncoded []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
+	receiver := r.ConnectedProgram.String()
+
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
 	require.NoError(r, err)
@@ -621,7 +622,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 	// withdraw
 	tx, err = r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
-		[]byte(to.String()),
+		[]byte(receiver),
 		amount,
 		r.SOLZRC20Addr,
 		msgEncoded,
@@ -653,7 +654,7 @@ func (r *E2ERunner) CallSOLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// create encoded msg
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(ConnectedProgramID)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
 	msg := solanacontract.ExecuteMsg{
@@ -713,12 +714,13 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 
 // WithdrawAndCallSPLZRC20 withdraws an amount of ZRC20 SPL tokens and calls program on solana
 func (r *E2ERunner) WithdrawAndCallSPLZRC20(
-	to solana.PublicKey,
 	amount *big.Int,
 	approveAmount *big.Int,
 	data []byte,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
+	receiver := r.ConnectedSPLProgram.String()
+
 	// approve
 	tx, err := r.SOLZRC20.Approve(r.ZEVMAuth, r.GatewayZEVMAddr, approveAmount)
 	require.NoError(r, err)
@@ -730,7 +732,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	utils.RequireTxSuccessful(r, receipt, "approve")
 
 	// create encoded msg
-	connected := solana.MustPublicKeyFromBase58(ConnectedSPLProgramID.String())
+	connected := solana.MustPublicKeyFromBase58(receiver)
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
 
@@ -757,7 +759,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	// withdraw
 	tx, err = r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
-		[]byte(to.String()),
+		[]byte(receiver),
 		amount,
 		r.SPLZRC20Addr,
 		msgEncoded,

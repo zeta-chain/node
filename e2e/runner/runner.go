@@ -121,8 +121,10 @@ type E2ERunner struct {
 	ZEVMAuth *bind.TransactOpts
 
 	// programs on Solana
-	GatewayProgram solana.PublicKey
-	SPLAddr        solana.PublicKey
+	GatewayProgram      solana.PublicKey
+	SPLAddr             solana.PublicKey
+	ConnectedProgram    solana.PublicKey
+	ConnectedSPLProgram solana.PublicKey
 
 	// TON related
 	TONGateway ton.AccountID
@@ -427,9 +429,13 @@ func (r *E2ERunner) Unlock() {
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
 func (r *E2ERunner) PrintContractAddresses() {
+	r.Logger.Print("Zetacored version: %s ", r.GetZetacoredVersion())
+
 	r.Logger.Print(" --- 📜Solana addresses ---")
-	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
-	r.Logger.Print("SPL:            %s", r.SPLAddr.String())
+	r.Logger.Print("GatewayProgram:      %s", r.GatewayProgram.String())
+	r.Logger.Print("SPL:                 %s", r.SPLAddr.String())
+	r.Logger.Print("ConnectedProgram:    %s", r.ConnectedProgram.String())
+	r.Logger.Print("ConnectedSPLProgram: %s", r.ConnectedSPLProgram.String())
 
 	r.Logger.Print(" --- 📜TON addresses ---")
 	if !r.TONGateway.IsZero() {
@@ -440,9 +446,10 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print(" --- 📜Sui addresses ---")
 	if r.SuiGateway != nil {
-		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
-		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("GatewayPackageID:  %s", r.SuiGateway.PackageID())
+		r.Logger.Print("GatewayObjectID:   %s", r.SuiGateway.ObjectID())
 		r.Logger.Print("GatewayUpgradeCap: %s", r.SuiGatewayUpgradeCap)
+		r.Logger.Print("ExamplePackageID:  %s", r.SuiExample.PackageID)
 	} else {
 		r.Logger.Print("💤 Sui tests disabled")
 	}

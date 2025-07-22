@@ -156,7 +156,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 			expectedReceiver: common.HexToAddress("0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6"),
 		},
 		{
-			name:    "should disable standard memo for Bitcoin mainnet",
+			name:    "should decode standard memo bytes successfully for Bitcoin Mainnet",
 			chainID: chains.BitcoinMainnet.ChainId,
 			event: &BTCInboundEvent{
 				// a deposit and call
@@ -165,7 +165,18 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
 				),
 			},
-			expectedReceiver: common.HexToAddress("0x5A0110032d07A9cbd57dcCa3e2Cf966c88bC8744"),
+			expectedMemoStd: &memo.InboundMemo{
+				Header: memo.Header{
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtCompactShort,
+					OpCode:      memo.OpCodeDepositAndCall,
+					DataFlags:   3, // reciever + payload
+				},
+				FieldsV0: memo.FieldsV0{
+					Receiver: common.HexToAddress("0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6"),
+					Payload:  []byte("hello satoshi"),
+				},
+			},
 		},
 		{
 			name:    "should return error if no memo is found",

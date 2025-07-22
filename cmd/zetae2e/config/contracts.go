@@ -121,6 +121,15 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}
 
+	if c := conf.Contracts.Solana.ConnectedProgramID; c != "" {
+		r.ConnectedProgram = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	if c := conf.Contracts.Solana.ConnectedSPLProgramID; c != "" {
+		r.ConnectedSPLProgram = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	// set TON contracts
 	if c := conf.Contracts.TON.GatewayAccountID; c != "" {
 		r.TONGateway = ton.MustParseAccountID(c.String())
 	}
