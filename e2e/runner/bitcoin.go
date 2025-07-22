@@ -80,6 +80,41 @@ func (r *E2ERunner) ListUTXOs() []btcjson.ListUnspentResult {
 	return utxos
 }
 
+// SelectUTXOs selects a subset of deployer's UTXOs to cover the given amount
+func (r *E2ERunner) SelectUTXOs(amount btcutil.Amount) ([]btcjson.ListUnspentResult, btcutil.Amount) {
+	var (
+		allUTXOs       = r.ListUTXOs()
+		regnet         = r.IsLocalBitcoin()
+		selectedUTXOs  = make([]btcjson.ListUnspentResult, 0, len(allUTXOs))
+		selectedAmount = btcutil.Amount(0)
+	)
+
+	// select UTXOs until we get enough funds
+	for _, utxo := range allUTXOs {
+		selectedUTXOs = append(selectedUTXOs, utxo)
+		selectedAmount += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
+
+		// in regnet, deployer owns too many UTXOs, so we stop when we have enough funds
+		// in others, it is a good idea to consume all UTXOs and keep a minimum UTXO list
+		if regnet && selectedAmount >= amount {
+			break
+		}
+	}
+	r.Logger.Info("selected %d UTXOs", len(selectedUTXOs))
+
+	// check if we have enough funds
+	require.GreaterOrEqual(
+		r,
+		selectedAmount,
+		amount,
+		"not enough funds in sats; wanted %d, got %d",
+		amount,
+		selectedAmount,
+	)
+
+	return selectedUTXOs, selectedAmount
+}
+
 // GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address.
 // Top 20 utxos should be used for TSS migration, as we can only migrate at max 20 utxos at a time.
 func (r *E2ERunner) GetTop20UTXOsForTssAddress() ([]btcjson.ListUnspentResult, error) {
@@ -294,29 +329,16 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	btcRPC := r.BtcRPCClient
 	address, wifKey := r.GetBtcKeypair()
 
-	allUTXOs := r.ListUTXOs()
-
-	// Calculate required amount including fee
+	// Calculate required amount with gas fee and then add
+	// additional dust amount to avoid dust 'change' output
 	feeSats := btcutil.Amount(BTCDepositTxFee * btcutil.SatoshiPerBitcoin)
 	amountInt, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 	amountSats := btcutil.Amount(amountInt)
-	requiredSats := amountSats + feeSats
+	requiredSats := amountSats + feeSats + constant.BTCWithdrawalDustAmount
 
-	// Select UTXOs until we have enough funds
-	inputUTXOs := make([]btcjson.ListUnspentResult, 0, len(allUTXOs))
-	inputSats := btcutil.Amount(0)
-	for _, utxo := range allUTXOs {
-		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
-		inputUTXOs = append(inputUTXOs, utxo)
-		if inputSats >= requiredSats {
-			break
-		}
-	}
-
-	if inputSats < requiredSats {
-		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", requiredSats, inputSats)
-	}
+	// Select UTXOs to cover the required amount
+	inputUTXOs, inputSats := r.SelectUTXOs(requiredSats)
 
 	// Create a new transaction
 	tx := wire.NewMsgTx(wire.TxVersion)
