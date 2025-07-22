@@ -8,7 +8,6 @@
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
-* [4004](https://github.com/zeta-chain/node/pull/4004) - add support for withdraws using the new v2 connector contract
 
 ### Fixes
 
@@ -35,6 +34,7 @@
 * [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
 * [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
 * [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
+* [4040](https://github.com/zeta-chain/node/pull/4040) - make Bitcoin inscription e2e test working for live networks
 
 ## v32.0.0
 
