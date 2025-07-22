@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -25,14 +24,15 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 const (
+	// BTCBlockTime is the block time for the Bitcoin mainnet and testnet
+	BTCBlockTime = 10 * time.Minute
+
 	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
 	BTCRegnetBlockTime = 6 * time.Second
 
@@ -394,36 +394,11 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	// mine 1 block to confirm the transaction
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
-	// gettransaction may fail if RPC lands on a different RPC node
-	gtx, err := retry.DoTypedWithRetry(func() (*btcjson.GetTransactionResult, error) {
-		return btcRPC.GetTransaction(r.Ctx, txid)
-	})
-	require.NoError(r, err)
-	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	// on live networks it may take some time for the transaction to appear in the mempool
-	rawtx, err := retry.DoTypedWithRetry(func() (*btcjson.TxRawResult, error) {
-		return btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
-	})
+
+	// on live networks, need to wait for the transaction to be included
+	_, err = r.WaitForTxInclusion(txid, BTCBlockTime*2)
 	require.NoError(r, err)
 
-	events, err := btcobserver.FilterAndParseIncomingTx(
-		r.Ctx,
-		btcRPC,
-		[]btcjson.TxRawResult{*rawtx},
-		0,
-		r.BTCTSSAddress.EncodeAddress(),
-		log.Logger,
-		r.BitcoinParams,
-	)
-	require.NoError(r, err)
-	r.Logger.Info("bitcoin inbound events:")
-	for _, event := range events {
-		r.Logger.Info("  TxHash: %s", event.TxHash)
-		r.Logger.Info("  From: %s", event.FromAddress)
-		r.Logger.Info("  To: %s", event.ToAddress)
-		r.Logger.Info("  Amount: %f", event.Value)
-		r.Logger.Info("  Memo: %x", event.MemoBytes)
-	}
 	return txid, nil
 }
 
@@ -431,7 +406,7 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	amount float64,
 	memo []byte,
 	feeRate int64,
-) (*chainhash.Hash, int64, string) {
+) (*btcjson.TxRawResult, int64, string) {
 	address, _ := r.GetBtcKeypair()
 
 	// generate commit address
@@ -471,7 +446,11 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
 
-	return txid, revealTx.TxOut[0].Value, receiver.EncodeAddress()
+	// on live networks, need to wait for the transaction to be included
+	rawTx, err := r.WaitForTxInclusion(txid, BTCBlockTime*2)
+	require.NoError(r, err)
+
+	return rawTx, revealTx.TxOut[0].Value, receiver.EncodeAddress()
 }
 
 // GetBitcoinChainID gets the bitcoin chain ID from the network params
@@ -497,6 +476,75 @@ func (r *E2ERunner) GenerateToAddressIfLocalBitcoin(
 		return r.BtcRPCClient.GenerateToAddress(r.Ctx, numBlocks, address, nil)
 	}
 	return nil, nil
+}
+
+// WaitForTxInclusion waits for the given transaction to be included either in the mempool or a block
+func (r *E2ERunner) WaitForTxInclusion(txHash *chainhash.Hash, timeout time.Duration) (*btcjson.TxRawResult, error) {
+	start := time.Now()
+
+	for {
+		time.Sleep(5 * time.Second)
+		if time.Since(start) > timeout {
+			return nil, fmt.Errorf("timeout waiting for tx inclusion: %s", txHash.String())
+		}
+
+		// error may occue if the tx is not yet included
+		getTxResult, err := r.BtcRPCClient.GetTransaction(r.Ctx, txHash)
+		if err != nil {
+			r.Logger.Error("unable to get tx %s: %s", txHash.String(), err)
+			continue
+		}
+		r.Logger.Info("tx %s got %d confirmations", txHash.String(), getTxResult.Confirmations)
+
+		// get raw transaction for depositor fee calculation
+		rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, txHash)
+		if err != nil {
+			r.Logger.Error("unable to get raw tx %s: %s", txHash.String(), err)
+			continue
+		}
+
+		// as far as tx gets into the mempool (0 confirmations), we consider it included
+		// there's no need to wait for 1 block to be able to send out subsequent transactions
+		if getTxResult.Confirmations >= 0 {
+			return rawTx, nil
+		}
+	}
+}
+
+// CalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
+func (r *E2ERunner) CalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
+	// calculate depositor fee
+	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, r.BitcoinParams)
+	require.NoError(r, err)
+
+	// convert depositor fee to satoshis
+	depositFeeSats, err := zetabtc.GetSatoshis(depositorFee)
+	require.NoError(r, err)
+
+	return depositedAmount - depositFeeSats
+}
+
+// EstimateFeeRate returns the estimated fee rate in sat/vB for live networks
+func (r *E2ERunner) EstimateFeeRate(confTarget int64) uint64 {
+	// if not local bitcoin network, do nothing
+	if r.IsLocalBitcoin() {
+		return 1
+	}
+
+	// query live network fee rate
+	feeResult, err := r.BtcRPCClient.EstimateSmartFee(r.Ctx, confTarget, &btcjson.EstimateModeEconomical)
+	require.NoError(r, err)
+	require.Empty(r, feeResult.Errors)
+	require.NotNil(r, feeResult.FeeRate)
+
+	// sanity check
+	feeRate := *feeResult.FeeRate
+	require.True(r, feeRate > 0)
+
+	satPerByte, err := zetabtc.FeeRateToSatPerByte(feeRate)
+	require.NoError(r, err)
+
+	return satPerByte
 }
 
 // QueryOutboundReceiverAndAmount queries the outbound receiver and amount (in satoshis) from the given txid
