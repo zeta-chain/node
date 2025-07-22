@@ -232,6 +232,7 @@ type FungibleKeeper interface {
 		remainingAmount *big.Int,
 		data []byte,
 		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
+	GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error)
 }
 
 type AuthorityKeeper interface {

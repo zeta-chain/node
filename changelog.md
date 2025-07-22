@@ -8,7 +8,7 @@
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
-
+* [4004](https://github.com/zeta-chain/node/pull/4004) - add support for withdraws using the new v2 connector contract
 
 ### Fixes
 
