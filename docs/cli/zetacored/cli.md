@@ -5104,7 +5104,7 @@ zetacored query evidence evidence [hash] [flags]
 ### Examples
 
 ```
-zetacored query evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
+zetacored query evidence evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 ```
 
 ### Options
@@ -5148,7 +5148,7 @@ zetacored query evidence list [flags]
 ### Examples
 
 ```
-zetacored query evidence --page=2 --page-limit=50
+zetacored query evidence list --page=2 --page-limit=50
 ```
 
 ### Options
