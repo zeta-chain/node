@@ -10,7 +10,7 @@ import (
 // UpdateTSSAddressForConnector updates the TSS address for the connector contract
 func (r *E2ERunner) UpdateTSSAddressForConnector() {
 	require.NoError(r, r.SetTSSAddresses())
-	require.NotNil(r, r.ConnectorEth, "ConnectorNative is not initialized")
+	require.NotNil(r, r.ConnectorEth, "Connector is not initialized")
 
 	tx, err := r.ConnectorEth.UpdateTssAddress(r.EVMAuth, r.TSSAddress)
 	require.NoError(r, err)
