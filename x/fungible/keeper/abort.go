@@ -48,10 +48,11 @@ func (k Keeper) ProcessAbort(
 		}
 	case coin.CoinType_Zeta:
 		// Deposit native zeta to the abort address
-		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
-			return nil, err
-		}
-		_, err := k.DepositZeta(ctx, abortAddress, amount)
+		// If the deposit fails do not mint Zeta
+		_, _, err := k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			res, err := k.DepositZeta(tmpCtx, abortAddress, amount)
+			return res, false, err
+		})
 		if err != nil {
 			return nil, err
 		}

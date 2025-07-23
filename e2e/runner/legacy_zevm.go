@@ -1,7 +1,9 @@
 package runner
 
 import (
+	"encoding/hex"
 	"math/big"
+	"math/rand"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -44,6 +46,13 @@ func (r *E2ERunner) ZetaDeposit() *ethtypes.Transaction {
 	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
+func randomPayloadBytes(r *E2ERunner) []byte {
+	bytes := make([]byte, 50)
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+	return bytes
+}
+
 // LegacyDepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount using legacy protocol contracts
 func (r *E2ERunner) LegacyDepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
 	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
@@ -63,13 +72,17 @@ func (r *E2ERunner) LegacyDepositZetaWithAmount(to ethcommon.Address, amount *bi
 	require.NoError(r, err)
 	require.False(r, paused, "ZetaConnectorEth is paused, cannot send ZETA")
 
+	bytes := make([]byte, 50)
+	_, err = rand.Read(bytes)
+	require.NoError(r, err)
+
 	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
 		DestinationChainId:  zetaChainID,
 		DestinationAddress:  to.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
-		Message:             nil,
+		Message:             []byte(hex.EncodeToString(randomPayloadBytes(r))),
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
 	})

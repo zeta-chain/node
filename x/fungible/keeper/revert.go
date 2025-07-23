@@ -83,16 +83,17 @@ func (k Keeper) processZetaRevert(
 	revertMessage []byte,
 	callOnRevert bool,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	// Mint ZETA to the fungible module for revert operations
-	if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
-		return nil, err
-	}
+	res, _, err := k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		if callOnRevert {
+			res, err := k.CallZetaDepositAndRevert(tmpCtx, inboundSender, amount, revertAddress, revertMessage)
+			return res, false, err
+		}
 
-	if callOnRevert {
-		return k.CallZetaDepositAndRevert(ctx, inboundSender, amount, revertAddress, revertMessage)
-	}
+		res, err := k.DepositZeta(tmpCtx, revertAddress, amount)
+		return res, false, err
+	})
 
-	return k.DepositZeta(ctx, revertAddress, amount)
+	return res, err
 }
 
 // processZRC20Revert handles ZRC20 token reverts [ZRC20 tokens exist for ERC20 and GAS tokens]

@@ -23,6 +23,8 @@ func (k Keeper) LegacyZETADepositAndCallContract(ctx sdk.Context,
 	indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	acc := k.evmKeeper.GetAccount(ctx, to)
 
+	fmt.Println("LegacyZETADepositAndCallContract called ")
+
 	if acc == nil || !acc.IsContract() {
 		err := k.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {

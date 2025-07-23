@@ -5,7 +5,12 @@ import (
 	"runtime"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/utils"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 // RunE2ETests runs a list of e2e tests
@@ -16,14 +21,28 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 			r.Logger.Print("⚠️ skipping test - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
 			continue
 		}
+		balancesBefore := r.CheckProtocolAddressBalances()
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}
 		if err := r.RunE2ETest(e2eTest, false); err != nil {
 			return err
 		}
+		balancesAfter := r.CheckProtocolAddressBalances()
+		if !balancesAfter.Equal(balancesBefore) {
+			r.Logger.Print("⚠️ protocol address balance changed during test %s: before %s, after %s", e2eTest.Name, balancesBefore.String(), balancesAfter.String())
+		}
 	}
 	return nil
+}
+
+func (r *E2ERunner) CheckProtocolAddressBalances() sdkmath.Int {
+	res, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: fungibletypes.ModuleAddress.String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err, "failed to get protocol address balance")
+	return res.GetBalance().Amount
 }
 
 // RunE2ETest runs a e2e test

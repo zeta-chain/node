@@ -397,6 +397,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	message []byte,
 	internalSendHash [32]byte,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
+	fmt.Println("CallOnReceiveZevmConnector called")
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
@@ -412,6 +413,8 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
 	}
+
+	fmt.Println("Minted Zeta to fungible module account")
 
 	return k.CallEVM(
 		ctx,

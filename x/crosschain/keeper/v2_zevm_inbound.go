@@ -5,10 +5,13 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -90,6 +93,24 @@ func (k Keeper) ProcessZEVMInboundV2(
 				"failed to parse inbound details for withdraw: %v", err,
 			)
 		}
+
+		if inboundDetails.coinType == coin.CoinType_Zeta {
+			err := k.bankKeeper.BurnCoins(ctx,
+				fungibletypes.ModuleName,
+				sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewIntFromBigInt(value))))
+			if err != nil {
+				return errorsmod.Wrapf(
+					types.ErrInvalidWithdrawalEvent,
+					"failed to burn ZETA coins: %v", err,
+				)
+			}
+		}
+		//	~/IdeaProjects/kingpinXD/zeta-node git:[connector-v2-migration-withdraw] zetacored q bank balances zeta1wdd3fwmegces02ktakrd4uej9v0xyf4trw8fja
+		//balances:
+		//	- amount: "20000000000000001000"
+		//denom: azeta
+		//pagination:
+		//total: "1"
 
 		// validate data of the withdrawal event
 		if err := k.validateOutbound(ctx, inboundDetails.receiverChain.ChainId, inboundDetails.coinType, value, receiver); err != nil {
