@@ -10,6 +10,7 @@ import (
 	"github.com/tonkeeper/tongo/boc"
 	"github.com/tonkeeper/tongo/ton"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
@@ -74,6 +75,11 @@ func New(bo *base.Observer, rpc RPC, gateway *toncontracts.Gateway) (*Observer, 
 
 // PostGasPrice fetches on-chain gas config and reports it to Zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
+	// add 1 min delay to not immediately post gas price
+	if ob.Chain().NetworkType != chains.NetworkType_privnet {
+		time.Sleep(1 * time.Minute)
+	}
+
 	cfg, err := rpc.FetchGasConfigRPC(ctx, ob.rpc)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch gas config")

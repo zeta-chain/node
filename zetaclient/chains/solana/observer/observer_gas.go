@@ -2,10 +2,12 @@ package observer
 
 import (
 	"context"
+	"time"
 
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	zetamath "github.com/zeta-chain/node/pkg/math"
 )
 
@@ -31,6 +33,11 @@ const (
 
 // PostGasPrice posts gas price to zetacore
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
+	// add 1 min delay to not immediately post gas price
+	if ob.Chain().NetworkType != chains.NetworkType_privnet {
+		time.Sleep(1 * time.Minute)
+	}
+
 	// get current slot
 	slot, err := ob.solClient.GetSlot(ctx, rpc.CommitmentConfirmed)
 	if err != nil {

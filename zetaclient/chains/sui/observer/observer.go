@@ -9,6 +9,7 @@ import (
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
@@ -85,6 +86,11 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 // - "Validators update the ReferencePrice every epoch (~24h)"
 // - "Storage price is updated infrequently through gov proposals"
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
+	// add 1 min delay to not immediately post gas price
+	if ob.Chain().NetworkType != chains.NetworkType_privnet {
+		time.Sleep(1 * time.Minute)
+	}
+
 	checkpoint, err := ob.client.GetLatestCheckpoint(ctx)
 	if err != nil {
 		return errors.Wrap(err, "unable to get latest checkpoint")

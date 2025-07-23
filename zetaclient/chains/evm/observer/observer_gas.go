@@ -3,12 +3,20 @@ package observer
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // PostGasPrice posts gas price to zetacore.
 func (ob *Observer) PostGasPrice(ctx context.Context) error {
+	// add 1 min delay to not immediately post gas price
+	if ob.Chain().NetworkType != chains.NetworkType_privnet {
+		time.Sleep(1 * time.Minute)
+	}
+
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(ctx)
 	if err != nil {
