@@ -420,36 +420,6 @@ func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Contex
 	return r0, r1
 }
 
-// GetWZetaContractAddress provides a mock function with given fields: ctx
-func (_m *CrosschainFungibleKeeper) GetWZetaContractAddress(ctx types.Context) (common.Address, error) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetWZetaContractAddress")
-	}
-
-	var r0 common.Address
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context) (common.Address, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context) common.Address); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.Address)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // LegacyZETADepositAndCallContract provides a mock function with given fields: ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes
 func (_m *CrosschainFungibleKeeper) LegacyZETADepositAndCallContract(ctx types.Context, sender common.Address, to common.Address, inboundSenderChainID int64, inboundAmount *big.Int, data []byte, indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	ret := _m.Called(ctx, sender, to, inboundSenderChainID, inboundAmount, data, indexBytes)
