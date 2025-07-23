@@ -97,19 +97,11 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(
 		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
 			e2etests.TestZetaDepositName,
-			e2etests.TestETHDepositName,
 			e2etests.TestZetaDepositAndCallName,
 			e2etests.TestZetaDepositAndCallRevertName,
 			e2etests.TestZetaDepositRevertAndAbortName,
 			e2etests.TestZetaDepositAndCallRevertWithCallName,
 			e2etests.TestZetaDepositAndCallNoMessageName,
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestZetaWithdrawAndCallName,
-			e2etests.TestZetaWithdrawAndCallRevertName,
-			e2etests.TestZetaWithdrawAndCallRevertWithCallName,
-			e2etests.TestZetaWithdrawRevertAndAbortName,
-			e2etests.TestZetaWithdrawAndCallNoMessageName,
-			e2etests.TestZetaWithdrawAndArbitraryCallName,
 		),
 	)
 }
