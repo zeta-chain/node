@@ -81,8 +81,7 @@ func (c *Client) Broadcast(
 	factory = factory.
 		WithAccountNumber(c.accountNumber[authzSigner.KeyType]).
 		WithSequence(c.seqNumber[authzSigner.KeyType]).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
-		WithGasAdjustment(1.5)
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
