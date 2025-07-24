@@ -61,15 +61,6 @@ func Test_GetBTCConfig(t *testing.T) {
 			want: true,
 		},
 		{
-			name:    "should fallback to old 'BitcoinConfig' if new config is not set",
-			chainID: chains.BitcoinRegtest.ChainId,
-			oldCfg: config.BTCConfig{
-				RPCHost: "old_host",
-			},
-			btcCfg: nil, // new config is not set
-			want:   true,
-		},
-		{
 			name:    "should fallback to old config but still can't find btc config as it's empty",
 			chainID: chains.BitcoinRegtest.ChainId,
 			oldCfg: config.BTCConfig{
@@ -93,8 +84,6 @@ func Test_GetBTCConfig(t *testing.T) {
 			// create config with defaults
 			cfg := config.New(true)
 
-			// set both new and old btc config
-			cfg.BitcoinConfig = tt.oldCfg
 			if tt.btcCfg != nil {
 				cfg.BTCChainConfigs[tt.chainID] = *tt.btcCfg
 			}
