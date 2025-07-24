@@ -31,8 +31,9 @@ func TestBitcoinWithdrawRBF(r *runner.E2ERunner, args []string) {
 	defaultReceiver := r.GetBtcAddress().EncodeAddress()
 	to, amount := utils.ParseBitcoinWithdrawArgs(r, args, defaultReceiver, r.GetBitcoinChainID())
 
-	// initiate a withdraw CCTX
+	// initiate a withdraw CCTX, and wait for CCTX creation
 	tx := r.WithdrawBTC(to, amount, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
+	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 1, 20*time.Second)
 	cctx := utils.GetCCTXByInboundHash(r.Ctx, r.CctxClient, tx.Hash().Hex())
 
 	// wait for the 1st outbound tracker hash to come in

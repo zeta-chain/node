@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
@@ -25,20 +24,24 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
-	"github.com/zeta-chain/node/pkg/retry"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	zetabtc "github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
-	btcobserver "github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 )
 
 const (
+	// BTCBlockTime is the block time for the Bitcoin mainnet and testnet
+	BTCBlockTime = 10 * time.Minute
+
 	// BTCRegnetBlockTime is the block time for the Bitcoin regnet
 	BTCRegnetBlockTime = 6 * time.Second
 
 	// BTCDepositTxFee is the fixed deposit transaction fee (0.00003 BTC) for E2E tests
 	// Given one UTXO input, the deposit transaction fee rate is approximately 10 sat/vB
 	BTCDepositTxFee = 0.00003
+
+	// feeRateCap is the maximum fee rate to avoid excessive fees in E2E tests
+	feeRateCap = 100
 )
 
 // ListUTXOs list the deployer's UTXOs
@@ -75,6 +78,41 @@ func (r *E2ERunner) ListUTXOs() []btcjson.ListUnspentResult {
 	require.NotEmpty(r, utxos)
 
 	return utxos
+}
+
+// SelectUTXOs selects a subset of deployer's UTXOs to cover the given amount
+func (r *E2ERunner) SelectUTXOs(amount btcutil.Amount) ([]btcjson.ListUnspentResult, btcutil.Amount) {
+	var (
+		allUTXOs       = r.ListUTXOs()
+		regnet         = r.IsLocalBitcoin()
+		selectedUTXOs  = make([]btcjson.ListUnspentResult, 0, len(allUTXOs))
+		selectedAmount = btcutil.Amount(0)
+	)
+
+	// select UTXOs until we get enough funds
+	for _, utxo := range allUTXOs {
+		selectedUTXOs = append(selectedUTXOs, utxo)
+		selectedAmount += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
+
+		// in regnet, deployer owns too many UTXOs, so we stop when we have enough funds
+		// in others, it is a good idea to consume all UTXOs and keep a minimum UTXO list
+		if regnet && selectedAmount >= amount {
+			break
+		}
+	}
+	r.Logger.Info("selected %d UTXOs", len(selectedUTXOs))
+
+	// check if we have enough funds
+	require.GreaterOrEqual(
+		r,
+		selectedAmount,
+		amount,
+		"not enough funds in sats; wanted %d, got %d",
+		amount,
+		selectedAmount,
+	)
+
+	return selectedUTXOs, selectedAmount
 }
 
 // GetTop20UTXOsForTssAddress returns the top 20 UTXOs for the TSS address.
@@ -291,29 +329,16 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	btcRPC := r.BtcRPCClient
 	address, wifKey := r.GetBtcKeypair()
 
-	allUTXOs := r.ListUTXOs()
-
-	// Calculate required amount including fee
+	// Calculate required amount with gas fee and then add
+	// additional dust amount to avoid dust 'change' output
 	feeSats := btcutil.Amount(BTCDepositTxFee * btcutil.SatoshiPerBitcoin)
 	amountInt, err := zetabtc.GetSatoshis(amount)
 	require.NoError(r, err)
 	amountSats := btcutil.Amount(amountInt)
-	requiredSats := amountSats + feeSats
+	requiredSats := amountSats + feeSats + constant.BTCWithdrawalDustAmount
 
-	// Select UTXOs until we have enough funds
-	inputUTXOs := make([]btcjson.ListUnspentResult, 0, len(allUTXOs))
-	inputSats := btcutil.Amount(0)
-	for _, utxo := range allUTXOs {
-		inputSats += btcutil.Amount(utxo.Amount * btcutil.SatoshiPerBitcoin)
-		inputUTXOs = append(inputUTXOs, utxo)
-		if inputSats >= requiredSats {
-			break
-		}
-	}
-
-	if inputSats < requiredSats {
-		return nil, fmt.Errorf("not enough input amount in sats; wanted %d, got %d", requiredSats, inputSats)
-	}
+	// Select UTXOs to cover the required amount
+	inputUTXOs, inputSats := r.SelectUTXOs(requiredSats)
 
 	// Create a new transaction
 	tx := wire.NewMsgTx(wire.TxVersion)
@@ -394,36 +419,11 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	// mine 1 block to confirm the transaction
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
-	// gettransaction may fail if RPC lands on a different RPC node
-	gtx, err := retry.DoTypedWithRetry(func() (*btcjson.GetTransactionResult, error) {
-		return btcRPC.GetTransaction(r.Ctx, txid)
-	})
-	require.NoError(r, err)
-	r.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	// on live networks it may take some time for the transaction to appear in the mempool
-	rawtx, err := retry.DoTypedWithRetry(func() (*btcjson.TxRawResult, error) {
-		return btcRPC.GetRawTransactionVerbose(r.Ctx, txid)
-	})
+
+	// on live networks, need to wait for the transaction to be included
+	_, err = r.WaitForBitcoinTxInclusion(txid, BTCBlockTime*2)
 	require.NoError(r, err)
 
-	events, err := btcobserver.FilterAndParseIncomingTx(
-		r.Ctx,
-		btcRPC,
-		[]btcjson.TxRawResult{*rawtx},
-		0,
-		r.BTCTSSAddress.EncodeAddress(),
-		log.Logger,
-		r.BitcoinParams,
-	)
-	require.NoError(r, err)
-	r.Logger.Info("bitcoin inbound events:")
-	for _, event := range events {
-		r.Logger.Info("  TxHash: %s", event.TxHash)
-		r.Logger.Info("  From: %s", event.FromAddress)
-		r.Logger.Info("  To: %s", event.ToAddress)
-		r.Logger.Info("  Amount: %f", event.Value)
-		r.Logger.Info("  Memo: %x", event.MemoBytes)
-	}
 	return txid, nil
 }
 
@@ -431,7 +431,7 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	amount float64,
 	memo []byte,
 	feeRate int64,
-) (*chainhash.Hash, int64, string) {
+) (*btcjson.TxRawResult, int64, string) {
 	address, _ := r.GetBtcKeypair()
 
 	// generate commit address
@@ -471,7 +471,11 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	_, err = r.GenerateToAddressIfLocalBitcoin(1, address)
 	require.NoError(r, err)
 
-	return txid, revealTx.TxOut[0].Value, receiver.EncodeAddress()
+	// on live networks, need to wait for the transaction to be included
+	rawTx, err := r.WaitForBitcoinTxInclusion(txid, BTCBlockTime*2)
+	require.NoError(r, err)
+
+	return rawTx, revealTx.TxOut[0].Value, receiver.EncodeAddress()
 }
 
 // GetBitcoinChainID gets the bitcoin chain ID from the network params
@@ -497,6 +501,81 @@ func (r *E2ERunner) GenerateToAddressIfLocalBitcoin(
 		return r.BtcRPCClient.GenerateToAddress(r.Ctx, numBlocks, address, nil)
 	}
 	return nil, nil
+}
+
+// WaitForBitcoinTxInclusion waits for the given transaction to be included either in the mempool or a block
+func (r *E2ERunner) WaitForBitcoinTxInclusion(
+	txHash *chainhash.Hash,
+	timeout time.Duration,
+) (*btcjson.TxRawResult, error) {
+	start := time.Now()
+
+	for {
+		time.Sleep(5 * time.Second)
+		if time.Since(start) > timeout {
+			return nil, fmt.Errorf("timeout waiting for tx inclusion: %s", txHash.String())
+		}
+
+		// error may occue if the tx is not yet included
+		getTxResult, err := r.BtcRPCClient.GetTransaction(r.Ctx, txHash)
+		if err != nil {
+			r.Logger.Error("unable to get tx %s: %s", txHash.String(), err)
+			continue
+		}
+		r.Logger.Info("tx %s got %d confirmations", txHash.String(), getTxResult.Confirmations)
+
+		// get raw transaction for depositor fee calculation
+		rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, txHash)
+		if err != nil {
+			r.Logger.Error("unable to get raw tx %s: %s", txHash.String(), err)
+			continue
+		}
+
+		// as far as tx gets into the mempool (0 confirmations), we consider it included
+		// there's no need to wait for 1 block to be able to send out subsequent transactions
+		if getTxResult.Confirmations >= 0 {
+			return rawTx, nil
+		}
+	}
+}
+
+// BitcoinCalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
+func (r *E2ERunner) BitcoinCalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
+	// calculate depositor fee
+	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, r.BitcoinParams)
+	require.NoError(r, err)
+
+	// convert depositor fee to satoshis
+	depositFeeSats, err := zetabtc.GetSatoshis(depositorFee)
+	require.NoError(r, err)
+
+	return depositedAmount - depositFeeSats
+}
+
+// BitcoinEstimateFeeRate returns the estimated fee rate in sat/vB for live networks
+func (r *E2ERunner) BitcoinEstimateFeeRate(confTarget int64) uint64 {
+	// if not local bitcoin network, do nothing
+	if r.IsLocalBitcoin() {
+		return 1
+	}
+
+	// query live network fee rate
+	feeResult, err := r.BtcRPCClient.EstimateSmartFee(r.Ctx, confTarget, &btcjson.EstimateModeEconomical)
+	require.NoError(r, err)
+	require.Empty(r, feeResult.Errors)
+	require.NotNil(r, feeResult.FeeRate)
+
+	// sanity check
+	feeRate := *feeResult.FeeRate
+	require.True(r, feeRate > 0)
+
+	satPerByte, err := zetabtc.FeeRateToSatPerByte(feeRate)
+	require.NoError(r, err)
+
+	// ensure the fee rate is within the cap
+	require.LessOrEqual(r, satPerByte, feeRateCap)
+
+	return satPerByte
 }
 
 // QueryOutboundReceiverAndAmount queries the outbound receiver and amount (in satoshis) from the given txid
