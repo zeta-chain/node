@@ -32,9 +32,7 @@ func (r *E2ERunner) UpgradeGatewaysAndERC20Custody() {
 // RunGatewayUpgradeTestsExternalChains runs the gateway upgrade tests for external chains
 func (r *E2ERunner) RunGatewayUpgradeTestsExternalChains(conf config.Config, opts UpgradeGatewayOptions) {
 	// Skip upgrades if this is the second run of the upgrade tests
-	if semver.Major(r.GetZetacoredVersion()) == "v0" {
-		return
-	}
+
 	if opts.TestSolana {
 		r.SolanaVerifyGatewayContractsUpgrade(conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	}
