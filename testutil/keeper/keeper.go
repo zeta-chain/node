@@ -416,14 +416,8 @@ func EVMKeeper(
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
-	allKeys := make(map[string]storetypes.StoreKey, len(testStoreKeys)+len(testTransientKeys)+len(testMemKeys))
+	allKeys := make(map[string]*storetypes.KVStoreKey, len(testStoreKeys)+len(testTransientKeys)+len(testMemKeys))
 	for k, v := range testStoreKeys {
-		allKeys[k] = v
-	}
-	for k, v := range testTransientKeys {
-		allKeys[k] = v
-	}
-	for k, v := range testMemKeys {
 		allKeys[k] = v
 	}
 
@@ -431,6 +425,7 @@ func EVMKeeper(
 		cdc,
 		storeKey,
 		transientKey,
+		allKeys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		authKeeper,
 		bankKeeper,
@@ -514,6 +509,7 @@ func NewSDKKeepersWithKeys(
 		cdc,
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
+		keys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		authKeeper,
 		bankKeeper,

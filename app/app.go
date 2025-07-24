@@ -524,6 +524,7 @@ func New(
 		appCodec,
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
+		keys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
