@@ -296,7 +296,6 @@ require (
 	github.com/bnb-chain/tss-lib v1.5.0
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/evm v1.0.0-rc2
-	github.com/cosmos/evm/evmd v0.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v10 v10.0.0-beta.0.0.20250528142215-7d579b91ac6b
 	github.com/fardream/go-bcs v0.7.0
@@ -326,7 +325,6 @@ require (
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
 	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
-	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
@@ -417,8 +415,6 @@ replace (
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
 	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250722151030-bffac1a2ccad
-
-	github.com/cosmos/evm/evmd => github.com/zeta-chain/evm/evmd v0.0.0-20250722151030-bffac1a2ccad
 
 	// use Cosmos geth fork
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0

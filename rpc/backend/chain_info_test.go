@@ -11,7 +11,6 @@ import (
 	"github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	evmdconfig "github.com/cosmos/evm/evmd/cmd/evmd/config"
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
@@ -155,7 +154,7 @@ func (s *TestSuite) TestBaseFee() {
 }
 
 func (s *TestSuite) TestChainID() {
-	expChainID := (*hexutil.Big)(big.NewInt(evmdconfig.EVMChainID))
+	expChainID := (*hexutil.Big)(big.NewInt(int64(testChainID)))
 	testCases := []struct {
 		name         string
 		registerMock func()

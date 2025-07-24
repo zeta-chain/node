@@ -16,8 +16,6 @@ replace (
 // and check about evmd fork
 replace (
     github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
-
-	github.com/cosmos/evm/evmd => github.com/skosito/evm/evmd v0.0.0-20250620225350-4e522deea683
 )
 
 // uncomment this for local development/testing/debugging

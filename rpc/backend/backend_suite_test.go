@@ -17,7 +17,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/evm/crypto/hd"
 	"github.com/cosmos/evm/encoding"
-	evmdconfig "github.com/cosmos/evm/evmd/cmd/evmd/config"
 	"github.com/cosmos/evm/indexer"
 	"github.com/cosmos/evm/testutil/constants"
 	utiltx "github.com/cosmos/evm/testutil/tx"
@@ -73,7 +72,7 @@ func TestBackendTestSuite(t *testing.T) {
 func (s *TestSuite) SetupTest() {
 	ctx := server.NewDefaultContext()
 	ctx.Viper.Set("telemetry.global-labels", []interface{}{})
-	ctx.Viper.Set("evm.evm-chain-id", evmdconfig.EVMChainID)
+	ctx.Viper.Set("evm.evm-chain-id", testChainID)
 
 	baseDir := s.T().TempDir()
 	nodeDirName := "node"
@@ -267,7 +266,7 @@ func (s *TestSuite) buildFormattedBlock(
 
 func (s *TestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
-	encCfg := encoding.MakeConfig(evmdconfig.EVMChainID)
+	encCfg := encoding.MakeConfig(testChainID)
 	return keyring.New(
 		sdk.KeyringServiceName(),
 		keyring.BackendTest,

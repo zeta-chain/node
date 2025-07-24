@@ -34,11 +34,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	cosmosevmcmd "github.com/cosmos/evm/client"
 	"github.com/cosmos/evm/crypto/hd"
-	evmdconfig "github.com/cosmos/evm/evmd/cmd/evmd/config"
-	"github.com/cosmos/evm/evmd/eips"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -168,17 +165,9 @@ func NewRootCmd() *cobra.Command {
 func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
 	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
 
-	// cosmosEVMActivators defines a map of opcode modifiers associated
-	// with a key defining the corresponding EIP.
-	var cosmosEVMActivators = map[int]func(*vm.JumpTable){
-		0o000: eips.Enable0000,
-		0o001: eips.Enable0001,
-		0o002: eips.Enable0002,
-	}
-
 	configurator := evmtypes.NewEVMConfigurator()
 	err := configurator.
-		WithExtendedEips(cosmosEVMActivators).
+		WithExtendedEips(zetacoredconfig.CosmosEVMActivators).
 		WithChainConfig(ethCfg).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
 			Denom:         denom,
@@ -449,7 +438,7 @@ func getChainIDFromOpts(appOpts servertypes.AppOptions) (chainID string, err err
 	if chainID == "" {
 		// If not available load from home
 		homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-		chainID, err = evmdconfig.GetChainIDFromHome(homeDir)
+		chainID, err = zetacoredconfig.GetChainIDFromHome(homeDir)
 		if err != nil {
 			return "", err
 		}

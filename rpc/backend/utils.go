@@ -24,6 +24,9 @@ import (
 	"github.com/zeta-chain/node/rpc/types"
 )
 
+// testChainID represents the ChainID used for the purpose of testing.
+const testChainID uint64 = 262144
+
 type txGasAndReward struct {
 	gasUsed uint64
 	reward  *big.Int
