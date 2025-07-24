@@ -380,7 +380,7 @@ start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
 	export UPGRADE_HEIGHT=225 && \
-	export E2E_ARGS="--test-solana --test-sui" && \
+	export E2E_ARGS="--test-solana --test-sui --verbose" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana --profile sui -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
