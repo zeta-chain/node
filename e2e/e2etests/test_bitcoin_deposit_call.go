@@ -45,7 +45,7 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	// check the payload was received on the contract
 	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, txHash)
 	require.NoError(r, err)
-	receivedAmount := r.CalcReceivedAmount(rawTx, amountSats)
+	receivedAmount := r.BitcoinCalcReceivedAmount(rawTx, amountSats)
 	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
 
 	// check the balance was updated

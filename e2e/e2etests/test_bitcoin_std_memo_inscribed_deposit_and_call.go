@@ -17,7 +17,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	// Given amount and live network fee rate
 	require.Len(r, args, 1)
 	amount := utils.ParseFloat(r, args[0])
-	feeRate := r.EstimateFeeRate(1)
+	feeRate := r.BitcoinEstimateFeeRate(1)
 
 	oldBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
@@ -60,7 +60,7 @@ func TestBitcoinStdMemoInscribedDepositAndCall(r *runner.E2ERunner, args []strin
 	require.Equal(r, senderAddress, cctx.InboundParams.TxOrigin)
 
 	// check the payload was received on the contract
-	receivedAmount := r.CalcReceivedAmount(rawTx, depositedAmount)
+	receivedAmount := r.BitcoinCalcReceivedAmount(rawTx, depositedAmount)
 	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
 
 	// check the balance was updated

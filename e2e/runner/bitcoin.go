@@ -421,7 +421,7 @@ func (r *E2ERunner) sendToAddrWithMemo(
 	require.NoError(r, err)
 
 	// on live networks, need to wait for the transaction to be included
-	_, err = r.WaitForTxInclusion(txid, BTCBlockTime*2)
+	_, err = r.WaitForBitcoinTxInclusion(txid, BTCBlockTime*2)
 	require.NoError(r, err)
 
 	return txid, nil
@@ -472,7 +472,7 @@ func (r *E2ERunner) InscribeToTSSWithMemo(
 	require.NoError(r, err)
 
 	// on live networks, need to wait for the transaction to be included
-	rawTx, err := r.WaitForTxInclusion(txid, BTCBlockTime*2)
+	rawTx, err := r.WaitForBitcoinTxInclusion(txid, BTCBlockTime*2)
 	require.NoError(r, err)
 
 	return rawTx, revealTx.TxOut[0].Value, receiver.EncodeAddress()
@@ -503,8 +503,11 @@ func (r *E2ERunner) GenerateToAddressIfLocalBitcoin(
 	return nil, nil
 }
 
-// WaitForTxInclusion waits for the given transaction to be included either in the mempool or a block
-func (r *E2ERunner) WaitForTxInclusion(txHash *chainhash.Hash, timeout time.Duration) (*btcjson.TxRawResult, error) {
+// WaitForBitcoinTxInclusion waits for the given transaction to be included either in the mempool or a block
+func (r *E2ERunner) WaitForBitcoinTxInclusion(
+	txHash *chainhash.Hash,
+	timeout time.Duration,
+) (*btcjson.TxRawResult, error) {
 	start := time.Now()
 
 	for {
@@ -536,8 +539,8 @@ func (r *E2ERunner) WaitForTxInclusion(txHash *chainhash.Hash, timeout time.Dura
 	}
 }
 
-// CalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
-func (r *E2ERunner) CalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
+// BitcoinCalcReceivedAmount calculates the amount received by the receiver after deducting the depositor fee
+func (r *E2ERunner) BitcoinCalcReceivedAmount(depositTx *btcjson.TxRawResult, depositedAmount int64) int64 {
 	// calculate depositor fee
 	depositorFee, err := zetabtc.CalcDepositorFee(r.Ctx, r.BtcRPCClient, depositTx, r.BitcoinParams)
 	require.NoError(r, err)
@@ -549,8 +552,8 @@ func (r *E2ERunner) CalcReceivedAmount(depositTx *btcjson.TxRawResult, deposited
 	return depositedAmount - depositFeeSats
 }
 
-// EstimateFeeRate returns the estimated fee rate in sat/vB for live networks
-func (r *E2ERunner) EstimateFeeRate(confTarget int64) uint64 {
+// BitcoinEstimateFeeRate returns the estimated fee rate in sat/vB for live networks
+func (r *E2ERunner) BitcoinEstimateFeeRate(confTarget int64) uint64 {
 	// if not local bitcoin network, do nothing
 	if r.IsLocalBitcoin() {
 		return 1
