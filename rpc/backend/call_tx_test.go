@@ -2,7 +2,6 @@ package backend
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -10,16 +9,16 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
+	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	utiltx "github.com/cosmos/evm/testutil/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 
 	"cosmossdk.io/math"
-
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (s *TestSuite) TestResend() {
@@ -335,11 +334,8 @@ func (s *TestSuite) TestSendRawTransaction() {
 				s.backend.AllowUnprotectedTxs = false
 			},
 			func() []byte {
-				from, priv := utiltx.NewAddrKey()
-				signer := utiltx.NewSigner(priv)
+				from, _ := utiltx.NewAddrKey()
 				invalidEvmChainIDTx.From = from.String()
-				err := invalidEvmChainIDTx.Sign(ethSigner, signer)
-				s.Require().NoError(err)
 				bytes, _ := rlp.EncodeToBytes(invalidEvmChainIDTx.AsTransaction())
 				return bytes
 			},

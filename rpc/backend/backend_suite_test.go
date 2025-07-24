@@ -194,12 +194,13 @@ func (suite *TestSuite) buildSyntheticTxResult(txHash string) ([]byte, abci.Exec
 // buildEthereumTx returns an example legacy Ethereum transaction
 func (s *TestSuite) buildEthereumTxWithChainID(eip155ChainID *big.Int) *evmtypes.MsgEthereumTx {
 	ethTxParams := evmtypes.EvmTxArgs{
-		ChainID:  eip155ChainID,
-		Nonce:    uint64(0),
-		To:       &common.Address{},
-		Amount:   big.NewInt(0),
-		GasLimit: 100000,
-		GasPrice: big.NewInt(1),
+		ChainID:   eip155ChainID,
+		Nonce:     uint64(0),
+		To:        &common.Address{},
+		Amount:    big.NewInt(0),
+		GasLimit:  100000,
+		GasPrice:  big.NewInt(1),
+		GasFeeCap: big.NewInt(1),
 	}
 	msgEthereumTx := evmtypes.NewTx(&ethTxParams)
 
