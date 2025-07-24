@@ -270,7 +270,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		AddrConversionCmd(),
 		UpgradeHandlerVersionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		// ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}), // TODO evm: removed, was it used before?
 
 		debug.Cmd(),
 		snapshot.Cmd(ac.newApp),
