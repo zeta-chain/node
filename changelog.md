@@ -4,11 +4,11 @@
 
 ### Features
 
-* [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
-* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 * [3961](https://github.com/zeta-chain/node/pull/3961) - cosmos v53 upgrade
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
+* [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
+
 
 ### Fixes
 
@@ -19,6 +19,8 @@
 * [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
 * [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
+* [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
+* [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 
 ### Refactor
 
@@ -31,7 +33,21 @@
 * [3975](https://github.com/zeta-chain/node/pull/3975) - add v2 connector deployment to the e2e test.
 * [3976](https://github.com/zeta-chain/node/pull/3976) - add connector fund migration e2e test using contracts only.
 * [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
-* [3985](https://github.com/zeta-chain/node/pull/3985)- add e2e tests for deposit and withdraw with big payload
+* [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
+* [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
+
+## v32.0.0
+
+### Chores
+
+* [4003](https://github.com/zeta-chain/node/pull/4003) - upgrade Cosmos SDK to v0.50.14
+
+## v31.0.1
+
+### Features
+
+* [3929](https://github.com/zeta-chain/node/pull/3929) - add support for TON http-rpc
+* [3958](https://github.com/zeta-chain/node/pull/3958) - integrate TON http-rpc
 
 ## v31.0.0
 

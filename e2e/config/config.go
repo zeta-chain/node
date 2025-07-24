@@ -136,8 +136,10 @@ type Contracts struct {
 
 // Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
-	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
-	SPLAddr          DoubleQuotedString `yaml:"spl"`
+	GatewayProgramID      DoubleQuotedString `yaml:"gateway_program_id"`
+	SPLAddr               DoubleQuotedString `yaml:"spl"`
+	ConnectedProgramID    DoubleQuotedString `yaml:"connected_program_id"`
+	ConnectedSPLProgramID DoubleQuotedString `yaml:"connected_spl_program_id"`
 }
 
 // TON contains the address of predeployed contracts on the TON chain

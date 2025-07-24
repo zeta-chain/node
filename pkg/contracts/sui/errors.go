@@ -104,9 +104,12 @@ func IsRetryableExecutionError(errorMsg string) (bool, error) {
 			return moveAbort.IsRetryable(), nil
 		}
 		return false, nil
-	case cmdIndex == 1 || cmdIndex == 2:
-		// 1: gas budget transfer error: cancel tx
-		// 2: 'on_call' error: cancel tx
+	case slices.Contains([]uint16{1, 2, 3, 4}, cmdIndex):
+		// cancel tx if any one of the remaining commands failed
+		// command 1: gas budget transfer error
+		// command 2: 'set_message_context' error
+		// command 3: 'on_call' error
+		// command 4: 'reset_message_context' error
 		return false, nil
 	default: // never happen
 		return false, errors.Errorf("invalid command index: %d", cmdIndex)

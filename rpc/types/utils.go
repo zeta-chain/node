@@ -70,7 +70,7 @@ func EthHeaderFromTendermint(
 	miner sdk.AccAddress,
 ) *ethtypes.Header {
 	txHash := ethtypes.EmptyRootHash
-	if len(header.DataHash) == 0 {
+	if len(header.DataHash) != 0 {
 		txHash = common.BytesToHash(header.DataHash)
 	}
 

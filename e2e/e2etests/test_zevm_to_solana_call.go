@@ -23,7 +23,7 @@ func TestZEVMToSolanaCall(r *runner.E2ERunner, _ []string) {
 	r.ZEVMAuth.GasLimit = 10000000
 	// withdraw and call
 	tx := r.CallSOLZRC20(
-		runner.ConnectedProgramID,
+		r.ConnectedProgram,
 		approvedAmount,
 		[]byte("simple call"),
 		gatewayzevm.RevertOptions{
@@ -36,7 +36,7 @@ func TestZEVMToSolanaCall(r *runner.E2ERunner, _ []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check pda account info of connected program
-	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(runner.ConnectedProgramID)
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 	connectedPdaInfo, err := r.SolanaClient.GetAccountInfo(r.Ctx, connectedPda)
 	require.NoError(r, err)

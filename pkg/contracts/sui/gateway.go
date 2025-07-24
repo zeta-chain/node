@@ -49,7 +49,7 @@ const (
 	CancelTxEvent EventType = "NonceIncreaseEvent"
 )
 
-const moduleName = "gateway"
+const GatewayModule = "gateway"
 
 // NewGatewayFromPairID creates a new Sui Gateway
 // from pair of `$packageID,$gatewayObjectID`
@@ -132,14 +132,14 @@ func (gw *Gateway) ObjectID() string {
 	return gw.objectID
 }
 
-// Module returns Gateway's module name
-func (gw *Gateway) Module() string {
-	return moduleName
-}
-
 // WithdrawCapType returns struct type of the WithdrawCap
 func (gw *Gateway) WithdrawCapType() string {
-	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), moduleName)
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), GatewayModule)
+}
+
+// MessageContextType returns struct type of the MessageContext
+func (gw *Gateway) MessageContextType() string {
+	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
 }
 
 // UpdateIDs updates packageID and objectID.
@@ -148,7 +148,6 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 	if err != nil {
 		return err
 	}
-
 	gw.mu.Lock()
 	defer gw.mu.Unlock()
 
@@ -189,7 +188,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 
 	// Note that event.TransactionModule can be different because it represents
 	// the module BY WHICH the gateway was called.
-	if descriptor.module != moduleName {
+	if descriptor.module != GatewayModule {
 		return Event{}, errors.Wrapf(ErrParseEvent, "module mismatch %q", descriptor.module)
 	}
 
@@ -226,7 +225,7 @@ func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
 func (gw *Gateway) ParseOutboundEvent(
 	res models.SuiTransactionBlockResponse,
 ) (event Event, content OutboundEventContent, err error) {
-	// a simple withdraw contains one single command, if it contains 3 commands,
+	// a simple withdraw contains one single command, if it contains 5 commands,
 	// we try passing the transaction as a withdraw and call with PTB
 	if len(res.Transaction.Data.Transaction.Transactions) == ptbWithdrawAndCallCmdCount {
 		return gw.parseWithdrawAndCallPTB(res)
@@ -389,6 +388,13 @@ func parsePair(pair string) (string, string, error) {
 	parts := strings.Split(pair, ",")
 	if len(parts) != 2 {
 		return "", "", errors.Errorf("invalid pair %q", pair)
+	}
+
+	// each part should be a valid Sui address
+	for _, part := range parts {
+		if err := ValidateAddress(part); err != nil {
+			return "", "", errors.Wrapf(err, "invalid Sui address %q", part)
+		}
 	}
 
 	return parts[0], parts[1], nil

@@ -42,7 +42,6 @@ func TestSolanaWithdrawAndCallInvalidMsgEncoding(r *runner.E2ERunner, args []str
 
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
-		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
 		msgEncoded,
