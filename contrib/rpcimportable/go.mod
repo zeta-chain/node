@@ -18,9 +18,8 @@ replace (
     github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0
 )
 
-// needed because it is imported in cosmos-evm
 replace (
-    github.com/cosmos/evm/evmd => github.com/zeta-chain/evm/evmd v0.0.0-20250722151030-bffac1a2ccad
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250722151030-bffac1a2ccad
 )
 
 // uncomment this for local development/testing/debugging

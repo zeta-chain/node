@@ -72,7 +72,7 @@ func TestBackendTestSuite(t *testing.T) {
 func (s *TestSuite) SetupTest() {
 	ctx := server.NewDefaultContext()
 	ctx.Viper.Set("telemetry.global-labels", []interface{}{})
-	ctx.Viper.Set("evm.evm-chain-id", testChainID)
+	ctx.Viper.Set("evm.evm-chain-id", ChainID.EVMChainID)
 
 	baseDir := s.T().TempDir()
 	nodeDirName := "node"
@@ -266,7 +266,7 @@ func (s *TestSuite) buildFormattedBlock(
 
 func (s *TestSuite) generateTestKeyring(clientDir string) (keyring.Keyring, error) {
 	buf := bufio.NewReader(os.Stdin)
-	encCfg := encoding.MakeConfig(testChainID)
+	encCfg := encoding.MakeConfig(ChainID.EVMChainID)
 	return keyring.New(
 		sdk.KeyringServiceName(),
 		keyring.BackendTest,
