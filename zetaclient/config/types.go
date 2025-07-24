@@ -100,9 +100,9 @@ type Config struct {
 	// chain configs
 	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
 	BTCChainConfigs map[int64]BTCConfig `json:"BTCChainConfigs"`
-	SolanaConfig  SolanaConfig `json:"SolanaConfig"`
-	SuiConfig     SuiConfig    `json:"SuiConfig"`
-	TONConfig     TONConfig    `json:"TONConfig"`
+	SolanaConfig    SolanaConfig        `json:"SolanaConfig"`
+	SuiConfig       SuiConfig           `json:"SuiConfig"`
+	TONConfig       TONConfig           `json:"TONConfig"`
 
 	// compliance config
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
