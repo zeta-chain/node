@@ -178,7 +178,40 @@ we need an equivalent mechanism. This is achieved using a feature of TON called 
 This is documented as a "raw message" or "external message" in the official TON documentation: 
 https://docs.ton.org/v3/documentation/smart-contracts/message-management/sending-messages#types-of-messages
 
-### Withdrawals
+Let's take an example from `depositAndCall` operation:
+
+```go
+// taken from pkg/contracts/ton/gateway_parse.go
+
+type Deposit struct {
+  // Parsed from an incoming message (IM / internal message)
+  Sender ton.AccountID 
+
+  // Equals to depositLog.Amount
+  Amount math.Uint
+
+  // Parsed from message payload;
+  // Payload is just a part of the same IM
+  Recipient eth.Address 
+}
+
+type DepositAndCall struct {
+  Deposit
+
+  // Parsed from the payload using snakeCell encoding
+  CallData []byte 
+}
+
+// represents outbound external message that acts as an event log
+// It contains FACTUAL TON amount that we treat as CCTX deposit 
+// and a deposit fee based on the operation (not used by zetaclient as of now)
+type depositLog struct {
+  Amount     math.Uint
+  DepositFee math.Uint
+}
+```
+
+### Signing Outbound Transactions
 
 TON uses EdDSA for cryptography, but TSS uses ECDSA. TVM provides the `ECRECOVER` opcode that performs 
 ECDSA recovery of the TSS signature. The `protocol-contracts-ton` repository explains how this 
