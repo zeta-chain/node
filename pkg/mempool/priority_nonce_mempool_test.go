@@ -1,4 +1,4 @@
-// Forked from here and extended to test ethermint txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce_test.go
+// Forked from here and extended to test evm txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/types/mempool/priority_nonce_test.go
 // TODO: remove this once cosmos is upgraded: https://github.com/zeta-chain/node/issues/2156
 package mempool_test
 
@@ -279,7 +279,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("ethermint tx test: %s", tt.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("evm tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.NewPriorityMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -310,7 +310,7 @@ func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("cosmos + ethermint tx test: %s", tt.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("cosmos + evm tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.NewPriorityMempool()
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
@@ -413,7 +413,7 @@ func (s *MempoolTestSuite) TestIterator() {
 				iterator = iterator.Next()
 			}
 		})
-		t.Run(fmt.Sprintf("ethermint tx test: %s", tt.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("evm tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool
@@ -434,7 +434,7 @@ func (s *MempoolTestSuite) TestIterator() {
 				iterator = iterator.Next()
 			}
 		})
-		t.Run(fmt.Sprintf("cosmos + ethermint tx test: %s", tt.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("cosmos + evm tx test: %s", tt.name), func(t *testing.T) {
 			pool := zetamempool.DefaultPriorityMempool()
 
 			// create test txs and insert into mempool

@@ -354,10 +354,10 @@ func New(
 	//scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// add keepers
-	// use custom Ethermint account for contracts
+	// use custom Evm account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		authtypes.ProtoBaseAccount, // TODO evm: this is missing
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -511,7 +511,7 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// Create Ethermint keepers
+	// Create Evm keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
 
 	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(

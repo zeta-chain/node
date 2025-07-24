@@ -123,7 +123,7 @@ func (tx testUnsignedTx) String() string {
 	return fmt.Sprintf("tx a: %s, p: %d, n: %d", tx.address, tx.priority, tx.nonce)
 }
 
-// testEthTx is a dummy implementation of ethermint Tx used for testing.
+// testEthTx is a dummy implementation of evm Tx used for testing.
 type testEthTx struct {
 	id              int
 	priority        int64
@@ -148,7 +148,7 @@ func (tx testEthTx) GetSigners() ([][]byte, error) { panic("not implemented") }
 
 func (tx testEthTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("not implemented") }
 
-// testEthTx is a dummy implementation of unsigned ethermint Tx used for testing.
+// testEthTx is a dummy implementation of unsigned evm Tx used for testing.
 type testUnsignedEthTx struct {
 	id              int
 	priority        int64

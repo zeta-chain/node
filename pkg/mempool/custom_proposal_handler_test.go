@@ -1,4 +1,4 @@
-// Forked from here and extended to test ethermint txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils_test.go
+// Forked from here and extended to test evm txs https://github.com/cosmos/cosmos-sdk/blob/v0.47.10/baseapp/abci_utils_test.go
 // TODO: remove this once cosmos is upgraded: https://github.com/zeta-chain/node/issues/2156
 package mempool_test
 
@@ -221,7 +221,7 @@ func (s *ABCIUtilsTestSuite) TestCustomProposalHandler_PriorityNonceMempoolTxSel
 	s.Require().Equal(testTxs[7].size, 196)
 	s.Require().Equal(testTxs[8].size, 196)
 
-	// ethermint txs
+	// evm txs
 	s.Require().Equal(testTxs[15].size, 247)
 	s.Require().Equal(testTxs[16].size, 257)
 	s.Require().Equal(testTxs[17].size, 248)

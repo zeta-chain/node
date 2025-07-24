@@ -12,22 +12,22 @@ import (
 )
 
 // GetSendersWithNonce is used to extract sender and nonce information txs
-// if tx is ethermint, it is extracted using from and nonce field
+// if tx is evm, it is extracted using from and nonce field
 // if it's cosmos tx, default cosmos way using signatures is used
 func GetSendersWithNonce(tx sdk.Tx) ([]SenderWithNonce, error) {
 	const extensionOptionsEthereumTxTypeURL = "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx"
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
 		if len(opts) > 0 && opts[0].GetTypeUrl() == extensionOptionsEthereumTxTypeURL {
-			return getSendersWithNonceEthermint(tx)
+			return getSendersWithNonceEvm(tx)
 		}
 	}
 
 	return getSendersWithNonceCosmos(tx)
 }
 
-// getSendersWithNonceEthermint gets senders and nonces from signatures in ethertmint txs
-func getSendersWithNonceEthermint(tx sdk.Tx) ([]SenderWithNonce, error) {
+// getSendersWithNonceEvm gets senders and nonces from signatures in ethertmint txs
+func getSendersWithNonceEvm(tx sdk.Tx) ([]SenderWithNonce, error) {
 	for _, msg := range tx.GetMsgs() {
 		if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
 			return []SenderWithNonce{
@@ -38,7 +38,7 @@ func getSendersWithNonceEthermint(tx sdk.Tx) ([]SenderWithNonce, error) {
 			}, nil
 		}
 	}
-	return nil, fmt.Errorf("ethermint sender with nonce not found")
+	return nil, fmt.Errorf("evm sender with nonce not found")
 }
 
 type SenderWithNonce struct {
