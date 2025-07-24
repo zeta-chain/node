@@ -183,6 +183,7 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	// should be able to get balance of signer
@@ -229,6 +230,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
@@ -247,6 +249,7 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(cometBFTClient),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	expectedHeight := int64(10)

@@ -283,7 +283,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		deployerRunner.SetupZEVM()
+		deployerRunner.SetupZEVMProtocolContracts()
 		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{
@@ -293,7 +293,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if setupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
-		deployerRunner.SetupZRC20(zrc20Deployment)
+		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
 		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)

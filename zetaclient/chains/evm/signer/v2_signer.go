@@ -24,10 +24,10 @@ func (signer *Signer) SignOutboundFromCCTXV2(
 		return signer.signERC20CustodyWithdraw(ctx, outboundData)
 	case common.OutboundTypeERC20WithdrawAndCall:
 		return signer.signERC20CustodyWithdrawAndCall(ctx, outboundData)
-	case common.OutboundTypeZetaWithdrawRevert, common.OutboundTypeZetaWithdraw:
+	case common.OutboundTypeZetaWithdrawRevert:
 		return signer.signZetaConnectorWithdraw(ctx, outboundData)
-	case common.OutboundTypeZetaWithdrawAndCall:
-		return signer.signZetaConnectorWithdrawAndCall(ctx, outboundData)
+	// Add when implementing Zeta withdraws
+	//common.OutboundTypeZetaWithdraw and common.OutboundTypeZetaWithdrawAndCall
 	case common.OutboundTypeGasWithdrawAndCall, common.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
