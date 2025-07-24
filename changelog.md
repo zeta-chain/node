@@ -25,6 +25,7 @@
 ### Refactor
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
+* [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
 
 ### Tests
 

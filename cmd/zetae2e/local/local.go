@@ -311,6 +311,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
+	deployerRunner.FetchZetaSupply()
+
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -345,6 +347,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
+	//startingZetaSupply := deployerRunner.FetchZetaSupply()
 
 	// Run the proposals under the start sequence(proposals_e2e_start folder)
 	if !skipRegular {
@@ -582,7 +585,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.CheckZRC20BalanceAndSupply()
+	deployerRunner.VerifyAccounting(testLegacy)
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.

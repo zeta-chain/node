@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -56,4 +57,23 @@ func (k *Keeper) validateZetaSupply(ctx sdk.Context, amount *big.Int) error {
 		return types.ErrMaxSupplyReached
 	}
 	return nil
+}
+
+func (k Keeper) executeWithMintedZeta(
+	ctx sdk.Context,
+	amount *big.Int,
+	operation func(sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error),
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+	tmpCtx, commit := ctx.CacheContext()
+
+	if err := k.MintZetaToFungibleModule(tmpCtx, amount); err != nil {
+		return nil, false, err
+	}
+
+	res, isCrossChain, err := operation(tmpCtx)
+	if err == nil {
+		commit()
+	}
+
+	return res, isCrossChain, err
 }

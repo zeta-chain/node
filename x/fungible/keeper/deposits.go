@@ -142,17 +142,15 @@ func (k Keeper) processZetaDeposit(
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// Deposit/Mint ZETA to the protocol address which will then be used to make the calls below
 	// NOTE: DepositZeta and DepositAndCallZeta expect the fungible module account to have enough ZETA
-	if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
-		return nil, false, err
-	}
+	return k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		if isCrossChainCall {
+			res, err := k.DepositAndCallZeta(tmpCtx, context, amount, to, message)
+			return res, true, err
+		}
 
-	if isCrossChainCall {
-		res, err := k.DepositAndCallZeta(ctx, context, amount, to, message)
-		return res, true, err
-	}
-
-	res, err := k.DepositZeta(ctx, to, amount)
-	return res, false, err
+		res, err := k.DepositZeta(tmpCtx, to, amount)
+		return res, false, err
+	})
 }
 
 // processZRC20Deposit handles ZRC20 token deposits [ZRC20 tokens exist for ERC20 and GAS tokens]
@@ -267,10 +265,10 @@ func (k Keeper) ProcessAbort(
 		}
 	}
 	if coinType == coin.CoinType_Zeta {
-		if err := k.MintZetaToFungibleModule(ctx, amount); err != nil {
-			return nil, err
-		}
-		_, err := k.DepositZeta(ctx, abortAddress, amount)
+		_, _, err := k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			res, err := k.DepositZeta(tmpCtx, abortAddress, amount)
+			return res, false, err
+		})
 		if err != nil {
 			return nil, err
 		}

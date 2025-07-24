@@ -36,6 +36,37 @@ copy_operator_keys() {
   echo "Key copying process completed"
 }
 
+# Copy the genesis file from zetacore0 to the orchestrator
+copy_genesis_file() {
+  local source_node="zetacore0"
+  local source_path="/root/.zetacored/config/genesis.json"
+  local dest_dir="/root/.zetacored/data"
+  local dest_path="$dest_dir/genesis.json"
+
+  # Check if source node is accessible
+  if ! ssh -q root@$source_node "exit" 2>/dev/null; then
+    echo "Error: Cannot connect to $source_node"
+    return 1
+  fi
+
+  # Check if genesis file exists on source node
+  if ! ssh root@$source_node "test -f $source_path"; then
+    echo "Error: Genesis file not found at $source_path on $source_node"
+    return 1
+  fi
+
+  # Create destination directory if it doesn't exist
+  mkdir -p "$dest_dir"
+
+  # Copy the genesis file
+  if scp root@$source_node:$source_path "$dest_path"; then
+    echo "Genesis file successfully copied from $source_node to $dest_path"
+  else
+    echo "Error: Failed to copy genesis file from $source_node"
+    return 1
+  fi
+}
+
 get_zetacored_version() {
   retries=10
   node_info=""
@@ -181,6 +212,7 @@ fund_eth_from_config '.additional_accounts.user_emissions_withdraw.evm_address' 
 mkdir -p /root/.zetacored/keyring-test/
 # Copy the keys from the localnet directory to the keyring-test directory
 copy_operator_keys
+copy_genesis_file
 
 # unlock local solana relayer accounts
 if host solana > /dev/null; then
