@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -181,7 +180,7 @@ func (a *AppContext) updateChainRegistry(
 	slices.Sort(existingChainIDs)
 
 	// 2. Compare existing chains with fresh ones
-	if len(existingChainIDs) > 0 && !slicesEqual(existingChainIDs, freshChainIDs) {
+	if len(existingChainIDs) > 0 && !slices.Equal(existingChainIDs, freshChainIDs) {
 		a.logger.Warn().
 			Ints64("chains.current", existingChainIDs).
 			Ints64("chains.new", freshChainIDs).
@@ -244,18 +243,4 @@ func isZeta(chainID int64) bool {
 // actually chainParams is a concept of observer
 func zetaObserverChainParams(chainID int64) *observertypes.ChainParams {
 	return &observertypes.ChainParams{ChainId: chainID, IsSupported: true}
-}
-
-func slicesEqual[T constraints.Ordered](a, b []T) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }
