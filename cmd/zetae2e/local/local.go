@@ -347,7 +347,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	// always mint ERC20 before every test execution
 	deployerRunner.MintERC20OnEVM(1e10)
-	//startingZetaSupply := deployerRunner.FetchZetaSupply()
 
 	// Run the proposals under the start sequence(proposals_e2e_start folder)
 	if !skipRegular {
