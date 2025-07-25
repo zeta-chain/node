@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/utils"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -27,7 +28,6 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 		if err := r.runTestWithProtocolBalanceCheck(e2eTest); err != nil {
 			return err
 		}
-
 	}
 	return nil
 }

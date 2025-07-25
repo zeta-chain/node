@@ -10,11 +10,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
-
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
@@ -37,7 +37,7 @@ type Response struct {
 }
 
 func (r *E2ERunner) VerifyAccounting(testLegacy bool) {
-	r.Logger.Print("Checking ZRC20 Balance vs Supply")
+	r.Logger.Print("Verifying accounting")
 	r.checkETHTSSBalance()
 	r.checkERC20TSSBalance()
 	r.checkZetaTSSBalance(testLegacy)
@@ -71,7 +71,14 @@ func (r *E2ERunner) checkETHTSSBalance() {
 	zrc20Supply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	require.NoError(r, err)
 
-	require.GreaterOrEqual(r, tssTotalBalance.Cmp(zrc20Supply), 0, "ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssTotalBalance, zrc20Supply)
+	require.GreaterOrEqual(
+		r,
+		tssTotalBalance.Cmp(zrc20Supply),
+		0,
+		"ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ",
+		tssTotalBalance,
+		zrc20Supply,
+	)
 	r.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssTotalBalance, zrc20Supply)
 }
 
@@ -163,7 +170,14 @@ func (r *E2ERunner) CheckSUITSSBalance() {
 	// https://github.com/zeta-chain/protocol-contracts-sui/issues/58
 	zrc20Supply = zrc20Supply.Sub(zrc20Supply, big.NewInt(100000000))
 
-	require.GreaterOrEqual(r, gatewayBalance.Cmp(zrc20Supply), 0, "SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ", gatewayBalance, zrc20Supply)
+	require.GreaterOrEqual(
+		r,
+		gatewayBalance.Cmp(zrc20Supply),
+		0,
+		"SUI: TSS balance (%d) < ZRC20 TotalSupply (%d) ",
+		gatewayBalance,
+		zrc20Supply,
+	)
 	r.Logger.Info("SUI: TSS balance (%d) >= ZRC20 TotalSupply (%d)", gatewayBalance, zrc20Supply)
 }
 
@@ -174,14 +188,24 @@ func (r *E2ERunner) checkERC20TSSBalance() {
 	erc20zrc20Supply, err := r.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	require.NoError(r, err)
 
-	require.GreaterOrEqual(r, custodyBalance.Cmp(erc20zrc20Supply), 0, "ERC20: custody balance (%d) < ZRC20 TotalSupply (%d) ", custodyBalance, erc20zrc20Supply)
+	require.GreaterOrEqual(
+		r,
+		custodyBalance.Cmp(erc20zrc20Supply),
+		0,
+		"ERC20: custody balance (%d) < ZRC20 TotalSupply (%d) ",
+		custodyBalance,
+		erc20zrc20Supply,
+	)
 	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyBalance, erc20zrc20Supply)
 }
 
 func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
-	unknownNumber, ok := sdkmath.NewIntFromString("400000000000000000")
+	// zetaMintedPoolSetup is the amount of Zeta minted to add liquidy to a gas token pool when setting it up
+	// https://github.com/zeta-chain/node/blob/854040f044d198a0453a7b9245d544debd9da055/x/fungible/keeper/gas_coin_and_pool.go#L88
+	zetaMintedPoolSetup, ok := sdkmath.NewIntFromString("400000000000000000")
+
 	require.True(r, ok, "failed to parse unknown number for zeta tokens minted during setup")
-	zetaTokensMintedDuringSetup := r.GetTokensMintedAtGenesis().Add(unknownNumber)
+	zetaTokensMintedDuringSetup := r.GetTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
 
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
@@ -200,7 +224,14 @@ func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
 		zetaLocked = zetaLocked.Sub(oneZeta)
 	}
 
-	require.True(r, zetaMinted.Equal(zetaLocked), "ZETA: Connector balance (%s) != ZETA TotalSupply (%s) + AbortedAmount (%d)", zetaLocked.String(), zetaSupply.String(), abortedAmount.String())
+	require.True(
+		r,
+		zetaMinted.Equal(zetaLocked),
+		"ZETA: Connector balance (%s) != ZETA TotalSupply (%s) + AbortedAmount (%d)",
+		zetaLocked.String(),
+		zetaSupply.String(),
+		abortedAmount.String(),
+	)
 }
 
 func (r *E2ERunner) GetTokensMintedAtGenesis() sdkmath.Int {
@@ -228,7 +259,7 @@ func (r *E2ERunner) FetchZetaSupply() sdkmath.Int {
 	})
 	require.NoError(r, err)
 	require.NotNil(r, res)
-	r.Logger.Print("ZetaSupply: %s", res.Amount.Amount.String())
+
 	return res.Amount.Amount
 }
 
