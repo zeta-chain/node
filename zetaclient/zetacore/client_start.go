@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	zetaauthz "github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/authz"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -107,11 +106,6 @@ func ensureBlocksProduction(ctx context.Context, zc *Client) error {
 
 // prepareZetacoreClient prepares the zetacore client for use.
 func prepareZetacoreClient(ctx context.Context, zc *Client, cfg *config.Config) error {
-	// Set grantee account number and sequence number
-	if err := zc.SetAccountNumber(zetaauthz.ZetaClientGranteeKey); err != nil {
-		return errors.Wrap(err, "failed to set account number")
-	}
-
 	res, err := zc.GetNodeInfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get node info")

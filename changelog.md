@@ -10,7 +10,6 @@
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 
-
 ### Fixes
 
 * [3953](https://github.com/zeta-chain/node/pull/3953) - skip Bitcoin outbound when scanning inbound transactions
@@ -20,11 +19,14 @@
 * [3917](https://github.com/zeta-chain/node/pull/3917) - prevent jailed observers from voting
 * [3971](https://github.com/zeta-chain/node/pull/3971) - zetaclient should load restricted addresses correctly from `zetaclient_restricted_addresses.json`
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
+* [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 
 ### Refactor
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
+* [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
+* [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
 
 ### Tests
 
@@ -35,6 +37,7 @@
 * [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
 * [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
 * [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
+* [4040](https://github.com/zeta-chain/node/pull/4040) - make Bitcoin inscription e2e test working for live networks
 
 ## v32.0.0
 

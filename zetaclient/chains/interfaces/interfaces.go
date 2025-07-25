@@ -91,7 +91,7 @@ type ZetacoreClient interface {
 	GetPendingNoncesByChain(ctx context.Context, chainID int64) (observertypes.PendingNonces, error)
 
 	GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutboundTracker(ctx context.Context, chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetOutboundTracker(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.OutboundTracker, error)
 	GetAllOutboundTrackerByChain(
 		ctx context.Context,
 		chainID int64,

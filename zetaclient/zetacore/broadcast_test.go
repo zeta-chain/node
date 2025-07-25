@@ -81,6 +81,7 @@ func TestBroadcast(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
 			withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+			withAccountRetriever(t, 5, 4),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
@@ -97,6 +98,7 @@ func TestBroadcast(t *testing.T) {
 			withCometBFT(
 				mocks.NewSDKClientWithErr(t, errors.New("account sequence mismatch, expected 5 got 4"), 32),
 			),
+			withAccountRetriever(t, 5, 4),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
