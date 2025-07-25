@@ -274,7 +274,7 @@ func (k Keeper) ProcessAbort(
 			amount,
 			func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 				res, err := k.DepositZeta(tmpCtx, abortAddress, amount)
-				return res, false, err
+				return res, false, err // return false for isCrossChainCall
 			},
 		)
 		if err != nil {

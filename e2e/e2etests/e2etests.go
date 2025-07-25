@@ -1868,7 +1868,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestLegacyZetaDepositAndCallAbortName,
-		"deposit ZETA from Ethereum to ZEVM",
+		"deposit and ZETA from Ethereum to ZEVM and call a contract.The cctx reverts and then aborts",
 		[]runner.ArgDefinition{
 			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},

@@ -42,6 +42,12 @@ func (r *E2ERunner) VerifyAccounting(testLegacy bool) {
 	r.checkERC20TSSBalance()
 	r.checkZetaTSSBalance(testLegacy)
 	r.CheckBTCTSSBalance()
+	r.checkProtocolBalance()
+}
+
+func (r *E2ERunner) checkProtocolBalance() {
+	balance := r.checkProtocolAddressBalance(config.BaseDenom)
+	require.True(r, balance.IsZero())
 }
 
 func (r *E2ERunner) checkETHTSSBalance() {
@@ -203,21 +209,23 @@ func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
 	// zetaMintedPoolSetup is the amount of Zeta minted to add liquidy to a gas token pool when setting it up
 	// https://github.com/zeta-chain/node/blob/854040f044d198a0453a7b9245d544debd9da055/x/fungible/keeper/gas_coin_and_pool.go#L88
 	zetaMintedPoolSetup, ok := sdkmath.NewIntFromString("400000000000000000")
-
-	require.True(r, ok, "failed to parse unknown number for zeta tokens minted during setup")
-	zetaTokensMintedDuringSetup := r.GetTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
+	require.True(r, ok)
+	zetaTokensMintedDuringSetup := r.getTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
 
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
-
 	zetaLockedConnectorNative, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorNativeAddr)
 	require.NoError(r, err, "BalanceOf failed for new connector")
 
-	zetaSupply := r.FetchZetaSupply()
+	zetaSupply := r.fetchZetaSupply()
+	// Subtract the amount of Zeta minted during setup from the total supply to fetch the number of zeta tokens created by e2e tests
 	zetaSupply = zetaSupply.Sub(zetaTokensMintedDuringSetup)
-	abortedAmount := r.FetchAbortedAmount()
-
+	abortedAmount := r.fetchAbortedAmount()
 	zetaMinted := zetaSupply.Add(abortedAmount)
+
+	// Fetch the total ZETA locked in the legacy and native connectors, remove 1 ZETA if this is a legacy test
+	// This is to account for the tokens from the test TestZetaDepositRestricted
+	// Related issue : https://github.com/zeta-chain/node/issues/4057
 	zetaLocked := sdkmath.NewIntFromBigInt(big.NewInt(0).Add(zetaLockedLegacyConnector, zetaLockedConnectorNative))
 	if testLegacy {
 		oneZeta := sdkmath.NewInt(1e18)
@@ -234,7 +242,8 @@ func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
 	)
 }
 
-func (r *E2ERunner) GetTokensMintedAtGenesis() sdkmath.Int {
+// getTokensMintedAtGenesis retrieves the total amount of ZETA tokens minttend from the genesis file.
+func (r *E2ERunner) getTokensMintedAtGenesis() sdkmath.Int {
 	genesisFilePath := "/root/.zetacored/data/genesis.json"
 	_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 	require.NoError(r, err, "failed to get genesis state from file: %s", genesisFilePath)
@@ -253,7 +262,8 @@ func (r *E2ERunner) GetTokensMintedAtGenesis() sdkmath.Int {
 	return bankState.Supply.AmountOf(config.BaseDenom)
 }
 
-func (r *E2ERunner) FetchZetaSupply() sdkmath.Int {
+// fetchZetaSupply retrieves the total supply of ZETA tokens from the Zetacore bank module.
+func (r *E2ERunner) fetchZetaSupply() sdkmath.Int {
 	res, err := r.Clients.Zetacore.Bank.SupplyOf(r.Ctx, &banktypes.QuerySupplyOfRequest{
 		Denom: config.BaseDenom,
 	})
@@ -263,7 +273,8 @@ func (r *E2ERunner) FetchZetaSupply() sdkmath.Int {
 	return res.Amount.Amount
 }
 
-func (r *E2ERunner) FetchAbortedAmount() sdkmath.Int {
+// fetchAbortedAmount retrieves the total amount of aborted ZETA tokens from the Zetacore crosschain module.
+func (r *E2ERunner) fetchAbortedAmount() sdkmath.Int {
 	res, err := r.Clients.Zetacore.Crosschain.ZetaAccounting(r.Ctx, &crosschaintypes.QueryZetaAccountingRequest{})
 	require.NoError(r, err)
 	require.NotNil(r, res)

@@ -44,7 +44,7 @@ func (r *E2ERunner) ZetaDeposit() *ethtypes.Transaction {
 	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
-// LegacyDepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount using legacy protocol contracts
+// LegacyDepositZetaWithAmountAndPayload deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount and payload using legacy protocol contracts
 func (r *E2ERunner) LegacyDepositZetaWithAmountAndPayload(
 	to ethcommon.Address,
 	amount *big.Int,

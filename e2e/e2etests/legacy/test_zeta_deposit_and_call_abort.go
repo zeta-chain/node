@@ -8,6 +8,7 @@ import (
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
+// TestZetaDepositAndCallAbort tests a deposit with a payload that causes the cctx to be aborted.
 func TestZetaDepositAndCallAbort(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 

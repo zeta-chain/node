@@ -33,13 +33,13 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 }
 
 func (r *E2ERunner) runTestWithProtocolBalanceCheck(e2eTest E2ETest) error {
-	balancesBefore := r.checkProtocolAddressBalance()
+	balancesBefore := r.checkProtocolAddressBalance(config.BaseDenom)
 
 	if err := r.RunE2ETest(e2eTest); err != nil {
 		return err
 	}
 
-	balancesAfter := r.checkProtocolAddressBalance()
+	balancesAfter := r.checkProtocolAddressBalance(config.BaseDenom)
 	if !balancesAfter.Equal(balancesBefore) {
 		r.Logger.Print("⚠️ protocol address balance changed during test %s: before %s, after %s",
 			e2eTest.Name, balancesBefore.String(), balancesAfter.String())
@@ -48,10 +48,10 @@ func (r *E2ERunner) runTestWithProtocolBalanceCheck(e2eTest E2ETest) error {
 	return nil
 }
 
-func (r *E2ERunner) checkProtocolAddressBalance() sdkmath.Int {
+func (r *E2ERunner) checkProtocolAddressBalance(denom string) sdkmath.Int {
 	res, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
 		Address: fungibletypes.ModuleAddress.String(),
-		Denom:   config.BaseDenom,
+		Denom:   denom,
 	})
 	require.NoError(r, err, "failed to get protocol address balance")
 	return res.GetBalance().Amount
