@@ -16,8 +16,14 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/rpc/types"
+)
+
+var (
+	errInvalidBlockRange      = errors.New("invalid block range params")
+	errPendingLogsUnsupported = errors.New("pending logs are not supported")
 )
 
 // FilterAPI gathers
@@ -536,6 +542,11 @@ func (api *PublicFilterAPI) GetLogs(ctx context.Context, crit filters.FilterCrit
 		end := rpc.LatestBlockNumber.Int64()
 		if crit.ToBlock != nil {
 			end = crit.ToBlock.Int64()
+		}
+		// Block numbers below 0 are special cases.
+		// for more info, https://github.com/ethereum/go-ethereum/blob/v1.15.11/eth/filters/api.go#L360
+		if begin > 0 && end > 0 && begin > end {
+			return nil, errInvalidBlockRange
 		}
 		// Construct the range filter
 		filter = NewRangeFilter(api.logger, api.backend, begin, end, crit.Addresses, crit.Topics)

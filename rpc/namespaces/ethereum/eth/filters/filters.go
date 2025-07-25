@@ -12,6 +12,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/rpc/backend"
@@ -91,13 +92,13 @@ func newFilter(logger log.Logger, backend Backend, criteria filters.FilterCriter
 	}
 }
 
-const (
-	maxToOverhang = 600
-)
-
 // Logs searches the blockchain for matching log entries, returning all from the
 // first block that contains matches, updating the start of the filter accordingly.
 func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*ethtypes.Log, error) {
+	if blockLimit == 0 {
+		return nil, nil
+	}
+
 	logs := []*ethtypes.Log{}
 	var err error
 
@@ -128,6 +129,12 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		return f.blockLogs(blockRes, bloom)
 	}
 
+	// Disallow pending logs.
+	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() ||
+		f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
+		return nil, errPendingLogsUnsupported
+	}
+
 	// Figure out the limits of the filter range
 	header, err := f.backend.HeaderByNumber(types.EthLatestBlockNumber)
 	if err != nil {
@@ -139,34 +146,46 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		return nil, nil
 	}
 
-	head := header.Number.Int64()
-	if f.criteria.FromBlock.Int64() < 0 {
-		f.criteria.FromBlock = big.NewInt(head)
-	} else if f.criteria.FromBlock.Int64() == 0 {
-		f.criteria.FromBlock = big.NewInt(1)
-	}
-	if f.criteria.ToBlock.Int64() < 0 {
-		f.criteria.ToBlock = big.NewInt(head)
-	} else if f.criteria.ToBlock.Int64() == 0 {
-		f.criteria.ToBlock = big.NewInt(1)
+	head := header.Number.Uint64()
+	resolveSpecial := func(number int64) (uint64, error) {
+		switch number {
+		case rpc.LatestBlockNumber.Int64(), rpc.FinalizedBlockNumber.Int64(), rpc.SafeBlockNumber.Int64():
+			return head, nil
+		case rpc.EarliestBlockNumber.Int64():
+			return 1, nil
+		default:
+			if number < 0 {
+				return 0, errors.New("negative block number")
+			}
+			return uint64(number), nil
+		}
 	}
 
-	if f.criteria.ToBlock.Int64()-f.criteria.FromBlock.Int64() > blockLimit {
-		return nil, fmt.Errorf("maximum [from, to] blocks distance: %d", blockLimit)
+	from, err := resolveSpecial(f.criteria.FromBlock.Int64())
+	if err != nil {
+		return nil, err
+	}
+	to, err := resolveSpecial(f.criteria.ToBlock.Int64())
+	if err != nil {
+		return nil, err
 	}
 
 	// check bounds
-	if f.criteria.FromBlock.Int64() > head {
-		return []*ethtypes.Log{}, nil
-	} else if f.criteria.ToBlock.Int64() > head+maxToOverhang {
-		f.criteria.ToBlock = big.NewInt(head + maxToOverhang)
+	if from > head || from > to {
+		return nil, errInvalidBlockRange
 	}
 
-	from := f.criteria.FromBlock.Int64()
-	to := f.criteria.ToBlock.Int64()
+	if to > head {
+		return nil, errInvalidBlockRange
+	}
+
+	if blockLimit > 0 && to-from > uint64(blockLimit) {
+		return nil, fmt.Errorf("maximum [from, to] blocks distance: %d", blockLimit)
+	}
 
 	for height := from; height <= to; height++ {
-		blockRes, err := f.backend.TendermintBlockResultByNumber(&height)
+		h := int64(height) //#nosec G115
+		blockRes, err := f.backend.TendermintBlockResultByNumber(&h)
 		if err != nil {
 			f.logger.Debug("failed to fetch block result from Tendermint", "height", height, "error", err.Error())
 			return nil, nil

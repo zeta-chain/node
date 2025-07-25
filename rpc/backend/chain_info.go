@@ -2,15 +2,19 @@ package backend
 
 import (
 	"fmt"
+	gomath "math"
 	"math/big"
+	"sync"
 
-	"cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -66,7 +70,7 @@ func (b *Backend) BaseFee(blockRes *cmtrpctypes.ResultBlockResults) (*big.Int, e
 		for i := len(blockRes.FinalizeBlockEvents) - 1; i >= 0; i-- {
 			evt := blockRes.FinalizeBlockEvents[i]
 			if evt.Type == evmtypes.EventTypeFeeMarket && len(evt.Attributes) > 0 {
-				baseFee, ok := math.NewIntFromString(evt.Attributes[0].Value)
+				baseFee, ok := sdkmath.NewIntFromString(evt.Attributes[0].Value)
 				if ok {
 					return baseFee.BigInt(), nil
 				}
@@ -140,20 +144,45 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 	return address, nil
 }
 
+var (
+	errInvalidPercentile = fmt.Errorf("invalid reward percentile")
+	errRequestBeyondHead = fmt.Errorf("request beyond head block")
+)
+
 // FeeHistory returns data relevant for fee estimation based on the specified range of blocks.
 func (b *Backend) FeeHistory(
-	userBlockCount, // number blocks to fetch, maximum is 100
+	userBlockCount math.HexOrDecimal64, // number blocks to fetch, maximum is 100
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
-	blockEnd := int64(lastBlock) //#nosec G115 -- checked for int overflow already
-
-	if blockEnd < 0 {
-		blockNumber, err := b.BlockNumber()
-		if err != nil {
-			return nil, err
+	for i, p := range rewardPercentiles {
+		if p < 0 || p > 100 {
+			return nil, fmt.Errorf("%w: %f", errInvalidPercentile, p)
 		}
-		blockEnd = int64(blockNumber) //#nosec G115 -- checked for int overflow already
+		if i > 0 && p < rewardPercentiles[i-1] {
+			return nil, fmt.Errorf("%w: #%d:%f > #%d:%f", errInvalidPercentile, i-1, rewardPercentiles[i-1], i, p)
+		}
+	}
+	blkNumber, err := b.BlockNumber()
+	if err != nil {
+		return nil, err
+	}
+	blockNumber := int64(blkNumber) //#nosec G115
+	blockEnd := int64(lastBlock)    //#nosec G115
+
+	switch lastBlock {
+	case rpc.EarliestBlockNumber:
+		blockEnd = 0
+	case rpc.SafeBlockNumber, rpc.FinalizedBlockNumber, rpc.LatestBlockNumber, rpc.PendingBlockNumber:
+		blockEnd = blockNumber
+	default:
+		if blockEnd < 0 {
+			blockEnd = blockNumber
+		}
+	}
+
+	if blockNumber < blockEnd {
+		return nil, fmt.Errorf("%w: requested %d, head %d", errRequestBeyondHead, blockEnd, blockNumber)
 	}
 
 	blocks := int64(userBlockCount)                     // #nosec G115 -- checked for int overflow already
@@ -162,7 +191,7 @@ func (b *Backend) FeeHistory(
 		return nil, fmt.Errorf("FeeHistory user block count %d higher than %d", blocks, maxBlockCount)
 	}
 
-	if blockEnd+1 < blocks {
+	if blockEnd < gomath.MaxInt64 && blockEnd+1 < blocks {
 		blocks = blockEnd + 1
 	}
 	// Ensure not trying to retrieve before genesis.
@@ -181,46 +210,97 @@ func (b *Backend) FeeHistory(
 
 	// rewards should only be calculated if reward percentiles were included
 	calculateRewards := rewardCount != 0
-
-	// fetch block
-	for blockID := blockStart; blockID <= blockEnd; blockID++ {
-		index := int32(blockID - blockStart) // #nosec G115
-		// tendermint block
-		tendermintblock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(blockID))
-		if tendermintblock == nil {
-			return nil, err
-		}
-
-		// eth block
-		ethBlock, err := b.GetBlockByNumber(rpctypes.BlockNumber(blockID), true)
-		if ethBlock == nil {
-			return nil, err
-		}
-
-		// tendermint block result
-		tendermintBlockResult, err := b.RPCClient.BlockResults(b.Ctx, &tendermintblock.Block.Height)
-		if tendermintBlockResult == nil {
-			b.Logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
-			return nil, err
-		}
-
-		oneFeeHistory := rpctypes.OneFeeHistory{}
-		err = b.processBlock(tendermintblock, &ethBlock, rewardPercentiles, tendermintBlockResult, &oneFeeHistory)
-		if err != nil {
-			return nil, err
-		}
-
-		// copy
-		thisBaseFee[index] = (*hexutil.Big)(oneFeeHistory.BaseFee)
-		thisBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBaseFee)
-		thisGasUsedRatio[index] = oneFeeHistory.GasUsedRatio
-		if calculateRewards {
-			for j := 0; j < rewardCount; j++ {
-				reward[index][j] = (*hexutil.Big)(oneFeeHistory.Reward[j])
-				if reward[index][j] == nil {
-					reward[index][j] = (*hexutil.Big)(big.NewInt(0))
-				}
+	const maxBlockFetchers = 4
+	for blockID := blockStart; blockID <= blockEnd; blockID += maxBlockFetchers {
+		wg := sync.WaitGroup{}
+		wgDone := make(chan bool)
+		chanErr := make(chan error)
+		for i := 0; i < maxBlockFetchers; i++ {
+			if blockID+int64(i) >= blockEnd+1 {
+				break
 			}
+			value := blockID - blockStart + int64(i)
+			if value > gomath.MaxInt32 || value < gomath.MinInt32 {
+				return nil, fmt.Errorf("integer overflow: calculated value %d exceeds int32 limits", value)
+			}
+			wg.Add(1)
+			go func(index int32) {
+				defer func() {
+					if r := recover(); r != nil {
+						err = errorsmod.Wrapf(errorsmod.ErrPanic, "%v", r)
+						b.Logger.Error("FeeHistory panicked", "error", err)
+						chanErr <- err
+					}
+					wg.Done()
+				}()
+				// fetch block
+				// tendermint block
+				blockNum := rpctypes.BlockNumber(blockStart + int64(index))
+				tendermintblock, err := b.TendermintBlockByNumber(blockNum)
+				if tendermintblock == nil {
+					chanErr <- err
+					return
+				}
+
+				// eth block
+				ethBlock, err := b.GetBlockByNumber(blockNum, true)
+				if ethBlock == nil {
+					chanErr <- err
+					return
+				}
+
+				// tendermint block result
+				tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
+				if tendermintBlockResult == nil {
+					b.Logger.Debug(
+						"block result not found",
+						"height",
+						tendermintblock.Block.Height,
+						"error",
+						err.Error(),
+					)
+					chanErr <- err
+					return
+				}
+
+				oneFeeHistory := rpctypes.OneFeeHistory{}
+				err = b.ProcessBlocker(
+					tendermintblock,
+					&ethBlock,
+					rewardPercentiles,
+					tendermintBlockResult,
+					&oneFeeHistory,
+				)
+				if err != nil {
+					chanErr <- err
+					return
+				}
+
+				// copy
+				thisBaseFee[index] = (*hexutil.Big)(oneFeeHistory.BaseFee)
+				// only use NextBaseFee as last item to avoid concurrent write
+				if int(index) == len(thisBaseFee)-2 {
+					thisBaseFee[index+1] = (*hexutil.Big)(oneFeeHistory.NextBaseFee)
+				}
+				thisGasUsedRatio[index] = oneFeeHistory.GasUsedRatio
+				if calculateRewards {
+					for j := 0; j < rewardCount; j++ {
+						reward[index][j] = (*hexutil.Big)(oneFeeHistory.Reward[j])
+						if reward[index][j] == nil {
+							reward[index][j] = (*hexutil.Big)(big.NewInt(0))
+						}
+					}
+				}
+			}(int32(value))
+		}
+		go func() {
+			wg.Wait()
+			close(wgDone)
+		}()
+		select {
+		case <-wgDone:
+		case err := <-chanErr:
+			return nil, err
 		}
 	}
 

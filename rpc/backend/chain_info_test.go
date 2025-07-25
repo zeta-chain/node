@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"google.golang.org/grpc/metadata"
 
@@ -16,13 +17,13 @@ import (
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	rpc "github.com/zeta-chain/node/rpc/types"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *TestSuite) TestBaseFee() {
-	baseFee := math.NewInt(1)
+	baseFee := sdkmath.NewInt(1)
 
 	testCases := []struct {
 		name         string
@@ -322,13 +323,14 @@ func (s *TestSuite) TestGlobalMinGasPrice() {
 
 func (s *TestSuite) TestFeeHistory() {
 	testCases := []struct {
-		name           string
-		registerMock   func(validator sdk.AccAddress)
-		userBlockCount ethrpc.BlockNumber
-		latestBlock    ethrpc.BlockNumber
-		expFeeHistory  *rpc.FeeHistoryResult
-		validator      sdk.AccAddress
-		expPass        bool
+		name              string
+		registerMock      func(validator sdk.AccAddress)
+		userBlockCount    math.HexOrDecimal64
+		latestBlock       ethrpc.BlockNumber
+		expFeeHistory     *rpc.FeeHistoryResult
+		validator         sdk.AccAddress
+		expPass           bool
+		targetNewBaseFees []*big.Int
 	}{
 		{
 			"fail - can't get params ",
@@ -343,6 +345,7 @@ func (s *TestSuite) TestFeeHistory() {
 			nil,
 			nil,
 			false,
+			nil,
 		},
 		{
 			"fail - user block count higher than max block count ",
@@ -357,12 +360,16 @@ func (s *TestSuite) TestFeeHistory() {
 			nil,
 			nil,
 			false,
+			nil,
 		},
 		{
 			"fail - Tendermint block fetching error ",
 			func(_ sdk.AccAddress) {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				var header metadata.MD
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
 				RegisterBlockError(client, ethrpc.BlockNumber(1).Int64())
 			},
 			1,
@@ -370,12 +377,33 @@ func (s *TestSuite) TestFeeHistory() {
 			nil,
 			nil,
 			false,
+			nil,
+		},
+		{
+			"fail - Tendermint block fetching panic",
+			func(_ sdk.AccAddress) {
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				var header metadata.MD
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
+				RegisterBlockPanic(client, ethrpc.BlockNumber(1).Int64())
+			},
+			1,
+			1,
+			nil,
+			nil,
+			false,
+			nil,
 		},
 		{
 			"fail - Eth block fetching error",
-			func(sdk.AccAddress) {
+			func(_ sdk.AccAddress) {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				var header metadata.MD
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				RegisterParams(queryClient, &header, 1)
 				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
 				s.Require().NoError(err)
 				RegisterBlockResultsError(client, 1)
@@ -385,44 +413,56 @@ func (s *TestSuite) TestFeeHistory() {
 			nil,
 			nil,
 			true,
+			nil,
 		},
 		{
-			"fail - Invalid base fee",
+			"pass - skip invalid base fee",
 			func(validator sdk.AccAddress) {
-				// baseFee := math.NewInt(1)
-				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				var header metadata.MD
+				RegisterParams(queryClient, &header, 1)
 				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)
 				s.Require().NoError(err)
-				RegisterBaseFeeError(QueryClient)
-				RegisterValidatorAccount(QueryClient, validator)
+				RegisterBaseFeeError(queryClient)
+				RegisterValidatorAccount(queryClient, validator)
 				RegisterConsensusParams(client, 1)
+				fQueryClient := s.backend.QueryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				RegisterFeeMarketParams(fQueryClient, 1)
 			},
 			1,
 			1,
-			nil,
+			&rpc.FeeHistoryResult{
+				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
+				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(new(big.Int).SetBits([]big.Word{}))},
+				GasUsedRatio: []float64{0},
+				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
-			false,
+			true,
+			nil,
 		},
 		{
 			"pass - Valid FeeHistoryResults object",
 			func(validator sdk.AccAddress) {
 				var header metadata.MD
-				baseFee := math.NewInt(1)
-				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				baseFee := sdkmath.NewInt(1)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				fQueryClient := s.backend.QueryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
 				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)
 				s.Require().NoError(err)
-				RegisterBaseFee(QueryClient, baseFee)
-				RegisterValidatorAccount(QueryClient, validator)
+				RegisterBaseFee(queryClient, baseFee)
+				RegisterValidatorAccount(queryClient, validator)
 				RegisterConsensusParams(client, 1)
-				RegisterParams(QueryClient, &header, 1)
+				RegisterParams(queryClient, &header, 1)
+				RegisterFeeMarketParams(fQueryClient, 1)
 			},
 			1,
 			1,
@@ -430,24 +470,129 @@ func (s *TestSuite) TestFeeHistory() {
 				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
 				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
 				GasUsedRatio: []float64{0},
-				Reward: [][]*hexutil.Big{
-					{
-						(*hexutil.Big)(big.NewInt(0)),
-						(*hexutil.Big)(big.NewInt(0)),
-						(*hexutil.Big)(big.NewInt(0)),
-						(*hexutil.Big)(big.NewInt(0)),
-					},
-				},
+				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
 			},
 			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
 			true,
+			nil,
+		},
+		{
+			"pass - Concurrent FeeHistoryResults object",
+			func(validator sdk.AccAddress) {
+				var header metadata.MD
+				baseFee := sdkmath.NewInt(1)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				fQueryClient := s.backend.QueryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
+				s.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				s.Require().NoError(err)
+				RegisterBaseFee(queryClient, baseFee)
+				RegisterValidatorAccount(queryClient, validator)
+				RegisterConsensusParams(client, 1)
+				RegisterParams(queryClient, &header, 1)
+				RegisterFeeMarketParams(fQueryClient, 1)
+			},
+			1,
+			1,
+			&rpc.FeeHistoryResult{
+				OldestBlock:  (*hexutil.Big)(big.NewInt(1)),
+				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(0))},
+				GasUsedRatio: []float64{0},
+				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+			},
+			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
+			true,
+			[]*big.Int{
+				big.NewInt(0), // for overwrite overlap
+			},
+		},
+		{
+			"pass - EarliestBlockNumber(0x0)",
+			func(validator sdk.AccAddress) {
+				var header metadata.MD
+				baseFee := sdkmath.NewInt(1)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				fQueryClient := s.backend.QueryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
+				s.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				s.Require().NoError(err)
+				RegisterBaseFee(queryClient, baseFee)
+				RegisterValidatorAccount(queryClient, validator)
+				RegisterConsensusParams(client, 1)
+				RegisterParams(queryClient, &header, 1)
+				RegisterFeeMarketParams(fQueryClient, 1)
+			},
+			1,
+			0,
+			&rpc.FeeHistoryResult{
+				OldestBlock:  (*hexutil.Big)(big.NewInt(0)),
+				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
+				GasUsedRatio: []float64{0},
+				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+			},
+			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
+			true,
+			nil,
+		},
+		{
+			"pass - EarliestBlockNumber(tag)",
+			func(validator sdk.AccAddress) {
+				var header metadata.MD
+				baseFee := sdkmath.NewInt(1)
+				queryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				fQueryClient := s.backend.QueryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				s.backend.Cfg.JSONRPC.FeeHistoryCap = 2
+				_, err := RegisterBlock(client, ethrpc.BlockNumber(1).Int64(), nil)
+				s.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				s.Require().NoError(err)
+				RegisterBaseFee(queryClient, baseFee)
+				RegisterValidatorAccount(queryClient, validator)
+				RegisterConsensusParams(client, 1)
+				RegisterParams(queryClient, &header, 1)
+				RegisterFeeMarketParams(fQueryClient, 1)
+			},
+			1,
+			ethrpc.EarliestBlockNumber,
+			&rpc.FeeHistoryResult{
+				OldestBlock:  (*hexutil.Big)(big.NewInt(0)),
+				BaseFee:      []*hexutil.Big{(*hexutil.Big)(big.NewInt(1)), (*hexutil.Big)(big.NewInt(1))},
+				GasUsedRatio: []float64{0},
+				Reward:       [][]*hexutil.Big{{(*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0)), (*hexutil.Big)(big.NewInt(0))}},
+			},
+			sdk.AccAddress(utiltx.GenerateAddress().Bytes()),
+			true,
+			nil,
 		},
 	}
-
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("case %s", tc.name), func() {
 			s.SetupTest() // reset test and queries
 			tc.registerMock(tc.validator)
+
+			called := 0
+			if len(tc.targetNewBaseFees) > 0 {
+				s.backend.ProcessBlocker = func(
+					tendermintBlock *tmrpctypes.ResultBlock,
+					ethBlock *map[string]interface{},
+					rewardPercentiles []float64,
+					tendermintBlockResult *tmrpctypes.ResultBlockResults,
+					targetOneFeeHistory *rpc.OneFeeHistory,
+				) error {
+					err := s.backend.ProcessBlock(tendermintBlock, ethBlock, rewardPercentiles, tendermintBlockResult, targetOneFeeHistory)
+					s.Require().NoError(err)
+					targetOneFeeHistory.NextBaseFee = tc.targetNewBaseFees[called]
+					called++
+					return nil
+				}
+			}
 
 			feeHistory, err := s.backend.FeeHistory(tc.userBlockCount, tc.latestBlock, []float64{25, 50, 75, 100})
 			if tc.expPass {
