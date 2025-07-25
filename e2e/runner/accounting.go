@@ -13,6 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
+	coin2 "github.com/zeta-chain/node/pkg/coin"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -207,10 +208,8 @@ func (r *E2ERunner) checkERC20TSSBalance() {
 
 func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
 	// zetaMintedPoolSetup is the amount of Zeta minted to add liquidy to a gas token pool when setting it up
-	// https://github.com/zeta-chain/node/blob/854040f044d198a0453a7b9245d544debd9da055/x/fungible/keeper/gas_coin_and_pool.go#L88
-	zetaMintedPoolSetup, ok := sdkmath.NewIntFromString("400000000000000000")
-	require.True(r, ok)
-	zetaTokensMintedDuringSetup := r.getTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
+	zetaMintedPoolSetup := r.fetchZetaMintedByGasPoolCreations()
+	zetaTokensMintedDuringSetup := r.fetchTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
 
 	zetaLockedLegacyConnector, err := r.ZetaEth.BalanceOf(&bind.CallOpts{}, r.ConnectorEthAddr)
 	require.NoError(r, err, "BalanceOf failed for legacy connector")
@@ -242,8 +241,29 @@ func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
 	)
 }
 
-// getTokensMintedAtGenesis retrieves the total amount of ZETA tokens minttend from the genesis file.
-func (r *E2ERunner) getTokensMintedAtGenesis() sdkmath.Int {
+// fetchZetaMintedByGasPoolCreations retrieves the total amount of ZETA tokens minted by gas pool creations.
+// https://github.com/zeta-chain/node/blob/854040f044d198a0453a7b9245d544debd9da055/x/fungible/keeper/gas_coin_and_pool.go#L88
+func (r *E2ERunner) fetchZetaMintedByGasPoolCreations() sdkmath.Int {
+	zetaPerGasPool := sdkmath.NewInt(1e17) // 0.1 ZETA per gas pool creation
+	// Get the protocol address balance
+	res, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(r.Ctx, &fungibletypes.QueryAllForeignCoinsRequest{})
+	require.NoError(r, err)
+	require.NotNil(r, res)
+
+	gasCoinCount := 0
+	for _, coin := range res.ForeignCoins {
+		if coin.CoinType == coin2.CoinType_Gas {
+			gasCoinCount++
+		}
+	}
+	if res.ForeignCoins == nil || gasCoinCount == 0 {
+		return sdkmath.ZeroInt()
+	}
+	return zetaPerGasPool.Mul(sdkmath.NewInt(int64(gasCoinCount)))
+}
+
+// fetchTokensMintedAtGenesis retrieves the total amount of ZETA tokens minttend from the genesis file.
+func (r *E2ERunner) fetchTokensMintedAtGenesis() sdkmath.Int {
 	genesisFilePath := "/root/.zetacored/data/genesis.json"
 	_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 	require.NoError(r, err, "failed to get genesis state from file: %s", genesisFilePath)
