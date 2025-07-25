@@ -311,8 +311,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.FetchZetaSupply()
-
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -554,6 +552,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
 			e2etests.TestLegacyZetaDepositRestrictedName,
 			e2etests.TestLegacyZetaDepositName,
+			e2etests.TestLegacyZetaDepositAndCallAbortName,
 			e2etests.TestLegacyZetaDepositNewAddressName,
 		))
 		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
