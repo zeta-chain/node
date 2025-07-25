@@ -1217,7 +1217,6 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM and call a contract with inscribed standard memo",
 		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
-			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
 		runner.WithMinimumVersion("v32.0.0"),

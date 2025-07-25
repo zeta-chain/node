@@ -23,8 +23,8 @@ func TestETHDepositAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		r.EVMAuth.GasLimit = previousGasLimit
 	}()
 
-	// convert to hex string, actual size == 2880 which is current max in the gateway
-	payload := randomPayloadWithSize(r, 1440)
+	// create a random payload with 2880 bytes which is current max in the gateway
+	payload := randomPayloadWithSize(r, 2880)
 
 	// perform the withdraw
 	tx := r.ETHDepositAndCall(
