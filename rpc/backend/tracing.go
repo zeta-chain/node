@@ -77,7 +77,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig = config // TODO evm: convert config
+		traceTxRequest.TraceConfig = config
 	}
 
 	// minus one to get the context of block beginning
@@ -144,7 +144,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     config, // TODO evm: convert config?
+		TraceConfig:     config,
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),

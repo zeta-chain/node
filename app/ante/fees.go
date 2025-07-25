@@ -1,4 +1,3 @@
-// TODO evm: licence
 package ante
 
 import (

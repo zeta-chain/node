@@ -16,8 +16,8 @@ smart contracts and messaging between any blockchain.
 
 ZetaChain is built with [Cosmos SDK](https://github.com/cosmos/cosmos-sdk), a
 modular framework for building blockchain and
-[Cosmos EVM](https://github.com/cosmos/evm), a module that implements
-EVM-compatibility. // TODO evm: new url
+[Cosmos EVM](https://github.com/zeta-chain/evm), a module that implements
+EVM-compatibility.
 
 This repository contains the core components:
 

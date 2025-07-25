@@ -23,7 +23,6 @@ const (
 // The migration deletes all ballots and ballot lists for heights less than the maturity blocks on testnet
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
-	// TODO evm: ParseChainID is removed, but since this is old migration probably we can remove it completely
 	zetachain, err := pkgchains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		// Its fine to return nil here and not try to execute the migration at all if the parsing fails

@@ -47,7 +47,7 @@ func NewSimApp(
 		nil,
 		false,
 		map[int64]bool{},
-		"", // TODO evm
+		"",
 		5,
 		serverconfig.DefaultEVMChainID,
 		appOptions,
