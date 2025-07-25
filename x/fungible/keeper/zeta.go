@@ -59,6 +59,10 @@ func (k *Keeper) validateZetaSupply(ctx sdk.Context, amount *big.Int) error {
 	return nil
 }
 
+// executeWithMintedZeta is a helper function that mints ZETA to the fungible module account
+// and executes the provided operation within a temporary context.
+// If the operation is successful, it commits the temporary context.
+// If it is not successful, it rolls back the temporary context thus preventing surplus ZETA from being minted.
 func (k Keeper) executeWithMintedZeta(
 	ctx sdk.Context,
 	amount *big.Int,
