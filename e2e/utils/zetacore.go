@@ -3,12 +3,16 @@ package utils
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -29,7 +33,36 @@ const (
 	// https://github.com/zeta-chain/node/issues/2690
 
 	DefaultCctxTimeout = 8 * time.Minute
+
+	// nodeSyncTolerance is the time tolerance for the ZetaChain nodes behind a RPC to be synced
+	nodeSyncTolerance = constant.ZetaBlockTime * 5
 )
+
+// BalanceChange contains details about the balance change
+type BalanceChange struct {
+	// If provided, when set to
+	//  - true: the balance change must be positive
+	//  - false: the balance change must be negative
+	positive *bool
+
+	// If provided, it's the exact value of the balance change
+	// Delta value can be positive or negative
+	delta *big.Int
+}
+
+// NewBalanceChange returns a new BalanceChange with given positive flag
+func NewBalanceChange(positive bool) BalanceChange {
+	return BalanceChange{
+		positive: &[]bool{positive}[0],
+	}
+}
+
+// NewExactChange returns a new BalanceChange with the Delta field set to the exact value
+func NewExactChange(delta *big.Int) BalanceChange {
+	return BalanceChange{
+		delta: delta,
+	}
+}
 
 // GetCCTXByInboundHash gets cctx by inbound hash
 func GetCCTXByInboundHash(
@@ -446,5 +479,58 @@ func WaitForZetaBlocks(
 		if newHeight >= oldHeight+waitBlocks {
 			return
 		}
+	}
+}
+
+// WaitForZRC20BalanceChange waits for the zrc20 balance of the given address to change by the given delta amount
+// This function is to tolerate the fact that the balance update may not be synced across all nodes behind a RPC.
+func WaitForZRC20BalanceChange(
+	t require.TestingT,
+	zrc20 *zrc20.ZRC20,
+	address common.Address,
+	oldBalance *big.Int,
+	change BalanceChange,
+	logger infoLogger,
+) {
+	// wait until the expected balance is reached or timeout
+	startTime := time.Now()
+	checkInterval := constant.ZetaBlockTime / 2
+	for {
+		time.Sleep(checkInterval)
+		require.False(t, time.Since(startTime) > nodeSyncTolerance, "timeout waiting for balance change")
+
+		symbol, err := zrc20.Symbol(&bind.CallOpts{})
+		if err != nil {
+			logger.Info("unable to get symbol: %s", err.Error())
+			continue
+		}
+
+		newBalance, err := zrc20.BalanceOf(&bind.CallOpts{}, address)
+		if err != nil {
+			logger.Info("unable to get balance: %s", err.Error())
+			continue
+		}
+
+		if oldBalance.Cmp(newBalance) == 0 {
+			logger.Info("balance has not changed yet")
+			continue
+		}
+		logger.Info("%s balance changed from %d to %d on address %s", symbol, oldBalance, newBalance, address.Hex())
+
+		// balance should increase or decrease?
+		if change.positive != nil && *change.positive {
+			if *change.positive {
+				require.True(t, newBalance.Cmp(oldBalance) > 0, "balance should be increased")
+			} else {
+				require.True(t, newBalance.Cmp(oldBalance) < 0, "balance should be decreased")
+			}
+		}
+
+		// check exact amount change if provided
+		if change.delta != nil {
+			require.Equal(t, new(big.Int).Add(oldBalance, change.delta), newBalance)
+		}
+
+		return
 	}
 }

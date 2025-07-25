@@ -1,8 +1,6 @@
 package e2etests
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -33,12 +31,7 @@ func TestSolanaDepositThroughProgram(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
-	// get ERC20 SOL balance after deposit
-	balanceAfter, err := r.SOLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	r.Logger.Info("runner balance of SOL after deposit: %d", balanceAfter)
-
-	// the runner balance should be increased by the deposit amount
-	amountIncreased := new(big.Int).Sub(balanceAfter, balanceBefore)
-	require.Equal(r, depositAmount.String(), amountIncreased.String())
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(depositAmount)
+	utils.WaitForZRC20BalanceChange(r, r.SOLZRC20, r.EVMAddress(), balanceBefore, change, r.Logger)
 }

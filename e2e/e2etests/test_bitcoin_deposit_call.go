@@ -42,14 +42,15 @@ func TestBitcoinDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "bitcoin_deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	// check the payload was received on the contract
+	// calculate received amount
 	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, txHash)
 	require.NoError(r, err)
 	receivedAmount := r.BitcoinCalcReceivedAmount(rawTx, amountSats)
-	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
 
-	// check the balance was updated
-	newBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, big.NewInt(receivedAmount)), newBalance)
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(big.NewInt(receivedAmount))
+	utils.WaitForZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
+
+	// check the payload was received on the contract
+	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))
 }

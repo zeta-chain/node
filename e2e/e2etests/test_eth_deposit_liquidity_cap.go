@@ -80,17 +80,11 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	)
 
 	utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	expectedBalance = big.NewInt(0).Add(initialBal, amountMoreThanCap)
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
-	bal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	require.Equal(r,
-		0,
-		bal.Cmp(expectedBalance),
-		"expected balance to be %s; got %s",
-		expectedBalance.String(),
-		bal.String(),
-	)
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amountMoreThanCap)
+	utils.WaitForZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), initialBal, change, r.Logger)
 
 	r.Logger.Info("New deposit succeeded")
 }
