@@ -26,6 +26,8 @@
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 * [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
+* [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
+* [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
 
 ### Tests
 
@@ -36,6 +38,7 @@
 * [3999](https://github.com/zeta-chain/node/pull/3999) - run simulation tests nightly
 * [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
 * [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
+* [4040](https://github.com/zeta-chain/node/pull/4040) - make Bitcoin inscription e2e test working for live networks
 
 ## v32.0.0
 

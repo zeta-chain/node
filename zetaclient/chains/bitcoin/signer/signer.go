@@ -88,7 +88,6 @@ func (signer *Signer) TryProcessOutbound(
 
 	// end outbound process on panic
 	defer func() {
-		signer.MarkOutbound(outboundID, false)
 		if err := recover(); err != nil {
 			signer.Logger().
 				Std.Error().
@@ -96,8 +95,10 @@ func (signer *Signer) TryProcessOutbound(
 				Str(logs.FieldCctx, cctx.Index).
 				Interface("panic", err).
 				Str("stack_trace", string(debug.Stack())).
-				Msg("caught panic error")
+				Msg("Caught panic error")
 		}
+
+		signer.MarkOutbound(outboundID, false)
 	}()
 
 	// prepare logger

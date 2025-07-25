@@ -480,9 +480,9 @@ func (_m *ZetacoreClient) GetOperationalFlags(ctx context.Context) (observertype
 	return r0, r1
 }
 
-// GetOutboundTracker provides a mock function with given fields: ctx, chain, nonce
-func (_m *ZetacoreClient) GetOutboundTracker(ctx context.Context, chain chains.Chain, nonce uint64) (*types.OutboundTracker, error) {
-	ret := _m.Called(ctx, chain, nonce)
+// GetOutboundTracker provides a mock function with given fields: ctx, chainID, nonce
+func (_m *ZetacoreClient) GetOutboundTracker(ctx context.Context, chainID int64, nonce uint64) (*types.OutboundTracker, error) {
+	ret := _m.Called(ctx, chainID, nonce)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOutboundTracker")
@@ -490,19 +490,19 @@ func (_m *ZetacoreClient) GetOutboundTracker(ctx context.Context, chain chains.C
 
 	var r0 *types.OutboundTracker
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64) (*types.OutboundTracker, error)); ok {
-		return rf(ctx, chain, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) (*types.OutboundTracker, error)); ok {
+		return rf(ctx, chainID, nonce)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, chains.Chain, uint64) *types.OutboundTracker); ok {
-		r0 = rf(ctx, chain, nonce)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, uint64) *types.OutboundTracker); ok {
+		r0 = rf(ctx, chainID, nonce)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.OutboundTracker)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, chains.Chain, uint64) error); ok {
-		r1 = rf(ctx, chain, nonce)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, uint64) error); ok {
+		r1 = rf(ctx, chainID, nonce)
 	} else {
 		r1 = ret.Error(1)
 	}
