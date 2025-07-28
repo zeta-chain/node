@@ -84,7 +84,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amountMoreThanCap)
-	utils.WaitForZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), initialBal, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), initialBal, change, r.Logger)
 
 	r.Logger.Info("New deposit succeeded")
 }

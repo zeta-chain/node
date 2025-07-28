@@ -39,5 +39,5 @@ func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(big.NewInt(receivedAmount))
-	utils.WaitForZRC20BalanceChange(r, r.BTCZRC20, r.ZEVMAuth.From, oldBalance, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.ZEVMAuth.From, oldBalance, change, r.Logger)
 }

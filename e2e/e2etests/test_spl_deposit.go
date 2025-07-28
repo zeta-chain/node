@@ -69,5 +69,5 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)
-	utils.WaitForZRC20BalanceChange(r, r.SPLZRC20, r.EVMAddress(), zrc20BalanceBefore, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SPLZRC20, r.EVMAddress(), zrc20BalanceBefore, change, r.Logger)
 }

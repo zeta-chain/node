@@ -33,5 +33,5 @@ func TestSolanaDepositThroughProgram(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(depositAmount)
-	utils.WaitForZRC20BalanceChange(r, r.SOLZRC20, r.EVMAddress(), balanceBefore, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SOLZRC20, r.EVMAddress(), balanceBefore, change, r.Logger)
 }

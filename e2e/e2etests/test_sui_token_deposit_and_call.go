@@ -35,7 +35,7 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)
-	utils.WaitForZRC20BalanceChange(r, r.SuiTokenZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SuiTokenZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)

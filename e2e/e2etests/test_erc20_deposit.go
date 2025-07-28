@@ -32,5 +32,5 @@ func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 
 	// wait for the arc20 balance to be updated
 	change := utils.NewExactChange(amount)
-	utils.WaitForZRC20BalanceChange(r, r.ERC20ZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
 }

@@ -59,7 +59,7 @@ func TestBitcoinStdMemoDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(big.NewInt(receivedAmount))
-	utils.WaitForZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, big.NewInt(receivedAmount))

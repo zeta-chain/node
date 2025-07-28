@@ -46,5 +46,5 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(expectedDeposit.BigInt())
-	utils.WaitForZRC20BalanceChange(r, r.TONZRC20, recipient, balanceBefore, change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.TONZRC20, recipient, balanceBefore, change, r.Logger)
 }

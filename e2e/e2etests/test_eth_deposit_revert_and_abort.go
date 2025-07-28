@@ -56,7 +56,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// wait for the abort contract to receive tokens
 	change := utils.NewBalanceChange(true)
-	utils.WaitForZRC20BalanceChange(r, r.ETHZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 
 	// Test 2: no contract for abort
 
@@ -83,5 +83,5 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// wait for the eoa to receive tokens
 	change = utils.NewBalanceChange(true)
-	utils.WaitForZRC20BalanceChange(r, r.ETHZRC20, eoaAddress, big.NewInt(0), change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, eoaAddress, big.NewInt(0), change, r.Logger)
 }

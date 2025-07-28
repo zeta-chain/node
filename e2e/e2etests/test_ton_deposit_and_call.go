@@ -48,7 +48,7 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(expectedDeposit.BigInt())
-	utils.WaitForZRC20BalanceChange(r, r.TONZRC20, contractAddr, big.NewInt(0), change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.TONZRC20, contractAddr, big.NewInt(0), change, r.Logger)
 
 	// check if example contract has been called, bar value should be set to amount
 	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))

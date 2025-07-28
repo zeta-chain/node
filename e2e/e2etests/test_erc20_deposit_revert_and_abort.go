@@ -56,5 +56,5 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 
 	// wait for the arc20 balance to be updated
 	change := utils.NewBalanceChange(true)
-	utils.WaitForZRC20BalanceChange(r, r.ERC20ZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 }

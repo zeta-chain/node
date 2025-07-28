@@ -54,7 +54,7 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 
 	// wait for the abort contract to receive tokens
 	change := utils.NewBalanceChange(true)
-	utils.WaitForZRC20BalanceChange(r, r.BTCZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})

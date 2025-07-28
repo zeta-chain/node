@@ -482,9 +482,9 @@ func WaitForZetaBlocks(
 	}
 }
 
-// WaitForZRC20BalanceChange waits for the zrc20 balance of the given address to change by the given delta amount
+// WaitAndVerifyZRC20BalanceChange waits for the zrc20 balance of the given address to change by the given delta amount
 // This function is to tolerate the fact that the balance update may not be synced across all nodes behind a RPC.
-func WaitForZRC20BalanceChange(
+func WaitAndVerifyZRC20BalanceChange(
 	t require.TestingT,
 	zrc20 *zrc20.ZRC20,
 	address common.Address,
@@ -494,7 +494,7 @@ func WaitForZRC20BalanceChange(
 ) {
 	// wait until the expected balance is reached or timeout
 	startTime := time.Now()
-	checkInterval := constant.ZetaBlockTime / 2
+	checkInterval := 2 * time.Second
 	for {
 		time.Sleep(checkInterval)
 		require.False(t, time.Since(startTime) > nodeSyncTolerance, "timeout waiting for balance change")
