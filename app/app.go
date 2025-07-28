@@ -94,7 +94,6 @@ import (
 
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/docs/openapi"
-	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	"github.com/zeta-chain/node/precompiles"
 	srvflags "github.com/zeta-chain/node/server/flags"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
@@ -335,9 +334,6 @@ func New(
 		runtime.EventService{},
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
-
-	customProposalHandler := zetamempool.NewCustomProposalHandler(bApp.Mempool(), bApp)
-	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
 
 	// add capability keeper and ScopeToModule for ibc module
 	//app.CapabilityKeeper = capabilitykeeper.NewKeeper(
