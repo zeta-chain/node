@@ -79,7 +79,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 		true,
 	)
 
-	utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_OutboundMined)
 
 	// wait for the zrc20 balance to be updated
