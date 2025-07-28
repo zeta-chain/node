@@ -518,7 +518,7 @@ func WaitForZRC20BalanceChange(
 		logger.Info("%s balance changed from %d to %d on address %s", symbol, oldBalance, newBalance, address.Hex())
 
 		// balance should increase or decrease?
-		if change.positive != nil && *change.positive {
+		if change.positive != nil {
 			if *change.positive {
 				require.True(t, newBalance.Cmp(oldBalance) > 0, "balance should be increased")
 			} else {
