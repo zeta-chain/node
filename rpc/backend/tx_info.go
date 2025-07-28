@@ -240,9 +240,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 	var from common.Address
 	if additional != nil {
-		from = common.HexToAddress(ethMsg.From)
+		from = common.BytesToAddress(ethMsg.From)
 	} else if ethMsg.Data != nil {
-		from, err = ethMsg.GetSender(b.EvmChainID)
+		from, err = ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(b.EvmChainID))
 		if err != nil {
 			b.Logger.Debug("failed to parse from field", "hash", hexTx, "error", err.Error())
 		}

@@ -226,7 +226,7 @@ func (s *MempoolTestSuite) buildMockEthTx(id int, priority int64, from string, n
 	})
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	require.NoError(s.T(), err)
-	msg.From = from
+	msg.From = common.FromHex(from)
 	return testEthTx{
 		id:              id,
 		priority:        priority,
@@ -252,7 +252,7 @@ func (s *MempoolTestSuite) buildInvalidMockEthTx(id int, priority int64, from st
 	})
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	require.NoError(s.T(), err)
-	msg.From = from
+	msg.From = common.FromHex(from)
 	return testUnsignedEthTx{
 		id:              id,
 		priority:        priority,

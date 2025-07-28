@@ -22,7 +22,6 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -392,7 +391,7 @@ func buildEthMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [
 
 	privKey := secp256k1.GenPrivKeyFromSecret(secrets[0])
 	addr := sdk.AccAddress(privKey.PubKey().Address())
-	msgEthereumTx.From = common.BytesToAddress(addr.Bytes()).Hex()
+	msgEthereumTx.From = addr.Bytes()
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	require.NoError(t, err)
 	builder, ok := txConfig.NewTxBuilder().(authtx.ExtensionOptionsTxBuilder)

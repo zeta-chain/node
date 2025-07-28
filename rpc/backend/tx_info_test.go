@@ -194,7 +194,7 @@ func (s *TestSuite) TestGetTransactionByHash() {
 	}
 
 	rpcTransaction, _ := rpctypes.NewRPCTransaction(
-		msgEthereumTx.AsTransaction(),
+		msgEthereumTx,
 		common.HexToHash("0x1"),
 		1,
 		0,
@@ -288,7 +288,7 @@ func (s *TestSuite) TestGetTransactionByHash() {
 func (s *TestSuite) TestGetTransactionsByHashPending() {
 	msgEthereumTx, bz := s.buildEthereumTx()
 	rpcTransaction, _ := rpctypes.NewRPCTransaction(
-		msgEthereumTx.AsTransaction(),
+		msgEthereumTx,
 		common.Hash{},
 		0,
 		0,
@@ -355,7 +355,7 @@ func (s *TestSuite) TestGetTransactionsByHashPending() {
 func (s *TestSuite) TestGetTxByEthHash() {
 	msgEthereumTx, bz := s.buildEthereumTx()
 	rpcTransaction, _ := rpctypes.NewRPCTransaction(
-		msgEthereumTx.AsTransaction(),
+		msgEthereumTx,
 		common.Hash{},
 		0,
 		0,

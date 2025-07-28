@@ -291,7 +291,7 @@ func (s *TestSuite) TestSendRawTransaction() {
 	s.SetupTest() // reset
 
 	ethTx, bz := s.buildEthereumTx()
-	ethTx.From = s.from.Hex()
+	ethTx.From = s.from.Bytes()
 
 	emptyEvmChainIDTx := s.buildEthereumTxWithChainID(nil)
 	invalidEvmChainIDTx := s.buildEthereumTxWithChainID(big.NewInt(1))
@@ -335,7 +335,7 @@ func (s *TestSuite) TestSendRawTransaction() {
 			},
 			func() []byte {
 				from, _ := utiltx.NewAddrKey()
-				invalidEvmChainIDTx.From = from.String()
+				invalidEvmChainIDTx.From = from.Bytes()
 				bytes, _ := rlp.EncodeToBytes(invalidEvmChainIDTx.AsTransaction())
 				return bytes
 			},
