@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -15,6 +16,7 @@ import (
 func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 	amount := utils.ParseBigInt(r, args[0])
+	require.True(r, amount.IsUint64(), fmt.Sprintf("arg[0] is not a uint64: %s", args[0]))
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()
