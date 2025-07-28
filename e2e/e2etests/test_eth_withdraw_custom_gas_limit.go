@@ -12,7 +12,7 @@ import (
 )
 
 func TestETHWithdrawCustomGasLimit(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	amount := utils.ParseBigInt(r, args[0])
 	customGasLimit := utils.ParseBigInt(r, args[1])
