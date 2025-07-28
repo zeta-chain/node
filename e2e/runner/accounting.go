@@ -13,7 +13,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
-	coin2 "github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/coin"
 	zetacrypto "github.com/zeta-chain/node/pkg/crypto"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -41,7 +41,7 @@ func (r *E2ERunner) VerifyAccounting(testLegacy bool) {
 	r.Logger.Print("Verifying accounting")
 	r.checkETHTSSBalance()
 	r.checkERC20TSSBalance()
-	r.checkZetaTSSBalance(testLegacy)
+	r.checkZETATSSBalance(testLegacy)
 	r.CheckBTCTSSBalance()
 	r.checkProtocolBalance()
 }
@@ -206,7 +206,7 @@ func (r *E2ERunner) checkERC20TSSBalance() {
 	r.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", custodyBalance, erc20zrc20Supply)
 }
 
-func (r *E2ERunner) checkZetaTSSBalance(testLegacy bool) {
+func (r *E2ERunner) checkZETATSSBalance(testLegacy bool) {
 	// zetaMintedPoolSetup is the amount of Zeta minted to add liquidy to a gas token pool when setting it up
 	zetaMintedPoolSetup := r.fetchZetaMintedByGasPoolCreations()
 	zetaTokensMintedDuringSetup := r.fetchTokensMintedAtGenesis().Add(zetaMintedPoolSetup)
@@ -251,8 +251,8 @@ func (r *E2ERunner) fetchZetaMintedByGasPoolCreations() sdkmath.Int {
 	require.NotNil(r, res)
 
 	gasCoinCount := 0
-	for _, coin := range res.ForeignCoins {
-		if coin.CoinType == coin2.CoinType_Gas {
+	for _, foreignCoin := range res.ForeignCoins {
+		if foreignCoin.CoinType == coin.CoinType_Gas {
 			gasCoinCount++
 		}
 	}
