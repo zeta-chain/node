@@ -290,6 +290,13 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	// Set the gateway address in the protocol
 	err = r.ZetaTxServer.UpdateGatewayAddress(e2eutils.AdminPolicyName, r.GatewayZEVMAddr.Hex())
 	require.NoError(r, err)
+	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
+
+	r.SetupZEVMTestDappV2(ensureTxReceipt)
+
+}
+
+func (r *E2ERunner) SetupZEVMTestDappV2(ensureTxReceipt func(tx *ethtypes.Transaction, failMessage string)) {
 
 	// deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
@@ -299,13 +306,11 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 		r.GatewayEVMAddr,
 	)
 	require.NoError(r, err)
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 
 	r.TestDAppV2ZEVMAddr = testDAppV2Addr
 	r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.ZEVMClient)
 	require.NoError(r, err)
-
-	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
-	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
 
 	// check isZetaChain is true
 	isZetaChain, err := r.TestDAppV2ZEVM.IsZetaChain(&bind.CallOpts{})

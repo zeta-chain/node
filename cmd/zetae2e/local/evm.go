@@ -95,16 +95,16 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	)
 
 	// TODO evm: tmp comment out because of setup difference between zetae2e-ante and zetae2e
-	// eg.Go(
-	// 	evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
-	// 		e2etests.TestZetaDepositName,
-	// 		e2etests.TestZetaDepositAndCallName,
-	// 		e2etests.TestZetaDepositAndCallRevertName,
-	// 		e2etests.TestZetaDepositRevertAndAbortName,
-	// 		e2etests.TestZetaDepositAndCallRevertWithCallName,
-	// 		e2etests.TestZetaDepositAndCallNoMessageName,
-	// 	),
-	// )
+	eg.Go(
+		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
+			e2etests.TestZetaDepositName,
+			e2etests.TestZetaDepositAndCallName,
+			e2etests.TestZetaDepositAndCallRevertName,
+			e2etests.TestZetaDepositRevertAndAbortName,
+			e2etests.TestZetaDepositAndCallRevertWithCallName,
+			e2etests.TestZetaDepositAndCallNoMessageName,
+		),
+	)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests

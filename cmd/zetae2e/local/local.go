@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -176,6 +177,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	conf, err := GetConfig(cmd)
 	noError(err)
 
+	accountData, err := config.ReadConfig("/work/config.yml", false)
+	noError(err)
+
+	conf.AdditionalAccounts.UserZeta = accountData.AdditionalAccounts.UserZeta
+
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
 	defer timeoutCancel()
@@ -302,6 +308,37 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			deployerRunner.SetupSui(conf.RPCs.SuiFaucet)
 		}
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
+	}
+
+	{
+		ensureReciptEVM := func(tx *ethtypes.Transaction, failMessage string) {
+			receipt := utils.MustWaitForTxReceipt(deployerRunner.Ctx, deployerRunner.EVMClient, tx, deployerRunner.Logger, deployerRunner.ReceiptTimeout)
+			msg := "receipt status is not successful: %s"
+			require.Equal(
+				deployerRunner,
+				ethtypes.ReceiptStatusSuccessful,
+				receipt.Status,
+				msg,
+				receipt.TxHash.String(),
+			)
+		}
+		ensureReciptZEVM := func(tx *ethtypes.Transaction, failMessage string) {
+			receipt := utils.MustWaitForTxReceipt(deployerRunner.Ctx, deployerRunner.ZEVMClient, tx, deployerRunner.Logger, deployerRunner.ReceiptTimeout)
+			msg := "receipt status is not successful: %s"
+			require.Equal(
+				deployerRunner,
+				ethtypes.ReceiptStatusSuccessful,
+				receipt.Status,
+				msg,
+				receipt.TxHash.String(),
+			)
+		}
+		deployerRunner.UpgradeGatewayEVM()
+		deployerRunner.UpgradeGatewayZEVM()
+		deployerRunner.DeployZetaConnectorNative(ensureReciptEVM)
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
+		deployerRunner.SetupZEVMTestDappV2(ensureReciptZEVM)
+		deployerRunner.DeployTestDAppV2(ensureReciptEVM)
 	}
 
 	// if a config output is specified, write the config
