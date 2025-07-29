@@ -1,7 +1,8 @@
 package e2etests
 
 import (
-	"github.com/btcsuite/btcd/btcutil"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -14,37 +15,29 @@ import (
 func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
 
-	depositAmount := utils.ParseFloat(r, args[0])
-	// ZRC20 BTC amounts have 8 decimals
-	depositAmountZRC20 := uint64(depositAmount * btcutil.SatoshiPerBitcoin)
-
-	startingBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	// Given amount to send
+	amount := utils.ParseFloat(r, args[0])
+	amountSats, err := common.GetSatoshis(amount)
 	require.NoError(r, err)
 
-	txHash := r.DepositBTCWithAmount(depositAmount, nil)
+	oldBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
+	require.NoError(r, err)
 
+	// ACT
+	txHash := r.DepositBTCWithAmount(amount, nil)
+
+	// ASSERT
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	// calculate fee
-	tx, err := r.BtcRPCClient.GetTransaction(r.Ctx, txHash)
+	// calculate received amount
+	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, txHash)
 	require.NoError(r, err)
-	rawTx, err := r.BtcRPCClient.GetRawTransactionResult(r.Ctx, txHash, tx)
-	require.NoError(r, err)
-	fee, err := common.CalcDepositorFee(r.Ctx, r.BtcRPCClient, &rawTx, r.BitcoinParams)
-	require.NoError(r, err)
-	feeSatoshis := uint64(fee * btcutil.SatoshiPerBitcoin)
+	receivedAmount := r.BitcoinCalcReceivedAmount(rawTx, amountSats)
 
-	expectedAmount := depositAmountZRC20 - feeSatoshis
-
-	// assert that the inbound amount is expected
-	require.InDelta(r, expectedAmount, cctx.InboundParams.Amount.Uint64(), 100)
-
-	// assert that the balance increases by the expected amount
-	endingBalance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, r.ZEVMAuth.From)
-	require.NoError(r, err)
-	balanceDiff := bigSub(endingBalance, startingBalance)
-	require.InDelta(r, expectedAmount, balanceDiff.Uint64(), 100)
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(big.NewInt(receivedAmount))
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, r.ZEVMAuth.From, oldBalance, change, r.Logger)
 }

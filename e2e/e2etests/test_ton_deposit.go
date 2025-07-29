@@ -44,13 +44,7 @@ func TestTONDeposit(r *runner.E2ERunner, args []string) {
 	require.Equal(r, sender.GetAddress().ToRaw(), cctx.InboundParams.Sender)
 	require.Equal(r, expectedDeposit.Uint64(), cctx.InboundParams.Amount.Uint64())
 
-	// Check receiver's balance after deposit
-	balanceAfter, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, recipient)
-
-	require.NoError(r, err)
-	r.Logger.Info("Recipient's zEVM TON balance after deposit: %d", balanceAfter.Uint64())
-
-	// The recipient balance should be increased by the expected deposit amount
-	amountIncreased := bigSub(balanceAfter, balanceBefore)
-	require.Equal(r, expectedDeposit.Uint64(), amountIncreased.Uint64())
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(expectedDeposit.BigInt())
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.TONZRC20, recipient, balanceBefore, change, r.Logger)
 }

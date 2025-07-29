@@ -54,8 +54,7 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, r.ERC20ZRC20Addr.Hex(), abortContext.Asset.Hex())
 
-	// check abort contract received the tokens
-	balance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
+	// wait for the arc20 balance to be updated
+	change := utils.NewBalanceChange(true)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 }
