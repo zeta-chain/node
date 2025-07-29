@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -61,6 +60,7 @@ const (
 	flagTestFilter             = "test-filter"
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
+	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
 )
 
 var (
@@ -104,6 +104,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
+	cmd.Flags().String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -143,6 +144,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
+		//accountConfig          = must(cmd.Flags().GetString(flagAccountConfig))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -176,11 +178,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// initialize tests config
 	conf, err := GetConfig(cmd)
 	noError(err)
-
-	accountData, err := config.ReadConfig("/work/config.yml", false)
-	noError(err)
-
-	conf.AdditionalAccounts.UserZeta = accountData.AdditionalAccounts.UserZeta
 
 	// initialize context
 	ctx, timeoutCancel := context.WithTimeoutCause(context.Background(), TestTimeout, ErrTopLevelTimeout)
@@ -310,36 +307,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	{
-		ensureReciptEVM := func(tx *ethtypes.Transaction, failMessage string) {
-			receipt := utils.MustWaitForTxReceipt(deployerRunner.Ctx, deployerRunner.EVMClient, tx, deployerRunner.Logger, deployerRunner.ReceiptTimeout)
-			msg := "receipt status is not successful: %s"
-			require.Equal(
-				deployerRunner,
-				ethtypes.ReceiptStatusSuccessful,
-				receipt.Status,
-				msg,
-				receipt.TxHash.String(),
-			)
-		}
-		ensureReciptZEVM := func(tx *ethtypes.Transaction, failMessage string) {
-			receipt := utils.MustWaitForTxReceipt(deployerRunner.Ctx, deployerRunner.ZEVMClient, tx, deployerRunner.Logger, deployerRunner.ReceiptTimeout)
-			msg := "receipt status is not successful: %s"
-			require.Equal(
-				deployerRunner,
-				ethtypes.ReceiptStatusSuccessful,
-				receipt.Status,
-				msg,
-				receipt.TxHash.String(),
-			)
-		}
-		deployerRunner.UpgradeGatewayEVM()
-		deployerRunner.UpgradeGatewayZEVM()
-		deployerRunner.DeployZetaConnectorNative(ensureReciptEVM)
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
-		deployerRunner.SetupZEVMTestDappV2(ensureReciptZEVM)
-		deployerRunner.DeployTestDAppV2(ensureReciptEVM)
-	}
+	deployerRunner.PostUpgradeSetup("v32.0.2", func() {
+		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
+		err = OverRideAccountData(cmd, &conf)
+		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		deployerRunner.RunSetup(testLegacy || testAdmin)
+	})
 
 	// if a config output is specified, write the config
 	if configOut != "" {

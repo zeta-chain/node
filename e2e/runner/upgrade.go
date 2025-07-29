@@ -120,3 +120,17 @@ func (r *E2ERunner) AssertBeforeUpgrade(assertVersion string, assertFunc func())
 	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", assertVersion)
 	assertFunc()
 }
+
+func (r *E2ERunner) PostUpgradeSetup(upgradeFrom string, runSetup func()) {
+	version := r.GetZetacoredVersion()
+	versionMajorIsZero := semver.Major(version) == "v0"
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+
+	if !r.IsRunningUpgradeOrTSSMigration() || !versionMajorIsZero || semver.Major(upgradeFrom) != semver.Major(oldVersion) {
+		return
+	}
+
+	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)
+	runSetup()
+
+}

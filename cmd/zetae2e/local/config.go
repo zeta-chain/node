@@ -23,3 +23,26 @@ func GetConfig(cmd *cobra.Command) (config.Config, error) {
 
 	return config.ReadConfig(configFile, true)
 }
+
+func OverRideAccountData(cmd *cobra.Command, conf *config.Config) error {
+	configFile, err := cmd.Flags().GetString(flagAccountConfig)
+	if err != nil {
+		return fmt.Errorf("--account-config is a required parameter")
+	}
+
+	configFile, err = filepath.Abs(configFile)
+	if err != nil {
+		return err
+	}
+
+	accountData, err := config.ReadConfig(configFile, false)
+	if err != nil {
+		return err
+	}
+	conf.DefaultAccount = accountData.DefaultAccount
+	conf.AdditionalAccounts = accountData.AdditionalAccounts
+	conf.PolicyAccounts = accountData.PolicyAccounts
+	conf.ObserverRelayerAccounts = accountData.ObserverRelayerAccounts
+
+	return nil
+}
