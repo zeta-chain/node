@@ -90,6 +90,9 @@ func (k Keeper) ProcessLogs(
 		if !crypto.IsEmptyAddress(gatewayAddr) {
 			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, txOrigin); err != nil {
 
+				// Emit an error event so the reason for the failure can be tracked
+				EmitInboundProcessingFailure(ctx, log.TxHash.String(), err.Error())
+
 				return errors.Wrap(err, "failed to process ZEVM inbound V2")
 			}
 		}
