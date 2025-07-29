@@ -55,7 +55,11 @@ func (k Keeper) PostTxProcessing(
 	if msg.To != nil {
 		emittingContract = *msg.To
 	}
-	return k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From.Hex())
+	err := k.ProcessLogs(ctx, receipt.Logs, emittingContract, msg.From.Hex())
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("PostTxProcessing: failed to process logs: %s", err.Error()))
+	}
+	return err
 }
 
 // ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event
