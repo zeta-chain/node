@@ -306,11 +306,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.AddZetaE2EUpgradeHandler("v32.0.2", func() {
+	deployerRunner.AddZetaE2EPostUpgradeHandler("v32.0.2", func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
 		err = OverRideAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
+		if !testSui || deployerRunner.IsRunningTssMigration() {
+			return
+		}
+		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
+		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
 	})
 
 	// if a config output is specified, write the config
@@ -327,14 +333,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	deployerRunner.PrintContractAddresses()
-	deployerRunner.AssertAfterUpgrade("v32.0.0", func() {
-		if !testSui {
-			return
-		}
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
-	})
 
 	// if setup only, quit
 	if setupOnly {
@@ -583,7 +581,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
+	deployerRunner.AddZetaE2EPreUpgradeHandler("v32.0.0", func() {
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")

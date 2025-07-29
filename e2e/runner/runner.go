@@ -493,6 +493,10 @@ func (r *E2ERunner) IsRunningUpgrade() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
 }
 
+func (r *E2ERunner) IsRunningTssMigration() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
 func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade || os.Getenv(EnvKeyLocalnetMode) == LocalNetModeTSSMigration
 }
