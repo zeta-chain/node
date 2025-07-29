@@ -89,6 +89,7 @@ func (k Keeper) ProcessLogs(
 	for _, log := range logs {
 		if !crypto.IsEmptyAddress(gatewayAddr) {
 			if err := k.ProcessZEVMInboundV2(ctx, log, gatewayAddr, txOrigin); err != nil {
+
 				return errors.Wrap(err, "failed to process ZEVM inbound V2")
 			}
 		}
