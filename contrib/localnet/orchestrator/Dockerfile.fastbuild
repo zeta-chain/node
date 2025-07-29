@@ -20,6 +20,10 @@ COPY e2e/contracts/sui/protocol-contracts-sui-upgrade /work/sui/protocol-contrac
 # TODO: remove in next release
 COPY e2e/contracts/sui/example /work/example
 COPY e2e/contracts/sui/protocol-contracts-sui-upgrade /work/protocol-contracts-sui-upgrade
+RUN rm /work/protocol-contracts-sui-upgrade/sources/gateway.move && \
+    mv /work/protocol-contracts-sui-upgrade/sources/gateway-old.move /work/protocol-contracts-sui-upgrade/sources/gateway.move
+RUN rm /work/protocol-contracts-sui-upgrade/Move.toml && \
+    mv /work/protocol-contracts-sui-upgrade/Move-old.toml /work/protocol-contracts-sui-upgrade/Move.toml
 
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
 
