@@ -39,6 +39,7 @@
 * [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
 * [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
 * [4040](https://github.com/zeta-chain/node/pull/4040) - make Bitcoin inscription e2e test working for live networks
+* [4053](https://github.com/zeta-chain/node/pull/4053) - fix flaky e2e tests that failed on zrc20 balance assertion in live networks
 
 ## v32.0.0
 
