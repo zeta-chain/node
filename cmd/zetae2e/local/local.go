@@ -144,7 +144,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		testFilterStr          = must(cmd.Flags().GetString(flagTestFilter))
 		testStaking            = must(cmd.Flags().GetBool(flagTestStaking))
 		testConnectorMigration = must(cmd.Flags().GetBool(flagTestConnectorMigration))
-		//accountConfig          = must(cmd.Flags().GetString(flagAccountConfig))
 	)
 
 	testFilter := regexp.MustCompile(testFilterStr)
@@ -307,7 +306,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.PostUpgradeSetup("v32.0.2", func() {
+	deployerRunner.AddZetaE2EUpgradeHandler("v32.0.2", func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
 		err = OverRideAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
