@@ -159,31 +159,34 @@ func NewTransactionFromMsg(
 	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
-	tx := msg.AsTransaction()
-	return NewRPCTransaction(tx, blockHash, blockNumber, index, baseFee, chainID)
+	return NewRPCTransaction(msg, blockHash, blockNumber, index, baseFee, chainID)
 }
 
 // NewTransactionFromData returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
 func NewRPCTransaction(
-	tx *ethtypes.Transaction,
+	msg *evmtypes.MsgEthereumTx,
 	blockHash common.Hash,
 	blockNumber,
 	index uint64,
 	baseFee,
 	chainID *big.Int,
 ) (*RPCTransaction, error) {
+	tx := msg.AsTransaction()
 	// Determine the signer. For replay-protected transactions, use the most permissive
 	// signer, because we assume that signers are backwards-compatible with old
-	// transactions. For non-protected transactions, the homestead signer signer is used
-	// because the return value of ChainId is zero for those transactions.
+	// transactions. For non-protected transactions, the frontier signer is used
+	// because the latest signer will reject the unprotected transactions.
 	var signer ethtypes.Signer
 	if tx.Protected() {
 		signer = ethtypes.LatestSignerForChainID(tx.ChainId())
 	} else {
-		signer = ethtypes.HomesteadSigner{}
+		signer = ethtypes.FrontierSigner{}
 	}
-	from, _ := ethtypes.Sender(signer, tx) // #nosec G703
+	from, err := msg.GetSenderLegacy(signer)
+	if err != nil {
+		return nil, err
+	}
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(tx.Type()),
@@ -242,7 +245,7 @@ func NewRPCTransactionFromIncompleteMsg(
 	*to = txAdditional.Recipient
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(txAdditional.Type),
-		From:     common.HexToAddress(msg.From),
+		From:     common.BytesToAddress(msg.From),
 		Gas:      hexutil.Uint64(txAdditional.GasLimit),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),

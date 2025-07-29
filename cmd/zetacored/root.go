@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -42,7 +43,6 @@ import (
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
-	zetamempool "github.com/zeta-chain/node/pkg/mempool"
 	zevmserver "github.com/zeta-chain/node/server"
 	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
@@ -343,6 +343,8 @@ type appCreator struct {
 	encCfg testutil.TestEncodingConfig
 }
 
+const DefaultMaxTxs = 3000
+
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -352,11 +354,22 @@ func (ac appCreator) newApp(
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
-		maxTxs = zetamempool.DefaultMaxTxs
+		maxTxs = DefaultMaxTxs
 	}
-	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
-		app.SetMempool(zetamempool.NewPriorityMempool(zetamempool.PriorityNonceWithMaxTx(maxTxs)))
+	signerExtractor := app.NewEthSignerExtractionAdapter(mempool.NewDefaultSignerExtractionAdapter())
+	mpool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{
+		TxPriority:      mempool.NewDefaultTxPriority(),
+		SignerExtractor: signerExtractor,
+		MaxTx:           maxTxs,
 	})
+	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
+		app.SetMempool(mpool)
+		handler := baseapp.NewDefaultProposalHandler(mpool, app)
+		handler.SetSignerExtractionAdapter(signerExtractor)
+		app.SetPrepareProposal(handler.PrepareProposalHandler())
+		app.SetProcessProposal(handler.ProcessProposalHandler())
+	})
+
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true

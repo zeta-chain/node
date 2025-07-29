@@ -118,7 +118,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 				"error",
 				err.Error(),
 			)
-			return nil, nil
+			return nil, err
 		}
 
 		bloom, err := f.backend.BlockBloom(blockRes)

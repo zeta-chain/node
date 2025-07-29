@@ -93,7 +93,7 @@ func (b *Backend) getAccountNonce(
 				break
 			}
 
-			sender, err := ethMsg.GetSender(b.EvmChainID)
+			sender, err := ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(b.EvmChainID))
 			if err != nil {
 				continue
 			}
