@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
+	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -314,6 +315,14 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !testSui || deployerRunner.IsRunningTssMigration() {
 			return
 		}
+		deployerRunner.SuiBuildExample()
+		deployerRunner.SuiDeployExample(
+			&deployerRunner.SuiExample,
+			suibin.ReadMoveBinaryBase64(deployerRunner, deployerRunner.WorkDirPrefixed(runner.SuiExampleBinToken)),
+			suibin.ReadMoveBinaryBase64(deployerRunner, deployerRunner.WorkDirPrefixed(runner.SuiExampleBinConnected)),
+			[]string{deployerRunner.SuiGateway.PackageID()},
+		)
+
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")

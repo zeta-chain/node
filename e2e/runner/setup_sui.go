@@ -39,11 +39,11 @@ const (
 )
 
 var (
-	// suiExampleBinToken is the path to the example token binary file
-	suiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
+	// SuiExampleBinToken is the path to the example token binary file
+	SuiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
 
-	// suiExampleBinConnected is the path to the example connected binary file
-	suiExampleBinConnected = fmt.Sprintf("%s/build/example/bytecode_modules/connected.mv", suiExamplePath)
+	// SuiExampleBinConnected is the path to the example connected binary file
+	SuiExampleBinConnected = fmt.Sprintf("%s/build/example/bytecode_modules/connected.mv", suiExamplePath)
 )
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
@@ -84,11 +84,11 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	// build and deploy example package with on_call function
-	r.suiBuildExample()
-	r.suiDeployExample(
+	r.SuiBuildExample()
+	r.SuiDeployExample(
 		&r.SuiExample,
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinToken)),
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinConnected)),
+		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(SuiExampleBinToken)),
+		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(SuiExampleBinConnected)),
 		[]string{r.SuiGateway.PackageID()},
 	)
 
@@ -166,8 +166,8 @@ func (r *E2ERunner) suiBuildGatewayUpgraded() {
 	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPath))
 }
 
-// suiBuildExample builds the example package
-func (r *E2ERunner) suiBuildExample() {
+// SuiBuildExample builds the example package
+func (r *E2ERunner) SuiBuildExample() {
 	// in order to import the gateway package, we need 3 patches to the Move.toml files:
 	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
 	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
@@ -271,8 +271,8 @@ func (r *E2ERunner) suiDeployFakeUSDC() string {
 	return coinType
 }
 
-// suiDeployExample deploys the example package on Sui
-func (r *E2ERunner) suiDeployExample(
+// SuiDeployExample deploys the example package on Sui
+func (r *E2ERunner) SuiDeployExample(
 	example *config.SuiExample,
 	fungibleTokenBytecodeBase64, connectedBytecodeBase64 string,
 	extraDependencies []string,
