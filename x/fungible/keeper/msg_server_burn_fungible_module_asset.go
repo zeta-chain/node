@@ -87,7 +87,6 @@ func (k msgServer) BurnFungibleModuleAsset(
 		); err != nil {
 			return nil, cosmoserrors.Wrapf(types.ErrFailedToBurn, "failed to burn zrc20 balance (%s)", err.Error())
 		}
-
 	}
 
 	return &types.MsgBurnFungibleModuleAssetResponse{}, nil

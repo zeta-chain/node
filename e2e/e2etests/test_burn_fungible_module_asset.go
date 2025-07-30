@@ -44,7 +44,7 @@ func testBurnFungibleModuleAssetZRC20(r *runner.E2ERunner) {
 	)
 	res, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
-	r.Logger.Info("Update connector bytecode tx hash: %s", res.TxHash)
+	r.Logger.Info("Burn fungible module asset tx hash: %s", res.TxHash)
 
 	// check the balance of the fungible module after burn
 	balance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.ModuleAddressEVM)
@@ -83,7 +83,7 @@ func testBurnFungibleModuleAssetZETA(r *runner.E2ERunner) {
 	)
 	resBurn, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
 	require.NoError(r, err)
-	r.Logger.Info("Update connector bytecode tx hash: %s", resBurn.TxHash)
+	r.Logger.Info("Burn fungible module asset tx hash: %s", resBurn.TxHash)
 
 	// check balance
 	res, err = r.BankClient.SpendableBalanceByDenom(r.Ctx, &banktypes.QuerySpendableBalanceByDenomRequest{
