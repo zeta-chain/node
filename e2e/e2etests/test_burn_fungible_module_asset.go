@@ -3,15 +3,23 @@ package e2etests
 import (
 	"math/big"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	"github.com/zeta-chain/node/pkg/constant"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 )
 
 func TestBurnFungibleModuleAsset(r *runner.E2ERunner, _ []string) {
+	testBurnFungibleModuleAssetZRC20(r)
+	testBurnFungibleModuleAssetZETA(r)
+}
+
+func testBurnFungibleModuleAssetZRC20(r *runner.E2ERunner) {
 	// get fungible module balance
 	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.ModuleAddressEVM)
 	require.NoError(r, err)
@@ -42,4 +50,47 @@ func TestBurnFungibleModuleAsset(r *runner.E2ERunner, _ []string) {
 	balance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.ModuleAddressEVM)
 	require.NoError(r, err)
 	require.Zero(r, balance.Uint64())
+}
+
+func testBurnFungibleModuleAssetZETA(r *runner.E2ERunner) {
+	// get fungible module balance
+	res, err := r.BankClient.SpendableBalanceByDenom(r.Ctx, &banktypes.QuerySpendableBalanceByDenomRequest{
+		Address: fungibletypes.ModuleAddress.String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	balance := res.Balance.Amount
+
+	// if the balance is zero, we need to deposit some tokens
+	if balance.IsZero() {
+		err := r.ZetaTxServer.TransferZETA(fungibletypes.ModuleAddress, 1000)
+		require.NoError(r, err)
+
+		// check balance
+		res, err := r.BankClient.SpendableBalanceByDenom(r.Ctx, &banktypes.QuerySpendableBalanceByDenomRequest{
+			Address: fungibletypes.ModuleAddress.String(),
+			Denom:   config.BaseDenom,
+		})
+		require.NoError(r, err)
+		balance := res.Balance.Amount
+		require.NotZero(r, balance.Int64())
+	}
+
+	r.Logger.Info("Sending message to burn fungible module asset")
+	msg := fungibletypes.NewMsgBurnFungibleModuleAsset(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.AdminPolicyName),
+		constant.EVMZeroAddress,
+	)
+	resBurn, err := r.ZetaTxServer.BroadcastTx(utils.AdminPolicyName, msg)
+	require.NoError(r, err)
+	r.Logger.Info("Update connector bytecode tx hash: %s", resBurn.TxHash)
+
+	// check balance
+	res, err = r.BankClient.SpendableBalanceByDenom(r.Ctx, &banktypes.QuerySpendableBalanceByDenomRequest{
+		Address: fungibletypes.ModuleAddress.String(),
+		Denom:   config.BaseDenom,
+	})
+	require.NoError(r, err)
+	balance = res.Balance.Amount
+	require.Zero(r, balance.Int64())
 }

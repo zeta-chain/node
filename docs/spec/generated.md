@@ -727,6 +727,7 @@ message MsgUpdateZRC20Name {
 #### MsgBurnFungibleModuleAsset
 
 BurnFungibleModuleAsset burns the zrc20 balance on the fungible module
+If the zero address is provided, it burns the native ZETA held from the fungible module
 
 ```proto
 message MsgBurnFungibleModuleAsset {
