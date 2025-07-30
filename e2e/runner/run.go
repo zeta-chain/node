@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/utils"
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
@@ -21,32 +22,43 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 			r.Logger.Print("⚠️ skipping test - %s (minimum version %s)", e2eTest.Name, e2eTest.MinimumVersion)
 			continue
 		}
-		balancesBefore := r.CheckProtocolAddressBalances()
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}
-		if err := r.RunE2ETest(e2eTest, false); err != nil {
+		if err := r.runTestWithProtocolBalanceCheck(e2eTest); err != nil {
 			return err
-		}
-		balancesAfter := r.CheckProtocolAddressBalances()
-		if !balancesAfter.Equal(balancesBefore) {
-			r.Logger.Print("⚠️ protocol address balance changed during test %s: before %s, after %s", e2eTest.Name, balancesBefore.String(), balancesAfter.String())
 		}
 	}
 	return nil
 }
 
-func (r *E2ERunner) CheckProtocolAddressBalances() sdkmath.Int {
+func (r *E2ERunner) runTestWithProtocolBalanceCheck(e2eTest E2ETest) error {
+	balancesBefore := r.checkProtocolAddressBalance(config.BaseDenom)
+
+	if err := r.RunE2ETest(e2eTest); err != nil {
+		return err
+	}
+
+	balancesAfter := r.checkProtocolAddressBalance(config.BaseDenom)
+	if !balancesAfter.Equal(balancesBefore) {
+		r.Logger.Print("⚠️ protocol address balance changed during test %s: before %s, after %s",
+			e2eTest.Name, balancesBefore.String(), balancesAfter.String())
+	}
+
+	return nil
+}
+
+func (r *E2ERunner) checkProtocolAddressBalance(denom string) sdkmath.Int {
 	res, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
 		Address: fungibletypes.ModuleAddress.String(),
-		Denom:   config.BaseDenom,
+		Denom:   denom,
 	})
 	require.NoError(r, err, "failed to get protocol address balance")
 	return res.GetBalance().Amount
 }
 
 // RunE2ETest runs a e2e test
-func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
+func (r *E2ERunner) RunE2ETest(e2eTest E2ETest) error {
 	// wait for all dependencies to complete
 	// this is only used by Bitcoin RBF test at the moment
 	if len(e2eTest.Dependencies) > 0 {
@@ -91,11 +103,6 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 		}
 	}
 
-	// check zrc20 balance vs. supply
-	if checkAccounting {
-		r.CheckZRC20BalanceAndSupply()
-	}
-
 	r.Logger.Print("✅ completed - %s (%s)", e2eTest.Name, time.Since(startTime))
 
 	return nil
@@ -115,7 +122,7 @@ func (r *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, erro
 		timeBefore := time.Now()
 
 		// run test
-		testErr := r.RunE2ETest(test, false)
+		testErr := r.RunE2ETest(test)
 		if testErr != nil {
 			r.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
 		}

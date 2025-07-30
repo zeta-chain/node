@@ -105,12 +105,6 @@ func (k Keeper) ProcessZEVMInboundV2(
 				)
 			}
 		}
-		//	~/IdeaProjects/kingpinXD/zeta-node git:[connector-v2-migration-withdraw] zetacored q bank balances zeta1wdd3fwmegces02ktakrd4uej9v0xyf4trw8fja
-		//balances:
-		//	- amount: "20000000000000001000"
-		//denom: azeta
-		//pagination:
-		//total: "1"
 
 		// validate data of the withdrawal event
 		if err := k.validateOutbound(ctx, inboundDetails.receiverChain.ChainId, inboundDetails.coinType, value, receiver); err != nil {

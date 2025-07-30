@@ -181,6 +181,7 @@ func (r *E2ERunner) deployTestDAppV2() {
 		r.ZEVMClient,
 		true,
 		r.GatewayEVMAddr,
+		r.WZetaAddr,
 	)
 	require.NoError(r, err)
 	r.ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")

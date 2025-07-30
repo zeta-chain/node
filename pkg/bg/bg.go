@@ -60,7 +60,7 @@ func Work(ctx context.Context, f func(context.Context) error, opts ...Opt) {
 			cfg.onComplete()
 		}
 
-		cfg.logger.Info().Str("worker.name", cfg.getName()).Msg("Background task completed")
+		cfg.logger.Debug().Str("worker.name", cfg.getName()).Msg("Background task completed")
 	}()
 }
 

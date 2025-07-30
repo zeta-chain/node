@@ -104,7 +104,7 @@ func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 		outboundNonce  = c.OutboundTssNonce
 	)
 
-	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain, outboundNonce)
+	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain.ChainId, outboundNonce)
 	// the tracker is found that means the outbound has been broadcast, but we are waiting for confirmations
 	if err == nil && tracker != nil {
 		c.updateOutboundConfirmation()

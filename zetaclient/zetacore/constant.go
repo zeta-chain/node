@@ -1,7 +1,5 @@
 package zetacore
 
-import "time"
-
 const (
 	// DefaultBaseGasPrice is the default base gas price
 	DefaultBaseGasPrice = 1_000_000
@@ -42,10 +40,4 @@ const (
 
 	// PostVoteOutboundRevertGasLimit is the retry gas limit for voting on observed outbound tx for success outbound
 	PostVoteOutboundRetryGasLimit uint64 = 1_000_000
-)
-
-// constants for monitoring tx results
-const (
-	monitorInterval   = 5 * time.Second
-	monitorRetryCount = 20
 )

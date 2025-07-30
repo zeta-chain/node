@@ -642,6 +642,7 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 	// compliance check
+	// https://github.com/zeta-chain/node/issues/4057
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,

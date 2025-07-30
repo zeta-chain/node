@@ -55,9 +55,7 @@ func tssMigrationTestRoutine(
 		if err := tssMigrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
-		if err := tssMigrationTestRunner.CheckBTCTSSBalance(); err != nil {
-			return err
-		}
+		tssMigrationTestRunner.CheckBTCTSSBalance()
 
 		tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
 

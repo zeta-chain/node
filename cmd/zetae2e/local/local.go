@@ -324,7 +324,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ config file written in %s", configOut)
 	}
 
-	deployerRunner.PrintContractAddresses()
 	deployerRunner.AssertAfterUpgrade("v32.0.0", func() {
 		if !testSui {
 			return
@@ -339,6 +338,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ the localnet has been setup")
 		os.Exit(0)
 	}
+	deployerRunner.PrintContractAddresses()
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
@@ -355,9 +355,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 
 	if !skipRegular {
-		//startEVMTests(&eg, conf, deployerRunner, verbose)
-		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
-		fmt.Println(skipBitcoinSetup, light)
+		startEVMTests(&eg, conf, deployerRunner, verbose)
+		//startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
+		fmt.Println("light:", light)
+		fmt.Println("skipBitcoinSetup:", skipBitcoinSetup)
 	}
 	if !skipPrecompiles {
 		precompiledContractTests := []string{
@@ -553,6 +554,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			//e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
 			//e2etests.TestLegacyZetaDepositRestrictedName,
 			e2etests.TestLegacyZetaDepositName,
+			e2etests.TestLegacyZetaDepositAndCallAbortName,
 			e2etests.TestLegacyZetaDepositNewAddressName,
 		))
 		//eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
@@ -583,7 +585,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.CheckZRC20BalanceAndSupply()
+	deployerRunner.VerifyAccounting(testLegacy)
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.

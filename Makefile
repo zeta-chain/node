@@ -379,7 +379,7 @@ endif
 start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=280 && \
+	export UPGRADE_HEIGHT=240 && \
 	export E2E_ARGS="--test-solana --test-sui" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana --profile sui -f docker-compose-upgrade.yml up -d
 
@@ -402,7 +402,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	export UPGRADE_HEIGHT=280 && \
+	export UPGRADE_HEIGHT=240 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-connector-migration-test: zetanode-upgrade

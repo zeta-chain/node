@@ -108,7 +108,7 @@ func NewClient(
 		ChainHost:    cosmosREST(chainIP),
 		SignerName:   signerName,
 		SignerPasswd: "password",
-		ChainRPC:     CometBFTRPC(chainIP),
+		ChainRPC:     cometBFTRPC(chainIP),
 	}
 
 	encodingCfg := app.MakeEncodingConfig()
@@ -130,22 +130,38 @@ func NewClient(
 		return nil, errors.Wrap(err, "unable to build cosmos client context")
 	}
 
-	cometBFTClientIface := constructOptions.cometBFTClient
+	cometBFTClient := constructOptions.cometBFTClient
 
 	// create a cometbft client if one was not provided in the constructOptions
 	if !constructOptions.customCometBFT {
-		cometBFTURL := "http://" + CometBFTRPC(chainIP)
-		cometBFTClient, err := cometbfthttp.New(cometBFTURL, "/websocket")
+		base := "http://" + cometBFTRPC(chainIP)
+		client, err := cometbfthttp.New(base, "/websocket")
 		if err != nil {
-			return nil, errors.Wrapf(err, "new cometbft client (%s)", cometBFTURL)
+			return nil, errors.Wrapf(err, "new cometbft client (%s)", base)
 		}
+
 		// start websockets
-		err = cometBFTClient.WSEvents.Start()
+		err = client.WSEvents.Start()
 		if err != nil {
 			return nil, errors.Wrap(err, "cometbft start")
 		}
-		cometBFTClientIface = cometBFTClient
+
+		cometBFTClient = client
 	}
+
+	// set account number and sequence number for the zeta client grantee key
+	address, err := keys.GetAddress()
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to get address")
+	}
+
+	accN, seq, err := cosmosContext.AccountRetriever.GetAccountNumberSequence(cosmosContext, address)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to get account number and sequence number")
+	}
+
+	accountsMap[authz.ZetaClientGranteeKey] = accN
+	seqMap[authz.ZetaClientGranteeKey] = seq
 
 	return &Client{
 		Clients: zetacoreClients,
@@ -153,7 +169,7 @@ func NewClient(
 		config:  cfg,
 
 		cosmosClientContext: cosmosContext,
-		cometBFTClient:      cometBFTClientIface,
+		cometBFTClient:      cometBFTClient,
 
 		accountNumber: accountsMap,
 		seqNumber:     seqMap,
@@ -272,25 +288,6 @@ func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uin
 	return c.cosmosClientContext.AccountRetriever.GetAccountNumberSequence(c.cosmosClientContext, address)
 }
 
-// SetAccountNumber sets the account number and sequence number for the given keyType
-// todo remove method and make it part of the client constructor.
-func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
-	address, err := c.keys.GetAddress()
-	if err != nil {
-		return errors.Wrap(err, "fail to get address")
-	}
-
-	accN, seq, err := c.cosmosClientContext.AccountRetriever.GetAccountNumberSequence(c.cosmosClientContext, address)
-	if err != nil {
-		return errors.Wrap(err, "fail to get account number and sequence number")
-	}
-
-	c.accountNumber[keyType] = accN
-	c.seqNumber[keyType] = seq
-
-	return nil
-}
-
 func cosmosREST(host string) string {
 	return fmt.Sprintf("%s:1317", host)
 }
@@ -299,6 +296,6 @@ func cosmosGRPC(host string) string {
 	return fmt.Sprintf("%s:9090", host)
 }
 
-func CometBFTRPC(host string) string {
+func cometBFTRPC(host string) string {
 	return fmt.Sprintf("%s:26657", host)
 }

@@ -263,11 +263,12 @@ const (
 	 Note: It is still the only way to transfer ZETA across chains. Work to integrate ZETA transfers as part of the gateway is in progress
 	 These tests are marked as legacy because there is no longer active development on ZETA transfers, and we stopped integrating ZETA support on new mainnet chains
 	*/
-	TestLegacyZetaDepositName           = "legacy_zeta_deposit"
-	TestLegacyZetaDepositNewAddressName = "legacy_zeta_deposit_new_address"
-	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
-	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
-	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestLegacyZetaDepositName             = "legacy_zeta_deposit"
+	TestLegacyZetaDepositAndCallAbortName = "legacy_zeta_deposit_and_call_abort"
+	TestLegacyZetaDepositNewAddressName   = "legacy_zeta_deposit_new_address"
+	TestLegacyZetaDepositRestrictedName   = "legacy_zeta_deposit_restricted"
+	TestLegacyZetaWithdrawName            = "legacy_zeta_withdraw"
+	TestLegacyZetaWithdrawBTCRevertName   = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
 	TestZetaDepositName                       = "zeta_deposit"
 	TestZetaDepositAndCallName                = "zeta_deposit_and_call"
@@ -367,7 +368,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw zeta from ZEVM and call a contract on connected eth chain",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawAndCall,
 		runner.WithMinimumVersion(V2ZetaVersion),
@@ -395,7 +396,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Zeta from ZEVM, revert, then abort with onAbort",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawRevertAndAbort,
 		runner.WithMinimumVersion(V2ZetaVersion),
@@ -414,7 +415,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Zeta from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawAndCallNoMessage,
 		runner.WithMinimumVersion(V2ZetaVersion),
@@ -503,7 +504,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawAndCall,
 	),
@@ -519,7 +520,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM call a contract with no message content",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "100000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawAndCallNoMessage,
 	),
@@ -552,7 +553,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw Ether from ZEVM, revert, then abort with onAbort, check onAbort can created cctx",
 		[]runner.ArgDefinition{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
-			{Description: "gas limit for withdraw", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw", DefaultValue: "350000"},
 		},
 		TestETHWithdrawRevertAndAbort,
 		runner.WithMinimumVersion("v29.0.0"),
@@ -642,7 +643,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestERC20WithdrawAndCall,
 	),
@@ -651,7 +652,7 @@ var AllE2ETests = []runner.E2ETest{
 		"withdraw ERC20 from ZEVM and authenticated call a contract with no message",
 		[]runner.ArgDefinition{
 			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "250000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestERC20WithdrawAndCallNoMessage,
 	),
@@ -1290,7 +1291,6 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM and call a contract with inscribed standard memo",
 		[]runner.ArgDefinition{
 			{Description: "amount in btc", DefaultValue: "0.1"},
-			{Description: "fee rate", DefaultValue: "10"},
 		},
 		TestBitcoinStdMemoInscribedDepositAndCall,
 		runner.WithMinimumVersion("v32.0.0"),
@@ -1938,6 +1938,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},
 		legacy.TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositAndCallAbortName,
+		"deposit and ZETA from Ethereum to ZEVM and call a contract.The cctx reverts and then aborts",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositAndCallAbort,
 	),
 	runner.NewE2ETest(
 		TestLegacyZetaDepositNewAddressName,

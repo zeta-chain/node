@@ -48,7 +48,7 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
-	r.AssertTestDAppEVMCalled(true, payload, big.NewInt(0))
+	r.AssertTestDAppEVMCalled(true, payload, amount)
 
 	// check expected sender was used
 	senderForMsg, err := r.TestDAppV2EVM.SenderWithMessage(
