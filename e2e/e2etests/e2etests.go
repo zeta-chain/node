@@ -206,6 +206,7 @@ const (
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 	TestMigrateConnectorFundsName        = "migrate_connector_funds"
+	TestBurnFungibleModuleAssetName      = "burn_fungible_module_asset"
 
 	/*
 	 Operational tests
@@ -1539,6 +1540,13 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestUpdateOperationalChainParams,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBurnFungibleModuleAssetName,
+		"burn fungible module asset",
+		[]runner.ArgDefinition{},
+		TestBurnFungibleModuleAsset,
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	/*
 	 Special tests
