@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
@@ -38,6 +39,13 @@ func TestMsgBurnFungibleModuleAsset_ValidateBasic(t *testing.T) {
 			msg: types.NewMsgBurnFungibleModuleAsset(
 				sample.AccAddress(),
 				sample.EthAddress().String(),
+			),
+		},
+		{
+			name: "zero address is valid",
+			msg: types.NewMsgBurnFungibleModuleAsset(
+				sample.AccAddress(),
+				constant.EVMZeroAddress,
 			),
 		},
 	}

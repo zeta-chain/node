@@ -47,7 +47,7 @@ func (msg *MsgBurnFungibleModuleAsset) ValidateBasic() error {
 	if err != nil {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	// check if the system contract address is valid
+	// check if the zrc20 address is valid
 	if !ethcommon.IsHexAddress(msg.Zrc20Address) {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20Address)
 	}
