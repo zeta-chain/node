@@ -1,6 +1,11 @@
 package keeper_test
 
 import (
+	"errors"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	"github.com/zeta-chain/node/pkg/constant"
 	"math/big"
 	"testing"
 
@@ -47,7 +52,7 @@ func TestKeeper_BurnFungibleModuleAsset(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, amount.Uint64(), balance.Uint64())
 
-		// can update the protocol fee and gas limit
+		// can burn the balance
 		msg := types.NewMsgBurnFungibleModuleAsset(
 			admin,
 			zrc20Addr.String(),
@@ -60,6 +65,11 @@ func TestKeeper_BurnFungibleModuleAsset(t *testing.T) {
 		balance, err = k.ZRC20BalanceOf(ctx, zrc20Addr, types.ModuleAddressEVM)
 		require.NoError(t, err)
 		require.Zero(t, balance.Uint64(), "balance should be zero after burn")
+
+		// doing a second call should fail with zero balance error
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err = msgServer.BurnFungibleModuleAsset(ctx, msg)
+		require.ErrorIs(t, err, types.ErrZeroBalance)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
@@ -114,5 +124,89 @@ func TestKeeper_BurnFungibleModuleAsset(t *testing.T) {
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 		_, err := msgServer.BurnFungibleModuleAsset(ctx, msg)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+	})
+
+	t.Run("should burn the native ZETA asset", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+			UseBankMock:      true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+
+		// mock the bank keeper
+		bankMock.On(
+			"SpendableCoin", mock.Anything, mock.Anything, mock.Anything,
+		).Return(sdktypes.NewInt64Coin(config.BaseDenom, 1000)).Once()
+		bankMock.On(
+			"BurnCoins", mock.Anything, mock.Anything, mock.Anything,
+		).Return(nil).Once()
+
+		// can burn the balance
+		msg := types.NewMsgBurnFungibleModuleAsset(
+			admin,
+			constant.EVMZeroAddress,
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.BurnFungibleModuleAsset(ctx, msg)
+		require.NoError(t, err)
+	})
+
+	t.Run("should fail if ZETA balance is zero", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+			UseBankMock:      true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+
+		// mock the bank keeper
+		bankMock.On(
+			"SpendableCoin", mock.Anything, mock.Anything, mock.Anything,
+		).Return(sdktypes.NewInt64Coin(config.BaseDenom, 0)).Once()
+
+		// can burn the balance
+		msg := types.NewMsgBurnFungibleModuleAsset(
+			admin,
+			constant.EVMZeroAddress,
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.BurnFungibleModuleAsset(ctx, msg)
+		require.ErrorIs(t, err, types.ErrZeroBalance)
+	})
+
+	t.Run("should fail if can't burn ZETA", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+			UseBankMock:      true,
+		})
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		bankMock := keepertest.GetFungibleBankMock(t, k)
+
+		// mock the bank keeper
+		bankMock.On(
+			"SpendableCoin", mock.Anything, mock.Anything, mock.Anything,
+		).Return(sdktypes.NewInt64Coin(config.BaseDenom, 1000)).Once()
+		bankMock.On(
+			"BurnCoins", mock.Anything, mock.Anything, mock.Anything,
+		).Return(errors.New("can't burn")).Once()
+
+		// can burn the balance
+		msg := types.NewMsgBurnFungibleModuleAsset(
+			admin,
+			constant.EVMZeroAddress,
+		)
+		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
+		_, err := msgServer.BurnFungibleModuleAsset(ctx, msg)
+		require.ErrorIs(t, err, types.ErrFailedToBurn)
 	})
 }
