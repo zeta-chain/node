@@ -58231,6 +58231,8 @@ definitions:
         type: boolean
       liquidityCap:
         type: string
+  zetachain.zetacore.fungible.MsgBurnFungibleModuleAssetResponse:
+    type: object
   zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response:
     type: object
     properties:

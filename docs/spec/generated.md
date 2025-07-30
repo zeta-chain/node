@@ -724,6 +724,15 @@ message MsgUpdateZRC20Name {
 }
 ```
 
+#### MsgBurnFungibleModuleAsset
+
+```proto
+message MsgBurnFungibleModuleAsset {
+	string creator = 1;
+	string zrc20_address = 2;
+}
+```
+
 ## lightclient
 
 ### Messages
