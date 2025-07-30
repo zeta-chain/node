@@ -726,6 +726,8 @@ message MsgUpdateZRC20Name {
 
 #### MsgBurnFungibleModuleAsset
 
+BurnFungibleModuleAsset burns the zrc20 balance on the fungible module
+
 ```proto
 message MsgBurnFungibleModuleAsset {
 	string creator = 1;
