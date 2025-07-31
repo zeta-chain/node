@@ -784,8 +784,9 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 func TestKeeper_ProcessLogs(t *testing.T) {
 	t.Run("successfully process Zeta Withdraw to ETH chain", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		err := sdkk.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(1000000000000))))
 
 		chain := chains.GoerliLocalnet
 		chainID := chain.ChainId
@@ -832,9 +833,10 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 	})
 
 	t.Run("successfully process Zeta Withdraw and call to ETH chain", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-
+		err := sdkk.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdkmath.NewInt(10000000000))))
+		require.NoError(t, err)
 		chain := chains.GoerliLocalnet
 		chainID := chain.ChainId
 		senderChain := chains.ZetaChainMainnet

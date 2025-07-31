@@ -83,15 +83,19 @@ func (k Keeper) processZetaRevert(
 	revertMessage []byte,
 	callOnRevert bool,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	res, _, err := k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-		if callOnRevert {
-			res, err := k.CallZetaDepositAndRevert(tmpCtx, inboundSender, amount, revertAddress, revertMessage)
-			return res, false, err
-		}
+	res, _, err := k.executeWithMintedZeta(
+		ctx,
+		amount,
+		func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			if callOnRevert {
+				res, err := k.CallZetaDepositAndRevert(tmpCtx, inboundSender, amount, revertAddress, revertMessage)
+				return res, false, err
+			}
 
-		res, err := k.DepositZeta(tmpCtx, revertAddress, amount)
-		return res, false, err
-	})
+			res, err := k.DepositZeta(tmpCtx, revertAddress, amount)
+			return res, false, err
+		},
+	)
 
 	return res, err
 }

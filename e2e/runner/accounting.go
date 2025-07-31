@@ -234,6 +234,10 @@ func (r *E2ERunner) checkZETATSSBalance(testLegacy bool) {
 	var comparison string
 	var difference sdkmath.Int
 
+	// This comparison assumes that the zeta allocated to Universal contracts is always consumed.However, in reality it may not be the case.
+	// It is quite possible that the Zeta locked is greater than the Zeta minted as the unused Zeta is returned back to the connector.
+	// For e2e tests, we artificially consume all Zeta that was allocated.
+
 	if zetaMinted.GT(zetaLocked) {
 		comparison = "zetaMinted > zetaLocked"
 		difference = zetaMinted.Sub(zetaLocked)

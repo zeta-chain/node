@@ -33,10 +33,16 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		expectedChain := chains.Chain{
-			ChainName: chains.ChainName_eth_mainnet,
-			ChainId:   1,
+			ChainName:  chains.ChainName_eth_mainnet,
+			ChainId:    1,
+			IsExternal: true,
 		}
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
+		observerMock.On("GetChainParamsByChainID", ctx, int64(1)).Return(&observertypes.ChainParams{
+			ChainId:                  receiverChainID.Int64(),
+			IsSupported:              true,
+			ZetaTokenContractAddress: sample.EthAddress().Hex(),
+		}, true)
 
 		// ACT
 		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
@@ -130,6 +136,11 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			ChainId:   1,
 		}
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
+		observerMock.On("GetChainParamsByChainID", ctx, int64(1)).Return(&observertypes.ChainParams{
+			ChainId:                  receiverChainID.Int64(),
+			IsSupported:              true,
+			ZetaTokenContractAddress: sample.EthAddress().Hex(),
+		}, true)
 
 		// ACT
 		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
@@ -158,6 +169,11 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 			ChainId:   1,
 		}
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(1)).Return(expectedChain, true)
+		observerMock.On("GetChainParamsByChainID", ctx, int64(1)).Return(&observertypes.ChainParams{
+			ChainId:                  receiverChainID.Int64(),
+			IsSupported:              true,
+			ZetaTokenContractAddress: sample.EthAddress().Hex(),
+		}, true)
 
 		// ACT
 		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
@@ -167,7 +183,9 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrInvalidWithdrawalEvent)
 		require.Contains(t, err.Error(), "gas limit not provided for ZETA withdrawal")
 	})
+}
 
+func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 	t.Run("success with valid foreign coin", func(t *testing.T) {
 		// ARRANGE
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{

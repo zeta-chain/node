@@ -139,15 +139,19 @@ func (k Keeper) processZetaDeposit(
 	isCrossChainCall bool,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// Use a helper function to handle the mint + execute + commit pattern
-	return k.executeWithMintedZeta(ctx, amount, func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
-		if isCrossChainCall {
-			res, err := k.DepositAndCallZeta(tmpCtx, context, amount, to, message)
-			return res, true, err
-		}
+	return k.executeWithMintedZeta(
+		ctx,
+		amount,
+		func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			if isCrossChainCall {
+				res, err := k.DepositAndCallZeta(tmpCtx, context, amount, to, message)
+				return res, true, err
+			}
 
-		res, err := k.DepositZeta(tmpCtx, to, amount)
-		return res, false, err
-	})
+			res, err := k.DepositZeta(tmpCtx, to, amount)
+			return res, false, err
+		},
+	)
 }
 
 // processZRC20Deposit handles ZRC20 token deposits [ZRC20 tokens exist for ERC20 and GAS tokens]

@@ -66,8 +66,6 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			indexBytes,
 		)
 
-		fmt.Println("HandleEVMDeposit called for ZETA deposit")
-		fmt.Println(evmTxResponse, err)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {

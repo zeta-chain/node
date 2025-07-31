@@ -62,7 +62,7 @@ func getTestDAppNoMessageIndex(
 
 // deployTestDAppV2 deploys the test dapp v2 contract and returns its address
 func deployTestDAppV2(t *testing.T, ctx sdk.Context, k *fungiblekeeper.Keeper, evmk types.EVMKeeper) common.Address {
-	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress())
+	testDAppV2, err := k.DeployContract(ctx, testdappv2.TestDAppV2MetaData, true, sample.EthAddress(), sample.EthAddress())
 	require.NoError(t, err)
 	require.NotEmpty(t, testDAppV2)
 	assertContractDeployment(t, evmk, ctx, testDAppV2)

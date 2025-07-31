@@ -137,7 +137,13 @@ func (r *E2ERunner) deployERC20Custody() {
 
 // deployTestDAppV2EVM deploys the test DApp V2 contract for EVM
 func (r *E2ERunner) deployTestDAppV2EVM() {
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr, r.ZetaEthAddr)
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
+		r.EVMAuth,
+		r.EVMClient,
+		false,
+		r.GatewayEVMAddr,
+		r.ZetaEthAddr,
+	)
 	require.NoError(r, err)
 	r.ensureTxReceiptEVM(txTestDAppV2, "TestDAppV2 deployment failed")
 

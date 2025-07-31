@@ -10,13 +10,14 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/node/cmd/zetacored/config"
-	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -94,6 +95,9 @@ func (k Keeper) ProcessZEVMInboundV2(
 			)
 		}
 
+		// if the coin type is ZETA, we need to burn the coins as the GatewayZEVM contract transfers the ZETA to the fungible module account.
+		// For ERC20 and GAS coin types; the GatewayZEVM directly burns the tokens, so we can skip this step.
+		// NOTE: value does not include tokens paid for the gas which is burned by the GatewayZEVM contract for both cases
 		if inboundDetails.coinType == coin.CoinType_Zeta {
 			err := k.bankKeeper.BurnCoins(ctx,
 				fungibletypes.ModuleName,
@@ -193,6 +197,24 @@ func (k Keeper) getZetaInboundDetails(
 			observertypes.ErrSupportedChains,
 			"chain with chainID %d not supported",
 			receiverChainID.Int64(),
+		)
+	}
+	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
+	chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, parsedReceiverChain.ChainId)
+	if !found {
+		return InboundDetails{}, errorsmod.Wrapf(
+			observertypes.ErrChainParamsNotFound,
+			"chaind ID :%d",
+			parsedReceiverChain.ChainId,
+		)
+	}
+
+	if parsedReceiverChain.IsExternalChain() &&
+		(chainParams.ZetaTokenContractAddress == "" || chainParams.ZetaTokenContractAddress == constant.EVMZeroAddress) {
+		return InboundDetails{}, errorsmod.Wrapf(
+			types.ErrUnableToSendCoinType,
+			" cannot send ZETA to external chain %d",
+			parsedReceiverChain.ChainId,
 		)
 	}
 
