@@ -39,7 +39,7 @@ func TestETHWithdrawCustomGasLimit(r *runner.E2ERunner, args []string) {
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
 	// check gas limit used
-	require.EqualValues(r, customGasLimit.Uint64(), cctx.OutboundParams[0].GasLimit)
+	require.EqualValues(r, customGasLimit.Uint64(), cctx.OutboundParams[0].CallOptions.GasLimit)
 
 	// check the balance was updated, we just check newBalance is greater than oldBalance because of the gas fee
 	newBalance, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
