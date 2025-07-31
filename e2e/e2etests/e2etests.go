@@ -21,6 +21,7 @@ const (
 	TestETHDepositRevertAndAbortName        = "eth_deposit_revert_and_abort"
 
 	TestETHWithdrawName                          = "eth_withdraw"
+	TestETHWithdrawCustomGasLimitName            = "eth_withdraw_custom_gas_limit"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
 	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
@@ -417,6 +418,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestETHWithdraw,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawCustomGasLimitName,
+		"withdraw Ether from ZEVM using a custom gas limit",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw", DefaultValue: "200000"},
+		},
+		TestETHWithdrawCustomGasLimit,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndArbitraryCallName,
