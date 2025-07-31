@@ -69,7 +69,14 @@ func (k msgServer) BurnFungibleModuleAsset(
 		if err != nil {
 			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query zrc20 balance (%s)", err.Error())
 		}
-		if balance.Uint64() == 0 {
+		if balance == nil {
+			return nil, cosmoserrors.Wrapf(
+				types.ErrZeroBalance,
+				"balance is nil for zrc20 address (%s)",
+				msg.Zrc20Address,
+			)
+		}
+		if balance.Sign() == 0 {
 			return nil, cosmoserrors.Wrapf(
 				types.ErrZeroBalance,
 				"no balance found for zrc20 address (%s)",
