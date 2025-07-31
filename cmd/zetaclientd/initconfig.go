@@ -18,7 +18,9 @@ type initializeConfigOptions struct {
 	logSampler         bool
 	preParamsPath      string
 	chainID            string
-	zetacoreURL        string
+	zetacoreIP         string
+	zetacoreGRPCURL    string
+	zetacoreWSSURL     string
 	authzGranter       string
 	authzHotkey        string
 	level              int8
@@ -50,7 +52,9 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
-	f.StringVar(&cfg.zetacoreURL, "zetacore-url", "127.0.0.1", "zetacore node URL")
+	f.StringVar(&cfg.zetacoreIP, "zetacore-ip", "", "zetacore node IP address, leave it empty to use gRPC and WSS URLs")
+	f.StringVar(&cfg.zetacoreGRPCURL, "zetacore-grpc-url", "", "zetacore node gRPC URL")
+	f.StringVar(&cfg.zetacoreWSSURL, "zetacore-wss-url", "", "zetacore node websocket URL")
 	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)
@@ -84,7 +88,9 @@ func InitializeConfig(_ *cobra.Command, _ []string) error {
 	configData.PublicIP = opts.publicIP
 	configData.PreParamsPath = opts.preParamsPath
 	configData.ChainID = opts.chainID
-	configData.ZetaCoreURL = opts.zetacoreURL
+	configData.ZetacoreIP = opts.zetacoreIP
+	configData.ZetacoreURLGRPC = opts.zetacoreGRPCURL
+	configData.ZetacoreURLWSS = opts.zetacoreWSSURL
 	configData.AuthzHotkey = opts.authzHotkey
 	configData.AuthzGranter = opts.authzGranter
 	configData.LogLevel = opts.level

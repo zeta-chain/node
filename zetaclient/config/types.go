@@ -1,11 +1,16 @@
 package config
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/showa-93/go-mask"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -27,13 +32,25 @@ const (
 	DefaultRelayerKeyPath = "~/.zetacored/" + DefaultRelayerDir
 )
 
-// ClientConfiguration is a subset of zetaclient config that is used by zetacore client
-type ClientConfiguration struct {
-	ChainHost       string `json:"chain_host"        mapstructure:"chain_host"`
-	ChainRPC        string `json:"chain_rpc"         mapstructure:"chain_rpc"`
-	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
-	SignerName      string `json:"signer_name"       mapstructure:"signer_name"`
-	SignerPasswd    string `json:"signer_passwd"`
+var (
+	// insecureGRPC is a grpc.DialOption that uses insecure transport credentials
+	// this is used when establishing gRPC connection to zetacore node via IP address
+	insecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
+
+	// credsTLSGRPC is a grpc.DialOption that uses TLS transport credentials
+	// this is used when establishing gRPC connection to zetacore node via hostname
+	credsTLSGRPC = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"h2"},
+	}))
+)
+
+// ZetacoreClientConfig is a subset of zetaclient config that is used by zetacore client
+type ZetacoreClientConfig struct {
+	GRPCURL     string          `json:"grpc_url"`
+	WSRemote    string          `json:"ws_remote"`
+	SignerName  string          `json:"signer_name"`
+	GRPCDialOpt grpc.DialOption `json:"grpc_dial_opt"`
 }
 
 // EVMConfig is the config for EVM chain
@@ -77,15 +94,18 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer                    string         `json:"Peer"`
-	PublicIP                string         `json:"PublicIP"`
-	LogFormat               string         `json:"LogFormat"`
-	LogLevel                int8           `json:"LogLevel"`
-	LogSampler              bool           `json:"LogSampler"`
-	PreParamsPath           string         `json:"PreParamsPath"`
-	ZetaCoreHome            string         `json:"ZetaCoreHome"`
-	ChainID                 string         `json:"ChainID"`
-	ZetaCoreURL             string         `json:"ZetaCoreURL"`
+	Peer          string `json:"Peer"`
+	PublicIP      string `json:"PublicIP"`
+	LogFormat     string `json:"LogFormat"`
+	LogLevel      int8   `json:"LogLevel"`
+	LogSampler    bool   `json:"LogSampler"`
+	PreParamsPath string `json:"PreParamsPath"`
+	ZetaCoreHome  string `json:"ZetaCoreHome"`
+	ChainID       string `json:"ChainID"`
+	// The old name tag 'ZetaCoreURL' is still used for backward compatibility
+	ZetacoreIP              string         `json:"ZetaCoreURL"`
+	ZetacoreURLGRPC         string         `json:"ZetaCoreURLGRPC"`
+	ZetacoreURLWSS          string         `json:"ZetaCoreURLWSS"`
 	AuthzGranter            string         `json:"AuthzGranter"`
 	AuthzHotkey             string         `json:"AuthzHotkey"`
 	P2PDiagnostic           bool           `json:"P2PDiagnostic"`
@@ -108,6 +128,87 @@ type Config struct {
 	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 
 	mu *sync.RWMutex
+}
+
+// GetZetacoreClientConfig returns the zetacore client config
+func (c Config) GetZetacoreClientConfig() ZetacoreClientConfig {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	var (
+		gRPCURL    string
+		wsRemote   string
+		dialOption grpc.DialOption
+	)
+
+	// zetaclient accepts both zetacore node IP address and hostnames.
+	// To be compatible with IP address users, try IP address if set, otherwise use hostnames.
+	// Note: leave the IP address field empty to use hostnames.
+	if c.ZetacoreIP != "" {
+		gRPCURL = cosmosGRPCFromIP(c.ZetacoreIP)
+		wsRemote = cosmosWSSRemoteFromIP(c.ZetacoreIP)
+		dialOption = insecureGRPC
+	} else {
+		gRPCURL = cosmosGRPCFromHost(c.ZetacoreURLGRPC)
+		wsRemote = cosmosWSSRemoteFromHost(c.ZetacoreURLWSS)
+		dialOption = credsTLSGRPC
+	}
+
+	return ZetacoreClientConfig{
+		GRPCURL:     gRPCURL,
+		WSRemote:    wsRemote,
+		SignerName:  c.AuthzHotkey,
+		GRPCDialOpt: dialOption,
+	}
+}
+
+// cosmosGRPCFromIP returns the gRPC URL for the given IP address
+func cosmosGRPCFromIP(ipAddress string) string {
+	return fmt.Sprintf("%s:9090", ipAddress)
+}
+
+// cosmosWSSRemoteFromIP returns the websocket remote URI for the given IP address
+func cosmosWSSRemoteFromIP(ipAddress string) string {
+	remote := cometBFTRPC(ipAddress)
+
+	// given an IP address, both remote URI formats will work:
+	// 1. http://zetacore_ip_address:26657
+	// 2. tcp://zetacore_ip_address:26657
+	// append http:// prefix if not present
+	if !strings.HasPrefix(remote, "http://") &&
+		!strings.HasPrefix(remote, "tcp://") {
+		remote = fmt.Sprintf("http://%s", remote)
+	}
+
+	return remote
+}
+
+// cometBFTRPC returns the CometBFT RPC endpoint for the given IP address
+func cometBFTRPC(ipAddress string) string {
+	return fmt.Sprintf("%s:26657", ipAddress)
+}
+
+// cosmosGRPCFromHost returns the gRPC URL for the given host
+// Note: there is no assumption on node provider's gRPC URL format.
+// The given host is expected to be a valid gRPC URL.
+func cosmosGRPCFromHost(host string) string {
+	return host
+}
+
+// cosmosWSSRemoteFromHost returns the websocket remote URI for the given host.
+func cosmosWSSRemoteFromHost(host string) string {
+	// A typical WSS URLs may look like below, and we need to convert them to the remote URI.
+	// wss://rpc.provider.com/zetachain/websocket
+	// wss://zetachain-mainnet.provider.com/websocket
+
+	// remove "wss://" prefix and replace with "https://"
+	remote := "https://" + strings.TrimPrefix(host, "wss://")
+
+	// remove "/websocket" endpoint suffix if present
+	// the suffix will be passed to http.New() as a separate argument
+	remote = strings.TrimSuffix(remote, "/websocket")
+
+	return remote
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID

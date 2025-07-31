@@ -2,11 +2,13 @@ package zetacore
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"testing"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -18,15 +20,20 @@ import (
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"github.com/zeta-chain/node/pkg/chains"
+	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -148,8 +155,11 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 
 	c, err := NewClient(
 		cfg.keys,
-		chainIP, signer,
-		chainID,
+		zetaclientconfig.Config{
+			ZetacoreIP:  chainIP,
+			AuthzHotkey: signer,
+			ChainID:     chainID,
+		},
 		zerolog.Nop(),
 		cfg.opts...,
 	)
@@ -157,6 +167,100 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 	require.NoError(t, err)
 
 	return c
+}
+
+// testZetacoreGRPC makes basic gRPC queries to zetacore
+func testZetacoreGRPC(t *testing.T, grpcURL string) {
+	ctx := context.Background()
+
+	credsTLSGRPC := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"h2"},
+	}))
+
+	// create zetacore clients with TLS credentials
+	zetacoreClients, err := zetacorerpc.NewGRPCClients(grpcURL, credsTLSGRPC)
+	require.NoError(t, err)
+
+	// query crosschain model
+	resp, err := zetacoreClients.Crosschain.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+	require.NoError(t, err)
+	require.Positive(t, resp.Height)
+
+	// query observer model
+	params, err := zetacoreClients.Observer.GetChainParams(ctx, &observertypes.QueryGetChainParamsRequest{})
+	require.NoError(t, err)
+	require.NotEmpty(t, params.ChainParams.ChainParams)
+}
+
+func testZetacoreWebsocket(t *testing.T, wssURLBase string) {
+	client, err := cometbfthttp.New(wssURLBase, "/websocket")
+	require.NoError(t, err)
+
+	err = client.WSEvents.Start()
+	require.NoError(t, err)
+
+	// subscribe to comet bft events
+	eventsChan, err := client.WSEvents.Subscribe(context.Background(), "", cometbfttypes.EventQueryNewBlock.String())
+	require.NoError(t, err)
+
+	// create block chan
+	blockChan := make(chan cometbfttypes.EventDataNewBlock)
+	defer close(blockChan)
+
+	// read one block event
+	event := <-eventsChan
+	newBlock, ok := event.Data.(cometbfttypes.EventDataNewBlock)
+	require.True(t, ok)
+	require.NotNil(t, newBlock.Block)
+	require.Positive(t, newBlock.Block.Header.Height)
+}
+
+func Test_CometBFTWebsocket(t *testing.T) {
+	tests := []struct {
+		name   string
+		wssURL string
+	}{
+		{
+			name: "AllThatNode",
+			// wss://zetachain-mainnet.g.allthatnode.com/full/tendermint
+			// wss://zetachain-mainnet.g.allthatnode.com/full/tendermint/websocket
+			wssURL: "https://zetachain-mainnet.g.allthatnode.com/full/tendermint",
+		},
+		{
+			name: "Lavenderfive",
+			// wss://rpc.lavenderfive.com:443/zetachain/websocket
+			wssURL: "https://rpc.lavenderfive.com:443/zetachain",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			testZetacoreWebsocket(t, test.wssURL)
+		})
+	}
+}
+
+func Test_CosmosGRPC(t *testing.T) {
+	tests := []struct {
+		name    string
+		grpcURL string
+	}{
+		{
+			name:    "Lavenderfive",
+			grpcURL: "zetachain.lavenderfive.com:443",
+		},
+		{
+			name:    "ITRocket",
+			grpcURL: "zetachain-mainnet-grpc.itrocket.net:443",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			testZetacoreGRPC(t, test.grpcURL)
+		})
+	}
 }
 
 // Need to test after refactor
