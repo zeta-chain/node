@@ -10,4 +10,16 @@ contract Opcode {
             return(0, 32)
         }
     }
+
+    function testTLOAD() public returns (uint256) {
+        uint256 result;
+        assembly {
+            // Store value in transient storage
+            tstore(0x00, 0x1234)
+
+            // Load it back with TLOAD
+            result := tload(0x00)
+        }
+        return result; // Should return 0x1234 if TLOAD works
+    }
 }
