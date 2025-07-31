@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/contracts/opcode"
 	"github.com/zeta-chain/node/e2e/runner"
 )
