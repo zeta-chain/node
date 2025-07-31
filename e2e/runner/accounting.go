@@ -303,3 +303,11 @@ func (r *E2ERunner) fetchAbortedAmount() sdkmath.Int {
 	require.True(r, ok, "failed to parse aborted ZETA amount")
 	return abortedAmount
 }
+func (r *E2ERunner) checkProtocolAddressBalance(denom string) sdkmath.Int {
+	res, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: fungibletypes.ModuleAddress.String(),
+		Denom:   denom,
+	})
+	require.NoError(r, err, "failed to get protocol address balance")
+	return res.GetBalance().Amount
+}
