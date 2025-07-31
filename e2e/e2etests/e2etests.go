@@ -124,6 +124,16 @@ const (
 	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
 
 	/*
+	 Sui legacy tests (using legacy sui gateway package)
+	 TODO: https://github.com/zeta-chain/node/issues/4066
+	 remove legacy tests after re-enabling authenticated call
+	*/
+	TestSuiWithdrawAndCallLegacyName                    = "sui_withdraw_and_call_legacy"
+	TestSuiTokenWithdrawAndCallLegacyName               = "sui_token_withdraw_and_call_legacy"
+	TestSuiWithdrawAndCallRevertWithCallLegacyName      = "sui_withdraw_and_call_revert_with_call_legacy"       // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallRevertWithCallLegacyName = "sui_token_withdraw_and_call_revert_with_call_legacy" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -1129,6 +1139,50 @@ var AllE2ETests = []runner.E2ETest{
 		TestSuiWithdrawInvalidReceiver,
 		runner.WithMinimumVersion("v33.0.0"),
 	),
+	/*
+	 Sui legacy tests (using legacy sui gateway)
+	*/
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallLegacyName,
+		"withdraw SUI from ZEVM and makes an legacy call to a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiWithdrawAndCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallRevertWithCallLegacyName,
+		"withdraw SUI from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiWithdrawAndCallRevertWithCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawAndCallLegacyName,
+		"withdraw fungible token from ZEVM and makes an legacy call to a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdrawAndCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
+		"withdraw fungible token from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdrawAndCallRevertWithCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+
 	/*
 	 Bitcoin tests
 	*/
