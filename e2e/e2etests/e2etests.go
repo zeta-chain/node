@@ -163,6 +163,7 @@ const (
 	*/
 	TestDonationEtherName   = "donation_ether"
 	TestInboundTrackersName = "inbound_trackers"
+	TestOpcodesName         = "opcodes"
 
 	/*
 	 Stress tests
@@ -1329,6 +1330,12 @@ var AllE2ETests = []runner.E2ETest{
 		"test processing inbound trackers for observation",
 		[]runner.ArgDefinition{},
 		TestInboundTrackers,
+	),
+	runner.NewE2ETest(
+		TestOpcodesName,
+		"test opcodes support in ZEVM",
+		[]runner.ArgDefinition{},
+		TestOpcodes,
 	),
 	/*
 	 Stress tests
