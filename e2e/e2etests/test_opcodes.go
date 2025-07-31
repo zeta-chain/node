@@ -19,4 +19,11 @@ func TestOpcodes(r *runner.E2ERunner, _ []string) {
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnZEVM(tx)
 	r.Logger.Print("PUSH0 opcode verified")
+
+	// check tload/tstore
+	r.Logger.Print("Testing TLOAD/TSTORE opcodes...")
+	tx, err = opcodeCaller.TestTLOAD(r.ZEVMAuth)
+	require.NoError(r, err)
+	r.WaitForTxReceiptOnZEVM(tx)
+	r.Logger.Print("TLOAD/TSTORE opcodes verified")
 }

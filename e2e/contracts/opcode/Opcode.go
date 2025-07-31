@@ -31,8 +31,8 @@ var (
 
 // OpcodeMetaData contains all meta data concerning the Opcode contract.
 var OpcodeMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"testPUSH0\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x6080604052348015600e575f80fd5b5060b180601a5f395ff3fe6080604052348015600e575f80fd5b50600436106026575f3560e01c8063d1529e5014602a575b5f80fd5b60306044565b604051603b91906064565b60405180910390f35b5f80805f5260205ff35b5f819050919050565b605e81604e565b82525050565b5f60208201905060755f8301846057565b9291505056fea26469706673582212205c3e117351ccfe76ecce550cca1d992bc75cdd91b7ba16838f6bb49118d5f5e764736f6c634300081a0033",
+	ABI: "[{\"inputs\":[],\"name\":\"testPUSH0\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"testTLOAD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x6080604052348015600e575f80fd5b5060e78061001b5f395ff3fe6080604052348015600e575f80fd5b50600436106030575f3560e01c8063d1529e50146034578063eac28ca814604e575b5f80fd5b603a6068565b60405160459190609a565b60405180910390f35b60546072565b604051605f9190609a565b60405180910390f35b5f80805f5260205ff35b5f806112345f5d5f5c90508091505090565b5f819050919050565b6094816084565b82525050565b5f60208201905060ab5f830184608d565b9291505056fea2646970667358221220776cb94ccb9ce53d4fa325f0b40b5eec02bc1b55f5de2648a70c64829cd45c6e64736f6c634300081a0033",
 }
 
 // OpcodeABI is the input ABI used to generate the binding from.
@@ -221,4 +221,25 @@ func (_Opcode *OpcodeSession) TestPUSH0() (*types.Transaction, error) {
 // Solidity: function testPUSH0() returns(uint256)
 func (_Opcode *OpcodeTransactorSession) TestPUSH0() (*types.Transaction, error) {
 	return _Opcode.Contract.TestPUSH0(&_Opcode.TransactOpts)
+}
+
+// TestTLOAD is a paid mutator transaction binding the contract method 0xeac28ca8.
+//
+// Solidity: function testTLOAD() returns(uint256)
+func (_Opcode *OpcodeTransactor) TestTLOAD(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Opcode.contract.Transact(opts, "testTLOAD")
+}
+
+// TestTLOAD is a paid mutator transaction binding the contract method 0xeac28ca8.
+//
+// Solidity: function testTLOAD() returns(uint256)
+func (_Opcode *OpcodeSession) TestTLOAD() (*types.Transaction, error) {
+	return _Opcode.Contract.TestTLOAD(&_Opcode.TransactOpts)
+}
+
+// TestTLOAD is a paid mutator transaction binding the contract method 0xeac28ca8.
+//
+// Solidity: function testTLOAD() returns(uint256)
+func (_Opcode *OpcodeTransactorSession) TestTLOAD() (*types.Transaction, error) {
+	return _Opcode.Contract.TestTLOAD(&_Opcode.TransactOpts)
 }
