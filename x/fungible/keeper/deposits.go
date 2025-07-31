@@ -148,11 +148,11 @@ func (k Keeper) processZetaDeposit(
 		func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 			if isCrossChainCall {
 				res, err := k.DepositAndCallZeta(tmpCtx, context, amount, to, message)
-				return res, true, err
+				return res, isCrossChainCall, err
 			}
 
 			res, err := k.DepositZeta(tmpCtx, to, amount)
-			return res, false, err
+			return res, isCrossChainCall, err
 		},
 	)
 }
