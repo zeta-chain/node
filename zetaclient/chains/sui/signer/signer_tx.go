@@ -309,6 +309,8 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// use IsRetryableExecutionError instead after re-enabling authenticated call
 	isRetryable, err := zetasui.IsRetryableExecutionErrorLegacy(res.Effects.Status.Error)
 	switch {
 	case err != nil:
