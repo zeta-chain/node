@@ -112,8 +112,8 @@ func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) 
 	assertFunc()
 }
 
-// AddZetaE2EPreUpgradeHandler adds a handler to run any logic before an upgrade
-func (r *E2ERunner) AddZetaE2EPreUpgradeHandler(upgradeFrom string, preHandler func()) {
+// AddPreUpgradeHandler adds a handler to run any logic before an upgrade
+func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) {
 	currentVersion := r.GetZetacoredVersion()
 	// run these assertions only on the first run of the upgrade
 	if !r.IsRunningUpgrade() || checkVersion(upgradeFrom, currentVersion) {
@@ -123,9 +123,9 @@ func (r *E2ERunner) AddZetaE2EPreUpgradeHandler(upgradeFrom string, preHandler f
 	preHandler()
 }
 
-// AddZetaE2EPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
+// AddPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
 // Note This is handler is not related to the cosmos-sdk upgrade handler in any way
-func (r *E2ERunner) AddZetaE2EPostUpgradeHandler(upgradeFrom string, postHandler func()) {
+func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()) {
 	version := r.GetZetacoredVersion()
 	versionMajorIsZero := semver.Major(version) == "v0"
 	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))

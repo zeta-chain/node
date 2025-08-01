@@ -17,11 +17,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
+	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
@@ -308,7 +308,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.AddZetaE2EPostUpgradeHandler("v32.0.2", func() {
+	deployerRunner.AddPostUpgradeHandler("v32.0.2", func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
@@ -591,7 +591,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	deployerRunner.AddZetaE2EPreUpgradeHandler("v32.0.0", func() {
+	deployerRunner.AddPreUpgradeHandler("v32.0.0", func() {
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")
