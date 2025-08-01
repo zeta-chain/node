@@ -328,7 +328,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
 
-
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
     zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
   else
