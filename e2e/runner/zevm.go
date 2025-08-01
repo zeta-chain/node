@@ -25,7 +25,7 @@ import (
 
 var defaultGasLimit = big.NewInt(250000)
 
-// ApproveETHZRC20 approves ETH ZRC20 on EVM to a specific address
+// ApproveETHZRC20 approves ETH ZRC20 on ZEVM to a specific address
 func (r *E2ERunner) ApproveETHZRC20(allowed ethcommon.Address) {
 	r.approveZRC20(allowed, r.ETHZRC20)
 }

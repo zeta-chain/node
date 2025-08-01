@@ -56,7 +56,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// we deploy connectorETH in this test to simulate a new "canonical" chain emitting ZETA
 	// to represent the ZETA already existing on ZetaChain we manually send the minted ZETA to the connector
-	newRunner.LegacySendZetaOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
+	newRunner.TransferZETAOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
 
 	// update the chain params to set up the chain
 	chainParams := getNewEVMChainParams(newRunner)

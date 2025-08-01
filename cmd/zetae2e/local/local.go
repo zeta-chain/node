@@ -270,7 +270,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupBitcoinAccounts(true)
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy || testAdmin)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -296,7 +296,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
 
 		if testTON {
 			deployerRunner.SetupTON(
@@ -384,8 +384,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}
 		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
 	}
-	// TODO : update all admin tests to use ZETA v2 flow instead of legacy
-	// https://github.com/zeta-chain/node/issues/4005
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestUpdateZRC20NameName,

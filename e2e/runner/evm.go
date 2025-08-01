@@ -16,6 +16,20 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
+// TransferZETAOnEvm sends ZETA to an address on EVM
+func (r *E2ERunner) TransferZETAOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+	// the deployer might be sending ZETA in different goroutines
+	r.Lock()
+	defer r.Unlock()
+
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(zetaAmount))
+	tx, err := r.ZetaEth.Transfer(r.EVMAuth, address, amount)
+	require.NoError(r, err)
+
+	return tx
+}
+
 // ETHDeposit calls Deposit of Gateway with gas token on EVM
 func (r *E2ERunner) ETHDeposit(
 	receiver ethcommon.Address,
@@ -59,6 +73,16 @@ func (r *E2ERunner) DepositERC20Deployer() ethcommon.Hash {
 	oneHundred := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100))
 	tx := r.ERC20Deposit(r.EVMAddress(), oneHundred, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	return tx.Hash()
+}
+
+// DepositZETADeployer deposits ZETA into ZEVM using v2 protocol contracts
+func (r *E2ERunner) DepositZETADeployer() *ethtypes.Transaction {
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
+
+	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
+
+	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
 // ETHDepositAndCall calls DepositAndCall of Gateway with gas token on EVM
