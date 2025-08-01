@@ -37,11 +37,10 @@ func TestETHDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit_and_call")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
+
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)
-
-	// check the balance was updated
-	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-	require.Equal(r, new(big.Int).Add(oldBalance, amount), newBalance)
 }

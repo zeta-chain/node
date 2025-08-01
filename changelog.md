@@ -8,6 +8,7 @@
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
+* [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 
 ### Fixes
 
@@ -26,6 +27,7 @@
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 * [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
 * [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
+* [4060] (https://github.com/zeta-chain/node/pull/4060) - cleanup forked mempool code
 
 ### Tests
 
@@ -37,6 +39,7 @@
 * [3985](https://github.com/zeta-chain/node/pull/3985) - add e2e tests for deposit and withdraw with big payload
 * [4022](https://github.com/zeta-chain/node/pull/4022) - configure Solana e2e test connected program IDs
 * [4040](https://github.com/zeta-chain/node/pull/4040) - make Bitcoin inscription e2e test working for live networks
+* [4053](https://github.com/zeta-chain/node/pull/4053) - fix flaky e2e tests that failed on zrc20 balance assertion in live networks
 
 ## v32.0.0
 
