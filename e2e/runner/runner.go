@@ -498,7 +498,8 @@ func (r *E2ERunner) IsRunningTssMigration() bool {
 }
 
 func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {
-	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade || os.Getenv(EnvKeyLocalnetMode) == LocalNetModeTSSMigration
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade ||
+		os.Getenv(EnvKeyLocalnetMode) == LocalNetModeTSSMigration
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf

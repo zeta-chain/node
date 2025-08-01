@@ -131,7 +131,8 @@ func (r *E2ERunner) AddZetaE2EPostUpgradeHandler(upgradeFrom string, postHandler
 	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
 
 	// Run the handler only if this is the second run of the upgrade tests
-	if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero || checkVersion(upgradeFrom, oldVersion) {
+	if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
+		checkVersion(upgradeFrom, oldVersion) {
 		return
 	}
 

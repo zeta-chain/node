@@ -3,6 +3,7 @@ package runner
 import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/utils"
 )
 

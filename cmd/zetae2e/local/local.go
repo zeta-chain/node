@@ -104,7 +104,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
-	cmd.Flags().String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().
+		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
