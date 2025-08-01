@@ -33,13 +33,13 @@ const (
 )
 
 var (
-	// insecureGRPC is a grpc.DialOption that uses insecure transport credentials
+	// CredsInsecureGRPC is a grpc.DialOption that uses insecure transport credentials
 	// this is used when establishing gRPC connection to zetacore node via IP address
-	insecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
+	CredsInsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
 
-	// credsTLSGRPC is a grpc.DialOption that uses TLS transport credentials
+	// CredsTLSGRPC is a grpc.DialOption that uses TLS transport credentials
 	// this is used when establishing gRPC connection to zetacore node via hostname
-	credsTLSGRPC = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+	CredsTLSGRPC = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"h2"},
 	}))
@@ -147,11 +147,11 @@ func (c Config) GetZetacoreClientConfig() ZetacoreClientConfig {
 	if c.ZetacoreIP != "" {
 		gRPCURL = cosmosGRPCFromIP(c.ZetacoreIP)
 		wsRemote = cosmosWSSRemoteFromIP(c.ZetacoreIP)
-		dialOption = insecureGRPC
+		dialOption = CredsInsecureGRPC
 	} else {
 		gRPCURL = cosmosGRPCFromHost(c.ZetacoreURLGRPC)
 		wsRemote = cosmosWSSRemoteFromHost(c.ZetacoreURLWSS)
-		dialOption = credsTLSGRPC
+		dialOption = CredsTLSGRPC
 	}
 
 	return ZetacoreClientConfig{
@@ -160,55 +160,6 @@ func (c Config) GetZetacoreClientConfig() ZetacoreClientConfig {
 		SignerName:  c.AuthzHotkey,
 		GRPCDialOpt: dialOption,
 	}
-}
-
-// cosmosGRPCFromIP returns the gRPC URL for the given IP address
-func cosmosGRPCFromIP(ipAddress string) string {
-	return fmt.Sprintf("%s:9090", ipAddress)
-}
-
-// cosmosWSSRemoteFromIP returns the websocket remote URI for the given IP address
-func cosmosWSSRemoteFromIP(ipAddress string) string {
-	remote := cometBFTRPC(ipAddress)
-
-	// given an IP address, both remote URI formats will work:
-	// 1. http://zetacore_ip_address:26657
-	// 2. tcp://zetacore_ip_address:26657
-	// append http:// prefix if not present
-	if !strings.HasPrefix(remote, "http://") &&
-		!strings.HasPrefix(remote, "tcp://") {
-		remote = fmt.Sprintf("http://%s", remote)
-	}
-
-	return remote
-}
-
-// cometBFTRPC returns the CometBFT RPC endpoint for the given IP address
-func cometBFTRPC(ipAddress string) string {
-	return fmt.Sprintf("%s:26657", ipAddress)
-}
-
-// cosmosGRPCFromHost returns the gRPC URL for the given host
-// Note: there is no assumption on node provider's gRPC URL format.
-// The given host is expected to be a valid gRPC URL.
-func cosmosGRPCFromHost(host string) string {
-	return host
-}
-
-// cosmosWSSRemoteFromHost returns the websocket remote URI for the given host.
-func cosmosWSSRemoteFromHost(host string) string {
-	// A typical WSS URLs may look like below, and we need to convert them to the remote URI.
-	// wss://rpc.provider.com/zetachain/websocket
-	// wss://zetachain-mainnet.provider.com/websocket
-
-	// remove "wss://" prefix and replace with "https://"
-	remote := "https://" + strings.TrimPrefix(host, "wss://")
-
-	// remove "/websocket" endpoint suffix if present
-	// the suffix will be passed to http.New() as a separate argument
-	remote = strings.TrimSuffix(remote, "/websocket")
-
-	return remote
 }
 
 // GetEVMConfig returns the EVM config for the given chain ID
@@ -325,4 +276,57 @@ func (c EVMConfig) Empty() bool {
 
 func (c BTCConfig) Empty() bool {
 	return c.RPCHost == ""
+}
+
+// cosmosGRPCFromIP returns the gRPC URL for the given IP address
+// Note: this function does not strictly enforce the IP address format.
+// In E2E tests, the IP addresses passed to zetaclientd are ['zetacore0' ~ 'zetacore3']
+// and these are not IP addresses, but they should still work without issues.
+// Any wrong format of 'ipAddress' will trigger gRPC connection error, no worries.
+func cosmosGRPCFromIP(ipAddress string) string {
+	return fmt.Sprintf("%s:9090", ipAddress)
+}
+
+// cosmosWSSRemoteFromIP returns the websocket remote URI for the given IP address
+func cosmosWSSRemoteFromIP(ipAddress string) string {
+	remote := cometBFTRPC(ipAddress)
+
+	// given an IP address, both remote URI formats will work:
+	// 1. http://zetacore_ip_address:26657
+	// 2. tcp://zetacore_ip_address:26657
+	// append http:// prefix if not present
+	if !strings.HasPrefix(remote, "http://") &&
+		!strings.HasPrefix(remote, "tcp://") {
+		remote = fmt.Sprintf("http://%s", remote)
+	}
+
+	return remote
+}
+
+// cometBFTRPC returns the CometBFT RPC endpoint for the given IP address
+func cometBFTRPC(ipAddress string) string {
+	return fmt.Sprintf("%s:26657", ipAddress)
+}
+
+// cosmosGRPCFromHost returns the gRPC URL for the given host
+// Note: there is no assumption on node provider's gRPC URL format.
+// The given host is expected to be a valid gRPC URL.
+func cosmosGRPCFromHost(host string) string {
+	return host
+}
+
+// cosmosWSSRemoteFromHost returns the websocket remote URI for the given host.
+func cosmosWSSRemoteFromHost(host string) string {
+	// A typical WSS URLs may look like below, and we need to convert them to the remote URI.
+	// wss://rpc.provider.com/zetachain/websocket
+	// wss://zetachain-mainnet.provider.com/websocket
+
+	// remove "wss://" prefix and replace with "https://"
+	remote := "https://" + strings.TrimPrefix(host, "wss://")
+
+	// remove "/websocket" endpoint suffix if present
+	// the suffix will be passed to http.New() as a separate argument
+	remote = strings.TrimSuffix(remote, "/websocket")
+
+	return remote
 }

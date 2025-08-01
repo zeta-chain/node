@@ -52,9 +52,12 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
-	f.StringVar(&cfg.zetacoreIP, "zetacore-ip", "", "zetacore node IP address, leave it empty to use gRPC and WSS URLs")
-	f.StringVar(&cfg.zetacoreGRPCURL, "zetacore-grpc-url", "", "zetacore node gRPC URL")
-	f.StringVar(&cfg.zetacoreWSSURL, "zetacore-wss-url", "", "zetacore node websocket URL")
+	f.StringVar(&cfg.zetacoreIP, "zetacore-ip", "",
+		"zetacore node IP address (leave empty to switch to using zetacore-grpc-url and zetacore-wss-url)")
+	f.StringVar(&cfg.zetacoreGRPCURL, "zetacore-grpc-url", "",
+		"zetacore node gRPC URL (e.g., zetachain.node-provider.com:433)")
+	f.StringVar(&cfg.zetacoreWSSURL, "zetacore-wss-url", "",
+		"zetacore node websocket URL (e.g., wss://node-provider.com:433/zetachain/websocket)")
 	f.StringVar(&cfg.authzGranter, "operator", "", "granter for the authorization , this should be operator address")
 	f.StringVar(&cfg.authzHotkey, "hotkey", "hotkey", usageHotKey)
 	f.Int8Var(&cfg.level, "log-level", int8(zerolog.InfoLevel), usageLogLevel)

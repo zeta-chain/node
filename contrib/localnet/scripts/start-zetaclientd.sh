@@ -14,22 +14,6 @@ set_sepolia_endpoint() {
   jq '.EVMChainConfigs."11155111".Endpoint = "http://eth2:8545"' /root/.zetacored/config/zetaclient_config.json > tmp.json && mv tmp.json /root/.zetacored/config/zetaclient_config.json
 }
 
-# calculate zetacore IP address based on zetaclient number
-calculate_zetacore_ip() {
-  local num="$1"
-  local base_ip="172.20.0.11"  # zetacore0 IP address
-  
-  if [[ $num =~ ^[0-9]+$ ]]; then
-    # extract the last octet and add the number
-    local base_octet
-    base_octet=$(echo $base_ip | cut -d. -f4)
-    local target_octet=$((base_octet + num))
-    echo "172.20.0.$target_octet"
-  else
-    echo "zetacore$num" # fallback for non-numeric pattern
-  fi
-}
-
 # import a relayer private key (e.g. Solana relayer key)
 import_relayer_key() {
   local num="$1"
@@ -70,6 +54,7 @@ if [ "$HOTKEY_BACKEND" == "file" ]; then
 fi
 
 num=$(echo $HOSTNAME | tr -dc '0-9')
+node="zetacore$num"
 
 while [ ! -f $HOME/.zetacored/os.json ]; do
     echo "Waiting for zetacore to exchange os.json file..."
@@ -95,7 +80,7 @@ echo "Start zetaclientd"
 
 # skip initialization if the config file already exists (zetaclientd init has already been run)
 if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]] then
-    zetaclientd init --zetacore-ip "$(calculate_zetacore_ip "0")" --chain-id athens_101-1 \
+    zetaclientd init --zetacore-ip zetacore0 --chain-id athens_101-1 \
         --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" \
         --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
@@ -117,7 +102,7 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
       node="zetacore-new-validator"
   else
       num=$(echo $HOSTNAME | tr -dc '0-9')
-      node=$(calculate_zetacore_ip "$num")
+      node="zetacore$num"
   fi
   zetaclientd init --zetacore-ip "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 

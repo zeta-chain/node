@@ -87,7 +87,7 @@ func Start(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "unable to update app context")
 	}
 
-	log.Info().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
+	log.Debug().Msgf("Config is updated from zetacore\n %s", cfg.StringMasked())
 
 	granteePubKeyBech32, err := resolveObserverPubKeyBech32(cfg, passes.hotkey)
 	if err != nil {
