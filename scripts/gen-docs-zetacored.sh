@@ -1,13 +1,12 @@
 #!/bin/bash
 
 DIR=docs/cli/zetacored
-CHAINID="athens_101-1"
 
 rm -rf $DIR
 
 go install ./cmd/zetacored
 
-zetacored docs --path $DIR --chain-id $CHAINID
+zetacored docs --path $DIR
 
 # Recursive function to process files
 process_files() {

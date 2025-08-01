@@ -127,6 +127,12 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
+			// TODO evm: need to check about evm chain id, getting it like this is generally fine, but some commands
+			// like docs are halting because of it
+			if initClientCtx.ChainID == "" {
+				return nil
+			}
+
 			zetachain, err := chains.ZetaChainFromCosmosChainID(initClientCtx.ChainID)
 			if err != nil {
 				return err
