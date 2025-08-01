@@ -2,7 +2,6 @@ package zetacore
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
 	"testing"
 	"time"
@@ -19,15 +18,12 @@ import (
 	"github.com/stretchr/testify/require"
 	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"github.com/zeta-chain/node/pkg/chains"
-	zetacorerpc "github.com/zeta-chain/node/pkg/rpc"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
 	"github.com/zeta-chain/node/zetaclient/common"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 	"go.uber.org/mock/gomock"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -188,30 +184,6 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 	return c
 }
 
-// testZetacoreGRPC makes basic gRPC queries to zetacore
-func testZetacoreGRPC(t *testing.T, grpcURL string) {
-	ctx := context.Background()
-
-	credsTLSGRPC := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
-		InsecureSkipVerify: true,
-		NextProtos:         []string{"h2"},
-	}))
-
-	// create zetacore clients with TLS credentials
-	zetacoreClients, err := zetacorerpc.NewGRPCClients(grpcURL, credsTLSGRPC)
-	require.NoError(t, err)
-
-	// query crosschain model
-	resp, err := zetacoreClients.Crosschain.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
-	require.NoError(t, err)
-	require.Positive(t, resp.Height)
-
-	// query observer model
-	params, err := zetacoreClients.Observer.GetChainParams(ctx, &observertypes.QueryGetChainParamsRequest{})
-	require.NoError(t, err)
-	require.NotEmpty(t, params.ChainParams.ChainParams)
-}
-
 func Test_CosmosGRPC_Live(t *testing.T) {
 	if !common.LiveTestEnabled() {
 		t.Skip("skipping zetacore gRPC live test")
@@ -237,7 +209,7 @@ func Test_CosmosGRPC_Live(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test_ZetacoreGRPC2(t, test.grpcURL, test.wssURL)
+			test_ZetacoreGRPC(t, test.grpcURL, test.wssURL)
 		})
 	}
 }
@@ -385,8 +357,8 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 	require.Equal(t, expectedHeight, receivedBlock.Block.Header.Height)
 }
 
-// test_ZetacoreGRPC2 is a helper function that makes basic gRPC queries to zetacore
-func test_ZetacoreGRPC2(t *testing.T, grpcURL, wssURL string) {
+// test_ZetacoreGRPC is a helper function that makes basic gRPC queries to zetacore
+func test_ZetacoreGRPC(t *testing.T, grpcURL, wssURL string) {
 	ctx := context.Background()
 
 	// create zetacore client using live network URLs

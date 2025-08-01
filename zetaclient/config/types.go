@@ -40,6 +40,7 @@ var (
 	// CredsTLSGRPC is a grpc.DialOption that uses TLS transport credentials
 	// this is used when establishing gRPC connection to zetacore node via hostname
 	CredsTLSGRPC = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		// #nosec G402 - InsecureSkipVerify required for non-standard certificates (e.g., CloudFlare Origin)
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"h2"},
 	}))
