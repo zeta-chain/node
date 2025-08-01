@@ -309,7 +309,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.AddZetaE2EPostUpgradeHandler("v32.0.2", func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
-		err = OverRideAccountData(cmd, &conf)
+		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 		if !testSui || deployerRunner.IsRunningTssMigration() {
