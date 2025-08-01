@@ -430,7 +430,7 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
 
-	res, _, err := k.executeWithMintedZeta(
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
 		zetaValue,
 		mintAndDeposit,
@@ -485,7 +485,7 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
 
-	res, _, err := k.executeWithMintedZeta(
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
 		remainingZetaValue,
 		mintAndRevert,

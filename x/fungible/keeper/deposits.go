@@ -142,7 +142,7 @@ func (k Keeper) processZetaDeposit(
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	// Deposit/Mint ZETA to the protocol address which will then be used to make the calls below
 	// NOTE: DepositZeta and DepositAndCallZeta expect the fungible module account to have enough ZETA
-	return k.executeWithMintedZeta(
+	return k.ExecuteWithMintedZeta(
 		ctx,
 		amount,
 		func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
@@ -269,7 +269,7 @@ func (k Keeper) ProcessAbort(
 		}
 	}
 	if coinType == coin.CoinType_Zeta {
-		_, _, err := k.executeWithMintedZeta(
+		_, _, err := k.ExecuteWithMintedZeta(
 			ctx,
 			amount,
 			func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
