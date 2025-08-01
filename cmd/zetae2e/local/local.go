@@ -383,6 +383,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
 			e2etests.TestUpdateOperationalChainParamsName,
+			e2etests.TestBurnFungibleModuleAssetName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
@@ -489,12 +490,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawAndCallName,
 			e2etests.TestSuiWithdrawRevertWithCallName,
-			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
-			e2etests.TestSuiTokenWithdrawAndCallName,
-			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			// TODO: https://github.com/zeta-chain/node/issues/4066
+			// remove legacy tests and enable new ones after re-enabling authenticated call
+			//e2etests.TestSuiWithdrawAndCallName,
+			//e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallLegacyName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallLegacyName,
+			e2etests.TestSuiTokenWithdrawAndCallLegacyName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,

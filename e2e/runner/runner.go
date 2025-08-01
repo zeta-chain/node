@@ -63,6 +63,9 @@ const (
 
 	LocalnetModeUpgrade      = "upgrade"
 	LocalNetModeTSSMigration = "tss-migration"
+
+	// NodeSyncTolerance is the time tolerance for the ZetaChain nodes behind a RPC to be synced
+	NodeSyncTolerance = constant.ZetaBlockTime * 5
 )
 
 func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {

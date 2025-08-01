@@ -21,6 +21,7 @@ const (
 	TestETHDepositRevertAndAbortName        = "eth_deposit_revert_and_abort"
 
 	TestETHWithdrawName                          = "eth_withdraw"
+	TestETHWithdrawCustomGasLimitName            = "eth_withdraw_custom_gas_limit"
 	TestETHWithdrawAndArbitraryCallName          = "eth_withdraw_and_arbitrary_call"
 	TestETHWithdrawAndCallName                   = "eth_withdraw_and_call"
 	TestETHWithdrawAndCallBigPayloadName         = "eth_withdraw_and_call_big_payload"
@@ -123,6 +124,16 @@ const (
 	TestSuiWithdrawInvalidReceiverName            = "sui_withdraw_invalid_receiver"
 
 	/*
+	 Sui legacy tests (using legacy sui gateway package)
+	 TODO: https://github.com/zeta-chain/node/issues/4066
+	 remove legacy tests after re-enabling authenticated call
+	*/
+	TestSuiWithdrawAndCallLegacyName                    = "sui_withdraw_and_call_legacy"
+	TestSuiTokenWithdrawAndCallLegacyName               = "sui_token_withdraw_and_call_legacy"
+	TestSuiWithdrawAndCallRevertWithCallLegacyName      = "sui_withdraw_and_call_revert_with_call_legacy"       // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiTokenWithdrawAndCallRevertWithCallLegacyName = "sui_token_withdraw_and_call_revert_with_call_legacy" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+
+	/*
 	 Bitcoin tests
 	 Test transfer of Bitcoin asset across chains
 	*/
@@ -206,6 +217,7 @@ const (
 	TestZetaclientSignerOffsetName       = "zetaclient_signer_offset"
 	TestUpdateOperationalChainParamsName = "update_operational_chain_params"
 	TestMigrateConnectorFundsName        = "migrate_connector_funds"
+	TestBurnFungibleModuleAssetName      = "burn_fungible_module_asset"
 
 	/*
 	 Operational tests
@@ -402,6 +414,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000"},
 		},
 		TestETHWithdraw,
+	),
+	runner.NewE2ETest(
+		TestETHWithdrawCustomGasLimitName,
+		"withdraw Ether from ZEVM using a custom gas limit",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw", DefaultValue: "200000"},
+		},
+		TestETHWithdrawCustomGasLimit,
 	),
 	runner.NewE2ETest(
 		TestETHWithdrawAndArbitraryCallName,
@@ -1105,6 +1126,50 @@ var AllE2ETests = []runner.E2ETest{
 		runner.WithMinimumVersion("v33.0.0"),
 	),
 	/*
+	 Sui legacy tests (using legacy sui gateway)
+	*/
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallLegacyName,
+		"withdraw SUI from ZEVM and makes an legacy call to a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiWithdrawAndCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallRevertWithCallLegacyName,
+		"withdraw SUI from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiWithdrawAndCallRevertWithCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawAndCallLegacyName,
+		"withdraw fungible token from ZEVM and makes an legacy call to a contract",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdrawAndCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
+		"withdraw fungible token from ZEVM and makes an legacy call to a contract that reverts with a onRevert call",
+		[]runner.ArgDefinition{
+			{Description: "amount in base unit", DefaultValue: "100000"},
+			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
+		},
+		TestSuiTokenWithdrawAndCallRevertWithCallLegacy,
+		runner.WithMinimumVersion("v30.0.0"),
+	),
+
+	/*
 	 Bitcoin tests
 	*/
 	runner.NewE2ETest(
@@ -1525,6 +1590,13 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestUpdateOperationalChainParams,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestBurnFungibleModuleAssetName,
+		"burn fungible module asset",
+		[]runner.ArgDefinition{},
+		TestBurnFungibleModuleAsset,
+		runner.WithMinimumVersion("v33.0.0"),
 	),
 	/*
 	 Special tests

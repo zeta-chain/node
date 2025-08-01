@@ -31,7 +31,7 @@ func TestSuiDeposit(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, coin.CoinType_Gas, cctx.InboundParams.CoinType)
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
 
-	newBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SUIZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
 }

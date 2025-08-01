@@ -21,6 +21,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHDepositAndCallBigPayloadName,
 		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
+		e2etests.TestETHWithdrawCustomGasLimitName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
 		e2etests.TestETHWithdrawAndCallBigPayloadName,
