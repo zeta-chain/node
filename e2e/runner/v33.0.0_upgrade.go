@@ -3,11 +3,11 @@ package runner
 import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
 func (r *E2ERunner) RunSetup(testLegacy bool) {
-
 	ensureReceiptEVM := func(tx *ethtypes.Transaction, failMessage string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 		msg := "receipt status is not successful: %s"

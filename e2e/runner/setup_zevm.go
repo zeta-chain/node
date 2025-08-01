@@ -293,11 +293,9 @@ func (r *E2ERunner) SetupZEVMProtocolContracts() {
 	ensureTxReceipt(txProxy, "Gateway proxy deployment failed")
 
 	r.SetupZEVMTestDappV2(ensureTxReceipt)
-
 }
 
 func (r *E2ERunner) SetupZEVMTestDappV2(ensureTxReceipt func(tx *ethtypes.Transaction, failMessage string)) {
-
 	// deploy test dapp v2
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
 		r.ZEVMAuth,

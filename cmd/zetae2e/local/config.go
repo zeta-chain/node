@@ -24,8 +24,8 @@ func GetConfig(cmd *cobra.Command) (config.Config, error) {
 	return config.ReadConfig(configFile, true)
 }
 
-// OverRideAccountData overrides the account data in the config with the one from the file specified in the command line flag
-func OverRideAccountData(cmd *cobra.Command, conf *config.Config) error {
+// OverwriteAccountData overwrites the account data in the config with the one from the file specified in the command line flag
+func OverwriteAccountData(cmd *cobra.Command, conf *config.Config) error {
 	configFile, err := cmd.Flags().GetString(flagAccountConfig)
 	if err != nil || configFile == "" {
 		return fmt.Errorf("--account-config is a required parameter to override account data")

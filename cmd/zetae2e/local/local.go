@@ -105,7 +105,8 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
-	cmd.Flags().String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
+	cmd.Flags().
+		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -309,7 +310,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	deployerRunner.AddZetaE2EPostUpgradeHandler("v32.0.2", func() {
 		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
-		err = OverRideAccountData(cmd, &conf)
+		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)
 		if !testSui || deployerRunner.IsRunningTssMigration() {
