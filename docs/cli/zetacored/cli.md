@@ -1001,8 +1001,9 @@ zetacored docs [path] [flags]
 ### Options
 
 ```
-  -h, --help          help for docs
-      --path string   Path where the docs will be generated 
+      --chain-id string   Chain id3
+  -h, --help              help for docs
+      --path string       Path where the docs will be generated 
 ```
 
 ### Options inherited from parent commands

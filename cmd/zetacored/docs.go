@@ -103,6 +103,7 @@ func docsCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("path", "docs/cli/zetacored", "Path where the docs will be generated")
+	cmd.Flags().String("chain-id", "", "Chain id3")
 
 	return cmd
 }
