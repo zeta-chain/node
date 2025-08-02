@@ -18,7 +18,7 @@ COPY e2e/contracts/sui/example /work/sui/example
 # TODO: https://github.com/zeta-chain/node/issues/4066
 # use 'protocol-contracts-sui-upgrade' after re-enabling authenticated call
 # remove the whole 'protocol-contracts-sui-upgrade-legacy' dir after re-enabling authenticated call
-COPY e2e/contracts/sui/protocol-contracts-sui-upgrade-legacy /work/sui/protocol-contracts-sui-upgrade
+COPY e2e/contracts/sui/protocol-contracts-sui-upgrade-legacy /work/protocol-contracts-sui-upgrade
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
 
 RUN chmod +x /work/*.sh

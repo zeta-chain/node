@@ -21,7 +21,6 @@ import (
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
-	suibin "github.com/zeta-chain/node/e2e/contracts/sui/bin"
 	"github.com/zeta-chain/node/e2e/e2etests"
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/txserver"
@@ -316,13 +315,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if !testSui || deployerRunner.IsRunningTssMigration() {
 			return
 		}
-		deployerRunner.SuiBuildExample()
-		deployerRunner.SuiDeployExample(
-			&deployerRunner.SuiExample,
-			suibin.ReadMoveBinaryBase64(deployerRunner, deployerRunner.WorkDirPrefixed(runner.SuiExampleBinToken)),
-			suibin.ReadMoveBinaryBase64(deployerRunner, deployerRunner.WorkDirPrefixed(runner.SuiExampleBinConnected)),
-			[]string{deployerRunner.SuiGateway.PackageID()},
-		)
 
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")

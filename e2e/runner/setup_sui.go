@@ -37,7 +37,7 @@ const (
 	//suiExamplePath = "sui/example"
 
 	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
-	suiGatewayUpgradedPath = "sui/protocol-contracts-sui-upgrade"
+	suiGatewayUpgradedPath = "protocol-contracts-sui-upgrade"
 )
 
 var (
@@ -172,6 +172,8 @@ func (r *E2ERunner) suiBuildGatewayUpgraded() {
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
+	// TODO: https://github.com/zeta-chain/node/issues/4066 remove ORIGINAL-PACKAGE-ID replacing
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "ORIGINAL-PACKAGE-ID"`, publishedAt)
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), gatewayAddress, `gateway = "0x0"`)
 
 	// build the upgraded gateway package
@@ -292,8 +294,8 @@ func (r *E2ERunner) suiDeployFakeUSDC() string {
 	return coinType
 }
 
-// SuiDeployExample deploys the example package on Sui
-func (r *E2ERunner) SuiDeployExample(
+// suiDeployExample deploys the example package on Sui
+func (r *E2ERunner) suiDeployExample(
 	example *config.SuiExample,
 	fungibleTokenBytecodeBase64, connectedBytecodeBase64 string,
 	extraDependencies []string,
