@@ -138,7 +138,6 @@ func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()
 
 	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)
 	postHandler()
-
 }
 
 func checkVersion(upgradeFromm, oldVersion string) bool {
