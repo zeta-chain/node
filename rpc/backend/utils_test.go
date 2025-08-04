@@ -6,7 +6,7 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 )
 
-func mockProofs(num int, withData bool) *crypto.ProofOps {
+func mookProofs(num int, withData bool) *crypto.ProofOps {
 	var proofOps *crypto.ProofOps
 	if num > 0 {
 		proofOps = new(crypto.ProofOps)
@@ -21,7 +21,7 @@ func mockProofs(num int, withData bool) *crypto.ProofOps {
 	return proofOps
 }
 
-func (suite *BackendTestSuite) TestGetHexProofs() {
+func (s *TestSuite) TestGetHexProofs() {
 	defaultRes := []string{""}
 	testCases := []struct {
 		name  string
@@ -30,23 +30,23 @@ func (suite *BackendTestSuite) TestGetHexProofs() {
 	}{
 		{
 			"no proof provided",
-			mockProofs(0, false),
+			mookProofs(0, false),
 			defaultRes,
 		},
 		{
 			"no proof data provided",
-			mockProofs(1, false),
+			mookProofs(1, false),
 			defaultRes,
 		},
 		{
 			"valid proof provided",
-			mockProofs(1, true),
+			mookProofs(1, true),
 			[]string{"0x0a190a034b4559120556414c55451a0b0801180120012a03000202"},
 		},
 	}
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.Require().Equal(tc.exp, GetHexProofs(tc.proof))
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.Require().Equal(tc.exp, GetHexProofs(tc.proof))
 		})
 	}
 }

@@ -25,8 +25,8 @@ import (
 	cosmossimcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/node/app"
 	zetasimulation "github.com/zeta-chain/node/simulation"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -186,7 +186,6 @@ func TestAppStateDeterminism(t *testing.T) {
 // 2. It exports the state and validators
 // 3. Verifies that the run and export were successful
 func TestFullAppSimulation(t *testing.T) {
-
 	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID

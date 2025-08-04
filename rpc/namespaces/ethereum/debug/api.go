@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package debug
 
 import (
@@ -20,7 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
-	"runtime"
+	"runtime" // #nosec G702
 	"runtime/debug"
 	"runtime/pprof"
 	"sync"
@@ -28,14 +13,13 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/server"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	stderrors "github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/rpc/backend"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
@@ -72,7 +56,7 @@ func NewAPI(
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (a *API) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
+func (a *API) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	a.logger.Debug("debug_traceTransaction", "hash", hash)
 	return a.backend.TraceTransaction(hash, config)
 }
@@ -81,7 +65,7 @@ func (a *API) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (
 // EVM and returns them as a JSON object.
 func (a *API) TraceBlockByNumber(
 	height rpctypes.BlockNumber,
-	config *rpctypes.TraceConfig,
+	config *evmtypes.TraceConfig,
 ) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByNumber", "height", height)
 	if height == 0 {
@@ -99,7 +83,7 @@ func (a *API) TraceBlockByNumber(
 
 // TraceBlockByHash returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByHash(hash common.Hash, config *rpctypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByHash(hash common.Hash, config *evmtypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByHash", "hash", hash)
 	// Get Tendermint Block
 	resBlock, err := a.backend.TendermintBlockByHash(hash)
@@ -124,20 +108,18 @@ func (a *API) BlockProfile(file string, nsec uint) error {
 	runtime.SetBlockProfileRate(1)
 	defer runtime.SetBlockProfileRate(0)
 
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return writeProfile("block", file, a.logger)
 }
 
 // CpuProfile turns on CPU profiling for nsec seconds and writes
 // profile data to file.
-func (a *API) CpuProfile(file string, nsec uint) error { //nolint: revive
+func (a *API) CpuProfile(file string, nsec uint) error { //nolint: golint, revive
 	a.logger.Debug("debug_cpuProfile", "file", file, "nsec", nsec)
 	if err := a.StartCPUProfile(file); err != nil {
 		return err
 	}
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return a.StopCPUProfile()
 }
 
@@ -156,8 +138,7 @@ func (a *API) GoTrace(file string, nsec uint) error {
 	if err := a.StartGoTrace(file); err != nil {
 		return err
 	}
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return a.StopGoTrace()
 }
 
@@ -201,13 +182,12 @@ func (a *API) StartCPUProfile(file string) error {
 		a.logger.Debug("CPU profiling already in progress")
 		return errors.New("CPU profiling already in progress")
 	default:
-		fp, err := zetaos.ExpandHomeDir(file)
+		fp, err := ExpandHome(file)
 		if err != nil {
 			a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
 		}
-		// #nosec G304 variable value is controlled
-		f, err := os.Create(fp)
+		f, err := os.Create(fp) //#nosec G304 forked code
 		if err != nil {
 			a.logger.Debug("failed to create CPU profile file", "error", err.Error())
 			return err
@@ -274,8 +254,7 @@ func (a *API) WriteMemProfile(file string) error {
 func (a *API) MutexProfile(file string, nsec uint) error {
 	a.logger.Debug("debug_mutexProfile", "file", file, "nsec", nsec)
 	runtime.SetMutexProfileFraction(1)
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	defer runtime.SetMutexProfileFraction(0)
 	return writeProfile("mutex", file, a.logger)
 }
@@ -307,8 +286,9 @@ func (a *API) SetGCPercent(v int) int {
 
 // GetHeaderRlp retrieves the RLP encoded for of a single header.
 func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
-	// #nosec G115 number always in int64 range
-	header, err := a.backend.HeaderByNumber(rpctypes.BlockNumber(number))
+	header, err := a.backend.HeaderByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -318,8 +298,9 @@ func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
 
 // GetBlockRlp retrieves the RLP encoded for of a single block.
 func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
-	// #nosec G115 number always in int64 range
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number))
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -329,8 +310,9 @@ func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
 
 // PrintBlock retrieves a block and returns its pretty printed form.
 func (a *API) PrintBlock(number uint64) (string, error) {
-	// #nosec G115 number always in int64 range
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number))
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return "", err
 	}

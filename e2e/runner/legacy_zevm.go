@@ -164,7 +164,7 @@ func (r *E2ERunner) LegacyWithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.requireTxSuccessful(receipt, "withdraw failed")
@@ -180,7 +180,7 @@ func (r *E2ERunner) LegacyWithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)

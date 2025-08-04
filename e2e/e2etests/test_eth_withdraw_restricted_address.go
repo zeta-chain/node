@@ -41,7 +41,7 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 		},
 	)
 
-	r.Logger.EVMTransaction(*tx, "withdraw to restricted address")
+	r.Logger.EVMTransaction(tx, "withdraw to restricted address")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)

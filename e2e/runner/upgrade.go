@@ -105,18 +105,41 @@ func (r *E2ERunner) AssertAfterUpgrade(assertVersion string, assertFunc func()) 
 	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
 
 	// run these assertions only on the second run of the upgrade
-	if !r.IsRunningUpgrade() || !versionMajorIsZero || assertVersion != oldVersion {
+	if !r.IsRunningUpgrade() || !versionMajorIsZero || checkVersion(assertVersion, oldVersion) {
 		return
 	}
 	r.Logger.Print("🏃 Running assertions after upgrade for version: %s", assertVersion)
 	assertFunc()
 }
 
-func (r *E2ERunner) AssertBeforeUpgrade(assertVersion string, assertFunc func()) {
+// AddPreUpgradeHandler adds a handler to run any logic before an upgrade
+func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) {
+	currentVersion := r.GetZetacoredVersion()
 	// run these assertions only on the first run of the upgrade
-	if !r.IsRunningUpgrade() || assertVersion != r.GetZetacoredVersion() {
+	if !r.IsRunningUpgrade() || checkVersion(upgradeFrom, currentVersion) {
 		return
 	}
-	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", assertVersion)
-	assertFunc()
+	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", upgradeFrom)
+	preHandler()
+}
+
+// AddPostUpgradeHandler adds a handler to run any logic after and upgrade to enable tests to be executed
+// Note This is handler is not related to the cosmos-sdk upgrade handler in any way
+func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()) {
+	version := r.GetZetacoredVersion()
+	versionMajorIsZero := semver.Major(version) == "v0"
+	oldVersion := fmt.Sprintf("v%s", os.Getenv("OLD_VERSION"))
+
+	// Run the handler only if this is the second run of the upgrade tests
+	if !r.IsRunningUpgrade() || !r.IsRunningTssMigration() || !versionMajorIsZero ||
+		checkVersion(upgradeFrom, oldVersion) {
+		return
+	}
+
+	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)
+	postHandler()
+}
+
+func checkVersion(upgradeFromm, oldVersion string) bool {
+	return semver.Major(upgradeFromm) != semver.Major(oldVersion)
 }

@@ -2,7 +2,6 @@ package v11
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethermint "github.com/zeta-chain/ethermint/types"
 
 	pkgchains "github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/observer/types"
@@ -24,15 +23,16 @@ const (
 // The migration deletes all ballots and ballot lists for heights less than the maturity blocks on testnet
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	currentHeight := ctx.BlockHeight()
-	chainID, err := ethermint.ParseChainID(ctx.ChainID())
+	zetachain, err := pkgchains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		// Its fine to return nil here and not try to execute the migration at all if the parsing fails
 		ctx.Logger().Error("failed to parse chain ID", "chain_id", ctx.ChainID(), "error", err)
+		return err
+	}
+	if zetachain.ChainId == pkgchains.ZetaChainMainnet.ChainId {
 		return nil
 	}
-	if chainID.Int64() == pkgchains.ZetaChainMainnet.ChainId {
-		return nil
-	}
+
 	bufferedMaturityBlocks := MaturityBlocks + PendingBallotsDeletionBufferBlocks
 	// Maturity blocks is a parameter in the emissions module
 	if currentHeight < bufferedMaturityBlocks {

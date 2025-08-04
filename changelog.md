@@ -9,6 +9,7 @@
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
+* [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 
 ### Fixes
 

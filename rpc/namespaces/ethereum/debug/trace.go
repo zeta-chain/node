@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-//go:build go1.5
-// +build go1.5
-
 package debug
 
 import (
@@ -25,8 +22,6 @@ import (
 	"runtime/trace"
 
 	stderrors "github.com/pkg/errors"
-
-	zetaos "github.com/zeta-chain/node/pkg/os"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.
@@ -39,13 +34,12 @@ func (a *API) StartGoTrace(file string) error {
 		a.logger.Debug("trace already in progress")
 		return errors.New("trace already in progress")
 	}
-	fp, err := zetaos.ExpandHomeDir(file)
+	fp, err := ExpandHome(file)
 	if err != nil {
 		a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 		return err
 	}
-	// #nosec G304 variable value is controlled
-	f, err := os.Create(fp)
+	f, err := os.Create(fp) //#nosec G304 forked code
 	if err != nil {
 		a.logger.Debug("failed to create go trace file", "error", err.Error())
 		return err
