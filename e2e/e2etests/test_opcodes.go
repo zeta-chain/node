@@ -7,6 +7,7 @@ import (
 	"github.com/zeta-chain/node/e2e/runner"
 )
 
+// TestOpcodes tests calling functions from the opcode contract to check if these opcodes are supported by the ZEVM.
 func TestOpcodes(r *runner.E2ERunner, _ []string) {
 	// deploy the opcode contract and run function using opcode
 	addr, tx, opcodeCaller, err := opcode.DeployOpcode(r.ZEVMAuth, r.ZEVMClient)
