@@ -61,6 +61,7 @@ const (
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
 	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
+	previousVersion            = "v32.0.2"
 )
 
 var (
@@ -307,8 +308,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
-	deployerRunner.AddPostUpgradeHandler("v32.0.2", func() {
-		deployerRunner.Logger.Print("Running post-upgrade setup for v32.0.2")
+	deployerRunner.AddPostUpgradeHandler(previousVersion, func() {
+		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
 		deployerRunner.RunSetup(testLegacy || testAdmin)

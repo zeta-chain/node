@@ -15,6 +15,7 @@ import (
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	serverconfig "github.com/zeta-chain/node/server/config"
 )
 
@@ -30,10 +31,10 @@ func NewSimApp(
 	err := configurator.
 		WithChainConfig(evmtypes.DefaultChainConfig(777)).
 		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
-			Denom:         "azeta",
-			ExtendedDenom: "azeta",
-			DisplayDenom:  "azeta",
-			Decimals:      18,
+			Denom:         config.BaseDenom,
+			ExtendedDenom: config.BaseDenom,
+			DisplayDenom:  config.BaseDenom,
+			Decimals:      config.BaseDenomUnit,
 		}).
 		Configure()
 	if err != nil {

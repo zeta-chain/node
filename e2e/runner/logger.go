@@ -177,9 +177,6 @@ func (l *Logger) EVMTransaction(tx *ethtypes.Transaction, name string) {
 	l.Info("  Value: %d", tx.Value())
 	l.Info("  Gas: %d", tx.Gas())
 	l.Info("  GasPrice: %d", tx.GasPrice())
-	l.Info("  Value: %d", tx.Value())
-	l.Info("  Gas: %d", tx.Gas())
-	l.Info("  GasPrice: %d", tx.GasPrice())
 }
 
 // EVMReceipt prints a receipt

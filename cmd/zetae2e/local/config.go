@@ -25,6 +25,7 @@ func GetConfig(cmd *cobra.Command) (config.Config, error) {
 }
 
 // OverwriteAccountData overwrites the account data in the config with the one from the file specified in the command line flag
+// used for upgrade tests in case some accounts should be overwritten in zetae2e upgrade handler
 func OverwriteAccountData(cmd *cobra.Command, conf *config.Config) error {
 	configFile, err := cmd.Flags().GetString(flagAccountConfig)
 	if err != nil || configFile == "" {
