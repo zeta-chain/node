@@ -8,6 +8,7 @@
 * [3977](https://github.com/zeta-chain/node/pull/3977) - integrate new ton features (call, increase_seqno, compliance)
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
+* [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 
 
 ### Fixes
@@ -21,6 +22,7 @@
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
 * [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
+* [4067](https://github.com/zeta-chain/node/pull/4067) - disable sui authenticated call temporarily until gateway upgrade
 
 ### Refactor
 
@@ -28,6 +30,7 @@
 * [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
 * [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
 * [4054](https://github.com/zeta-chain/node/pull/4054) - refactor deposit logic to prevent minting surplus zeta
+* [4060](https://github.com/zeta-chain/node/pull/4060) - cleanup forked mempool code
 
 ### Tests
 

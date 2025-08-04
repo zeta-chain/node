@@ -29,6 +29,8 @@ service Msg {
   rpc UpdateGatewayContract(MsgUpdateGatewayContract)
       returns (MsgUpdateGatewayContractResponse);
   rpc UpdateZRC20Name(MsgUpdateZRC20Name) returns (MsgUpdateZRC20NameResponse);
+  rpc BurnFungibleModuleAsset(MsgBurnFungibleModuleAsset)
+      returns (MsgBurnFungibleModuleAssetResponse);
 }
 
 message MsgDeploySystemContracts {
@@ -148,3 +150,11 @@ message MsgUpdateZRC20Name {
 }
 
 message MsgUpdateZRC20NameResponse {}
+
+message MsgBurnFungibleModuleAsset {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string zrc20_address = 2;
+}
+
+message MsgBurnFungibleModuleAssetResponse {}
