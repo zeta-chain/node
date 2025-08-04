@@ -124,3 +124,26 @@ func TestRateLimiterRaceCondition(t *testing.T) {
 	require.NoError(t, r.Acquire(100, 100))
 	require.Equal(t, uint64(1), r.Pending())
 }
+
+func TestRateLimiterUnderflowProtection(t *testing.T) {
+	r := New(5)
+
+	// Don't acquire any permits
+	require.Equal(t, uint64(0), r.Pending())
+
+	// Try to release multiple times without acquiring
+	for i := 0; i < 10; i++ {
+		r.Release() // Should not cause underflow or panic
+	}
+
+	// Pending should still be 0
+	require.Equal(t, uint64(0), r.Pending())
+
+	// Should still be able to acquire after excessive releases
+	require.NoError(t, r.Acquire(1, 100))
+	require.Equal(t, uint64(1), r.Pending())
+
+	// Release normally
+	r.Release()
+	require.Equal(t, uint64(0), r.Pending())
+}
