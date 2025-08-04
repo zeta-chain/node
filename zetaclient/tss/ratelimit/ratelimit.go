@@ -65,18 +65,15 @@ func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 }
 
 func (r *RateLimiter) Release() {
-	// Use atomic compare-and-swap to ensure we only decrement when pending > 0
-	current := r.pending.Load()
-	if current <= 0 {
-		// No pending items, nothing to release
+	// Check if there are pending items to release
+	if r.pending.Load() <= 0 {
 		return
 	}
 
-	// Try to atomically decrement the counter
-	if r.pending.CompareAndSwap(current, current-1) {
-		// Successfully decremented, now release the semaphore
-		r.sem.Release(1)
-	}
+	// Decrement the pending counter first
+	r.pending.Add(-1)
+	// Then release the semaphore
+	r.sem.Release(1)
 }
 
 // Pending returns the number of pending signatures.
