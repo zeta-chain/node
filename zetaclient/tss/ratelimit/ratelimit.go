@@ -66,20 +66,16 @@ func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 
 func (r *RateLimiter) Release() {
 	// Use atomic compare-and-swap to ensure we only decrement when pending > 0
-	for {
-		current := r.pending.Load()
-		if current <= 0 {
-			// No pending items, nothing to release
-			return
-		}
+	current := r.pending.Load()
+	if current <= 0 {
+		// No pending items, nothing to release
+		return
+	}
 
-		// Try to atomically decrement the counter
-		if r.pending.CompareAndSwap(current, current-1) {
-			// Successfully decremented, now release the semaphore
-			r.sem.Release(1)
-			return
-		}
-		// CAS failed, retry
+	// Try to atomically decrement the counter
+	if r.pending.CompareAndSwap(current, current-1) {
+		// Successfully decremented, now release the semaphore
+		r.sem.Release(1)
 	}
 }
 
