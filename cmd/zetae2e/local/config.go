@@ -23,3 +23,26 @@ func GetConfig(cmd *cobra.Command) (config.Config, error) {
 
 	return config.ReadConfig(configFile, true)
 }
+
+// OverwriteAccountData overwrites the account data in the config with the one from the file specified in the command line flag
+func OverwriteAccountData(cmd *cobra.Command, conf *config.Config) error {
+	configFile, err := cmd.Flags().GetString(flagAccountConfig)
+	if err != nil || configFile == "" {
+		return fmt.Errorf("--account-config is a required parameter to override account data")
+	}
+	configFile, err = filepath.Abs(configFile)
+	if err != nil {
+		return err
+	}
+
+	accountData, err := config.ReadConfig(configFile, false)
+	if err != nil {
+		return err
+	}
+	conf.DefaultAccount = accountData.DefaultAccount
+	conf.AdditionalAccounts = accountData.AdditionalAccounts
+	conf.PolicyAccounts = accountData.PolicyAccounts
+	conf.ObserverRelayerAccounts = accountData.ObserverRelayerAccounts
+
+	return nil
+}

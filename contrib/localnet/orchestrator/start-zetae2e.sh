@@ -207,7 +207,8 @@ mkdir -p /root/state
 deployed_config_path=/root/state/deployed.yml
 
 ### Run zetae2e command depending on the option passed
-
+ACCOUNT_CONFIG="/work/config.yml"
+export OLD_VERSION=$(get_zetacored_version)
 # Mode migrate is used to run the e2e tests before and after the TSS migration
 # It runs the e2e tests with the migrate flag which triggers a TSS migration at the end of the tests. Once the migrationis done the first e2e test is complete
 # The second e2e test is run after the migration to ensure the network is still working as expected with the new tss address
@@ -234,8 +235,7 @@ if [ "$LOCALNET_MODE" == "tss-migrate" ]; then
   echo "Waiting 10 seconds for node to restart"
   sleep 10
 
-  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" \
-      --skip-bitcoin-setup --light --skip-header-proof
+  zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light --skip-header-proof
 
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
@@ -257,7 +257,6 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # set upgrade height to 225 by default
   UPGRADE_HEIGHT=${UPGRADE_HEIGHT:=225}
   # shellcheck disable=SC2155
-  OLD_VERSION=$(get_zetacored_version)
   COMMON_ARGS="--skip-header-proof --skip-tracker-check"
   USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE:=false}
 
@@ -328,10 +327,11 @@ if [ "$LOCALNET_MODE" == "upgrade" ]; then
   # Run zetae2e again
   # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
   # Use light flag to skip advanced tests
+
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --light ${COMMON_ARGS}
   else
-    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --skip-bitcoin-setup --light ${COMMON_ARGS}
+    zetae2e local $E2E_ARGS --skip-setup --config "$deployed_config_path" --account-config "$ACCOUNT_CONFIG" --skip-bitcoin-setup --light ${COMMON_ARGS}
   fi
 
   ZETAE2E_EXIT_CODE=$?

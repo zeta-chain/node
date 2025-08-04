@@ -111,57 +111,9 @@ func (r *E2ERunner) SetupEVM() {
 	txSetCustody, err := r.GatewayEVM.SetCustody(r.EVMAuth, erc20CustodyProxyAddress)
 	require.NoError(r, err)
 
-	// deploy test dapp v2
-	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
-	require.NoError(r, err)
-
-	r.TestDAppV2EVMAddr = testDAppV2Addr
-	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
-	require.NoError(r, err)
-
+	r.DeployTestDAppV2(ensureTxReceipt)
 	// Deploy zetaConnectorNative contract
-	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
-		r.EVMAuth,
-		r.EVMClient,
-	)
-	require.NoError(r, err)
-	ensureTxReceipt(txZetaConnectorNativeHash, "ZetaConnectorNative deployment failed")
-
-	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
-	require.NoError(r, err)
-	// Encode the initializer data
-	initializerData, err = zetaConnnectorNativeABI.Pack(
-		"initialize",
-		r.GatewayEVMAddr,
-		r.ZetaEthAddr,
-		r.TSSAddress,
-		r.Account.EVMAddress(),
-	)
-	require.NoError(r, err)
-
-	// Deploy zetaConnnectorNative proxy contract
-	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
-		r.EVMAuth,
-		r.EVMClient,
-		zetaConnectorNativeAddress,
-		initializerData,
-	)
-	require.NoError(r, err)
-
-	ensureTxReceipt(zetaConnnectorNativeProxyTx, "ZetaConnectorNative proxy deployment failed")
-
-	r.ConnectorNativeAddr = zetaConnnectorNativeProxyAddress
-	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
-	require.NoError(r, err)
-
-	txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, zetaConnnectorNativeProxyAddress)
-	require.NoError(r, err)
-
-	r.Logger.Info(
-		"ZetaConnectorNative contract address: %s, tx hash: %s",
-		zetaConnectorNativeAddress.Hex(),
-		txZetaConnectorNativeHash.Hash().Hex(),
-	)
+	r.DeployZetaConnectorNative(ensureTxReceipt)
 
 	// check contract deployment receipt
 	ensureTxReceipt(txERC20, "ERC20 deployment failed")
@@ -169,8 +121,6 @@ func (r *E2ERunner) SetupEVM() {
 	ensureTxReceipt(gatewayProxyTx, "Gateway proxy deployment failed")
 	ensureTxReceipt(erc20ProxyTx, "ERC20Custody proxy deployment failed")
 	ensureTxReceipt(txSetCustody, "Set custody in Gateway failed")
-	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
-	ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
 
 	// check isZetaChain is false
 	isZetaChain, err := r.TestDAppV2EVM.IsZetaChain(&bind.CallOpts{})
@@ -194,4 +144,67 @@ func (r *E2ERunner) SetupEVM() {
 	require.NoError(r, err)
 
 	ensureTxReceipt(txGrantPauserRole, "Failed to grant PAUSER_ROLE to TSS address")
+}
+
+func (r *E2ERunner) DeployTestDAppV2(ensureTxReceipt func(tx *ethtypes.Transaction, failMessage string)) {
+	// deploy test dapp v2
+	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(r.EVMAuth, r.EVMClient, false, r.GatewayEVMAddr)
+	require.NoError(r, err)
+
+	r.TestDAppV2EVMAddr = testDAppV2Addr
+	r.TestDAppV2EVM, err = testdappv2.NewTestDAppV2(testDAppV2Addr, r.EVMClient)
+	require.NoError(r, err)
+
+	ensureTxReceipt(txTestDAppV2, "TestDAppV2 deployment failed")
+}
+
+// DeployZetaConnectorNative deploys the ZetaConnectorNative contract with proxy
+func (r *E2ERunner) DeployZetaConnectorNative(ensureTxReceipt func(tx *ethtypes.Transaction, failMessage string)) {
+	// Deploy zetaConnectorNative contract
+	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
+		r.EVMAuth,
+		r.EVMClient,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(txZetaConnectorNativeHash, "ZetaConnectorNative deployment failed")
+
+	// Get ABI for initialization
+	zetaConnnectorNativeABI, err := zetaconnnectornative.ZetaConnectorNativeMetaData.GetAbi()
+	require.NoError(r, err)
+
+	// Encode the initializer data
+	initializerData, err := zetaConnnectorNativeABI.Pack(
+		"initialize",
+		r.GatewayEVMAddr,
+		r.ZetaEthAddr,
+		r.TSSAddress,
+		r.Account.EVMAddress(),
+	)
+	require.NoError(r, err)
+
+	// Deploy zetaConnnectorNative proxy contract
+	zetaConnnectorNativeProxyAddress, zetaConnnectorNativeProxyTx, _, err := erc1967proxy.DeployERC1967Proxy(
+		r.EVMAuth,
+		r.EVMClient,
+		zetaConnectorNativeAddress,
+		initializerData,
+	)
+	require.NoError(r, err)
+	ensureTxReceipt(zetaConnnectorNativeProxyTx, "ZetaConnectorNative proxy deployment failed")
+
+	// Initialize the connector contract instance
+	r.ConnectorNativeAddr = zetaConnnectorNativeProxyAddress
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(zetaConnnectorNativeProxyAddress, r.EVMClient)
+	require.NoError(r, err)
+
+	// Set connector in gateway
+	txSetConnector, err := r.GatewayEVM.SetConnector(r.EVMAuth, zetaConnnectorNativeProxyAddress)
+	require.NoError(r, err)
+	ensureTxReceipt(txSetConnector, "Set connector in Gateway failed")
+
+	r.Logger.Info(
+		"ZetaConnectorNative contract address: %s, tx hash: %s",
+		zetaConnectorNativeAddress.Hex(),
+		txZetaConnectorNativeHash.Hash().Hex(),
+	)
 }
