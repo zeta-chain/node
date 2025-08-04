@@ -234,8 +234,9 @@ func (r *E2ERunner) checkZETATSSBalance(testLegacy bool) {
 	require.True(
 		r,
 		zetaMinted.Equal(zetaLocked),
-		"ZETA: Connector balance (%s) != ZETA TotalSupply (%s) + AbortedAmount (%d)",
+		"ZETA: Connector balance (%s) != ZETA Minted (%s) [ ZETA TotalSupply (%s) + AbortedAmount (%s) ]",
 		zetaLocked.String(),
+		zetaMinted.String(),
 		zetaSupply.String(),
 		abortedAmount.String(),
 	)
