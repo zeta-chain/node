@@ -5,9 +5,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/pkg/errors"
-
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/pkg/errors"
 )
 
 type Option func(bus *memEventBus)

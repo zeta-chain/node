@@ -6,6 +6,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
+	"github.com/test-go/testify/mock"
+	"google.golang.org/grpc/metadata"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -229,7 +232,7 @@ func (s *TestSuite) TestGetTransactionByHash() {
 			},
 			msgEthereumTx,
 			nil,
-			true,
+			false,
 		},
 		{
 			"pass - Base fee error",
@@ -726,7 +729,10 @@ func (s *TestSuite) TestQueryTendermintTxIndexer() {
 
 func (s *TestSuite) TestGetTransactionReceipt() {
 	msgEthereumTx, _ := s.buildEthereumTx()
+	msgEthereumTx2, _ := s.buildEthereumTx()
 	txHash := msgEthereumTx.AsTransaction().Hash()
+	txHash2 := msgEthereumTx2.AsTransaction().Hash()
+	_ = txHash2
 
 	txBz := s.signAndEncodeEthTx(msgEthereumTx)
 
@@ -736,13 +742,95 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 		tx           *evmtypes.MsgEthereumTx
 		block        *types.Block
 		blockResult  []*abci.ExecTxResult
-		expTxReceipt map[string]interface{}
 		expPass      bool
+		expErr       error
 	}{
+		// TODO test happy path
 		{
-			"fail - Receipts do not match",
-			func() {
+			name:         "fail - tx not found",
+			registerMock: func() {},
+			block:        &types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
+			tx:           msgEthereumTx2,
+			blockResult: []*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: txHash.Hex()},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			expPass: false,
+			expErr:  fmt.Errorf("tx not found, hash: %s", txHash.Hex()),
+		},
+		{
+			name: "fail - block not found",
+			registerMock: func() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				client.On("Block", mock.Anything, mock.Anything).Return(nil, errors.New("some error"))
+			},
+			block: &types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
+			tx:    msgEthereumTx,
+			blockResult: []*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: txHash.Hex()},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			expPass: false,
+			expErr:  fmt.Errorf("block not found at height 1: some error"),
+		},
+		{
+			name: "fail - block result error",
+			registerMock: func() {
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				_, err := RegisterBlock(client, 1, txBz)
+				s.Require().NoError(err)
+				client.On("BlockResults", mock.Anything, mock.AnythingOfType("*int64")).
+					Return(nil, errors.New("some error"))
+			},
+			tx:    msgEthereumTx,
+			block: &types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
+			blockResult: []*abci.ExecTxResult{
+				{
+					Code: 0,
+					Events: []abci.Event{
+						{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+							{Key: "ethereumTxHash", Value: txHash.Hex()},
+							{Key: "txIndex", Value: "0"},
+							{Key: "amount", Value: "1000"},
+							{Key: "txGasUsed", Value: "21000"},
+							{Key: "txHash", Value: ""},
+							{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
+						}},
+					},
+				},
+			},
+			expPass: false,
+			expErr:  fmt.Errorf("block result not found at height 1: some error"),
+		},
+		{
+			"happy path",
+			func() {
+				var header metadata.MD
+				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				RegisterParams(QueryClient, &header, 1)
 				_, err := RegisterBlock(client, 1, txBz)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)
@@ -765,8 +853,8 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 					},
 				},
 			},
-			map[string]interface{}(nil),
-			false,
+			true,
+			nil,
 		},
 	}
 
@@ -780,12 +868,20 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 			err := s.backend.Indexer.IndexBlock(tc.block, tc.blockResult)
 			s.Require().NoError(err)
 
-			txReceipt, err := s.backend.GetTransactionReceipt(common.HexToHash(tc.tx.Hash))
+			hash := common.HexToHash(tc.tx.Hash)
+			res, err := s.backend.GetTransactionReceipt(hash)
 			if tc.expPass {
+				s.Require().Equal(res["transactionHash"], hash)
+				s.Require().Equal(res["blockNumber"], hexutil.Uint64(tc.block.Height)) //nolint: gosec // G115
+				requiredFields := []string{"status", "cumulativeGasUsed", "logsBloom", "logs", "gasUsed", "blockHash", "blockNumber", "transactionIndex", "effectiveGasPrice", "from", "to", "type"}
+				for _, field := range requiredFields {
+					s.Require().NotNil(res[field], "field was empty %s", field)
+				}
+				s.Require().Nil(res["contractAddress"]) // no contract creation
 				s.Require().NoError(err)
-				s.Require().Equal(txReceipt, tc.expTxReceipt)
 			} else {
-				s.Require().NotEqual(txReceipt, tc.expTxReceipt)
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expErr.Error())
 			}
 		})
 	}

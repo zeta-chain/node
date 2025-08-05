@@ -5,21 +5,18 @@ import (
 	"math"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/libs/bytes"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 
-	"github.com/cometbft/cometbft/libs/bytes"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetCode returns the contract code at the given address and block number.
@@ -42,7 +39,11 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 }
 
 // GetProof returns an account object with proof and any storage proofs
-func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error) {
+func (b *Backend) GetProof(
+	address common.Address,
+	storageKeys []string,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (*rpctypes.AccountResult, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
@@ -78,7 +79,11 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.QueryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
+		valueBz, proof, err := b.QueryClient.GetProof(
+			clientCtx,
+			evmtypes.StoreKey,
+			evmtypes.StateKey(address, hexKey.Bytes()),
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -124,7 +129,11 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 }
 
 // GetStorageAt returns the contract storage at the given address, block number, and key.
-func (b *Backend) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
+func (b *Backend) GetStorageAt(
+	address common.Address,
+	key string,
+	blockNrOrHash rpctypes.BlockNumberOrHash,
+) (hexutil.Bytes, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err

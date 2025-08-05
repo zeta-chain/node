@@ -6,22 +6,19 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	cmttypes "github.com/cometbft/cometbft/types"
-
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/types"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var (
@@ -431,7 +428,13 @@ func (api *PublicFilterAPI) Logs(ctx context.Context, crit filters.FilterCriteri
 					return
 				}
 
-				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
+				logs := FilterLogs(
+					evmtypes.LogsToEthereum(txResponse.Logs),
+					crit.FromBlock,
+					crit.ToBlock,
+					crit.Addresses,
+					crit.Topics,
+				)
 
 				for _, log := range logs {
 					_ = notifier.Notify(rpcSub.ID, log) // #nosec G703
@@ -511,7 +514,13 @@ func (api *PublicFilterAPI) NewFilter(criteria filters.FilterCriteria) (rpc.ID, 
 					return
 				}
 
-				logs := FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), criteria.FromBlock, criteria.ToBlock, criteria.Addresses, criteria.Topics)
+				logs := FilterLogs(
+					evmtypes.LogsToEthereum(txResponse.Logs),
+					criteria.FromBlock,
+					criteria.ToBlock,
+					criteria.Addresses,
+					criteria.Topics,
+				)
 
 				api.filtersMu.Lock()
 				if f, found := api.filters[filterID]; found {

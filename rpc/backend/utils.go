@@ -267,7 +267,15 @@ func (b *Backend) ProcessBlock(
 			tx := ethMsg.AsTransaction()
 			reward := tx.EffectiveGasTipValue(blockBaseFee)
 			if reward == nil || reward.Sign() < 0 {
-				b.Logger.Debug("negative or nil reward found in transaction", "height", blockHeight, "txHash", tx.Hash().Hex(), "reward", reward)
+				b.Logger.Debug(
+					"negative or nil reward found in transaction",
+					"height",
+					blockHeight,
+					"txHash",
+					tx.Hash().Hex(),
+					"reward",
+					reward,
+				)
 				reward = big.NewInt(0)
 			}
 			sorter = append(sorter, txGasAndReward{gasUsed: txGasUsed, reward: reward})
