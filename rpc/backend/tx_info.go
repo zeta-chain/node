@@ -356,7 +356,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 func (b *Backend) GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error) {
 	hexTx := hash.Hex()
 
-	res, _, err := b.GetTxByEthHash(hash) // TODO evm: additional fields?
+	// TODO https://github.com/zeta-chain/node/issues/4079
+	// check if additional fields should be used here
+	res, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.Logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
 		return nil, nil

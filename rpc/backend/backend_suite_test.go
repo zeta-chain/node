@@ -120,7 +120,8 @@ func (s *TestSuite) SetupTest() {
 	// Add codec
 	s.backend.ClientCtx.Codec = encodingConfig.Codec
 
-	// TODO evm: rpc tests in evm module are integration tests, this workaround is needed to setup eth config
+	// TODO https://github.com/zeta-chain/node/issues/2157
+	// rpc tests in evm module are integration tests, this workaround is needed to setup eth config
 	// consider maintaining all synthetic txs changes and tests in evm module fork, so there is no need to have
 	// only rpc forked in node repo
 	ethCfg := evmtypes.DefaultChainConfig(s.backend.Cfg.EVM.EVMChainID)

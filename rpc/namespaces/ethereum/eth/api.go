@@ -170,7 +170,7 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 	return e.backend.GetBlockByHash(hash, fullTx)
 }
 
-// TODO evm: new method
+// TODO https://github.com/zeta-chain/node/issues/4079
 // GetBlockReceipts returns the block receipts for the given block hash or number or tag.
 // func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
 // 	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)

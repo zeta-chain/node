@@ -600,7 +600,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 		}
 	}
 
-	// TODO evm: add tx receipts
+	// TODO: add tx receipts
 	ethBlock := ethtypes.NewBlock(
 		ethHeader,
 		&ethtypes.Body{Transactions: txs, Uncles: nil, Withdrawals: nil},
@@ -609,7 +609,8 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	return ethBlock, nil
 }
 
-// TODO evm: new method, needs refactoring with synthetic txs
+// TODO https://github.com/zeta-chain/node/issues/4079
+// new method, needs refactoring with synthetic txs
 // GetBlockReceipts returns the receipts for a given block number or hash.
 // func (b *Backend) GetBlockReceipts(
 // 	blockNrOrHash rpctypes.BlockNumberOrHash,
