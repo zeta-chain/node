@@ -590,7 +590,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.VerifyAccounting(testLegacy)
+	// We artificially burn zeta in teh admin tests so the zeta balance check fails.
+	// As long as the check pass in all other tests it should be fine.
+	if !testAdmin {
+		deployerRunner.VerifyAccounting(testLegacy)
+	}
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.
