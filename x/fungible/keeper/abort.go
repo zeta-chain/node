@@ -5,9 +5,9 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	errorspkg "github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -49,7 +49,7 @@ func (k Keeper) ProcessAbort(
 	case coin.CoinType_Zeta:
 		// Deposit native zeta to the abort address
 		// If the deposit fails do not mint Zeta
-		_, _, err := k.executeWithMintedZeta(
+		_, _, err := k.ExecuteWithMintedZeta(
 			ctx,
 			amount,
 			func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {

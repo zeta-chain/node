@@ -5,8 +5,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/coin"
 )
@@ -83,7 +83,7 @@ func (k Keeper) processZetaRevert(
 	revertMessage []byte,
 	callOnRevert bool,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	res, _, err := k.executeWithMintedZeta(
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
 		amount,
 		func(tmpCtx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {

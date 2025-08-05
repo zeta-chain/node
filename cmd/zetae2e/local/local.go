@@ -56,11 +56,12 @@ const (
 	flagSkipHeaderProof        = "skip-header-proof"
 	flagTestLegacy             = "test-legacy"
 	flagSkipTrackerCheck       = "skip-tracker-check"
-	flagSkipPrecompiles        = "skip-precompiles"
 	flagUpgradeContracts       = "upgrade-contracts"
 	flagTestFilter             = "test-filter"
 	flagTestStaking            = "test-staking"
 	flagTestConnectorMigration = "test-connector-migration"
+	flagAccountConfig          = "account-config" // Use this flag to override the account data in base config file
+	previousVersion            = "v32.0.2"
 )
 
 var (
@@ -99,12 +100,13 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestTSSMigration, false, "set to true to include a migration test at the end")
 	cmd.Flags().Bool(flagTestLegacy, false, "set to true to run legacy EVM tests")
 	cmd.Flags().Bool(flagSkipTrackerCheck, false, "set to true to skip tracker check at the end of the tests")
-	cmd.Flags().Bool(flagSkipPrecompiles, true, "set to true to skip stateful precompiled contracts test")
 	cmd.Flags().
 		Bool(flagUpgradeContracts, false, "set to true to upgrade Gateways and ERC20Custody contracts during setup for ZEVM and EVM")
 	cmd.Flags().String(flagTestFilter, "", "regexp filter to limit which test to run")
 	cmd.Flags().Bool(flagTestStaking, false, "set to true to run staking tests")
 	cmd.Flags().Bool(flagTestConnectorMigration, false, "set to true to run v2 connector migration tests")
+	cmd.Flags().
+		String(flagAccountConfig, "", "path to the account config file to override the accounts in the base config file")
 
 	cmd.AddCommand(NewGetZetaclientBootstrap())
 
@@ -137,7 +139,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		skipTrackerCheck       = must(cmd.Flags().GetBool(flagSkipTrackerCheck))
 		testTSSMigration       = must(cmd.Flags().GetBool(flagTestTSSMigration))
 		testLegacy             = must(cmd.Flags().GetBool(flagTestLegacy))
-		skipPrecompiles        = must(cmd.Flags().GetBool(flagSkipPrecompiles))
 		upgradeContracts       = must(cmd.Flags().GetBool(flagUpgradeContracts))
 		testStress             = testEthStress || testSolanaStress || testSuiStress
 		setupSolana            = testSolana || testStress
@@ -169,7 +170,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if testStress {
 		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
 		skipRegular = true
-		skipPrecompiles = true
 
 		if iterations > 100 {
 			TestTimeout = time.Hour
@@ -258,9 +258,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		}))
 	}
 
-	e2eStartHeight, err := deployerRunner.Clients.Zetacore.GetBlockHeight(ctx)
-	noError(err)
-
 	// setting up the networks
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
@@ -311,6 +308,20 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
+	deployerRunner.AddPostUpgradeHandler(previousVersion, func() {
+		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
+		err = OverwriteAccountData(cmd, &conf)
+		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
+		deployerRunner.RunSetup(testLegacy || testAdmin)
+		if !testSui || deployerRunner.IsRunningTssMigration() {
+			return
+		}
+
+		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
+		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
+		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
+	})
+
 	// if a config output is specified, write the config
 	if configOut != "" {
 		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
@@ -324,21 +335,13 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ config file written in %s", configOut)
 	}
 
-	deployerRunner.AssertAfterUpgrade("v32.0.0", func() {
-		if !testSui {
-			return
-		}
-		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
-		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) == 0, "SUI ZRC20 balance should be zero")
-	})
+	deployerRunner.PrintContractAddresses()
 
 	// if setup only, quit
 	if setupOnly {
 		logger.Print("✅ the localnet has been setup")
 		os.Exit(0)
 	}
-	deployerRunner.PrintContractAddresses()
 
 	if upgradeContracts {
 		deployerRunner.UpgradeGatewaysAndERC20Custody()
@@ -358,34 +361,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startEVMTests(&eg, conf, deployerRunner, verbose)
 		startBitcoinTests(&eg, conf, deployerRunner, verbose, light, skipBitcoinSetup)
 	}
-	if !skipPrecompiles {
-		precompiledContractTests := []string{
-			//e2etests.TestPrecompilesPrototypeName,
-			//e2etests.TestPrecompilesPrototypeThroughContractName,
-			//// Disabled until further notice, check https://github.com/zeta-chain/node/issues/3005.
-			//// e2etests.TestPrecompilesStakingThroughContractName,
-			//e2etests.TestPrecompilesBankName,
-			//e2etests.TestPrecompilesBankFailName,
-			//e2etests.TestPrecompilesBankThroughContractName,
-		}
-		if e2eStartHeight < 100 {
-			// these tests require a clean system
-			// since unstaking has an unbonding period
-			//precompiledContractTests = append(precompiledContractTests,
-			//	e2etests.TestPrecompilesStakingName,
-			//	e2etests.TestPrecompilesDistributeName,
-			//	e2etests.TestPrecompilesDistributeNonZRC20Name,
-			//	e2etests.TestPrecompilesDistributeThroughContractName,
-			//)
-			// prevent lint error
-			_ = precompiledContractTests
-		} else {
-			logger.Print("⚠️ partial precompiled run (unclean state)")
-		}
-		eg.Go(statefulPrecompilesTestRoutine(conf, deployerRunner, verbose, precompiledContractTests...))
-	}
-	// TODO : update all admin tests to use ZETA v2 flow instead of legacy
-	// https://github.com/zeta-chain/node/issues/4005
+
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
 			e2etests.TestUpdateZRC20NameName,
@@ -400,6 +376,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestPauseERC20CustodyName,
 			e2etests.TestMigrateERC20CustodyFundsName,
 			e2etests.TestUpdateOperationalChainParamsName,
+			e2etests.TestBurnFungibleModuleAssetName,
 
 			// Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
 			// See issue below for details
@@ -506,12 +483,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawAndCallName,
 			e2etests.TestSuiWithdrawRevertWithCallName,
-			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
-			e2etests.TestSuiTokenWithdrawAndCallName,
-			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			// TODO: https://github.com/zeta-chain/node/issues/4066
+			// remove legacy tests and enable new ones after re-enabling authenticated call
+			//e2etests.TestSuiWithdrawAndCallName,
+			//e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiWithdrawAndCallLegacyName,
+			e2etests.TestSuiWithdrawAndCallRevertWithCallLegacyName,
+			e2etests.TestSuiTokenWithdrawAndCallLegacyName,
+			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallLegacyName,
 			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
 			e2etests.TestSuiWithdrawInvalidReceiverName,
@@ -583,7 +566,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.VerifyAccounting(testLegacy)
+	// We artificially burn zeta in the admin tests which causes an imbalance in the accounting.
+	if !testAdmin {
+		deployerRunner.VerifyAccounting(testLegacy)
+	}
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.
@@ -609,7 +595,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			os.Exit(1)
 		}
 	}
-	deployerRunner.AssertBeforeUpgrade("v32.0.0", func() {
+	deployerRunner.AddPreUpgradeHandler("v32.0.0", func() {
 		balance, err := deployerRunner.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
 		require.NoError(deployerRunner, err, "Failed to get SUI ZRC20 balance")
 		require.True(deployerRunner, balance.Cmp(big.NewInt(0)) >= 0, "SUI ZRC20 balance should be positive")

@@ -35,7 +35,7 @@ func (r *E2ERunner) SetupZEVM() {
 	r.setupSystemContract()
 	r.deployGatewayZEVM()
 	r.deployCoreRegistry()
-	r.deployTestDAppV2()
+	r.DeployTestDAppV2ZEVM()
 }
 
 // ensureTxReceipt is a helper function to ensure transaction success
@@ -174,8 +174,8 @@ func (r *E2ERunner) deployCoreRegistry() {
 	r.ensureTxReceipt(updateRegistryTx, "Gateway set registry address failed")
 }
 
-// deployTestDAppV2 deploys the test DApp V2 contract
-func (r *E2ERunner) deployTestDAppV2() {
+// DeployTestDAppV2ZEVM deploys the test DApp V2 contract
+func (r *E2ERunner) DeployTestDAppV2ZEVM() {
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
 		r.ZEVMAuth,
 		r.ZEVMClient,

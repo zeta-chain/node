@@ -30,8 +30,8 @@ func (r *E2ERunner) SetupEVM() {
 	r.prepareTSSForDeployment()
 	r.deployGatewayEVM()
 	r.deployERC20Custody()
-	r.deployTestDAppV2EVM()
-	r.deployZetaConnectorNative()
+	r.DeployTestDAppV2EVM()
+	r.DeployZetaConnectorNative()
 	r.finalizeEVMSetup()
 }
 
@@ -135,8 +135,8 @@ func (r *E2ERunner) deployERC20Custody() {
 	r.ensureTxReceiptEVM(txSetCustody, "Set custody in Gateway failed")
 }
 
-// deployTestDAppV2EVM deploys the test DApp V2 contract for EVM
-func (r *E2ERunner) deployTestDAppV2EVM() {
+// DeployTestDAppV2EVM deploys the test DApp V2 contract for EVM
+func (r *E2ERunner) DeployTestDAppV2EVM() {
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
 		r.EVMAuth,
 		r.EVMClient,
@@ -157,8 +157,8 @@ func (r *E2ERunner) deployTestDAppV2EVM() {
 	require.False(r, isZetaChain)
 }
 
-// deployZetaConnectorNative deploys the ZetaConnectorNative contract with proxy
-func (r *E2ERunner) deployZetaConnectorNative() {
+// DeployZetaConnectorNative deploys the ZetaConnectorNative contract with proxy
+func (r *E2ERunner) DeployZetaConnectorNative() {
 	// Deploy zetaConnectorNative contract
 	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
 		r.EVMAuth,

@@ -23,7 +23,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "approve")
+	r.Logger.EVMTransaction(tx, "approve")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	utils.RequireTxSuccessful(r, receipt)

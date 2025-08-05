@@ -1,6 +1,7 @@
 # syntax=ghcr.io/zeta-chain/docker-dockerfile:1.9-labs
 # check=error=true
-FROM ghcr.io/zeta-chain/golang:1.23.3-bookworm AS base-build
+# TODO evm: do we need to push golang image to zeta ghcr?
+FROM golang:1.23.8-bookworm AS base-build
 
 ENV GOPATH=/go
 ENV GOOS=linux
@@ -27,10 +28,10 @@ RUN --mount=type=cache,target="/root/.cache/go-build" \
     NODE_COMMIT=${NODE_COMMIT} \
     make install install-zetae2e
 
-FROM ghcr.io/zeta-chain/golang:1.23.3-bookworm AS cosmovisor-build
+FROM golang:1.23.8-bookworm AS cosmovisor-build
 RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.1
 
-FROM ghcr.io/zeta-chain/golang:1.23.3-bookworm AS base-runtime
+FROM golang:1.23.8-bookworm AS base-runtime
 
 RUN apt update && \
     apt install -yq jq yq curl tmux python3 openssh-server iputils-ping iproute2 bind9-host && \
@@ -75,12 +76,12 @@ RUN git clone https://github.com/zeta-chain/node.git
 RUN cd node && git fetch
 
 RUN cd node && git checkout ${OLD_VERSION}
-RUN cd node && make install
+RUN cd node && make install install-zetae2e
 
 FROM base-runtime AS old-runtime-source
 
 COPY --from=cosmovisor-build /go/bin/cosmovisor /usr/local/bin
-COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /usr/local/bin/
+COPY --from=old-build-source /go/bin/zetacored /go/bin/zetaclientd /go/bin/zetae2e /usr/local/bin/
 COPY --from=latest-build /go/bin/zetaclientd-supervisor /usr/local/bin
 
 # Optional old version build (from binary).
@@ -94,4 +95,6 @@ ARG BUILDARCH
 RUN curl -Lo /usr/local/bin/zetacored ${OLD_VERSION}/zetacored-linux-${BUILDARCH} && \
     chmod 755 /usr/local/bin/zetacored && \
     curl -Lo /usr/local/bin/zetaclientd ${OLD_VERSION}/zetaclientd-linux-${BUILDARCH} && \
-    chmod 755 /usr/local/bin/zetaclientd
+    chmod 755 /usr/local/bin/zetaclientd && \
+    curl -Lo /usr/local/bin/zetae2e ${OLD_VERSION}/zetae2e-linux-${BUILDARCH} && \
+    chmod 755 /usr/local/bin/zetae2e;
