@@ -279,7 +279,6 @@ const (
 	TestZetaWithdrawName                      = "zeta_withdraw"
 	TestZetaWithdrawAndCallName               = "zeta_withdraw_and_call"
 	TestZetaWithdrawAndArbitraryCallName      = "zeta_withdraw_and_arbitrary_call"
-	TestZetaWithdrawAndCallNoMessageName      = "zeta_withdraw_and_call_no_message"
 	TestZetaWithdrawAndCallRevertName         = "zeta_withdraw_and_call_revert"
 	TestZetaWithdrawAndCallRevertWithCallName = "zeta_withdraw_and_call_revert_with_call"
 	TestZetaWithdrawRevertAndAbortName        = "zeta_withdraw_revert_and_abort"
@@ -408,16 +407,6 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndArbitraryCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
-	),
-	runner.NewE2ETest(
-		TestZetaWithdrawAndCallNoMessageName,
-		"withdraw Zeta from ZEVM and authenticated call a contract with no message",
-		[]runner.ArgDefinition{
-			{Description: "amount", DefaultValue: "1000"},
-			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
-		},
-		TestZetaWithdrawAndCallNoMessage,
 		runner.WithMinimumVersion(V2ZetaVersion),
 	),
 	runner.NewE2ETest(

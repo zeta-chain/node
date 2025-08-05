@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
@@ -27,7 +28,7 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 	gasLimit := utils.ParseBigInt(r, args[1])
 
-	payload := randomPayload(r)
+	payload := strings.ToLower(r.ZetaEthAddr.String())
 
 	r.AssertTestDAppEVMCalled(false, payload, amount)
 

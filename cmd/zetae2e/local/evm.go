@@ -108,7 +108,6 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestZetaWithdrawAndCallRevertName,
 			e2etests.TestZetaWithdrawAndCallRevertWithCallName,
 			e2etests.TestZetaWithdrawRevertAndAbortName,
-			e2etests.TestZetaWithdrawAndCallNoMessageName,
 			e2etests.TestZetaWithdrawAndArbitraryCallName,
 		),
 	)

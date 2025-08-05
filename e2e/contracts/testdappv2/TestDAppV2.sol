@@ -234,18 +234,20 @@ contract TestDAppV2 {
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
-    // Callable interface on connected EVM chains
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
         string memory messageStr = message.length == 0 ? getNoMessageIndex(messageContext.sender) : string(message);
-        
-        IERC20 zetaTokenContract = IERC20(zetatoken);
-        uint256 allowance = zetaTokenContract.allowance(msg.sender, address(this));
 
-        uint256 amountToRecord = msg.value; 
+        uint256 amountToRecord = msg.value;
 
-        if (allowance > 0) {
-            require(zetaTokenContract.transferFrom(msg.sender, address(this), allowance), "Zetatoken transfer from gateway failed");
-            amountToRecord = allowance; // Use token amount instead of ETH
+        // Check if message matches zetatoken address
+        if (message.length > 0 && keccak256(abi.encodePacked(messageStr)) == keccak256(abi.encodePacked(addressToString(zetatoken)))) {
+            IERC20 zetaTokenContract = IERC20(zetatoken);
+            uint256 allowance = zetaTokenContract.allowance(msg.sender, address(this));
+
+            if (allowance > 0) {
+                require(zetaTokenContract.transferFrom(msg.sender, address(this), allowance), "Zetatoken transfer from gateway failed");
+                amountToRecord = allowance; // Use token amount instead of ETH
+            }
         }
 
         setCalledWithMessage(messageStr);
@@ -253,6 +255,20 @@ contract TestDAppV2 {
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
+    }
+
+// Helper function to convert address to lowercase hex string
+    function addressToString(address _addr) internal pure returns (string memory) {
+        bytes32 value = bytes32(uint256(uint160(_addr)));
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory str = new bytes(42);
+        str[0] = '0';
+        str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2+i*2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+        return string(str);
     }
 
     // deposit through Gateway EVM

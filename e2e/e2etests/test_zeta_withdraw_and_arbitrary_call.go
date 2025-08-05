@@ -17,6 +17,7 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseBigInt(r, args[0])
 
 	payload := randomPayload(r)
+	//payload := strings.ToLower(r.ZetaEthAddr.String())
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
 
