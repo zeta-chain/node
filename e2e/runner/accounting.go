@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/coin"
