@@ -235,28 +235,6 @@ func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Addres
 	return sui.NewCallPayload(argumentTypes, objects, message)
 }
 
-// TODO: https://github.com/zeta-chain/node/issues/4066
-// remove legacy payload builder after re-enabling authenticated call
-// SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
-// The example on_call function will just forward the withdrawn token to given 'suiAddress'
-func (r *E2ERunner) SuiCreateExampleWACPayloadLegacy(suiAddress string) (sui.CallPayload, error) {
-	// only the CCTX's coinType is needed, no additional arguments
-	argumentTypes := []string{}
-	objects := []string{
-		r.SuiExample.GlobalConfigID.String(),
-		r.SuiExample.PartnerID.String(),
-		r.SuiExample.ClockID.String(),
-	}
-
-	// create the payload message from the sui address
-	message, err := hex.DecodeString(suiAddress[2:]) // remove 0x prefix
-	if err != nil {
-		return sui.CallPayload{}, err
-	}
-
-	return sui.NewCallPayload(argumentTypes, objects, message), nil
-}
-
 // SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
 // function in Sui the example package
 func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {

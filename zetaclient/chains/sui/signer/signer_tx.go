@@ -95,13 +95,10 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	}
 
 	// Retrieve message context ID
-	// TODO: https://github.com/zeta-chain/node/issues/4066
-	// bring back this query after re-enabling authenticated call
-	msgContextID := ""
-	// msgContextID, err := s.getMessageContextIDCached(ctx)
-	// if err != nil {
-	// 	return tx, errors.Wrap(err, "unable to get message context ID")
-	// }
+	msgContextID, err := s.getMessageContextIDCached(ctx)
+	if err != nil {
+		return tx, errors.Wrap(err, "unable to get message context ID")
+	}
 
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
@@ -309,9 +306,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
-	// TODO: https://github.com/zeta-chain/node/issues/4066
-	// use IsRetryableExecutionError instead after re-enabling authenticated call
-	isRetryable, err := zetasui.IsRetryableExecutionErrorLegacy(res.Effects.Status.Error)
+	isRetryable, err := zetasui.IsRetryableExecutionError(res.Effects.Status.Error)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "unable to check tx execution status error: %s", res.Effects.Status.Error)

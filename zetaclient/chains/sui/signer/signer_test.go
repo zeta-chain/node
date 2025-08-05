@@ -57,11 +57,9 @@ func TestSigner(t *testing.T) {
 		const withdrawCapID = "0xWithdrawCapID"
 		ts.MockWithdrawCapID(withdrawCapID)
 
-		// TODO: https://github.com/zeta-chain/node/issues/4066
-		// bring back MessageContextID
 		// Given mocked MessageContextID
-		// const messageContextID = "0xMessageContextID"
-		// ts.MockMessageContextID(messageContextID)
+		const messageContextID = "0xMessageContextID"
+		ts.MockMessageContextID(messageContextID)
 
 		// Given expected MoveCall
 		txBytes := base64.StdEncoding.EncodeToString([]byte("raw_tx_bytes"))
