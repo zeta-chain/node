@@ -594,7 +594,7 @@ func (r *E2ERunner) WithdrawSOLZRC20(
 		revertOptions,
 	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -630,7 +630,7 @@ func (r *E2ERunner) WithdrawAndCallSOLZRC20(
 		revertOptions,
 	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+	r.Logger.EVMTransaction(tx, "withdraw_and_call")
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -702,7 +702,7 @@ func (r *E2ERunner) WithdrawSPLZRC20(
 	// withdraw
 	tx, err = r.SPLZRC20.Withdraw(r.ZEVMAuth, []byte(to.String()), amount)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
@@ -767,7 +767,7 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 		revertOptions,
 	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "withdraw_and_call")
+	r.Logger.EVMTransaction(tx, "withdraw_and_call")
 
 	// wait for tx receipt
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

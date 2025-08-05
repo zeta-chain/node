@@ -3,24 +3,27 @@ package backend
 import (
 	"encoding/json"
 
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
+	cmttypes "github.com/cometbft/cometbft/types"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
 	ethrpc "github.com/zeta-chain/node/rpc/types"
 )
 
-func (suite *BackendTestSuite) TestGetLogs() {
-	_, bz := suite.buildEthereumTx()
-	block := tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil)
+func (s *TestSuite) TestGetLogs() {
+	_, bz := s.buildEthereumTx()
+	block := cmttypes.MakeBlock(1, []cmttypes.Tx{bz}, nil, nil)
 	logs := make([]*evmtypes.Log, 0, 1)
 	var log evmtypes.Log
-	json.Unmarshal(
-		[]byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d},
+	err := json.Unmarshal(
+		[]byte("{\"test\": \"hello\"}"),
 		&log,
-	)
+	) // TODO refactor this to unmarshall to a log struct successfully
+	s.Require().NoError(err)
+
 	logs = append(logs, &log)
 
 	testCases := []struct {
@@ -33,7 +36,7 @@ func (suite *BackendTestSuite) TestGetLogs() {
 		{
 			"fail - no block with that hash",
 			func(hash common.Hash) {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterBlockByHashNotFound(client, hash, bz)
 			},
 			common.Hash{},
@@ -43,7 +46,7 @@ func (suite *BackendTestSuite) TestGetLogs() {
 		{
 			"fail - error fetching block by hash",
 			func(hash common.Hash) {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterBlockByHashError(client, hash, bz)
 			},
 			common.Hash{},
@@ -53,8 +56,9 @@ func (suite *BackendTestSuite) TestGetLogs() {
 		{
 			"fail - error getting block results",
 			func(hash common.Hash) {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockByHash(client, hash, bz)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				_, err := RegisterBlockByHash(client, hash, bz)
+				s.Require().NoError(err)
 				RegisterBlockResultsError(client, 1)
 			},
 			common.Hash{},
@@ -64,9 +68,11 @@ func (suite *BackendTestSuite) TestGetLogs() {
 		{
 			"success - getting logs with block hash",
 			func(hash common.Hash) {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockByHash(client, hash, bz)
-				RegisterBlockResultsWithEventLog(client, ethrpc.BlockNumber(1).Int64())
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				_, err := RegisterBlockByHash(client, hash, bz)
+				s.Require().NoError(err)
+				_, err = RegisterBlockResultsWithEventLog(client, ethrpc.BlockNumber(1).Int64())
+				s.Require().NoError(err)
 			},
 			common.BytesToHash(block.Hash()),
 			[][]*ethtypes.Log{evmtypes.LogsToEthereum(logs)},
@@ -75,23 +81,23 @@ func (suite *BackendTestSuite) TestGetLogs() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			tc.registerMock(tc.blockHash)
-			logs, err := suite.backend.GetLogs(tc.blockHash)
+			logs, err := s.backend.GetLogs(tc.blockHash)
 
 			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expLogs, logs)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expLogs, logs)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *BackendTestSuite) TestBloomStatus() {
+func (s *TestSuite) TestBloomStatus() {
 	testCases := []struct {
 		name         string
 		registerMock func()
@@ -107,14 +113,14 @@ func (suite *BackendTestSuite) TestBloomStatus() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
 			tc.registerMock()
-			bloom, _ := suite.backend.BloomStatus()
+			bloom, _ := s.backend.BloomStatus()
 
 			if tc.expPass {
-				suite.Require().Equal(tc.expResult, bloom)
+				s.Require().Equal(tc.expResult, bloom)
 			}
 		})
 	}

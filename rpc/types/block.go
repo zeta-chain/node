@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package types
 
 import (
@@ -25,11 +10,10 @@ import (
 	"strings"
 
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"github.com/cosmos/evm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/spf13/cast"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -62,7 +46,7 @@ func NewBlockNumber(n *big.Int) BlockNumber {
 
 // ContextWithHeight wraps a context with the a gRPC block height header. If the provided height is
 // 0, it will return an empty context and the gRPC query will use the latest block height for querying.
-// Note that all metadata are processed and removed by tendermint layer, so it wont be accessible at gRPC server level.
+// Note that all metadata is processed and removed by the CometBFT layer, so it won't be accessible at gRPC server level.
 func ContextWithHeight(height int64) context.Context {
 	if height == 0 {
 		return context.Background()
@@ -109,8 +93,7 @@ func (bn *BlockNumber) UnmarshalJSON(data []byte) error {
 	if blckNum > math.MaxInt64 {
 		return fmt.Errorf("block number larger than int64")
 	}
-	// #nosec G115 range checked
-	*bn = BlockNumber(blckNum)
+	*bn = BlockNumber(blckNum) // #nosec G115
 
 	return nil
 }
@@ -201,7 +184,7 @@ func (bnh *BlockNumberOrHash) decodeFromString(input string) error {
 			return err
 		}
 
-		bnInt, err := ethermint.SafeInt64(blockNumber)
+		bnInt, err := types.SafeInt64(blockNumber)
 		if err != nil {
 			return err
 		}
@@ -210,27 +193,4 @@ func (bnh *BlockNumberOrHash) decodeFromString(input string) error {
 		bnh.BlockNumber = &bn
 	}
 	return nil
-}
-
-// https://github.com/ethereum/go-ethereum/blob/release/1.11/core/types/gen_header_json.go#L18
-type Header struct {
-	ParentHash common.Hash `json:"parentHash"       gencodec:"required"`
-	UncleHash  common.Hash `json:"sha3Uncles"       gencodec:"required"`
-	// update string avoid lost checksumed miner after MarshalText
-	Coinbase    string              `json:"miner"`
-	Root        common.Hash         `json:"stateRoot"        gencodec:"required"`
-	TxHash      common.Hash         `json:"transactionsRoot" gencodec:"required"`
-	ReceiptHash common.Hash         `json:"receiptsRoot"     gencodec:"required"`
-	Bloom       ethtypes.Bloom      `json:"logsBloom"        gencodec:"required"`
-	Difficulty  *hexutil.Big        `json:"difficulty"       gencodec:"required"`
-	Number      *hexutil.Big        `json:"number"           gencodec:"required"`
-	GasLimit    hexutil.Uint64      `json:"gasLimit"         gencodec:"required"`
-	GasUsed     hexutil.Uint64      `json:"gasUsed"          gencodec:"required"`
-	Time        hexutil.Uint64      `json:"timestamp"        gencodec:"required"`
-	Extra       hexutil.Bytes       `json:"extraData"        gencodec:"required"`
-	MixDigest   common.Hash         `json:"mixHash"`
-	Nonce       ethtypes.BlockNonce `json:"nonce"`
-	BaseFee     *hexutil.Big        `json:"baseFeePerGas"                        rlp:"optional"`
-	// overwrite rlpHash
-	Hash common.Hash `json:"hash"`
 }

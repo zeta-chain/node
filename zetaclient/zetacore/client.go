@@ -10,10 +10,10 @@ import (
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -44,7 +44,7 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg etherminttypes.EncodingConfig
+	encodingCfg testutil.TestEncodingConfig
 	keys        keyinterfaces.ObserverKeys
 	chainID     string
 	chain       chains.Chain
@@ -111,7 +111,7 @@ func NewClient(
 		ChainRPC:     cometBFTRPC(chainIP),
 	}
 
-	encodingCfg := app.MakeEncodingConfig()
+	encodingCfg := app.MakeEncodingConfig(uint64(zetaChain.ChainId)) //#nosec G115 won't exceed uint64
 
 	zetacoreClients, err := zetacorerpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
 	if err != nil {
@@ -186,7 +186,7 @@ func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
 	config config.ClientConfiguration,
-	encodingConfig etherminttypes.EncodingConfig,
+	encodingConfig testutil.TestEncodingConfig,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {

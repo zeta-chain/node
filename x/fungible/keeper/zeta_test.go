@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/mock"
 
 	sdkmath "cosmossdk.io/math"
@@ -17,6 +18,42 @@ import (
 	"github.com/zeta-chain/node/x/fungible/keeper"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
+
+func TestKeeper_ExecuteWithMintedZeta(t *testing.T) {
+	t.Run("should execute the operation with minted ZETA", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		executedOperation := false
+		operationNoErr := func(sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			executedOperation = true
+			return nil, true, nil
+		}
+		amount := int64(42)
+
+		_, ok, err := k.ExecuteWithMintedZeta(ctx, big.NewInt(amount), operationNoErr)
+		require.NoError(t, err)
+		require.True(t, ok)
+		require.True(t, executedOperation)
+
+		require.Equal(t, amount, sdkk.BankKeeper.GetBalance(ctx, types.ModuleAddress, config.BaseDenom).Amount.Int64())
+	})
+
+	t.Run("should not mint zeta if operation fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		executedOperation := false
+		operationErr := func(sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+			executedOperation = true
+			return nil, false, errors.New("operation failed")
+		}
+		amount := int64(42)
+
+		_, ok, err := k.ExecuteWithMintedZeta(ctx, big.NewInt(amount), operationErr)
+		require.Error(t, err)
+		require.False(t, ok)
+		require.True(t, executedOperation)
+
+		require.Equal(t, sdkmath.ZeroInt(), sdkk.BankKeeper.GetBalance(ctx, types.ModuleAddress, config.BaseDenom).Amount)
+	})
+}
 
 func TestKeeper_MintZetaToEVMAccount(t *testing.T) {
 	t.Run("should mint the token in the specified balance", func(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 var (

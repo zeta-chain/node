@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package rpc
 
 import (
@@ -22,17 +7,18 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-	"net"
 	"net/http"
+	"strconv"
 	"sync"
-	"time"
 
 	"cosmossdk.io/log"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/evm/rpc/ethereum/pubsub"
+	"github.com/cosmos/evm/server/config"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/params"
@@ -40,24 +26,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	"github.com/zeta-chain/node/rpc/backend"
-	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/node/rpc/types"
-	"github.com/zeta-chain/node/server/config"
-)
-
-const (
-	messageSizeLimit = 10 * 1024 * 1024 // 10MB
-
-)
-
-var (
-	readTimeout  = 15 * time.Second // Time to read the request
-	writeTimeout = 15 * time.Second // Time to write the response
-	idleTimeout  = 60 * time.Second // Max time for connections using TCP Keep-Alive
 )
 
 type WebsocketsServer interface {
@@ -108,13 +79,8 @@ func NewWebsocketsServer(
 	cfg *config.Config,
 ) WebsocketsServer {
 	logger = logger.With("api", "websocket-server")
-	_, port, err := net.SplitHostPort(cfg.JSONRPC.Address)
-	if err != nil {
-		logger.Error("failed to parse rpc address", "error", err.Error())
-	}
-
 	return &websocketsServer{
-		rpcAddr:  "localhost:" + port, // FIXME: this shouldn't be hardcoded to localhost
+		rpcAddr:  cfg.JSONRPC.Address,
 		wsAddr:   cfg.JSONRPC.WsAddress,
 		certFile: cfg.TLS.CertificatePath,
 		keyFile:  cfg.TLS.KeyPath,
@@ -127,21 +93,14 @@ func (s *websocketsServer) Start() {
 	ws := mux.NewRouter()
 	ws.Handle("/", s)
 
-	// configuring the HTTP server
-	server := &http.Server{
-		Addr:         s.wsAddr,
-		Handler:      ws,
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
-		IdleTimeout:  idleTimeout,
-	}
-
 	go func() {
 		var err error
 		if s.certFile == "" || s.keyFile == "" {
-			err = server.ListenAndServe()
+			//#nosec G114 -- http functions have no support for timeouts
+			err = http.ListenAndServe(s.wsAddr, ws)
 		} else {
-			err = server.ListenAndServeTLS(s.certFile, s.keyFile)
+			//#nosec G114 -- http functions have no support for timeouts
+			err = http.ListenAndServeTLS(s.wsAddr, s.certFile, s.keyFile, ws)
 		}
 
 		if err != nil {
@@ -167,8 +126,6 @@ func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn.SetReadLimit(messageSizeLimit)
-
 	s.readLoop(&wsConn{
 		mux:  new(sync.Mutex),
 		conn: conn,
@@ -185,10 +142,7 @@ func (s *websocketsServer) sendErrResponse(wsConn *wsConn, msg string) {
 		ID: nil,
 	}
 
-	err := wsConn.WriteJSON(res)
-	if err != nil {
-		s.logger.Debug("error writing error response", "error", err.Error())
-	}
+	_ = wsConn.WriteJSON(res) // #nosec G703
 }
 
 type wsConn struct {
@@ -221,6 +175,7 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 	subscriptions := make(map[rpc.ID]pubsub.UnsubscribeFunc)
 	defer func() {
 		// cancel all subscriptions when connection closed
+		// #nosec G705
 		for _, unsubFn := range subscriptions {
 			unsubFn()
 		}
@@ -229,11 +184,8 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 	for {
 		_, mb, err := wsConn.ReadMessage()
 		if err != nil {
+			_ = wsConn.Close() // #nosec G703
 			s.logger.Error("read message error, breaking read loop", "error", err.Error())
-			err = wsConn.Close()
-			if err != nil {
-				s.logger.Debug("error closing websocket connection", "error", err.Error())
-			}
 			return
 		}
 
@@ -261,8 +213,16 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 			continue
 		}
 
-		connID, ok := msg["id"].(float64)
-		if !ok {
+		var connID float64
+		switch id := msg["id"].(type) {
+		case string:
+			connID, err = strconv.ParseFloat(id, 64)
+		case float64:
+			connID = id
+		default:
+			err = fmt.Errorf("unknown type")
+		}
+		if err != nil {
 			s.sendErrResponse(
 				wsConn,
 				fmt.Errorf("invalid type for connection ID: %T", msg["id"]).Error(),
@@ -380,21 +340,18 @@ func (s *websocketsServer) tcpGetAndSendResponse(wsConn *wsConn, mb []byte) erro
 
 // pubSubAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec
 type pubSubAPI struct {
-	events      *rpcfilters.EventSystem
-	logger      log.Logger
-	clientCtx   client.Context
-	queryClient *types.QueryClient
+	events    *rpcfilters.EventSystem
+	logger    log.Logger
+	clientCtx client.Context
 }
 
 // newPubSubAPI creates an instance of the ethereum PubSub API.
 func newPubSubAPI(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient) *pubSubAPI {
 	logger = logger.With("module", "websocket-client")
-	types.NewQueryClient(clientCtx)
 	return &pubSubAPI{
-		events:      rpcfilters.NewEventSystem(logger, tmWSClient),
-		logger:      logger,
-		clientCtx:   clientCtx,
-		queryClient: types.NewQueryClient(clientCtx),
+		events:    rpcfilters.NewEventSystem(logger, tmWSClient),
+		logger:    logger,
+		clientCtx: clientCtx,
 	}
 }
 
@@ -430,6 +387,7 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 
 	// TODO: use events
 	baseFee := big.NewInt(params.InitialBaseFee)
+
 	go func() {
 		headersCh := sub.Event()
 		errCh := sub.Err()
@@ -440,38 +398,13 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					return
 				}
 
-				data, ok := event.Data.(tmtypes.EventDataNewBlockHeader)
+				data, ok := event.Data.(cmttypes.EventDataNewBlockHeader)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", event.Data))
 					continue
 				}
 
-				validatorAccount, err := backend.GetValidatorAccount(&data.Header, api.queryClient)
-				if err != nil {
-					api.logger.Error("failed to get validator account", "err", err)
-					continue
-				}
-
-				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee, validatorAccount)
-
-				var enc types.Header
-				enc.ParentHash = header.ParentHash
-				enc.UncleHash = header.UncleHash
-				enc.Coinbase = header.Coinbase.Hex()
-				enc.Root = header.Root
-				enc.TxHash = header.TxHash
-				enc.ReceiptHash = header.ReceiptHash
-				enc.Bloom = header.Bloom
-				enc.Difficulty = (*hexutil.Big)(header.Difficulty)
-				enc.Number = (*hexutil.Big)(header.Number)
-				enc.GasLimit = hexutil.Uint64(header.GasLimit)
-				enc.GasUsed = hexutil.Uint64(header.GasUsed)
-				enc.Time = hexutil.Uint64(header.Time)
-				enc.Extra = header.Extra
-				enc.MixDigest = header.MixDigest
-				enc.Nonce = header.Nonce
-				enc.BaseFee = (*hexutil.Big)(header.BaseFee)
-				enc.Hash = common.BytesToHash(data.Header.Hash())
+				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
 
 				// write to ws conn
 				res := &SubscriptionNotification{
@@ -479,7 +412,7 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 					Method:  "eth_subscription",
 					Params: &SubscriptionResult{
 						Subscription: subID,
-						Result:       enc,
+						Result:       header,
 					},
 				}
 
@@ -489,10 +422,7 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 
 					try(func() {
 						if err != websocket.ErrCloseSent {
-							err = wsConn.Close()
-							if err != nil {
-								api.logger.Debug("error closing websocket peer", "error", err.Error())
-							}
+							_ = wsConn.Close() // #nosec G703
 						}
 					}, api.logger, "closing websocket peer sub")
 				}
@@ -551,7 +481,7 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 				return nil, err
 			}
 
-			if ok {
+			if isString {
 				crit.Addresses = []common.Address{common.HexToAddress(address)}
 			}
 
@@ -647,13 +577,13 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					return
 				}
 
-				dataTx, ok := event.Data.(tmtypes.EventDataTx)
+				dataTx, ok := event.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", event.Data))
 					continue
 				}
 
-				txResponse, err := evmtypes.DecodeTxResponse(dataTx.TxResult.Result.Data)
+				txResponse, err := evmtypes.DecodeTxResponse(dataTx.Result.Data)
 				if err != nil {
 					api.logger.Error("failed to decode tx response", "error", err.Error())
 					return
@@ -683,11 +613,8 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					err = wsConn.WriteJSON(res)
 					if err != nil {
 						try(func() {
-							if !errors.Is(err, websocket.ErrCloseSent) {
-								err = wsConn.Close()
-								if err != nil {
-									api.logger.Debug("error closing websocket peer", "error", err.Error())
-								}
+							if err != websocket.ErrCloseSent {
+								_ = wsConn.Close() // #nosec G703
 							}
 						}, api.logger, "closing websocket peer sub")
 					}
@@ -716,7 +643,7 @@ func (api *pubSubAPI) subscribePendingTransactions(wsConn *wsConn, subID rpc.ID)
 		for {
 			select {
 			case ev := <-txsCh:
-				data, ok := ev.Data.(tmtypes.EventDataTx)
+				data, ok := ev.Data.(cmttypes.EventDataTx)
 				if !ok {
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
@@ -744,11 +671,8 @@ func (api *pubSubAPI) subscribePendingTransactions(wsConn *wsConn, subID rpc.ID)
 						api.logger.Debug("error writing header, will drop peer", "error", err.Error())
 
 						try(func() {
-							if !errors.Is(err, websocket.ErrCloseSent) {
-								err = wsConn.Close()
-								if err != nil {
-									api.logger.Debug("error closing websocket peer", "error", err.Error())
-								}
+							if err != websocket.ErrCloseSent {
+								_ = wsConn.Close() // #nosec G703
 							}
 						}, api.logger, "closing websocket peer sub")
 					}

@@ -12,11 +12,12 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	serverconfig "github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestSystemTxPriorityDecorator_AnteHandle(t *testing.T) {
-	txConfig := app.MakeEncodingConfig().TxConfig
+	txConfig := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID).TxConfig
 
 	testPrivKey, _ := sample.PrivKeyAddressPair()
 

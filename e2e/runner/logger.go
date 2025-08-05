@@ -167,9 +167,13 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 }
 
 // EVMTransaction prints a transaction
-func (l *Logger) EVMTransaction(tx ethtypes.Transaction, name string) {
+func (l *Logger) EVMTransaction(tx *ethtypes.Transaction, name string) {
 	l.Info(" %s EVM transaction: %s", name, tx.Hash().Hex())
-	l.Info("  To: %s", tx.To().Hex())
+	if tx.To() != nil {
+		l.Info("  To: %s", tx.To().Hex())
+	} else {
+		l.Info("  To: <nil>")
+	}
 	l.Info("  Value: %d", tx.Value())
 	l.Info("  Gas: %d", tx.Gas())
 	l.Info("  GasPrice: %d", tx.GasPrice())
