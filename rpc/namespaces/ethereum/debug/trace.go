@@ -44,7 +44,7 @@ func (a *API) StartGoTrace(file string) error {
 		a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 		return err
 	}
-	f, err := os.Create(fp)
+	f, err := os.Create(fp) //#nosec G304 forked code
 	if err != nil {
 		a.logger.Debug("failed to create go trace file", "error", err.Error())
 		return err

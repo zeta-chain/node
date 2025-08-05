@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/test-go/testify/mock"
-	"google.golang.org/grpc/metadata"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -732,10 +731,9 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 	msgEthereumTx2, _ := s.buildEthereumTx()
 	txHash := msgEthereumTx.AsTransaction().Hash()
 	txHash2 := msgEthereumTx2.AsTransaction().Hash()
-	_ = txHash2
 
 	txBz := s.signAndEncodeEthTx(msgEthereumTx)
-
+	_ = txHash2
 	testCases := []struct {
 		name         string
 		registerMock func()
@@ -745,7 +743,6 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 		expPass      bool
 		expErr       error
 	}{
-		// TODO test happy path
 		{
 			name:         "fail - tx not found",
 			registerMock: func() {},
@@ -767,7 +764,7 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 				},
 			},
 			expPass: false,
-			expErr:  fmt.Errorf("tx not found, hash: %s", txHash.Hex()),
+			expErr:  fmt.Errorf("tx not found, hash: %s", txHash2.Hex()),
 		},
 		{
 			name: "fail - block not found",
@@ -801,8 +798,7 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				_, err := RegisterBlock(client, 1, txBz)
 				s.Require().NoError(err)
-				client.On("BlockResults", mock.Anything, mock.AnythingOfType("*int64")).
-					Return(nil, errors.New("some error"))
+				RegisterBlockResultsError(client, 1)
 			},
 			tx:    msgEthereumTx,
 			block: &types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
@@ -822,15 +818,12 @@ func (s *TestSuite) TestGetTransactionReceipt() {
 				},
 			},
 			expPass: false,
-			expErr:  fmt.Errorf("block result not found at height 1: some error"),
+			expErr:  fmt.Errorf("block result not found at height 1: invalid request"),
 		},
 		{
 			"happy path",
 			func() {
-				var header metadata.MD
-				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := s.backend.ClientCtx.Client.(*mocks.Client)
-				RegisterParams(QueryClient, &header, 1)
 				_, err := RegisterBlock(client, 1, txBz)
 				s.Require().NoError(err)
 				_, err = RegisterBlockResults(client, 1)

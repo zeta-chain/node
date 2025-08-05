@@ -73,10 +73,10 @@ func (b *Backend) Syncing() (interface{}, error) {
 	return map[string]interface{}{
 		"startingBlock": hexutil.Uint64(
 			status.SyncInfo.EarliestBlockHeight,
-		), //nolint:gosec // G115 // won't exceed uint64
+		), //#nosec won't exceed uint64
 		"currentBlock": hexutil.Uint64(
 			status.SyncInfo.LatestBlockHeight,
-		), //nolint:gosec // G115 // won't exceed uint64
+		), //#nosec won't exceed uint64
 		// "highestBlock":  nil, // NA
 		// "pulledStates":  nil, // NA
 		// "knownStates":   nil, // NA

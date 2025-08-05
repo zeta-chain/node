@@ -508,7 +508,7 @@ func NewSDKKeepersWithKeys(
 	)
 	consensusKeeper := consensuskeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[consensuskeeper.StoreKey]),
+		runtime.NewKVStoreService(keys[consensustypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
 	)

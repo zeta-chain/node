@@ -278,6 +278,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 	to := &common.Address{}
 	var txType uint8
+	var effectiveGasPrice *hexutil.Big
 
 	if txData == nil {
 		// #nosec G115 always in range
@@ -286,6 +287,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		txType = ethMsg.AsTransaction().Type()
 		to = txData.GetTo()
+		effectiveGasPrice = (*hexutil.Big)(txData.GetGasPrice())
 	}
 
 	// create the logs bloom
@@ -316,6 +318,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		"blockHash":        common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
 		"blockNumber":      hexutil.Uint64(res.Height),     //#nosec G115 won't exceed uint64
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex), //#nosec G115 no int overflow expected here
+
+		// https://github.com/foundry-rs/foundry/issues/7640
+		"effectiveGasPrice": effectiveGasPrice,
 
 		// sender and receiver (contract or EOA) addreses
 		"from": from,
