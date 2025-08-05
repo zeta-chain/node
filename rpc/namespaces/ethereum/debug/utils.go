@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -44,7 +45,7 @@ func writeProfile(name, file string, log log.Logger) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(fp) //#nosec G304 forked code
+	f, err := os.Create(fp)
 	if err != nil {
 		return err
 	}

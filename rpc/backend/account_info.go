@@ -5,18 +5,21 @@ import (
 	"math"
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/bytes"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 
+	"github.com/cometbft/cometbft/libs/bytes"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetCode returns the contract code at the given address and block number.
@@ -39,24 +42,19 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 }
 
 // GetProof returns an account object with proof and any storage proofs
-func (b *Backend) GetProof(
-	address common.Address,
-	storageKeys []string,
-	blockNrOrHash rpctypes.BlockNumberOrHash,
-) (*rpctypes.AccountResult, error) {
+func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
 	}
 
-	height := blockNum.Int64()
+	height := int64(blockNum)
 
 	_, err = b.TendermintBlockByNumber(blockNum)
 	if err != nil {
 		// the error message imitates geth behavior
 		return nil, errors.New("header not found")
 	}
-	ctx := rpctypes.ContextWithHeight(height)
 
 	// if the height is equal to zero, meaning the query condition of the block is either "pending" or "latest"
 	if height == 0 {
@@ -72,6 +70,7 @@ func (b *Backend) GetProof(
 		height = int64(bn) //#nosec G115 -- checked for int overflow already
 	}
 
+	ctx := rpctypes.ContextWithHeight(height)
 	clientCtx := b.ClientCtx.WithHeight(height)
 
 	// query storage proofs
@@ -79,11 +78,7 @@ func (b *Backend) GetProof(
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.QueryClient.GetProof(
-			clientCtx,
-			evmtypes.StoreKey,
-			evmtypes.StateKey(address, hexKey.Bytes()),
-		)
+		valueBz, proof, err := b.QueryClient.GetProof(clientCtx, evmtypes.StoreKey, evmtypes.StateKey(address, hexKey.Bytes()))
 		if err != nil {
 			return nil, err
 		}
@@ -129,11 +124,7 @@ func (b *Backend) GetProof(
 }
 
 // GetStorageAt returns the contract storage at the given address, block number, and key.
-func (b *Backend) GetStorageAt(
-	address common.Address,
-	key string,
-	blockNrOrHash rpctypes.BlockNumberOrHash,
-) (hexutil.Bytes, error) {
+func (b *Backend) GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
 		return nil, err
@@ -153,7 +144,7 @@ func (b *Backend) GetStorageAt(
 	return value.Bytes(), nil
 }
 
-// GetBalance returns the provided account's balance up to the provided block number.
+// GetBalance returns the provided account's *spendable* balance up to the provided block number.
 func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Big, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {

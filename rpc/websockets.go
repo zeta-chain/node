@@ -5,19 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"math/big"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 
-	"cosmossdk.io/log"
-	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/evm/rpc/ethereum/pubsub"
-	"github.com/cosmos/evm/server/config"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
@@ -27,8 +24,22 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	cmttypes "github.com/cometbft/cometbft/types"
+
+	"github.com/cosmos/evm/server/config"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/node/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+)
+
+const (
+	maxMessageSize = 1 << 20 // 1 MiB is the max message size for the websocket server
 )
 
 type WebsocketsServer interface {
@@ -64,28 +75,25 @@ type ErrorMessageJSON struct {
 }
 
 type websocketsServer struct {
-	rpcAddr  string // listen address of rest-server
-	wsAddr   string // listen address of ws server
-	certFile string
-	keyFile  string
-	api      *pubSubAPI
-	logger   log.Logger
+	rpcAddr        string // listen address of rest-server
+	wsAddr         string // listen address of ws server
+	certFile       string
+	keyFile        string
+	allowedOrigins []string // allowed origins for WebSocket connections
+	api            *pubSubAPI
+	logger         log.Logger
 }
 
-func NewWebsocketsServer(
-	clientCtx client.Context,
-	logger log.Logger,
-	tmWSClient *rpcclient.WSClient,
-	cfg *config.Config,
-) WebsocketsServer {
+func NewWebsocketsServer(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient, cfg *config.Config) WebsocketsServer {
 	logger = logger.With("api", "websocket-server")
 	return &websocketsServer{
-		rpcAddr:  cfg.JSONRPC.Address,
-		wsAddr:   cfg.JSONRPC.WsAddress,
-		certFile: cfg.TLS.CertificatePath,
-		keyFile:  cfg.TLS.KeyPath,
-		api:      newPubSubAPI(clientCtx, logger, tmWSClient),
-		logger:   logger,
+		rpcAddr:        cfg.JSONRPC.Address,
+		wsAddr:         cfg.JSONRPC.WsAddress,
+		certFile:       cfg.TLS.CertificatePath,
+		keyFile:        cfg.TLS.KeyPath,
+		allowedOrigins: cfg.JSONRPC.WSOrigins,
+		api:            newPubSubAPI(clientCtx, logger, tmWSClient),
+		logger:         logger,
 	}
 }
 
@@ -104,7 +112,7 @@ func (s *websocketsServer) Start() {
 		}
 
 		if err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				return
 			}
 
@@ -113,11 +121,74 @@ func (s *websocketsServer) Start() {
 	}()
 }
 
+// sanitizeOriginForLogging sanitizes the origin header to prevent log injection attacks
+func sanitizeOriginForLogging(origin string) string {
+	// Limit length to prevent log flooding
+	if len(origin) > 200 {
+		origin = origin[:200] + "..."
+	}
+
+	// Remove or replace dangerous characters that could be used for log injection
+	// Replace newlines, carriage returns, and other control characters
+	sanitized := regexp.MustCompile(`[\r\n\t\x00-\x1f\x7f-\x9f]`).ReplaceAllString(origin, "")
+
+	// Additional safety: only allow printable ASCII and common URL characters
+	sanitized = regexp.MustCompile(`[^\x20-\x7E]`).ReplaceAllString(sanitized, "")
+
+	// If the result is empty or too different from original, use a safe placeholder
+	if sanitized == "" || len(sanitized) < len(origin)/2 {
+		return "<sanitized-origin>"
+	}
+
+	// Replace newlines, carriage returns, and other control characters
+	sanitized = strings.ReplaceAll(sanitized, "\n", "")
+	sanitized = strings.ReplaceAll(sanitized, "\r", "")
+
+	// Escape the input to prevent HTML injection
+	sanitized = html.EscapeString(sanitized)
+
+	return sanitized
+}
+
+// checkOrigin validates the Origin header of incoming WebSocket upgrade requests
+func (s *websocketsServer) checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	sanitizedOrigin := sanitizeOriginForLogging(origin)
+
+	// If no allowed origins are configured, reject all requests for security
+	if len(s.allowedOrigins) == 0 {
+		s.logger.Debug("websocket connection rejected: no allowed origins configured", "origin", sanitizedOrigin)
+		return false
+	}
+
+	// Allow requests without an Origin header (e.g., from server-side clients)
+	if origin == "" {
+		return true
+	}
+
+	// Parse the origin URL to get the host
+	originURL, err := url.Parse(origin)
+	if err != nil {
+		s.logger.Debug("websocket connection rejected: invalid origin URL", "origin", sanitizedOrigin, "error", err.Error())
+		return false
+	}
+
+	originHost := originURL.Hostname()
+
+	// Check if the origin host is in the allowed list
+	for _, allowedOrigin := range s.allowedOrigins {
+		if originHost == allowedOrigin || allowedOrigin == "*" {
+			return true
+		}
+	}
+
+	s.logger.Debug("websocket connection rejected: origin not allowed", "origin", sanitizedOrigin, "allowed", s.allowedOrigins)
+	return false
+}
+
 func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upgrader := websocket.Upgrader{
-		CheckOrigin: func(_ *http.Request) bool {
-			return true
-		},
+		CheckOrigin: s.checkOrigin,
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -126,10 +197,14 @@ func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.readLoop(&wsConn{
+	conn.SetReadLimit(maxMessageSize)
+
+	ws := &wsConn{
 		mux:  new(sync.Mutex),
 		conn: conn,
-	})
+	}
+
+	s.readLoop(ws)
 }
 
 func (s *websocketsServer) sendErrResponse(wsConn *wsConn, msg string) {
@@ -181,6 +256,7 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 		}
 	}()
 
+readLoop:
 	for {
 		_, mb, err := wsConn.ReadMessage()
 		if err != nil {
@@ -252,7 +328,8 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 			}
 
 			if err := wsConn.WriteJSON(res); err != nil {
-				break
+				s.logger.Error("error writing subscription response", "error", err.Error())
+				break readLoop
 			}
 		case "eth_unsubscribe":
 			params, ok := s.getParamsAndCheckValid(msg, wsConn)
@@ -280,7 +357,8 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 			}
 
 			if err := wsConn.WriteJSON(res); err != nil {
-				break
+				s.logger.Error("error writing unsubscribe response", "error", err.Error())
+				break readLoop
 			}
 		default:
 			// otherwise, call the usual rpc server to respond
@@ -430,13 +508,7 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 				if !ok {
 					return
 				}
-				api.logger.Debug(
-					"dropping NewHeads WebSocket subscription",
-					"subscription-id",
-					subID,
-					"error",
-					err.Error(),
-				)
+				api.logger.Debug("dropping NewHeads WebSocket subscription", "subscription-id", subID, "error", err.Error())
 			}
 		}
 	}()
@@ -589,13 +661,7 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					return
 				}
 
-				logs := rpcfilters.FilterLogs(
-					evmtypes.LogsToEthereum(txResponse.Logs),
-					crit.FromBlock,
-					crit.ToBlock,
-					crit.Addresses,
-					crit.Topics,
-				)
+				logs := rpcfilters.FilterLogs(evmtypes.LogsToEthereum(txResponse.Logs), crit.FromBlock, crit.ToBlock, crit.Addresses, crit.Topics)
 				if len(logs) == 0 {
 					continue
 				}

@@ -6,16 +6,6 @@ import (
 	"math/big"
 	"time"
 
-	"cosmossdk.io/log"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/evm/server/config"
-	cosmosevmtypes "github.com/cosmos/evm/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -24,12 +14,27 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	"github.com/cosmos/evm/server/config"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BackendI implements the Cosmos and EVM backend.
 type BackendI interface { //nolint: revive
 	EVMBackend
+
+	GetConfig() config.Config
 }
 
 // EVMBackend implements the functionality shared within ethereum namespaces
@@ -43,12 +48,7 @@ type EVMBackend interface {
 	SetGasPrice(gasPrice hexutil.Big) bool
 	ImportRawKey(privkey, password string) (common.Address, error)
 	ListAccounts() ([]common.Address, error)
-	NewMnemonic(
-		uid string,
-		language keyring.Language,
-		hdPath, bip39Passphrase string,
-		algo keyring.SignatureAlgo,
-	) (*keyring.Record, error)
+	NewMnemonic(uid string, language keyring.Language, hdPath, bip39Passphrase string, algo keyring.SignatureAlgo) (*keyring.Record, error)
 	UnprotectedAllowed() bool
 	RPCGasCap() uint64            // global gas cap for eth_call over rpc: DoS protection
 	RPCEVMTimeout() time.Duration // global timeout for eth_call over rpc: DoS protection
@@ -74,30 +74,18 @@ type EVMBackend interface {
 		block *tmrpctypes.ResultBlock,
 		blockRes *tmrpctypes.ResultBlockResults,
 	) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields)
-	BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 	HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Header, error)
 	HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error)
-	RPCBlockFromTendermintBlock(
-		resBlock *tmrpctypes.ResultBlock,
-		blockRes *tmrpctypes.ResultBlockResults,
-		fullTx bool,
-	) (map[string]interface{}, error)
+	RPCBlockFromTendermintBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults, fullTx bool) (map[string]interface{}, error)
 	EthBlockByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Block, error)
-	EthBlockFromTendermintBlock(
-		resBlock *tmrpctypes.ResultBlock,
-		blockRes *tmrpctypes.ResultBlockResults,
-	) (*ethtypes.Block, error)
-	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) // TODO evm: new method
+	EthBlockFromTendermintBlock(resBlock *tmrpctypes.ResultBlock, blockRes *tmrpctypes.ResultBlockResults) (*ethtypes.Block, error)
+	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error)
 
 	// Account Info
 	GetCode(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
 	GetBalance(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Big, error)
 	GetStorageAt(address common.Address, key string, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
-	GetProof(
-		address common.Address,
-		storageKeys []string,
-		blockNrOrHash rpctypes.BlockNumberOrHash,
-	) (*rpctypes.AccountResult, error)
+	GetProof(address common.Address, storageKeys []string, blockNrOrHash rpctypes.BlockNumberOrHash) (*rpctypes.AccountResult, error)
 	GetTransactionCount(address common.Address, blockNum rpctypes.BlockNumber) (*hexutil.Uint64, error)
 
 	// Chain Info
@@ -108,11 +96,7 @@ type EVMBackend interface {
 	CurrentHeader() (*ethtypes.Header, error)
 	PendingTransactions() ([]*sdk.Tx, error)
 	GetCoinbase() (sdk.AccAddress, error)
-	FeeHistory(
-		blockCount math.HexOrDecimal64,
-		lastBlock rpc.BlockNumber,
-		rewardPercentiles []float64,
-	) (*rpctypes.FeeHistoryResult, error)
+	FeeHistory(blockCount math.HexOrDecimal64, lastBlock rpc.BlockNumber, rewardPercentiles []float64) (*rpctypes.FeeHistoryResult, error)
 	SuggestGasTipCap(baseFee *big.Int) (*big.Int, error)
 
 	// Tx Info
@@ -123,10 +107,7 @@ type EVMBackend interface {
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
 	GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error)
 	GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
-	GetTransactionByBlockNumberAndIndex(
-		blockNum rpctypes.BlockNumber,
-		idx hexutil.Uint,
-	) (*rpctypes.RPCTransaction, error)
+	GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNumber, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 
 	// Send Transaction
 	Resend(args evmtypes.TransactionArgs, gasPrice *hexutil.Big, gasLimit *hexutil.Uint64) (common.Hash, error)
@@ -141,13 +122,15 @@ type EVMBackend interface {
 	GetLogsByHeight(height *int64) ([][]*ethtypes.Log, error)
 	BloomStatus() (uint64, uint64)
 
+	// TxPool API
+	Content() (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	ContentFrom(address common.Address) (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	Inspect() (map[string]map[string]map[string]string, error)
+	Status() (map[string]hexutil.Uint, error)
+
 	// Tracing
 	TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error)
-	TraceBlock(
-		height rpctypes.BlockNumber,
-		config *evmtypes.TraceConfig,
-		block *tmrpctypes.ResultBlock,
-	) ([]*evmtypes.TxTraceResult, error)
+	TraceBlock(height rpctypes.BlockNumber, config *evmtypes.TraceConfig, block *tmrpctypes.ResultBlock) ([]*evmtypes.TxTraceResult, error)
 }
 
 var _ BackendI = (*Backend)(nil)
@@ -187,6 +170,10 @@ type Backend struct {
 	ProcessBlocker      ProcessBlocker
 }
 
+func (b *Backend) GetConfig() config.Config {
+	return b.Cfg
+}
+
 // NewBackend creates a new Backend instance for cosmos and ethereum namespaces
 func NewBackend(
 	ctx *server.Context,
@@ -211,7 +198,7 @@ func NewBackend(
 		RPCClient:           rpcClient,
 		QueryClient:         rpctypes.NewQueryClient(clientCtx),
 		Logger:              logger.With("module", "backend"),
-		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //#nosec G115 won't exceed uint64
+		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //nolint:gosec // G115 // won't exceed uint64
 		Cfg:                 appConf,
 		AllowUnprotectedTxs: allowUnprotectedTxs,
 		Indexer:             indexer,

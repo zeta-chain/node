@@ -6,13 +6,6 @@ import (
 	"math/big"
 	"sync"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
-	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
-	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -20,7 +13,17 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
+	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ChainID is the EIP-155 replay-protection chain id for the current ethereum chain config.
@@ -252,25 +255,13 @@ func (b *Backend) FeeHistory(
 				// tendermint block result
 				tendermintBlockResult, err := b.TendermintBlockResultByNumber(&tendermintblock.Block.Height)
 				if tendermintBlockResult == nil {
-					b.Logger.Debug(
-						"block result not found",
-						"height",
-						tendermintblock.Block.Height,
-						"error",
-						err.Error(),
-					)
+					b.Logger.Debug("block result not found", "height", tendermintblock.Block.Height, "error", err.Error())
 					chanErr <- err
 					return
 				}
 
 				oneFeeHistory := rpctypes.OneFeeHistory{}
-				err = b.ProcessBlocker(
-					tendermintblock,
-					&ethBlock,
-					rewardPercentiles,
-					tendermintBlockResult,
-					&oneFeeHistory,
-				)
+				err = b.ProcessBlocker(tendermintblock, &ethBlock, rewardPercentiles, tendermintBlockResult, &oneFeeHistory)
 				if err != nil {
 					chanErr <- err
 					return
@@ -340,9 +331,7 @@ func (b *Backend) SuggestGasTipCap(baseFee *big.Int) (*big.Int, error) {
 	// MaxDelta = BaseFee * (GasLimit - GasLimit / ElasticityMultiplier) / (GasLimit / ElasticityMultiplier) / Denominator
 	//          = BaseFee * (ElasticityMultiplier - 1) / Denominator
 	// ```t
-	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(
-		params.Params.BaseFeeChangeDenominator,
-	) // #nosec G115
+	maxDelta := baseFee.Int64() * (int64(params.Params.ElasticityMultiplier) - 1) / int64(params.Params.BaseFeeChangeDenominator) // #nosec G115
 	if maxDelta < 0 {
 		// impossible if the parameter validation passed.
 		maxDelta = 0

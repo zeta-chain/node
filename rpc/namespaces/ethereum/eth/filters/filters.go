@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"cosmossdk.io/log"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -15,8 +13,12 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
 	"github.com/zeta-chain/node/rpc/backend"
 	"github.com/zeta-chain/node/rpc/types"
+
+	"cosmossdk.io/log"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong
@@ -44,13 +46,7 @@ func NewBlockFilter(logger log.Logger, backend Backend, criteria filters.FilterC
 
 // NewRangeFilter creates a new filter which uses a bloom filter on blocks to
 // figure out whether a particular block is interesting or not.
-func NewRangeFilter(
-	logger log.Logger,
-	backend Backend,
-	begin, end int64,
-	addresses []common.Address,
-	topics [][]common.Hash,
-) *Filter {
+func NewRangeFilter(logger log.Logger, backend Backend, begin, end int64, addresses []common.Address, topics [][]common.Hash) *Filter {
 	// Flatten the address and topic filter clauses into a single bloombits filter
 	// system. Since the bloombits are not positional, nil topics are permitted,
 	// which get flattened into a nil byte slice.
@@ -111,13 +107,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 
 		blockRes, err := f.backend.TendermintBlockResultByNumber(&resBlock.Block.Height)
 		if err != nil {
-			f.logger.Debug(
-				"failed to fetch block result from Tendermint",
-				"height",
-				resBlock.Block.Height,
-				"error",
-				err.Error(),
-			)
+			f.logger.Debug("failed to fetch block result from Tendermint", "height", resBlock.Block.Height, "error", err.Error())
 			return nil, err
 		}
 
@@ -130,8 +120,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 	}
 
 	// Disallow pending logs.
-	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() ||
-		f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
+	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() || f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
 		return nil, errPendingLogsUnsupported
 	}
 
@@ -188,17 +177,17 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		blockRes, err := f.backend.TendermintBlockResultByNumber(&h)
 		if err != nil {
 			f.logger.Debug("failed to fetch block result from Tendermint", "height", height, "error", err.Error())
-			return nil, nil
+			return nil, fmt.Errorf("failed to fetch block result from Tendermint: %w", err)
 		}
 
 		bloom, err := f.backend.BlockBloom(blockRes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to query block bloom filter from block results: %w", err)
 		}
 
 		filtered, err := f.blockLogs(blockRes, bloom)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to fetch block by number %d", height)
+			return nil, fmt.Errorf("failed to fetch block by number %d: %w", height, err)
 		}
 
 		// check logs limit

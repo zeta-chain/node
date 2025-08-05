@@ -2,16 +2,9 @@ package backend
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmtypes "github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -20,7 +13,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtypes "github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 // BlockNumber returns the current block number in abci app state. Because abci
@@ -37,21 +38,12 @@ func (b *Backend) BlockNumber() (hexutil.Uint64, error) {
 
 	blockHeightHeader := header.Get(grpctypes.GRPCBlockHeightHeader)
 	if headerLen := len(blockHeightHeader); headerLen != 1 {
-		return 0, fmt.Errorf(
-			"unexpected '%s' gRPC header length; got %d, expected: %d",
-			grpctypes.GRPCBlockHeightHeader,
-			headerLen,
-			1,
-		)
+		return 0, fmt.Errorf("unexpected '%s' gRPC header length; got %d, expected: %d", grpctypes.GRPCBlockHeightHeader, headerLen, 1)
 	}
 
 	height, err := strconv.ParseUint(blockHeightHeader[0], 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse block height: %w", err)
-	}
-
-	if height > math.MaxInt64 {
-		return 0, fmt.Errorf("block height %d is greater than max uint64", height)
 	}
 
 	return hexutil.Uint64(height), nil
@@ -101,13 +93,7 @@ func (b *Backend) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]inte
 
 	blockRes, err := b.RPCClient.BlockResults(b.Ctx, &resBlock.Block.Height)
 	if err != nil {
-		b.Logger.Debug(
-			"failed to fetch block result from Tendermint",
-			"block-hash",
-			hash.String(),
-			"error",
-			err.Error(),
-		)
+		b.Logger.Debug("failed to fetch block result from Tendermint", "block-hash", hash.String(), "error", err.Error())
 		return nil, nil
 	}
 
@@ -176,9 +162,6 @@ func (b *Backend) TendermintBlockByNumber(blockNum rpctypes.BlockNumber) (*tmrpc
 		n, err := b.BlockNumber()
 		if err != nil {
 			return nil, err
-		}
-		if n > math.MaxInt64 {
-			return nil, fmt.Errorf("block number %d is greater than max int64", n)
 		}
 		height = int64(n) //#nosec G115 -- checked for int overflow already
 	}
@@ -377,13 +360,7 @@ func (b *Backend) HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Heade
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.Logger.Error(
-			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
-			"height",
-			resBlock.Block.Height,
-			"error",
-			err,
-		)
+		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", resBlock.Block.Height, "error", err)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(resBlock.Block.Header, bloom, baseFee)
@@ -416,13 +393,7 @@ func (b *Backend) HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error) 
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.Logger.Error(
-			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
-			"height",
-			height,
-			"error",
-			err,
-		)
+		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", height, "error", err)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(*resHeader.Header, bloom, baseFee)
@@ -458,13 +429,7 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle the error for pruned node.
-		b.Logger.Error(
-			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
-			"height",
-			block.Height,
-			"error",
-			err,
-		)
+		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", block.Height, "error", err)
 	}
 
 	msgs, txsAdditional := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
@@ -589,13 +554,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	baseFee, err := b.BaseFee(blockRes)
 	if err != nil {
 		// handle error for pruned node and log
-		b.Logger.Error(
-			"failed to fetch Base Fee from prunned block. Check node prunning configuration",
-			"height",
-			height,
-			"error",
-			err,
-		)
+		b.Logger.Error("failed to fetch Base Fee from prunned block. Check node prunning configuration", "height", height, "error", err)
 	}
 
 	ethHeader := rpctypes.EthHeaderFromTendermint(block.Header, bloom, baseFee)
@@ -618,7 +577,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 }
 
 // TODO evm: new method, needs refactoring with synthetic txs
-// // GetBlockReceipts returns the receipts for a given block number or hash.
+// GetBlockReceipts returns the receipts for a given block number or hash.
 // func (b *Backend) GetBlockReceipts(
 // 	blockNrOrHash rpctypes.BlockNumberOrHash,
 // ) ([]map[string]interface{}, error) {
@@ -689,7 +648,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 // 		return nil, err
 // 	}
 
-// 	from, err := ethMsg.GetSender(chainID.ToInt())
+// 	from, err := ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(chainID.ToInt()))
 // 	if err != nil {
 // 		return nil, err
 // 	}
