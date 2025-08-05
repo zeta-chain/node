@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 // Opcode is a smart contract used to test if specific opcodes or other EVM functionalities are supported by the ZEVM
 contract Opcode {
