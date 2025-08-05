@@ -193,6 +193,9 @@ tracer = ""
 # MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
 max-tx-gas-wanted = 0
 
+# EVMChainID is the EIP-155 compatible replay protection chain ID. This is separate from the Cosmos chain ID.
+evm-chain-id = 101
+
 ###############################################################################
 ###                           JSON RPC Configuration                        ###
 ###############################################################################

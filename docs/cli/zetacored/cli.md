@@ -21,6 +21,7 @@ Zetacore Daemon (server)
 * [zetacored collect-gentxs](#zetacored-collect-gentxs)	 - Collect genesis txs and output a genesis.json file
 * [zetacored collect-observer-info](#zetacored-collect-observer-info)	 - collect observer info into the genesis from a folder , default path is ~/.zetacored/os_info/ 
 
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
 * [zetacored config](#zetacored-config)	 - Utilities for managing application configuration
 * [zetacored debug](#zetacored-debug)	 - Tool for helping with debugging your application
 * [zetacored docs](#zetacored-docs)	 - Generate markdown documentation for zetacored
@@ -36,8 +37,6 @@ Zetacore Daemon (server)
 * [zetacored snapshots](#zetacored-snapshots)	 - Manage local snapshots
 * [zetacored start](#zetacored-start)	 - Run the full node
 * [zetacored status](#zetacored-status)	 - Query remote node for status
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-* [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored upgrade-handler-version](#zetacored-upgrade-handler-version)	 - Print the default upgrade handler version
 * [zetacored validate](#zetacored-validate)	 - Validates the genesis file at the default location or at the location passed as an arg
@@ -211,6 +210,239 @@ zetacored collect-observer-info [folder] [flags]
 ### SEE ALSO
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
+
+## zetacored comet
+
+CometBFT subcommands
+
+### Options
+
+```
+  -h, --help   help for comet
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored](#zetacored)	 - Zetacore Daemon (server)
+* [zetacored comet bootstrap-state](#zetacored-comet-bootstrap-state)	 - Bootstrap CometBFT state at an arbitrary block height using a light client
+* [zetacored comet reset-state](#zetacored-comet-reset-state)	 - Remove all the data and WAL
+* [zetacored comet show-address](#zetacored-comet-show-address)	 - Shows this node's CometBFT validator consensus address
+* [zetacored comet show-node-id](#zetacored-comet-show-node-id)	 - Show this node's ID
+* [zetacored comet show-validator](#zetacored-comet-show-validator)	 - Show this node's CometBFT validator info
+* [zetacored comet unsafe-reset-all](#zetacored-comet-unsafe-reset-all)	 - (unsafe) Remove all the data and WAL, reset this node's validator to genesis state
+* [zetacored comet version](#zetacored-comet-version)	 - Print CometBFT libraries' version
+
+## zetacored comet bootstrap-state
+
+Bootstrap CometBFT state at an arbitrary block height using a light client
+
+```
+zetacored comet bootstrap-state [flags]
+```
+
+### Options
+
+```
+      --height int   Block height to bootstrap state at, if not provided it uses the latest block height in app state
+  -h, --help         help for bootstrap-state
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet reset-state
+
+Remove all the data and WAL
+
+```
+zetacored comet reset-state [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for reset-state
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet show-address
+
+Shows this node's CometBFT validator consensus address
+
+```
+zetacored comet show-address [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for show-address
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet show-node-id
+
+Show this node's ID
+
+```
+zetacored comet show-node-id [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for show-node-id
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet show-validator
+
+Show this node's CometBFT validator info
+
+```
+zetacored comet show-validator [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for show-validator
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet unsafe-reset-all
+
+(unsafe) Remove all the data and WAL, reset this node's validator to genesis state
+
+```
+zetacored comet unsafe-reset-all [flags]
+```
+
+### Options
+
+```
+  -h, --help             help for unsafe-reset-all
+      --keep-addr-book   keep the address book intact
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
+
+## zetacored comet version
+
+Print CometBFT libraries' version
+
+### Synopsis
+
+Print protocols' and libraries' version numbers against which this app has been compiled.
+
+```
+zetacored comet version [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for version
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored comet](#zetacored-comet)	 - CometBFT subcommands
 
 ## zetacored config
 
@@ -1025,7 +1257,7 @@ Manage your application's keys
 ### Synopsis
 
 Keyring management commands. These keys may be in any format supported by the
-Tendermint crypto library and can be used by light-clients, full nodes, or any other application
+CometBFT crypto library and can be used by light-clients, full nodes, or any other application
 that needs to sign with a private key.
 
 The keyring supports the following backends:
@@ -1075,6 +1307,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 * [zetacored keys export](#zetacored-keys-export)	 - Export private keys
 * [zetacored keys import](#zetacored-keys-import)	 - Import private keys into the local keybase
 * [zetacored keys list](#zetacored-keys-list)	 - List all keys
+* [zetacored keys list-key-types](#zetacored-keys-list-key-types)	 - List all key types
 * [zetacored keys migrate](#zetacored-keys-migrate)	 - Migrate keys from amino to proto serialization format
 * [zetacored keys mnemonic](#zetacored-keys-mnemonic)	 - Compute the bip39 mnemonic for some input entropy
 * [zetacored keys parse](#zetacored-keys-parse)	 - Parse address from hex to bech32 and vice versa
@@ -1328,6 +1561,41 @@ zetacored keys list [flags]
 ```
   -h, --help         help for list
   -n, --list-names   List names only
+```
+
+### Options inherited from parent commands
+
+```
+      --home string              The application home directory 
+      --keyring-backend string   Select keyring's backend (os|file|test) 
+      --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
+      --log_format string        The logging format (json|plain) 
+      --log_level string         The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color             Disable colored logs
+      --output string            Output format (text|json) 
+      --trace                    print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored keys](#zetacored-keys)	 - Manage your application's keys
+
+## zetacored keys list-key-types
+
+List all key types
+
+### Synopsis
+
+Return a list of all supported key types (also known as algos)
+
+```
+zetacored keys list-key-types [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for list-key-types
 ```
 
 ### Options inherited from parent commands
@@ -4836,7 +5104,7 @@ zetacored query evidence evidence [hash] [flags]
 ### Examples
 
 ```
-zetacored query evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
+zetacored query evidence evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 ```
 
 ### Options
@@ -4880,7 +5148,7 @@ zetacored query evidence list [flags]
 ### Examples
 
 ```
-zetacored query evidence --page=2 --page-limit=50
+zetacored query evidence list --page=2 --page-limit=50
 ```
 
 ### Options
@@ -4945,9 +5213,229 @@ zetacored query evm [flags]
 ### SEE ALSO
 
 * [zetacored query](#zetacored-query)	 - Querying subcommands
+* [zetacored query evm 0x-to-bech32](#zetacored-query-evm-0x-to-bech32)	 - Get the bech32 address for a given 0x address
+* [zetacored query evm account](#zetacored-query-evm-account)	 - Gets account info from an address
+* [zetacored query evm balance-bank](#zetacored-query-evm-balance-bank)	 - Get the bank balance for a given 0x address and bank denom
+* [zetacored query evm balance-erc20](#zetacored-query-evm-balance-erc20)	 - Get the ERC20 balance for a given 0x address and erc20 address
+* [zetacored query evm bech32-to-0x](#zetacored-query-evm-bech32-to-0x)	 - Get the 0x address for a given bech32 address
 * [zetacored query evm code](#zetacored-query-evm-code)	 - Gets code from an account
+* [zetacored query evm config](#zetacored-query-evm-config)	 - Get the evm config
 * [zetacored query evm params](#zetacored-query-evm-params)	 - Get the evm params
 * [zetacored query evm storage](#zetacored-query-evm-storage)	 - Gets storage for an account with a given key and height
+
+## zetacored query evm 0x-to-bech32
+
+Get the bech32 address for a given 0x address
+
+### Synopsis
+
+Get the bech32 address for a given 0x address.
+
+```
+zetacored query evm 0x-to-bech32 [flags]
+```
+
+### Examples
+
+```
+evmd query evm 0x-to-bech32 0x7cB61D4117AE31a12E393a1Cfa3BaC666481D02E
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for 0x-to-bech32
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
+
+## zetacored query evm account
+
+Gets account info from an address
+
+### Synopsis
+
+Gets account info from an address. If the height is not provided, it will use the latest height from context.
+
+```
+zetacored query evm account ADDRESS [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for account
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
+
+## zetacored query evm balance-bank
+
+Get the bank balance for a given 0x address and bank denom
+
+### Synopsis
+
+Get the bank balance for a given 0x address and bank denom.
+
+```
+zetacored query evm balance-bank [address] [denom] [flags]
+```
+
+### Examples
+
+```
+evmd query evm balance-bank 0xA2A8B87390F8F2D188242656BFb6852914073D06 atoken
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for balance-bank
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
+
+## zetacored query evm balance-erc20
+
+Get the ERC20 balance for a given 0x address and erc20 address
+
+### Synopsis
+
+Get the ERC20 balance for a given 0x address and erc20 address.
+
+```
+zetacored query evm balance-erc20 [address] [erc20-address] [flags]
+```
+
+### Examples
+
+```
+evmd query evm balance-erc20 0xA2A8B87390F8F2D188242656BFb6852914073D06 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for balance-erc20
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
+
+## zetacored query evm bech32-to-0x
+
+Get the 0x address for a given bech32 address
+
+### Synopsis
+
+Get the 0x address for a given bech32 address.
+
+```
+zetacored query evm bech32-to-0x [flags]
+```
+
+### Examples
+
+```
+evmd query evm bech32-to-0x cosmos10jmp6sgh4cc6zt3e8gw05wavvejgr5pwsjskvv
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for bech32-to-0x
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
 
 ## zetacored query evm code
 
@@ -4968,6 +5456,44 @@ zetacored query evm code ADDRESS [flags]
       --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
   -h, --help               help for code
+      --node string        [host]:[port] to CometBFT RPC interface for this chain 
+  -o, --output string      Output format (text|json) 
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query evm](#zetacored-query-evm)	 - Querying commands for the evm module
+
+## zetacored query evm config
+
+Get the evm config
+
+### Synopsis
+
+Get the evm configuration values.
+
+```
+zetacored query evm config [flags]
+```
+
+### Options
+
+```
+      --grpc-addr string   the gRPC endpoint to use for this chain
+      --grpc-insecure      allow gRPC over insecure channels, if not the server must use TLS
+      --height int         Use a specific height to query state at (this can error if the node is pruning state)
+  -h, --help               help for config
       --node string        [host]:[port] to CometBFT RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
@@ -9139,8 +9665,8 @@ Run the full node
 
 ### Synopsis
 
-Run the full node application with Tendermint in or out of process. By
-default, the application will run with Tendermint in process.
+Run the full node application with CometBFT in or out of process. By
+default, the application will run with CometBFT in process.
 
 Pruning options can be provided via the '--pruning' flag or alternatively with '--pruning-keep-recent',
 'pruning-keep-every', and 'pruning-interval' together.
@@ -9180,13 +9706,16 @@ zetacored start [flags]
       --cpu-profile string                              Enable CPU profiling and write to the provided file
       --db_backend string                               database backend: goleveldb | cleveldb | boltdb | rocksdb | badgerdb 
       --db_dir string                                   database directory 
+      --evm.cache-preimage                              Enables tracking of SHA3 preimages in the EVM (not implemented yet)
+      --evm.evm-chain-id uint                           the EIP-155 compatible replay protection chain ID (default 262144)
       --evm.max-tx-gas-wanted uint                      the gas wanted for each eth tx returned in ante handler in check tx mode
       --evm.tracer string                               the EVM tracer type to collect execution traces from the EVM transaction execution (json|struct|access_list|markdown)
       --genesis_hash bytesHex                           optional SHA-256 hash of the genesis file
-      --grpc-only                                       Start the node in gRPC query only mode without Tendermint process
-      --grpc-web.enable                                 Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.) (default true)
+      --grpc-only                                       Start the node in gRPC query only mode without CometBFT process
+      --grpc-web.address string                         The gRPC-Web server address to listen on 
+      --grpc-web.enable                                 Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled.)
       --grpc.address string                             the gRPC server address to listen on 
-      --grpc.enable                                     Define if the gRPC server should be enabled (default true)
+      --grpc.enable                                     Define if the gRPC server should be enabled
       --halt-height uint                                Block height at which to gracefully halt the chain and shutdown the node
       --halt-time uint                                  Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node
   -h, --help                                            help for start
@@ -9194,23 +9723,24 @@ zetacored start [flags]
       --inter-block-cache                               Enable inter-block caching (default true)
       --inv-check-period uint                           Assert registered invariants every N blocks
       --json-rpc.address string                         the JSON-RPC server address to listen on 
+      --json-rpc.allow-insecure-unlock                  Allow insecure account unlocking when account-related RPCs are exposed by http (default true)
       --json-rpc.allow-unprotected-txs                  Allow for unprotected (non EIP155 signed) transactions to be submitted via the node's RPC when the global parameter is disabled
       --json-rpc.api strings                            Defines a list of JSON-RPC namespaces that should be enabled (default [eth,net,web3])
       --json-rpc.block-range-cap eth_getLogs            Sets the max block range allowed for eth_getLogs query (default 10000)
-      --json-rpc.enable                                 Define if the JSON-RPC server should be enabled (default true)
+      --json-rpc.enable                                 Define if the JSON-RPC server should be enabled
       --json-rpc.enable-indexer                         Enable the custom tx indexer for json-rpc
       --json-rpc.evm-timeout duration                   Sets a timeout used for eth_call (0=infinite) (default 5s)
       --json-rpc.filter-cap int32                       Sets the global cap for total number of filters that can be created (default 200)
-      --json-rpc.gas-cap uint                           Sets a cap on gas that can be used in eth_call/estimateGas unit is aphoton (0=infinite) (default 25000000)
+      --json-rpc.gas-cap uint                           Sets a cap on gas that can be used in eth_call/estimateGas unit is aatom (0=infinite) (default 25000000)
       --json-rpc.http-idle-timeout duration             Sets a idle timeout for json-rpc http server (0=infinite) (default 2m0s)
       --json-rpc.http-timeout duration                  Sets a read/write timeout for json-rpc http server (0=infinite) (default 30s)
       --json-rpc.logs-cap eth_getLogs                   Sets the max number of results can be returned from single eth_getLogs query (default 10000)
       --json-rpc.max-open-connections int               Sets the maximum number of simultaneous connections for the server listener
-      --json-rpc.txfee-cap float                        Sets a cap on transaction fee that can be sent via the RPC APIs (1 = default 1 photon) (default 1)
+      --json-rpc.txfee-cap float                        Sets a cap on transaction fee that can be sent via the RPC APIs (1 = default 1 evmos) (default 1)
       --json-rpc.ws-address string                      the JSON-RPC WS server address to listen on 
       --metrics                                         Define if EVM rpc metrics server should be enabled
-      --min-retain-blocks uint                          Minimum block height offset during ABCI commit to prune Tendermint blocks
-      --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photon;0.0001stake)
+      --min-retain-blocks uint                          Minimum block height offset during ABCI commit to prune CometBFT blocks
+      --minimum-gas-prices string                       Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000azeta)
       --moniker string                                  node name 
       --p2p.external-address string                     ip:port address to advertise to peers for them to dial
       --p2p.laddr string                                node listen address. (0.0.0.0:0 means any interface, any port) 
@@ -9237,7 +9767,7 @@ zetacored start [flags]
       --trace-store string                              Enable KVStore tracing to an output file
       --transport string                                Transport protocol: socket, grpc 
       --unsafe-skip-upgrades ints                       Skip a set of upgrade heights to continue the old binary
-      --with-tendermint                                 Run abci app embedded in-process with tendermint (default true)
+      --with-cometbft                                   Run abci app embedded in-process with CometBFT (default true)
       --x-crisis-skip-assert-invariants                 Skip x/crisis invariants check on startup
 ```
 
@@ -9283,339 +9813,6 @@ zetacored status [flags]
 
 * [zetacored](#zetacored)	 - Zetacore Daemon (server)
 
-## zetacored tendermint
-
-Tendermint subcommands
-
-### Options
-
-```
-  -h, --help   help for tendermint
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored](#zetacored)	 - Zetacore Daemon (server)
-* [zetacored tendermint reset-state](#zetacored-tendermint-reset-state)	 - Remove all the data and WAL
-* [zetacored tendermint show-address](#zetacored-tendermint-show-address)	 - Shows this node's CometBFT validator consensus address
-* [zetacored tendermint show-node-id](#zetacored-tendermint-show-node-id)	 - Show this node's ID
-* [zetacored tendermint show-validator](#zetacored-tendermint-show-validator)	 - Show this node's CometBFT validator info
-* [zetacored tendermint unsafe-reset-all](#zetacored-tendermint-unsafe-reset-all)	 - (unsafe) Remove all the data and WAL, reset this node's validator to genesis state
-* [zetacored tendermint version](#zetacored-tendermint-version)	 - Print CometBFT libraries' version
-
-## zetacored tendermint reset-state
-
-Remove all the data and WAL
-
-```
-zetacored tendermint reset-state [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for reset-state
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored tendermint show-address
-
-Shows this node's CometBFT validator consensus address
-
-```
-zetacored tendermint show-address [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for show-address
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored tendermint show-node-id
-
-Show this node's ID
-
-```
-zetacored tendermint show-node-id [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for show-node-id
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored tendermint show-validator
-
-Show this node's CometBFT validator info
-
-```
-zetacored tendermint show-validator [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for show-validator
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored tendermint unsafe-reset-all
-
-(unsafe) Remove all the data and WAL, reset this node's validator to genesis state
-
-```
-zetacored tendermint unsafe-reset-all [flags]
-```
-
-### Options
-
-```
-  -h, --help             help for unsafe-reset-all
-      --keep-addr-book   keep the address book intact
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored tendermint version
-
-Print CometBFT libraries' version
-
-### Synopsis
-
-Print protocols' and libraries' version numbers against which this app has been compiled.
-
-```
-zetacored tendermint version [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for version
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored tendermint](#zetacored-tendermint)	 - Tendermint subcommands
-
-## zetacored testnet
-
-subcommands for starting or configuring local testnets
-
-```
-zetacored testnet [flags]
-```
-
-### Options
-
-```
-  -h, --help   help for testnet
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored](#zetacored)	 - Zetacore Daemon (server)
-* [zetacored testnet init-files](#zetacored-testnet-init-files)	 - Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)
-* [zetacored testnet start](#zetacored-testnet-start)	 - Launch an in-process multi-validator testnet
-
-## zetacored testnet init-files
-
-Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)
-
-### Synopsis
-
-init-files will setup "v" number of directories and populate each with
-necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
-
-Booting up a network with these validator folders is intended to be used with Docker Compose,
-or a similar setup where each node has a manually configurable IP address.
-
-Note, strict routability for addresses is turned off in the config file.
-
-Example:
-	evmosd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
-	
-
-```
-zetacored testnet init-files [flags]
-```
-
-### Options
-
-```
-      --chain-id string              genesis file chain-id, if left blank will be randomly created
-  -h, --help                         help for init-files
-      --key-type string              Key signing algorithm to generate keys for 
-      --keyring-backend string       Select keyring's backend (os|file|test) 
-      --minimum-gas-prices string    Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) 
-      --node-daemon-home string      Home directory of the node's daemon configuration 
-      --node-dir-prefix string       Prefix the directory name for each node with (node results in node0, node1, ...) 
-  -o, --output-dir string            Directory to store initialization data for the testnet 
-      --starting-ip-address string   Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...) 
-      --v int                        Number of validators to initialize the testnet with (default 4)
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
-
-## zetacored testnet start
-
-Launch an in-process multi-validator testnet
-
-### Synopsis
-
-testnet will launch an in-process multi-validator testnet,
-and generate "v" directories, populated with necessary validator configuration files
-(private validator, genesis, config, etc.).
-
-Example:
-	evmosd testnet --v 4 --output-dir ./.testnets
-	
-
-```
-zetacored testnet start [flags]
-```
-
-### Options
-
-```
-      --api.address string          the address to listen on for REST API 
-      --chain-id string             genesis file chain-id, if left blank will be randomly created
-      --enable-logging              Enable INFO logging of tendermint validator nodes
-      --grpc.address string         the gRPC server address to listen on 
-  -h, --help                        help for start
-      --json-rpc.address string     the JSON-RPC server address to listen on 
-      --key-type string             Key signing algorithm to generate keys for 
-      --minimum-gas-prices string   Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake) 
-  -o, --output-dir string           Directory to store initialization data for the testnet 
-      --print-mnemonic              print mnemonic of first validator to stdout for manual testing (default true)
-      --rpc.address string          the RPC address to listen on 
-      --v int                       Number of validators to initialize the testnet with (default 4)
-```
-
-### Options inherited from parent commands
-
-```
-      --home string         directory for config and data 
-      --log_format string   The logging format (json|plain) 
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
-      --log_no_color        Disable colored logs
-      --trace               print out full stack trace on errors
-```
-
-### SEE ALSO
-
-* [zetacored testnet](#zetacored-testnet)	 - subcommands for starting or configuring local testnets
-
 ## zetacored tx
 
 Transactions subcommands
@@ -9657,7 +9854,7 @@ zetacored tx [flags]
 * [zetacored tx emissions](#zetacored-tx-emissions)	 - emissions transactions subcommands
 * [zetacored tx encode](#zetacored-tx-encode)	 - Encode transactions generated offline
 * [zetacored tx evidence](#zetacored-tx-evidence)	 - Evidence transaction subcommands
-* [zetacored tx evm](#zetacored-tx-evm)	 - evm transactions subcommands
+* [zetacored tx evm](#zetacored-tx-evm)	 - evm subcommands
 * [zetacored tx feemarket](#zetacored-tx-feemarket)	 - Transactions commands for the feemarket module
 * [zetacored tx fungible](#zetacored-tx-fungible)	 - fungible transactions subcommands
 * [zetacored tx gov](#zetacored-tx-gov)	 - Governance transactions subcommands
@@ -12305,7 +12502,7 @@ zetacored tx evidence [flags]
 
 ## zetacored tx evm
 
-evm transactions subcommands
+evm subcommands
 
 ```
 zetacored tx evm [flags]
@@ -12332,6 +12529,7 @@ zetacored tx evm [flags]
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx evm raw](#zetacored-tx-evm-raw)	 - Build cosmos transaction from raw ethereum transaction
+* [zetacored tx evm send](#zetacored-tx-evm-send)	 - Send funds from one account to another.
 
 ## zetacored tx evm raw
 
@@ -12386,7 +12584,76 @@ zetacored tx evm raw TX_HEX [flags]
 
 ### SEE ALSO
 
-* [zetacored tx evm](#zetacored-tx-evm)	 - evm transactions subcommands
+* [zetacored tx evm](#zetacored-tx-evm)	 - evm subcommands
+
+## zetacored tx evm send
+
+Send funds from one account to another.
+
+### Synopsis
+
+Send funds from one account to another. Both 0x and bech32 addresses
+may be used.
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+When using '--dry-run' a key name cannot be used, only an 0x or bech32 address.
+
+
+```
+zetacored tx evm send [from_key_or_address] [to_address] [amount] [flags]
+```
+
+### Examples
+
+```
+evmd tx evm send 0x7cB61D4117AE31a12E393a1Cfa3BaC666481D02E 0xA2A8B87390F8F2D188242656BFb6852914073D06 10utoken
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for send
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx evm](#zetacored-tx-evm)	 - evm subcommands
 
 ## zetacored tx feemarket
 
@@ -12429,35 +12696,35 @@ zetacored tx feemarket update-params [flags]
 ### Options
 
 ```
-  -a, --account-number uint                           The account number of the signing account (offline mode only)
-      --aux                                           Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string                         Transaction broadcasting mode (sync|async) 
-      --chain-id string                               The network chain ID
-      --dry-run                                       ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
-      --fee-granter string                            Fee granter grants fees for the transaction
-      --fee-payer string                              Fee payer pays fees for the transaction instead of deducting from the signer
-      --fees string                                   Fees to pay along with transaction; eg: 10uatom
-      --from string                                   Name or address of private key with which to sign
-      --gas string                                    gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
-      --gas-adjustment float                          adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
-      --gas-prices string                             Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
-      --generate-only                                 Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                                          help for update-params
-      --keyring-backend string                        Select keyring's backend (os|file|kwallet|pass|test|memory) 
-      --keyring-dir string                            The client Keyring directory; if omitted, the default 'home' directory will be used
-      --ledger                                        Use a connected Ledger device
-      --node string                                   [host]:[port] to CometBFT rpc interface for this chain 
-      --note string                                   Note to add a description to the transaction (previously --memo)
-      --offline                                       Offline mode (does not allow any online functionality)
-  -o, --output string                                 Output format (text|json) 
-      --params ethermint.feemarket.v1.Params (json)   
-  -s, --sequence uint                                 The sequence number of the signing account (offline mode only)
-      --sign-mode string                              Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
-      --timeout-duration duration                     TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
-      --timeout-height uint                           DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
-      --tip string                                    Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
-      --unordered                                     Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
-  -y, --yes                                           Skip tx broadcasting prompt confirmation
+  -a, --account-number uint                            The account number of the signing account (offline mode only)
+      --aux                                            Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string                          Transaction broadcasting mode (sync|async) 
+      --chain-id string                                The network chain ID
+      --dry-run                                        ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string                             Fee granter grants fees for the transaction
+      --fee-payer string                               Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                                    Fees to pay along with transaction; eg: 10uatom
+      --from string                                    Name or address of private key with which to sign
+      --gas string                                     gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float                           adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string                              Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only                                  Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                                           help for update-params
+      --keyring-backend string                         Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string                             The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                                         Use a connected Ledger device
+      --node string                                    [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                                    Note to add a description to the transaction (previously --memo)
+      --offline                                        Offline mode (does not allow any online functionality)
+  -o, --output string                                  Output format (text|json) 
+      --params cosmos.evm.feemarket.v1.Params (json)   
+  -s, --sequence uint                                  The sequence number of the signing account (offline mode only)
+      --sign-mode string                               Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration                      TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint                            DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                                     Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
+      --unordered                                      Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                                            Skip tx broadcasting prompt confirmation
 ```
 
 ### Options inherited from parent commands
@@ -16584,6 +16851,7 @@ Upgrade transaction subcommands
 
 * [zetacored tx](#zetacored-tx)	 - Transactions subcommands
 * [zetacored tx upgrade cancel-software-upgrade](#zetacored-tx-upgrade-cancel-software-upgrade)	 - Cancel the current software upgrade proposal
+* [zetacored tx upgrade cancel-upgrade-proposal](#zetacored-tx-upgrade-cancel-upgrade-proposal)	 - Submit a proposal to cancel a planned chain upgrade.
 * [zetacored tx upgrade software-upgrade](#zetacored-tx-upgrade-software-upgrade)	 - Submit a software upgrade proposal
 
 ## zetacored tx upgrade cancel-software-upgrade
@@ -16632,6 +16900,61 @@ zetacored tx upgrade cancel-software-upgrade [flags]
       --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
       --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
       --title string                The title to put on the governance proposal
+      --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
+  -y, --yes                         Skip tx broadcasting prompt confirmation
+```
+
+### Options inherited from parent commands
+
+```
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:[level],[key]:[level]') 
+      --log_no_color        Disable colored logs
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored tx upgrade](#zetacored-tx-upgrade)	 - Upgrade transaction subcommands
+
+## zetacored tx upgrade cancel-upgrade-proposal
+
+Submit a proposal to cancel a planned chain upgrade.
+
+```
+zetacored tx upgrade cancel-upgrade-proposal [flags]
+```
+
+### Options
+
+```
+  -a, --account-number uint         The account number of the signing account (offline mode only)
+      --aux                         Generate aux signer data instead of sending a tx
+  -b, --broadcast-mode string       Transaction broadcasting mode (sync|async) 
+      --chain-id string             The network chain ID
+      --dry-run                     ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
+      --fee-granter string          Fee granter grants fees for the transaction
+      --fee-payer string            Fee payer pays fees for the transaction instead of deducting from the signer
+      --fees string                 Fees to pay along with transaction; eg: 10uatom
+      --from string                 Name or address of private key with which to sign
+      --gas string                  gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically. Note: "auto" option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of "fees". (default 200000)
+      --gas-adjustment float        adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
+      --gas-prices string           Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
+      --generate-only               Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
+  -h, --help                        help for cancel-upgrade-proposal
+      --keyring-backend string      Select keyring's backend (os|file|kwallet|pass|test|memory) 
+      --keyring-dir string          The client Keyring directory; if omitted, the default 'home' directory will be used
+      --ledger                      Use a connected Ledger device
+      --node string                 [host]:[port] to CometBFT rpc interface for this chain 
+      --note string                 Note to add a description to the transaction (previously --memo)
+      --offline                     Offline mode (does not allow any online functionality)
+  -o, --output string               Output format (text|json) 
+  -s, --sequence uint               The sequence number of the signing account (offline mode only)
+      --sign-mode string            Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature
+      --timeout-duration duration   TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.
+      --timeout-height uint         DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height
+      --tip string                  Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator
       --unordered                   Enable unordered transaction delivery; must be used in conjunction with --timeout-duration
   -y, --yes                         Skip tx broadcasting prompt confirmation
 ```

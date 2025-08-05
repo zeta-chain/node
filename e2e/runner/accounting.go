@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -274,7 +273,12 @@ func (r *E2ERunner) fetchTokensMintedAtGenesis() sdkmath.Int {
 
 	bankStateBz, ok := appState[banktypes.ModuleName]
 	require.True(r, ok, "bank genesis state is missing")
-	cdc := app.MakeEncodingConfig().Codec
+
+	zevmChainID, err := r.ZEVMClient.ChainID(r.Ctx)
+	require.NoError(r, err, "failed to get ZetaChain ID from ZEVM client")
+
+	r.Logger.Info("ZetaChain ID: %d", zevmChainID.Uint64())
+	cdc := app.MakeEncodingConfig(zevmChainID.Uint64()).Codec
 
 	bankState := new(banktypes.GenesisState)
 	err = cdc.UnmarshalJSON(bankStateBz, bankState)

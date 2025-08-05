@@ -1,21 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
-
-// Copyright 2023 ZetaChain
-// modified to exclude gentx transaction type from the min gas price check
 package ante
 
 import (
@@ -26,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 var (
@@ -162,10 +144,7 @@ func (empd EthMinGasPriceDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	evmParams := empd.evmKeeper.GetParams(ctx)
-	chainCfg := evmParams.GetChainConfig()
-	ethCfg := chainCfg.EthereumConfig(empd.evmKeeper.ChainID())
-	baseFee := empd.evmKeeper.GetBaseFee(ctx, ethCfg)
+	baseFee := empd.evmKeeper.GetBaseFee(ctx)
 
 	for _, msg := range tx.GetMsgs() {
 		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
@@ -228,10 +207,7 @@ func (mfd EthMempoolFeeDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 	evmParams := mfd.evmKeeper.GetParams(ctx)
-	chainCfg := evmParams.GetChainConfig()
-	ethCfg := chainCfg.EthereumConfig(mfd.evmKeeper.ChainID())
-
-	baseFee := mfd.evmKeeper.GetBaseFee(ctx, ethCfg)
+	baseFee := mfd.evmKeeper.GetBaseFee(ctx)
 	// skip check as the London hard fork and EIP-1559 are enabled
 	if baseFee != nil {
 		return next(ctx, tx, simulate)
