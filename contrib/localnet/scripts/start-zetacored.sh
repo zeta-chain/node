@@ -244,6 +244,7 @@ then
     .app_state.crisis.constant_fee.denom = "azeta" |
     .app_state.mint.params.mint_denom = "azeta" |
     .app_state.evm.params.evm_denom = "azeta" |
+    .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000800"] |
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
