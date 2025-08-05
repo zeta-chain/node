@@ -566,8 +566,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// We artificially burn zeta in teh admin tests so the zeta balance check fails.
-	// As long as the check pass in all other tests it should be fine.
+	// We artificially burn zeta in the admin tests so the zeta balance check fails.
 	if !testAdmin {
 		deployerRunner.VerifyAccounting(testLegacy)
 	}
