@@ -26,9 +26,9 @@ type FungibleEVMKeeper struct {
 	mock.Mock
 }
 
-// ApplyMessage provides a mock function with given fields: ctx, msg, tracer, commit
-func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, tracer *tracing.Hooks, commit bool) (*vmtypes.MsgEthereumTxResponse, error) {
-	ret := _m.Called(ctx, msg, tracer, commit)
+// ApplyMessage provides a mock function with given fields: ctx, msg, tracer, commit, internal
+func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, tracer *tracing.Hooks, commit bool, internal bool) (*vmtypes.MsgEthereumTxResponse, error) {
+	ret := _m.Called(ctx, msg, tracer, commit, internal)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ApplyMessage")
@@ -36,19 +36,19 @@ func (_m *FungibleEVMKeeper) ApplyMessage(ctx types.Context, msg core.Message, t
 
 	var r0 *vmtypes.MsgEthereumTxResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, core.Message, *tracing.Hooks, bool) (*vmtypes.MsgEthereumTxResponse, error)); ok {
-		return rf(ctx, msg, tracer, commit)
+	if rf, ok := ret.Get(0).(func(types.Context, core.Message, *tracing.Hooks, bool, bool) (*vmtypes.MsgEthereumTxResponse, error)); ok {
+		return rf(ctx, msg, tracer, commit, internal)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, core.Message, *tracing.Hooks, bool) *vmtypes.MsgEthereumTxResponse); ok {
-		r0 = rf(ctx, msg, tracer, commit)
+	if rf, ok := ret.Get(0).(func(types.Context, core.Message, *tracing.Hooks, bool, bool) *vmtypes.MsgEthereumTxResponse); ok {
+		r0 = rf(ctx, msg, tracer, commit, internal)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*vmtypes.MsgEthereumTxResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, core.Message, *tracing.Hooks, bool) error); ok {
-		r1 = rf(ctx, msg, tracer, commit)
+	if rf, ok := ret.Get(1).(func(types.Context, core.Message, *tracing.Hooks, bool, bool) error); ok {
+		r1 = rf(ctx, msg, tracer, commit, internal)
 	} else {
 		r1 = ret.Error(1)
 	}

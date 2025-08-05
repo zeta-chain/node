@@ -409,6 +409,7 @@ func EVMKeeper(
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
 	erc20Keeper evmtypes.Erc20Keeper,
+	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
 	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
@@ -431,6 +432,7 @@ func EVMKeeper(
 		bankKeeper,
 		stakingKeeper,
 		feemarketKeeper,
+		consensusKeeper,
 		erc20Keeper,
 		"",
 	)
@@ -504,6 +506,12 @@ func NewSDKKeepersWithKeys(
 		keys[feemarkettypes.StoreKey],
 		tKeys[feemarkettypes.TransientKey],
 	)
+	consensusKeeper := consensuskeeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[consensuskeeper.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
 	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := evmkeeper.NewKeeper(
 		cdc,
@@ -515,6 +523,7 @@ func NewSDKKeepersWithKeys(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
+		consensusKeeper,
 		&erc20Keeper,
 		"",
 	)
@@ -690,6 +699,7 @@ func NewSDKKeepers(
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss)
+	consensusKeeper := ConsensusKeeper(cdc, db, ss)
 	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := EVMKeeper(
 		cdc,
@@ -700,6 +710,7 @@ func NewSDKKeepers(
 		stakingKeeper,
 		feeMarketKeeper,
 		&erc20Keeper,
+		consensusKeeper,
 	)
 	erc20Keeper = ERC20Keeper(cdc, db, ss, authKeeper, bankKeeper, &stakingKeeper, evmKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)

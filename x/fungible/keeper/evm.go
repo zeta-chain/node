@@ -807,7 +807,7 @@ func (k Keeper) CallEVMWithData(
 	}
 	// k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
 	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "ctx.chainid", ctx.ChainID())
-	res, err := k.evmKeeper.ApplyMessage(ctx, *msg, evmtypes.NewNoOpTracer(), commit)
+	res, err := k.evmKeeper.ApplyMessage(ctx, *msg, evmtypes.NewNoOpTracer(), commit, false)
 	if err != nil {
 		return nil, err
 	}

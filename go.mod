@@ -414,7 +414,7 @@ replace (
 	// which is a fork of https://github.com/threshold-network/tss-lib
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
-	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250728181429-8c0987924dce
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250805001456-7b9c001332c6
 
 	// use Cosmos geth fork
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0

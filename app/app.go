@@ -526,6 +526,7 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.FeeMarketKeeper,
+		app.ConsensusParamsKeeper,
 		&app.Erc20Keeper,
 		tracer,
 	)
