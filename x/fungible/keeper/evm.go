@@ -409,28 +409,34 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
-	err = k.MintZetaToFungibleModule(ctx, zetaValue)
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
+	mintAndDeposit := func(ctx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		res, err := k.CallEVM(
+			ctx,
+			*zevmConnectorAbi,
+			types.ModuleAddressEVM,
+			connectorAddress,
+			zetaValue,
+			ZEVMGasLimitConnectorCall,
+			true,
+			false,
+			"onReceive",
+			zetaTxSenderAddress,
+			sourceChainID,
+			destinationAddress,
+			zetaValue,
+			message,
+			internalSendHash,
+		)
+		return res, true, err // true indicates that this is a cross-chain transaction
+		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
 
-	return k.CallEVM(
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
-		*zevmConnectorAbi,
-		types.ModuleAddressEVM,
-		connectorAddress,
 		zetaValue,
-		ZEVMGasLimitConnectorCall,
-		true,
-		false,
-		"onReceive",
-		zetaTxSenderAddress,
-		sourceChainID,
-		destinationAddress,
-		zetaValue,
-		message,
-		internalSendHash,
+		mintAndDeposit,
 	)
+	return res, err
 }
 
 // CallOnRevertZevmConnector calls the onRevert function of the ZevmConnector contract
@@ -456,28 +462,36 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	err = k.MintZetaToFungibleModule(ctx, remainingZetaValue)
-	if err != nil {
-		return nil, err
+
+	mintAndRevert := func(ctx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		res, err := k.CallEVM(
+			ctx,
+			*zevmConnectorAbi,
+			types.ModuleAddressEVM,
+			connectorAddress,
+			remainingZetaValue,
+			ZEVMGasLimitConnectorCall,
+			true,
+			false,
+			"onRevert",
+			zetaTxSenderAddress,
+			sourceChainID,
+			destinationAddress,
+			destinationChainID,
+			remainingZetaValue,
+			message,
+			internalSendHash,
+		)
+		return res, true, err // true indicates that this is a cross-chain transaction
+		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
-	return k.CallEVM(
+
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
-		*zevmConnectorAbi,
-		types.ModuleAddressEVM,
-		connectorAddress,
 		remainingZetaValue,
-		ZEVMGasLimitConnectorCall,
-		true,
-		false,
-		"onRevert",
-		zetaTxSenderAddress,
-		sourceChainID,
-		destinationAddress,
-		destinationChainID,
-		remainingZetaValue,
-		message,
-		internalSendHash,
+		mintAndRevert,
 	)
+	return res, err
 }
 
 // QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20

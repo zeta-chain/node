@@ -186,6 +186,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return err
 		}
 	}
+	// Overwrite using contract addresses from config
+	if c := conf.Contracts.EVM.ConnectorEthAddr; c != "" {
+		r.ConnectorEthAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorEthAddr: %w", err)
+		}
+		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
 	// set ZEVM contracts
 	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(
 		r.Ctx,

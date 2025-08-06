@@ -535,6 +535,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestLegacyMessagePassingRevertSuccessExternalChainsName,
 			e2etests.TestLegacyZetaDepositRestrictedName,
 			e2etests.TestLegacyZetaDepositName,
+			e2etests.TestLegacyZetaDepositAndCallAbortName,
 			e2etests.TestLegacyZetaDepositNewAddressName,
 		))
 		eg.Go(legacyZEVMMPTestRoutine(conf, deployerRunner, verbose,
@@ -565,7 +566,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.CheckZRC20BalanceAndSupply()
+	// We artificially burn zeta in the admin tests which causes an imbalance in the accounting.
+	if !testAdmin {
+		deployerRunner.VerifyAccounting(testLegacy)
+	}
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.
