@@ -175,6 +175,7 @@ const (
 	TestDonationEtherName   = "donation_ether"
 	TestInboundTrackersName = "inbound_trackers"
 	TestPrecompilesName     = "precompiles"
+	TestOpcodesName         = "opcodes"
 
 	/*
 	 Stress tests
@@ -262,11 +263,12 @@ const (
 	 Note: It is still the only way to transfer ZETA across chains. Work to integrate ZETA transfers as part of the gateway is in progress
 	 These tests are marked as legacy because there is no longer active development on ZETA transfers, and we stopped integrating ZETA support on new mainnet chains
 	*/
-	TestLegacyZetaDepositName           = "legacy_zeta_deposit"
-	TestLegacyZetaDepositNewAddressName = "legacy_zeta_deposit_new_address"
-	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
-	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
-	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestLegacyZetaDepositName             = "legacy_zeta_deposit"
+	TestLegacyZetaDepositAndCallAbortName = "legacy_zeta_deposit_and_call_abort"
+	TestLegacyZetaDepositNewAddressName   = "legacy_zeta_deposit_new_address"
+	TestLegacyZetaDepositRestrictedName   = "legacy_zeta_deposit_restricted"
+	TestLegacyZetaWithdrawName            = "legacy_zeta_withdraw"
+	TestLegacyZetaWithdrawBTCRevertName   = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
 	TestZetaDepositName                      = "zeta_deposit"
 	TestZetaDepositAndCallName               = "zeta_deposit_and_call"
@@ -1403,6 +1405,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompiles,
 		runner.WithMinimumVersion("v33.0.0"),
 	),
+
+	runner.NewE2ETest(
+
+		TestOpcodesName,
+		"test opcodes support in ZEVM",
+		[]runner.ArgDefinition{},
+		TestOpcodes,
+	),
 	/*
 	 Stress tests
 	*/
@@ -1866,6 +1876,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},
 		legacy.TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositAndCallAbortName,
+		"deposit and ZETA from Ethereum to ZEVM and call a contract.The cctx reverts and then aborts",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositAndCallAbort,
 	),
 	runner.NewE2ETest(
 		TestLegacyZetaDepositNewAddressName,
