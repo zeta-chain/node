@@ -13,11 +13,9 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	// parse deposit amount
 	amount := utils.ParseBigInt(r, args[0])
 
-	hash := r.LegacyDepositZetaWithAmount(r.ZevmTestDAppAddr, amount)
+	hash := r.LegacyDepositZetaWithAmount(r.EVMAddress(), amount)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-
-	r.Logger.Print("Zeta deposit cctx: %s", cctx.Index)
 }

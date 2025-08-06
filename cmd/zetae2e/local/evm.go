@@ -34,8 +34,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHWithdrawAndCallNoMessageName,
 		e2etests.TestEtherWithdrawRestrictedName,
 	))
-	//
-	//// Test happy paths for erc20 token workflow
+	// Test happy paths for erc20 token workflow
 	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
@@ -48,8 +47,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestDepositAndCallSwapName,
 		e2etests.TestERC20DepositRestrictedName,
 	))
-	//
-	//// Test revert cases for gas token workflow
+	// Test revert cases for gas token workflow
 	eg.Go(
 		evmTestRoutine(
 			conf,
@@ -72,8 +70,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestEVMToZEVMCallAbortName,
 		),
 	)
-	//
-	//// Test revert cases for erc20 token workflow
+	// Test revert cases for erc20 token workflow
 	eg.Go(
 		evmTestRoutine(
 			conf,
@@ -94,8 +91,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
-
-	// TODO evm: tmp comment out because of setup difference between zetae2e-ante and zetae2e
+	// test zeta token workflow
 	eg.Go(
 		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgRed, deployerRunner, verbose,
 			e2etests.TestZetaDepositName,
