@@ -71,7 +71,7 @@ func getDelegation(r *runner.E2ERunner) math.LegacyDec {
 	})
 	if err != nil {
 		// no delegation found, return zero shares
-		if strings.Contains(err.Error(), "not found") {
+		if stakingtypes.ErrNoDelegation.Is(err) || strings.Contains(err.Error(), "not found") {
 			return math.LegacyZeroDec()
 		}
 		require.Fail(r, "Failed to get delegation", "error: %v", err)
@@ -85,5 +85,10 @@ func getValidatorOpAddress(r *runner.E2ERunner) string {
 	res, err := r.StakingClient.Validators(r.Ctx, &stakingtypes.QueryValidatorsRequest{})
 	require.NoError(r, err)
 	require.NotEmpty(r, res.Validators)
+
+	// Ensure the validator is in bonded state for delegation
+	validator := res.Validators[0]
+	require.Equal(r, stakingtypes.Bonded, validator.Status)
+
 	return res.Validators[0].OperatorAddress
 }
