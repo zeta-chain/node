@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"strings"
 
@@ -22,12 +23,23 @@ func TestPrecompiles(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Print("Trying to perform staking precompile test...")
 
+	// get validators
+	res, err := precompile.Validators(&bind.CallOpts{}, "", istaking.PageRequest{})
+	require.NoError(r, err)
+	require.Len(r, res.Validators, 2)
+	r.Logger.Print("Validators found: %d", len(res.Validators))
+	for i, v := range res.Validators {
+		r.Logger.Print("Validator %d: %s, shares: %s", i, v.OperatorAddress, v.DelegatorShares.String())
+	}
+
 	validator := getValidatorOpAddress(r)
 
 	// Get the delegation to the first validator
 	delegationBefore := getDelegation(r)
 
 	// Deledate 1 ZETA
+	// Note: the call fails here with a `no contract code at given address` error, calling the precompile directly works
+	// TODO: fix the issue with the precompile call
 	tx, err := precompile.Delegate(r.ZEVMAuth, r.ZEVMAuth.From, validator, big.NewInt(1e18))
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnZEVM(tx)
