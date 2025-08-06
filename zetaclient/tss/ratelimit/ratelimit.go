@@ -78,6 +78,10 @@ func (r *RateLimiter) Release() {
 
 // Pending returns the number of pending signatures.
 func (r *RateLimiter) Pending() uint64 {
-	// #nosec G115 always in range
-	return uint64(r.pending.Load())
+	// Ensure we never return a negative value
+	pending := r.pending.Load()
+	if pending < 0 {
+		return 0
+	}
+	return uint64(pending)
 }
