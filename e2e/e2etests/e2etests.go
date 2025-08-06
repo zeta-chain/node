@@ -1405,7 +1405,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestPrecompiles,
 		runner.WithMinimumVersion("v33.0.0"),
 	),
-
 	runner.NewE2ETest(
 
 		TestOpcodesName,
