@@ -191,8 +191,8 @@ func (r *E2ERunner) ERC20Withdraw(
 	return tx
 }
 
-// ZetaWithdraw calls Withdraw of Gateway with Zeta token on ZEVM
-func (r *E2ERunner) ZetaWithdraw(
+// ZETAWithdraw calls Withdraw of Gateway with Zeta token on ZEVM
+func (r *E2ERunner) ZETAWithdraw(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	chainID *big.Int,
@@ -271,8 +271,8 @@ func (r *E2ERunner) ERC20WithdrawAndCall(
 	return tx
 }
 
-// ZetaWithdrawAndCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM
-func (r *E2ERunner) ZetaWithdrawAndCall(
+// ZETAWithdrawAndCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM
+func (r *E2ERunner) ZETAWithdrawAndCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	payload []byte,
@@ -305,8 +305,8 @@ func (r *E2ERunner) ZetaWithdrawAndCall(
 	return tx
 }
 
-// ZetaWithdrawAndArbitraryCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM using arbitrary call
-func (r *E2ERunner) ZetaWithdrawAndArbitraryCall(
+// ZETAWithdrawAndArbitraryCall calls WithdrawAndCall of Gateway with Zeta token on ZEVM using arbitrary call
+func (r *E2ERunner) ZETAWithdrawAndArbitraryCall(
 	receiver ethcommon.Address,
 	amount *big.Int,
 	chainID *big.Int,

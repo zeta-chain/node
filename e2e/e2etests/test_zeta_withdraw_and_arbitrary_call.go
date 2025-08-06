@@ -26,7 +26,7 @@ func TestZetaWithdrawAndArbitraryCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ZetaWithdrawAndArbitraryCall(
+	tx := r.ZETAWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		evmChainID,

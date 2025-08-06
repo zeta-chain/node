@@ -45,7 +45,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		// ACT
-		result, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		result, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -86,7 +86,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -110,7 +110,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(999)).Return(chains.Chain{}, false)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -143,7 +143,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -176,7 +176,7 @@ func TestKeeper_GetZetaInboundDetails(t *testing.T) {
 		}, true)
 
 		// ACT
-		_, err := k.GetZetaInboundDetails(ctx, receiverChainID, callOptions)
+		_, err := k.GetZETAInboundDetails(ctx, receiverChainID, callOptions)
 
 		// ASSERT
 		require.Error(t, err)
@@ -216,7 +216,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(gasLimit, nil)
 
 		// ACT
-		_, err := k.GetErc20InboundDetails(ctx, zrc20, callEvent)
+		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -236,7 +236,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		fungibleMock.On("GetForeignCoins", ctx, zrc20.Hex()).Return(fungibletypes.ForeignCoins{}, false)
 
 		// ACT
-		result, err := k.GetErc20InboundDetails(ctx, zrc20, callEvent)
+		result, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -266,7 +266,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", ctx, int64(999)).Return(chains.Chain{}, false)
 
 		// ACT
-		_, err := k.GetErc20InboundDetails(ctx, zrc20, callEvent)
+		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
 
 		// ASSERT
 		require.Error(t, err)
@@ -303,7 +303,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(nil, errors.New("gas limit query failed"))
 
 		// ACT
-		_, err := k.GetErc20InboundDetails(ctx, zrc20, callEvent)
+		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
 
 		// ASSERT
 		require.Error(t, err)
@@ -340,7 +340,7 @@ func TestKeeper_GetErc20InboundDetails(t *testing.T) {
 		fungibleMock.On("QueryGasLimit", ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress)).Return(gasLimit, nil)
 
 		// ACT
-		_, err := k.GetErc20InboundDetails(ctx, zrc20, callEvent)
+		_, err := k.GetERC20InboundDetails(ctx, zrc20, callEvent)
 
 		// ASSERT
 		require.NoError(t, err)

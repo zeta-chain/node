@@ -31,7 +31,7 @@ func TestZetaWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	// perform the withdraw
-	tx := r.ZetaWithdrawAndCall(
+	tx := r.ZETAWithdrawAndCall(
 		sample.EthAddress(), // non-existing address
 		amount,
 		[]byte("revert"),

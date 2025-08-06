@@ -83,9 +83,9 @@ func (k Keeper) ProcessZEVMInboundV2(
 		// Note: NoAssetCall is not supported for ZETA
 		switch {
 		case zrc20 == wzetaContractAddress:
-			inboundDetails, err = k.getZetaInboundDetails(ctx, receiverChainID, callOptions)
+			inboundDetails, err = k.getZETAInboundDetails(ctx, receiverChainID, callOptions)
 		default:
-			inboundDetails, err = k.getErc20InboundDetails(ctx, zrc20, callEvent != nil)
+			inboundDetails, err = k.getZRC20InboundDetails(ctx, zrc20, callEvent != nil)
 		}
 
 		if err != nil {
@@ -176,8 +176,8 @@ func (k Keeper) ProcessZEVMInboundV2(
 	return nil
 }
 
-// getZetaInboundDetails retrieves the details for a ZETA withdrawal event, it returns an InboundDetails object
-func (k Keeper) getZetaInboundDetails(
+// getZETAInboundDetails retrieves the details for a ZETA withdrawal event, it returns an InboundDetails object
+func (k Keeper) getZETAInboundDetails(
 	ctx sdk.Context,
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
@@ -232,8 +232,8 @@ func (k Keeper) getZetaInboundDetails(
 	}, nil
 }
 
-// getErc20InboundDetails retrieves the details for a ZRC20 withdrawal event, it returns an InboundDetails object
-func (k Keeper) getErc20InboundDetails(
+// getZRC20InboundDetails retrieves the details for a ZRC20 withdrawal event, it returns an InboundDetails object
+func (k Keeper) getZRC20InboundDetails(
 	ctx sdk.Context,
 	zrc20 ethcommon.Address,
 	callEvent bool,

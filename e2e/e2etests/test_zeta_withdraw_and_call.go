@@ -33,7 +33,7 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ZetaWithdrawAndCall(
+	tx := r.ZETAWithdrawAndCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		[]byte(payload),

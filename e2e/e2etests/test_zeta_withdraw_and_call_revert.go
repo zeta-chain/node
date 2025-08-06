@@ -30,7 +30,7 @@ func TestZetaWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.EqualValues(r, int64(0), balance.Int64())
 
 	// perform the withdraw
-	tx := r.ZetaWithdrawAndArbitraryCall(
+	tx := r.ZETAWithdrawAndArbitraryCall(
 		r.TestDAppV2EVMAddr,
 		amount,
 		evmChainID,

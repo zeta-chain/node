@@ -27,18 +27,18 @@ func (k Keeper) GetNextCctxCounter(ctx sdk.Context) uint64 {
 	return k.getNextCctxCounter(ctx)
 }
 
-func (k Keeper) GetZetaInboundDetails(
+func (k Keeper) GetZETAInboundDetails(
 	ctx sdk.Context,
 	receiverChainID *big.Int,
 	callOptions gatewayzevm.CallOptions,
 ) (InboundDetails, error) {
-	return k.getZetaInboundDetails(ctx, receiverChainID, callOptions)
+	return k.getZETAInboundDetails(ctx, receiverChainID, callOptions)
 }
 
-func (k Keeper) GetErc20InboundDetails(
+func (k Keeper) GetERC20InboundDetails(
 	ctx sdk.Context,
 	zrc20 ethcommon.Address,
 	callEvent bool,
 ) (InboundDetails, error) {
-	return k.getErc20InboundDetails(ctx, zrc20, callEvent)
+	return k.getZRC20InboundDetails(ctx, zrc20, callEvent)
 }
