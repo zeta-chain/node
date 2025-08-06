@@ -18,7 +18,7 @@ replace (
 )
 
 replace (
-	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250806111156-8f47b267e38e
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250806143210-a1eff9efadd4
 )
 
 // uncomment this for local development/testing/debugging
