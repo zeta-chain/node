@@ -119,7 +119,6 @@ func (r *E2ERunner) AddPreUpgradeHandler(upgradeFrom string, preHandler func()) 
 	if !r.IsRunningUpgrade() || checkVersion(upgradeFrom, currentVersion) {
 		return
 	}
-	r.Logger.Print("🏃 Running assertions before upgrade for version: %s", upgradeFrom)
 	preHandler()
 }
 
@@ -136,7 +135,6 @@ func (r *E2ERunner) AddPostUpgradeHandler(upgradeFrom string, postHandler func()
 		return
 	}
 
-	r.Logger.Print("🏃 Running post-upgrade setup for version: %s", upgradeFrom)
 	postHandler()
 }
 

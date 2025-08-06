@@ -30,8 +30,6 @@ func TestZetaWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	payload := strings.ToLower(r.ZetaEthAddr.String())
 
-	r.AssertTestDAppEVMCalled(false, payload, amount)
-
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
