@@ -56,6 +56,7 @@ type EVMKeeper interface {
 		msg core.Message,
 		tracer *tracing.Hooks,
 		commit bool,
+		internal bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte

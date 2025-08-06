@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/evm/types"
@@ -76,7 +77,7 @@ type EthereumAPI interface {
 	Call(
 		args evmtypes.TransactionArgs,
 		blockNrOrHash rpctypes.BlockNumberOrHash,
-		_ *rpctypes.StateOverride,
+		override *rpctypes.StateOverride,
 	) (hexutil.Bytes, error)
 
 	// Chain Information
@@ -133,7 +134,6 @@ var _ EthereumAPI = (*PublicAPI)(nil)
 
 // PublicAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec.
 type PublicAPI struct {
-	ctx     context.Context
 	logger  log.Logger
 	backend backend.EVMBackend
 }
@@ -141,7 +141,6 @@ type PublicAPI struct {
 // NewPublicAPI creates an instance of the public ETH Web3 API.
 func NewPublicAPI(logger log.Logger, backend backend.EVMBackend) *PublicAPI {
 	api := &PublicAPI{
-		ctx:     context.Background(),
 		logger:  logger.With("client", "json-rpc"),
 		backend: backend,
 	}
@@ -171,8 +170,8 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 	return e.backend.GetBlockByHash(hash, fullTx)
 }
 
-// TODO evm: new method
-// // GetBlockReceipts returns the block receipts for the given block hash or number or tag.
+// TODO https://github.com/zeta-chain/node/issues/4079
+// GetBlockReceipts returns the block receipts for the given block hash or number or tag.
 // func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
 // 	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
 // 	return e.backend.GetBlockReceipts(blockNrOrHash)
@@ -302,9 +301,14 @@ func (e *PublicAPI) GetProof(address common.Address,
 // Call performs a raw contract call.
 func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
 	blockNrOrHash rpctypes.BlockNumberOrHash,
-	_ *rpctypes.StateOverride,
+	override *rpctypes.StateOverride,
 ) (hexutil.Bytes, error) {
 	e.logger.Debug("eth_call", "args", args.String(), "block number or hash", blockNrOrHash)
+
+	if override != nil {
+		e.logger.Debug("eth_call", "error", "overrides are unsupported in call queries")
+		return nil, fmt.Errorf("overrides are unsupported in call queries")
+	}
 
 	blockNum, err := e.backend.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {

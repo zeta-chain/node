@@ -34,6 +34,7 @@ type EVMKeeper interface {
 	GetParams(ctx sdk.Context) evmtypes.Params
 	GetBaseFee(ctx sdk.Context) *big.Int
 	GetMinGasPrice(ctx sdk.Context) math.LegacyDec
+	SpendableCoin(ctx sdk.Context, addr common.Address) *uint256.Int
 }
 
 // FeeMarketKeeper defines the expected keeper interface used on the AnteHandler

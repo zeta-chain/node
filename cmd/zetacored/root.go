@@ -66,11 +66,12 @@ func NewRootCmd() *cobra.Command {
 		map[int64]bool{},
 		"",
 		0,
-		zetaserverconfig.DefaultEVMChainID, // TODO evm: should be ok to use default just for temp app?
+		zetaserverconfig.DefaultEVMChainID, // should be ok to use default just for temp app
 		emptyAppOptions{},
 	)
 
-	encodingConfig := app.MakeEncodingConfig(zetaserverconfig.DefaultEVMChainID) // TODO evm: same as above
+	// should be ok to use default just for temp app
+	encodingConfig := app.MakeEncodingConfig(zetaserverconfig.DefaultEVMChainID)
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -127,7 +128,8 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO evm: need to check about evm chain id, getting it like this is generally fine, but some commands
+			// TODO https://github.com/zeta-chain/node/issues/4078
+			// need to check about evm chain id, getting it like this is generally fine, but some commands
 			// like docs are halting because of it
 			if initClientCtx.ChainID == "" {
 				return nil
@@ -277,7 +279,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingCon
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
-		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true), // TODO evm: second arg default to eth keys?
+		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true),
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
@@ -388,7 +390,7 @@ func (ac appCreator) newApp(
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64 // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64
 		appOpts,
 		baseappOptions...,
 	)
@@ -427,7 +429,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64 // TODO evm: evm chain id?
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64
 		appOpts,
 	)
 

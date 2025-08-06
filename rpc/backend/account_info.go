@@ -49,14 +49,13 @@ func (b *Backend) GetProof(
 		return nil, err
 	}
 
-	height := blockNum.Int64()
+	height := int64(blockNum)
 
 	_, err = b.TendermintBlockByNumber(blockNum)
 	if err != nil {
 		// the error message imitates geth behavior
 		return nil, errors.New("header not found")
 	}
-	ctx := rpctypes.ContextWithHeight(height)
 
 	// if the height is equal to zero, meaning the query condition of the block is either "pending" or "latest"
 	if height == 0 {
@@ -72,6 +71,7 @@ func (b *Backend) GetProof(
 		height = int64(bn) //#nosec G115 -- checked for int overflow already
 	}
 
+	ctx := rpctypes.ContextWithHeight(height)
 	clientCtx := b.ClientCtx.WithHeight(height)
 
 	// query storage proofs
@@ -153,7 +153,7 @@ func (b *Backend) GetStorageAt(
 	return value.Bytes(), nil
 }
 
-// GetBalance returns the provided account's balance up to the provided block number.
+// GetBalance returns the provided account's *spendable* balance up to the provided block number.
 func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Big, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {

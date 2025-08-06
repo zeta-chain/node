@@ -22,11 +22,16 @@ import (
 	"runtime/trace"
 
 	stderrors "github.com/pkg/errors"
+
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.
 func (a *API) StartGoTrace(file string) error {
 	a.logger.Debug("debug_startGoTrace", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 
@@ -62,6 +67,9 @@ func (a *API) StartGoTrace(file string) error {
 // StopGoTrace stops an ongoing trace.
 func (a *API) StopGoTrace() error {
 	a.logger.Debug("debug_stopGoTrace")
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 
