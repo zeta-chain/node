@@ -40,6 +40,7 @@ func TestPrecompiles(r *runner.E2ERunner, _ []string) {
 	// Deledate 1 ZETA
 	// Note: the call fails here with a `no contract code at given address` error, calling the precompile directly works
 	// TODO: fix the issue with the precompile call
+	// https://github.com/zeta-chain/node/issues/4081
 	tx, err := precompile.Delegate(r.ZEVMAuth, r.ZEVMAuth.From, validator, big.NewInt(1e18))
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnZEVM(tx)
