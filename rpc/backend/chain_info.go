@@ -155,6 +155,13 @@ func (b *Backend) FeeHistory(
 	lastBlock rpc.BlockNumber, // the block to start search , to oldest
 	rewardPercentiles []float64, // percentiles to fetch reward
 ) (*rpctypes.FeeHistoryResult, error) {
+	if userBlockCount > 100 {
+		return nil, fmt.Errorf("max userBlockCount is 100")
+	}
+	if len(rewardPercentiles) > 100 {
+		return nil, fmt.Errorf("max len of rewardPercentiles is 100")
+	}
+
 	for i, p := range rewardPercentiles {
 		if p < 0 || p > 100 {
 			return nil, fmt.Errorf("%w: %f", errInvalidPercentile, p)

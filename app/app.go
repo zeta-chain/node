@@ -178,6 +178,7 @@ var maccPerms = map[string][]string{
 	emissionstypes.ModuleName:                       nil,
 	emissionstypes.UndistributedObserverRewardsPool: nil,
 	emissionstypes.UndistributedTSSRewardsPool:      nil,
+	feemarkettypes.ModuleName:                       nil,
 }
 
 // module accounts that are NOT allowed to receive tokens
@@ -187,6 +188,8 @@ var blockedReceivingModAcc = map[string]bool{
 	stakingtypes.BondedPoolName:    true,
 	stakingtypes.NotBondedPoolName: true,
 	govtypes.ModuleName:            true,
+	evmtypes.ModuleName:            true,
+	feemarkettypes.ModuleName:      true,
 }
 
 var (
