@@ -11,6 +11,7 @@
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 * [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
+* [4087](https://github.com/zeta-chain/node/pull/4087) - re-enable Sui authenticated call and adopt MessageContext ID as a gateway dynamic field
 
 ### Fixes
 
