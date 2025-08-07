@@ -174,6 +174,7 @@ const (
 	*/
 	TestDonationEtherName   = "donation_ether"
 	TestInboundTrackersName = "inbound_trackers"
+	TestPrecompilesName     = "precompiles"
 	TestOpcodesName         = "opcodes"
 
 	/*
@@ -1398,6 +1399,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestInboundTrackers,
 	),
 	runner.NewE2ETest(
+		TestPrecompilesName,
+		"test precompiles on ZEVM",
+		[]runner.ArgDefinition{},
+		TestPrecompiles,
+		runner.WithMinimumVersion("v33.0.0"),
+	),
+	runner.NewE2ETest(
+
 		TestOpcodesName,
 		"test opcodes support in ZEVM",
 		[]runner.ArgDefinition{},
