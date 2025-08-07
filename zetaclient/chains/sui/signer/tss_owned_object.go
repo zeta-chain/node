@@ -5,7 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
+
+	"github.com/zeta-chain/node/pkg/contracts/sui"
 )
 
 const tssOwnedObjectTTL = 5 * time.Minute
@@ -90,15 +93,32 @@ func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) 
 	return objectID, nil
 }
 
-// getMessageContextID returns the objectID of the MessageContext. Should belong to TSS address on Sui.
+// getMessageContextID returns the objectID of the active MessageContext. Should belong to TSS address on Sui.
 func (s *Signer) getMessageContextID(ctx context.Context) (string, error) {
-	owner := s.TSS().PubKey().AddressSui()
-	structType := s.gateway.MessageContextType()
-
-	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
+	nameJSON, err := sui.ActiveMessageContextDynamicFieldName()
 	if err != nil {
-		return "", errors.Wrap(err, "unable to get owned object ID")
+		return "", errors.Wrap(err, "unable to get dynamic field name")
 	}
 
-	return objectID, nil
+	response, err := s.client.SuiXGetDynamicFieldObject(ctx, models.SuiXGetDynamicFieldObjectRequest{
+		ObjectId: s.gateway.ObjectID(),
+		DynamicFieldName: models.DynamicFieldObjectName{
+			Type:  "vector<u8>",
+			Value: nameJSON,
+		},
+	})
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get message context dynamic field object")
+	}
+
+	if response.Data == nil || response.Data.Content == nil {
+		return "", errors.New("dynamic field object data is nil")
+	}
+
+	messageContextID, err := sui.ParseDynamicFieldValueStr(*response.Data.Content)
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to parse message context ID")
+	}
+
+	return messageContextID, nil
 }

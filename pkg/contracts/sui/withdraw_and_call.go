@@ -14,6 +14,9 @@ const (
 	// FuncWithdrawImpl is the gateway function name withdraw_impl
 	FuncWithdrawImpl = "withdraw_impl"
 
+	// FuncIssueMessageContext is the gateway function name issue_message_context
+	FuncIssueMessageContext = "issue_message_context"
+
 	// FuncSetMessageContext is the gateway function name set_message_context
 	FuncSetMessageContext = "set_message_context"
 

@@ -74,7 +74,10 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package
-	whitelistCapID, withdrawCapID, messageContextID := r.suiDeployGateway()
+	whitelistCapID, withdrawCapID, adminCapID := r.suiDeployGateway()
+
+	// issue message context
+	messageContextID := r.issueMessageContext(deployerSigner, adminCapID)
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -182,20 +185,20 @@ func (r *E2ERunner) suiBuildExample() {
 }
 
 // suiDeployGateway deploys the SUI gateway package on Sui
-func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageContextID string) {
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, adminCapID string) {
 	const (
-		filterGatewayType        = "gateway::Gateway"
-		filterWithdrawCapType    = "gateway::WithdrawCap"
-		filterWhitelistCapType   = "gateway::WhitelistCap"
-		filterMessageContextType = "gateway::MessageContext"
-		filterUpgradeCapType     = "0x2::package::UpgradeCap"
+		filterGatewayType      = "gateway::Gateway"
+		filterWithdrawCapType  = "gateway::WithdrawCap"
+		filterWhitelistCapType = "gateway::WhitelistCap"
+		filterAdminCapType     = "gateway::AdminCap"
+		filterUpgradeCapType   = "0x2::package::UpgradeCap"
 	)
 
 	objectTypeFilters := []string{
 		filterGatewayType,
 		filterWhitelistCapType,
 		filterWithdrawCapType,
-		filterMessageContextType,
+		filterAdminCapType,
 		filterUpgradeCapType,
 	}
 	packageID, objectIDs := r.suiDeployPackage(
@@ -213,8 +216,8 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
 
-	messageContextID, ok = objectIDs[filterMessageContextType]
-	require.True(r, ok, "messageContext object not found")
+	adminCapID, ok = objectIDs[filterAdminCapType]
+	require.True(r, ok, "adminCap object not found")
 
 	r.SuiGatewayUpgradeCap, ok = objectIDs[filterUpgradeCapType]
 	require.True(r, ok, "upgradeCap object not found")
@@ -222,7 +225,7 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
-	return whitelistCapID, withdrawCapID, messageContextID
+	return whitelistCapID, withdrawCapID, adminCapID
 }
 
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
@@ -376,6 +379,35 @@ func (r *E2ERunner) suiDeployPackage(
 	}
 
 	return packageID, objectIDs
+}
+
+// issueMessageContext issues a message context object in the gateway package
+func (r *E2ERunner) issueMessageContext(signer *zetasui.SignerSecp256k1, adminCapID string) string {
+	const messageContextType = "gateway::MessageContext"
+
+	// issue message context
+	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
+		Signer:          signer.Address(),
+		PackageObjectId: r.SuiGateway.PackageID(),
+		Module:          zetasui.GatewayModule,
+		Function:        zetasui.FuncIssueMessageContext,
+		TypeArguments:   []any{},
+		Arguments:       []any{r.SuiGateway.ObjectID(), adminCapID},
+		GasBudget:       "5000000000",
+	})
+	require.NoError(r, err)
+	resp := r.suiExecuteTx(signer, tx)
+
+	// find MessageContext object
+	var messageContextID string
+	for _, change := range resp.ObjectChanges {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, messageContextType) {
+			messageContextID = change.ObjectId
+		}
+	}
+	require.NotEmpty(r, messageContextID, "MessageContext object not found")
+
+	return messageContextID
 }
 
 // whitelistSuiFakeUSDC deploys the FakeUSDC zrc20 on ZetaChain and whitelist it

@@ -445,13 +445,16 @@ func (r *E2ERunner) suiExecuteTx(
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
-		Options:     models.SuiTransactionBlockOptions{ShowEffects: true},
+		TxBytes:   tx.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:       true,
+			ShowObjectChanges: true,
+		},
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
-	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess)
+	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess, "tx failed: %s", resp.Effects.Status.Error)
 
 	return resp
 }
