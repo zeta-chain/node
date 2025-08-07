@@ -136,7 +136,7 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainGas(
 	refundAddress ethcommon.Address,
 ) error {
 	// refund in gas token to refund address
-	// Refund the the amount was previously
+	// Refund the amount that was previously aborted
 	refundAmount := GetAbortedAmount(cctx)
 	if refundAmount.IsNil() || refundAmount.IsZero() {
 		return errors.New("no amount to refund")

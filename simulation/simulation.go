@@ -25,7 +25,6 @@ func NewSimApp(
 	appOptions servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*zetaapp.App, error) {
-	// TODO evm: check 0.3 version if this can be simplified
 	configurator := evmtypes.NewEVMConfigurator()
 	configurator.ResetTestConfig()
 	err := configurator.

@@ -37,7 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/evm/indexer"
-	ethdebug "github.com/cosmos/evm/rpc/namespaces/ethereum/debug"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
 	srvflags "github.com/cosmos/evm/server/flags"
 	cosmosevmtypes "github.com/cosmos/evm/types"
@@ -46,6 +45,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	ethdebug "github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 )
 
 // DBOpener is a function to open `application.db`, potentially with customized options.
