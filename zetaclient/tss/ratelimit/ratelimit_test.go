@@ -37,24 +37,13 @@ func TestRateLimiter(t *testing.T) {
 	require.Equal(t, uint64(0), r.Pending())
 }
 
-// TestVulnerabilityDemonstration shows the race condition vulnerability
-func TestVulnerabilityDemonstration(t *testing.T) {
-	// This test demonstrates the race condition vulnerability
-	// Original vulnerable code from commit 101cbe96:
-	//
-	// func (r *RateLimiter) Release() {
-	//     if r.pending.Load() == 0 {
-	//         return
-	//     }
-	//     r.sem.Release(1)
-	//     r.pending.Add(-1)
-	// }
-	//
-	// The race condition: if multiple goroutines call Release() simultaneously,
-	// they can all pass the `if r.pending.Load() == 0` check, then all call
-	// `r.sem.Release(1)`, releasing more permits than were acquired.
+// TestRateLimiterRobustness tests that the rate limiter handles edge cases robustly
+func TestRateLimiterRobustness(t *testing.T) {
+	// This test verifies that the rate limiter handles edge cases correctly
+	// The implementation ensures proper ordering of operations and handles
+	// potential edge cases gracefully.
 
-	t.Run("Current Implementation Handles Edge Cases", func(t *testing.T) {
+	t.Run("Handles Edge Cases Correctly", func(t *testing.T) {
 		r := New(5)
 
 		// Acquire 1 permit
