@@ -63,12 +63,12 @@ func (r *RateLimiter) Acquire(chainID, nonce uint64) error {
 
 func (r *RateLimiter) Release() {
 	// noop
-	if r.pending.Load() == 0 {
+	if r.pending.Load() <= 0 {
 		return
 	}
 
-	r.sem.Release(1)
 	r.pending.Add(-1)
+	r.sem.Release(1)
 }
 
 // Pending returns the number of pending signatures.
