@@ -7,8 +7,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"

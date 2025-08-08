@@ -1,26 +1,29 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package pubsub
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/pkg/errors"
+)
+
+type Option func(bus *memEventBus)
+
+func WithMaxSubscribers(n int) Option {
+	return func(bus *memEventBus) {
+		bus.maxTotalSubscribers = n
+	}
+}
+
+const (
+	DefaultMaxSubscribers = 500_000
+)
+
+var (
+	ErrTooManySubscribers = errors.New("too many subscribers")
+	ErrTopicNotFound      = errors.New("topic not found")
 )
 
 type UnsubscribeFunc func()
@@ -38,15 +41,23 @@ type memEventBus struct {
 	subscribers     map[string]map[uint64]chan<- coretypes.ResultEvent
 	subscribersMux  *sync.RWMutex
 	currentUniqueID uint64
+
+	maxTotalSubscribers int
+	totalSubscribers    atomic.Int64
 }
 
-func NewEventBus() EventBus {
-	return &memEventBus{
-		topics:         make(map[string]<-chan coretypes.ResultEvent),
-		topicsMux:      new(sync.RWMutex),
-		subscribers:    make(map[string]map[uint64]chan<- coretypes.ResultEvent),
-		subscribersMux: new(sync.RWMutex),
+func NewEventBus(opts ...Option) EventBus {
+	bus := &memEventBus{
+		topics:              make(map[string]<-chan coretypes.ResultEvent),
+		topicsMux:           new(sync.RWMutex),
+		subscribers:         make(map[string]map[uint64]chan<- coretypes.ResultEvent),
+		subscribersMux:      new(sync.RWMutex),
+		maxTotalSubscribers: DefaultMaxSubscribers,
 	}
+	for _, opt := range opts {
+		opt(bus)
+	}
+	return bus
 }
 
 func (m *memEventBus) GenUniqueID() uint64 {
@@ -95,23 +106,32 @@ func (m *memEventBus) Subscribe(name string) (<-chan coretypes.ResultEvent, Unsu
 	m.topicsMux.RUnlock()
 
 	if !ok {
-		return nil, nil, errors.Errorf("topic not found: %s", name)
+		return nil, nil, errors.Wrapf(ErrTopicNotFound, name)
 	}
 
 	ch := make(chan coretypes.ResultEvent)
 	m.subscribersMux.Lock()
 	defer m.subscribersMux.Unlock()
 
+	if m.maxTotalSubscribers > 0 && m.totalSubscribers.Load() >= int64(m.maxTotalSubscribers) {
+		return nil, nil, errors.Wrap(ErrTooManySubscribers, fmt.Sprintf("%d", m.maxTotalSubscribers))
+	}
+
 	id := m.GenUniqueID()
 	if _, ok := m.subscribers[name]; !ok {
 		m.subscribers[name] = make(map[uint64]chan<- coretypes.ResultEvent)
 	}
 	m.subscribers[name][id] = ch
+	m.totalSubscribers.Add(1)
 
 	unsubscribe := func() {
 		m.subscribersMux.Lock()
 		defer m.subscribersMux.Unlock()
-		delete(m.subscribers[name], id)
+		if _, ok := m.subscribers[name][id]; ok {
+			close(m.subscribers[name][id])
+			delete(m.subscribers[name], id)
+			m.totalSubscribers.Add(-1)
+		}
 	}
 
 	return ch, unsubscribe, nil
@@ -135,20 +155,21 @@ func (m *memEventBus) closeAllSubscribers(name string) {
 	m.subscribersMux.Lock()
 	defer m.subscribersMux.Unlock()
 
-	subsribers := m.subscribers[name]
+	subscribers := m.subscribers[name]
 	delete(m.subscribers, name)
-
-	for _, sub := range subsribers {
+	m.totalSubscribers.Add(int64(-len(subscribers)))
+	// #nosec G705
+	for _, sub := range subscribers {
 		close(sub)
 	}
 }
 
 func (m *memEventBus) publishAllSubscribers(name string, msg coretypes.ResultEvent) {
 	m.subscribersMux.RLock()
-	subsribers := m.subscribers[name]
-	m.subscribersMux.RUnlock()
-
-	for _, sub := range subsribers {
+	defer m.subscribersMux.RUnlock()
+	subscribers := m.subscribers[name]
+	// #nosec G705
+	for _, sub := range subscribers {
 		select {
 		case sub <- msg:
 		default:

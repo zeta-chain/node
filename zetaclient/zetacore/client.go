@@ -10,10 +10,10 @@ import (
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/pkg/authz"
@@ -42,7 +42,7 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg etherminttypes.EncodingConfig
+	encodingCfg testutil.TestEncodingConfig
 	keys        keyinterfaces.ObserverKeys
 	chainID     string
 	chain       chains.Chain
@@ -113,7 +113,7 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	encodingCfg := app.MakeEncodingConfig()
+	encodingCfg := app.MakeEncodingConfig(uint64(zetaChain.ChainId)) //#nosec G115 won't exceed uint64
 	cosmosContext, err := buildCosmosClientContext(chainID, keys, zetacoreCfg, encodingCfg, constructOptions)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to build cosmos client context")
@@ -170,8 +170,8 @@ func createCometBFTClient(remote string, startWS bool) (cometbftrpc.Client, erro
 
 	// start websocket if needed
 	if startWS {
-		err = client.WSEvents.Start()
-		if err != nil {
+		if err = client.WSEvents.Start(); err != nil {
+			_ = client.Stop()
 			return nil, errors.Wrap(err, "failed to start cometbft websocket")
 		}
 	}
@@ -184,7 +184,7 @@ func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
 	config config.ZetacoreClientConfig,
-	encodingConfig etherminttypes.EncodingConfig,
+	encodingConfig testutil.TestEncodingConfig,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {

@@ -268,14 +268,16 @@ func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransa
 						map[string]any{
 							"TransferObjects": map[string]any{},
 						},
-						map[string]any{
-							"MoveCall": map[string]any{
-								"arguments": []any{},
-								"function":  FuncSetMessageContext,
-								"module":    GatewayModule,
-								"package":   packageID,
-							},
-						},
+						// TODO: https://github.com/zeta-chain/node/issues/4066
+						// add set_message_context command back after re-enabling authenticated call
+						// map[string]any{
+						// 	"MoveCall": map[string]any{
+						// 		"arguments": []any{},
+						// 		"function":  FuncSetMessageContext,
+						// 		"module":    GatewayModule,
+						// 		"package":   packageID,
+						// 	},
+						// },
 						map[string]any{
 							"MoveCall": map[string]any{
 								"arguments": []any{},
@@ -284,14 +286,16 @@ func createPTBResponse(txHash, packageID, amount, nonce string) models.SuiTransa
 								"package":   "target_package_id",
 							},
 						},
-						map[string]any{
-							"MoveCall": map[string]any{
-								"arguments": []any{},
-								"function":  FuncResetMessageContext,
-								"module":    GatewayModule,
-								"package":   packageID,
-							},
-						},
+						// TODO: https://github.com/zeta-chain/node/issues/4066
+						// add reset_message_context command back after re-enabling authenticated call
+						// map[string]any{
+						// 	"MoveCall": map[string]any{
+						// 		"arguments": []any{},
+						// 		"function":  FuncResetMessageContext,
+						// 		"module":    GatewayModule,
+						// 		"package":   packageID,
+						// 	},
+						// },
 					},
 				},
 			},

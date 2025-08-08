@@ -1,22 +1,7 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package config
 
-// DefaultConfigTemplate defines the configuration template for the EVM RPC configuration
-const DefaultConfigTemplate = `
+// DefaultEVMConfigTemplate defines the configuration template for the EVM RPC configuration.
+const DefaultEVMConfigTemplate = `
 ###############################################################################
 ###                             EVM Configuration                           ###
 ###############################################################################
@@ -31,13 +16,19 @@ tracer = "{{ .EVM.Tracer }}"
 # MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
 max-tx-gas-wanted = {{ .EVM.MaxTxGasWanted }}
 
+# EnablePreimageRecording enables tracking of SHA3 preimages in the VM
+cache-preimage = {{ .EVM.EnablePreimageRecording }}
+
+# EVMChainID is the EIP-155 compatible replay protection chain ID. This is separate from the Cosmos chain ID.
+evm-chain-id = {{ .EVM.EVMChainID }}
+
 ###############################################################################
 ###                           JSON RPC Configuration                        ###
 ###############################################################################
 
 [json-rpc]
 
-# Enable defines if the gRPC server should be enabled.
+# Enable defines if the JSONRPC server should be enabled.
 enable = {{ .JSONRPC.Enable }}
 
 # Address defines the EVM RPC HTTP server address to bind to.
@@ -52,6 +43,9 @@ api = "{{range $index, $elmt := .JSONRPC.API}}{{if $index}},{{$elmt}}{{else}}{{$
 
 # GasCap sets a cap on gas that can be used in eth_call/estimateGas (0=infinite). Default: 25,000,000.
 gas-cap = {{ .JSONRPC.GasCap }}
+
+# Allow insecure account unlocking when account-related RPCs are exposed by http
+allow-insecure-unlock = {{ .JSONRPC.AllowInsecureUnlock }}
 
 # EVMTimeout is the global timeout for eth_call. Default: 5s.
 evm-timeout = "{{ .JSONRPC.EVMTimeout }}"

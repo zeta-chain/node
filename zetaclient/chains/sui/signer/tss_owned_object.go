@@ -70,35 +70,37 @@ func (s *Signer) getWithdrawCapID(ctx context.Context) (string, error) {
 	return objectID, nil
 }
 
+// TODO: https://github.com/zeta-chain/node/issues/4066
+// uncomment below helper functions used for authenticated call
 // getMessageContextIDCached getMessageContextID with tssOwnedObjectTTL cache.
-func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) {
-	if s.messageContext.valid() {
-		return s.messageContext.objectID, nil
-	}
+// func (s *Signer) getMessageContextIDCached(ctx context.Context) (string, error) {
+// 	if s.messageContext.valid() {
+// 		return s.messageContext.objectID, nil
+// 	}
 
-	s.Logger().Std.Info().Msg("MessageContext cache expired, fetching new objectID")
+// 	s.Logger().Std.Info().Msg("MessageContext cache expired, fetching new objectID")
 
-	objectID, err := s.getMessageContextID(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get message context ID")
-	}
+// 	objectID, err := s.getMessageContextID(ctx)
+// 	if err != nil {
+// 		return "", errors.Wrap(err, "unable to get message context ID")
+// 	}
 
-	s.messageContext.set(objectID)
+// 	s.messageContext.set(objectID)
 
-	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("MessageContext objectID fetched")
+// 	s.Logger().Std.Info().Str("sui.object_id", objectID).Msg("MessageContext objectID fetched")
 
-	return objectID, nil
-}
+// 	return objectID, nil
+// }
 
 // getMessageContextID returns the objectID of the MessageContext. Should belong to TSS address on Sui.
-func (s *Signer) getMessageContextID(ctx context.Context) (string, error) {
-	owner := s.TSS().PubKey().AddressSui()
-	structType := s.gateway.MessageContextType()
+// func (s *Signer) getMessageContextID(ctx context.Context) (string, error) {
+// 	owner := s.TSS().PubKey().AddressSui()
+// 	structType := s.gateway.MessageContextType()
 
-	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get owned object ID")
-	}
+// 	objectID, err := s.client.GetOwnedObjectID(ctx, owner, structType)
+// 	if err != nil {
+// 		return "", errors.Wrap(err, "unable to get owned object ID")
+// 	}
 
-	return objectID, nil
-}
+// 	return objectID, nil
+// }

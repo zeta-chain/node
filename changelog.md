@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## UNRELEASED
+## v33.0.0
 
 ### Features
 
@@ -9,6 +9,8 @@
 * [3990](https://github.com/zeta-chain/node/pull/3990) - add support for deposits using the new v2 connector contract
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
+* [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
+* [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
 * [4068](https://github.com/zeta-chain/node/pull/4068) - add support for hostname in addition to public IP for zetaclient to connect to zetacore
 
 ### Fixes
@@ -22,13 +24,15 @@
 * [3964](https://github.com/zeta-chain/node/pull/3964) - use the inscription initiator address as Bitcoin inbound sender address
 * [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
+* [4067](https://github.com/zeta-chain/node/pull/4067) - disable sui authenticated call temporarily until gateway upgrade
 
 ### Refactor
 
 * [3940](https://github.com/zeta-chain/node/pull/3940) - avoid pre-signing solana outbound by waiting for the exact PDA nonce to arrive
 * [4033](https://github.com/zeta-chain/node/pull/4033) - improve error handling logic when decoding Bitcoin inscribed memo standard
 * [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
-* [4060] (https://github.com/zeta-chain/node/pull/4060) - cleanup forked mempool code
+* [4054](https://github.com/zeta-chain/node/pull/4054) - refactor deposit logic to prevent minting surplus zeta
+* [4060](https://github.com/zeta-chain/node/pull/4060) - cleanup forked mempool code
 
 ### Tests
 

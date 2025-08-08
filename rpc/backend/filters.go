@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
@@ -30,13 +15,13 @@ func (b *Backend) GetLogs(hash common.Hash) ([][]*ethtypes.Log, error) {
 	if resBlock == nil {
 		return nil, errors.Errorf("block not found for hash %s", hash)
 	}
-	return b.GetLogsByHeight(&resBlock.Block.Header.Height)
+	return b.GetLogsByHeight(&resBlock.Block.Height)
 }
 
 // GetLogsByHeight returns all the logs from all the ethereum transactions in a block.
 func (b *Backend) GetLogsByHeight(height *int64) ([][]*ethtypes.Log, error) {
 	// NOTE: we query the state in case the tx result logs are not persisted after an upgrade.
-	blockRes, err := b.TendermintBlockResultByNumber(height)
+	blockRes, err := b.RPCClient.BlockResults(b.Ctx, height)
 	if err != nil {
 		return nil, err
 	}

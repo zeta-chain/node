@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
@@ -20,18 +5,17 @@ import (
 	"net/http"
 	"time"
 
-	tmlog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/evm/server/config"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/netutil"
-
-	"github.com/zeta-chain/node/server/config"
 )
 
 // AddCommands adds server commands
@@ -41,18 +25,20 @@ func AddCommands(
 	appExport types.AppExporter,
 	addStartFlags types.ModuleInitFlags,
 ) {
-	tendermintCmd := &cobra.Command{
-		Use:   "tendermint",
-		Short: "Tendermint subcommands",
+	cometbftCmd := &cobra.Command{
+		Use:     "comet",
+		Aliases: []string{"cometbft", "tendermint"},
+		Short:   "CometBFT subcommands",
 	}
 
-	tendermintCmd.AddCommand(
+	cometbftCmd.AddCommand(
 		sdkserver.ShowNodeIDCmd(),
 		sdkserver.ShowValidatorCmd(),
 		sdkserver.ShowAddressCmd(),
 		sdkserver.VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
+		sdkserver.BootstrapStateCmd(opts.AppCreator),
 	)
 
 	startCmd := StartCmd(opts)
@@ -60,7 +46,7 @@ func AddCommands(
 
 	rootCmd.AddCommand(
 		startCmd,
-		tendermintCmd,
+		cometbftCmd,
 		sdkserver.ExportCmd(appExport, opts.DefaultNodeHome),
 		version.NewVersionCommand(),
 		sdkserver.NewRollbackCmd(opts.AppCreator, opts.DefaultNodeHome),
@@ -70,7 +56,12 @@ func AddCommands(
 	)
 }
 
-func ConnectTmWS(tmRPCAddr, tmEndpoint string, logger tmlog.Logger) *rpcclient.WSClient {
+// ConnectTmWS connects to a Tendermint WebSocket (WS) server.
+// Parameters:
+// - tmRPCAddr: The RPC address of the Tendermint server.
+// - tmEndpoint: The WebSocket endpoint on the Tendermint server.
+// - logger: A logger instance used to log debug and error messages.
+func ConnectTmWS(tmRPCAddr, tmEndpoint string, logger log.Logger) *rpcclient.WSClient {
 	tmWsClient, err := rpcclient.NewWS(tmRPCAddr, tmEndpoint,
 		rpcclient.MaxReconnectAttempts(256),
 		rpcclient.ReadWait(120*time.Second),
@@ -98,11 +89,17 @@ func ConnectTmWS(tmRPCAddr, tmEndpoint string, logger tmlog.Logger) *rpcclient.W
 	return tmWsClient
 }
 
+// MountGRPCWebServices mounts gRPC-Web services on specific HTTP POST routes.
+// Parameters:
+// - router: The HTTP router instance to mount the routes on (using mux.Router).
+// - grpcWeb: The wrapped gRPC-Web server that will handle incoming gRPC-Web and WebSocket requests.
+// - grpcResources: A list of resource endpoints (URLs) that should be mounted for gRPC-Web POST requests.
+// - logger: A logger instance used to log information about the mounted resources.
 func MountGRPCWebServices(
 	router *mux.Router,
 	grpcWeb *grpcweb.WrappedGrpcServer,
 	grpcResources []string,
-	logger tmlog.Logger,
+	logger log.Logger,
 ) {
 	for _, res := range grpcResources {
 		logger.Info("[GRPC Web] HTTP POST mounted", "resource", res)
@@ -135,5 +132,5 @@ func Listen(addr string, config *config.Config) (net.Listener, error) {
 	if config.JSONRPC.MaxOpenConnections > 0 {
 		ln = netutil.LimitListener(ln, config.JSONRPC.MaxOpenConnections)
 	}
-	return ln, nil
+	return ln, err
 }

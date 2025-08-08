@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 
@@ -125,7 +127,7 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 
 			// process test
 			h := k.EVMHooks()
-			err := h.PostTxProcessing(ctx, nil, tc.receipt)
+			err := h.PostTxProcessing(ctx, common.Address{}, core.Message{}, tc.receipt)
 			if tc.wantErr {
 				require.ErrorIs(t, err, types.ErrPausedZRC20)
 			} else {
