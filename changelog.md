@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## UNRELEASED
+## v33.0.0
 
 ### Features
 
