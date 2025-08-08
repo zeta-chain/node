@@ -375,8 +375,15 @@ func (ts *testSuite) MockWithdrawCapID(id string) {
 }
 
 func (ts *testSuite) MockMessageContextID(id string) {
-	tss, structType := ts.TSS.PubKey().AddressSui(), ts.Gateway.MessageContextType()
-	ts.SuiMock.On("GetOwnedObjectID", mock.Anything, tss, structType).Return(id, nil)
+	ts.SuiMock.On("SuiXGetDynamicFieldObject", mock.Anything, mock.Anything).Return(models.SuiObjectResponse{
+		Data: &models.SuiObjectData{
+			Content: &models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"value": id},
+				},
+			},
+		},
+	}, nil)
 }
 
 func (ts *testSuite) MockMoveCall(assert func(req models.MoveCallRequest), txBytesBase64 string) {
