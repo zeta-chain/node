@@ -327,7 +327,7 @@ func (r *E2ERunner) SendWithdrawTONZRC20(
 		revertOptions,
 	)
 	require.NoError(r, err)
-	r.Logger.EVMTransaction(*tx, "zevm ton withdraw")
+	r.Logger.EVMTransaction(tx, "zevm ton withdraw")
 
 	// wait for tx receipt
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

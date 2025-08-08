@@ -81,7 +81,6 @@ type AdditionalAccounts struct {
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
 	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
-	UserPrecompile        Account `yaml:"user_precompile"`
 	UserEther             Account `yaml:"user_ether"`
 	UserERC20             Account `yaml:"user_erc20"`
 	UserEtherRevert       Account `yaml:"user_ether_revert"`
@@ -293,7 +292,6 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
-		a.UserPrecompile,
 		a.UserEther,
 		a.UserERC20,
 		a.UserEtherRevert,
@@ -405,10 +403,6 @@ func (c *Config) GenerateKeys() error {
 		return err
 	}
 	c.AdditionalAccounts.UserMigration, err = generateAccount()
-	if err != nil {
-		return err
-	}
-	c.AdditionalAccounts.UserPrecompile, err = generateAccount()
 	if err != nil {
 		return err
 	}

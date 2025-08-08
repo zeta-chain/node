@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -57,16 +56,6 @@ func randomPayloadBytes(r *runner.E2ERunner) []byte {
 	require.NoError(r, err)
 
 	return bytes
-}
-
-// bigAdd is shorthand for new(big.Int).Add(x, y)
-func bigAdd(x *big.Int, y *big.Int) *big.Int {
-	return new(big.Int).Add(x, y)
-}
-
-// bigSub is shorthand for new(big.Int).Sub(x, y)
-func bigSub(x *big.Int, y *big.Int) *big.Int {
-	return new(big.Int).Sub(x, y)
 }
 
 func formatDuration(d time.Duration) string {

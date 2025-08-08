@@ -1,38 +1,25 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package eth
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/log"
+	"github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethmath "github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
 	"github.com/zeta-chain/node/rpc/backend"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
-// The Ethereum API allows applications to connect to an Evmos node that is
-// part of the Evmos blockchain. Developers can interact with on-chain EVM data
+// The Ethereum API allows applications to connect to an node of any Cosmos EVM based blockchain.
+// Developers can interact with on-chain EVM data
 // and send different types of transactions to the network by utilizing the
 // endpoints provided by the API. The API follows a JSON-RPC standard. If not
 // otherwise specified, the interface is derived from the Alchemy Ethereum API:
@@ -66,6 +53,7 @@ type EthereumAPI interface {
 	// Allows developers to both send ETH from one address to another, write data
 	// on-chain, and interact with smart contracts.
 	SendRawTransaction(data hexutil.Bytes) (common.Hash, error)
+	SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error)
 	// eth_sendPrivateTransaction
 	// eth_cancel	PrivateTransaction
 
@@ -89,7 +77,7 @@ type EthereumAPI interface {
 	Call(
 		args evmtypes.TransactionArgs,
 		blockNrOrHash rpctypes.BlockNumberOrHash,
-		_ *rpctypes.StateOverride,
+		override *rpctypes.StateOverride,
 	) (hexutil.Bytes, error)
 
 	// Chain Information
@@ -99,7 +87,7 @@ type EthereumAPI interface {
 	GasPrice() (*hexutil.Big, error)
 	EstimateGas(args evmtypes.TransactionArgs, blockNrOptional *rpctypes.BlockNumber) (hexutil.Uint64, error)
 	FeeHistory(
-		blockCount ethmath.HexOrDecimal64,
+		blockCount math.HexOrDecimal64,
 		lastBlock rpc.BlockNumber,
 		rewardPercentiles []float64,
 	) (*rpctypes.FeeHistoryResult, error)
@@ -121,7 +109,9 @@ type EthereumAPI interface {
 	// Other
 	Syncing() (interface{}, error)
 	Coinbase() (string, error)
+	Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
 	GetTransactionLogs(txHash common.Hash) ([]*ethtypes.Log, error)
+	SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
 	FillTransaction(args evmtypes.TransactionArgs) (*rpctypes.SignTransactionResult, error)
 	Resend(
 		ctx context.Context,
@@ -138,18 +128,12 @@ type EthereumAPI interface {
 	// eth_getWork (on Ethereum.org)
 	// eth_submitWork (on Ethereum.org)
 	// eth_submitHashrate (on Ethereum.org)
-
-	// Disabled
-	//SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error)
-	//Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
-	//SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
 }
 
 var _ EthereumAPI = (*PublicAPI)(nil)
 
 // PublicAPI is the eth_ prefixed set of APIs in the Web3 JSON-RPC spec.
 type PublicAPI struct {
-	ctx     context.Context
 	logger  log.Logger
 	backend backend.EVMBackend
 }
@@ -157,7 +141,6 @@ type PublicAPI struct {
 // NewPublicAPI creates an instance of the public ETH Web3 API.
 func NewPublicAPI(logger log.Logger, backend backend.EVMBackend) *PublicAPI {
 	api := &PublicAPI{
-		ctx:     context.Background(),
 		logger:  logger.With("client", "json-rpc"),
 		backend: backend,
 	}
@@ -186,6 +169,13 @@ func (e *PublicAPI) GetBlockByHash(hash common.Hash, fullTx bool) (map[string]in
 	e.logger.Debug("eth_getBlockByHash", "hash", hash.Hex(), "full", fullTx)
 	return e.backend.GetBlockByHash(hash, fullTx)
 }
+
+// TODO https://github.com/zeta-chain/node/issues/4079
+// GetBlockReceipts returns the block receipts for the given block hash or number or tag.
+// func (e *PublicAPI) GetBlockReceipts(ctx context.Context, blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) {
+// 	e.logger.Debug("eth_getBlockReceipts", "block number or hash", blockNrOrHash)
+// 	return e.backend.GetBlockReceipts(blockNrOrHash)
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Read Txs					                            ///
@@ -257,6 +247,12 @@ func (e *PublicAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, error) 
 	return e.backend.SendRawTransaction(data)
 }
 
+// SendTransaction sends an Ethereum transaction.
+func (e *PublicAPI) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
+	e.logger.Debug("eth_sendTransaction", "args", args.String())
+	return e.backend.SendTransaction(args)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///                           Account Information				                    ///
 ///////////////////////////////////////////////////////////////////////////////
@@ -305,9 +301,14 @@ func (e *PublicAPI) GetProof(address common.Address,
 // Call performs a raw contract call.
 func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
 	blockNrOrHash rpctypes.BlockNumberOrHash,
-	_ *rpctypes.StateOverride,
+	override *rpctypes.StateOverride,
 ) (hexutil.Bytes, error) {
 	e.logger.Debug("eth_call", "args", args.String(), "block number or hash", blockNrOrHash)
+
+	if override != nil {
+		e.logger.Debug("eth_call", "error", "overrides are unsupported in call queries")
+		return nil, fmt.Errorf("overrides are unsupported in call queries")
+	}
 
 	blockNum, err := e.backend.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
@@ -333,10 +334,10 @@ func (e *PublicAPI) Call(args evmtypes.TransactionArgs,
 // ProtocolVersion returns the supported Ethereum protocol version.
 func (e *PublicAPI) ProtocolVersion() hexutil.Uint {
 	e.logger.Debug("eth_protocolVersion")
-	return hexutil.Uint(ethermint.ProtocolVersion)
+	return hexutil.Uint(types.ProtocolVersion)
 }
 
-// GasPrice returns the current gas price based on Ethermint's gas price oracle.
+// GasPrice returns the current gas price based on Cosmos EVM's gas price oracle.
 func (e *PublicAPI) GasPrice() (*hexutil.Big, error) {
 	e.logger.Debug("eth_gasPrice")
 	return e.backend.GasPrice()
@@ -351,7 +352,8 @@ func (e *PublicAPI) EstimateGas(
 	return e.backend.EstimateGas(args, blockNrOptional)
 }
 
-func (e *PublicAPI) FeeHistory(blockCount ethmath.HexOrDecimal64,
+func (e *PublicAPI) FeeHistory(
+	blockCount math.HexOrDecimal64,
 	lastBlock rpc.BlockNumber,
 	rewardPercentiles []float64,
 ) (*rpctypes.FeeHistoryResult, error) {
@@ -362,7 +364,10 @@ func (e *PublicAPI) FeeHistory(blockCount ethmath.HexOrDecimal64,
 // MaxPriorityFeePerGas returns a suggestion for a gas tip cap for dynamic fee transactions.
 func (e *PublicAPI) MaxPriorityFeePerGas() (*hexutil.Big, error) {
 	e.logger.Debug("eth_maxPriorityFeePerGas")
-	head := e.backend.CurrentHeader()
+	head, err := e.backend.CurrentHeader()
+	if err != nil {
+		return nil, err
+	}
 	tipcap, err := e.backend.SuggestGasTipCap(head.BaseFee)
 	if err != nil {
 		return nil, err
@@ -444,31 +449,23 @@ func (e *PublicAPI) Coinbase() (string, error) {
 	return ethAddr.Hex(), nil
 }
 
+// Sign signs the provided data using the private key of address via Geth's signature standard.
+func (e *PublicAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
+	e.logger.Debug("eth_sign", "address", address.Hex(), "data", common.Bytes2Hex(data))
+	return e.backend.Sign(address, data)
+}
+
 // GetTransactionLogs returns the logs given a transaction hash.
 func (e *PublicAPI) GetTransactionLogs(txHash common.Hash) ([]*ethtypes.Log, error) {
 	e.logger.Debug("eth_getTransactionLogs", "hash", txHash)
 
-	hexTx := txHash.Hex()
-	res, _, err := e.backend.GetTxByEthHash(txHash)
-	if err != nil {
-		e.logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
-		return nil, nil
-	}
+	return e.backend.GetTransactionLogs(txHash)
+}
 
-	if res.Failed {
-		// failed, return empty logs
-		return nil, nil
-	}
-
-	resBlockResult, err := e.backend.TendermintBlockResultByNumber(&res.Height)
-	if err != nil {
-		e.logger.Debug("block result not found", "number", res.Height, "error", err.Error())
-		return nil, nil
-	}
-
-	// parse tx logs from events
-	// #nosec G115 always in range
-	return backend.TxLogsFromEvents(resBlockResult.TxsResults[res.TxIndex].Events, int(res.MsgIndex))
+// SignTypedData signs EIP-712 conformant typed data
+func (e *PublicAPI) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
+	e.logger.Debug("eth_signTypedData", "address", address.Hex(), "data", typedData)
+	return e.backend.SignTypedData(address, typedData)
 }
 
 // FillTransaction fills the defaults (nonce, gas, gasPrice or 1559 fields)
@@ -516,6 +513,13 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 		return nil, err
 	}
 
+	chainIDHex, err := e.backend.ChainID()
+	if err != nil {
+		return nil, err
+	}
+
+	chainID := chainIDHex.ToInt()
+
 	result := make([]*rpctypes.RPCTransaction, 0, len(txs))
 	for _, tx := range txs {
 		for _, msg := range (*tx).GetMsgs() {
@@ -531,7 +535,7 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 				uint64(0),
 				uint64(0),
 				nil,
-				e.backend.ChainConfig().ChainID,
+				chainID,
 				nil,
 			)
 			if err != nil {
@@ -544,23 +548,3 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 
 	return result, nil
 }
-
-// Disabled
-
-//// SendTransaction sends an Ethereum transaction.
-//func (e *PublicAPI) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
-//	e.logger.Debug("eth_sendTransaction", "args", args.String())
-//	return e.backend.SendTransaction(args)
-//}
-//
-//// Sign signs the provided data using the private key of address via Geth's signature standard.
-//func (e *PublicAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
-//	e.logger.Debug("eth_sign", "address", address.Hex(), "data", common.Bytes2Hex(data))
-//	return e.backend.Sign(address, data)
-//}
-//
-//// SignTypedData signs EIP-712 conformant typed data
-//func (e *PublicAPI) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
-//	e.logger.Debug("eth_signTypedData", "address", address.Hex(), "data", typedData)
-//	return e.backend.SignTypedData(address, typedData)
-//}

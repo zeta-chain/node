@@ -174,6 +174,8 @@ const (
 	*/
 	TestDonationEtherName   = "donation_ether"
 	TestInboundTrackersName = "inbound_trackers"
+	TestPrecompilesName     = "precompiles"
+	TestOpcodesName         = "opcodes"
 
 	/*
 	 Stress tests
@@ -234,20 +236,6 @@ const (
 	TestOperationAddLiquidityTONName              = "add_liquidity_ton"
 
 	/*
-	 Stateful precompiled contracts tests
-	*/
-	TestPrecompilesPrototypeName                 = "precompile_contracts_prototype"
-	TestPrecompilesPrototypeThroughContractName  = "precompile_contracts_prototype_through_contract"
-	TestPrecompilesStakingName                   = "precompile_contracts_staking"
-	TestPrecompilesStakingThroughContractName    = "precompile_contracts_staking_through_contract"
-	TestPrecompilesBankName                      = "precompile_contracts_bank"
-	TestPrecompilesBankFailName                  = "precompile_contracts_bank_fail"
-	TestPrecompilesBankThroughContractName       = "precompile_contracts_bank_through_contract"
-	TestPrecompilesDistributeName                = "precompile_contracts_distribute"
-	TestPrecompilesDistributeNonZRC20Name        = "precompile_contracts_distribute_non_zrc20"
-	TestPrecompilesDistributeThroughContractName = "precompile_contracts_distribute_through_contract"
-
-	/*
 	 Legacy tests (using v1 protocol contracts)
 	*/
 	TestLegacyMessagePassingExternalChainsName              = "legacy_message_passing_external_chains"
@@ -275,11 +263,12 @@ const (
 	 Note: It is still the only way to transfer ZETA across chains. Work to integrate ZETA transfers as part of the gateway is in progress
 	 These tests are marked as legacy because there is no longer active development on ZETA transfers, and we stopped integrating ZETA support on new mainnet chains
 	*/
-	TestLegacyZetaDepositName           = "legacy_zeta_deposit"
-	TestLegacyZetaDepositNewAddressName = "legacy_zeta_deposit_new_address"
-	TestLegacyZetaDepositRestrictedName = "legacy_zeta_deposit_restricted"
-	TestLegacyZetaWithdrawName          = "legacy_zeta_withdraw"
-	TestLegacyZetaWithdrawBTCRevertName = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestLegacyZetaDepositName             = "legacy_zeta_deposit"
+	TestLegacyZetaDepositAndCallAbortName = "legacy_zeta_deposit_and_call_abort"
+	TestLegacyZetaDepositNewAddressName   = "legacy_zeta_deposit_new_address"
+	TestLegacyZetaDepositRestrictedName   = "legacy_zeta_deposit_restricted"
+	TestLegacyZetaWithdrawName            = "legacy_zeta_withdraw"
+	TestLegacyZetaWithdrawBTCRevertName   = "legacy_zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 
 	TestZetaDepositName                      = "zeta_deposit"
 	TestZetaDepositAndCallName               = "zeta_deposit_and_call"
@@ -1409,6 +1398,20 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestInboundTrackers,
 	),
+	runner.NewE2ETest(
+		TestPrecompilesName,
+		"test precompiles on ZEVM",
+		[]runner.ArgDefinition{},
+		TestPrecompiles,
+		runner.WithMinimumVersion("v33.0.0"),
+	),
+	runner.NewE2ETest(
+
+		TestOpcodesName,
+		"test opcodes support in ZEVM",
+		[]runner.ArgDefinition{},
+		TestOpcodes,
+	),
 	/*
 	 Stress tests
 	*/
@@ -1696,70 +1699,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestOperationAddLiquidityTON,
 	),
 	/*
-	 Stateful precompiled contracts tests
-	*/
-	runner.NewE2ETest(
-		TestPrecompilesPrototypeName,
-		"test stateful precompiled contracts prototype",
-		[]runner.ArgDefinition{},
-		TestPrecompilesPrototype,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesPrototypeThroughContractName,
-		"test stateful precompiled contracts prototype through contract",
-		[]runner.ArgDefinition{},
-		TestPrecompilesPrototypeThroughContract,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesStakingName,
-		"test stateful precompiled contracts staking",
-		[]runner.ArgDefinition{},
-		TestPrecompilesStakingIsDisabled,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesStakingThroughContractName,
-		"test stateful precompiled contracts staking through contract",
-		[]runner.ArgDefinition{},
-		TestPrecompilesStakingThroughContract,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesBankName,
-		"test stateful precompiled contracts bank with ZRC20 tokens",
-		[]runner.ArgDefinition{},
-		TestPrecompilesBank,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesBankFailName,
-		"test stateful precompiled contracts bank with non ZRC20 tokens",
-		[]runner.ArgDefinition{},
-		TestPrecompilesBankNonZRC20,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesBankThroughContractName,
-		"test stateful precompiled contracts bank through contract",
-		[]runner.ArgDefinition{},
-		TestPrecompilesBankThroughContract,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesDistributeName,
-		"test stateful precompiled contracts distribute",
-		[]runner.ArgDefinition{},
-		TestPrecompilesDistributeAndClaim,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesDistributeNonZRC20Name,
-		"test stateful precompiled contracts distribute with non ZRC20 tokens",
-		[]runner.ArgDefinition{},
-		TestPrecompilesDistributeNonZRC20,
-	),
-	runner.NewE2ETest(
-		TestPrecompilesDistributeThroughContractName,
-		"test stateful precompiled contracts distribute through contract",
-		[]runner.ArgDefinition{},
-		TestPrecompilesDistributeAndClaimThroughContract,
-	),
-
-	/*
 	 Legacy tests
 	*/
 	runner.NewE2ETest(
@@ -1936,6 +1875,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
 		},
 		legacy.TestZetaDeposit,
+	),
+	runner.NewE2ETest(
+		TestLegacyZetaDepositAndCallAbortName,
+		"deposit and ZETA from Ethereum to ZEVM and call a contract.The cctx reverts and then aborts",
+		[]runner.ArgDefinition{
+			{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
+		legacy.TestZetaDepositAndCallAbort,
 	),
 	runner.NewE2ETest(
 		TestLegacyZetaDepositNewAddressName,

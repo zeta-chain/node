@@ -14,10 +14,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/evm/x/vm/statedb"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	fungiblemocks "github.com/zeta-chain/node/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -82,15 +82,12 @@ func FungibleKeeperWithMocks(
 	t testing.TB,
 	mockOptions FungibleMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	keys, memKeys, tkeys, allKeys := StoreKeys()
+	keys, memKeys, tkeys, _ := StoreKeys()
 
-	// Initialize local store
-	db := tmdb.NewMemDB()
-	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cdc := NewCodec()
 
 	// Create regular keepers
-	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys, allKeys)
+	sdkKeepers := NewSDKKeepersWithKeys(cdc, keys, memKeys, tkeys)
 
 	// Create authority keeper
 	authorityKeeperTmp := authoritykeeper.NewKeeper(
@@ -130,6 +127,9 @@ func FungibleKeeperWithMocks(
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 
+	// Initialize local store
+	db := tmdb.NewMemDB()
+	stateStore := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	// Create the fungible keeper
 	for _, key := range keys {
 		stateStore.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
@@ -283,12 +283,14 @@ func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimesWithReturn(ret *evmtypes.
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
+		mock.Anything,
 	).Return(ret, nil).Times(times)
 }
 
 func (m *FungibleMockEVMKeeper) MockEVMFailCallOnce() {
 	m.On(
 		"ApplyMessage",
+		mock.Anything,
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,

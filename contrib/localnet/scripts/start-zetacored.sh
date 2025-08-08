@@ -233,6 +233,11 @@ then
   fi
 
   # Update governance and other chain parameters for localnet
+  # Note: It should contains the precompile list as well in params using the following line:
+  # .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000100","0x0000000000000000000000000000000000000400","0x0000000000000000000000000000000000000800","0x0000000000000000000000000000000000000801","0x0000000000000000000000000000000000000802","0x0000000000000000000000000000000000000803","0x0000000000000000000000000000000000000804","0x0000000000000000000000000000000000000805"] |
+  # Currently adding this fails as the param is not recognized by <v33
+  # For simplicity it has been removed, but it should be added back once mainnet upgraded to v33 and we want to implement automated tests for precompiles
+  # https://github.com/zeta-chain/node/issues/4081
   jq '
     .app_state.gov.params.voting_period="30s" |
     .app_state.gov.params.quorum="0.1" |

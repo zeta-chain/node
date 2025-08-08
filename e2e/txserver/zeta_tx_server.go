@@ -34,13 +34,13 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/evm/crypto/hd"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	"github.com/samber/lo"
-	"github.com/zeta-chain/ethermint/crypto/hd"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -111,8 +111,13 @@ func NewZetaTxServer(rpcAddr string, names []string, privateKeys []string, chain
 		return nil, fmt.Errorf("failed to query rpc: %s", err.Error())
 	}
 
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		return nil, err
+	}
+
 	// initialize codec
-	cdc, reg := newCodec()
+	cdc, reg := newCodec(uint64(zetachain.ChainId)) //#nosec G115 chain id won't exceed uint64
 
 	// initialize keyring
 	kr := keyring.NewInMemory(cdc, hd.EthSecp256k1Option())
@@ -729,8 +734,8 @@ func (zts *ZetaTxServer) fetchMessagePermissions(msg sdktypes.Msg) (authoritytyp
 }
 
 // newCodec returns the codec for msg server
-func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
-	encodingConfig := app.MakeEncodingConfig()
+func newCodec(evmChainID uint64) (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
+	encodingConfig := app.MakeEncodingConfig(evmChainID)
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -746,7 +751,7 @@ func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	evidencetypes.RegisterInterfaces(interfaceRegistry)
 	crisistypes.RegisterInterfaces(interfaceRegistry)
 	evmtypes.RegisterInterfaces(interfaceRegistry)
-	etherminttypes.RegisterInterfaces(interfaceRegistry)
+	cosmosevmtypes.RegisterInterfaces(interfaceRegistry)
 	crosschaintypes.RegisterInterfaces(interfaceRegistry)
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)

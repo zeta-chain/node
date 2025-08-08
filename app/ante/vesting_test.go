@@ -13,11 +13,12 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	serverconfig "github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
 func TestVesting_AnteHandle(t *testing.T) {
-	txConfig := app.MakeEncodingConfig().TxConfig
+	txConfig := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID).TxConfig
 
 	testPrivKey, testAddress := sample.PrivKeyAddressPair()
 	_, testAddress2 := sample.PrivKeyAddressPair()

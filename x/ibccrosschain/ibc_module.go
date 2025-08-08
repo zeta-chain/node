@@ -2,10 +2,9 @@ package ibccrosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/zeta-chain/node/x/ibccrosschain/keeper"
 )
@@ -35,7 +34,6 @@ func (im IBCModule) OnChanOpenInit(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
@@ -45,7 +43,6 @@ func (im IBCModule) OnChanOpenInit(
 	_ = connectionHops
 	_ = portID
 	_ = channelID
-	_ = chanCap
 	_ = counterparty
 
 	return version, nil
@@ -60,7 +57,6 @@ func (im IBCModule) OnChanOpenTry(
 	connectionHops []string,
 	portID,
 	channelID string,
-	chanCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
@@ -70,7 +66,6 @@ func (im IBCModule) OnChanOpenTry(
 	_ = connectionHops
 	_ = portID
 	_ = channelID
-	_ = chanCap
 	_ = counterparty
 	_ = counterpartyVersion
 
@@ -152,11 +147,13 @@ func (im IBCModule) OnChanCloseConfirm(
 // https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 	// Set variable to blank to remove lint error so we can keep variable name for future use
 	_ = ctx
+	_ = channelVersion
 	_ = packet
 	_ = relayer
 
@@ -168,12 +165,14 @@ func (im IBCModule) OnRecvPacket(
 // https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
 	// Set variable to blank to remove lint error so we can keep variable name for future use
 	_ = ctx
+	_ = channelVersion
 	_ = packet
 	_ = acknowledgement
 	_ = relayer
@@ -186,11 +185,13 @@ func (im IBCModule) OnAcknowledgementPacket(
 // https://github.com/zeta-chain/node/issues/2163
 func (im IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,
+	channelVersion string,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
 	// Set variable to blank to remove lint error so we can keep variable name for future use
 	_ = ctx
+	_ = channelVersion
 	_ = packet
 	_ = relayer
 

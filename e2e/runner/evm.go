@@ -301,7 +301,7 @@ func logDepositInfoAndWaitForTxReceipt(
 	tx *ethtypes.Transaction,
 	name string,
 ) {
-	r.Logger.EVMTransaction(*tx, name)
+	r.Logger.EVMTransaction(tx, name)
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.requireTxSuccessful(receipt, name+" failed")

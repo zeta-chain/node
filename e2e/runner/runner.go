@@ -61,7 +61,8 @@ type E2ERunnerOption func(*E2ERunner)
 const (
 	EnvKeyLocalnetMode = "LOCALNET_MODE"
 
-	LocalnetModeUpgrade = "upgrade"
+	LocalnetModeUpgrade      = "upgrade"
+	LocalNetModeTSSMigration = "tss-migration"
 
 	// NodeSyncTolerance is the time tolerance for the ZetaChain nodes behind a RPC to be synced
 	NodeSyncTolerance = constant.ZetaBlockTime * 5
@@ -493,6 +494,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 // IsRunningUpgrade returns true if the test is running an upgrade test suite.
 func (r *E2ERunner) IsRunningUpgrade() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningTssMigration() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade ||
+		os.Getenv(EnvKeyLocalnetMode) == LocalNetModeTSSMigration
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf

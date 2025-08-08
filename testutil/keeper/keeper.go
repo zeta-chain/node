@@ -33,23 +33,25 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
+	erc20types "github.com/cosmos/evm/x/erc20/types"
+	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmmodule "github.com/cosmos/evm/x/vm"
+	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	capabilitymodule "github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmmodule "github.com/zeta-chain/ethermint/x/evm"
-	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	feemarketkeeper "github.com/zeta-chain/ethermint/x/feemarket/keeper"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
+	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/testutil/sample"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
@@ -109,6 +111,7 @@ type SDKKeepers struct {
 	SlashingKeeper       slashingkeeper.Keeper
 	FeeMarketKeeper      feemarketkeeper.Keeper
 	EvmKeeper            *evmkeeper.Keeper
+	ERC20Keeper          erc20keeper.Keeper
 	CapabilityKeeper     *capabilitykeeper.Keeper
 	IBCKeeper            *ibckeeper.Keeper
 	TransferKeeper       ibctransferkeeper.Keeper
@@ -232,7 +235,7 @@ func AccountKeeper(
 	return authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		moduleAccountPerms,
 		authcodec.NewBech32Codec("zeta"),
 		"zeta",
@@ -365,10 +368,34 @@ func FeeMarketKeeper(
 
 	return feemarketkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(storeKey),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		storeKey,
 		transientKey,
+	)
+}
+
+// FeeMarketKeeper instantiates an erc20 keeper for testing purposes
+func ERC20Keeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	accountKeeper authkeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
+	evmKeeper erc20types.EVMKeeper,
+) erc20keeper.Keeper {
+	storeKey := storetypes.NewKVStoreKey(erc20types.StoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+
+	return erc20keeper.NewKeeper(
+		storeKey,
+		cdc,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+		accountKeeper,
+		bankKeeper,
+		evmKeeper,
+		stakingKeeper,
+		nil,
 	)
 }
 
@@ -381,6 +408,8 @@ func EVMKeeper(
 	bankKeeper bankkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	feemarketKeeper feemarketkeeper.Keeper,
+	erc20Keeper evmtypes.Erc20Keeper,
+	consensusKeeper consensuskeeper.Keeper,
 ) *evmkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(evmtypes.StoreKey)
 	transientKey := storetypes.NewTransientStoreKey(evmtypes.TransientKey)
@@ -388,30 +417,24 @@ func EVMKeeper(
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
-	allKeys := make(map[string]storetypes.StoreKey, len(testStoreKeys)+len(testTransientKeys)+len(testMemKeys))
+	allKeys := make(map[string]*storetypes.KVStoreKey, len(testStoreKeys)+len(testTransientKeys)+len(testMemKeys))
 	for k, v := range testStoreKeys {
-		allKeys[k] = v
-	}
-	for k, v := range testTransientKeys {
-		allKeys[k] = v
-	}
-	for k, v := range testMemKeys {
 		allKeys[k] = v
 	}
 
 	k := evmkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(storeKey),
 		storeKey,
 		transientKey,
+		allKeys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		authKeeper,
 		bankKeeper,
 		stakingKeeper,
 		feemarketKeeper,
+		consensusKeeper,
+		erc20Keeper,
 		"",
-		nil,
-		allKeys,
 	)
 
 	return k
@@ -423,33 +446,37 @@ func NewSDKKeepersWithKeys(
 	keys map[string]*storetypes.KVStoreKey,
 	memKeys map[string]*storetypes.MemoryStoreKey,
 	tKeys map[string]*storetypes.TransientStoreKey,
-	allKeys map[string]storetypes.StoreKey,
 ) SDKKeepers {
-	authorityKeeper := authoritykeeper.NewKeeper(
-		cdc,
-		keys[authoritytypes.StoreKey],
-		memKeys[authoritytypes.MemStoreKey],
-		AuthorityGovAddress,
-	)
+	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
+	ethCfg := evmtypes.DefaultChainConfig(7000)
+	err := configurator.
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         zetacoredconfig.BaseDenom,
+			ExtendedDenom: zetacoredconfig.BaseDenom,
+			DisplayDenom:  zetacoredconfig.BaseDenom,
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(authtypes.ModuleName).String(),
 	)
-	paramsKeeper := paramskeeper.NewKeeper(
-		cdc,
-		fungibletypes.Amino,
-		keys[paramstypes.StoreKey],
-		tKeys[paramstypes.TStoreKey],
-	)
+
 	authKeeper := authkeeper.NewAccountKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -475,25 +502,42 @@ func NewSDKKeepersWithKeys(
 	)
 	feeMarketKeeper := feemarketkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		keys[feemarkettypes.StoreKey],
 		tKeys[feemarkettypes.TransientKey],
 	)
+	consensusKeeper := consensuskeeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(keys[consensustypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
+	)
+	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := evmkeeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(keys[evmtypes.StoreKey]),
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
+		keys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		authKeeper,
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
+		consensusKeeper,
+		&erc20Keeper,
 		"",
-		[]evmkeeper.CustomContractFn{},
-		allKeys,
 	)
+	erc20Keeper = erc20keeper.NewKeeper(
+		keys[erc20types.StoreKey],
+		cdc,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+		accountKeeper,
+		bankKeeper,
+		evmKeeper,
+		stakingKeeper,
+		nil,
+	)
+
 	slashingKeeper := slashingkeeper.NewKeeper(
 		cdc,
 		codec.NewLegacyAmino(),
@@ -514,6 +558,12 @@ func NewSDKKeepersWithKeys(
 		stakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(distrtypes.ModuleName).String(),
+	)
+	authorityKeeper := authoritykeeper.NewKeeper(
+		cdc,
+		keys[authoritytypes.StoreKey],
+		memKeys[authoritytypes.MemStoreKey],
+		AuthorityGovAddress,
 	)
 	lightclientKeeper := lightclientkeeper.NewKeeper(
 		cdc,
@@ -543,6 +593,12 @@ func NewSDKKeepersWithKeys(
 		observerKeeper,
 		authKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	paramsKeeper := paramskeeper.NewKeeper(
+		cdc,
+		fungibletypes.Amino,
+		keys[paramstypes.StoreKey],
+		tKeys[paramstypes.TStoreKey],
 	)
 
 	return SDKKeepers{
@@ -580,22 +636,16 @@ func IBCKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	paramKeeper paramskeeper.Keeper,
-	stakingKeeper stakingkeeper.Keeper,
 	uppgradeKeeper upgradekeeper.Keeper,
-	capabilityKeeper capabilitykeeper.Keeper,
 ) *ibckeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-
 	return ibckeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		paramKeeper.Subspace(ibcexported.ModuleName),
-		stakingKeeper,
 		uppgradeKeeper,
-		scopedIBCKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 }
@@ -609,24 +659,20 @@ func TransferKeeper(
 	ibcKeeper *ibckeeper.Keeper,
 	authKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
-	capabilityKeeper capabilitykeeper.Keeper,
 	ibcRouter *porttypes.Router,
 ) ibctransferkeeper.Keeper {
 	storeKey := storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		paramKeeper.Subspace(ibctransfertypes.ModuleName),
 		ibcKeeper.ChannelKeeper,
 		ibcKeeper.ChannelKeeper,
-		ibcKeeper.PortKeeper,
+		nil,
 		authKeeper,
 		bankKeeper,
-		scopedTransferKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -653,6 +699,8 @@ func NewSDKKeepers(
 	bankKeeper := BankKeeper(cdc, db, ss, authKeeper)
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss)
+	consensusKeeper := ConsensusKeeper(cdc, db, ss)
+	var erc20Keeper erc20keeper.Keeper
 	evmKeeper := EVMKeeper(
 		cdc,
 		db,
@@ -661,10 +709,13 @@ func NewSDKKeepers(
 		bankKeeper,
 		stakingKeeper,
 		feeMarketKeeper,
+		&erc20Keeper,
+		consensusKeeper,
 	)
+	erc20Keeper = ERC20Keeper(cdc, db, ss, authKeeper, bankKeeper, &stakingKeeper, evmKeeper)
 	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper)
 
-	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, stakingKeeper, UpgradeKeeper(cdc, db, ss), *capabilityKeeper)
+	ibcKeeper := IBCKeeper(cdc, db, ss, paramsKeeper, UpgradeKeeper(cdc, db, ss))
 	transferKeeper := TransferKeeper(
 		cdc,
 		db,
@@ -673,7 +724,6 @@ func NewSDKKeepers(
 		ibcKeeper,
 		authKeeper,
 		bankKeeper,
-		*capabilityKeeper,
 		ibcRouter,
 	)
 
@@ -689,6 +739,7 @@ func NewSDKKeepers(
 		IBCKeeper:        ibcKeeper,
 		TransferKeeper:   transferKeeper,
 		IBCRouter:        ibcRouter,
+		ERC20Keeper:      erc20Keeper,
 	}
 }
 

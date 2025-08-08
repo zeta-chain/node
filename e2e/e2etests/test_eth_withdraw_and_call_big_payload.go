@@ -37,7 +37,7 @@ func TestETHWithdrawAndCallBigPayload(r *runner.E2ERunner, _ []string) {
 		big.NewInt(200000),
 	)
 
-	r.Logger.EVMTransaction(*tx, "withdraw and call big payload")
+	r.Logger.EVMTransaction(tx, "withdraw and call big payload")
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

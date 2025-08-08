@@ -11,8 +11,8 @@ import (
 	_ "embed"
 	"encoding/json"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 type CompiledContract struct {

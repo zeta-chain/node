@@ -133,7 +133,7 @@ func TestKeeper_ZRC20TotalSupply(t *testing.T) {
 func TestKeeper_ZRC20Transfer(t *testing.T) {
 	ts := setupChain(t)
 
-	// Make sure sample.EthAddress() exists as an ethermint account in state.
+	// Make sure sample.EthAddress() exists as an evm account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
 	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
 	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)
@@ -196,7 +196,7 @@ func TestKeeper_ZRC20TransferFrom(t *testing.T) {
 
 	ts := setupChain(t)
 
-	// Make sure sample.EthAddress() exists as an ethermint account in state.
+	// Make sure sample.EthAddress() exists as an evm account in state.
 	accAddress := sdk.AccAddress(sample.EthAddress().Bytes())
 	acc := ts.fungibleKeeper.GetAuthKeeper().NewAccountWithAddress(ts.ctx, accAddress)
 	ts.fungibleKeeper.GetAuthKeeper().SetAccount(ts.ctx, acc)

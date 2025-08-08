@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
@@ -456,18 +456,18 @@ func TestZetacore_GetBaseGasPrice(t *testing.T) {
 
 	expectedOutput := feemarkettypes.QueryParamsResponse{
 		Params: feemarkettypes.Params{
-			BaseFee: sdkmath.NewInt(23455),
+			BaseFee: sdkmath.LegacyNewDec(23455),
 		},
 	}
 	input := feemarkettypes.QueryParamsRequest{}
-	method := "/ethermint.feemarket.v1.Query/Params"
+	method := "/cosmos.evm.feemarket.v1.Query/Params"
 	setupMockServer(t, feemarkettypes.RegisterQueryServer, method, input, expectedOutput)
 
 	client := setupZetacoreClients(t)
 
 	resp, err := client.GetBaseGasPrice(ctx)
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput.Params.BaseFee.Int64(), resp)
+	require.Equal(t, expectedOutput.Params.BaseFee.RoundInt().Int64(), resp)
 }
 
 func TestZetacore_GetNonceByChain(t *testing.T) {
