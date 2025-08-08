@@ -25,6 +25,7 @@
 * [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 * [4067](https://github.com/zeta-chain/node/pull/4067) - disable sui authenticated call temporarily until gateway upgrade
+* [4072](https://github.com/zeta-chain/node/pull/4072) - improve rate limiter robustness and code quality
 
 ### Refactor
 
