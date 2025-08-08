@@ -74,10 +74,10 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package
-	whitelistCapID, withdrawCapID, adminCapID := r.suiDeployGateway()
+	whitelistCapID, withdrawCapID := r.suiDeployGateway()
 
 	// issue message context
-	messageContextID := r.issueMessageContext(deployerSigner, adminCapID)
+	messageContextID := r.issueMessageContext()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -185,12 +185,11 @@ func (r *E2ERunner) suiBuildExample() {
 }
 
 // suiDeployGateway deploys the SUI gateway package on Sui
-func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, adminCapID string) {
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 	const (
 		filterGatewayType      = "gateway::Gateway"
 		filterWithdrawCapType  = "gateway::WithdrawCap"
 		filterWhitelistCapType = "gateway::WhitelistCap"
-		filterAdminCapType     = "gateway::AdminCap"
 		filterUpgradeCapType   = "0x2::package::UpgradeCap"
 	)
 
@@ -198,7 +197,6 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, adminCapI
 		filterGatewayType,
 		filterWhitelistCapType,
 		filterWithdrawCapType,
-		filterAdminCapType,
 		filterUpgradeCapType,
 	}
 	packageID, objectIDs := r.suiDeployPackage(
@@ -216,16 +214,13 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, adminCapI
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
 
-	adminCapID, ok = objectIDs[filterAdminCapType]
-	require.True(r, ok, "adminCap object not found")
-
 	r.SuiGatewayUpgradeCap, ok = objectIDs[filterUpgradeCapType]
 	require.True(r, ok, "upgradeCap object not found")
 
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
-	return whitelistCapID, withdrawCapID, adminCapID
+	return whitelistCapID, withdrawCapID
 }
 
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain
@@ -381,11 +376,28 @@ func (r *E2ERunner) suiDeployPackage(
 	return packageID, objectIDs
 }
 
-// issueMessageContext issues a message context object in the gateway package
-func (r *E2ERunner) issueMessageContext(signer *zetasui.SignerSecp256k1, adminCapID string) string {
-	const messageContextType = "gateway::MessageContext"
+// issueMessageContext issues a message context object in the gateway package if not exists
+func (r *E2ERunner) issueMessageContext() string {
+	signer, err := r.Account.SuiSigner()
+	require.NoError(r, err, "get deployer signer")
 
-	// issue message context
+	var (
+		adminCapType   = fmt.Sprintf("%s::gateway::AdminCap", r.SuiGateway.PackageID())
+		msgContextType = fmt.Sprintf("%s::gateway::MessageContext", r.SuiGateway.PackageID())
+	)
+
+	// message context object exists or not
+	msgContextID, found := r.suiGetOwnedObjectID(signer.Address(), msgContextType)
+	if found {
+		r.Logger.Info("message context object already exists, skipping issue")
+		return msgContextID
+	}
+
+	// get admin cap object ID
+	adminCapID, found := r.suiGetOwnedObjectID(signer.Address(), adminCapType)
+	require.True(r, found, "admin cap object not found")
+
+	// if no message context object found, issue a new one
 	tx, err := r.Clients.Sui.MoveCall(r.Ctx, models.MoveCallRequest{
 		Signer:          signer.Address(),
 		PackageObjectId: r.SuiGateway.PackageID(),
@@ -401,11 +413,13 @@ func (r *E2ERunner) issueMessageContext(signer *zetasui.SignerSecp256k1, adminCa
 	// find MessageContext object
 	var messageContextID string
 	for _, change := range resp.ObjectChanges {
-		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, messageContextType) {
+		if change.Type == changeTypeCreated && strings.Contains(change.ObjectType, msgContextType) {
 			messageContextID = change.ObjectId
 		}
 	}
 	require.NotEmpty(r, messageContextID, "MessageContext object not found")
+
+	r.Logger.Info("message context object issued: %s", messageContextID)
 
 	return messageContextID
 }
@@ -525,4 +539,24 @@ func (r *E2ERunner) suiTransferObjectToTSS(signer *zetasui.SignerSecp256k1, obje
 	require.NoError(r, err)
 
 	r.suiExecuteTx(signer, tx)
+}
+
+// suiGetOwnedObjectID gets the first owned object ID by owner address and struct type
+func (r *E2ERunner) suiGetOwnedObjectID(ownerAddress, structType string) (string, bool) {
+	res, err := r.Clients.Sui.SuiXGetOwnedObjects(r.Ctx, models.SuiXGetOwnedObjectsRequest{
+		Address: ownerAddress,
+		Query: models.SuiObjectResponseQuery{
+			Filter: map[string]any{
+				"StructType": structType,
+			},
+		},
+		Limit: 1,
+	})
+	require.NoError(r, err)
+
+	if len(res.Data) == 0 {
+		return "", false
+	}
+
+	return res.Data[0].Data.ObjectId, true
 }
