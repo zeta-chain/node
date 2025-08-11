@@ -34,7 +34,7 @@ func OutboundVoteStatusSimulationMatrix() (simtypes.TransitionMatrix, []float64,
 	// column 1: 100% vote yes
 	// column 2: 50% vote yes
 	// column 3: 0% vote yes
-	// For all conditions we assume if the the vote is not a yes.
+	// For all conditions we assume if the vote is not a yes.
 	// then it is a no .Not voting condtion is handled by the ObserverVotesSimulationMatrix matrix
 	yesVoteArray := []float64{1, .5, 0}
 	ballotVotesState := 1

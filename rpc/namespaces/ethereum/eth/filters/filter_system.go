@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package filters
 
 import (
@@ -22,30 +7,30 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/rpc/ethereum/pubsub"
 )
 
 var (
-	txEvents  = tmtypes.QueryForEvent(tmtypes.EventTx).String()
-	evmEvents = tmquery.MustCompile(fmt.Sprintf("%s='%s' AND %s.%s='%s'",
-		tmtypes.EventTypeKey,
-		tmtypes.EventTx,
+	txEvents  = cmttypes.QueryForEvent(cmttypes.EventTx).String()
+	evmEvents = cmtquery.MustCompile(fmt.Sprintf("%s='%s' AND %s.%s='%s'",
+		cmttypes.EventTypeKey,
+		cmttypes.EventTx,
 		sdk.EventTypeMessage,
 		sdk.AttributeKeyModule, evmtypes.ModuleName)).String()
-	headerEvents = tmtypes.QueryForEvent(tmtypes.EventNewBlockHeader).String()
+	headerEvents = cmttypes.QueryForEvent(cmttypes.EventNewBlockHeader).String()
 )
 
 // EventSystem creates subscriptions, processes events and broadcasts them to the
@@ -99,7 +84,7 @@ func NewEventSystem(logger log.Logger, tmWSClient *rpcclient.WSClient) *EventSys
 }
 
 // WithContext sets a new context to the EventSystem. This is required to set a timeout context when
-// a new filter is instantiated.
+// a new filter is intantiated.
 func (es *EventSystem) WithContext(ctx context.Context) {
 	es.ctx = ctx
 }
@@ -241,9 +226,10 @@ func (es *EventSystem) eventLoop() {
 			es.indexMux.Lock()
 			es.index[f.typ][f.id] = f
 			ch := make(chan coretypes.ResultEvent)
-			es.topicChans[f.event] = ch
 			if err := es.eventBus.AddTopic(f.event, ch); err != nil {
 				es.logger.Error("failed to add event topic to event bus", "topic", f.event, "error", err.Error())
+			} else {
+				es.topicChans[f.event] = ch
 			}
 			es.indexMux.Unlock()
 			close(f.installed)
@@ -252,6 +238,7 @@ func (es *EventSystem) eventLoop() {
 			delete(es.index[f.typ], f.id)
 
 			var channelInUse bool
+			// #nosec G705
 			for _, sub := range es.index[f.typ] {
 				if sub.event == f.event {
 					channelInUse = true
@@ -287,7 +274,7 @@ func (es *EventSystem) consumeEvents() {
 			if rpcResp.Error != nil {
 				time.Sleep(5 * time.Second)
 				continue
-			} else if err := tmjson.Unmarshal(rpcResp.Result, &ev); err != nil {
+			} else if err := cmtjson.Unmarshal(rpcResp.Result, &ev); err != nil {
 				es.logger.Error("failed to JSON unmarshal ResponsesCh result event", "error", err.Error())
 				continue
 			}

@@ -4,6 +4,7 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -17,10 +18,10 @@ import (
 	proposaltypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	evmenc "github.com/zeta-chain/ethermint/encoding"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+	evmosencoding "github.com/cosmos/evm/encoding"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -31,8 +32,8 @@ import (
 )
 
 // MakeEncodingConfig creates an EncodingConfig
-func MakeEncodingConfig() ethermint.EncodingConfig {
-	encodingConfig := evmenc.MakeConfig()
+func MakeEncodingConfig(chainID uint64) testutil.TestEncodingConfig {
+	encodingConfig := evmosencoding.MakeConfig(chainID)
 	registry := encodingConfig.InterfaceRegistry
 	// TODO test if we need to register these interfaces again as MakeConfig already registers them
 	// https://github.com/zeta-chain/node/issues/3003
@@ -47,7 +48,7 @@ func MakeEncodingConfig() ethermint.EncodingConfig {
 	evidencetypes.RegisterInterfaces(registry)
 	crisistypes.RegisterInterfaces(registry)
 	evmtypes.RegisterInterfaces(registry)
-	ethermint.RegisterInterfaces(registry)
+	cosmosevmtypes.RegisterInterfaces(registry)
 	authoritytypes.RegisterInterfaces(registry)
 	crosschaintypes.RegisterInterfaces(registry)
 	emissionstypes.RegisterInterfaces(registry)

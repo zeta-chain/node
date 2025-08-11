@@ -31,19 +31,23 @@ const (
 	// changeTypeCreated is the type of change that indicates a new object was created
 	changeTypeCreated = "created"
 
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// uncomment below after re-enabling authenticated call
 	// suiExamplePath is the path to the example package
-	suiExamplePath = "sui/example"
+	//suiExamplePath = "sui/example"
 
 	// suiGatewayUpgradedPath is the path to the upgraded Sui gateway package
-	suiGatewayUpgradedPath = "sui/protocol-contracts-sui-upgrade"
+	suiGatewayUpgradedPath = "protocol-contracts-sui-upgrade"
 )
 
 var (
-	// suiExampleBinToken is the path to the example token binary file
-	suiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
+// TODO: https://github.com/zeta-chain/node/issues/4066
+// uncomment below after re-enabling authenticated call
+// suiExampleBinToken is the path to the example token binary file
+//suiExampleBinToken = fmt.Sprintf("%s/build/example/bytecode_modules/token.mv", suiExamplePath)
 
-	// suiExampleBinConnected is the path to the example connected binary file
-	suiExampleBinConnected = fmt.Sprintf("%s/build/example/bytecode_modules/connected.mv", suiExamplePath)
+// suiExampleBinConnected is the path to the example connected binary file
+// suiExampleBinConnected = fmt.Sprintf("%s/build/example/bytecode_modules/connected.mv", suiExamplePath)
 )
 
 // RequestSuiFromFaucet requests SUI tokens from the faucet for the runner account
@@ -74,7 +78,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.RequestSuiFromFaucet(faucetURL, r.SuiTSSAddress)
 
 	// deploy gateway package
-	whitelistCapID, withdrawCapID, messageContextID := r.suiDeployGateway()
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// bring back messageContextID after re-enabling authenticated call
+	whitelistCapID, withdrawCapID /*, messageContextID*/ := r.suiDeployGateway()
 
 	// deploy SUI zrc20
 	r.deploySUIZRC20()
@@ -84,11 +90,15 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.whitelistSuiFakeUSDC(deployerSigner, fakeUSDCCoinType, whitelistCapID)
 
 	// build and deploy example package with on_call function
-	r.suiBuildExample()
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// switch to manual example package compilation after re-enabling authenticated call
+	//r.suiBuildExample()
 	r.suiDeployExample(
 		&r.SuiExample,
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinToken)),
-		suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinConnected)),
+		suibin.ExampleFungibleTokenBytecodeBase64Legacy(),
+		suibin.ExampleConnectedBytecodeBase64Legacy(),
+		// suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinToken)),
+		// suibin.ReadMoveBinaryBase64(r, r.WorkDirPrefixed(suiExampleBinConnected)),
 		[]string{r.SuiGateway.PackageID()},
 	)
 
@@ -96,7 +106,9 @@ func (r *E2ERunner) SetupSui(faucetURL string) {
 	r.suiTransferObjectToTSS(deployerSigner, withdrawCapID)
 
 	// send message context to TSS
-	r.suiTransferObjectToTSS(deployerSigner, messageContextID)
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// bring back messageContextID after re-enabling authenticated call
+	//r.suiTransferObjectToTSS(deployerSigner, messageContextID)
 
 	// set the chain params
 	err = r.setSuiChainParams()
@@ -160,46 +172,54 @@ func (r *E2ERunner) suiBuildGatewayUpgraded() {
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
+	// TODO: https://github.com/zeta-chain/node/issues/4066 remove ORIGINAL-PACKAGE-ID replacing
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "ORIGINAL-PACKAGE-ID"`, publishedAt)
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), gatewayAddress, `gateway = "0x0"`)
 
 	// build the upgraded gateway package
 	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPath))
 }
 
+// TODO: https://github.com/zeta-chain/node/issues/4066
+// uncomment this manual package compilation helper function
 // suiBuildExample builds the example package
-func (r *E2ERunner) suiBuildExample() {
-	// in order to import the gateway package, we need 3 patches to the Move.toml files:
-	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
-	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
-	// 3. set the actual gateway address in the example package, otherwise the build will fail.
-	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
-	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `gateway = "0x0"`, gatewayAddress)
-	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiExamplePath), `gateway = "0x0"`, gatewayAddress)
+// func (r *E2ERunner) suiBuildExample() {
+// 	// in order to import the gateway package, we need 3 patches to the Move.toml files:
+// 	// 1. set the actual gateway address in the gateway package, otherwise the build will fail
+// 	// 2. set the actual gateway address to `published-at` in the gateway package, otherwise the deploy will fail
+// 	// 3. set the actual gateway address in the example package, otherwise the build will fail.
+// 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
+// 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
+// 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
+// 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `gateway = "0x0"`, gatewayAddress)
+// 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiExamplePath), `gateway = "0x0"`, gatewayAddress)
 
-	r.suiBuildPackage(r.WorkDirPrefixed(suiExamplePath))
-}
+// 	r.suiBuildPackage(r.WorkDirPrefixed(suiExamplePath))
+// }
 
 // suiDeployGateway deploys the SUI gateway package on Sui
-func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageContextID string) {
+func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID string) {
 	const (
-		filterGatewayType        = "gateway::Gateway"
-		filterWithdrawCapType    = "gateway::WithdrawCap"
-		filterWhitelistCapType   = "gateway::WhitelistCap"
-		filterMessageContextType = "gateway::MessageContext"
-		filterUpgradeCapType     = "0x2::package::UpgradeCap"
+		filterGatewayType      = "gateway::Gateway"
+		filterWithdrawCapType  = "gateway::WithdrawCap"
+		filterWhitelistCapType = "gateway::WhitelistCap"
+		// TODO: https://github.com/zeta-chain/node/issues/4066
+		// bring back MessageContext filter
+		//filterMessageContextType = "gateway::MessageContext"
+		filterUpgradeCapType = "0x2::package::UpgradeCap"
 	)
 
 	objectTypeFilters := []string{
 		filterGatewayType,
 		filterWhitelistCapType,
 		filterWithdrawCapType,
-		filterMessageContextType,
+		// TODO: https://github.com/zeta-chain/node/issues/4066
+		// bring back MessageContext filter
+		//filterMessageContextType,
 		filterUpgradeCapType,
 	}
 	packageID, objectIDs := r.suiDeployPackage(
-		[]string{suibin.GatewayBytecodeBase64(), suibin.EVMBytecodeBase64()},
+		[]string{suibin.GatewayBytecodeBase64Legacy(), suibin.EVMBytecodeBase64()},
 		[]string{},
 		objectTypeFilters,
 	)
@@ -213,8 +233,10 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	withdrawCapID, ok = objectIDs[filterWithdrawCapType]
 	require.True(r, ok, "withdrawCap object not found")
 
-	messageContextID, ok = objectIDs[filterMessageContextType]
-	require.True(r, ok, "messageContext object not found")
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	// bring back MessageContext ID
+	// messageContextID, ok = objectIDs[filterMessageContextType]
+	// require.True(r, ok, "messageContext object not found")
 
 	r.SuiGatewayUpgradeCap, ok = objectIDs[filterUpgradeCapType]
 	require.True(r, ok, "upgradeCap object not found")
@@ -222,7 +244,8 @@ func (r *E2ERunner) suiDeployGateway() (whitelistCapID, withdrawCapID, messageCo
 	// set sui gateway
 	r.SuiGateway = zetasui.NewGateway(packageID, gatewayID)
 
-	return whitelistCapID, withdrawCapID, messageContextID
+	// TODO: https://github.com/zeta-chain/node/issues/4066
+	return whitelistCapID, withdrawCapID /*, messageContextID*/
 }
 
 // deploySUIZRC20 deploys the SUI zrc20 on ZetaChain

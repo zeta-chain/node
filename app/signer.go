@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mempool "github.com/cosmos/cosmos-sdk/types/mempool"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 )
 
 var _ mempool.SignerExtractionAdapter = EthSignerExtractionAdapter{}
@@ -25,7 +25,7 @@ func NewEthSignerExtractionAdapter(fallback mempool.SignerExtractionAdapter) Eth
 func (s EthSignerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, error) {
 	if txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx); ok {
 		opts := txWithExtensions.GetExtensionOptions()
-		if len(opts) > 0 && opts[0].GetTypeUrl() == "/ethermint.evm.v1.ExtensionOptionsEthereumTx" {
+		if len(opts) > 0 && opts[0].GetTypeUrl() == "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx" {
 			for _, msg := range tx.GetMsgs() {
 				if ethMsg, ok := msg.(*evmtypes.MsgEthereumTx); ok {
 					return []mempool.SignerData{
