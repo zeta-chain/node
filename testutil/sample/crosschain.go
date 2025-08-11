@@ -549,6 +549,14 @@ func ValidZRC20WithdrawToBTCReceipt(t *testing.T) (receipt ethtypes.Receipt) {
 	return readZetaReceipt(t, "zrc20_withdraw_to_btc")
 }
 
+func ValidZetaWithdrawToEthReceipt(t *testing.T) (receipt ethtypes.Receipt) {
+	return readZetaReceipt(t, "gateway_withdraw_zeta_to_eth")
+}
+
+func ValidZetaWithdrawAndCallReceipt(t *testing.T) (receipt ethtypes.Receipt) {
+	return readZetaReceipt(t, "gateway_withdraw_and_call_zeta_to_eth")
+}
+
 // ValidZetaSentDestinationExternalReceipt is a receipt for a Zeta sent to an external destination
 func ValidZetaSentDestinationExternalReceipt(t *testing.T) (receipt ethtypes.Receipt) {
 	return readZetaReceipt(t, "zeta_sent_destination_external")
