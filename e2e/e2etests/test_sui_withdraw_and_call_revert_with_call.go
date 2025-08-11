@@ -34,6 +34,8 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 	// such that the 'r.EVMAddress()' becomes an unauthorized sender in the 'on_call'
 	authorizedSender := sample.EthAddress()
 	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
+	message, err := payloadOnCall.PackABI()
+	require.NoError(r, err)
 
 	// given ZEVM revert address (the dApp)
 	dAppAddress := r.TestDAppV2ZEVMAddr
@@ -53,7 +55,7 @@ func TestSuiWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		r.SUIZRC20Addr,
-		payloadOnCall,
+		message,
 		gasLimit,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,

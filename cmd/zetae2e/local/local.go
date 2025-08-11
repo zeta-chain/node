@@ -486,6 +486,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
 			e2etests.TestSuiWithdrawAndCallName,
+			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
 			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawAndCallName,
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,

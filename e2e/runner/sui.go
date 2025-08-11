@@ -81,23 +81,19 @@ func (r *E2ERunner) SuiWithdrawAndCall(
 	receiver string,
 	amount *big.Int,
 	zrc20 ethcommon.Address,
-	payload sui.CallPayload,
+	message []byte,
 	gasLimit *big.Int,
 	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	// ACT
-	payloadBytes, err := payload.PackABI()
-	require.NoError(r, err)
-
 	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
 		zrc20,
-		payloadBytes,
+		message,
 		gatewayzevm.CallOptions{
 			GasLimit:        gasLimit,
 			IsArbitraryCall: false, // always authenticated call

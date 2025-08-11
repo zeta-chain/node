@@ -273,6 +273,9 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
 	switch {
+	case errors.Is(err, zetasui.ErrInvalidPayload):
+		logger.Info().Err(err).Msg("cancelling tx due to invalid payload")
+		return s.broadcastCancelTx(ctx, cancelTxBuilder)
 	case errors.Is(err, zetasui.ErrObjectOwnership):
 		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
 		return s.broadcastCancelTx(ctx, cancelTxBuilder)

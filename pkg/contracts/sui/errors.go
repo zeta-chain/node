@@ -29,6 +29,9 @@ var (
 	// ErrObjectOwnership is the error returned when a wrong object ownership is used in withdraw_and_call
 	ErrObjectOwnership = errors.New("wrong object ownership")
 
+	// ErrInvalidPayload is the error returned when a invalid payload format is used in withdraw_and_call
+	ErrInvalidPayload = errors.New("invalid payload")
+
 	// retryableOutboundErrCodes are the outbound execution (if failed) error codes that are retryable.
 	// The list is used to determine if a withdraw_and_call should fallback if rejected by the network.
 	// Note: keep this list in sync with the actual implementation in `gateway.move`

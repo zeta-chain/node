@@ -118,6 +118,7 @@ const (
 	TestSuiTokenWithdrawAndCallRevertWithCallName = "sui_token_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallName                    = "sui_withdraw_and_call"
 	TestSuiWithdrawRevertWithCallName             = "sui_withdraw_revert_with_call"          // #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestSuiWithdrawAndCallInvalidPayloadName      = "sui_withdraw_and_call_invalid_payload"  // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiWithdrawAndCallRevertWithCallName      = "sui_withdraw_and_call_revert_with_call" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestSuiDepositRestrictedName                  = "sui_deposit_restricted"
 	TestSuiWithdrawRestrictedName                 = "sui_withdraw_restricted"
@@ -1049,6 +1050,15 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawRevertWithCall,
+		runner.WithMinimumVersion("v33.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSuiWithdrawAndCallInvalidPayloadName,
+		"withdraw SUI from ZEVM and makes an authenticated call to a contract that reverts due to invalid payload",
+		[]runner.ArgDefinition{
+			{Description: "amount in mist", DefaultValue: "1000000"},
+		},
+		TestSuiWithdrawAndCallInvalidPayload,
 		runner.WithMinimumVersion("v33.0.0"),
 	),
 	runner.NewE2ETest(
