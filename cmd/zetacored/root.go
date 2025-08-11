@@ -146,7 +146,6 @@ func NewRootCmd() *cobra.Command {
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
 		},
 	}
-
 	initRootCmd(rootCmd, encodingConfig)
 	rootCmd.AddCommand(
 		confixcmd.ConfigCommand(),
