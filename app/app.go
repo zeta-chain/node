@@ -178,6 +178,7 @@ var maccPerms = map[string][]string{
 	emissionstypes.ModuleName:                       nil,
 	emissionstypes.UndistributedObserverRewardsPool: nil,
 	emissionstypes.UndistributedTSSRewardsPool:      nil,
+	feemarkettypes.ModuleName:                       nil,
 }
 
 // module accounts that are NOT allowed to receive tokens
@@ -187,6 +188,8 @@ var blockedReceivingModAcc = map[string]bool{
 	stakingtypes.BondedPoolName:    true,
 	stakingtypes.NotBondedPoolName: true,
 	govtypes.ModuleName:            true,
+	evmtypes.ModuleName:            true,
+	feemarkettypes.ModuleName:      true,
 }
 
 var (
@@ -526,6 +529,7 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.FeeMarketKeeper,
+		app.ConsensusParamsKeeper,
 		&app.Erc20Keeper,
 		tracer,
 	)
@@ -640,6 +644,20 @@ func New(
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+
+	// add static precompiles
+	app.EvmKeeper.WithStaticPrecompiles(
+		NewAvailableStaticPrecompiles(
+			*app.StakingKeeper,
+			app.DistrKeeper,
+			app.BankKeeper,
+			app.Erc20Keeper,
+			app.EvmKeeper,
+			app.GovKeeper,
+			app.SlashingKeeper,
+			app.AppCodec(),
+		),
+	)
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

@@ -38,7 +38,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	blockRes, err := b.RPCClient.BlockResults(b.Ctx, &resBlock.Block.Height)
 	if err != nil {
 		b.Logger.Debug("block result not found", "height", resBlock.Block.Height, "error", err.Error())
-		return nil, nil
+		return nil, fmt.Errorf("block result not found: %w", err)
 	}
 
 	var ethMsg *evmtypes.MsgEthereumTx
@@ -174,13 +174,13 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	res, additional, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.Logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
-		return nil, nil
+		return nil, err
 	}
 
 	resBlock, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(res.Height))
 	if err != nil {
 		b.Logger.Debug("block not found", "height", res.Height, "error", err.Error())
-		return nil, nil
+		return nil, fmt.Errorf("block not found at height %d: %w", res.Height, err)
 	}
 
 	var txData evmtypes.TxData
@@ -222,7 +222,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	blockRes, err := b.RPCClient.BlockResults(b.Ctx, &res.Height)
 	if err != nil {
 		b.Logger.Debug("failed to retrieve block results", "height", res.Height, "error", err.Error())
-		return nil, nil
+		return nil, fmt.Errorf("block result not found at height %d: %w", res.Height, err)
 	}
 
 	for _, txResult := range blockRes.TxsResults[0:res.TxIndex] {
@@ -278,6 +278,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 
 	to := &common.Address{}
 	var txType uint8
+	var effectiveGasPrice *hexutil.Big
 
 	if txData == nil {
 		// #nosec G115 always in range
@@ -286,6 +287,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	} else {
 		txType = ethMsg.AsTransaction().Type()
 		to = txData.GetTo()
+		effectiveGasPrice = (*hexutil.Big)(txData.GetGasPrice())
 	}
 
 	// create the logs bloom
@@ -316,6 +318,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		"blockHash":        common.BytesToHash(resBlock.Block.Header.Hash()).Hex(),
 		"blockNumber":      hexutil.Uint64(res.Height),     //#nosec G115 won't exceed uint64
 		"transactionIndex": hexutil.Uint64(res.EthTxIndex), //#nosec G115 no int overflow expected here
+
+		// https://github.com/foundry-rs/foundry/issues/7640
+		"effectiveGasPrice": effectiveGasPrice,
 
 		// sender and receiver (contract or EOA) addreses
 		"from": from,
@@ -351,7 +356,9 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 func (b *Backend) GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error) {
 	hexTx := hash.Hex()
 
-	res, _, err := b.GetTxByEthHash(hash) // TODO evm: additional fields?
+	// TODO https://github.com/zeta-chain/node/issues/4079
+	// check if additional fields should be used here
+	res, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
 		b.Logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
 		return nil, nil

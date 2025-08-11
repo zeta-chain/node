@@ -283,12 +283,14 @@ func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimesWithReturn(ret *evmtypes.
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
+		mock.Anything,
 	).Return(ret, nil).Times(times)
 }
 
 func (m *FungibleMockEVMKeeper) MockEVMFailCallOnce() {
 	m.On(
 		"ApplyMessage",
+		mock.Anything,
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,

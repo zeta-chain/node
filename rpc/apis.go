@@ -111,12 +111,18 @@ func init() {
 				},
 			}
 		},
-		TxPoolNamespace: func(ctx *server.Context, _ client.Context, _ *rpcclient.WSClient, _ bool, _ types.EVMTxIndexer) []rpc.API {
+		TxPoolNamespace: func(ctx *server.Context,
+			clientCtx client.Context,
+			_ *rpcclient.WSClient,
+			allowUnprotectedTxs bool,
+			indexer types.EVMTxIndexer,
+		) []rpc.API {
+			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
 			return []rpc.API{
 				{
 					Namespace: TxPoolNamespace,
 					Version:   apiVersion,
-					Service:   txpool.NewPublicAPI(ctx.Logger),
+					Service:   txpool.NewPublicAPI(ctx.Logger, evmBackend),
 					Public:    true,
 				},
 			}
@@ -132,7 +138,7 @@ func init() {
 				{
 					Namespace: DebugNamespace,
 					Version:   apiVersion,
-					Service:   debug.NewAPI(ctx, evmBackend),
+					Service:   debug.NewAPI(ctx, evmBackend, evmBackend.GetConfig().JSONRPC.EnableProfiling),
 					Public:    true,
 				},
 			}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"golang.org/x/exp/slices"
 )
 
 // FilterLogs creates a slice of logs matching the given criteria.
@@ -28,7 +29,7 @@ Logs:
 		if toBlock != nil && toBlock.Int64() >= 0 && toBlock.Uint64() < log.BlockNumber {
 			continue
 		}
-		if len(addresses) > 0 && !includes(addresses, log.Address) {
+		if len(addresses) > 0 && !slices.Contains(addresses, log.Address) {
 			continue
 		}
 		// If the to filtered topics is greater than the amount of topics in logs, skip.
@@ -50,16 +51,6 @@ Logs:
 		ret = append(ret, log)
 	}
 	return ret
-}
-
-func includes(addresses []common.Address, a common.Address) bool {
-	for _, addr := range addresses {
-		if addr == a {
-			return true
-		}
-	}
-
-	return false
 }
 
 // https://github.com/ethereum/go-ethereum/blob/v1.10.14/eth/filters/filter.go#L321

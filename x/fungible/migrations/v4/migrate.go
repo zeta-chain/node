@@ -32,7 +32,6 @@ func MigrateStore(ctx sdk.Context, fungibleKeeper fungibleKeeper) error {
 		return nil
 	}
 
-	// TODO evm: ParseChainID is removed, check if this is ok
 	zetachain, err := chains.ZetaChainFromCosmosChainID(ctx.ChainID())
 	if err != nil {
 		return logAndSkip("failed to parse chain ID", err, "chain_id", ctx.ChainID())

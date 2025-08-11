@@ -304,6 +304,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1
 	github.com/pattonkan/sui-go v0.1.0
 	github.com/showa-93/go-mask v0.6.2
+	github.com/test-go/testify v1.1.4
 	github.com/tonkeeper/tongo v1.16.4
 	github.com/zeta-chain/go-tss v0.6.3
 	github.com/zeta-chain/protocol-contracts-solana/go-idl v0.0.0-20250409230544-d88f214f6f46
@@ -414,7 +415,7 @@ replace (
 	// which is a fork of https://github.com/threshold-network/tss-lib
 	github.com/bnb-chain/tss-lib => github.com/zeta-chain/tss-lib v0.0.0-20240916163010-2e6b438bd901
 
-	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250728181429-8c0987924dce
+	github.com/cosmos/evm => github.com/zeta-chain/evm v0.0.0-20250808111716-1882abec3ec9
 
 	// use Cosmos geth fork
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.15.11-cosmos-0

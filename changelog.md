@@ -1,6 +1,16 @@
 # CHANGELOG
 
-## UNRELEASED
+## Unreleased
+
+### Features
+
+* [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+
+### Refactor
+
+* [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
+
+## v33.0.0
 
 ### Features
 
@@ -10,7 +20,7 @@
 * [4007](https://github.com/zeta-chain/node/pull/4007) - add support for Sui withdraw and authenticated call
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
-* [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+* [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
 
 ### Fixes
 
@@ -24,6 +34,7 @@
 * [4018](https://github.com/zeta-chain/node/pull/4018) - Sui token accounting mismatch
 * [4020](https://github.com/zeta-chain/node/pull/4020) - add a migration script to delete ZRC20 SUI gas tokens from stability pool
 * [4067](https://github.com/zeta-chain/node/pull/4067) - disable sui authenticated call temporarily until gateway upgrade
+* [4072](https://github.com/zeta-chain/node/pull/4072) - improve rate limiter robustness and code quality
 
 ### Refactor
 

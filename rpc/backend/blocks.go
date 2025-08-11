@@ -2,7 +2,6 @@ package backend
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 
@@ -48,10 +47,6 @@ func (b *Backend) BlockNumber() (hexutil.Uint64, error) {
 	height, err := strconv.ParseUint(blockHeightHeader[0], 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse block height: %w", err)
-	}
-
-	if height > math.MaxInt64 {
-		return 0, fmt.Errorf("block height %d is greater than max uint64", height)
 	}
 
 	return hexutil.Uint64(height), nil
@@ -176,9 +171,6 @@ func (b *Backend) TendermintBlockByNumber(blockNum rpctypes.BlockNumber) (*tmrpc
 		n, err := b.BlockNumber()
 		if err != nil {
 			return nil, err
-		}
-		if n > math.MaxInt64 {
-			return nil, fmt.Errorf("block number %d is greater than max int64", n)
 		}
 		height = int64(n) //#nosec G115 -- checked for int overflow already
 	}
@@ -608,7 +600,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 		}
 	}
 
-	// TODO evm: add tx receipts
+	// TODO: add tx receipts
 	ethBlock := ethtypes.NewBlock(
 		ethHeader,
 		&ethtypes.Body{Transactions: txs, Uncles: nil, Withdrawals: nil},
@@ -617,8 +609,9 @@ func (b *Backend) EthBlockFromTendermintBlock(
 	return ethBlock, nil
 }
 
-// TODO evm: new method, needs refactoring with synthetic txs
-// // GetBlockReceipts returns the receipts for a given block number or hash.
+// TODO https://github.com/zeta-chain/node/issues/4079
+// new method, needs refactoring with synthetic txs
+// GetBlockReceipts returns the receipts for a given block number or hash.
 // func (b *Backend) GetBlockReceipts(
 // 	blockNrOrHash rpctypes.BlockNumberOrHash,
 // ) ([]map[string]interface{}, error) {
@@ -689,7 +682,7 @@ func (b *Backend) EthBlockFromTendermintBlock(
 // 		return nil, err
 // 	}
 
-// 	from, err := ethMsg.GetSender(chainID.ToInt())
+// 	from, err := ethMsg.GetSenderLegacy(ethtypes.LatestSignerForChainID(chainID.ToInt()))
 // 	if err != nil {
 // 		return nil, err
 // 	}

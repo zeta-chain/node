@@ -188,17 +188,17 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		blockRes, err := f.backend.TendermintBlockResultByNumber(&h)
 		if err != nil {
 			f.logger.Debug("failed to fetch block result from Tendermint", "height", height, "error", err.Error())
-			return nil, nil
+			return nil, fmt.Errorf("failed to fetch block result from Tendermint: %w", err)
 		}
 
 		bloom, err := f.backend.BlockBloom(blockRes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to query block bloom filter from block results: %w", err)
 		}
 
 		filtered, err := f.blockLogs(blockRes, bloom)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to fetch block by number %d", height)
+			return nil, fmt.Errorf("failed to fetch block by number %d: %w", height, err)
 		}
 
 		// check logs limit

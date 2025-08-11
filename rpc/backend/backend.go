@@ -30,6 +30,8 @@ import (
 // BackendI implements the Cosmos and EVM backend.
 type BackendI interface { //nolint: revive
 	EVMBackend
+
+	GetConfig() config.Config
 }
 
 // EVMBackend implements the functionality shared within ethereum namespaces
@@ -74,7 +76,6 @@ type EVMBackend interface {
 		block *tmrpctypes.ResultBlock,
 		blockRes *tmrpctypes.ResultBlockResults,
 	) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields)
-	BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 	HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Header, error)
 	HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error)
 	RPCBlockFromTendermintBlock(
@@ -87,7 +88,7 @@ type EVMBackend interface {
 		resBlock *tmrpctypes.ResultBlock,
 		blockRes *tmrpctypes.ResultBlockResults,
 	) (*ethtypes.Block, error)
-	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error) // TODO evm: new method
+	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error)
 
 	// Account Info
 	GetCode(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
@@ -141,6 +142,12 @@ type EVMBackend interface {
 	GetLogsByHeight(height *int64) ([][]*ethtypes.Log, error)
 	BloomStatus() (uint64, uint64)
 
+	// TxPool API
+	Content() (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	ContentFrom(address common.Address) (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	Inspect() (map[string]map[string]map[string]string, error)
+	Status() (map[string]hexutil.Uint, error)
+
 	// Tracing
 	TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error)
 	TraceBlock(
@@ -185,6 +192,10 @@ type Backend struct {
 	AllowUnprotectedTxs bool
 	Indexer             cosmosevmtypes.EVMTxIndexer
 	ProcessBlocker      ProcessBlocker
+}
+
+func (b *Backend) GetConfig() config.Config {
+	return b.Cfg
 }
 
 // NewBackend creates a new Backend instance for cosmos and ethereum namespaces
