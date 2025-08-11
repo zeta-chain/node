@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Refactor
+
+* [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
+
 ## v33.0.0
 
 ### Features
