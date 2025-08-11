@@ -52,7 +52,6 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() (packageID string, err error) {
 		"client",
 		"upgrade",
 		"--json", // output in JSON format for easier parsing
-		"--skip-dependency-verification",
 		"--upgrade-capability",
 		r.SuiGatewayUpgradeCap,
 	}...)
