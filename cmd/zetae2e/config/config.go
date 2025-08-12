@@ -99,6 +99,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.TestDappAddr = config.DoubleQuotedString(r.ZevmTestDAppAddr.Hex())
 	conf.Contracts.ZEVM.Gateway = config.DoubleQuotedString(r.GatewayZEVMAddr.Hex())
 	conf.Contracts.ZEVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2ZEVMAddr.Hex())
+	conf.Contracts.ZEVM.CoreRegistry = config.DoubleQuotedString(r.CoreRegistryAddr.Hex())
 
 	return conf
 }

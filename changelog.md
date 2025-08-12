@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## UNRELEASED
+## Unreleased
+
+### Features
+
+* [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+
+### Refactor
+
+* [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 
 ### Fixes
 
