@@ -236,16 +236,6 @@ contract TestDAppV2 {
 
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
         string memory messageStr = message.length == 0 ? getNoMessageIndex(messageContext.sender) : string(message);
-        
-        IERC20 zetaTokenContract = IERC20(zetatoken);
-        uint256 allowance = zetaTokenContract.allowance(msg.sender, address(this));
-
-        uint256 amountToRecord = msg.value; 
-
-        if (allowance > 0) {
-            require(zetaTokenContract.transferFrom(msg.sender, address(this), allowance), "Zetatoken transfer from gateway failed");
-            amountToRecord = allowance; // Use token amount instead of ETH
-        }
 
         uint256 amountToRecord = msg.value;
 

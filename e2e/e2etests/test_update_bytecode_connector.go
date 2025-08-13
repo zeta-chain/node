@@ -22,7 +22,7 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 
 	require.NoError(r, err)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
-	tx := r.ZetaWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
@@ -69,7 +69,7 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	// Can continue to interact with the connector: withdraw 10ZETA
 	r.DepositWZeta(amount)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
-	tx = r.ZetaWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx = r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
