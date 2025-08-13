@@ -24,7 +24,6 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
-	"github.com/zeta-chain/node/pkg/chains"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
@@ -218,12 +217,6 @@ func NewBackend(
 	}
 
 	ethCfg := evmtypes.GetEthChainConfig()
-	zetachain, err := chains.ZetaChainFromCosmosChainID(clientCtx.ChainID)
-	if err != nil {
-		logger.Info("chain id from client ctx", "chainId", zetachain.ChainId)
-	}
-
-	logger.Info("chain id from app cfg", "chainId", appConf.EVM.EVMChainID)
 	logger.Info("chain id from eth cfg", "chainId", ethCfg.ChainID.String())
 
 	b := &Backend{
