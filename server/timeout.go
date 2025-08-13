@@ -45,7 +45,8 @@ type timeoutConfig struct {
 	defaultValue time.Duration
 }
 
-func overWriteConfigHandler(cmd *cobra.Command) error {
+// overWriteConfigCmd overwites the consensus timeout configurations to the default values.
+func overWriteConfig(cmd *cobra.Command) error {
 	serverCtx := server.GetServerContextFromCmd(cmd)
 
 	timeoutConfigs := []timeoutConfig{
@@ -67,7 +68,6 @@ func overWriteConfigHandler(cmd *cobra.Command) error {
 	}
 
 	if needsUpdate {
-
 		err := server.SetCmdServerContext(cmd, serverCtx)
 		if err != nil {
 			return fmt.Errorf("failed to set server context: %w", err)
@@ -81,6 +81,7 @@ func overWriteConfigHandler(cmd *cobra.Command) error {
 	return nil
 }
 
+// updateConfigFile updates the config file with the current server context configuration.
 func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 	rootDir, err := cmd.Flags().GetString(flags.FlagHome)
 	if err != nil {

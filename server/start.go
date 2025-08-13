@@ -109,7 +109,7 @@ which accepts a path for the resulting pprof file.
 			_, err = server.GetPruningOptionsFromFlags(serverCtx.Viper)
 			return err
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -134,7 +134,7 @@ which accepts a path for the resulting pprof file.
 			}
 			skipOverride, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
 			if !skipOverride {
-				err := overWriteConfigHandler(cmd)
+				err := overWriteConfig(cmd)
 				if err != nil {
 					return fmt.Errorf("failed to overwrite config: %w", err)
 				}
@@ -156,7 +156,8 @@ which accepts a path for the resulting pprof file.
 		},
 	}
 
-	cmd.Flags().Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
+	cmd.Flags().
+		Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
 	cmd.Flags().String(flags.FlagHome, opts.DefaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.Address, "tcp://0.0.0.0:26658", "Listen address")

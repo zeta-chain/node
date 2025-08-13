@@ -147,7 +147,7 @@ func AddObserverListCmd() *cobra.Command {
 				keygenPubKeys = append(keygenPubKeys, info.ZetaClientGranteePubKey)
 			}
 
-			genFile := filepath.Join(serverConfig.GenesisFile())
+			genFile := serverConfig.GenesisFile()
 
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
