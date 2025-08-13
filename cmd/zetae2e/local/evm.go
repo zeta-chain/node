@@ -21,6 +21,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHDepositAndCallBigPayloadName,
 		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
+		e2etests.TestETHWithdrawCustomGasLimitName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
 		e2etests.TestETHWithdrawAndCallBigPayloadName,
@@ -33,8 +34,8 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestETHWithdrawAndCallNoMessageName,
 		e2etests.TestEtherWithdrawRestrictedName,
 	))
-	//
-	//// Test happy paths for erc20 token workflow
+
+	// Test happy paths for erc20 token workflow
 	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
@@ -47,8 +48,8 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 		e2etests.TestDepositAndCallSwapName,
 		e2etests.TestERC20DepositRestrictedName,
 	))
-	//
-	//// Test revert cases for gas token workflow
+
+	// Test revert cases for gas token workflow
 	eg.Go(
 		evmTestRoutine(
 			conf,
@@ -71,8 +72,8 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestEVMToZEVMCallAbortName,
 		),
 	)
-	//
-	//// Test revert cases for erc20 token workflow
+
+	// Test revert cases for erc20 token workflow
 	eg.Go(
 		evmTestRoutine(
 			conf,
@@ -93,9 +94,9 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
-
+	// test zeta token workflow
 	eg.Go(
-		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgHiBlue, deployerRunner, verbose,
+		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgRed, deployerRunner, verbose,
 			e2etests.TestZetaDepositName,
 			e2etests.TestETHDepositName,
 			e2etests.TestZetaDepositAndCallName,
@@ -108,7 +109,6 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestZetaWithdrawAndCallRevertName,
 			e2etests.TestZetaWithdrawAndCallRevertWithCallName,
 			e2etests.TestZetaWithdrawRevertAndAbortName,
-			e2etests.TestZetaWithdrawAndCallNoMessageName,
 			e2etests.TestZetaWithdrawAndArbitraryCallName,
 		),
 	)

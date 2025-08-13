@@ -6,7 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -59,11 +59,11 @@ func (k *Keeper) validateZetaSupply(ctx sdk.Context, amount *big.Int) error {
 	return nil
 }
 
-// executeWithMintedZeta is a helper function that mints ZETA to the fungible module account
+// ExecuteWithMintedZeta is a helper function that mints ZETA to the fungible module account
 // and executes the provided operation within a temporary context.
 // If the operation is successful, it commits the temporary context.
 // If it is not successful, it rolls back the temporary context thus preventing surplus ZETA from being minted.
-func (k Keeper) executeWithMintedZeta(
+func (k Keeper) ExecuteWithMintedZeta(
 	ctx sdk.Context,
 	amount *big.Int,
 	operation func(sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error),

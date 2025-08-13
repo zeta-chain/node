@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package config
 
 import (
@@ -29,6 +14,28 @@ import (
 )
 
 const (
+	// ServerStartTime defines the time duration that the server need to stay running after startup
+	// for the startup be considered successful
+	ServerStartTime = 5 * time.Second
+
+	// DefaultAPIEnable is the default value for the parameter that defines if the cosmos REST API server is enabled
+	DefaultAPIEnable = false
+
+	// DefaultGRPCEnable is the default value for the parameter that defines if the gRPC server is enabled
+	DefaultGRPCEnable = false
+
+	// DefaultGRPCWebEnable is the default value for the parameter that defines if the gRPC web server is enabled
+	DefaultGRPCWebEnable = false
+
+	// DefaultJSONRPCEnable is the default value for the parameter that defines if the JSON-RPC server is enabled
+	DefaultJSONRPCEnable = false
+
+	// DefaultRosettaEnable is the default value for the parameter that defines if the Rosetta API server is enabled
+	DefaultRosettaEnable = false
+
+	// DefaultTelemetryEnable is the default value for the parameter that defines if the telemetry is enabled
+	DefaultTelemetryEnable = false
+
 	// DefaultGRPCAddress is the default address the gRPC server binds to.
 	DefaultGRPCAddress = "0.0.0.0:9900"
 
@@ -44,28 +51,46 @@ const (
 	// DefaultEVMTracer is the default vm.Tracer type
 	DefaultEVMTracer = ""
 
+	// DefaultEnablePreimageRecording is the default value for EnablePreimageRecording
+	DefaultEnablePreimageRecording = false
+
 	// DefaultFixRevertGasRefundHeight is the default height at which to overwrite gas refund
 	DefaultFixRevertGasRefundHeight = 0
 
+	// DefaultMaxTxGasWanted is the default gas wanted for each eth tx returned in ante handler in check tx mode
 	DefaultMaxTxGasWanted = 0
 
+	// DefaultEVMChainID is the default EVM Chain ID if one is not provided
+	DefaultEVMChainID = 7000
+
+	// DefaultGasCap is the default cap on gas that can be used in eth_call/estimateGas
 	DefaultGasCap uint64 = 25000000
 
+	// DefaultJSONRPCAllowInsecureUnlock is true
+	DefaultJSONRPCAllowInsecureUnlock bool = true
+
+	// DefaultFilterCap is the default cap for total number of filters that can be created
 	DefaultFilterCap int32 = 200
 
+	// DefaultFeeHistoryCap is the default cap for total number of blocks that can be fetched
 	DefaultFeeHistoryCap int32 = 100
 
+	// DefaultLogsCap is the default cap of results returned from single 'eth_getLogs' query
 	DefaultLogsCap int32 = 10000
 
+	// DefaultBlockRangeCap is the default cap of block range allowed for 'eth_getLogs' query
 	DefaultBlockRangeCap int32 = 10000
 
+	// DefaultEVMTimeout is the default timeout for eth_call
 	DefaultEVMTimeout = 5 * time.Second
 
-	// default 1.0 eth
+	// DefaultTxFeeCap is the default tx-fee cap for sending a transaction
 	DefaultTxFeeCap float64 = 1.0
 
+	// DefaultHTTPTimeout is the default read/write timeout of the http json-rpc server
 	DefaultHTTPTimeout = 30 * time.Second
 
+	// DefaultHTTPIdleTimeout is the default idle timeout of the http json-rpc server
 	DefaultHTTPIdleTimeout = 120 * time.Second
 
 	// DefaultAllowUnprotectedTxs value is false
@@ -73,6 +98,9 @@ const (
 
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// DefaultGasAdjustment value to use as default in gas-adjustment flag
+	DefaultGasAdjustment = 1.2
 )
 
 var evmTracers = []string{"json", "markdown", "struct", "access_list"}
@@ -80,7 +108,7 @@ var evmTracers = []string{"json", "markdown", "struct", "access_list"}
 // Config defines the server's top level configuration. It includes the default app config
 // from the SDK as well as the EVM configuration to enable the JSON-RPC APIs.
 type Config struct {
-	config.Config
+	config.Config `mapstructure:",squash"`
 
 	EVM     EVMConfig     `mapstructure:"evm"`
 	JSONRPC JSONRPCConfig `mapstructure:"json-rpc"`
@@ -94,6 +122,10 @@ type EVMConfig struct {
 	Tracer string `mapstructure:"tracer"`
 	// MaxTxGasWanted defines the gas wanted for each eth tx returned in ante handler in check tx mode.
 	MaxTxGasWanted uint64 `mapstructure:"max-tx-gas-wanted"`
+	// Enables tracking of SHA3 preimages in the VM
+	EnablePreimageRecording bool `mapstructure:"cache-preimage"`
+	// EVMChainID defines the EIP-155 replay-protection chain ID.
+	EVMChainID uint64 `mapstructure:"evm-chain-id"`
 }
 
 // JSONRPCConfig defines configuration for the EVM RPC server.
@@ -106,6 +138,8 @@ type JSONRPCConfig struct {
 	WsAddress string `mapstructure:"ws-address"`
 	// GasCap is the global gas cap for eth-call variants.
 	GasCap uint64 `mapstructure:"gas-cap"`
+	// AllowInsecureUnlock toggles if account unlocking is enabled when account-related RPCs are exposed by http.
+	AllowInsecureUnlock bool `mapstructure:"allow-insecure-unlock"`
 	// EVMTimeout is the global timeout for eth-call.
 	EVMTimeout time.Duration `mapstructure:"evm-timeout"`
 	// TxFeeCap is the global tx-fee cap for send transaction
@@ -146,56 +180,13 @@ type TLSConfig struct {
 	KeyPath string `mapstructure:"key-path"`
 }
 
-// AppConfig helps to override default appConfig template and configs.
-// return "", nil if no custom configuration is required for the application.
-func AppConfig(denom string) (string, interface{}) {
-	// Optionally allow the chain developer to overwrite the SDK's default
-	// server config.
-	srvCfg := config.DefaultConfig()
-
-	// The SDK's default minimum gas price is set to "" (empty value) inside
-	// app.toml. If left empty by validators, the node will halt on startup.
-	// However, the chain developer can set a default app.toml value for their
-	// validators here.
-	//
-	// In summary:
-	// - if you leave srvCfg.MinGasPrices = "", all validators MUST tweak their
-	//   own app.toml config,
-	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
-	//   own app.toml to override, or use this default value.
-	//
-	// In ethermint, we set the min gas prices to 0.
-	if denom != "" {
-		srvCfg.MinGasPrices = "0" + denom
-	}
-
-	customAppConfig := Config{
-		Config:  *srvCfg,
-		EVM:     *DefaultEVMConfig(),
-		JSONRPC: *DefaultJSONRPCConfig(),
-		TLS:     *DefaultTLSConfig(),
-	}
-
-	customAppTemplate := config.DefaultConfigTemplate + DefaultConfigTemplate
-
-	return customAppTemplate, customAppConfig
-}
-
-// DefaultConfig returns server's default configuration.
-func DefaultConfig() *Config {
-	return &Config{
-		Config:  *config.DefaultConfig(),
-		EVM:     *DefaultEVMConfig(),
-		JSONRPC: *DefaultJSONRPCConfig(),
-		TLS:     *DefaultTLSConfig(),
-	}
-}
-
 // DefaultEVMConfig returns the default EVM configuration
 func DefaultEVMConfig() *EVMConfig {
 	return &EVMConfig{
-		Tracer:         DefaultEVMTracer,
-		MaxTxGasWanted: DefaultMaxTxGasWanted,
+		Tracer:                  DefaultEVMTracer,
+		MaxTxGasWanted:          DefaultMaxTxGasWanted,
+		EVMChainID:              DefaultEVMChainID,
+		EnablePreimageRecording: DefaultEnablePreimageRecording,
 	}
 }
 
@@ -226,6 +217,7 @@ func DefaultJSONRPCConfig() *JSONRPCConfig {
 		Address:                  DefaultJSONRPCAddress,
 		WsAddress:                DefaultJSONRPCWsAddress,
 		GasCap:                   DefaultGasCap,
+		AllowInsecureUnlock:      DefaultJSONRPCAllowInsecureUnlock,
 		EVMTimeout:               DefaultEVMTimeout,
 		TxFeeCap:                 DefaultTxFeeCap,
 		FilterCap:                DefaultFilterCap,
@@ -318,53 +310,29 @@ func (c TLSConfig) Validate() error {
 	return nil
 }
 
-// GetConfig returns a fully parsed Config object.
-func GetConfig(v *viper.Viper) (Config, error) {
-	cfg, err := config.GetConfig(v)
-	if err != nil {
-		return Config{}, err
-	}
+// DefaultConfig returns server's default configuration.
+func DefaultConfig() *Config {
+	defaultSDKConfig := config.DefaultConfig()
+	defaultSDKConfig.API.Enable = DefaultAPIEnable
+	defaultSDKConfig.GRPC.Enable = DefaultGRPCEnable
+	defaultSDKConfig.GRPCWeb.Enable = DefaultGRPCWebEnable
+	defaultSDKConfig.Telemetry.Enabled = DefaultTelemetryEnable
 
-	return Config{
-		Config: cfg,
-		EVM: EVMConfig{
-			Tracer:         v.GetString("evm.tracer"),
-			MaxTxGasWanted: v.GetUint64("evm.max-tx-gas-wanted"),
-		},
-		JSONRPC: JSONRPCConfig{
-			Enable:                   v.GetBool("json-rpc.enable"),
-			API:                      v.GetStringSlice("json-rpc.api"),
-			Address:                  v.GetString("json-rpc.address"),
-			WsAddress:                v.GetString("json-rpc.ws-address"),
-			GasCap:                   v.GetUint64("json-rpc.gas-cap"),
-			FilterCap:                v.GetInt32("json-rpc.filter-cap"),
-			FeeHistoryCap:            v.GetInt32("json-rpc.feehistory-cap"),
-			TxFeeCap:                 v.GetFloat64("json-rpc.txfee-cap"),
-			EVMTimeout:               v.GetDuration("json-rpc.evm-timeout"),
-			LogsCap:                  v.GetInt32("json-rpc.logs-cap"),
-			BlockRangeCap:            v.GetInt32("json-rpc.block-range-cap"),
-			HTTPTimeout:              v.GetDuration("json-rpc.http-timeout"),
-			HTTPIdleTimeout:          v.GetDuration("json-rpc.http-idle-timeout"),
-			AllowUnprotectedTxs:      v.GetBool("json-rpc.allow-unprotected-txs"),
-			MaxOpenConnections:       v.GetInt("json-rpc.max-open-connections"),
-			EnableIndexer:            v.GetBool("json-rpc.enable-indexer"),
-			MetricsAddress:           v.GetString("json-rpc.metrics-address"),
-			FixRevertGasRefundHeight: v.GetInt64("json-rpc.fix-revert-gas-refund-height"),
-		},
-		TLS: TLSConfig{
-			CertificatePath: v.GetString("tls.certificate-path"),
-			KeyPath:         v.GetString("tls.key-path"),
-		},
-	}, nil
+	return &Config{
+		Config:  *defaultSDKConfig,
+		EVM:     *DefaultEVMConfig(),
+		JSONRPC: *DefaultJSONRPCConfig(),
+		TLS:     *DefaultTLSConfig(),
+	}
 }
 
-// ParseConfig retrieves the default environment configuration for the
-// application.
-func ParseConfig(v *viper.Viper) (*Config, error) {
+// GetConfig returns a fully parsed Config object.
+func GetConfig(v *viper.Viper) (Config, error) {
 	conf := DefaultConfig()
-	err := v.Unmarshal(conf)
-
-	return conf, err
+	if err := v.Unmarshal(conf); err != nil {
+		return Config{}, fmt.Errorf("error extracting app config: %w", err)
+	}
+	return *conf, nil
 }
 
 // ValidateBasic returns an error any of the application configuration fields are invalid

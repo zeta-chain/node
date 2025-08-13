@@ -45,12 +45,13 @@ func (r *E2ERunner) SetupZRC20(zrc20Deployment txserver.ZRC20Deployment) {
 	r.SetupBTCZRC20()
 	r.SetupSOLZRC20()
 	r.SetupTONZRC20()
-	r.activateChainsOnRegistry()
+	r.ActivateChainsOnRegistry()
 }
 
-func (r *E2ERunner) activateChainsOnRegistry() {
+func (r *E2ERunner) ActivateChainsOnRegistry() {
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err)
+	// Activate ETH
 	_, err = r.CoreRegistry.ChangeChainStatus(r.ZEVMAuth, evmChainID, r.ETHZRC20Addr, []byte{}, true)
 	require.NoError(r, err)
 }

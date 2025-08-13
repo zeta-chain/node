@@ -5,11 +5,11 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/evm/x/vm/statedb"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/ethereum/go-ethereum/core/tracing"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
@@ -32,8 +32,10 @@ type BankKeeper interface {
 		recipientAddr sdk.AccAddress,
 		amt sdk.Coins,
 	) error
+	BurnCoins(ctx context.Context, name string, amt sdk.Coins) error
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetSupply(ctx context.Context, denom string) sdk.Coin
 }
 
@@ -42,18 +44,19 @@ type ObserverKeeper interface {
 }
 
 type EVMKeeper interface {
-	ChainID() *big.Int
+	// ChainID() *big.Int
 	GetBlockBloomTransient(ctx sdk.Context) *big.Int
 	GetLogSizeTransient(ctx sdk.Context) uint64
-	WithChainID(ctx sdk.Context)
+	// WithChainID(ctx sdk.Context)
 	SetBlockBloomTransient(ctx sdk.Context, bloom *big.Int)
 	SetLogSizeTransient(ctx sdk.Context, logSize uint64)
 	EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error)
 	ApplyMessage(
 		ctx sdk.Context,
-		msg *core.Message,
-		tracer vm.EVMLogger,
+		msg core.Message,
+		tracer *tracing.Hooks,
 		commit bool,
+		internal bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte

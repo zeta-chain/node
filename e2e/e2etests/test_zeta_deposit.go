@@ -27,7 +27,7 @@ func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta_deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, receiverAddress, nil)
 	require.NoError(r, err)

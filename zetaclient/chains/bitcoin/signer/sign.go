@@ -156,7 +156,7 @@ func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, er
 // 2nd output: the payment to the recipient
 // 3rd output: the remaining btc to TSS itself
 //
-// Note: float64 is used for for 'inputValue' because UTXOs struct uses float64.
+// Note: float64 is used for 'inputValue' because UTXOs struct uses float64.
 // But we need to use 'int64' for the outputs because NewTxOut expects int64.
 func (signer *Signer) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,

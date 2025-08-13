@@ -15,7 +15,7 @@ import (
 func main() {
 	cmdcfg.RegisterDenoms()
 
-	rootCmd, _ := NewRootCmd()
+	rootCmd := NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
 		processError(err)

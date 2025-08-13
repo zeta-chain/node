@@ -22,7 +22,7 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.ZetaWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

@@ -40,7 +40,7 @@ func TestSuiWithdrawRestrictedAddress(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(0),
 		},
 	)
-	r.Logger.EVMTransaction(*tx, "withdraw to restricted sui address")
+	r.Logger.EVMTransaction(tx, "withdraw to restricted sui address")
 
 	// wait for the withdraw tx to be mined
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)

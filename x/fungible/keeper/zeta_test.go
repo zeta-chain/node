@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/mock"
 	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 

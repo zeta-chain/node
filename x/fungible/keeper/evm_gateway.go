@@ -4,8 +4,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"

@@ -231,30 +231,14 @@ func (r *E2ERunner) checkZETATSSBalance(testLegacy bool) {
 		zetaLocked = zetaLocked.Sub(oneZeta)
 	}
 
-	var comparison string
-	var difference sdkmath.Int
-
-	// This comparison assumes that the zeta allocated to Universal contracts is always consumed.However, in reality it may not be the case.
-	// It is quite possible that the Zeta locked is greater than the Zeta minted as the unused Zeta is returned back to the connector.
-	// For e2e tests, we artificially consume all Zeta that was allocated.
-
-	if zetaMinted.GT(zetaLocked) {
-		comparison = "zetaMinted > zetaLocked"
-		difference = zetaMinted.Sub(zetaLocked)
-	} else {
-		comparison = "zetaLocked > zetaMinted"
-		difference = zetaLocked.Sub(zetaMinted)
-	}
-
 	require.True(
 		r,
 		zetaMinted.Equal(zetaLocked),
-		"ZETA: Connector balance (%s) != ZETA TotalSupply (%s) + AbortedAmount (%s). %s by %s",
+		"ZETA: Connector balance (%s) != ZETA Minted (%s) [ ZETA TotalSupply (%s) + AbortedAmount (%s) ]",
 		zetaLocked.String(),
+		zetaMinted.String(),
 		zetaSupply.String(),
 		abortedAmount.String(),
-		comparison,
-		difference.String(),
 	)
 }
 
@@ -290,7 +274,12 @@ func (r *E2ERunner) fetchTokensMintedAtGenesis() sdkmath.Int {
 
 	bankStateBz, ok := appState[banktypes.ModuleName]
 	require.True(r, ok, "bank genesis state is missing")
-	cdc := app.MakeEncodingConfig().Codec
+
+	zevmChainID, err := r.ZEVMClient.ChainID(r.Ctx)
+	require.NoError(r, err, "failed to get ZetaChain ID from ZEVM client")
+
+	r.Logger.Info("ZetaChain ID: %d", zevmChainID.Uint64())
+	cdc := app.MakeEncodingConfig(zevmChainID.Uint64()).Codec
 
 	bankState := new(banktypes.GenesisState)
 	err = cdc.UnmarshalJSON(bankStateBz, bankState)
@@ -319,4 +308,12 @@ func (r *E2ERunner) fetchAbortedAmount() sdkmath.Int {
 	abortedAmount, ok := sdkmath.NewIntFromString(res.GetAbortedZetaAmount())
 	require.True(r, ok, "failed to parse aborted ZETA amount")
 	return abortedAmount
+}
+func (r *E2ERunner) checkProtocolAddressBalance(denom string) sdkmath.Int {
+	res, err := r.BankClient.Balance(r.Ctx, &banktypes.QueryBalanceRequest{
+		Address: fungibletypes.ModuleAddress.String(),
+		Denom:   denom,
+	})
+	require.NoError(r, err, "failed to get protocol address balance")
+	return res.GetBalance().Amount
 }

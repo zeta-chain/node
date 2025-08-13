@@ -12,6 +12,7 @@ import (
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	serverconfig "github.com/zeta-chain/node/server/config"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -43,12 +44,12 @@ func TestIsSystemTx(t *testing.T) {
 	//		*observertypes.MsgVoteTSS,
 	//		*observertypes.MsgVoteBlame:
 	buildTxFromMsg := func(msg sdk.Msg) sdk.Tx {
-		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
+		txBuilder := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID).TxConfig.NewTxBuilder()
 		txBuilder.SetMsgs(msg)
 		return txBuilder.GetTx()
 	}
 	buildAuthzTxFromMsg := func(msg sdk.Msg) sdk.Tx {
-		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
+		txBuilder := app.MakeEncodingConfig(serverconfig.DefaultEVMChainID).TxConfig.NewTxBuilder()
 		msgExec := authz.NewMsgExec(sample.Bech32AccAddress(), []sdk.Msg{msg})
 		txBuilder.SetMsgs(&msgExec)
 		return txBuilder.GetTx()

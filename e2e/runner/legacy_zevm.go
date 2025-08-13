@@ -78,6 +78,63 @@ func (r *E2ERunner) LegacyDepositZetaWithAmountAndPayload(
 	return tx.Hash()
 }
 
+// LegacyDepositZetaWithAmountAndPayload deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount and payload using legacy protocol contracts
+func (r *E2ERunner) LegacyDepositZetaWithAmountAndPayload(
+	to ethcommon.Address,
+	amount *big.Int,
+	payload []byte,
+) ethcommon.Hash {
+	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
+	require.NoError(r, err)
+
+	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "approve")
+	r.requireTxSuccessful(receipt, "approve tx failed")
+
+	// query the chain ID using zevm client
+	zetaChainID, err := r.ZEVMClient.ChainID(r.Ctx)
+	require.NoError(r, err)
+
+	paused, err := r.ConnectorEth.Paused(&bind.CallOpts{})
+	require.NoError(r, err)
+	require.False(r, paused, "ZetaConnectorEth is paused, cannot send ZETA")
+
+	tx, err = r.ConnectorEth.Send(r.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
+		// TODO: allow user to specify destination chain id
+		// https://github.com/zeta-chain/node-private/issues/41
+		DestinationChainId:  zetaChainID,
+		DestinationAddress:  to.Bytes(),
+		DestinationGasLimit: big.NewInt(250_000),
+		Message:             payload,
+		ZetaValueAndGas:     amount,
+		ZetaParams:          nil,
+	})
+	require.NoError(r, err)
+
+	r.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
+
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "send")
+	r.requireTxSuccessful(receipt, "send tx failed")
+
+	r.Logger.Info("  Logs:")
+	for _, log := range receipt.Logs {
+		sentLog, err := r.ConnectorEth.ParseZetaSent(*log)
+		if err == nil {
+			r.Logger.Info("    Connector: %s", r.ConnectorEthAddr.String())
+			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			r.Logger.Info("    Block Num: %d", log.BlockNumber)
+		}
+	}
+
+	return tx.Hash()
+}
+
 // LegacyDepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount using legacy protocol contracts
 func (r *E2ERunner) LegacyDepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
 	tx, err := r.ZetaEth.Approve(r.EVMAuth, r.ConnectorEthAddr, amount)
@@ -211,7 +268,7 @@ func (r *E2ERunner) LegacyWithdrawEther(amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.requireTxSuccessful(receipt, "withdraw failed")
@@ -227,7 +284,7 @@ func (r *E2ERunner) LegacyWithdrawERC20(amount *big.Int) *ethtypes.Transaction {
 	tx, err := r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.EVMAddress().Bytes(), amount)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)

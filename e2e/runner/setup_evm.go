@@ -27,11 +27,11 @@ func (r *E2ERunner) SetupEVM() {
 	}()
 
 	r.deployERC20Contract()
-	r.prepareTSSForDeployment()
+	r.donateTx()
 	r.deployGatewayEVM()
 	r.deployERC20Custody()
-	r.deployTestDAppV2EVM()
-	r.deployZetaConnectorNative()
+	r.DeployTestDAppV2EVM()
+	r.DeployZetaConnectorNative()
 	r.finalizeEVMSetup()
 }
 
@@ -54,8 +54,8 @@ func (r *E2ERunner) deployERC20Contract() {
 	r.ensureTxReceiptEVM(txERC20, "ERC20 deployment failed")
 }
 
-// prepareTSSForDeployment donates ether to TSS address to avoid account errors
-func (r *E2ERunner) prepareTSSForDeployment() {
+// donateTx donates ether to TSS address to avoid account errors
+func (r *E2ERunner) donateTx() {
 	r.Logger.InfoLoud("Deploy Gateway and ERC20Custody ERC20\n")
 
 	// Donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
@@ -135,8 +135,8 @@ func (r *E2ERunner) deployERC20Custody() {
 	r.ensureTxReceiptEVM(txSetCustody, "Set custody in Gateway failed")
 }
 
-// deployTestDAppV2EVM deploys the test DApp V2 contract for EVM
-func (r *E2ERunner) deployTestDAppV2EVM() {
+// DeployTestDAppV2EVM deploys the test DApp V2 contract for EVM
+func (r *E2ERunner) DeployTestDAppV2EVM() {
 	testDAppV2Addr, txTestDAppV2, _, err := testdappv2.DeployTestDAppV2(
 		r.EVMAuth,
 		r.EVMClient,
@@ -157,8 +157,8 @@ func (r *E2ERunner) deployTestDAppV2EVM() {
 	require.False(r, isZetaChain)
 }
 
-// deployZetaConnectorNative deploys the ZetaConnectorNative contract with proxy
-func (r *E2ERunner) deployZetaConnectorNative() {
+// DeployZetaConnectorNative deploys the ZetaConnectorNative contract with proxy
+func (r *E2ERunner) DeployZetaConnectorNative() {
 	// Deploy zetaConnectorNative contract
 	zetaConnectorNativeAddress, txZetaConnectorNativeHash, _, err := zetaconnnectornative.DeployZetaConnectorNative(
 		r.EVMAuth,
