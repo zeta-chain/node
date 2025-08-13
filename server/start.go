@@ -132,11 +132,11 @@ which accepts a path for the resulting pprof file.
 					return err
 				}
 			}
-			skipOverride, _ := cmd.Flags().GetBool(FlagSkipConfigOverride)
+			skipOverride, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
 			if !skipOverride {
-				err := overRideConfigPreRunHandler(cmd)
+				err := overWriteConfigHandler(cmd)
 				if err != nil {
-					return fmt.Errorf("failed to override config: %w", err)
+					return fmt.Errorf("failed to overwrite config: %w", err)
 				}
 			}
 			serverCtx.Logger.Info("starting ABCI with CometBFT")
@@ -156,7 +156,7 @@ which accepts a path for the resulting pprof file.
 		},
 	}
 
-	cmd.Flags().Bool(FlagSkipConfigOverride, false, "Skip running the config override handler")
+	cmd.Flags().Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
 	cmd.Flags().String(flags.FlagHome, opts.DefaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.Address, "tcp://0.0.0.0:26658", "Listen address")

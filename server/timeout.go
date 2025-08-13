@@ -36,7 +36,7 @@ const (
 	// though we already have +2/3).
 	DefaultTimeoutCommit = 3 * time.Second
 
-	FlagSkipConfigOverride = "skip-config-override"
+	FlagSkipConfigOverwrite = "skip-config-overwrite"
 )
 
 // timeoutConfig represents a consensus timeout configuration pair
@@ -45,7 +45,7 @@ type timeoutConfig struct {
 	defaultValue time.Duration
 }
 
-func overRideConfigPreRunHandler(cmd *cobra.Command) error {
+func overWriteConfigHandler(cmd *cobra.Command) error {
 	serverCtx := server.GetServerContextFromCmd(cmd)
 
 	timeoutConfigs := []timeoutConfig{
@@ -88,8 +88,6 @@ func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 	}
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")
-
 	cmtcfg.WriteConfigFile(cmtCfgFile, conf)
-	fmt.Printf("Consensus timeouts updated in %s\n", cmtCfgFile)
 	return nil
 }
