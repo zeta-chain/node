@@ -43,7 +43,7 @@ func TestSolanaWithdrawAndCallInvalidTxSize(r *runner.E2ERunner, args []string) 
 		approvedAmount,
 	)
 
-	// check balances before withdraw
+	// get connected program pda
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
