@@ -170,6 +170,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
@@ -259,6 +260,7 @@ func TestSigner(t *testing.T) {
 			expectedArgs := []any{
 				ts.Gateway.ObjectID(),
 				fmt.Sprintf("%d", nonce),
+				"42000", // gasRefund = GasPrice (1000) * GasLimit (42)
 				withdrawCapID,
 			}
 			require.Equal(t, expectedArgs, req.Arguments)
