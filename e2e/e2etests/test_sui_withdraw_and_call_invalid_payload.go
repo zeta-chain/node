@@ -27,6 +27,9 @@ func TestSuiWithdrawAndCallInvalidPayload(r *runner.E2ERunner, args []string) {
 	message, err := hex.DecodeString("deadbeef")
 	require.NoError(r, err)
 
+	// given TSS balance in Sui network
+	tssBalanceBefore := r.SuiGetSUIBalance(r.SuiTSSAddress)
+
 	// ACT
 	// approve SUI ZRC20 token
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
@@ -47,4 +50,9 @@ func TestSuiWithdrawAndCallInvalidPayload(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+
+	// the TSS balance in Sui network should be higher or equal to the balance before
+	// reason is that the max budget is refunded to the TSS
+	tssBalanceAfter := r.SuiGetSUIBalance(r.SuiTSSAddress)
+	require.GreaterOrEqual(r, tssBalanceAfter, tssBalanceBefore)
 }

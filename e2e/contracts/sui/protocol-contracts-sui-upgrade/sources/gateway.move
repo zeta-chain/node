@@ -155,10 +155,12 @@ entry fun upgraded(): bool {
 // increase_nonce increases the nonce of the gateway
 // it is used when a failed outbound needs to be reported to ZetaChain
 // it is sent by the tss and therefore requires the withdraw cap
-entry fun increase_nonce(gateway: &mut Gateway, nonce: u64, cap: &WithdrawCap, ctx: &TxContext) {
-    assert!(gateway.active_withdraw_cap == object::id(cap), EInactiveWithdrawCap);
-    assert!(nonce == gateway.nonce, ENonceMismatch);
-    gateway.nonce = nonce + 1;
+entry fun increase_nonce(gateway: &mut Gateway, nonce: u64, gas_budget: u64, cap: &WithdrawCap, ctx: &mut TxContext) {
+    // withdraw gas budget to the TSS to reimburse gas expenses
+    let (coins, coins_gas_budget) = withdraw_impl<SUI>(gateway, 0, nonce, gas_budget, cap, ctx);
+
+    coin::destroy_zero(coins);
+    transfer::public_transfer(coins_gas_budget, tx_context::sender(ctx));
 
     // Emit event
     event::emit(NonceIncreaseEvent {
