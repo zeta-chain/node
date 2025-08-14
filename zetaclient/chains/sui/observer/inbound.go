@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -199,10 +200,12 @@ func (ob *Observer) constructInboundVote(
 		return nil, errCompliance
 	}
 
-	// Sui uses checkpoint seq num instead of block height
+	// Sui uses checkpoint seq num instead of block height.
+	// If checkpoint is invalid (e.g. 0), the tx status remains unclear (e.g. maybe pending).
+	// In this case, we should signal the caller to stop scanning further by returning errTxNotFound.
 	checkpointSeqNum, err := uint64FromStr(tx.Checkpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse checkpoint")
+	if err != nil || checkpointSeqNum == 0 {
+		return nil, errors.Wrap(errTxNotFound, fmt.Sprintf("invalid checkpoint: %s", tx.Checkpoint))
 	}
 
 	return cctypes.NewMsgVoteInbound(

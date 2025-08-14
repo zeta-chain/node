@@ -62,11 +62,7 @@ func suiTestRoutine(
 		}
 
 		// check gateway SUI balance against ZRC20 total supply
-		// TODO: https://github.com/zeta-chain/node/issues/4066 remove after v33
-		// skip if its running upgrade as gas limit improvement is not on release/v32
-		if !suiRunner.IsRunningUpgrade() {
-			suiRunner.CheckSUITSSBalance()
-		}
+		suiRunner.CheckSUITSSBalance()
 
 		suiRunner.Logger.Print("🍾 sui tests completed in %s", time.Since(startTime).String())
 
