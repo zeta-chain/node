@@ -10,6 +10,10 @@
 
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 
+### Tests
+
+* [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
+
 ## v33.0.0
 
 ### Features
