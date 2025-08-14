@@ -566,7 +566,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// Admin tests forcefully burn ZETA from fungible module address which causes an accounting mismatch
+	// We artificially burn zeta in the admin tests which causes an imbalance in the accounting.
 	if !testAdmin {
 		deployerRunner.VerifyAccounting(testLegacy)
 	}

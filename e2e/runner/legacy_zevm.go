@@ -154,6 +154,7 @@ func (r *E2ERunner) LegacyDepositAndApproveWZeta(amount *big.Int) {
 	r.requireTxSuccessful(receipt, "approve failed, logs: %+v", receipt.Logs)
 }
 
+// DepositWZeta deposits WZETA on ZetaChain
 func (r *E2ERunner) DepositWZeta(amount *big.Int) {
 	r.ZEVMAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZEVMAuth)
