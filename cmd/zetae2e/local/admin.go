@@ -43,10 +43,10 @@ func adminTestRoutine(
 		adminRunner.WaitForTxReceiptOnEVM(txZetaSend)
 		adminRunner.WaitForTxReceiptOnEVM(txERC20Send)
 
-		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := adminRunner.DepositZETADeployer()
-		txEtherDeposit := adminRunner.DepositEtherDeployer()
-		txERC20Deposit := adminRunner.DepositERC20Deployer()
+		// depositing the necessary tokens on ZetaChain to the deployer account
+		txZetaDeposit := adminRunner.DepositZETAToDeployer()
+		txEtherDeposit := adminRunner.DepositEtherToDeployer()
+		txERC20Deposit := adminRunner.DepositERC20ToDeployer()
 		adminRunner.WaitForMinedCCTX(txZetaDeposit.Hash())
 		adminRunner.WaitForMinedCCTX(txEtherDeposit)
 		adminRunner.WaitForMinedCCTX(txERC20Deposit)

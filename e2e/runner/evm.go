@@ -57,31 +57,27 @@ func (r *E2ERunner) ETHDeposit(
 	return tx
 }
 
-// DepositEtherDeployer sends Ethers into ZEVM using V2 protocol contracts
-func (r *E2ERunner) DepositEtherDeployer() ethcommon.Hash {
+// DepositEtherToDeployer sends Ethers into ZEVM using V2 protocol contracts
+func (r *E2ERunner) DepositEtherToDeployer() ethcommon.Hash {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100)) // 100 eth
 	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
 	return tx.Hash()
 }
 
-// DepositERC20Deployer sends ERC20 into ZEVM using v2 protocol contracts
-func (r *E2ERunner) DepositERC20Deployer() ethcommon.Hash {
+// DepositERC20ToDeployer sends ERC20 into ZEVM using v2 protocol contracts
+func (r *E2ERunner) DepositERC20ToDeployer() ethcommon.Hash {
 	r.Logger.Print("⏳ depositing ERC20 into ZEVM")
-
 	r.ApproveERC20OnEVM(r.GatewayEVMAddr)
-
 	oneHundred := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(100))
 	tx := r.ERC20Deposit(r.EVMAddress(), oneHundred, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	return tx.Hash()
 }
 
-// DepositZETADeployer deposits ZETA into ZEVM using v2 protocol contracts
-func (r *E2ERunner) DepositZETADeployer() *ethtypes.Transaction {
+// DepositZETAToDeployer deposits ZETA into ZEVM using v2 protocol contracts
+func (r *E2ERunner) DepositZETAToDeployer() *ethtypes.Transaction {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
-
 	r.ApproveZetaOnEVM(r.GatewayEVMAddr)
-
 	return r.ZETADeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 }
 
