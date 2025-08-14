@@ -566,7 +566,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	deployerRunner.VerifyAccounting(testLegacy)
+	// Admin tests forcefully burn ZETA from fungible module address which causes an accounting mismatch
+	if !testAdmin {
+		deployerRunner.VerifyAccounting(testLegacy)
+	}
 
 	// Default ballot maturity is set to 30 blocks.
 	// We can wait for 31 blocks to ensure that all ballots created during the test are matured, as emission rewards may be slashed for some observers based on their vote.

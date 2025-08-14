@@ -7,7 +7,6 @@ import (
 
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/mock"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
