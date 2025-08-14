@@ -32,10 +32,6 @@ func GetDefaultUpgradeHandlerVersion() string {
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
 		upgrades: []upgradeTrackerItem{
-			{
-				index:        1752528615,
-				storeUpgrade: &storetypes.StoreUpgrades{},
-			},
 			// TODO: enable back IBC
 			// these commented lines allow for the IBC modules to be added to the upgrade tracker
 			// https://github.com/zeta-chain/node/issues/2573
