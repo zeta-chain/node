@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -226,9 +226,7 @@ func displayJSON(stats *databaseStats) error {
 
 // sortSlice sorts a slice of ordered values
 func sortSlice[T constraints.Ordered](s []T) {
-	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
-	})
+	slices.Sort(s)
 }
 
 // formatBytes formats a byte count into a human-readable string
