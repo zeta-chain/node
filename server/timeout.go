@@ -8,7 +8,9 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // REF: https://github.com/zeta-chain/node/issues/4032
@@ -17,19 +19,19 @@ const (
 	DefaultTimeoutPropose = 3 * time.Second
 
 	// DefaultTimeoutProposeDelta How much timeout_propose increases with each round
-	DefaultTimeoutProposeDelta = 500 * time.Millisecond
+	DefaultTimeoutProposeDelta = 200 * time.Millisecond
 
 	// DefaultTimeoutPrevote How long we wait after receiving +2/3 prevotes for "anything" (ie. not a single block or nil)
 	DefaultTimeoutPrevote = 1 * time.Second
 
 	// DefaultTimeoutPrevoteDelta How much the timeout_prevote increases with each round
-	DefaultTimeoutPrevoteDelta = 500 * time.Millisecond
+	DefaultTimeoutPrevoteDelta = 200 * time.Millisecond
 
 	// DefaultTimeoutPrecommit How long we wait after receiving +2/3 precommits for "anything" (ie. not a single block or nil)
 	DefaultTimeoutPrecommit = 1 * time.Second
 
 	// DefaultTimeoutPrecommitDelta How much the timeout_precommit increases with each round
-	DefaultTimeoutPrecommitDelta = 500 * time.Millisecond
+	DefaultTimeoutPrecommitDelta = 200 * time.Millisecond
 
 	// DefaultTimeoutCommit How long we wait after committing a block, before starting on the new
 	// height (this gives us a chance to receive some more precommits, even
@@ -84,11 +86,26 @@ func overWriteConfig(cmd *cobra.Command) error {
 // updateConfigFile updates the config file with the current server context configuration.
 func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 	rootDir, err := cmd.Flags().GetString(flags.FlagHome)
-	if err != nil {
+	if err != nil || rootDir == "" {
 		return fmt.Errorf("failed to get home directory: %w", err)
 	}
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")
 	cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 	return nil
+}
+
+// fetchTokensMintedAtGenesis retrieves the total amount of ZETA tokens minttend from the genesis file.
+func genesisChainId(genesisFilePath string) (int64, error) {
+
+	_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get genesis state from genesis file: %w", err)
+	}
+
+	evmChainID, err := chains.CosmosToEthChainID(genesis.ChainID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert cosmos chain ID to ethereum chain ID: %w", err)
+	}
+	return evmChainID, nil
 }
