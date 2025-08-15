@@ -125,7 +125,10 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	if tx == nil {
-		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txReq := models.SuiGetTransactionBlockRequest{
+			Digest:  event.TxHash,
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		}
 		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
@@ -150,8 +153,11 @@ func (ob *Observer) processInboundEvent(
 // processInboundTracker queries tx with its events by tracker and then votes.
 func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  tracker.TxHash,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+		Digest: tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+			ShowEvents:  true,
+		},
 	}
 
 	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
@@ -198,6 +204,12 @@ func (ob *Observer) constructInboundVote(
 			asset,
 		)
 		return nil, errCompliance
+	}
+
+	// a valid inbound should be successful
+	// in theory, Sui protocol should erase emitted events if tx failed, just in case
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return nil, errors.Errorf("inbound is failed: %s", tx.Effects.Status.Error)
 	}
 
 	// Sui uses checkpoint seq num instead of block height.
