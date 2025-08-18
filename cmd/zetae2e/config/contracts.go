@@ -7,6 +7,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -410,6 +411,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
 		}
 		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.CoreRegistry; c != "" {
+		r.CoreRegistryAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid CoreRegistryAddr: %w", err)
+		}
+		r.CoreRegistry, err = coreregistry.NewCoreRegistry(r.CoreRegistryAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

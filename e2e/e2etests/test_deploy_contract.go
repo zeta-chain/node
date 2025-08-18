@@ -47,6 +47,7 @@ func deployZEVMTestDApp(r *runner.E2ERunner) (ethcommon.Address, error) {
 		r.ZEVMClient,
 		true,
 		r.GatewayEVMAddr,
+		r.WZetaAddr,
 	)
 	if err != nil {
 		return addr, err
@@ -68,6 +69,7 @@ func deployEVMTestDApp(r *runner.E2ERunner) (ethcommon.Address, error) {
 		r.EVMClient,
 		false,
 		r.GatewayEVMAddr,
+		r.ZetaEthAddr,
 	)
 	if err != nil {
 		return addr, err
