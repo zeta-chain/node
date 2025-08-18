@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/mod/semver"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
 	"github.com/zeta-chain/node/e2e/config"
@@ -604,11 +603,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// TODO : enable sui gateway upgrade tests to be run multiple times
 	runSuiGatewayUpgradeTests := func() bool {
 		// do not if we are running and upgrade and this is the second run
-		if deployerRunner.IsRunningUpgrade() && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
-			return false
-		}
-		// do not run if we are running TSS migration tests and this is the second run
-		if testTSSMigration && semver.Major(deployerRunner.GetZetacoredVersion()) == "v0" {
+		if deployerRunner.IsRunningUpgrade() || testTSSMigration {
 			return false
 		}
 		return testSui
