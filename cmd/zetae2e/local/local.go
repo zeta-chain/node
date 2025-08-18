@@ -312,7 +312,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy || testAdmin)
+		deployerRunner.RunSetup(testLegacy)
 		if !testSui || deployerRunner.IsRunningTssMigration() {
 			return
 		}
