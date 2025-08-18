@@ -10,6 +10,10 @@
 
 * [4070](https://github.com/zeta-chain/node/pull/4070) - remove support for v1 revert address for BTC
 
+### Fixes
+
+* [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
+
 ### Tests
 
 * [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
