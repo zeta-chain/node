@@ -399,7 +399,7 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	export UPGRADE_HEIGHT=225 && \
+	export UPGRADE_HEIGHT=240 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-connector-migration-test: zetanode-upgrade

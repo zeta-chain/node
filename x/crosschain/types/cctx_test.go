@@ -202,12 +202,10 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().ConfirmationMode, cctx.InboundParams.ConfirmationMode)
 	})
 
-	t.Run("successfully set BTC revert address V1", func(t *testing.T) {
-		r := sample.Rand()
-		cctx := sample.CrossChainTx(t, "test")
-		cctx.InboundParams.SenderChainId = chains.BitcoinTestnet.ChainId
+	t.Run("successfully set EVM revert address V2", func(t *testing.T) {
+		cctx := sample.CrossChainTxV2(t, "test")
 		cctx.OutboundParams = cctx.OutboundParams[:1]
-		cctx.RevertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, r, &chaincfg.TestNet3Params).String()
+		cctx.RevertOptions.RevertAddress = sample.EthAddress().Hex()
 
 		err := cctx.AddRevertOutbound(100)
 		require.NoError(t, err)
@@ -221,10 +219,12 @@ func Test_SetRevertOutboundValues(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutboundParam().CoinType, cctx.InboundParams.CoinType)
 	})
 
-	t.Run("successfully set EVM revert address V2", func(t *testing.T) {
+	t.Run("successfully set BTC revert address V2", func(t *testing.T) {
 		cctx := sample.CrossChainTxV2(t, "test")
 		cctx.OutboundParams = cctx.OutboundParams[:1]
-		cctx.RevertOptions.RevertAddress = sample.EthAddress().Hex()
+		r := sample.Rand()
+		cctx.InboundParams.SenderChainId = chains.BitcoinMainnet.ChainId
+		cctx.RevertOptions.RevertAddress = sample.BTCAddressP2WPKH(t, r, &chaincfg.MainNetParams).String()
 
 		err := cctx.AddRevertOutbound(100)
 		require.NoError(t, err)

@@ -135,8 +135,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetupZEVMProtocolContracts()
-		e2eTest.SetupZEVMZRC20s(txserver.ZRC20Deployment{
+		e2eTest.SetupZEVM()
+		e2eTest.SetupZRC20(txserver.ZRC20Deployment{
 			ERC20Addr: e2eTest.ERC20Addr,
 			SPLAddr:   nil, // no stress tests for solana atm
 		})
