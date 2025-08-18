@@ -68,6 +68,7 @@ const (
 	TestSolanaWithdrawName                                = "solana_withdraw"
 	TestSolanaWithdrawRevertExecutableReceiverName        = "solana_withdraw_revert_executable_receiver"
 	TestSolanaWithdrawAndCallName                         = "solana_withdraw_and_call"
+	TestSolanaWithdrawAndCallInvalidTxSizeName            = "solana_withdraw_and_call_invalid_tx_size"
 	TestSolanaWithdrawAndCallInvalidMsgEncodingName       = "solana_withdraw_and_call_invalid_msg_encoding"
 	TestZEVMToSolanaCallName                              = "zevm_to_solana_call"
 	TestSolanaWithdrawAndCallRevertWithCallName           = "solana_withdraw_and_call_revert_with_call"
@@ -783,6 +784,14 @@ var AllE2ETests = []runner.E2ETest{
 		[]runner.ArgDefinition{},
 		TestZEVMToSolanaCall,
 		runner.WithMinimumVersion("v29.0.0"),
+	),
+	runner.NewE2ETest(
+		TestSolanaWithdrawAndCallInvalidTxSizeName,
+		"withdraw SOL from ZEVM and call solana program with invalid tx size",
+		[]runner.ArgDefinition{
+			{Description: "amount in lamport", DefaultValue: "1000000"},
+		},
+		TestSolanaWithdrawAndCallInvalidTxSize,
 	),
 	runner.NewE2ETest(
 		TestSolanaWithdrawAndCallInvalidMsgEncodingName,
