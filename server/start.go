@@ -42,11 +42,11 @@ import (
 	cosmosevmtypes "github.com/cosmos/evm/types"
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/node/pkg/chains"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	ethdebug "github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 )
 
@@ -133,17 +133,22 @@ which accepts a path for the resulting pprof file.
 					return err
 				}
 			}
-			skipOverride, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
+			skipOverwrite, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
 			genesisChainID, err := genesisChainId(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return errorsmod.Wrapf(err, "failed to get genesis chain ID from genesis file")
 			}
 
-			if (genesisChainID == chains.ZetaChainMainnet.ChainId || genesisChainID == chains.ZetaChainTestnet.ChainId) && skipOverride {
-				return fmt.Errorf("config overwrite is required for ZetaChain mainnet and testnet, please run the command without the --%s flag", FlagSkipConfigOverwrite)
+			// Cannot skip over writing the config file for ZetaChain mainnet and testnet
+			if (genesisChainID == chains.ZetaChainMainnet.ChainId || genesisChainID == chains.ZetaChainTestnet.ChainId) &&
+				skipOverwrite {
+				return fmt.Errorf(
+					"config overwrite is required for ZetaChain mainnet and testnet, please run the command without the --%s flag",
+					FlagSkipConfigOverwrite,
+				)
 			}
 
-			if !skipOverride {
+			if !skipOverwrite {
 				err := overWriteConfig(cmd)
 				if err != nil {
 					return fmt.Errorf("failed to overwrite config: %w", err)
