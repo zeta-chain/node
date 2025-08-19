@@ -82,12 +82,10 @@ func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 
 // genesisChainId reads the genesis file at the given path and returns the corresponding chain ID in int64 format(EVM)
 func genesisChainId(genesisFilePath string) (int64, error) {
-
 	_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 	if err != nil {
 		return -1, fmt.Errorf("failed to get genesis state from genesis file: %w", err)
 	}
-
 	evmChainID, err := chains.CosmosToEthChainID(genesis.ChainID)
 	if err != nil {
 		return -1, fmt.Errorf("failed to convert cosmos chain ID to ethereum chain ID: %w", err)
