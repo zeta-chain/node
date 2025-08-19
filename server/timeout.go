@@ -80,17 +80,17 @@ func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 	return nil
 }
 
-// fetchTokensMintedAtGenesis retrieves the total amount of ZETA tokens minttend from the genesis file.
+// genesisChainId reads the genesis file at the given path and returns the corresponding chain ID in int64 format(EVM)
 func genesisChainId(genesisFilePath string) (int64, error) {
 
 	_, genesis, err := genutiltypes.GenesisStateFromGenFile(genesisFilePath)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get genesis state from genesis file: %w", err)
+		return -1, fmt.Errorf("failed to get genesis state from genesis file: %w", err)
 	}
 
 	evmChainID, err := chains.CosmosToEthChainID(genesis.ChainID)
 	if err != nil {
-		return 0, fmt.Errorf("failed to convert cosmos chain ID to ethereum chain ID: %w", err)
+		return -1, fmt.Errorf("failed to convert cosmos chain ID to ethereum chain ID: %w", err)
 	}
 	return evmChainID, nil
 }
