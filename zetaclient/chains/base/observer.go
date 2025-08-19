@@ -402,10 +402,6 @@ func (ob *Observer) PostVoteInbound(
 		logs.FieldConfirmationMode: msg.ConfirmationMode.String(),
 	}
 
-	// zetaclient patch
-	// force use SAFE mode for all inbound votes (both fast and slow votes)
-	msg.ConfirmationMode = crosschaintypes.ConfirmationMode_SAFE
-
 	cctxIndex := msg.Digest()
 	// The cctx is created after the inbound ballot is finalized
 	// 1. if the cctx already exists, we could try voting if the ballot is present
