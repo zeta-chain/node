@@ -10,33 +10,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/cobra"
+
 	"github.com/zeta-chain/node/pkg/chains"
 )
 
 // REF: https://github.com/zeta-chain/node/issues/4032
 const (
-	// DefaultTimeoutPropose How long we wait for a proposal block before prevoting nil
-	DefaultTimeoutPropose = 3 * time.Second
 
 	// DefaultTimeoutProposeDelta How much timeout_propose increases with each round
 	DefaultTimeoutProposeDelta = 200 * time.Millisecond
 
-	// DefaultTimeoutPrevote How long we wait after receiving +2/3 prevotes for "anything" (ie. not a single block or nil)
-	DefaultTimeoutPrevote = 1 * time.Second
-
 	// DefaultTimeoutPrevoteDelta How much the timeout_prevote increases with each round
 	DefaultTimeoutPrevoteDelta = 200 * time.Millisecond
 
-	// DefaultTimeoutPrecommit How long we wait after receiving +2/3 precommits for "anything" (ie. not a single block or nil)
-	DefaultTimeoutPrecommit = 1 * time.Second
-
 	// DefaultTimeoutPrecommitDelta How much the timeout_precommit increases with each round
 	DefaultTimeoutPrecommitDelta = 200 * time.Millisecond
-
-	// DefaultTimeoutCommit How long we wait after committing a block, before starting on the new
-	// height (this gives us a chance to receive some more precommits, even
-	// though we already have +2/3).
-	DefaultTimeoutCommit = 3 * time.Second
 
 	FlagSkipConfigOverwrite = "skip-config-overwrite"
 )
@@ -52,13 +40,9 @@ func overWriteConfig(cmd *cobra.Command) error {
 	serverCtx := server.GetServerContextFromCmd(cmd)
 
 	timeoutConfigs := []timeoutConfig{
-		{&serverCtx.Config.Consensus.TimeoutPropose, DefaultTimeoutPropose},
 		{&serverCtx.Config.Consensus.TimeoutProposeDelta, DefaultTimeoutProposeDelta},
-		{&serverCtx.Config.Consensus.TimeoutPrevote, DefaultTimeoutPrevote},
 		{&serverCtx.Config.Consensus.TimeoutPrevoteDelta, DefaultTimeoutPrevoteDelta},
-		{&serverCtx.Config.Consensus.TimeoutPrecommit, DefaultTimeoutPrecommit},
 		{&serverCtx.Config.Consensus.TimeoutPrecommitDelta, DefaultTimeoutPrecommitDelta},
-		{&serverCtx.Config.Consensus.TimeoutCommit, DefaultTimeoutCommit},
 	}
 
 	needsUpdate := false
@@ -87,6 +71,7 @@ func overWriteConfig(cmd *cobra.Command) error {
 func updateConfigFile(cmd *cobra.Command, conf *cmtcfg.Config) error {
 	rootDir, err := cmd.Flags().GetString(flags.FlagHome)
 	if err != nil || rootDir == "" {
+		fmt.Println("root directory :", rootDir)
 		return fmt.Errorf("failed to get home directory: %w", err)
 	}
 	configPath := filepath.Join(rootDir, "config")
