@@ -29,7 +29,7 @@ func TestETHDeposit(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// check the balance after the deposit
+	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
 }
