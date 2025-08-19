@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 )
 
@@ -82,7 +84,7 @@ func Test_OverWriteConfig(t *testing.T) {
 	}
 }
 
-func Test_updateConfigFile(t *testing.T) {
+func Test_UpdateConfigFile(t *testing.T) {
 	t.Run("should create config.toml in specified directory", func(t *testing.T) {
 		// Arrange
 		cmd := StartCmd(StartOptions{})
@@ -116,5 +118,55 @@ func Test_updateConfigFile(t *testing.T) {
 		// Assert
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to get home directory")
+	})
+}
+
+func Test_GenesisChainID(t *testing.T) {
+	t.Run("get chainID for ZetaChainPrivnet", func(t *testing.T) {
+		genesis := sample.AppGenesis(t)
+		genesis.ChainID = fmt.Sprintf("test_%d-%d", chains.ZetaChainPrivnet.ChainId, 1)
+		tempDir := t.TempDir()
+		rootConfigDir := filepath.Join(tempDir, "config")
+		require.NoError(t, os.MkdirAll(rootConfigDir, 0755))
+		genesisFile := filepath.Join(rootConfigDir, "genesis.json")
+		err := genesis.SaveAs(genesisFile)
+		require.NoError(t, err)
+
+		id, err := genesisChainId(genesisFile)
+
+		require.NoError(t, err)
+		require.Equal(t, id, chains.ZetaChainPrivnet.ChainId)
+	})
+
+	t.Run("fail to get chainID if genesis file does not exist", func(t *testing.T) {
+		tempDir := t.TempDir()
+		genesisFile := filepath.Join(tempDir, "config", "genesis.json")
+
+		// Act
+		_, err := genesisChainId(genesisFile)
+
+		// Assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to get genesis state from genesis file")
+	})
+
+	t.Run("fail to get chain Id if genesis file has invalid chainID", func(t *testing.T) {
+		tempDir := t.TempDir()
+		rootConfigDir := filepath.Join(tempDir, "config")
+		require.NoError(t, os.MkdirAll(rootConfigDir, 0755))
+		genesisFile := filepath.Join(rootConfigDir, "genesis.json")
+
+		// Create a genesis file with an invalid chain ID
+		genesis := sample.AppGenesis(t)
+		genesis.ChainID = "invalid_chain_id"
+		err := genesis.SaveAs(genesisFile)
+		require.NoError(t, err)
+
+		// Act
+		_, err = genesisChainId(genesisFile)
+
+		// Assert
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to convert cosmos chain ID to ethereum chain ID")
 	})
 }

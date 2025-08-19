@@ -148,7 +148,6 @@ func AddObserverListCmd() *cobra.Command {
 			}
 
 			genFile := serverConfig.GenesisFile()
-
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
