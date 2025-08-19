@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/contracts/testconnectorzevm"
 	"github.com/zeta-chain/node/e2e/runner"
@@ -17,9 +18,12 @@ import (
 func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	// Can withdraw 10ZETA
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10))
-	r.LegacyDepositAndApproveWZeta(amount)
+	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 
-	tx := r.LegacyWithdrawZeta(amount, true)
+	require.NoError(r, err)
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
+	tx := r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
@@ -63,8 +67,9 @@ func TestUpdateBytecodeConnector(r *runner.E2ERunner, _ []string) {
 	require.Equal(r, "foo", response)
 
 	// Can continue to interact with the connector: withdraw 10ZETA
-	r.LegacyDepositAndApproveWZeta(amount)
-	tx = r.LegacyWithdrawZeta(amount, true)
+	r.DepositWZeta(amount)
+	r.ApproveETHZRC20(r.GatewayZEVMAddr)
+	tx = r.ZETAWithdraw(r.EVMAddress(), amount, evmChainID, gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
