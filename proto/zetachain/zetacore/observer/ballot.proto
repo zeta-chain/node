@@ -9,7 +9,7 @@ option go_package = "github.com/zeta-chain/node/x/observer/types";
 enum VoteType {
   option (gogoproto.goproto_enum_stringer) = true;
   SuccessObservation = 0;
-  FailureObservation = 1; // Failure observation means , the the message that
+  FailureObservation = 1; // Failure observation means , the message that
                           // this voter is observing failed / reverted . It does
                           // not mean it was unable to observe.
   NotYetVoted = 2;

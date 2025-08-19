@@ -56087,7 +56087,7 @@ definitions:
       - NotYetVoted
     default: SuccessObservation
     description: |2-
-       - FailureObservation: Failure observation means , the the message that
+       - FailureObservation: Failure observation means , the message that
        - NotYetVoted: this voter is observing failed / reverted . It does
       not mean it was unable to observe.
   zetachain.zetacore.observer.VoterList:

@@ -101,7 +101,7 @@ export enum VoteType {
   SuccessObservation = 0,
 
   /**
-   * Failure observation means , the the message that
+   * Failure observation means , the message that
    *
    * @generated from enum value: FailureObservation = 1;
    */
