@@ -13,6 +13,7 @@
 ### Fixes
 
 * [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
+* [4116](https://github.com/zeta-chain/node/pull/4116) - remove confirmation mode from outbound and inbound digest
 
 ### Tests
 
