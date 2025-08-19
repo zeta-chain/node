@@ -267,7 +267,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetupBitcoinAccounts(true)
 
 		//setup protocol contracts v1 as they are still supported for now
-		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy || testAdmin)
+		deployerRunner.LegacySetupEVM(contractsDeployed, testLegacy)
 
 		// setup protocol contracts on the connected EVM chain
 		deployerRunner.SetupEVM()
@@ -280,7 +280,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			)
 		}
 
-		deployerRunner.SetupZEVMProtocolContracts()
+		deployerRunner.SetupZEVM()
 		deployerRunner.SetupLegacyZEVMContracts()
 
 		zrc20Deployment := txserver.ZRC20Deployment{
@@ -290,10 +290,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		if setupSolana {
 			zrc20Deployment.SPLAddr = deployerRunner.SPLAddr.ToPointer()
 		}
-		deployerRunner.SetupZEVMZRC20s(zrc20Deployment)
+		deployerRunner.SetupZRC20(zrc20Deployment)
 
 		// Update the chain params to contains protocol contract addresses
-		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy || testAdmin)
+		deployerRunner.UpdateProtocolContractsInChainParams(testLegacy)
 
 		if testTON {
 			deployerRunner.SetupTON(
@@ -312,7 +312,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.Logger.Print(fmt.Sprintf("Running post-upgrade setup for %s", previousVersion))
 		err = OverwriteAccountData(cmd, &conf)
 		require.NoError(deployerRunner, err, "Failed to override account data from the config file")
-		deployerRunner.RunSetup(testLegacy || testAdmin)
+		deployerRunner.RunSetup(testLegacy)
 		if !testSui || deployerRunner.IsRunningTssMigration() {
 			return
 		}

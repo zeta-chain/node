@@ -186,7 +186,7 @@ func TestPendingFunctionUnderflowProtection(t *testing.T) {
 	// Acquire and release to potentially cause underflow
 	require.NoError(t, r.Acquire(1, 100))
 	r.Release()
-	
+
 	// Release multiple times to potentially cause negative internal state
 	for i := 0; i < 10; i++ {
 		r.Release()

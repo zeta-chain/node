@@ -65,6 +65,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			data,
 			indexBytes,
 		)
+
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {
@@ -106,6 +107,8 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// and does not include any other side effects or any logic that modifies the state directly
 		tmpCtx, commit := ctx.CacheContext()
 
+		// contractCall is the same as the isCrossChainCall for V2 protocol version
+		// when removing V1 flows this can be simplified
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
 			tmpCtx,
 			from,
@@ -127,7 +130,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return false, err
 		}
 
-		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
+		// non-empty msg.Message means this is a contract call; therefore, the logs should be processed.
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)

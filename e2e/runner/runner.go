@@ -24,6 +24,7 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
@@ -205,6 +206,8 @@ type E2ERunner struct {
 	GatewayZEVM          *gatewayzevm.GatewayZEVM
 	TestDAppV2ZEVMAddr   ethcommon.Address
 	TestDAppV2ZEVM       *testdappv2.TestDAppV2
+	CoreRegistryAddr     ethcommon.Address
+	CoreRegistry         *coreregistry.CoreRegistry
 
 	// config
 	CctxTimeout    time.Duration
@@ -472,6 +475,7 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
 	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
 	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
+	r.Logger.Print("CoreRegistry:   %s", r.CoreRegistryAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
