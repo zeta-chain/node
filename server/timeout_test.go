@@ -151,12 +151,12 @@ func Test_GenesisChainID(t *testing.T) {
 	})
 
 	t.Run("fail to get chain Id if genesis file has invalid chainID", func(t *testing.T) {
+		// Arrange
 		tempDir := t.TempDir()
 		rootConfigDir := filepath.Join(tempDir, "config")
 		require.NoError(t, os.MkdirAll(rootConfigDir, 0755))
 		genesisFile := filepath.Join(rootConfigDir, "genesis.json")
 
-		// Create a genesis file with an invalid chain ID
 		genesis := sample.AppGenesis(t)
 		genesis.ChainID = "invalid_chain_id"
 		err := genesis.SaveAs(genesisFile)
