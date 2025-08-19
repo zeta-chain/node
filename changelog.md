@@ -15,6 +15,10 @@
 * [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
 * [4111](https://github.com/zeta-chain/node/pull/4111) - cancel Solana outbound if transaction size is too large
 
+### Tests
+
+* [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
+
 ## v33.0.0
 
 ### Features
