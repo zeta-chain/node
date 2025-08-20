@@ -71,7 +71,7 @@ type ParsedTx struct {
 	// -1 means uninitialized
 	EthTxIndex int32
 	GasUsed    uint64
-	GasLimit   uint64
+	GasLimit   *uint64
 	Failed     bool
 	// Additional cosmos EVM tx fields
 	TxHash    string
@@ -395,7 +395,7 @@ func fillTxAttribute(tx *ParsedTx, key string, value string) error {
 		if err != nil {
 			return err
 		}
-		tx.GasLimit = gasLimit
+		tx.GasLimit = &gasLimit
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
 	case SenderType:
