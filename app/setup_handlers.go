@@ -2,11 +2,14 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	erc20types "github.com/cosmos/evm/x/erc20/types"
+	"github.com/zeta-chain/node/pkg/chains"
 	"golang.org/x/mod/semver"
 
 	"github.com/zeta-chain/node/pkg/constant"
@@ -30,28 +33,28 @@ func GetDefaultUpgradeHandlerVersion() string {
 }
 
 func SetupHandlers(app *App) {
-	allUpgrades := upgradeTracker{
-		upgrades: []upgradeTrackerItem{
-			// TODO: enable back IBC
-			// these commented lines allow for the IBC modules to be added to the upgrade tracker
-			// https://github.com/zeta-chain/node/issues/2573
-			//{
-			//	index: <CURRENT TIMESTAMP>,
-			//	storeUpgrade: &storetypes.StoreUpgrades{
-			//		Added: []string{
-			//			capabilitytypes.ModuleName,
-			//			ibcexported.ModuleName,
-			//			ibctransfertypes.ModuleName,
-			//		},
-			//	},
-			//},
-			//{
-			//	index: <CURRENT TIMESTAMP>,
-			//	storeUpgrade: &storetypes.StoreUpgrades{
-			//		Added: []string{ibccrosschaintypes.ModuleName},
-			//	},
-			//},
+
+	addErc20ModuleUpgradeTracker := upgradeTrackerItem{
+		index: 1752528615,
+		storeUpgrade: &storetypes.StoreUpgrades{
+			Added: []string{erc20types.ModuleName},
 		},
+	}
+
+	var upgrades []upgradeTrackerItem
+	if app.ChainID() != "" {
+		evmChaindID, err := chains.CosmosToEthChainID(app.ChainID())
+		if err != nil {
+			fmt.Println("Skip here")
+		}
+		if evmChaindID == chains.ZetaChainPrivnet.ChainId {
+			// Mainnet
+			upgrades = append(upgrades, addErc20ModuleUpgradeTracker)
+		}
+	}
+
+	allUpgrades := upgradeTracker{
+		upgrades:     upgrades,
 		stateFileDir: DefaultNodeHome,
 	}
 
