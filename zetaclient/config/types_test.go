@@ -8,6 +8,71 @@ import (
 	"github.com/zeta-chain/node/zetaclient/config"
 )
 
+func Test_GetZetacoreClientConfig(t *testing.T) {
+	signerName := "signerA"
+
+	tests := []struct {
+		name    string
+		cfg     config.Config
+		want    config.ZetacoreClientConfig
+		wantErr bool
+	}{
+		{
+			name: "should resolve zetacore client config from IP address",
+			cfg: func() config.Config {
+				cfg := config.New(false)
+				cfg.ZetacoreIP = "127.0.0.1"
+				cfg.AuthzHotkey = signerName
+				return cfg
+			}(),
+			want: config.ZetacoreClientConfig{
+				GRPCURL:     "127.0.0.1:9090",
+				WSRemote:    "http://127.0.0.1:26657",
+				SignerName:  signerName,
+				GRPCDialOpt: config.CredsInsecureGRPC,
+			},
+		},
+		{
+			name: "should resolve zetacore client config from hostname",
+			cfg: func() config.Config {
+				cfg := config.New(false)
+				cfg.ZetacoreURLGRPC = "zetachain.lavenderfive.com:443"
+				cfg.ZetacoreURLWSS = "wss://rpc.lavenderfive.com:443/zetachain/websocket"
+				cfg.AuthzHotkey = signerName
+				return cfg
+			}(),
+			want: config.ZetacoreClientConfig{
+				GRPCURL:     "zetachain.lavenderfive.com:443",
+				WSRemote:    "https://rpc.lavenderfive.com:443/zetachain",
+				SignerName:  signerName,
+				GRPCDialOpt: config.CredsTLSGRPC,
+			},
+		},
+		{
+			name: "localnet zetacore container names should work",
+			cfg: func() config.Config {
+				cfg := config.New(false)
+				cfg.ZetacoreIP = "zetacore0"
+				cfg.AuthzHotkey = signerName
+				return cfg
+			}(),
+			want: config.ZetacoreClientConfig{
+				GRPCURL:     "zetacore0:9090",
+				WSRemote:    "http://zetacore0:26657",
+				SignerName:  signerName,
+				GRPCDialOpt: config.CredsInsecureGRPC,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.cfg.GetZetacoreClientConfig()
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func Test_GetRelayerKeyPath(t *testing.T) {
 	// create config
 	cfg := config.New(false)
