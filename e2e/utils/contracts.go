@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
@@ -14,43 +16,66 @@ const (
 	ErrHashRevertFoo = "0xbfb4ebcf"
 )
 
-// MustHaveCalledExampleContract checks if the contract has been called correctly
-func MustHaveCalledExampleContract(
+// WaitAndVerifyExampleContractCall waits for the example contract to be called with the expected amount and sender
+// This function is to tolerate the fact that the contract state may not be synced across all nodes behind a RPC.
+func WaitAndVerifyExampleContractCall(
 	t require.TestingT,
 	contract *testcontract.Example,
 	amount *big.Int,
 	sender []byte,
 ) {
-	bar, err := contract.Bar(&bind.CallOpts{})
-	require.NoError(t, err)
-	require.Equal(
-		t,
-		amount.Uint64(),
-		bar.Uint64(),
-	)
+	// wait until the contract gets called with the expected amount and sender or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
 
-	actualSender, err := contract.LastSender(&bind.CallOpts{})
-	require.NoError(t, err)
-	require.EqualValues(t, sender, actualSender)
+	for {
+		time.Sleep(checkInterval)
+		require.False(t, time.Since(startTime) > nodeSyncTolerance, "timeout waiting for contract state to update")
+
+		bar, err := contract.Bar(&bind.CallOpts{})
+		require.NoError(t, err)
+
+		actualSender, err := contract.LastSender(&bind.CallOpts{})
+		require.NoError(t, err)
+
+		// stop only if both amount and sender are matching the expected values
+		if bar.Cmp(amount) == 0 && bytes.Equal(actualSender, sender) {
+			return
+		}
+	}
 }
 
-// MustHaveCalledExampleContractWithMsg checks if the contract has been called correctly with correct amount and msg
-func MustHaveCalledExampleContractWithMsg(
+// WaitAndVerifyExampleContractCallWithMsg waits for the example contract to be called with the expected amount, msg and sender
+// This function is to tolerate the fact that the contract state may not be synced across all nodes behind a RPC.
+func WaitAndVerifyExampleContractCallWithMsg(
 	t require.TestingT,
 	contract *testcontract.Example,
 	amount *big.Int,
 	msg []byte,
 	sender []byte,
 ) {
-	bar, err := contract.Bar(&bind.CallOpts{})
-	require.NoError(t, err)
-	require.Equal(t, amount.Uint64(), bar.Uint64(), "amount mismatch")
+	// wait until the contract gets called with the expected amount, msg and sender or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
 
-	lastMsg, err := contract.LastMessage(&bind.CallOpts{})
-	require.NoError(t, err)
-	require.Equal(t, string(msg), string(lastMsg), "message mismatch")
+	for {
+		time.Sleep(checkInterval)
+		require.False(t, time.Since(startTime) > nodeSyncTolerance, "timeout waiting for contract state to update")
 
-	actualSender, err := contract.LastSender(&bind.CallOpts{})
-	require.NoError(t, err)
-	require.EqualValues(t, sender, actualSender, "sender mismatch")
+		bar, err := contract.Bar(&bind.CallOpts{})
+		require.NoError(t, err)
+
+		lastMsg, err := contract.LastMessage(&bind.CallOpts{})
+		require.NoError(t, err)
+
+		actualSender, err := contract.LastSender(&bind.CallOpts{})
+		require.NoError(t, err)
+
+		// stop only if amount, msg and sender are all matching the expected values
+		if bar.Cmp(amount) == 0 &&
+			bytes.Equal(lastMsg, msg) &&
+			bytes.Equal(actualSender, sender) {
+			return
+		}
+	}
 }

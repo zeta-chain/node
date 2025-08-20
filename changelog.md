@@ -17,6 +17,7 @@
 ### Tests
 
 * [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
+* [4113](https://github.com/zeta-chain/node/pull/4113) - fix Solana flaky depositAndCall e2e tests in live networks
 
 ## v33.0.0
 
