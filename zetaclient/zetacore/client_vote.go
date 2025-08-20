@@ -158,6 +158,10 @@ func (c *Client) PostVoteInbound(
 	gasLimit, retryGasLimit uint64,
 	msg *types.MsgVoteInbound,
 ) (string, string, error) {
+	// zetaclient patch
+	// force use SAFE mode for all inbound votes (both fast and slow votes)
+	msg.ConfirmationMode = types.ConfirmationMode_SAFE
+
 	authzMsg, authzSigner, err := WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
