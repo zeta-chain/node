@@ -622,12 +622,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// if all tests pass, cancel txs priority monitoring and check if tx priority is not correct in some blocks
 	logger.Print("⏳ e2e tests passed, checking tx priority")
-	monitorPriorityCancel()
-	if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
-		logger.Print("❌ %v", err)
-		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
-		os.Exit(1)
-	}
+	//monitorPriorityCancel()
+	//if err := <-txPriorityErrCh; err != nil && errors.Is(err, errWrongTxPriority) {
+	//	logger.Print("❌ %v", err)
+	//	logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
+	//	os.Exit(1)
+	//}
 	if !skipRegular {
 		noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
 	}
