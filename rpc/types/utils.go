@@ -243,6 +243,7 @@ func NewRPCTransactionFromIncompleteMsg(
 ) (*RPCTransaction, error) {
 	to := &common.Address{}
 	*to = txAdditional.Recipient
+	// for transactions before v31 this value was mistakenly used for Gas field
 	gas := txAdditional.GasUsed
 	if txAdditional.GasLimit != nil {
 		gas = *txAdditional.GasLimit

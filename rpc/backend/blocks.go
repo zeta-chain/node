@@ -323,6 +323,7 @@ func (b *Backend) parseSyntethicTxFromAdditionalFields(
 	additional *rpctypes.TxResultAdditionalFields,
 ) *evmtypes.MsgEthereumTx {
 	recipient := additional.Recipient
+	// for transactions before v31 this value was mistakenly used for Gas field
 	gas := additional.GasUsed
 	if additional.GasLimit != nil {
 		gas = *additional.GasLimit
