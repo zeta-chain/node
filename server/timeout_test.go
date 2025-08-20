@@ -132,7 +132,7 @@ func Test_GenesisChainID(t *testing.T) {
 		err := genesis.SaveAs(genesisFile)
 		require.NoError(t, err)
 
-		id, err := genesisChainId(genesisFile)
+		id, err := genesisChainID(genesisFile)
 
 		require.NoError(t, err)
 		require.Equal(t, id, chains.ZetaChainPrivnet.ChainId)
@@ -143,7 +143,7 @@ func Test_GenesisChainID(t *testing.T) {
 		genesisFile := filepath.Join(tempDir, "config", "genesis.json")
 
 		// Act
-		_, err := genesisChainId(genesisFile)
+		_, err := genesisChainID(genesisFile)
 
 		// Assert
 		require.Error(t, err)
@@ -163,7 +163,7 @@ func Test_GenesisChainID(t *testing.T) {
 		require.NoError(t, err)
 
 		// Act
-		_, err = genesisChainId(genesisFile)
+		_, err = genesisChainID(genesisFile)
 
 		// Assert
 		require.Error(t, err)
