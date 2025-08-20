@@ -13,6 +13,7 @@
 ### Fixes
 
 * [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
+* [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
 * [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 
 ### Tests
@@ -31,6 +32,7 @@
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 * [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
+* [4068](https://github.com/zeta-chain/node/pull/4068) - add support for hostname in addition to public IP for zetaclient to connect to zetacore
 
 ### Fixes
 
