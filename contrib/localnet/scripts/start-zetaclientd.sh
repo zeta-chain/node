@@ -80,7 +80,7 @@ echo "Start zetaclientd"
 
 # skip initialization if the config file already exists (zetaclientd init has already been run)
 if [[ $HOSTNAME == "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.json ]] then
-    zetaclientd init --zetacore-ip zetacore0 --chain-id athens_101-1 \
+    zetaclientd init --zetacore-url zetacore0 --chain-id athens_101-1 \
         --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" \
         --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
@@ -104,7 +104,7 @@ if [[ $HOSTNAME != "zetaclient0" && ! -f ~/.zetacored/config/zetaclient_config.j
       num=$(echo $HOSTNAME | tr -dc '0-9')
       node="zetacore$num"
   fi
-  zetaclientd init --zetacore-ip "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
+  zetaclientd init --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND" --pre-params "$PREPARAMS_PATH"
 
   # import relayer private key for zetaclient{$num}
   import_relayer_key "${num}"

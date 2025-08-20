@@ -52,6 +52,8 @@ func setupInitializeConfigOptions() {
 	f.StringVar(&cfg.publicIP, "public-ip", "", "public ip address")
 	f.StringVar(&cfg.preParamsPath, "pre-params", "~/preParams.json", "pre-params file path")
 	f.StringVar(&cfg.chainID, "chain-id", "athens_7001-1", "chain id")
+	// support both old argument name 'zetacore-url' and new argument name 'zetacore-ip' for backward compatibility
+	f.StringVar(&cfg.zetacoreIP, "zetacore-url", "", "will be deprecated in the future, use zetacore-ip instead")
 	f.StringVar(&cfg.zetacoreIP, "zetacore-ip", "",
 		"zetacore node IP address (leave empty to switch to using zetacore-grpc-url and zetacore-wss-url)")
 	f.StringVar(&cfg.zetacoreGRPCURL, "zetacore-grpc-url", "",
