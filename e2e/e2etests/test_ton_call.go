@@ -45,8 +45,8 @@ func TestTONToZEVMCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.CCTX(*cctx, "ton_call")
 
-	// Ensure the dapp is called
-	utils.MustHaveCalledExampleContractWithMsg(
+	// Ensure the example contract has been called, bar value should be set to amount
+	utils.WaitAndVerifyExampleContractCallWithMsg(
 		r,
 		contract,
 		big.NewInt(0),

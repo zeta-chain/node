@@ -105,26 +105,11 @@ func (s *TestSuite) SetupTest() {
 		WithAccountRetriever(client.TestAccountRetriever{Accounts: accounts}).
 		WithClient(mocks.NewClient(s.T()))
 
-	allowUnprotectedTxs := false
-	idxer := indexer.NewKVIndexer(dbm.NewMemDB(), ctx.Logger, clientCtx)
-
-	s.backend = NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, idxer)
-	s.backend.Cfg.EVM.EVMChainID = ChainID.EVMChainID
-	s.backend.Cfg.JSONRPC.GasCap = 0
-	s.backend.Cfg.JSONRPC.EVMTimeout = 0
-	s.backend.Cfg.JSONRPC.AllowInsecureUnlock = true
-	s.backend.QueryClient.QueryClient = mocks.NewEVMQueryClient(s.T())
-	s.backend.QueryClient.FeeMarket = mocks.NewFeeMarketQueryClient(s.T())
-	s.backend.Ctx = rpctypes.ContextWithHeight(1)
-
-	// Add codec
-	s.backend.ClientCtx.Codec = encodingConfig.Codec
-
 	// TODO https://github.com/zeta-chain/node/issues/2157
 	// rpc tests in evm module are integration tests, this workaround is needed to setup eth config
 	// consider maintaining all synthetic txs changes and tests in evm module fork, so there is no need to have
 	// only rpc forked in node repo
-	ethCfg := evmtypes.DefaultChainConfig(s.backend.Cfg.EVM.EVMChainID)
+	ethCfg := evmtypes.DefaultChainConfig(ChainID.EVMChainID)
 	configurator := evmtypes.NewEVMConfigurator()
 	configurator.ResetTestConfig()
 	err = configurator.
@@ -136,6 +121,22 @@ func (s *TestSuite) SetupTest() {
 			Decimals:      18,
 		}).
 		Configure()
+
+	allowUnprotectedTxs := false
+	idxer := indexer.NewKVIndexer(dbm.NewMemDB(), ctx.Logger, clientCtx)
+
+	s.backend = NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, idxer)
+	s.backend.Cfg.EVM.EVMChainID = ChainID.EVMChainID
+	s.backend.EvmChainID = big.NewInt(int64(ChainID.EVMChainID))
+	s.backend.Cfg.JSONRPC.GasCap = 0
+	s.backend.Cfg.JSONRPC.EVMTimeout = 0
+	s.backend.Cfg.JSONRPC.AllowInsecureUnlock = true
+	s.backend.QueryClient.QueryClient = mocks.NewEVMQueryClient(s.T())
+	s.backend.QueryClient.FeeMarket = mocks.NewFeeMarketQueryClient(s.T())
+	s.backend.Ctx = rpctypes.ContextWithHeight(1)
+
+	// Add codec
+	s.backend.ClientCtx.Codec = encodingConfig.Codec
 }
 
 // buildEthereumTx returns an example legacy Ethereum transaction
