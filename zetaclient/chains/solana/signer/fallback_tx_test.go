@@ -111,4 +111,30 @@ func Test_ParseRPCErrorForFallback(t *testing.T) {
 		require.False(t, shouldUseFallbackTx)
 		require.Empty(t, failureReason)
 	})
+
+	t.Run("use fallback, transaction size error", func(t *testing.T) {
+		err := &jsonrpc.RPCError{
+			Code:    errorCodeJSONRPCInvalidParams,
+			Message: "base64 encoded solana_transaction::versioned::VersionedTransaction too large: 2012 bytes (max: encoded/raw 1644/1232)",
+			Data:    nil,
+		}
+
+		shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, gateway)
+
+		require.True(t, shouldUseFallbackTx)
+		require.Equal(t, transactionSizeError, failureReason)
+	})
+
+	t.Run("don't use fallback, invalid params error but not transaction size", func(t *testing.T) {
+		err := &jsonrpc.RPCError{
+			Code:    errorCodeJSONRPCInvalidParams,
+			Message: "some other invalid parameter error",
+			Data:    nil,
+		}
+
+		shouldUseFallbackTx, failureReason := parseRPCErrorForFallback(err, gateway)
+
+		require.False(t, shouldUseFallbackTx)
+		require.Empty(t, failureReason)
+	})
 }
