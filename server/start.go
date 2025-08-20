@@ -134,7 +134,7 @@ which accepts a path for the resulting pprof file.
 				}
 			}
 			skipOverwrite, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
-			genesisChainID, err := genesisChainId(serverCtx.Config.GenesisFile())
+			genesisChainID, err := genesisChainID(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return errorsmod.Wrapf(err, "failed to get genesis chain ID from genesis file")
 			}
