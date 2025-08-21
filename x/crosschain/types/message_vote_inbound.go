@@ -162,6 +162,7 @@ func (msg *MsgVoteInbound) Digest() string {
 	m := *msg
 	m.Creator = ""
 	m.InboundBlockHeight = 0
+	m.ConfirmationMode = ConfirmationMode_SAFE
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }
