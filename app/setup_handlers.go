@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	storetypes "cosmossdk.io/store/types"
@@ -32,28 +31,30 @@ func GetDefaultUpgradeHandlerVersion() string {
 	return semver.Major(vVersion)
 }
 
-func SetupHandlers(app *App) {
-
-	addErc20ModuleUpgradeTracker := upgradeTrackerItem{
+func createUpgrades(chainID string) []upgradeTrackerItem {
+	addErc20ModuleUpgrade := upgradeTrackerItem{
 		index: 1752528615,
 		storeUpgrade: &storetypes.StoreUpgrades{
 			Added: []string{erc20types.ModuleName},
 		},
 	}
 
-	var upgrades []upgradeTrackerItem
-	if app.ChainID() != "" {
-		evmChaindID, err := chains.CosmosToEthChainID(app.ChainID())
+	upgrades := make([]upgradeTrackerItem, 0)
+	if chainID != "" {
+		evmChaindID, err := chains.CosmosToEthChainID(chainID)
 		if err != nil {
-			fmt.Println("Skip here")
+			return upgrades
 		}
 		if evmChaindID == chains.ZetaChainMainnet.ChainId {
-			upgrades = append(upgrades, addErc20ModuleUpgradeTracker)
+			return append(upgrades, addErc20ModuleUpgrade)
 		}
 	}
+	return upgrades
+}
 
+func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
-		upgrades:     upgrades,
+		upgrades:     createUpgrades(app.ChainID()),
 		stateFileDir: DefaultNodeHome,
 	}
 
