@@ -628,9 +628,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("❌ e2e tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
-	//if !skipRegular {
-	//	noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
-	//}
+	if !skipRegular {
+		noError(deployerRunner.CreateGovProposals(runner.EndOfE2E))
+	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
 
