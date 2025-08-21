@@ -274,7 +274,7 @@ start-e2e-test: e2e-images
 
 start-skip-consensus-overwrite-test: e2e-images
 	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
-	cd contrib/localnet/ && SKIP_CONCENSUS_VALUES_OVERWRITE=true $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && SKIP_CONSENSUS_VALUES_OVERWRITE=true $(DOCKER_COMPOSE) up -d
 
 start-staking-test: e2e-images
 	@echo "--> Starting e2e staking test"
