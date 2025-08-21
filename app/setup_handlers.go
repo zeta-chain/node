@@ -47,8 +47,7 @@ func SetupHandlers(app *App) {
 		if err != nil {
 			fmt.Println("Skip here")
 		}
-		if evmChaindID == chains.ZetaChainPrivnet.ChainId {
-			// Mainnet
+		if evmChaindID == chains.ZetaChainMainnet.ChainId {
 			upgrades = append(upgrades, addErc20ModuleUpgradeTracker)
 		}
 	}
