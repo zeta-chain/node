@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+### Features
+* [4125](https://github.com/zeta-chain/node/pull/4125) - add conditional logic for adding erc20 module based on chain id for v35 upgrade
+
+## v34.0.0
+
 ## v33.0.0
 
 ### Features
