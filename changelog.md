@@ -13,10 +13,15 @@
 ### Fixes
 
 * [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
+* [4116](https://github.com/zeta-chain/node/pull/4116) - remove confirmation mode from outbound and inbound digest
+* [4111](https://github.com/zeta-chain/node/pull/4111) - cancel Solana outbound if transaction size is too large
+* [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
+* [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 
 ### Tests
 
 * [4071](https://github.com/zeta-chain/node/pull/4071) - use v2 connector contract in admin e2e tests
+* [4113](https://github.com/zeta-chain/node/pull/4113) - fix Solana flaky depositAndCall e2e tests in live networks
 
 ## v33.0.0
 
@@ -29,6 +34,7 @@
 * [4063](https://github.com/zeta-chain/node/pull/4063) - add a message to burn funds in the fungible module
 * [3991](https://github.com/zeta-chain/node/pull/3991) - migrate from Ethermint to new Cosmos EVM module
 * [4077](https://github.com/zeta-chain/node/pull/4077) - add Cosmos EVM default precompiles support
+* [4068](https://github.com/zeta-chain/node/pull/4068) - add support for hostname in addition to public IP for zetaclient to connect to zetacore
 
 ### Fixes
 

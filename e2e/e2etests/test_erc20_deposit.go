@@ -30,7 +30,7 @@ func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 
-	// wait for the arc20 balance to be updated
+	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
 }
