@@ -39,7 +39,7 @@ type TxResultAdditionalFields struct {
 	Recipient common.Address `json:"recipient"`
 	Sender    common.Address `json:"sender"`
 	GasUsed   uint64         `json:"gasUsed"`
-	GasLimit  uint64         `json:"gasLimit"`
+	GasLimit  *uint64        `json:"gasLimit"`
 	Nonce     uint64         `json:"nonce"`
 	Data      []byte         `json:"data"`
 }
