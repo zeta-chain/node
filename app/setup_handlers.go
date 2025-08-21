@@ -43,7 +43,7 @@ func createUpgrades(chainID string) []upgradeTrackerItem {
 	if chainID != "" {
 		evmChaindID, err := chains.CosmosToEthChainID(chainID)
 		if err != nil {
-			return upgrades
+			panic("invalid chain ID: " + chainID + ", error: " + err.Error())
 		}
 		if evmChaindID == chains.ZetaChainMainnet.ChainId {
 			return append(upgrades, addErc20ModuleUpgrade)
