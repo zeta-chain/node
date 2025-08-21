@@ -8,9 +8,9 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
-	"github.com/zeta-chain/node/pkg/chains"
 	"golang.org/x/mod/semver"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/constant"
 )
 
