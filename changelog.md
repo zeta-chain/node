@@ -14,6 +14,7 @@
 
 * [4090](https://github.com/zeta-chain/node/pull/4090) - print error message in detail if unable to decode Bitcoin memo
 * [4112](https://github.com/zeta-chain/node/pull/4112) - fix error when deploying contracts on testnet
+* [4121](https://github.com/zeta-chain/node/pull/4121) - dbg trace block by number gas limit legacy
 
 ### Tests
 
