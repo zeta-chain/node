@@ -2,6 +2,7 @@ package sui
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -11,6 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func Test_ActiveMessageContextDynamicFieldName(t *testing.T) {
+	got, err := ActiveMessageContextDynamicFieldName()
+	require.NoError(t, err)
+
+	expectedJSON := json.RawMessage(`[97,99,116,105,118,101,95,109,101,115,115,97,103,101,95,99,111,110,116,101,120,116]`)
+	require.Equal(t, expectedJSON, got)
+}
 
 func TestNewGatewayFromPairID(t *testing.T) {
 	// stubs
@@ -549,6 +558,59 @@ func Test_ParseOutboundEvent(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.wantEvent, event)
 			require.Equal(t, tt.wantEvent.content, content)
+		})
+	}
+}
+
+func Test_ParseDynamicFieldValueStr(t *testing.T) {
+	tests := []struct {
+		name   string
+		data   models.SuiParsedData
+		want   string
+		errMsg string
+	}{
+		{
+			name: "valid dynamic field value",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{
+						"value": "0x123",
+					},
+				},
+			},
+			want: "0x123",
+		},
+		{
+			name: "missing value field",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{},
+				},
+			},
+			errMsg: "missing value field",
+		},
+		{
+			name: "value field type mismatch",
+			data: models.SuiParsedData{
+				SuiMoveObject: models.SuiMoveObject{
+					Fields: map[string]any{"value": 123},
+				},
+			},
+			errMsg: "want string, got int for dynamic field value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseDynamicFieldValueStr(tt.data)
+			if tt.errMsg != "" {
+				require.Empty(t, got)
+				require.ErrorContains(t, err, tt.errMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }

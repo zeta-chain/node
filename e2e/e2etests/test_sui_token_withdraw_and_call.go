@@ -32,6 +32,8 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	// create the on_call payload
 	authorizedSender := r.EVMAddress()
 	payloadOnCall := r.SuiCreateExampleWACPayload(authorizedSender, suiAddress)
+	message, err := payloadOnCall.PackABI()
+	require.NoError(r, err)
 
 	// ACT
 	// approve both SUI gas budget token and fungible token ZRC20
@@ -43,7 +45,7 @@ func TestSuiTokenWithdrawAndCall(r *runner.E2ERunner, args []string) {
 		targetPackageID,
 		amount,
 		r.SuiTokenZRC20Addr,
-		payloadOnCall,
+		message,
 		gasLimit,
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
 	)

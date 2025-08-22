@@ -46,12 +46,12 @@ func NewCallPayload(typeArgs []string, objectIDs []string, message []byte) CallP
 func (c *CallPayload) UnpackABI(payload []byte) error {
 	unpacked, err := abiArgs.Unpack(payload)
 	if err != nil {
-		return errors.Wrap(err, "unable to unpack ABI arguments")
+		return errors.Wrapf(ErrInvalidPayload, "unable to unpack ABI encoded payload (%x): %s", payload, err)
 	}
 
 	jsonData, err := json.Marshal(unpacked[0])
 	if err != nil {
-		return errors.Wrap(err, "unable to marshal ABI arguments")
+		return errors.Wrapf(ErrInvalidPayload, "unable to marshal unpacked payload (%x): %s", payload, err)
 	}
 
 	// raw payload format parsed from ABI
@@ -61,7 +61,7 @@ func (c *CallPayload) UnpackABI(payload []byte) error {
 		Message       string   `json:"message"` // base64-encoded
 	}
 	if err := json.Unmarshal(jsonData, &rawPayload); err != nil {
-		return errors.Wrap(err, "unable to unmarshal formatted JSON")
+		return errors.Wrapf(ErrInvalidPayload, "unable to unmarshal formatted JSON for payload (%x): %s", payload, err)
 	}
 
 	// Convert object [][]byte to []string (hex-encoded)
@@ -73,7 +73,8 @@ func (c *CallPayload) UnpackABI(payload []byte) error {
 	// Decode base64 message
 	messageBytes, err := base64.StdEncoding.DecodeString(rawPayload.Message)
 	if err != nil {
-		return errors.Wrap(err, "unable to decode base64 message")
+		// should never happen, guaranteed by json.Marshal()
+		return errors.Wrapf(ErrInvalidPayload, "unable to decode base64 message: %s", err)
 	}
 
 	// Set the fields
