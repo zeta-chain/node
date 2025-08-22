@@ -38,7 +38,6 @@ func createUpgrades(chainID string) []upgradeTrackerItem {
 			Added: []string{erc20types.ModuleName},
 		},
 		// TODO: enable back IBC
-		// these commented lines allow for the IBC modules to be added to the upgrade trackerCollapse commentComment on line L36lumtis commented on Aug 21, 2025 lumtison Aug 21, 2025MemberWhy removing? It nice to keep these TODO if we want to work on IBC laterWrite a replyResolve commentCode has comments. Press enter to view.
 		// https://github.com/zeta-chain/node/issues/2573
 		//{
 		//	index: <CURRENT TIMESTAMP>,
