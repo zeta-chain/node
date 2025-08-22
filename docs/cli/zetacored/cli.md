@@ -9759,6 +9759,7 @@ zetacored start [flags]
       --rpc.laddr string                                RPC listen address. Port required 
       --rpc.pprof_laddr string                          pprof listen address (https://golang.org/pkg/net/http/pprof)
       --rpc.unsafe                                      enabled unsafe rpc methods
+      --skip-config-overwrite                           Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead
       --state-sync.snapshot-interval uint               State sync snapshot interval
       --state-sync.snapshot-keep-recent uint32          State sync snapshot to keep (default 2)
       --tls.certificate-path string                     the cert.pem file path for the server TLS configuration

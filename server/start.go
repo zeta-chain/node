@@ -46,6 +46,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/zeta-chain/node/pkg/chains"
 	ethdebug "github.com/zeta-chain/node/rpc/namespaces/ethereum/debug"
 )
 
@@ -132,7 +133,26 @@ which accepts a path for the resulting pprof file.
 					return err
 				}
 			}
+			skipOverwrite, _ := cmd.Flags().GetBool(FlagSkipConfigOverwrite)
+			zevmChainID, err := genesisChainID(serverCtx.Config.GenesisFile())
+			if err != nil {
+				return errorsmod.Wrapf(err, "failed to get genesis chain ID from genesis file")
+			}
 
+			// Cannot skip over writing the config file for ZetaChain mainnet
+			if zevmChainID == chains.ZetaChainMainnet.ChainId && skipOverwrite {
+				return fmt.Errorf(
+					"config overwrite is required for ZetaChain mainnet , please run the command without the --%s flag",
+					FlagSkipConfigOverwrite,
+				)
+			}
+
+			if !skipOverwrite {
+				err := overWriteConfig(cmd)
+				if err != nil {
+					return fmt.Errorf("failed to overwrite config: %w", err)
+				}
+			}
 			serverCtx.Logger.Info("starting ABCI with CometBFT")
 
 			// amino is needed here for backwards compatibility of REST routes
@@ -150,6 +170,8 @@ which accepts a path for the resulting pprof file.
 		},
 	}
 
+	cmd.Flags().
+		Bool(FlagSkipConfigOverwrite, false, "Skip running the config configuration overwrite handler.This is used for testing purposes only and skips using the default timeouts hardcoded and uses the config file instead")
 	cmd.Flags().String(flags.FlagHome, opts.DefaultNodeHome, "The application home directory")
 	cmd.Flags().Bool(srvflags.WithCometBFT, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(srvflags.Address, "tcp://0.0.0.0:26658", "Listen address")
@@ -158,7 +180,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		String(server.FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 20000000000azeta)")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		IntSlice(server.FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().
@@ -175,7 +197,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Uint64(server.FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().Uint(server.FlagInvCheckPeriod, 0, "Assert registered invariants every N blocks")
 	cmd.Flags().
 		Uint64(server.FlagMinRetainBlocks, 0, "Minimum block height offset during ABCI commit to prune CometBFT blocks")
@@ -206,15 +228,15 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Uint64(srvflags.JSONRPCGasCap, cosmosevmserverconfig.DefaultGasCap, "Sets a cap on gas that can be used in eth_call/estimateGas unit is aatom (0=infinite)")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Bool(srvflags.JSONRPCAllowInsecureUnlock, cosmosevmserverconfig.DefaultJSONRPCAllowInsecureUnlock, "Allow insecure account unlocking when account-related RPCs are exposed by http")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Float64(srvflags.JSONRPCTxFeeCap, cosmosevmserverconfig.DefaultTxFeeCap, "Sets a cap on transaction fee that can be sent via the RPC APIs (1 = default 1 evmos)")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Int32(srvflags.JSONRPCFilterCap, cosmosevmserverconfig.DefaultFilterCap, "Sets the global cap for total number of filters that can be created")
 	cmd.Flags().
@@ -226,7 +248,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Bool(srvflags.JSONRPCAllowUnprotectedTxs, cosmosevmserverconfig.DefaultAllowUnprotectedTxs, "Allow for unprotected (non EIP155 signed) transactions to be submitted via the node's RPC when the global parameter is disabled")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Int32(srvflags.JSONRPCLogsCap, cosmosevmserverconfig.DefaultLogsCap, "Sets the max number of results can be returned from single `eth_getLogs` query")
 	cmd.Flags().
@@ -234,22 +256,22 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().
 		Int(srvflags.JSONRPCMaxOpenConnections, cosmosevmserverconfig.DefaultMaxOpenConnections, "Sets the maximum number of simultaneous connections for the server listener")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().Bool(srvflags.JSONRPCEnableIndexer, false, "Enable the custom tx indexer for json-rpc")
 	cmd.Flags().Bool(srvflags.JSONRPCEnableMetrics, false, "Define if EVM rpc metrics server should be enabled")
 
 	cmd.Flags().
 		String(srvflags.EVMTracer, cosmosevmserverconfig.DefaultEVMTracer, "the EVM tracer type to collect execution traces from the EVM transaction execution (json|struct|access_list|markdown)")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Uint64(srvflags.EVMMaxTxGasWanted, cosmosevmserverconfig.DefaultMaxTxGasWanted, "the gas wanted for each eth tx returned in ante handler in check tx mode")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Bool(srvflags.EVMEnablePreimageRecording, cosmosevmserverconfig.DefaultEnablePreimageRecording, "Enables tracking of SHA3 preimages in the EVM (not implemented yet)")
 
-		//nolint:lll
+	//nolint:lll
 	cmd.Flags().
 		Uint64(srvflags.EVMChainID, cosmosevmserverconfig.DefaultEVMChainID, "the EIP-155 compatible replay protection chain ID")
 

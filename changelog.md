@@ -32,6 +32,7 @@
 * [4052](https://github.com/zeta-chain/node/pull/4052) - remove the deprecated 'BitcoinConfig' from zetaclient config
 * [4054](https://github.com/zeta-chain/node/pull/4054) - refactor deposit logic to prevent minting surplus zeta
 * [4060](https://github.com/zeta-chain/node/pull/4060) - cleanup forked mempool code
+* [4097](https://github.com/zeta-chain/node/pull/4097) - refactor zetacore to overwrite consensus config values for all timeout deltas on startup.
 
 ### Tests
 
