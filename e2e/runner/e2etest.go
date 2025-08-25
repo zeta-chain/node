@@ -160,7 +160,7 @@ func (r *E2ERunner) GetE2ETestsToRunByConfig(
 	return tests, nil
 }
 
-// findE2ETest finds a e2e test by name
+// findE2ETestByName finds a e2e test by name
 func findE2ETestByName(e2eTests []E2ETest, e2eTestName string) (E2ETest, bool) {
 	for _, test := range e2eTests {
 		if test.Name == e2eTestName {
