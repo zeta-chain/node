@@ -85,7 +85,7 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
-		index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
+		index := ethcrypto.Keccak256Hash(fmt.Appendf(nil, "%d", r.Int63())).Hex()
 
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
