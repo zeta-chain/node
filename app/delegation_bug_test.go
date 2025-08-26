@@ -1,7 +1,6 @@
 package app_test
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -14,19 +13,33 @@ import (
 func TestDelegationBug(t *testing.T) {
 	// Values from zeta1j6c9cgutn9mg7dy3xh0qv5aksluuz0lwx4wncc to zetavaloper19pgg7htc67rhrk6jpvutpxwsrm8g3654jmrrye on mainnet
 	{
-		validator := sample.Validator(t, sample.Rand())
-		validator.DelegatorShares = sdkmath.LegacyMustNewDecFromStr("303282111200117915174803.285525143883122398")
+		totalShares := sdkmath.LegacyMustNewDecFromStr("303282111200117915174803.285525143883122398")
+		delShares := sdkmath.LegacyMustNewDecFromStr("1003005.744042141715136737")
 
 		tokens, ok := sdkmath.NewIntFromString("302373254591626134909587")
 		require.True(t, ok)
-		validator.Tokens = tokens
-		result := validator.TokensFromShares(sdkmath.LegacyMustNewDecFromStr("1003005.744042141715136737"))
-		resultTruncate := result.TruncateInt()
-		resultRoundUp := validator.TokensFromSharesRoundUp(sdkmath.LegacyMustNewDecFromStr("1003005.744042141715136737"))
 
-		fmt.Println(result.String())
-		fmt.Println(resultTruncate.String()) // return 999999 while 1000000 tokens were delegated
-		fmt.Println(resultRoundUp.String())
+		validator := sample.Validator(t, sample.Rand())
+		validator.DelegatorShares = totalShares
+		validator.Tokens = tokens
+
+		// https://github.com/cosmos/cosmos-sdk/blob/79fcc30f7eb642b028ebe6bf1a6fa29334c7de75/x/staking/keeper/grpc_query.go#L597C26-L597C72
+		// the calculation in the query returns 999999 while 1000000 tokens were delegated
+		result := validator.TokensFromShares(delShares).TruncateInt()
+		require.EqualValues(t, int64(999999), result.Int64())
+
+		// using TokensFromSharesRoundUp fixes the issue
+		resultRoundUp := validator.TokensFromSharesRoundUp(delShares).TruncateInt()
+		require.EqualValues(t, int64(1000000), resultRoundUp.Int64())
+
+		// https://github.com/cosmos/cosmos-sdk/blob/79fcc30f7eb642b028ebe6bf1a6fa29334c7de75/x/staking/keeper/delegation.go#L1379
+		// this is how the max number of token that can be undelegated is calculated
+		sharesTruncated, err := validator.SharesFromTokensTruncated(sdkmath.NewInt(1000000))
+		require.NoError(t, err)
+
+		// if sharesTruncated.GT(delShares) undelegate message fail
+		// if false it means 1000000 tokens can be undelegated
+		require.False(t, sharesTruncated.GT(delShares))
 	}
 
 	// Trying to reproduce with simpler values
