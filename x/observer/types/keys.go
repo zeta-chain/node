@@ -41,7 +41,7 @@ func KeyPrefix(p string) []byte {
 }
 
 func BallotListKeyPrefix(p int64) []byte {
-	return []byte(fmt.Sprintf("%d", p))
+	return fmt.Appendf(nil, "%d", p)
 }
 
 func ChainNoncesKeyPrefix(chainID int64) []byte {
