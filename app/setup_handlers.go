@@ -31,7 +31,7 @@ func GetDefaultUpgradeHandlerVersion() string {
 	return semver.Major(vVersion)
 }
 
-func createUpgrades(chainID string) []upgradeTrackerItem {
+func createUpgrades(chainID string, app *App) []upgradeTrackerItem {
 	addErc20ModuleUpgrade := upgradeTrackerItem{
 		index: 1752528615,
 		storeUpgrade: &storetypes.StoreUpgrades{
@@ -62,7 +62,8 @@ func createUpgrades(chainID string) []upgradeTrackerItem {
 		if err != nil {
 			panic("invalid chain ID: " + chainID + ", error: " + err.Error())
 		}
-		if evmChaindID == chains.ZetaChainMainnet.ChainId {
+		if evmChaindID == chains.ZetaChainPrivnet.ChainId {
+			app.Logger().Info("Adding erc20 module upgrade for chain ID: " + chainID)
 			return append(upgrades, addErc20ModuleUpgrade)
 		}
 	}
@@ -71,7 +72,7 @@ func createUpgrades(chainID string) []upgradeTrackerItem {
 
 func SetupHandlers(app *App) {
 	allUpgrades := upgradeTracker{
-		upgrades:     createUpgrades(app.ChainID()),
+		upgrades:     createUpgrades(app.ChainID(), app),
 		stateFileDir: DefaultNodeHome,
 	}
 
