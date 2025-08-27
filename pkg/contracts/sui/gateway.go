@@ -24,6 +24,10 @@ type Gateway struct {
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
 
+	// oldPackageID is an optional package ID that points to the old gateway package during upgrade
+	// it is only used by the observer to continue observing inbound from the old package after upgrade
+	oldPackageID string
+
 	mu sync.RWMutex
 }
 
@@ -52,19 +56,40 @@ const (
 const GatewayModule = "gateway"
 
 // NewGatewayFromPairID creates a new Sui Gateway
-// from pair of `$packageID,$gatewayObjectID`
+// from triplet of `$packageID,$gatewayObjectID[,oldPackageID]`, where oldPackageID is optional
 func NewGatewayFromPairID(pair string) (*Gateway, error) {
-	packageID, gatewayObjectID, err := parsePair(pair)
+	packageID, gatewayObjectID, oldPackageID, err := parsePair(pair)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewGateway(packageID, gatewayObjectID), nil
+	return &Gateway{
+		packageID:    packageID,
+		objectID:     gatewayObjectID,
+		oldPackageID: oldPackageID,
+	}, nil
 }
 
 // NewGateway creates a new Sui Gateway.
 func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
+}
+
+// Old creates a Gateway struct that points to the old package ID.
+//
+// Note:
+//   - To give enough time for the deprecation of the old gateway package, the observers will have to
+//     continue observing inbounds that happen on the old gateway package.
+//   - This method allows the observer to make a switch and work with the old gateway package after upgrade.
+func (gw *Gateway) Old() *Gateway {
+	gw.mu.Lock()
+	defer gw.mu.Unlock()
+
+	// return nil if old package ID is not present
+	if gw.oldPackageID == "" {
+		return nil
+	}
+	return &Gateway{packageID: gw.oldPackageID, objectID: gw.objectID}
 }
 
 // Event represents generic event wrapper
@@ -142,9 +167,9 @@ func (gw *Gateway) MessageContextType() string {
 	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
 }
 
-// UpdateIDs updates packageID and objectID.
+// UpdateIDs updates packageID, objectID, and oldPackageID.
 func (gw *Gateway) UpdateIDs(pair string) error {
-	packageID, gatewayObjectID, err := parsePair(pair)
+	packageID, gatewayObjectID, oldPackageID, err := parsePair(pair)
 	if err != nil {
 		return err
 	}
@@ -153,6 +178,7 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
+	gw.oldPackageID = oldPackageID
 
 	return nil
 }
@@ -384,18 +410,23 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
-func parsePair(pair string) (string, string, error) {
+func parsePair(pair string) (string, string, string, error) {
 	parts := strings.Split(pair, ",")
-	if len(parts) != 2 {
-		return "", "", errors.Errorf("invalid pair %q", pair)
+	if len(parts) != 2 && len(parts) != 3 {
+		return "", "", "", errors.Errorf("invalid pair %q", pair)
 	}
 
 	// each part should be a valid Sui address
 	for _, part := range parts {
 		if err := ValidateAddress(part); err != nil {
-			return "", "", errors.Wrapf(err, "invalid Sui address %q", part)
+			return "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
 		}
 	}
 
-	return parts[0], parts[1], nil
+	// part[2] is optional
+	if len(parts) == 2 {
+		return parts[0], parts[1], "", nil
+	}
+
+	return parts[0], parts[1], parts[2], nil
 }

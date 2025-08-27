@@ -15,34 +15,41 @@ import (
 func TestNewGatewayFromPairID(t *testing.T) {
 	// stubs
 	const (
-		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		packageID    = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID    = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	tests := []struct {
-		name    string
-		triplet string
-		wantErr string
+		name             string
+		pair             string
+		wantErr          string
+		wantOldPackageID string
 	}{
 		{
-			name:    "valid pair",
-			triplet: fmt.Sprintf("%s,%s", packageID, gatewayID),
+			name: "valid pair",
+			pair: fmt.Sprintf("%s,%s", packageID, gatewayID),
+		},
+		{
+			name:             "valid pair with optional old package id",
+			pair:             fmt.Sprintf("%s,%s,%s", packageID, gatewayID, oldPackageID),
+			wantOldPackageID: oldPackageID,
 		},
 		{
 			name:    "invalid pair, missing gateway object id",
-			triplet: "0x123",
+			pair:    "0x123",
 			wantErr: "invalid pair",
 		},
 		{
 			name:    "invalid Sui address",
-			triplet: fmt.Sprintf("%s,0xabc", packageID),
+			pair:    fmt.Sprintf("%s,0xabc", packageID),
 			wantErr: "invalid Sui address",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gw, err := NewGatewayFromPairID(tt.triplet)
+			gw, err := NewGatewayFromPairID(tt.pair)
 			if tt.wantErr != "" {
 				require.Nil(t, gw)
 				require.ErrorContains(t, err, tt.wantErr)
@@ -52,8 +59,57 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, packageID, gw.PackageID())
 			assert.Equal(t, gatewayID, gw.ObjectID())
+			assert.Equal(t, tt.wantOldPackageID, gw.oldPackageID)
 		})
 	}
+}
+
+func Test_Old(t *testing.T) {
+	const (
+		packageID    = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID    = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("old package id is not empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, oldPackageID))
+		require.NoError(t, err)
+
+		gwOld := gw.Old()
+		require.NotNil(t, gwOld)
+		assert.Equal(t, oldPackageID, gwOld.PackageID())
+		assert.Equal(t, gatewayID, gwOld.ObjectID())
+		assert.Empty(t, gwOld.oldPackageID)
+	})
+
+	t.Run("old package id is empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s", packageID, gatewayID))
+		require.NoError(t, err)
+		require.Nil(t, gw.Old())
+	})
+}
+
+func Test_UpdateIDs(t *testing.T) {
+	const (
+		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+
+		packageID2   = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		gatewayID2   = "0xaf52affd195806d9aa9d967462cbda411bfed9a6efc4a032bf8e34a391469878"
+		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	// before update
+	gw := NewGateway(packageID, gatewayID)
+	assert.Equal(t, packageID, gw.PackageID())
+	assert.Equal(t, gatewayID, gw.ObjectID())
+	assert.Empty(t, gw.oldPackageID)
+
+	// after update
+	require.NoError(t, gw.UpdateIDs(fmt.Sprintf("%s,%s,%s", packageID2, gatewayID2, oldPackageID)))
+	assert.Equal(t, packageID2, gw.PackageID())
+	assert.Equal(t, gatewayID2, gw.ObjectID())
+	assert.Equal(t, oldPackageID, gw.oldPackageID)
 }
 
 func TestParseEvent(t *testing.T) {

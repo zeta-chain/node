@@ -516,6 +516,65 @@ func TestReadWriteDBLastTxScanned(t *testing.T) {
 	})
 }
 
+func Test_GetSetAnyString(t *testing.T) {
+	chain := chains.SuiMainnet
+
+	t.Run("should be able to update any string value", func(t *testing.T) {
+		ob := newTestSuite(t, chain)
+
+		// should return empty value if not set
+		require.Empty(t, ob.GetAnyString(0))
+
+		// update any string value
+		key := uint(0)
+		value := "test value"
+		ob.Observer.WithAnyString(key, value)
+		require.Equal(t, value, ob.GetAnyString(key))
+	})
+}
+
+func Test_LoadAnyString(t *testing.T) {
+	chain := chains.SuiMainnet
+	envvar := base.EnvVarLatestAnyStringByChain(chain, 0)
+
+	t.Run("should be able to load any string value", func(t *testing.T) {
+		// create observer and open db
+		ob := newTestSuite(t, chain)
+
+		// create db and write any string value
+		err := ob.WriteAnyStringToDB(0, "test value")
+		require.NoError(t, err)
+
+		// read any string value
+		ob.LoadAnyString(0)
+		require.EqualValues(t, "test value", ob.GetAnyString(0))
+	})
+
+	t.Run("should return empty value if not found in db", func(t *testing.T) {
+		// create observer and open db
+		ob := newTestSuite(t, chain)
+
+		// read any string value
+		ob.LoadAnyString(0)
+		require.Empty(t, ob.GetAnyString(0))
+	})
+
+	t.Run("should overwrite string value if env var is set", func(t *testing.T) {
+		// create observer and open db
+		ob := newTestSuite(t, chain)
+
+		// create db and write any string value
+		ob.WriteAnyStringToDB(0, "test value 1")
+
+		// set env var
+		os.Setenv(envvar, "test value 2")
+
+		// read any string value
+		ob.LoadAnyString(0)
+		require.EqualValues(t, "test value 2", ob.GetAnyString(0))
+	})
+}
+
 func TestPostVoteInbound(t *testing.T) {
 	t.Run("should be able to post vote inbound", func(t *testing.T) {
 		// create observer

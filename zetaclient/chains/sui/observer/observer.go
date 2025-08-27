@@ -15,6 +15,9 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
+// oldInboundCursorKey is the key to access the old gateway inbound cursor in the database
+const oldInboundCursorKey = 0
+
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
@@ -52,6 +55,7 @@ func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observe
 	}
 
 	ob.LoadLastTxScanned()
+	ob.LoadAnyString(oldInboundCursorKey)
 
 	return ob
 }
@@ -138,6 +142,28 @@ func (ob *Observer) setCursor(eventID models.EventId) error {
 	}
 
 	ob.WithLastTxScanned(cursor)
+
+	ob.Logger().Inbound.Info().Msgf("Sui inbound set cursor: %s", cursor)
+
+	return nil
+}
+
+// getOldCursor gets the inbound scanning cursor of the old gateway package.
+func (ob *Observer) getOldCursor() string {
+	return ob.GetAnyString(oldInboundCursorKey)
+}
+
+// setOldCursor sets the inbound scanning cursor of the old gateway package.
+func (ob *Observer) setOldCursor(eventID models.EventId) error {
+	cursor := client.EncodeCursor(eventID)
+
+	if err := ob.WriteAnyStringToDB(oldInboundCursorKey, cursor); err != nil {
+		return errors.Wrap(err, "unable to write old cursor to db")
+	}
+
+	ob.WithAnyString(oldInboundCursorKey, cursor)
+
+	ob.Logger().Inbound.Info().Msgf("Sui inbound set old cursor: %s", cursor)
 
 	return nil
 }
