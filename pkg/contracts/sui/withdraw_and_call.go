@@ -14,6 +14,9 @@ const (
 	// FuncWithdrawImpl is the gateway function name withdraw_impl
 	FuncWithdrawImpl = "withdraw_impl"
 
+	// FuncIssueMessageContext is the gateway function name issue_message_context
+	FuncIssueMessageContext = "issue_message_context"
+
 	// FuncSetMessageContext is the gateway function name set_message_context
 	FuncSetMessageContext = "set_message_context"
 
@@ -29,15 +32,9 @@ const (
 	// typeSeparator is the separator for Sui package and module
 	typeSeparator = "::"
 
-	// TODO: https://github.com/zeta-chain/node/issues/4066
-	// replace below legacy constant value 3 -> 5 after re-enabling authenticated call
 	// ptbWithdrawAndCallCmdCount is the number of commands in the PTB withdraw and call
 	// the five commands are: [withdraw_impl, transfer_objects, set_message_context, on_call, reset_message_context]
-	// ptbWithdrawAndCallCmdCount = 5
-
-	// ptbWithdrawAndCallCmdCount is the number of commands in the PTB withdraw and call
-	// the three commands are: [withdraw_impl, transfer_objects, on_call]
-	ptbWithdrawAndCallCmdCount = 3
+	ptbWithdrawAndCallCmdCount = 5
 
 	// ptbWithdrawImplInputCount is the number of inputs in the withdraw_impl command
 	// the inputs are: [gatewayObject, amount, nonce, gasBudget, withdrawCap]
