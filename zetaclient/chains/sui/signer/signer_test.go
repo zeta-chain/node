@@ -377,7 +377,7 @@ func (ts *testSuite) MockWithdrawCapID(id string) {
 }
 
 func (ts *testSuite) MockMessageContextID(id string) {
-	ts.SuiMock.On("SuiXGetDynamicFieldObject", mock.Anything, mock.Anything).Return(models.SuiObjectResponse{
+	ts.SuiMock.On("SuiXGetDynamicFieldObject", mock.Anything, mock.Anything).Maybe().Return(models.SuiObjectResponse{
 		Data: &models.SuiObjectData{
 			Content: &models.SuiParsedData{
 				SuiMoveObject: models.SuiMoveObject{
