@@ -157,13 +157,15 @@ func (r *E2ERunner) suiBuildPackage(path string) {
 
 // suiBuildGatewayUpgraded builds the upgraded gateway package
 func (r *E2ERunner) suiBuildGatewayUpgraded() {
-	// in order to upgrade the gateway package, we need 2 patches to the Move.toml files:
+	// in order to upgrade the gateway package, we need e patches to the Move.toml files:
 	// 1. set the `published-at` so that SUI knows which deployed gateway package the upgrade applies to.
 	// 2. use `gateway = 0x0` as a placeholder that will be replaced by new gateway package address.
+	// 3. set the old placeholder "ORIGINAL-PACKAGE-ID" to actual package ID, will deprecate it in the future.
 	publishedAt := fmt.Sprintf(`published-at = "%s"`, r.SuiGateway.PackageID())
 	gatewayAddress := fmt.Sprintf(`gateway = "%s"`, r.SuiGateway.PackageID())
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "0x0"`, publishedAt)
 	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), gatewayAddress, `gateway = "0x0"`)
+	r.suiPatchMoveConfig(r.WorkDirPrefixed(suiGatewayUpgradedPath), `published-at = "ORIGINAL-PACKAGE-ID"`, publishedAt)
 
 	// build the upgraded gateway package
 	r.suiBuildPackage(r.WorkDirPrefixed(suiGatewayUpgradedPath))
