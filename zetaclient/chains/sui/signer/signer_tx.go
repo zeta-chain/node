@@ -97,14 +97,14 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
-	// Retrieve message context ID
-	msgContextID, err := s.getMessageContextIDCached(ctx)
-	if err != nil {
-		return tx, errors.Wrap(err, "unable to get message context ID")
-	}
-
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
+		// Retrieve message context ID
+		msgContextID, err := s.getMessageContextIDCached(ctx)
+		if err != nil {
+			return tx, errors.Wrap(err, "unable to get message context ID")
+		}
+
 		return s.buildWithdrawAndCallTx(
 			ctx,
 			cctx,

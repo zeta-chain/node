@@ -1112,7 +1112,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawRevertWithCallName,
@@ -1130,7 +1130,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in mist", DefaultValue: "1000000"},
 		},
 		TestSuiWithdrawAndCallInvalidPayload,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiWithdrawAndCallRevertWithCallName,
@@ -1140,7 +1140,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawName,
@@ -1159,7 +1159,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiTokenWithdrawAndCallRevertWithCallName,
@@ -1169,7 +1169,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "100000"},
 		},
 		TestSuiTokenWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion("v33.0.0"),
+		runner.WithMinimumVersion("v35.0.0"),
 	),
 	runner.NewE2ETest(
 		TestSuiDepositRestrictedName,

@@ -483,17 +483,35 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestSuiTokenDepositAndCallName,
 			e2etests.TestSuiTokenDepositAndCallRevertName,
 			e2etests.TestSuiWithdrawName,
-			e2etests.TestSuiWithdrawRevertWithCallName,
+			//e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawName,
+			//e2etests.TestSuiWithdrawAndCallName,
+			//e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
+			//e2etests.TestSuiWithdrawAndCallRevertWithCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallName,
+			//e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
+			e2etests.TestSuiDepositRestrictedName,
+			//e2etests.TestSuiWithdrawRestrictedName,
+			e2etests.TestSuiWithdrawInvalidReceiverName,
+		}
+
+		// TODO: https://github.com/zeta-chain/node/issues/4139
+		// the v35 upgrade test is now based on v32 sui gateway
+		// 1. does not have MessageContext object, we have to skip all WaC tests
+		// 2. does not accept a gasBudget refund in 'increase_nonce' entry, we have to skip cancelled outbound tests
+		suiBreakingTestsV35Upgrade := []string{
+			e2etests.TestSuiWithdrawRevertWithCallName,
 			e2etests.TestSuiWithdrawAndCallName,
 			e2etests.TestSuiWithdrawAndCallInvalidPayloadName,
 			e2etests.TestSuiWithdrawAndCallRevertWithCallName,
 			e2etests.TestSuiTokenWithdrawAndCallName,
 			e2etests.TestSuiTokenWithdrawAndCallRevertWithCallName,
-			e2etests.TestSuiDepositRestrictedName,
 			e2etests.TestSuiWithdrawRestrictedName,
-			e2etests.TestSuiWithdrawInvalidReceiverName,
 		}
+		if !deployerRunner.IsRunningUpgrade() {
+			suiTests = append(suiTests, suiBreakingTestsV35Upgrade...)
+		}
+
 		eg.Go(suiTestRoutine(conf, deployerRunner, verbose, suiTests...))
 	}
 
