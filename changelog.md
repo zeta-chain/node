@@ -5,6 +5,7 @@
 ### Features
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+* [4138](https://github.com/zeta-chain/node/pull/4138) - allow zetaclient to optionally observe inbound from Sui old gateway package
 
 ### Refactor
 
