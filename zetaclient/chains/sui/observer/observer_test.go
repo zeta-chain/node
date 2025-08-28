@@ -135,11 +135,11 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, gatewayQuery).Return(events, "", nil)
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, oldGatewayQuery).Return(oldGatewayEvents, "", nil)
 
-		// Given 3 transaction blocks
-		ts.OnGetTx("TX_1_ok", "10000", false, nil)
-		ts.OnGetTx("TX_3_ok", "20000", false, nil)
-		ts.OnGetTx("TX_5_old_gateway", "30000", false, nil)
-		ts.OnGetTx("TX_6_old_gateway", "40000", false, nil)
+		// Given 4 transaction blocks
+		ts.OnGetTx("TX_1_ok", "10000", true, false, nil)
+		ts.OnGetTx("TX_3_ok", "20000", true, false, nil)
+		ts.OnGetTx("TX_5_old_gateway", "30000", true, false, nil)
+		ts.OnGetTx("TX_6_old_gateway", "40000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -247,7 +247,7 @@ func TestObserver(t *testing.T) {
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
 		// Given transaction block
-		ts.OnGetTx("TX_restricted", "10000", false, nil)
+		ts.OnGetTx("TX_restricted", "10000", true, false, nil)
 
 		// Given inbound votes catches so we can assert them later
 		ts.CatchInboundVotes()
@@ -292,7 +292,7 @@ func TestObserver(t *testing.T) {
 		evmAlice := sample.EthAddress()
 		evmBob := sample.EthAddress()
 
-		ts.OnGetTx(txHash1, "15000", true, []models.SuiEventResponse{
+		ts.OnGetTx(txHash1, "15000", true, true, []models.SuiEventResponse{
 			ts.SampleEvent(ts.gateway.PackageID(), txHash1, string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
@@ -300,7 +300,7 @@ func TestObserver(t *testing.T) {
 				"receiver":  evmAlice.String(),
 			}),
 		})
-		ts.OnGetTx(txHash2, "20000", true, []models.SuiEventResponse{
+		ts.OnGetTx(txHash2, "20000", true, true, []models.SuiEventResponse{
 			ts.SampleEvent(ts.gateway.Old().PackageID(), txHash2, string(sui.DepositAndCallEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "2000",
@@ -674,14 +674,20 @@ func (ts *testSuite) SampleEvent(packageID, txHash, event string, kv map[string]
 	}
 }
 
-func (ts *testSuite) OnGetTx(digest, checkpoint string, showEvents bool, events []models.SuiEventResponse) {
+func (ts *testSuite) OnGetTx(digest, checkpoint string, showEffects, showEvents bool, events []models.SuiEventResponse) {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  digest,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: showEvents},
+		Digest: digest,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: showEffects,
+			ShowEvents:  showEvents,
+		},
 	}
 
 	res := models.SuiTransactionBlockResponse{
-		Digest:     digest,
+		Digest: digest,
+		Effects: models.SuiEffects{
+			Status: models.ExecutionStatus{Status: client.TxStatusSuccess},
+		},
 		Events:     events,
 		Checkpoint: checkpoint,
 	}
