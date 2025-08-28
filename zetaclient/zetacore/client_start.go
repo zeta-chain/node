@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/node/zetaclient/authz"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 // This file contains some high level logic for creating a zetacore client
@@ -83,7 +84,7 @@ func ensureBlocksProduction(ctx context.Context, zc *Client) error {
 		blockHeight, err := zc.GetBlockHeight(ctx)
 
 		if err == nil && blockHeight > 1 {
-			zc.logger.Info().Msgf("Zetacore is ready, block height: %d", blockHeight)
+			zc.logger.Info().Int64(logs.FieldBlock, blockHeight).Msg("zetacore is ready")
 			t.Stop()
 			return nil
 		}
@@ -93,7 +94,10 @@ func ensureBlocksProduction(ctx context.Context, zc *Client) error {
 			return fmt.Errorf("zetacore is not ready, timeout %s", time.Since(start).String())
 		}
 
-		zc.logger.Info().Msgf("Failed to get block number, retry: %d/%d", retryCount, attempts)
+		zc.logger.Info().
+			Int("current_attempt", retryCount).
+			Uint("max_attempts", attempts).
+			Msg("failed to get block number")
 		return nil
 	}
 
@@ -112,7 +116,7 @@ func prepareZetacoreClient(ctx context.Context, zc *Client, cfg *config.Config) 
 		zc.logger.Warn().
 			Str("got", cfg.ChainID).
 			Str("want", network).
-			Msg("Zetacore chain id config mismatch. Forcing update from the network")
+			Msg("zetacore chain id config mismatch; forcing update from the network")
 
 		cfg.ChainID = network
 		if err = zc.UpdateChainID(cfg.ChainID); err != nil {

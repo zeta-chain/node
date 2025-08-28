@@ -112,13 +112,17 @@ func NewOutboundData(
 		if cctx.ProtocolContractVersion == types.ProtocolContractVersion_V2 {
 			message, err = hex.DecodeString(cctx.RelayedMessage)
 			if err != nil {
-				logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
+				logger.Err(err).
+					Str("relayed_message", cctx.RelayedMessage).
+					Msg("unable to decode relayed message (hexadecimal)")
 				message = []byte{}
 			}
 		} else {
 			msg, errDecode := base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 			if errDecode != nil {
-				logger.Err(err).Str("cctx.relayed_message", cctx.RelayedMessage).Msg("Unable to decode relayed message")
+				logger.Err(err).
+					Str("relayed_message", cctx.RelayedMessage).
+					Msg("unable to decode relayed message (base64)")
 			} else {
 				message = msg
 			}
@@ -194,9 +198,9 @@ func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.
 		chainID := big.NewInt(cctx.InboundParams.SenderChainId)
 
 		logger.Info().
-			Str("cctx.index", cctx.Index).
-			Int64("cctx.chain_id", chainID.Int64()).
-			Msgf("Abort: reverting inbound")
+			Int64("cctx_chain_id", chainID.Int64()).
+			Str("cctx_index", cctx.Index).
+			Msg("abort: reverting inbound")
 
 		return to, chainID, false
 	case types.CctxStatus_PendingOutbound:
@@ -207,9 +211,9 @@ func getDestination(cctx *types.CrossChainTx, logger zerolog.Logger) (ethcommon.
 	}
 
 	logger.Info().
-		Str("cctx.index", cctx.Index).
-		Str("cctx.status", cctx.CctxStatus.String()).
-		Msgf("CCTX doesn't need to be processed")
+		Str("cctx_index", cctx.Index).
+		Str("cctx_status", cctx.CctxStatus.String()).
+		Msg("CCTX does not need to be processed")
 
 	return ethcommon.Address{}, nil, true
 }

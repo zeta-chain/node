@@ -47,12 +47,9 @@ func (ob *Observer) isEventProcessable(
 
 	// donation check
 	if bytes.Equal(payload, []byte(constant.DonationMessage)) {
-		logFields := map[string]any{
-			"chain": ob.Chain().ChainId,
-			"tx":    txHash.Hex(),
-		}
-		ob.Logger().Inbound.Info().Fields(logFields).
-			Msgf("thank you rich folk for your donation!")
+		ob.Logger().Inbound.Info().
+			Stringer(logs.FieldTx, txHash).
+			Msg("thank you rich folk for your donation!")
 		return false
 	}
 
@@ -131,11 +128,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 		}
 		depositedEvent, err := gatewayContract.ParseDeposited(log)
 		if err != nil {
-			ob.Logger().
-				Inbound.Warn().
+			ob.Logger().Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("Invalid Deposit event")
+				Msg("invalid Deposit event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -159,10 +155,9 @@ func (ob *Observer) parseAndValidateDepositEvents(
 	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().
-				Inbound.Warn().
+			ob.Logger().Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("Multiple Deposited events in same tx")
+				Msg("multiple Deposited events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -239,9 +234,12 @@ func (ob *Observer) observeGatewayCall(
 		msg := ob.newCallInboundVote(event)
 
 		ob.Logger().Inbound.Info().
-			Msgf("ObserveGateway: Call inbound detected on chain %d tx %s block %d from %s value message %s",
-				ob.Chain().
-					ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.Sender.Hex(), hex.EncodeToString(event.Payload))
+			Str(logs.FieldMethod, "observeGatewayCall").
+			Stringer(logs.FieldTx, event.Raw.TxHash).
+			Uint64(logs.FieldBlock, event.Raw.BlockNumber).
+			Stringer("from", event.Sender).
+			Str("message", hex.EncodeToString(event.Payload)).
+			Msg("inbound detected (Call)")
 
 		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
 		if err != nil {
@@ -266,11 +264,10 @@ func (ob *Observer) parseAndValidateCallEvents(
 		}
 		calledEvent, err := gatewayContract.ParseCalled(log)
 		if err != nil {
-			ob.Logger().
-				Inbound.Warn().
+			ob.Logger().Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("Invalid Call event")
+				Msg("invalid Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -363,9 +360,13 @@ func (ob *Observer) observeGatewayDepositAndCall(
 		msg := ob.newDepositAndCallInboundVote(event)
 
 		ob.Logger().Inbound.Info().
-			Msgf("ObserveGateway: DepositAndCall inbound detected on chain %d tx %s block %d from %s value %s message %s",
-				ob.Chain().
-					ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.Sender.Hex(), event.Amount.String(), hex.EncodeToString(event.Payload))
+			Str(logs.FieldMethod, "observeGatewayDepositAndCall").
+			Stringer(logs.FieldTx, event.Raw.TxHash).
+			Uint64(logs.FieldBlock, event.Raw.BlockNumber).
+			Stringer("from", event.Sender).
+			Stringer("value", event.Amount).
+			Str("message", hex.EncodeToString(event.Payload)).
+			Msg("inbound detected (DepositAndCall)")
 
 		_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
 		if err != nil {
@@ -393,11 +394,10 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 		}
 		depositAndCallEvent, err := gatewayContract.ParseDepositedAndCalled(log)
 		if err != nil {
-			ob.Logger().
-				Inbound.Warn().
+			ob.Logger().Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("Invalid DepositedAndCall event")
+				Msg("invalid DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)
@@ -421,10 +421,9 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().
-				Inbound.Warn().
+			ob.Logger().Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("Multiple DepositedAndCalled events in same tx")
+				Msg("multiple DepositedAndCalled events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
