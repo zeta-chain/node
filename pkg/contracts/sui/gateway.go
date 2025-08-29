@@ -27,8 +27,8 @@ type Gateway struct {
 	objectID string
 
 	// originalPackageID is an optional field that points to the original gateway package.
-	// After upgrading, the observer MUST use it to query inbound events from the gateway,
-	// because the original gateway package is where the events were defined.
+	// After gateway upgrade, the observer MUST use this packageID to query inbound events,
+	// because the original gateway package was where the events were initially defined.
 	originalPackageID string
 
 	mu sync.RWMutex
@@ -83,15 +83,20 @@ func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
-// ToPairID return a pair of `$packageID,$gatewayObjectID[,originalPackageID]`
+// MakePair makes a string containing `$packageID,$gatewayObjectID[,originalPackageID]`
+func MakePair(packageID, gatewayObjectID, originalPackageID string) string {
+	if originalPackageID == "" {
+		return fmt.Sprintf("%s,%s", packageID, gatewayObjectID)
+	}
+	return fmt.Sprintf("%s,%s,%s", packageID, gatewayObjectID, originalPackageID)
+}
+
+// ToPairID return a pair ID of `$packageID,$gatewayObjectID[,originalPackageID]`
 func (gw *Gateway) ToPairID() string {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
 
-	if gw.originalPackageID == "" {
-		return fmt.Sprintf("%s,%s", gw.packageID, gw.objectID)
-	}
-	return fmt.Sprintf("%s,%s,%s", gw.packageID, gw.objectID, gw.originalPackageID)
+	return MakePair(gw.packageID, gw.objectID, gw.originalPackageID)
 }
 
 // Original creates a Gateway struct that points to the original gateway.
@@ -169,6 +174,17 @@ func (gw *Gateway) PackageID() string {
 	return gw.packageID
 }
 
+// PackageIDs returns slice of {packageID[,originalPackageID]}
+func (gw *Gateway) PackageIDs() []string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
+
+	if gw.originalPackageID == "" {
+		return []string{gw.packageID}
+	}
+	return []string{gw.packageID, gw.originalPackageID}
+}
+
 // ObjectID returns Gateway's struct object id
 func (gw *Gateway) ObjectID() string {
 	gw.mu.RLock()
@@ -177,11 +193,13 @@ func (gw *Gateway) ObjectID() string {
 }
 
 // WithdrawCapType returns struct type of the WithdrawCap
+// Note: the withdraw cap was defined in the original package, so original package ID should be used
 func (gw *Gateway) WithdrawCapType() string {
-	return fmt.Sprintf("%s::%s::WithdrawCap", gw.PackageID(), GatewayModule)
+	return fmt.Sprintf("%s::%s::WithdrawCap", gw.Original().PackageID(), GatewayModule)
 }
 
 // MessageContextType returns struct type of the MessageContext
+// Note: the message context was defined in upgraded package, so new package ID should be used
 func (gw *Gateway) MessageContextType() string {
 	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
 }
@@ -204,16 +222,8 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 // ParseEvent parses Event.
 func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
-	var (
-		packageID  = gw.PackageID()
-		originalID = gw.Original().PackageID()
-	)
-
 	// event may carry either package ID, depending on which gateway was called
-	packageIDs := []string{packageID}
-	if packageID != originalID {
-		packageIDs = append(packageIDs, originalID)
-	}
+	packageIDs := gw.PackageIDs()
 
 	// basic validation
 	switch {
@@ -457,6 +467,7 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
+// parsePair parses a pair of IDs from `$packageID,$gatewayObjectID[,originalPackageID]`
 func parsePair(pair string) (string, string, string, error) {
 	parts := strings.Split(pair, ",")
 	if len(parts) != 2 && len(parts) != 3 {

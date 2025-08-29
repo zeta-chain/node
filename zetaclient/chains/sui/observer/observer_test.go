@@ -109,7 +109,7 @@ func TestObserver(t *testing.T) {
 
 		ts.suiMock.On("QueryModuleEvents", mock.Anything, expectedQuery).Return(events, "", nil)
 
-		// Given 4 transaction blocks
+		// Given 2 transaction blocks
 		ts.OnGetTx("TX_1_ok", "10000", true, false, nil)
 		ts.OnGetTx("TX_3_ok", "20000", true, false, nil)
 
@@ -216,7 +216,8 @@ func TestObserver(t *testing.T) {
 
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, func(cfg *testSuiteConfig) { cfg.originalPackageID = sample.SuiAddress(t) })
+		originalPackageID := sample.SuiAddress(t)
+		ts := newTestSuite(t, func(cfg *testSuiteConfig) { cfg.originalPackageID = originalPackageID })
 
 		// Given inbound tracker
 		chainID := ts.Chain().ChainId
@@ -231,11 +232,11 @@ func TestObserver(t *testing.T) {
 
 		ts.zetaMock.On("GetInboundTrackersForChain", mock.Anything, chainID).Return(trackers, nil)
 
-		// Given underlying txs with events on two gateway packages
+		// Given underlying tx with event
 		evmAlice := sample.EthAddress()
 
 		ts.OnGetTx(txHash, "15000", true, true, []models.SuiEventResponse{
-			ts.SampleEvent(ts.gateway.PackageID(), txHash, string(sui.DepositEvent), map[string]any{
+			ts.SampleEvent(originalPackageID, txHash, string(sui.DepositEvent), map[string]any{
 				"coin_type": string(sui.SUI),
 				"amount":    "1000",
 				"sender":    "SUI_ALICE",
@@ -255,13 +256,14 @@ func TestObserver(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(ts.inboundVotesBag))
 
-		vote1 := ts.inboundVotesBag[0]
-		assert.Equal(t, txHash, vote1.InboundHash)
-		assert.Equal(t, uint64(15_000), vote1.InboundBlockHeight)
-		assert.Equal(t, coin.CoinType_Gas, vote1.CoinType)
-		assert.Equal(t, false, vote1.IsCrossChainCall)
-		assert.Equal(t, math.NewUint(1000), vote1.Amount)
-		assert.Equal(t, evmAlice.String(), vote1.Receiver)
+		vote := ts.inboundVotesBag[0]
+
+		assert.Equal(t, txHash, vote.InboundHash)
+		assert.Equal(t, uint64(15_000), vote.InboundBlockHeight)
+		assert.Equal(t, coin.CoinType_Gas, vote.CoinType)
+		assert.Equal(t, false, vote.IsCrossChainCall)
+		assert.Equal(t, math.NewUint(1000), vote.Amount)
+		assert.Equal(t, evmAlice.String(), vote.Receiver)
 	})
 
 	t.Run("ProcessOutboundTrackers", func(t *testing.T) {
@@ -504,6 +506,87 @@ func TestObserver(t *testing.T) {
 		assert.Equal(t, uint64(1000), vote.ObservedOutboundEffectiveGasPrice.Uint64())
 		assert.Equal(t, uint64(200+300-50), vote.ObservedOutboundGasUsed)
 	})
+}
+
+func Test_MigrateInboundCursorV35(t *testing.T) {
+	originalPackageID := sample.SuiAddress(t)
+
+	tests := []struct {
+		name              string
+		cursor            string
+		originalPackageID string
+		wantKey           string
+	}{
+		{
+			name:              "migration with empty original package ID",
+			cursor:            "HBgprKGko6Kk1q7cjZpg1KHVUqFXE7PFhT2M9DaPAezi,0",
+			originalPackageID: "",
+		},
+		{
+			name:              "migration with non-empty original package ID",
+			cursor:            "DVmb9QoJKRvSZfw6SkL8Zp1vRESxS7RuHy6XEYGT7WWn,0",
+			originalPackageID: originalPackageID,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
+			opt := func(cfg *testSuiteConfig) { cfg.originalPackageID = tt.originalPackageID }
+			ts := newTestSuite(t, opt)
+			packageID := ts.Gateway().PackageID()
+			originalPackageID := ts.Gateway().Original().PackageID()
+
+			// write a pre-v35 old cursor to the DB
+			err := ts.WriteLastTxScannedToDB(tt.cursor)
+			require.NoError(t, err)
+			ts.WithLastTxScanned(tt.cursor)
+
+			// ensure the old cursor is set
+			oldCursor, err := ts.ReadLastTxScannedFromDB()
+			require.NoError(t, err)
+			assert.Equal(t, tt.cursor, oldCursor)
+			assert.Equal(t, tt.cursor, ts.LastTxScanned())
+
+			// ACT-1
+			err = ts.MigrateInboundCursorToV35()
+
+			// ASSERT
+			require.NoError(t, err)
+
+			// ensure the new cursor is stored under original package ID
+			newCursor, err := ts.ReadAnyStringFromDB(originalPackageID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.cursor, newCursor)
+			assert.Equal(t, tt.cursor, ts.GetAnyString(originalPackageID))
+
+			// ensure nothing is stored under new package ID
+			if packageID != originalPackageID {
+				cursor, err := ts.ReadAnyStringFromDB(packageID)
+				require.ErrorContains(t, err, "record not found")
+				assert.Empty(t, cursor)
+				assert.Empty(t, ts.GetAnyString(packageID))
+			}
+
+			// ensure the old cursor is set to empty
+			oldCursor, err = ts.ReadLastTxScannedFromDB()
+			require.NoError(t, err)
+			assert.Empty(t, oldCursor)
+			assert.Empty(t, ts.LastTxScanned())
+
+			// ACT-2, migrate again
+			err = ts.MigrateInboundCursorToV35()
+
+			// ASSERT
+			require.NoError(t, err)
+
+			// ensure the new cursor stay untouched
+			cursor, err := ts.ReadAnyStringFromDB(originalPackageID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.cursor, cursor)
+			assert.Equal(t, tt.cursor, ts.GetAnyString(originalPackageID))
+		})
+	}
 }
 
 type testSuite struct {

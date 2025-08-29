@@ -38,7 +38,7 @@ type Response struct {
 }
 
 func (r *E2ERunner) VerifyAccounting(testLegacy bool) {
-	r.Logger.Print("Verifying accounting")
+	r.Logger.Print("🏃 Verifying accounting")
 	r.checkETHTSSBalance()
 	r.checkERC20TSSBalance()
 	r.checkZETATSSBalance(testLegacy)

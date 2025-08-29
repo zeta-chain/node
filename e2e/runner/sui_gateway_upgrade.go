@@ -45,13 +45,15 @@ func (r *E2ERunner) SuiVerifyGatewayPackageUpgrade() {
 	require.Equal(r, gatewayDataBefore, gatewayDataAfter)
 
 	// it takes 1 Zeta block time for zetaclient to pick up the new chain params
-	// wait for 2 blocks to ensure the new chain params are effective
+	// wait for 2 blocks to ensure the new gateway package ID is effective
 	utils.WaitForZetaBlocks(r.Ctx, r, r.ZEVMClient, 2, 10*time.Second)
 
 	// deposit from new gateway package should be observed
-	r.suiVerifyDepositFromPackage(r.SuiGateway.PackageID(), big.NewInt(1000000))
+	r.Logger.Print("🏃 Verifying Sui deposit from new package")
+	r.suiVerifyDepositFromPackage(r.SuiGateway.PackageID(), big.NewInt(10000000000))
 
 	// deposit from original gateway package should be observed
+	r.Logger.Print("🏃 Verifying Sui deposit from original package")
 	r.suiVerifyDepositFromPackage(r.SuiGateway.Original().PackageID(), big.NewInt(2000000))
 }
 

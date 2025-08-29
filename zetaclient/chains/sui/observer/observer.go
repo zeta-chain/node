@@ -72,10 +72,10 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 	return nil
 }
 
-// MigrateInboundCursorV35 migrates old inbound cursor in the database
+// MigrateInboundCursorToV35 migrates old inbound cursor in the database to v35 format
 // zetaclient v35 needs two separate inbound cursors for old and new gateway packages,
 // so the cursors have to be stored under separate keys - the package IDs
-func (ob *Observer) MigrateInboundCursorV35() error {
+func (ob *Observer) MigrateInboundCursorToV35() error {
 	// all we need to do is to migrate the cursor for original package
 	// the old cursor is stored as 'LastTransactionSQLType'
 	oldCursor := ob.LastTxScanned()
@@ -88,21 +88,20 @@ func (ob *Observer) MigrateInboundCursorV35() error {
 	// the 'originalPackageID' should be used as the DB key for old cursor
 	originalPackageID := ob.gateway.Original().PackageID()
 	if err := ob.WriteAnyStringToDB(originalPackageID, oldCursor); err != nil {
-		return errors.Wrapf(err, "unable to write old cursor to db for package %s", originalPackageID)
+		return errors.Wrapf(err, "unable to migrate inbound cursor for package %s", originalPackageID)
 	}
 	ob.WithAnyString(originalPackageID, oldCursor)
 
-	ob.Logger().
-		Inbound.Info().
-		Str("package", originalPackageID).
-		Str("cursor", oldCursor).
-		Msgf("Migrated Sui inbound cursor")
-
-	// clean up old cursor from DB
+	// set old cursor to empty value
 	if err := ob.WriteLastTxScannedToDB(""); err != nil {
 		return errors.Wrap(err, "unable to clean last tx scanned from db")
 	}
 	ob.WithLastTxScanned("")
+
+	ob.Logger().Inbound.Info().
+		Str("package", originalPackageID).
+		Str("cursor", oldCursor).
+		Msgf("Migrated inbound cursor")
 
 	return nil
 }

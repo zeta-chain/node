@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -30,19 +31,19 @@ func TestNewGatewayFromPairID(t *testing.T) {
 	)
 
 	tests := []struct {
-		name                  string
-		pair                  string
-		wantErr               string
-		wantOriginalPackageID string
+		name         string
+		pair         string
+		wantErr      string
+		wantOriginal bool
 	}{
 		{
 			name: "valid pair",
-			pair: fmt.Sprintf("%s,%s", packageID, gatewayID),
+			pair: MakePair(packageID, gatewayID, ""),
 		},
 		{
-			name:                  "valid pair with original package id",
-			pair:                  fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID),
-			wantOriginalPackageID: originalPackageID,
+			name:         "valid pair with original package id",
+			pair:         MakePair(packageID, gatewayID, originalPackageID),
+			wantOriginal: true,
 		},
 		{
 			name:    "invalid pair, missing gateway object id",
@@ -68,9 +69,32 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, packageID, gw.PackageID())
 			assert.Equal(t, gatewayID, gw.ObjectID())
-			assert.Equal(t, tt.wantOriginalPackageID, gw.originalPackageID)
+
+			if !tt.wantOriginal {
+				assert.Equal(t, []string{packageID}, gw.PackageIDs())
+				return
+			}
+			assert.True(t, slices.Equal([]string{packageID, originalPackageID}, gw.PackageIDs()))
 		})
 	}
+}
+
+func Test_MakePair(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("original package id is empty", func(t *testing.T) {
+		pair := MakePair(packageID, gatewayID, "")
+		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), pair)
+	})
+
+	t.Run("original package id is not empty", func(t *testing.T) {
+		pair := MakePair(packageID, gatewayID, originalPackageID)
+		assert.Equal(t, fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID), pair)
+	})
 }
 
 func Test_ToPairID(t *testing.T) {
@@ -82,11 +106,11 @@ func Test_ToPairID(t *testing.T) {
 
 	t.Run("original package id is empty", func(t *testing.T) {
 		gw := NewGateway(packageID, gatewayID)
-		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gw.ToPairID())
+		assert.Equal(t, MakePair(packageID, gatewayID, ""), gw.ToPairID())
 	})
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		pairID := fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID)
+		pairID := MakePair(packageID, gatewayID, originalPackageID)
 		gw, err := NewGatewayFromPairID(pairID)
 		require.NoError(t, err)
 		assert.Equal(t, pairID, gw.ToPairID())
@@ -101,7 +125,7 @@ func Test_Original(t *testing.T) {
 	)
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID))
+		gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, originalPackageID))
 		require.NoError(t, err)
 
 		gwOriginal := gw.Original()
@@ -111,7 +135,7 @@ func Test_Original(t *testing.T) {
 	})
 
 	t.Run("original package id is empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s", packageID, gatewayID))
+		gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, ""))
 		require.NoError(t, err)
 
 		gwOriginal := gw.Original()
@@ -138,7 +162,7 @@ func Test_UpdateIDs(t *testing.T) {
 	assert.Empty(t, gw.originalPackageID)
 
 	// after update
-	require.NoError(t, gw.UpdateIDs(fmt.Sprintf("%s,%s,%s", packageID2, gatewayID2, originalPackageID)))
+	require.NoError(t, gw.UpdateIDs(MakePair(packageID2, gatewayID2, originalPackageID)))
 	assert.Equal(t, packageID2, gw.PackageID())
 	assert.Equal(t, gatewayID2, gw.ObjectID())
 	assert.Equal(t, originalPackageID, gw.originalPackageID)
@@ -154,7 +178,7 @@ func TestParseEvent(t *testing.T) {
 		txHash            = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID))
+	gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, originalPackageID))
 	require.NoError(t, err)
 
 	eventType := func(t string) string {

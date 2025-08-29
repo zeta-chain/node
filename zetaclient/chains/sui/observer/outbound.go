@@ -235,6 +235,7 @@ func (ob *Observer) postVoteOutbound(ctx context.Context, msg *cctypes.MsgVoteOu
 	case zetaTxHash != "":
 		ob.Logger().Outbound.Info().
 			Str(logs.FieldTx, msg.ObservedOutboundHash).
+			Uint64(logs.FieldNonce, msg.OutboundTssNonce).
 			Str(logs.FieldZetaTx, zetaTxHash).
 			Str(logs.FieldBallot, ballot).
 			Msg("Outbound vote posted")

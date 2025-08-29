@@ -58,8 +58,8 @@ type Observer struct {
 	// lastTxScanned is the last transaction hash scanned by the observer
 	lastTxScanned string
 
-	// anyStringMap is the map of any string values stored by the observer
-	// it is now only used by Sui observer to store old Sui gateway inbound cursor during upgrade
+	// anyStringMap is a key-value map to store any string values used by the observer
+	// it is now only used by Sui observer to store old/new Sui gateway inbound cursors
 	anyStringMap map[string]string
 
 	blockCache *lru.Cache
@@ -430,8 +430,8 @@ func (ob *Observer) LoadAnyString(key string) {
 		return
 	}
 
-	// load from DB otherwise.
-	value, err := ob.readAnyStringFromDB(key)
+	// load from DB otherwise
+	value, err := ob.ReadAnyStringFromDB(key)
 	if err != nil {
 		// if not found, let the concrete chain observer decide where to start
 		chainID := ob.chain.ChainId
@@ -441,8 +441,8 @@ func (ob *Observer) LoadAnyString(key string) {
 	ob.WithAnyString(key, value)
 }
 
-// readAnyStringFromDB reads the any string data from the database.
-func (ob *Observer) readAnyStringFromDB(key string) (string, error) {
+// ReadAnyStringFromDB reads the any string data from the database.
+func (ob *Observer) ReadAnyStringFromDB(key string) (string, error) {
 	var anyString clienttypes.AnyStringSQLType
 	if err := ob.db.Client().Where("key_name = ?", key).First(&anyString).Error; err != nil {
 		return "", err
