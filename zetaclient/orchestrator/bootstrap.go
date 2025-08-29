@@ -216,6 +216,11 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 
 	observer := suiobserver.New(baseObserver, suiClient, gateway)
 
+	// migrate inbound cursor
+	if err = observer.MigrateInboundCursorV35(); err != nil {
+		return nil, errors.Wrap(err, "unable to migrate inbound cursor")
+	}
+
 	signer := suisigner.New(oc.newBaseSigner(chain), suiClient, gateway, oc.deps.Zetacore)
 
 	return sui.New(oc.scheduler, observer, signer), nil

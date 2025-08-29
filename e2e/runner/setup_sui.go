@@ -495,7 +495,7 @@ func (r *E2ERunner) setSuiChainParams() error {
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
-		GatewayAddress:              fmt.Sprintf("%s,%s", r.SuiGateway.PackageID(), r.SuiGateway.ObjectID()),
+		GatewayAddress:              r.SuiGateway.ToPairID(),
 		ConfirmationParams: &observertypes.ConfirmationParams{
 			SafeInboundCount:  1,
 			SafeOutboundCount: 1,

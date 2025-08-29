@@ -24,25 +24,25 @@ func Test_ActiveMessageContextDynamicFieldName(t *testing.T) {
 func TestNewGatewayFromPairID(t *testing.T) {
 	// stubs
 	const (
-		packageID    = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID    = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
-		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	tests := []struct {
-		name             string
-		pair             string
-		wantErr          string
-		wantOldPackageID string
+		name                  string
+		pair                  string
+		wantErr               string
+		wantOriginalPackageID string
 	}{
 		{
 			name: "valid pair",
 			pair: fmt.Sprintf("%s,%s", packageID, gatewayID),
 		},
 		{
-			name:             "valid pair with optional old package id",
-			pair:             fmt.Sprintf("%s,%s,%s", packageID, gatewayID, oldPackageID),
-			wantOldPackageID: oldPackageID,
+			name:                  "valid pair with original package id",
+			pair:                  fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID),
+			wantOriginalPackageID: originalPackageID,
 		},
 		{
 			name:    "invalid pair, missing gateway object id",
@@ -68,33 +68,56 @@ func TestNewGatewayFromPairID(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, packageID, gw.PackageID())
 			assert.Equal(t, gatewayID, gw.ObjectID())
-			assert.Equal(t, tt.wantOldPackageID, gw.oldPackageID)
+			assert.Equal(t, tt.wantOriginalPackageID, gw.originalPackageID)
 		})
 	}
 }
 
-func Test_Old(t *testing.T) {
+func Test_ToPairID(t *testing.T) {
 	const (
-		packageID    = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID    = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
-		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
-	t.Run("old package id is not empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, oldPackageID))
-		require.NoError(t, err)
-
-		gwOld := gw.Old()
-		require.NotNil(t, gwOld)
-		assert.Equal(t, oldPackageID, gwOld.PackageID())
-		assert.Equal(t, gatewayID, gwOld.ObjectID())
-		assert.Empty(t, gwOld.oldPackageID)
+	t.Run("original package id is empty", func(t *testing.T) {
+		gw := NewGateway(packageID, gatewayID)
+		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gw.ToPairID())
 	})
 
-	t.Run("old package id is empty", func(t *testing.T) {
+	t.Run("original package id is not empty", func(t *testing.T) {
+		pairID := fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID)
+		gw, err := NewGatewayFromPairID(pairID)
+		require.NoError(t, err)
+		assert.Equal(t, pairID, gw.ToPairID())
+	})
+}
+
+func Test_Original(t *testing.T) {
+	const (
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+	)
+
+	t.Run("original package id is not empty", func(t *testing.T) {
+		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID))
+		require.NoError(t, err)
+
+		gwOriginal := gw.Original()
+		assert.Equal(t, originalPackageID, gwOriginal.PackageID())
+		assert.Equal(t, gatewayID, gwOriginal.ObjectID())
+		assert.Empty(t, gwOriginal.originalPackageID)
+	})
+
+	t.Run("original package id is empty", func(t *testing.T) {
 		gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s", packageID, gatewayID))
 		require.NoError(t, err)
-		require.Nil(t, gw.Old())
+
+		gwOriginal := gw.Original()
+		assert.Equal(t, packageID, gwOriginal.PackageID())
+		assert.Equal(t, gatewayID, gwOriginal.ObjectID())
+		assert.Empty(t, gwOriginal.originalPackageID)
 	})
 }
 
@@ -103,37 +126,39 @@ func Test_UpdateIDs(t *testing.T) {
 		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
 
-		packageID2   = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
-		gatewayID2   = "0xaf52affd195806d9aa9d967462cbda411bfed9a6efc4a032bf8e34a391469878"
-		oldPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		packageID2        = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		gatewayID2        = "0xaf52affd195806d9aa9d967462cbda411bfed9a6efc4a032bf8e34a391469878"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	// before update
 	gw := NewGateway(packageID, gatewayID)
 	assert.Equal(t, packageID, gw.PackageID())
 	assert.Equal(t, gatewayID, gw.ObjectID())
-	assert.Empty(t, gw.oldPackageID)
+	assert.Empty(t, gw.originalPackageID)
 
 	// after update
-	require.NoError(t, gw.UpdateIDs(fmt.Sprintf("%s,%s,%s", packageID2, gatewayID2, oldPackageID)))
+	require.NoError(t, gw.UpdateIDs(fmt.Sprintf("%s,%s,%s", packageID2, gatewayID2, originalPackageID)))
 	assert.Equal(t, packageID2, gw.PackageID())
 	assert.Equal(t, gatewayID2, gw.ObjectID())
-	assert.Equal(t, oldPackageID, gw.oldPackageID)
+	assert.Equal(t, originalPackageID, gw.originalPackageID)
 }
 
 func TestParseEvent(t *testing.T) {
 	// stubs
 	const (
-		packageID = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
-		gatewayID = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
-		sender    = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
-		txHash    = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
+		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
+		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
+		sender            = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
+		txHash            = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw := NewGateway(packageID, gatewayID)
+	gw, err := NewGatewayFromPairID(fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID))
+	require.NoError(t, err)
 
 	eventType := func(t string) string {
-		return fmt.Sprintf("%s::%s::%s", packageID, GatewayModule, t)
+		return fmt.Sprintf("%s::%s::%s", originalPackageID, GatewayModule, t)
 	}
 
 	receiverAlice := ethcommon.HexToAddress("0xa64AeD687591CfCAB52F2C1DF79a2424BbC5fEA1")
@@ -154,7 +179,7 @@ func TestParseEvent(t *testing.T) {
 		assert      func(t *testing.T, raw models.SuiEventResponse, out Event)
 	}{
 		{
-			name: "deposit",
+			name: "deposit from non-original gateway",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
 				PackageId: packageID,
@@ -187,7 +212,7 @@ func TestParseEvent(t *testing.T) {
 			name: "depositAndCall with bytes payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -218,7 +243,7 @@ func TestParseEvent(t *testing.T) {
 			name: "depositAndCall with Base64 formatted payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -249,7 +274,7 @@ func TestParseEvent(t *testing.T) {
 			name: "depositAndCall_empty_payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -280,7 +305,7 @@ func TestParseEvent(t *testing.T) {
 			name: "withdraw",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("WithdrawEvent"),
 				ParsedJson: map[string]any{
@@ -326,7 +351,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid event id",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "hey"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 			},
 			errContains: `failed to parse event id "hey"`,
 		},
@@ -342,8 +367,8 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid module",
 			event: models.SuiEventResponse{
 				Id:                models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId:         packageID,
-				Type:              fmt.Sprintf("%s::%s::%s", packageID, "not_a_gateway", DepositEvent),
+				PackageId:         originalPackageID,
+				Type:              fmt.Sprintf("%s::%s::%s", originalPackageID, "not_a_gateway", DepositEvent),
 				TransactionModule: "foo",
 			},
 			errContains: "module mismatch",
@@ -352,7 +377,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid event type",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Type:      eventType("bar"),
 			},
 			errContains: `unknown event "bar"`,
@@ -361,7 +386,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid coin type",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -374,7 +399,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid amount",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -388,7 +413,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid sender",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -403,7 +428,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid receiver",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "0"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositEvent"),
 				ParsedJson: map[string]any{
@@ -419,7 +444,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid payload",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{
@@ -436,7 +461,7 @@ func TestParseEvent(t *testing.T) {
 			name: "invalid payload float64",
 			event: models.SuiEventResponse{
 				Id:        models.EventId{TxDigest: txHash, EventSeq: "1"},
-				PackageId: packageID,
+				PackageId: originalPackageID,
 				Sender:    sender,
 				Type:      eventType("DepositAndCallEvent"),
 				ParsedJson: map[string]any{

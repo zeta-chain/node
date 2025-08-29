@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,9 +26,10 @@ type Gateway struct {
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
 
-	// oldPackageID is an optional package ID that points to the old gateway package during upgrade
-	// it is only used by the observer to continue observing inbound from the old package after upgrade
-	oldPackageID string
+	// originalPackageID is an optional field that points to the original gateway package.
+	// After upgrading, the observer MUST use it to query inbound events from the gateway,
+	// because the original gateway package is where the events were defined.
+	originalPackageID string
 
 	mu sync.RWMutex
 }
@@ -62,17 +64,17 @@ func ActiveMessageContextDynamicFieldName() (json.RawMessage, error) {
 }
 
 // NewGatewayFromPairID creates a new Sui Gateway
-// from triplet of `$packageID,$gatewayObjectID[,oldPackageID]`, where oldPackageID is optional
+// from pair of `$packageID,$gatewayObjectID[,originalPackageID]`, where originalPackageID is optional
 func NewGatewayFromPairID(pair string) (*Gateway, error) {
-	packageID, gatewayObjectID, oldPackageID, err := parsePair(pair)
+	packageID, gatewayObjectID, originalPackageID, err := parsePair(pair)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Gateway{
-		packageID:    packageID,
-		objectID:     gatewayObjectID,
-		oldPackageID: oldPackageID,
+		packageID:         packageID,
+		objectID:          gatewayObjectID,
+		originalPackageID: originalPackageID,
 	}, nil
 }
 
@@ -81,21 +83,32 @@ func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
-// Old creates a Gateway struct that points to the old package ID.
+// ToPairID return a pair of `$packageID,$gatewayObjectID[,originalPackageID]`
+func (gw *Gateway) ToPairID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
+
+	if gw.originalPackageID == "" {
+		return fmt.Sprintf("%s,%s", gw.packageID, gw.objectID)
+	}
+	return fmt.Sprintf("%s,%s,%s", gw.packageID, gw.objectID, gw.originalPackageID)
+}
+
+// Original creates a Gateway struct that points to the original gateway.
 //
 // Note:
-//   - To give enough time for the deprecation of the old gateway package, the observers will have to
-//     continue observing inbounds that happen on the old gateway package.
-//   - This method allows the observer to make a switch and work with the old gateway package after upgrade.
-func (gw *Gateway) Old() *Gateway {
+//   - Gateway events were defined in the original gateway package, so the original package ID should be used for event queries.
+//     Event queries on upgraded gateway package ID will return empty events and lead to missed deposits.
+//   - This method allows the observer to make a switch and work with the original gateway package after upgrade.
+func (gw *Gateway) Original() *Gateway {
 	gw.mu.Lock()
 	defer gw.mu.Unlock()
 
-	// return nil if old package ID is not present
-	if gw.oldPackageID == "" {
-		return nil
+	// return self if original package ID is not specified
+	if gw.originalPackageID == "" {
+		return gw
 	}
-	return &Gateway{packageID: gw.oldPackageID, objectID: gw.objectID}
+	return &Gateway{packageID: gw.originalPackageID, objectID: gw.objectID}
 }
 
 // Event represents generic event wrapper
@@ -173,9 +186,9 @@ func (gw *Gateway) MessageContextType() string {
 	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
 }
 
-// UpdateIDs updates packageID, objectID, and oldPackageID.
+// UpdateIDs updates packageID, objectID, and originalPackageID.
 func (gw *Gateway) UpdateIDs(pair string) error {
-	packageID, gatewayObjectID, oldPackageID, err := parsePair(pair)
+	packageID, gatewayObjectID, originalPackageID, err := parsePair(pair)
 	if err != nil {
 		return err
 	}
@@ -184,25 +197,36 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
-	gw.oldPackageID = oldPackageID
+	gw.originalPackageID = originalPackageID
 
 	return nil
 }
 
 // ParseEvent parses Event.
 func (gw *Gateway) ParseEvent(event models.SuiEventResponse) (Event, error) {
+	var (
+		packageID  = gw.PackageID()
+		originalID = gw.Original().PackageID()
+	)
+
+	// event may carry either package ID, depending on which gateway was called
+	packageIDs := []string{packageID}
+	if packageID != originalID {
+		packageIDs = append(packageIDs, originalID)
+	}
+
 	// basic validation
 	switch {
 	case event.Id.TxDigest == "":
 		return Event{}, errors.Wrap(ErrParseEvent, "empty tx hash")
 	case event.Id.EventSeq == "":
 		return Event{}, errors.Wrap(ErrParseEvent, "empty event id")
-	case event.PackageId != gw.packageID:
+	case !slices.Contains(packageIDs, event.PackageId):
 		return Event{}, errors.Wrapf(
 			ErrParseEvent,
-			"package id mismatch (got %s, want %s)",
+			"package id mismatch (got %s, want one of %s)",
 			event.PackageId,
-			gw.packageID,
+			strings.Join(packageIDs, ","),
 		)
 	}
 

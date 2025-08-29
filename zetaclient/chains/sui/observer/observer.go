@@ -15,9 +15,6 @@ import (
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
-// oldInboundCursorKey is the key to access the old gateway inbound cursor in the database
-const oldInboundCursorKey = 0
-
 // Observer Sui observer
 type Observer struct {
 	*base.Observer
@@ -55,7 +52,6 @@ func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observe
 	}
 
 	ob.LoadLastTxScanned()
-	ob.LoadAnyString(oldInboundCursorKey)
 
 	return ob
 }
@@ -72,6 +68,41 @@ func (ob *Observer) CheckRPCStatus(ctx context.Context) error {
 
 	// It's not a "real" block latency as Sui uses concept of "checkpoints"
 	metrics.ReportBlockLatency(ob.Chain().Name, blockTime)
+
+	return nil
+}
+
+// MigrateInboundCursorV35 migrates old inbound cursor in the database
+// zetaclient v35 needs two separate inbound cursors for old and new gateway packages,
+// so the cursors have to be stored under separate keys - the package IDs
+func (ob *Observer) MigrateInboundCursorV35() error {
+	// all we need to do is to migrate the cursor for original package
+	// the old cursor is stored as 'LastTransactionSQLType'
+	oldCursor := ob.LastTxScanned()
+	if oldCursor == "" {
+		// nothing to migrate
+		return nil
+	}
+
+	// Sui chain params may or may not contain new gateway package ID
+	// the 'originalPackageID' should be used as the DB key for old cursor
+	originalPackageID := ob.gateway.Original().PackageID()
+	if err := ob.WriteAnyStringToDB(originalPackageID, oldCursor); err != nil {
+		return errors.Wrapf(err, "unable to write old cursor to db for package %s", originalPackageID)
+	}
+	ob.WithAnyString(originalPackageID, oldCursor)
+
+	ob.Logger().
+		Inbound.Info().
+		Str("package", originalPackageID).
+		Str("cursor", oldCursor).
+		Msgf("Migrated Sui inbound cursor")
+
+	// clean up old cursor from DB
+	if err := ob.WriteLastTxScannedToDB(""); err != nil {
+		return errors.Wrap(err, "unable to clean last tx scanned from db")
+	}
+	ob.WithLastTxScanned("")
 
 	return nil
 }
@@ -132,38 +163,19 @@ func (ob *Observer) setLatestGasPrice(price uint64) {
 	ob.latestGasPrice = price
 }
 
-func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
-
-func (ob *Observer) setCursor(eventID models.EventId) error {
-	cursor := client.EncodeCursor(eventID)
-
-	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
-		return errors.Wrap(err, "unable to write last tx scanned to db")
-	}
-
-	ob.WithLastTxScanned(cursor)
-
-	ob.Logger().Inbound.Info().Msgf("Sui inbound set cursor: %s", cursor)
-
-	return nil
+// getCursor retrieves the inbound cursor for a given packageID
+func (ob *Observer) getCursor(packageID string) string {
+	return ob.GetAnyString(packageID)
 }
 
-// getOldCursor gets the inbound scanning cursor of the old gateway package.
-func (ob *Observer) getOldCursor() string {
-	return ob.GetAnyString(oldInboundCursorKey)
-}
-
-// setOldCursor sets the inbound scanning cursor of the old gateway package.
-func (ob *Observer) setOldCursor(eventID models.EventId) error {
+// setCursor saves the inbound cursor for a given packageID
+func (ob *Observer) setCursor(packageID string, eventID models.EventId) error {
 	cursor := client.EncodeCursor(eventID)
 
-	if err := ob.WriteAnyStringToDB(oldInboundCursorKey, cursor); err != nil {
-		return errors.Wrap(err, "unable to write old cursor to db")
+	if err := ob.WriteAnyStringToDB(packageID, cursor); err != nil {
+		return errors.Wrapf(err, "unable to write cursor to db for package %s", packageID)
 	}
-
-	ob.WithAnyString(oldInboundCursorKey, cursor)
-
-	ob.Logger().Inbound.Info().Msgf("Sui inbound set old cursor: %s", cursor)
+	ob.WithAnyString(packageID, cursor)
 
 	return nil
 }

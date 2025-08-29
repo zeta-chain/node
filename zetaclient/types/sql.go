@@ -10,16 +10,7 @@ const (
 
 	// LastTxHashID is the identifier to access the last transaction hash in the database
 	LastTxHashID = 0xBEF0
-
-	// AnyStringBaseKey is the base key to access any auxiliary string data in the database
-	// It is now only used for storing old Sui gateway cursor.
-	AnyStringBaseKey = 0xC000
 )
-
-// AnyStringKey calculates the key to access any string data in the database
-func AnyStringKey(key uint) uint {
-	return AnyStringBaseKey + key
-}
 
 // LastBlockSQLType is a model for storing the last block number
 type LastBlockSQLType struct {
@@ -36,6 +27,7 @@ type LastTransactionSQLType struct {
 // AnyStringSQLType is a model for storing any auxiliary string data
 type AnyStringSQLType struct {
 	gorm.Model
+	Key   string `gorm:"column:key_name;uniqueIndex;not null"`
 	Value string
 }
 
@@ -55,10 +47,10 @@ func ToLastTxHashSQLType(lastTx string) *LastTransactionSQLType {
 	}
 }
 
-// ToAnyStringSQLType converts a string to a AnyStringSQLType using identifier [AnyStringKeyBase + key]
-func ToAnyStringSQLType(key uint, value string) *AnyStringSQLType {
+// ToAnyStringSQLType converts given key and value to a AnyStringSQLType
+func ToAnyStringSQLType(key, value string) *AnyStringSQLType {
 	return &AnyStringSQLType{
-		Model: gorm.Model{ID: AnyStringKey(key)},
+		Key:   key,
 		Value: value,
 	}
 }

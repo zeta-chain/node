@@ -60,7 +60,7 @@ type Observer struct {
 
 	// anyStringMap is the map of any string values stored by the observer
 	// it is now only used by Sui observer to store old Sui gateway inbound cursor during upgrade
-	anyStringMap map[uint]string
+	anyStringMap map[string]string
 
 	blockCache *lru.Cache
 
@@ -106,7 +106,7 @@ func NewObserver(
 		lastBlock:        0,
 		lastBlockScanned: 0,
 		lastTxScanned:    "",
-		anyStringMap:     make(map[uint]string),
+		anyStringMap:     make(map[string]string),
 		ts:               ts,
 		db:               database,
 		blockCache:       blockCache,
@@ -233,6 +233,8 @@ func (ob *Observer) WithLastBlockScanned(blockNumber uint64) *Observer {
 
 // LastTxScanned get last transaction scanned.
 func (ob *Observer) LastTxScanned() string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	return ob.lastTxScanned
 }
 
@@ -391,17 +393,17 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 }
 
 // GetAnyString get any string data by key
-func (ob *Observer) GetAnyString(key uint) string {
+func (ob *Observer) GetAnyString(key string) string {
 	return ob.anyStringMap[key]
 }
 
 // WithAnyString set any string data by key
-func (ob *Observer) WithAnyString(key uint, value string) *Observer {
+func (ob *Observer) WithAnyString(key, value string) *Observer {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 
 	if ob.anyStringMap[key] == "" {
-		ob.logger.Chain.Info().Uint("key", key).Str("value", value).Msg("initializing any string value")
+		ob.logger.Chain.Info().Str("key", key).Str("value", value).Msg("initializing any string value")
 	}
 	ob.anyStringMap[key] = value
 
@@ -409,12 +411,14 @@ func (ob *Observer) WithAnyString(key uint, value string) *Observer {
 }
 
 // WriteAnyStringToDB writes the any string data to the database.
-func (ob *Observer) WriteAnyStringToDB(key uint, value string) error {
-	return ob.db.Client().Save(clienttypes.ToAnyStringSQLType(key, value)).Error
+func (ob *Observer) WriteAnyStringToDB(key, value string) error {
+	// handle both insert and update cases
+	anyString := clienttypes.ToAnyStringSQLType(key, value)
+	return ob.db.Client().Where("key_name = ?", key).Assign(anyString).FirstOrCreate(anyString).Error
 }
 
 // LoadAnyString loads any string data from environment variable or from database.
-func (ob *Observer) LoadAnyString(key uint) {
+func (ob *Observer) LoadAnyString(key string) {
 	// get environment variable
 	envvar := EnvVarLatestAnyStringByChain(ob.chain, key)
 	value := os.Getenv(envvar)
@@ -431,16 +435,16 @@ func (ob *Observer) LoadAnyString(key uint) {
 	if err != nil {
 		// if not found, let the concrete chain observer decide where to start
 		chainID := ob.chain.ChainId
-		ob.logger.Chain.Info().Int64(logs.FieldChain, chainID).Uint("key", key).Msg("string value not found in db")
+		ob.logger.Chain.Info().Int64(logs.FieldChain, chainID).Str("key", key).Msg("string value not found in db")
 		return
 	}
 	ob.WithAnyString(key, value)
 }
 
 // readAnyStringFromDB reads the any string data from the database.
-func (ob *Observer) readAnyStringFromDB(key uint) (string, error) {
+func (ob *Observer) readAnyStringFromDB(key string) (string, error) {
 	var anyString clienttypes.AnyStringSQLType
-	if err := ob.db.Client().First(&anyString, clienttypes.AnyStringKey(key)).Error; err != nil {
+	if err := ob.db.Client().Where("key_name = ?", key).First(&anyString).Error; err != nil {
 		return "", err
 	}
 	return anyString.Value, nil
@@ -520,8 +524,8 @@ func EnvVarLatestTxByChain(chain chains.Chain) string {
 }
 
 // EnvVarLatestAnyStringByChain returns the environment variable for any string data by chain for the given key.
-func EnvVarLatestAnyStringByChain(chain chains.Chain, key uint) string {
-	return fmt.Sprintf("CHAIN_%d_ANY_STRING_%d", chain.ChainId, key)
+func EnvVarLatestAnyStringByChain(chain chains.Chain, key string) string {
+	return fmt.Sprintf("CHAIN_%d_ANY_STRING_%s", chain.ChainId, key)
 }
 
 func newObserverLogger(chain chains.Chain, logger Logger) ObserverLogger {

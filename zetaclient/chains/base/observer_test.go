@@ -523,10 +523,11 @@ func Test_GetSetAnyString(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// should return empty value if not set
-		require.Empty(t, ob.GetAnyString(0))
+		key := "test key"
+		require.Empty(t, ob.GetAnyString(key))
 
 		// update any string value
-		key := uint(0)
+
 		value := "test value"
 		ob.Observer.WithAnyString(key, value)
 		require.Equal(t, value, ob.GetAnyString(key))
@@ -535,19 +536,20 @@ func Test_GetSetAnyString(t *testing.T) {
 
 func Test_LoadAnyString(t *testing.T) {
 	chain := chains.SuiMainnet
-	envvar := base.EnvVarLatestAnyStringByChain(chain, 0)
+	key := "test key"
+	envvar := base.EnvVarLatestAnyStringByChain(chain, key)
 
 	t.Run("should be able to load any string value", func(t *testing.T) {
 		// create observer and open db
 		ob := newTestSuite(t, chain)
 
 		// create db and write any string value
-		err := ob.WriteAnyStringToDB(0, "test value")
+		err := ob.WriteAnyStringToDB(key, "test value")
 		require.NoError(t, err)
 
 		// read any string value
-		ob.LoadAnyString(0)
-		require.EqualValues(t, "test value", ob.GetAnyString(0))
+		ob.LoadAnyString(key)
+		require.EqualValues(t, "test value", ob.GetAnyString(key))
 	})
 
 	t.Run("should return empty value if not found in db", func(t *testing.T) {
@@ -555,8 +557,8 @@ func Test_LoadAnyString(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// read any string value
-		ob.LoadAnyString(0)
-		require.Empty(t, ob.GetAnyString(0))
+		ob.LoadAnyString(key)
+		require.Empty(t, ob.GetAnyString(key))
 	})
 
 	t.Run("should overwrite string value if env var is set", func(t *testing.T) {
@@ -564,14 +566,14 @@ func Test_LoadAnyString(t *testing.T) {
 		ob := newTestSuite(t, chain)
 
 		// create db and write any string value
-		ob.WriteAnyStringToDB(0, "test value 1")
+		ob.WriteAnyStringToDB(key, "test value 1")
 
 		// set env var
 		os.Setenv(envvar, "test value 2")
 
 		// read any string value
-		ob.LoadAnyString(0)
-		require.EqualValues(t, "test value 2", ob.GetAnyString(0))
+		ob.LoadAnyString(key)
+		require.EqualValues(t, "test value 2", ob.GetAnyString(key))
 	})
 }
 

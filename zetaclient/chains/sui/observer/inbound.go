@@ -23,41 +23,24 @@ var (
 	errCompliance = errors.New("compliance check failed")
 )
 
-// cursorUpdator is a function that updates the gateway's inbound cursor
-type cursorUpdator func(eventID models.EventId) error
-
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	// process inbound from current gateway
-	cursor := ob.getCursor()
-	cursorUpdator := ob.setCursor
-	if err := ob.observeGatewayInbound(ctx, ob.gateway, cursor, cursorUpdator); err != nil {
+	// always query inbound events from original gateway package
+	// querying events from upgraded packageID will get nothing
+	packageID := ob.gateway.Original().PackageID()
+	if err := ob.observeGatewayInbound(ctx, packageID); err != nil {
 		return errors.Wrap(err, "unable to observe gateway inbound")
-	}
-
-	// process inbound from old gateway package if present
-	gwOld := ob.gateway.Old()
-	if gwOld != nil {
-		cursor = ob.getOldCursor()
-		cursorUpdator = ob.setOldCursor
-		if err := ob.observeGatewayInbound(ctx, gwOld, cursor, cursorUpdator); err != nil {
-			return errors.Wrap(err, "unable to observe old gateway inbound")
-		}
 	}
 
 	return nil
 }
 
-// observeGatewayInbound observes inbound deposits for the given gateway and cursor
-// It returns the event id of the last processed event, which will be used as next cursor
-func (ob *Observer) observeGatewayInbound(
-	ctx context.Context,
-	gw *sui.Gateway,
-	cursor string,
-	updator cursorUpdator,
-) error {
+// observeGatewayInbound observes inbound deposits for the given gateway packageID
+// The last processed event will be used as the next cursor
+func (ob *Observer) observeGatewayInbound(ctx context.Context, packageID string) error {
+	cursor := ob.getCursor(packageID)
 	query := client.EventQuery{
-		PackageID: gw.PackageID(),
+		PackageID: packageID,
 		Module:    sui.GatewayModule,
 		Cursor:    cursor,
 		Limit:     client.DefaultEventsLimit,
@@ -74,12 +57,17 @@ func (ob *Observer) observeGatewayInbound(
 		return nil
 	}
 
-	ob.Logger().Inbound.Info().Int("events", len(events)).Msg("Processing inbound events")
+	ob.Logger().
+		Inbound.Info().
+		Str("package", packageID).
+		Str("cursor", cursor).
+		Int("events", len(events)).
+		Msg("Processing inbound events")
 
 	for _, event := range events {
 		// Note: we can make this concurrent if needed.
 		// Let's revisit later
-		err := ob.processInboundEvent(ctx, gw, event, nil)
+		err := ob.processInboundEvent(ctx, event, nil)
 
 		switch {
 		case errors.Is(err, errTxNotFound):
@@ -101,7 +89,7 @@ func (ob *Observer) observeGatewayInbound(
 		}
 
 		// update the cursor
-		if err := updator(event.Id); err != nil {
+		if err := ob.setCursor(packageID, event.Id); err != nil {
 			return errors.Wrapf(err, "unable to set cursor %+v", event.Id)
 		}
 	}
@@ -138,11 +126,10 @@ func (ob *Observer) ProcessInboundTrackers(ctx context.Context) error {
 // See https://docs.sui.io/concepts/sui-architecture/transaction-lifecycle#verifying-finality
 func (ob *Observer) processInboundEvent(
 	ctx context.Context,
-	gw *sui.Gateway,
 	raw models.SuiEventResponse,
 	tx *models.SuiTransactionBlockResponse,
 ) error {
-	event, err := gw.ParseEvent(raw)
+	event, err := ob.gateway.ParseEvent(raw)
 	switch {
 	case errors.Is(err, sui.ErrParseEvent):
 		ob.Logger().Inbound.Err(err).Msg("Unable to parse event. Skipping")
@@ -198,19 +185,8 @@ func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.I
 	}
 
 	for _, event := range tx.Events {
-		// process inbound for current gateway
-		if event.PackageId == ob.gateway.PackageID() {
-			if err := ob.processInboundEvent(ctx, ob.gateway, event, &tx); err != nil {
-				return errors.Wrapf(err, "unable to process gateway inbound event %s", event.Id.EventSeq)
-			}
-		}
-
-		// process inbound for old gateway if present
-		gwOld := ob.gateway.Old()
-		if gwOld != nil && event.PackageId == gwOld.PackageID() {
-			if err := ob.processInboundEvent(ctx, gwOld, event, &tx); err != nil {
-				return errors.Wrapf(err, "unable to process old gateway inbound event %s", event.Id.EventSeq)
-			}
+		if err := ob.processInboundEvent(ctx, event, &tx); err != nil {
+			return errors.Wrapf(err, "unable to process inbound event %s", event.Id.EventSeq)
 		}
 	}
 
