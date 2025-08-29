@@ -20,6 +20,9 @@ import (
 	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
+// solanaNodeSyncTolerance is the time tolerance for the Solana nodes behind a RPC to be synced
+const solanaNodeSyncTolerance = 30 * time.Second
+
 // Connected programs used to test sol and spl withdraw and call
 var ConnectedProgramID = solana.MustPublicKeyFromBase58("4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc")
 var ConnectedSPLProgramID = solana.MustPublicKeyFromBase58("8iUjRRhUCn8BjrvsWPfj8mguTe9L81ES4oAUApiF8JFC")
@@ -775,4 +778,38 @@ func (r *E2ERunner) WithdrawAndCallSPLZRC20(
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	return tx
+}
+
+// WaitAndVerifySPLBalanceChange waits for the SPL balance of the given address to change by the given delta amount
+// This function is to tolerate the fact that the balance update may not be synced across Solana nodes behind a RPC.
+func (r *E2ERunner) WaitAndVerifySPLBalanceChange(
+	ata solana.PublicKey,
+	oldBalance *big.Int,
+	change utils.BalanceChange,
+) {
+	// wait until the expected balance is reached or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
+
+	for {
+		time.Sleep(checkInterval)
+		require.False(r, time.Since(startTime) > solanaNodeSyncTolerance, "timeout waiting for SPL balance change")
+
+		result, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, ata, rpc.CommitmentConfirmed)
+		if err != nil {
+			r.Logger.Info("unable to get SPL balance: %s", err.Error())
+			continue
+		}
+		newBalance := utils.ParseBigInt(r, result.Value.Amount)
+
+		if oldBalance.Cmp(newBalance) == 0 {
+			r.Logger.Info("SPL balance has not changed yet")
+			continue
+		}
+		r.Logger.Info("SPL balance changed from %d to %d on address %s", oldBalance, newBalance, ata.String())
+
+		change.Verify(r, oldBalance, newBalance)
+
+		return
+	}
 }
