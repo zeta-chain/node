@@ -25,12 +25,14 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	pda := r.ComputePdaAddress()
 	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
 
-	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceResult, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+	pdaBalanceBefore := utils.ParseBigInt(r, pdaBalanceResult.Value.Amount)
 
 	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
-	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderBalanceResult, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+	senderBalanceBefore := utils.ParseBigInt(r, senderBalanceResult.Value.Amount)
 
 	// get zrc20 balance for recipient
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -46,26 +48,13 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
-	// verify balances are updated
-	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
-	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
 	// verify amount is deposited to pda ata
-	require.Equal(
-		r,
-		new(big.Int).Add(utils.ParseBigInt(r, pdaBalanceBefore.Value.Amount), amount),
-		utils.ParseBigInt(r, pdaBalanceAfter.Value.Amount),
-	)
+	pdaChange := utils.NewExactChange(amount)
+	r.WaitAndVerifySPLBalanceChange(pdaAta, pdaBalanceBefore, pdaChange)
 
 	// verify amount is subtracted from sender ata
-	require.Equal(
-		r,
-		new(big.Int).Sub(utils.ParseBigInt(r, senderBalanceBefore.Value.Amount), amount),
-		utils.ParseBigInt(r, senderBalanceAfter.Value.Amount),
-	)
+	senderChange := utils.NewExactChange(new(big.Int).Neg(amount))
+	r.WaitAndVerifySPLBalanceChange(senderAta, senderBalanceBefore, senderChange)
 
 	// wait for the zrc20 balance to be updated
 	change := utils.NewExactChange(amount)
