@@ -394,6 +394,8 @@ func (ob *Observer) ReadLastTxScannedFromDB() (string, error) {
 
 // GetAnyString get any string data by key
 func (ob *Observer) GetAnyString(key string) string {
+	ob.mu.Lock()
+	defer ob.mu.Unlock()
 	return ob.anyStringMap[key]
 }
 
