@@ -45,6 +45,7 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA-}
+      - SKIP_CONSENSUS_VALUES_OVERWRITE=${SKIP_CONSENSUS_VALUES_OVERWRITE}
     volumes:
       - ssh:/root/.ssh
       - ~/.zetacored/genesis_data:/root/genesis_data

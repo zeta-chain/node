@@ -3,6 +3,7 @@ package e2etests
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 
@@ -18,6 +19,9 @@ func TestETHDeposit(r *runner.E2ERunner, args []string) {
 
 	r.Logger.Info("starting eth deposit test")
 
+	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+
 	// perform the deposit
 	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, true)
 
@@ -25,4 +29,8 @@ func TestETHDeposit(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
 }

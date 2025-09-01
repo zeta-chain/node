@@ -73,6 +73,7 @@ func (s *Signer) reportOutboundTracker(ctx context.Context, nonce uint64, digest
 			// failed outbound should be ignored as it cannot increment the gateway nonce.
 			// Sui transaction status is one of ["success", "failure"]
 			// see: https://github.com/MystenLabs/sui/blob/615516edb0ed55e45d599f042f9570b493ce9643/crates/sui-json-rpc-types/src/sui_transaction.rs#L1345
+			logger.Error().Msgf("tx failed with error: %s", res.Effects.Status.Error)
 			return errors.Errorf("tx failed with error: %s", res.Effects.Status.Error)
 		case res.Effects.Status.Status == client.TxStatusSuccess && res.Checkpoint != "":
 			return s.postTrackerVote(ctx, nonce, digest)

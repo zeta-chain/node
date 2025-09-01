@@ -243,10 +243,15 @@ func NewRPCTransactionFromIncompleteMsg(
 ) (*RPCTransaction, error) {
 	to := &common.Address{}
 	*to = txAdditional.Recipient
+	// for transactions before v31 this value was mistakenly used for Gas field
+	gas := txAdditional.GasUsed
+	if txAdditional.GasLimit != nil {
+		gas = *txAdditional.GasLimit
+	}
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(txAdditional.Type),
 		From:     common.BytesToAddress(msg.From),
-		Gas:      hexutil.Uint64(txAdditional.GasLimit),
+		Gas:      hexutil.Uint64(gas),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
 		Input:    txAdditional.Data,

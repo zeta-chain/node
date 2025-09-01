@@ -342,12 +342,20 @@ then
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
 
-  pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
-  pps=${pp:1:58}
-  sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+   pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
+   pps=${pp:1:58}
+   sed -i -e "s/^persistent_peers = .*/persistent_peers = \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
 # mark init completed so we skip it if container is restarted
 touch ~/.zetacored/init_complete
 
-cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+
+# Start zetacored with conditional skip-config-override flag
+if [[ $HOSTNAME == "zetacore0" && "$SKIP_CONCENSUS_VALUES_OVERWRITE" == "true" ]]; then
+    echo "Starting zetacored with skip-config-override flag"
+    cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored --skip-config-overwrite
+else
+    echo "Starting zetacored with default configuration"
+    cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+fi

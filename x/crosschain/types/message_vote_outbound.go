@@ -82,6 +82,7 @@ func (msg *MsgVoteOutbound) ValidateBasic() error {
 func (msg *MsgVoteOutbound) Digest() string {
 	m := *msg
 	m.Creator = ""
+	m.ConfirmationMode = ConfirmationMode_SAFE
 
 	// Set status to ReceiveStatus_created to make sure both successful and failed votes are added to the same ballot
 	m.Status = chains.ReceiveStatus_created

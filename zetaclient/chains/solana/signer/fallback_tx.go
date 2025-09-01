@@ -6,12 +6,25 @@ import (
 	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 )
 
+const (
+	transactionSizeError = "transaction is too large"
+
+	// Solana uses JSON-RPC error code -32602 for invalid params
+	// see: https://github.com/paritytech/jsonrpc/blob/dc9550b4b0d8bf409d025eba7e9b229b67af9401/core/src/types/error.rs#L32
+	errorCodeJSONRPCInvalidParams = -32602
+)
+
 // parseRPCErrorForFallback parse error as RPCError and verifies if fallback tx should be used
 // and which failure reason to attach to fallback tx
 func parseRPCErrorForFallback(err error, program string) (useFallback bool, failureReason string) {
 	rpcErr, ok := err.(*jsonrpc.RPCError)
 	if !ok {
 		return false, ""
+	}
+
+	// Special handling for transaction size errors
+	if isTransactionSizeError(rpcErr) {
+		return true, transactionSizeError
 	}
 
 	if !strings.Contains(rpcErr.Message, "Error processing Instruction") {
@@ -100,5 +113,23 @@ func containsNonceMismatch(logs []string) bool {
 			return true
 		}
 	}
+	return false
+}
+
+// isTransactionSizeError checks if the error matches transaction size error patterns
+//
+// the invalid transaction size error message will be like:
+// "base64 encoded solana_transaction::versioned::VersionedTransaction too large: 2012 bytes (max: encoded/raw 1644/1232)"
+//
+// see:
+//
+//	https://github.com/solana-labs/solana/blob/bfacaf616fa4a1c57e2a337fcc864c92c25815a0/rpc/src/rpc.rs#L4506
+//	https://github.com/solana-labs/solana/blob/bfacaf616fa4a1c57e2a337fcc864c92c25815a0/rpc/src/rpc.rs#L4521
+func isTransactionSizeError(rpcErr *jsonrpc.RPCError) bool {
+	if rpcErr.Code == errorCodeJSONRPCInvalidParams && strings.Contains(rpcErr.Message, "too large") &&
+		strings.Contains(rpcErr.Message, "bytes (max: encoded/raw") {
+		return true
+	}
+
 	return false
 }

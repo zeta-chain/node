@@ -54,7 +54,7 @@ func TestERC20DepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, r.ERC20ZRC20Addr.Hex(), abortContext.Asset.Hex())
 
-	// wait for the arc20 balance to be updated
+	// wait for the zrc20 balance to be updated
 	change := utils.NewBalanceChange(true)
 	utils.WaitAndVerifyZRC20BalanceChange(r, r.ERC20ZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 }

@@ -216,13 +216,16 @@ func NewBackend(
 		panic(fmt.Sprintf("invalid rpc client, expected: tmrpcclient.SignClient, got: %T", clientCtx.Client))
 	}
 
+	ethCfg := evmtypes.GetEthChainConfig()
+	logger.Info("chain id from eth cfg", "chainId", ethCfg.ChainID.String())
+
 	b := &Backend{
 		Ctx:                 context.Background(),
 		ClientCtx:           clientCtx,
 		RPCClient:           rpcClient,
 		QueryClient:         rpctypes.NewQueryClient(clientCtx),
 		Logger:              logger.With("module", "backend"),
-		EvmChainID:          big.NewInt(int64(appConf.EVM.EVMChainID)), //#nosec G115 won't exceed uint64
+		EvmChainID:          ethCfg.ChainID,
 		Cfg:                 appConf,
 		AllowUnprotectedTxs: allowUnprotectedTxs,
 		Indexer:             indexer,

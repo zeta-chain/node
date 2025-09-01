@@ -31,6 +31,10 @@ type Signer struct {
 // RPC represents Sui rpc.
 type RPC interface {
 	SuiXGetLatestSuiSystemState(ctx context.Context) (models.SuiSystemStateSummary, error)
+	SuiXGetDynamicFieldObject(
+		ctx context.Context,
+		req models.SuiXGetDynamicFieldObjectRequest,
+	) (models.SuiObjectResponse, error)
 	GetOwnedObjectID(ctx context.Context, ownerAddress, structType string) (string, error)
 	GetObjectParsedData(ctx context.Context, objectID string) (models.SuiParsedData, error)
 	SuiMultiGetObjects(ctx context.Context, req models.SuiMultiGetObjectsRequest) ([]*models.SuiObjectResponse, error)

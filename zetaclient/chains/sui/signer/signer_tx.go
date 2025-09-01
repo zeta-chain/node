@@ -30,8 +30,11 @@ const (
 	funcWithdraw      = "withdraw"
 	funcIncreaseNonce = "increase_nonce"
 
-	// minGasBudgetCancelTx is the minimum gas budget for the cancel tx
-	minGasBudgetCancelTx = 2_000_000
+	// gasBudgetCancelTx is the static gas budget for the cancel tx, which ensures that
+	// the cancel tx self can be executed by the Sui network without InsufficientGas error.
+	// Note: the cancel tx in local network E2E test consumes 2_062_860 gas budget, but
+	// a higher number is used here to allow for gas usage increase in the future.
+	gasBudgetCancelTx = 5_000_000
 )
 
 // TODO: use these functions in PTB building
@@ -94,17 +97,14 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}
 
-	// Retrieve message context ID
-	// TODO: https://github.com/zeta-chain/node/issues/4066
-	// bring back this query after re-enabling authenticated call
-	msgContextID := ""
-	// msgContextID, err := s.getMessageContextIDCached(ctx)
-	// if err != nil {
-	// 	return tx, errors.Wrap(err, "unable to get message context ID")
-	// }
-
 	// build tx depending on the type of transaction
 	if cctx.IsWithdrawAndCall() {
+		// Retrieve message context ID
+		msgContextID, err := s.getMessageContextIDCached(ctx)
+		if err != nil {
+			return tx, errors.Wrap(err, "unable to get message context ID")
+		}
+
 		return s.buildWithdrawAndCallTx(
 			ctx,
 			cctx,
@@ -222,8 +222,8 @@ func (s *Signer) createCancelTxBuilder(
 		nonce  = strconv.FormatUint(params.TssNonce, 10)
 	)
 
-	// get gas budget from CCTX
-	gasBudget, err := getCancelTxGasBudget(params)
+	// calculate gas budget and gas refund from CCTX
+	gasBudget, gasRefund, err := getCancelTxGasBudget(params)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get gas budget")
 	}
@@ -240,7 +240,7 @@ func (s *Signer) createCancelTxBuilder(
 		Module:          zetasui.GatewayModule,
 		Function:        funcIncreaseNonce,
 		TypeArguments:   []any{},
-		Arguments:       []any{s.gateway.ObjectID(), nonce, withdrawCapID},
+		Arguments:       []any{s.gateway.ObjectID(), nonce, gasRefund, withdrawCapID},
 		GasBudget:       gasBudget,
 	}
 
@@ -276,6 +276,9 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// we should cancel withdrawAndCall if user provided objects are not shared or immutable
 	switch {
+	case errors.Is(err, zetasui.ErrInvalidPayload):
+		logger.Info().Err(err).Msg("cancelling tx due to invalid payload")
+		return s.broadcastCancelTx(ctx, cancelTxBuilder)
 	case errors.Is(err, zetasui.ErrObjectOwnership):
 		logger.Info().Err(err).Msg("cancelling tx due to wrong object ownership")
 		return s.broadcastCancelTx(ctx, cancelTxBuilder)
@@ -309,9 +312,7 @@ func (s *Signer) broadcastWithdrawalWithFallback(
 
 	// check if the error is a retryable MoveAbort
 	// if it is, skip the cancel tx and let the scheduler retry the outbound
-	// TODO: https://github.com/zeta-chain/node/issues/4066
-	// use IsRetryableExecutionError instead after re-enabling authenticated call
-	isRetryable, err := zetasui.IsRetryableExecutionErrorLegacy(res.Effects.Status.Error)
+	isRetryable, err := zetasui.IsRetryableExecutionError(res.Effects.Status.Error)
 	switch {
 	case err != nil:
 		return "", errors.Wrapf(err, "unable to check tx execution status error: %s", res.Effects.Status.Error)
@@ -354,17 +355,18 @@ func (s *Signer) broadcastCancelTx(ctx context.Context, cancelTxBuilder txBuilde
 }
 
 // getCancelTxGasBudget returns gas budget for a cancel tx
-func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, error) {
+func getCancelTxGasBudget(params *cctypes.OutboundParams) (string, string, error) {
 	gasPrice, err := strconv.ParseUint(params.GasPrice, 10, 64)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to parse gas price")
+		return "", "", errors.Wrap(err, "unable to parse gas price")
 	}
+	gasRefund := gasPrice * params.CallOptions.GasLimit
 
-	// If it is a cancel tx, we need to use the bigger one
-	// because the cancelled tx may be caused by insufficient gas
-	gasBudget := max(gasPrice*params.CallOptions.GasLimit, minGasBudgetCancelTx)
+	// ensure the cancel tx has enough gas budget to be executed
+	// because the cancelled tx may be caused by insufficient gas in CCTX
+	gasBudget := strconv.FormatUint(gasBudgetCancelTx, 10)
 
-	return strconv.FormatUint(gasBudget, 10), nil
+	return gasBudget, strconv.FormatUint(gasRefund, 10), nil
 }
 
 // getGatewayNonce reads the nonce of the gateway object
