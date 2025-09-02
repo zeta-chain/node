@@ -33,5 +33,6 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
+
 }

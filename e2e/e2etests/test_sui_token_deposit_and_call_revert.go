@@ -36,7 +36,7 @@ func TestSuiTokenDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.EqualValues(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, coin.CoinType_ERC20, cctx.InboundParams.CoinType)
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
 
