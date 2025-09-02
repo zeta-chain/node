@@ -34,5 +34,4 @@ func TestDepositAndCallOutOfGas(r *runner.E2ERunner, args []string) {
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit_and_call")
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
-
 }
