@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -9,6 +10,7 @@ import (
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
@@ -26,11 +28,13 @@ import (
 // MsgPauseZRC20
 // MsgMigrateTssFunds
 // MsgUpdateTssAddress
-//
-//	However, the transactions other than `AddToInboundTracker` and `UpdateGasPriceIncreaseFlags` have already been used in other tests.
+// MsgUpdateGatewayGasLimit
+
+// However, the transactions other than `AddToInboundTracker`, `UpdateGasPriceIncreaseFlags`, and `UpdateGatewayGasLimit` have already been used in other tests.
 func TestCriticalAdminTransactions(r *runner.E2ERunner, _ []string) {
 	TestAddToInboundTracker(r)
 	TestUpdateGasPriceIncreaseFlags(r)
+	TestUpdateGatewayGasLimit(r)
 }
 
 func TestUpdateGasPriceIncreaseFlags(r *runner.E2ERunner) {
@@ -102,4 +106,22 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 	require.NoError(r, err)
 	require.NotNil(r, tracker)
 	require.Equal(r, msgBtc.TxHash, tracker.InboundTracker.TxHash)
+}
+
+func TestUpdateGatewayGasLimit(r *runner.E2ERunner) {
+	// Update the gateway gas limit to 1,600,000
+	newGasLimit := sdkmath.NewInt(1_600_000)
+	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
+		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
+		newGasLimit,
+	)
+	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
+	require.NoError(r, err)
+
+	r.WaitForBlocks(1)
+
+	// Verify that the gas limit has been updated
+	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	require.NoError(r, err)
+	require.Equal(r, newGasLimit.String(), systemContract.SystemContract.GatewayGasLimit.String())
 }

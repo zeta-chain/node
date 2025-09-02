@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -28,8 +29,9 @@ func TestKeeper_SystemContract(t *testing.T) {
 	t.Run("should return system contract if found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		sc := types.SystemContract{
-			SystemContract: sample.EthAddress().Hex(),
-			ConnectorZevm:  sample.EthAddress().Hex(),
+			SystemContract:  sample.EthAddress().Hex(),
+			ConnectorZevm:   sample.EthAddress().Hex(),
+			GatewayGasLimit: sdkmath.NewIntFromBigInt(types.GatewayGasLimit),
 		}
 		k.SetSystemContract(ctx, sc)
 		res, err := k.SystemContract(ctx, &types.QueryGetSystemContractRequest{})

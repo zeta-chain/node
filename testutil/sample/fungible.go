@@ -3,6 +3,8 @@ package sample
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -55,7 +57,9 @@ func ForeignCoinList(t *testing.T, zrc20ETH, zrc20BTC, zrc20ERC20, erc20Asset st
 
 func SystemContract() *types.SystemContract {
 	return &types.SystemContract{
-		SystemContract: EthAddress().String(),
-		ConnectorZevm:  EthAddress().String(),
+		SystemContract:  EthAddress().String(),
+		ConnectorZevm:   EthAddress().String(),
+		Gateway:         EthAddress().String(),
+		GatewayGasLimit: sdkmath.NewIntFromBigInt(types.GatewayGasLimit),
 	}
 }

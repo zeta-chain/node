@@ -55348,6 +55348,8 @@ definitions:
     type: object
   zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse:
     type: object
+  zetachain.zetacore.fungible.MsgUpdateGatewayGasLimitResponse:
+    type: object
   zetachain.zetacore.fungible.MsgUpdateSystemContractResponse:
     type: object
   zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCapResponse:
@@ -55425,6 +55427,8 @@ definitions:
       connectorZevm:
         type: string
       gateway:
+        type: string
+      gatewayGasLimit:
         type: string
   zetachain.zetacore.lightclient.ChainState:
     type: object

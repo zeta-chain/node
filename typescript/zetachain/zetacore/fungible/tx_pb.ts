@@ -14,7 +14,42 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file zetachain/zetacore/fungible/tx.proto.
  */
 export const file_zetachain_zetacore_fungible_tx: GenFile = /*@__PURE__*/
-  fileDesc("CiR6ZXRhY2hhaW4vemV0YWNvcmUvZnVuZ2libGUvdHgucHJvdG8SG3pldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZSI5ChhNc2dEZXBsb3lTeXN0ZW1Db250cmFjdHMSDwoHY3JlYXRvchgBIAEoCToMguewKgdjcmVhdG9yIpMBCiBNc2dEZXBsb3lTeXN0ZW1Db250cmFjdHNSZXNwb25zZRIYChB1bmlzd2FwVjJGYWN0b3J5GAEgASgJEg0KBXd6ZXRhGAIgASgJEhcKD3VuaXN3YXBWMlJvdXRlchgDIAEoCRIVCg1jb25uZWN0b3JaRVZNGAQgASgJEhYKDnN5c3RlbUNvbnRyYWN0GAUgASgJIsIBChlNc2dVcGRhdGVaUkMyMFdpdGhkcmF3RmVlEg8KB2NyZWF0b3IYASABKAkSFQoNenJjMjBfYWRkcmVzcxgCIAEoCRI4ChBuZXdfd2l0aGRyYXdfZmVlGAYgASgJQh7I3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnQSNQoNbmV3X2dhc19saW1pdBgHIAEoCUIeyN4fANreHxZjb3Ntb3NzZGsuaW8vbWF0aC5VaW50OgyC57AqB2NyZWF0b3IiIwohTXNnVXBkYXRlWlJDMjBXaXRoZHJhd0ZlZVJlc3BvbnNlIl0KF01zZ1VwZGF0ZVN5c3RlbUNvbnRyYWN0Eg8KB2NyZWF0b3IYASABKAkSIwobbmV3X3N5c3RlbV9jb250cmFjdF9hZGRyZXNzGAIgASgJOgyC57AqB2NyZWF0b3IiIQofTXNnVXBkYXRlU3lzdGVtQ29udHJhY3RSZXNwb25zZSKYAgoaTXNnRGVwbG95RnVuZ2libGVDb2luWlJDMjASDwoHY3JlYXRvchgBIAEoCRINCgVFUkMyMBgCIAEoCRIYChBmb3JlaWduX2NoYWluX2lkGAMgASgDEhAKCGRlY2ltYWxzGAQgASgNEgwKBG5hbWUYBSABKAkSDgoGc3ltYm9sGAYgASgJEjgKCWNvaW5fdHlwZRgHIAEoDjIlLnpldGFjaGFpbi56ZXRhY29yZS5wa2cuY29pbi5Db2luVHlwZRIRCglnYXNfbGltaXQYCCABKAMSNQoNbGlxdWlkaXR5X2NhcBgJIAEoCUIeyN4fAdreHxZjb3Ntb3NzZGsuaW8vbWF0aC5VaW50OgyC57AqB2NyZWF0b3IiNQoiTXNnRGVwbG95RnVuZ2libGVDb2luWlJDMjBSZXNwb25zZRIPCgdhZGRyZXNzGAEgASgJIkwKFE1zZ1JlbW92ZUZvcmVpZ25Db2luEg8KB2NyZWF0b3IYASABKAkSFQoNenJjMjBfYWRkcmVzcxgCIAEoCToMguewKgdjcmVhdG9yIh4KHE1zZ1JlbW92ZUZvcmVpZ25Db2luUmVzcG9uc2UiawoZTXNnVXBkYXRlQ29udHJhY3RCeXRlY29kZRIPCgdjcmVhdG9yGAEgASgJEhgKEGNvbnRyYWN0X2FkZHJlc3MYAiABKAkSFQoNbmV3X2NvZGVfaGFzaBgDIAEoCToMguewKgdjcmVhdG9yIiMKIU1zZ1VwZGF0ZUNvbnRyYWN0Qnl0ZWNvZGVSZXNwb25zZSKJAQoaTXNnVXBkYXRlWlJDMjBMaXF1aWRpdHlDYXASDwoHY3JlYXRvchgBIAEoCRIVCg16cmMyMF9hZGRyZXNzGAIgASgJEjUKDWxpcXVpZGl0eV9jYXAYAyABKAlCHsjeHwDa3h8WY29zbW9zc2RrLmlvL21hdGguVWludDoMguewKgdjcmVhdG9yIiQKIk1zZ1VwZGF0ZVpSQzIwTGlxdWlkaXR5Q2FwUmVzcG9uc2UiRwoNTXNnUGF1c2VaUkMyMBIPCgdjcmVhdG9yGAEgASgJEhcKD3pyYzIwX2FkZHJlc3NlcxgCIAMoCToMguewKgdjcmVhdG9yIhcKFU1zZ1BhdXNlWlJDMjBSZXNwb25zZSJJCg9Nc2dVbnBhdXNlWlJDMjASDwoHY3JlYXRvchgBIAEoCRIXCg96cmMyMF9hZGRyZXNzZXMYAiADKAk6DILnsCoHY3JlYXRvciIZChdNc2dVbnBhdXNlWlJDMjBSZXNwb25zZSJfChhNc2dVcGRhdGVHYXRld2F5Q29udHJhY3QSDwoHY3JlYXRvchgBIAEoCRIkChxuZXdfZ2F0ZXdheV9jb250cmFjdF9hZGRyZXNzGAIgASgJOgyC57AqB2NyZWF0b3IiIgogTXNnVXBkYXRlR2F0ZXdheUNvbnRyYWN0UmVzcG9uc2UiaAoSTXNnVXBkYXRlWlJDMjBOYW1lEg8KB2NyZWF0b3IYASABKAkSFQoNenJjMjBfYWRkcmVzcxgCIAEoCRIMCgRuYW1lGAMgASgJEg4KBnN5bWJvbBgEIAEoCToMguewKgdjcmVhdG9yIhwKGk1zZ1VwZGF0ZVpSQzIwTmFtZVJlc3BvbnNlIlIKGk1zZ0J1cm5GdW5naWJsZU1vZHVsZUFzc2V0Eg8KB2NyZWF0b3IYASABKAkSFQoNenJjMjBfYWRkcmVzcxgCIAEoCToMguewKgdjcmVhdG9yIiQKIk1zZ0J1cm5GdW5naWJsZU1vZHVsZUFzc2V0UmVzcG9uc2UyhA0KA01zZxKNAQoVRGVwbG95U3lzdGVtQ29udHJhY3RzEjUuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ0RlcGxveVN5c3RlbUNvbnRyYWN0cxo9LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dEZXBsb3lTeXN0ZW1Db250cmFjdHNSZXNwb25zZRKTAQoXRGVwbG95RnVuZ2libGVDb2luWlJDMjASNy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnRGVwbG95RnVuZ2libGVDb2luWlJDMjAaPy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnRGVwbG95RnVuZ2libGVDb2luWlJDMjBSZXNwb25zZRKBAQoRUmVtb3ZlRm9yZWlnbkNvaW4SMS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnUmVtb3ZlRm9yZWlnbkNvaW4aOS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnUmVtb3ZlRm9yZWlnbkNvaW5SZXNwb25zZRKKAQoUVXBkYXRlU3lzdGVtQ29udHJhY3QSNC56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlU3lzdGVtQ29udHJhY3QaPC56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlU3lzdGVtQ29udHJhY3RSZXNwb25zZRKQAQoWVXBkYXRlQ29udHJhY3RCeXRlY29kZRI2LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVDb250cmFjdEJ5dGVjb2RlGj4uemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZUNvbnRyYWN0Qnl0ZWNvZGVSZXNwb25zZRKQAQoWVXBkYXRlWlJDMjBXaXRoZHJhd0ZlZRI2LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVaUkMyMFdpdGhkcmF3RmVlGj4uemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZVpSQzIwV2l0aGRyYXdGZWVSZXNwb25zZRKTAQoXVXBkYXRlWlJDMjBMaXF1aWRpdHlDYXASNy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlWlJDMjBMaXF1aWRpdHlDYXAaPy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlWlJDMjBMaXF1aWRpdHlDYXBSZXNwb25zZRJsCgpQYXVzZVpSQzIwEiouemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1BhdXNlWlJDMjAaMi56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnUGF1c2VaUkMyMFJlc3BvbnNlEnIKDFVucGF1c2VaUkMyMBIsLnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVbnBhdXNlWlJDMjAaNC56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVW5wYXVzZVpSQzIwUmVzcG9uc2USjQEKFVVwZGF0ZUdhdGV3YXlDb250cmFjdBI1LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVHYXRld2F5Q29udHJhY3QaPS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlR2F0ZXdheUNvbnRyYWN0UmVzcG9uc2USewoPVXBkYXRlWlJDMjBOYW1lEi8uemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZVpSQzIwTmFtZRo3LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVaUkMyME5hbWVSZXNwb25zZRKTAQoXQnVybkZ1bmdpYmxlTW9kdWxlQXNzZXQSNy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnQnVybkZ1bmdpYmxlTW9kdWxlQXNzZXQaPy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnQnVybkZ1bmdpYmxlTW9kdWxlQXNzZXRSZXNwb25zZRoFgOewKgFC5QEKH2NvbS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGVCB1R4UHJvdG9QAVorZ2l0aHViLmNvbS96ZXRhLWNoYWluL25vZGUveC9mdW5naWJsZS90eXBlc6ICA1paRqoCG1pldGFjaGFpbi5aZXRhY29yZS5GdW5naWJsZcoCG1pldGFjaGFpblxaZXRhY29yZVxGdW5naWJsZeICJ1pldGFjaGFpblxaZXRhY29yZVxGdW5naWJsZVxHUEJNZXRhZGF0YeoCHVpldGFjaGFpbjo6WmV0YWNvcmU6OkZ1bmdpYmxlYgZwcm90bzM", [file_gogoproto_gogo, file_zetachain_zetacore_pkg_coin_coin, file_cosmos_msg_v1_msg]);
+  fileDesc("CiR6ZXRhY2hhaW4vemV0YWNvcmUvZnVuZ2libGUvdHgucHJvdG8SG3pldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZSJvChhNc2dVcGRhdGVHYXRld2F5R2FzTGltaXQSDwoHY3JlYXRvchgBIAEoCRI0Cg1uZXdfZ2FzX2xpbWl0GAIgASgJQh3I3h8A2t4fFWNvc21vc3Nkay5pby9tYXRoLkludDoMguewKgdjcmVhdG9yIiIKIE1zZ1VwZGF0ZUdhdGV3YXlHYXNMaW1pdFJlc3BvbnNlIjkKGE1zZ0RlcGxveVN5c3RlbUNvbnRyYWN0cxIPCgdjcmVhdG9yGAEgASgJOgyC57AqB2NyZWF0b3IikwEKIE1zZ0RlcGxveVN5c3RlbUNvbnRyYWN0c1Jlc3BvbnNlEhgKEHVuaXN3YXBWMkZhY3RvcnkYASABKAkSDQoFd3pldGEYAiABKAkSFwoPdW5pc3dhcFYyUm91dGVyGAMgASgJEhUKDWNvbm5lY3RvclpFVk0YBCABKAkSFgoOc3lzdGVtQ29udHJhY3QYBSABKAkiwgEKGU1zZ1VwZGF0ZVpSQzIwV2l0aGRyYXdGZWUSDwoHY3JlYXRvchgBIAEoCRIVCg16cmMyMF9hZGRyZXNzGAIgASgJEjgKEG5ld193aXRoZHJhd19mZWUYBiABKAlCHsjeHwDa3h8WY29zbW9zc2RrLmlvL21hdGguVWludBI1Cg1uZXdfZ2FzX2xpbWl0GAcgASgJQh7I3h8A2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnQ6DILnsCoHY3JlYXRvciIjCiFNc2dVcGRhdGVaUkMyMFdpdGhkcmF3RmVlUmVzcG9uc2UiXQoXTXNnVXBkYXRlU3lzdGVtQ29udHJhY3QSDwoHY3JlYXRvchgBIAEoCRIjChtuZXdfc3lzdGVtX2NvbnRyYWN0X2FkZHJlc3MYAiABKAk6DILnsCoHY3JlYXRvciIhCh9Nc2dVcGRhdGVTeXN0ZW1Db250cmFjdFJlc3BvbnNlIpgCChpNc2dEZXBsb3lGdW5naWJsZUNvaW5aUkMyMBIPCgdjcmVhdG9yGAEgASgJEg0KBUVSQzIwGAIgASgJEhgKEGZvcmVpZ25fY2hhaW5faWQYAyABKAMSEAoIZGVjaW1hbHMYBCABKA0SDAoEbmFtZRgFIAEoCRIOCgZzeW1ib2wYBiABKAkSOAoJY29pbl90eXBlGAcgASgOMiUuemV0YWNoYWluLnpldGFjb3JlLnBrZy5jb2luLkNvaW5UeXBlEhEKCWdhc19saW1pdBgIIAEoAxI1Cg1saXF1aWRpdHlfY2FwGAkgASgJQh7I3h8B2t4fFmNvc21vc3Nkay5pby9tYXRoLlVpbnQ6DILnsCoHY3JlYXRvciI1CiJNc2dEZXBsb3lGdW5naWJsZUNvaW5aUkMyMFJlc3BvbnNlEg8KB2FkZHJlc3MYASABKAkiTAoUTXNnUmVtb3ZlRm9yZWlnbkNvaW4SDwoHY3JlYXRvchgBIAEoCRIVCg16cmMyMF9hZGRyZXNzGAIgASgJOgyC57AqB2NyZWF0b3IiHgocTXNnUmVtb3ZlRm9yZWlnbkNvaW5SZXNwb25zZSJrChlNc2dVcGRhdGVDb250cmFjdEJ5dGVjb2RlEg8KB2NyZWF0b3IYASABKAkSGAoQY29udHJhY3RfYWRkcmVzcxgCIAEoCRIVCg1uZXdfY29kZV9oYXNoGAMgASgJOgyC57AqB2NyZWF0b3IiIwohTXNnVXBkYXRlQ29udHJhY3RCeXRlY29kZVJlc3BvbnNlIokBChpNc2dVcGRhdGVaUkMyMExpcXVpZGl0eUNhcBIPCgdjcmVhdG9yGAEgASgJEhUKDXpyYzIwX2FkZHJlc3MYAiABKAkSNQoNbGlxdWlkaXR5X2NhcBgDIAEoCUIeyN4fANreHxZjb3Ntb3NzZGsuaW8vbWF0aC5VaW50OgyC57AqB2NyZWF0b3IiJAoiTXNnVXBkYXRlWlJDMjBMaXF1aWRpdHlDYXBSZXNwb25zZSJHCg1Nc2dQYXVzZVpSQzIwEg8KB2NyZWF0b3IYASABKAkSFwoPenJjMjBfYWRkcmVzc2VzGAIgAygJOgyC57AqB2NyZWF0b3IiFwoVTXNnUGF1c2VaUkMyMFJlc3BvbnNlIkkKD01zZ1VucGF1c2VaUkMyMBIPCgdjcmVhdG9yGAEgASgJEhcKD3pyYzIwX2FkZHJlc3NlcxgCIAMoCToMguewKgdjcmVhdG9yIhkKF01zZ1VucGF1c2VaUkMyMFJlc3BvbnNlIl8KGE1zZ1VwZGF0ZUdhdGV3YXlDb250cmFjdBIPCgdjcmVhdG9yGAEgASgJEiQKHG5ld19nYXRld2F5X2NvbnRyYWN0X2FkZHJlc3MYAiABKAk6DILnsCoHY3JlYXRvciIiCiBNc2dVcGRhdGVHYXRld2F5Q29udHJhY3RSZXNwb25zZSJoChJNc2dVcGRhdGVaUkMyME5hbWUSDwoHY3JlYXRvchgBIAEoCRIVCg16cmMyMF9hZGRyZXNzGAIgASgJEgwKBG5hbWUYAyABKAkSDgoGc3ltYm9sGAQgASgJOgyC57AqB2NyZWF0b3IiHAoaTXNnVXBkYXRlWlJDMjBOYW1lUmVzcG9uc2UiUgoaTXNnQnVybkZ1bmdpYmxlTW9kdWxlQXNzZXQSDwoHY3JlYXRvchgBIAEoCRIVCg16cmMyMF9hZGRyZXNzGAIgASgJOgyC57AqB2NyZWF0b3IiJAoiTXNnQnVybkZ1bmdpYmxlTW9kdWxlQXNzZXRSZXNwb25zZTKUDgoDTXNnEo0BChVEZXBsb3lTeXN0ZW1Db250cmFjdHMSNS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnRGVwbG95U3lzdGVtQ29udHJhY3RzGj0uemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ0RlcGxveVN5c3RlbUNvbnRyYWN0c1Jlc3BvbnNlEpMBChdEZXBsb3lGdW5naWJsZUNvaW5aUkMyMBI3LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dEZXBsb3lGdW5naWJsZUNvaW5aUkMyMBo/LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dEZXBsb3lGdW5naWJsZUNvaW5aUkMyMFJlc3BvbnNlEoEBChFSZW1vdmVGb3JlaWduQ29pbhIxLnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dSZW1vdmVGb3JlaWduQ29pbho5LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dSZW1vdmVGb3JlaWduQ29pblJlc3BvbnNlEooBChRVcGRhdGVTeXN0ZW1Db250cmFjdBI0LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVTeXN0ZW1Db250cmFjdBo8LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVTeXN0ZW1Db250cmFjdFJlc3BvbnNlEpABChZVcGRhdGVDb250cmFjdEJ5dGVjb2RlEjYuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZUNvbnRyYWN0Qnl0ZWNvZGUaPi56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlQ29udHJhY3RCeXRlY29kZVJlc3BvbnNlEpABChZVcGRhdGVaUkMyMFdpdGhkcmF3RmVlEjYuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZVpSQzIwV2l0aGRyYXdGZWUaPi56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlWlJDMjBXaXRoZHJhd0ZlZVJlc3BvbnNlEpMBChdVcGRhdGVaUkMyMExpcXVpZGl0eUNhcBI3LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVaUkMyMExpcXVpZGl0eUNhcBo/LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVaUkMyMExpcXVpZGl0eUNhcFJlc3BvbnNlEmwKClBhdXNlWlJDMjASKi56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnUGF1c2VaUkMyMBoyLnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dQYXVzZVpSQzIwUmVzcG9uc2UScgoMVW5wYXVzZVpSQzIwEiwuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VucGF1c2VaUkMyMBo0LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVbnBhdXNlWlJDMjBSZXNwb25zZRKNAQoVVXBkYXRlR2F0ZXdheUNvbnRyYWN0EjUuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZUdhdGV3YXlDb250cmFjdBo9LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dVcGRhdGVHYXRld2F5Q29udHJhY3RSZXNwb25zZRJ7Cg9VcGRhdGVaUkMyME5hbWUSLy56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlWlJDMjBOYW1lGjcuemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZVpSQzIwTmFtZVJlc3BvbnNlEpMBChdCdXJuRnVuZ2libGVNb2R1bGVBc3NldBI3LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dCdXJuRnVuZ2libGVNb2R1bGVBc3NldBo/LnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZS5Nc2dCdXJuRnVuZ2libGVNb2R1bGVBc3NldFJlc3BvbnNlEo0BChVVcGRhdGVHYXRld2F5R2FzTGltaXQSNS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUuTXNnVXBkYXRlR2F0ZXdheUdhc0xpbWl0Gj0uemV0YWNoYWluLnpldGFjb3JlLmZ1bmdpYmxlLk1zZ1VwZGF0ZUdhdGV3YXlHYXNMaW1pdFJlc3BvbnNlGgWA57AqAULlAQofY29tLnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZUIHVHhQcm90b1ABWitnaXRodWIuY29tL3pldGEtY2hhaW4vbm9kZS94L2Z1bmdpYmxlL3R5cGVzogIDWlpGqgIbWmV0YWNoYWluLlpldGFjb3JlLkZ1bmdpYmxlygIbWmV0YWNoYWluXFpldGFjb3JlXEZ1bmdpYmxl4gInWmV0YWNoYWluXFpldGFjb3JlXEZ1bmdpYmxlXEdQQk1ldGFkYXRh6gIdWmV0YWNoYWluOjpaZXRhY29yZTo6RnVuZ2libGViBnByb3RvMw", [file_gogoproto_gogo, file_zetachain_zetacore_pkg_coin_coin, file_cosmos_msg_v1_msg]);
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit
+ */
+export type MsgUpdateGatewayGasLimit = Message<"zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit"> & {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string new_gas_limit = 2;
+   */
+  newGasLimit: string;
+};
+
+/**
+ * Describes the message zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit.
+ * Use `create(MsgUpdateGatewayGasLimitSchema)` to create a new message.
+ */
+export const MsgUpdateGatewayGasLimitSchema: GenMessage<MsgUpdateGatewayGasLimit> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_fungible_tx, 0);
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayGasLimitResponse
+ */
+export type MsgUpdateGatewayGasLimitResponse = Message<"zetachain.zetacore.fungible.MsgUpdateGatewayGasLimitResponse"> & {
+};
+
+/**
+ * Describes the message zetachain.zetacore.fungible.MsgUpdateGatewayGasLimitResponse.
+ * Use `create(MsgUpdateGatewayGasLimitResponseSchema)` to create a new message.
+ */
+export const MsgUpdateGatewayGasLimitResponseSchema: GenMessage<MsgUpdateGatewayGasLimitResponse> = /*@__PURE__*/
+  messageDesc(file_zetachain_zetacore_fungible_tx, 1);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgDeploySystemContracts
@@ -31,7 +66,7 @@ export type MsgDeploySystemContracts = Message<"zetachain.zetacore.fungible.MsgD
  * Use `create(MsgDeploySystemContractsSchema)` to create a new message.
  */
 export const MsgDeploySystemContractsSchema: GenMessage<MsgDeploySystemContracts> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 0);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 2);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgDeploySystemContractsResponse
@@ -68,7 +103,7 @@ export type MsgDeploySystemContractsResponse = Message<"zetachain.zetacore.fungi
  * Use `create(MsgDeploySystemContractsResponseSchema)` to create a new message.
  */
 export const MsgDeploySystemContractsResponseSchema: GenMessage<MsgDeploySystemContractsResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 1);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 3);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee
@@ -102,7 +137,7 @@ export type MsgUpdateZRC20WithdrawFee = Message<"zetachain.zetacore.fungible.Msg
  * Use `create(MsgUpdateZRC20WithdrawFeeSchema)` to create a new message.
  */
 export const MsgUpdateZRC20WithdrawFeeSchema: GenMessage<MsgUpdateZRC20WithdrawFee> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 2);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 4);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFeeResponse
@@ -115,7 +150,7 @@ export type MsgUpdateZRC20WithdrawFeeResponse = Message<"zetachain.zetacore.fung
  * Use `create(MsgUpdateZRC20WithdrawFeeResponseSchema)` to create a new message.
  */
 export const MsgUpdateZRC20WithdrawFeeResponseSchema: GenMessage<MsgUpdateZRC20WithdrawFeeResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 3);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 5);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateSystemContract
@@ -137,7 +172,7 @@ export type MsgUpdateSystemContract = Message<"zetachain.zetacore.fungible.MsgUp
  * Use `create(MsgUpdateSystemContractSchema)` to create a new message.
  */
 export const MsgUpdateSystemContractSchema: GenMessage<MsgUpdateSystemContract> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 4);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 6);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateSystemContractResponse
@@ -150,7 +185,7 @@ export type MsgUpdateSystemContractResponse = Message<"zetachain.zetacore.fungib
  * Use `create(MsgUpdateSystemContractResponseSchema)` to create a new message.
  */
 export const MsgUpdateSystemContractResponseSchema: GenMessage<MsgUpdateSystemContractResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 5);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 7);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20
@@ -207,7 +242,7 @@ export type MsgDeployFungibleCoinZRC20 = Message<"zetachain.zetacore.fungible.Ms
  * Use `create(MsgDeployFungibleCoinZRC20Schema)` to create a new message.
  */
 export const MsgDeployFungibleCoinZRC20Schema: GenMessage<MsgDeployFungibleCoinZRC20> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 6);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 8);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response
@@ -224,7 +259,7 @@ export type MsgDeployFungibleCoinZRC20Response = Message<"zetachain.zetacore.fun
  * Use `create(MsgDeployFungibleCoinZRC20ResponseSchema)` to create a new message.
  */
 export const MsgDeployFungibleCoinZRC20ResponseSchema: GenMessage<MsgDeployFungibleCoinZRC20Response> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 7);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 9);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgRemoveForeignCoin
@@ -246,7 +281,7 @@ export type MsgRemoveForeignCoin = Message<"zetachain.zetacore.fungible.MsgRemov
  * Use `create(MsgRemoveForeignCoinSchema)` to create a new message.
  */
 export const MsgRemoveForeignCoinSchema: GenMessage<MsgRemoveForeignCoin> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 8);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 10);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgRemoveForeignCoinResponse
@@ -259,7 +294,7 @@ export type MsgRemoveForeignCoinResponse = Message<"zetachain.zetacore.fungible.
  * Use `create(MsgRemoveForeignCoinResponseSchema)` to create a new message.
  */
 export const MsgRemoveForeignCoinResponseSchema: GenMessage<MsgRemoveForeignCoinResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 9);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 11);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecode
@@ -286,7 +321,7 @@ export type MsgUpdateContractBytecode = Message<"zetachain.zetacore.fungible.Msg
  * Use `create(MsgUpdateContractBytecodeSchema)` to create a new message.
  */
 export const MsgUpdateContractBytecodeSchema: GenMessage<MsgUpdateContractBytecode> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 10);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 12);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse
@@ -299,7 +334,7 @@ export type MsgUpdateContractBytecodeResponse = Message<"zetachain.zetacore.fung
  * Use `create(MsgUpdateContractBytecodeResponseSchema)` to create a new message.
  */
 export const MsgUpdateContractBytecodeResponseSchema: GenMessage<MsgUpdateContractBytecodeResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 11);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 13);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap
@@ -326,7 +361,7 @@ export type MsgUpdateZRC20LiquidityCap = Message<"zetachain.zetacore.fungible.Ms
  * Use `create(MsgUpdateZRC20LiquidityCapSchema)` to create a new message.
  */
 export const MsgUpdateZRC20LiquidityCapSchema: GenMessage<MsgUpdateZRC20LiquidityCap> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 12);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 14);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCapResponse
@@ -339,7 +374,7 @@ export type MsgUpdateZRC20LiquidityCapResponse = Message<"zetachain.zetacore.fun
  * Use `create(MsgUpdateZRC20LiquidityCapResponseSchema)` to create a new message.
  */
 export const MsgUpdateZRC20LiquidityCapResponseSchema: GenMessage<MsgUpdateZRC20LiquidityCapResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 13);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 15);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgPauseZRC20
@@ -361,7 +396,7 @@ export type MsgPauseZRC20 = Message<"zetachain.zetacore.fungible.MsgPauseZRC20">
  * Use `create(MsgPauseZRC20Schema)` to create a new message.
  */
 export const MsgPauseZRC20Schema: GenMessage<MsgPauseZRC20> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 14);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 16);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgPauseZRC20Response
@@ -374,7 +409,7 @@ export type MsgPauseZRC20Response = Message<"zetachain.zetacore.fungible.MsgPaus
  * Use `create(MsgPauseZRC20ResponseSchema)` to create a new message.
  */
 export const MsgPauseZRC20ResponseSchema: GenMessage<MsgPauseZRC20Response> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 15);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 17);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUnpauseZRC20
@@ -396,7 +431,7 @@ export type MsgUnpauseZRC20 = Message<"zetachain.zetacore.fungible.MsgUnpauseZRC
  * Use `create(MsgUnpauseZRC20Schema)` to create a new message.
  */
 export const MsgUnpauseZRC20Schema: GenMessage<MsgUnpauseZRC20> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 16);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 18);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUnpauseZRC20Response
@@ -409,7 +444,7 @@ export type MsgUnpauseZRC20Response = Message<"zetachain.zetacore.fungible.MsgUn
  * Use `create(MsgUnpauseZRC20ResponseSchema)` to create a new message.
  */
 export const MsgUnpauseZRC20ResponseSchema: GenMessage<MsgUnpauseZRC20Response> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 17);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 19);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayContract
@@ -431,7 +466,7 @@ export type MsgUpdateGatewayContract = Message<"zetachain.zetacore.fungible.MsgU
  * Use `create(MsgUpdateGatewayContractSchema)` to create a new message.
  */
 export const MsgUpdateGatewayContractSchema: GenMessage<MsgUpdateGatewayContract> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 18);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 20);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse
@@ -444,7 +479,7 @@ export type MsgUpdateGatewayContractResponse = Message<"zetachain.zetacore.fungi
  * Use `create(MsgUpdateGatewayContractResponseSchema)` to create a new message.
  */
 export const MsgUpdateGatewayContractResponseSchema: GenMessage<MsgUpdateGatewayContractResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 19);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 21);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20Name
@@ -476,7 +511,7 @@ export type MsgUpdateZRC20Name = Message<"zetachain.zetacore.fungible.MsgUpdateZ
  * Use `create(MsgUpdateZRC20NameSchema)` to create a new message.
  */
 export const MsgUpdateZRC20NameSchema: GenMessage<MsgUpdateZRC20Name> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 20);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 22);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20NameResponse
@@ -489,7 +524,7 @@ export type MsgUpdateZRC20NameResponse = Message<"zetachain.zetacore.fungible.Ms
  * Use `create(MsgUpdateZRC20NameResponseSchema)` to create a new message.
  */
 export const MsgUpdateZRC20NameResponseSchema: GenMessage<MsgUpdateZRC20NameResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 21);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 23);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgBurnFungibleModuleAsset
@@ -511,7 +546,7 @@ export type MsgBurnFungibleModuleAsset = Message<"zetachain.zetacore.fungible.Ms
  * Use `create(MsgBurnFungibleModuleAssetSchema)` to create a new message.
  */
 export const MsgBurnFungibleModuleAssetSchema: GenMessage<MsgBurnFungibleModuleAsset> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 22);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 24);
 
 /**
  * @generated from message zetachain.zetacore.fungible.MsgBurnFungibleModuleAssetResponse
@@ -524,7 +559,7 @@ export type MsgBurnFungibleModuleAssetResponse = Message<"zetachain.zetacore.fun
  * Use `create(MsgBurnFungibleModuleAssetResponseSchema)` to create a new message.
  */
 export const MsgBurnFungibleModuleAssetResponseSchema: GenMessage<MsgBurnFungibleModuleAssetResponse> = /*@__PURE__*/
-  messageDesc(file_zetachain_zetacore_fungible_tx, 23);
+  messageDesc(file_zetachain_zetacore_fungible_tx, 25);
 
 /**
  * Msg defines the Msg service.
@@ -627,6 +662,14 @@ export const Msg: GenService<{
     methodKind: "unary";
     input: typeof MsgBurnFungibleModuleAssetSchema;
     output: typeof MsgBurnFungibleModuleAssetResponseSchema;
+  },
+  /**
+   * @generated from rpc zetachain.zetacore.fungible.Msg.UpdateGatewayGasLimit
+   */
+  updateGatewayGasLimit: {
+    methodKind: "unary";
+    input: typeof MsgUpdateGatewayGasLimitSchema;
+    output: typeof MsgUpdateGatewayGasLimitResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_zetachain_zetacore_fungible_tx, 0);
