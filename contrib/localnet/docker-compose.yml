@@ -209,7 +209,7 @@ services:
       - preparams:/root/preparams
 
   eth:
-    image: ghcr.io/zeta-chain/ethereum-client-go:v1.10.26
+    image: ethereum/client-go:v1.14.0
     container_name: eth
     hostname: eth
     ports:
@@ -217,7 +217,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--datadir", "/root/data", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2", "--"]
+    entrypoint: ["geth", "--dev", "--override.cancun", "0", "--datadir", "/root/data", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2", "--"]
 
   eth2:
     build:
