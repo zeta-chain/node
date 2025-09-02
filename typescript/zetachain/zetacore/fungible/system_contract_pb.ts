@@ -11,7 +11,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file zetachain/zetacore/fungible/system_contract.proto.
  */
 export const file_zetachain_zetacore_fungible_system_contract: GenFile = /*@__PURE__*/
-  fileDesc("CjF6ZXRhY2hhaW4vemV0YWNvcmUvZnVuZ2libGUvc3lzdGVtX2NvbnRyYWN0LnByb3RvEht6ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUiUgoOU3lzdGVtQ29udHJhY3QSFwoPc3lzdGVtX2NvbnRyYWN0GAEgASgJEhYKDmNvbm5lY3Rvcl96ZXZtGAIgASgJEg8KB2dhdGV3YXkYAyABKAlC8QEKH2NvbS56ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGVCE1N5c3RlbUNvbnRyYWN0UHJvdG9QAVorZ2l0aHViLmNvbS96ZXRhLWNoYWluL25vZGUveC9mdW5naWJsZS90eXBlc6ICA1paRqoCG1pldGFjaGFpbi5aZXRhY29yZS5GdW5naWJsZcoCG1pldGFjaGFpblxaZXRhY29yZVxGdW5naWJsZeICJ1pldGFjaGFpblxaZXRhY29yZVxGdW5naWJsZVxHUEJNZXRhZGF0YeoCHVpldGFjaGFpbjo6WmV0YWNvcmU6OkZ1bmdpYmxlYgZwcm90bzM", [file_gogoproto_gogo]);
+  fileDesc("CjF6ZXRhY2hhaW4vemV0YWNvcmUvZnVuZ2libGUvc3lzdGVtX2NvbnRyYWN0LnByb3RvEht6ZXRhY2hhaW4uemV0YWNvcmUuZnVuZ2libGUijAEKDlN5c3RlbUNvbnRyYWN0EhcKD3N5c3RlbV9jb250cmFjdBgBIAEoCRIWCg5jb25uZWN0b3JfemV2bRgCIAEoCRIPCgdnYXRld2F5GAMgASgJEjgKEWdhdGV3YXlfZ2FzX2xpbWl0GAUgASgJQh3I3h8A2t4fFWNvc21vc3Nkay5pby9tYXRoLkludELxAQofY29tLnpldGFjaGFpbi56ZXRhY29yZS5mdW5naWJsZUITU3lzdGVtQ29udHJhY3RQcm90b1ABWitnaXRodWIuY29tL3pldGEtY2hhaW4vbm9kZS94L2Z1bmdpYmxlL3R5cGVzogIDWlpGqgIbWmV0YWNoYWluLlpldGFjb3JlLkZ1bmdpYmxlygIbWmV0YWNoYWluXFpldGFjb3JlXEZ1bmdpYmxl4gInWmV0YWNoYWluXFpldGFjb3JlXEZ1bmdpYmxlXEdQQk1ldGFkYXRh6gIdWmV0YWNoYWluOjpaZXRhY29yZTo6RnVuZ2libGViBnByb3RvMw", [file_gogoproto_gogo]);
 
 /**
  * @generated from message zetachain.zetacore.fungible.SystemContract
@@ -31,6 +31,11 @@ export type SystemContract = Message<"zetachain.zetacore.fungible.SystemContract
    * @generated from field: string gateway = 3;
    */
   gateway: string;
+
+  /**
+   * @generated from field: string gateway_gas_limit = 5;
+   */
+  gatewayGasLimit: string;
 };
 
 /**

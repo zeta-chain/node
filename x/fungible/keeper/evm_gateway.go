@@ -14,9 +14,6 @@ import (
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
-// gatewayGasLimit is the gas limit for the gateway functions
-var gatewayGasLimit = big.NewInt(1_500_000)
-
 // CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract
 // function updateGatewayAddress(address addr)
 func (k Keeper) CallUpdateGatewayAddress(
@@ -35,7 +32,7 @@ func (k Keeper) CallUpdateGatewayAddress(
 		types.ModuleAddressEVM,
 		zrc20Address,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"updateGatewayAddress",
@@ -85,7 +82,7 @@ func (k Keeper) CallDepositAndCallZRC20(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"depositAndCall0",
@@ -132,7 +129,7 @@ func (k Keeper) DepositAndCallZeta(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		amount,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"depositAndCall",
@@ -180,7 +177,7 @@ func (k Keeper) CallExecute(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"execute",
@@ -226,7 +223,7 @@ func (k Keeper) CallExecuteRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"executeRevert",
@@ -278,7 +275,7 @@ func (k Keeper) CallDepositAndRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"depositAndRevert",
@@ -322,7 +319,7 @@ func (k Keeper) CallZetaDepositAndRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		amount,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"depositAndRevert0",
@@ -374,7 +371,7 @@ func (k Keeper) CallExecuteAbort(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.MustGetGatewayGasLimit(ctx),
 		true,
 		false,
 		"executeAbort",

@@ -1,4 +1,4 @@
-package v4
+package v5
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,27 +11,26 @@ type authorityKeeper interface {
 	GetAuthorizationList(ctx sdk.Context) (val types.AuthorizationList, found bool)
 }
 
-// MigrateStore migrates the authority module state from the consensus version 3 to 4
+// MigrateStore migrates the authority module state from the consensus version 4 to 5
 func MigrateStore(
 	ctx sdk.Context,
 	keeper authorityKeeper,
 ) error {
 	var (
-		authorizationList                    = types.DefaultAuthorizationsList()
-		burnFungibleModuleAssetAuthorization = types.Authorization{
-			MsgUrl:           "/zetachain.zetacore.fungible.MsgBurnFungibleModuleAsset",
-			AuthorizedPolicy: types.PolicyType_groupAdmin,
+		authorizationList                  = types.DefaultAuthorizationsList()
+		updateGatewayGasLimitAuthorization = types.Authorization{
+			MsgUrl:           "/zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit",
+			AuthorizedPolicy: types.PolicyType_groupOperational,
 		}
 	)
 
-	// Fetch the current authorization list, if found use that instead of default list
 	al, found := keeper.GetAuthorizationList(ctx)
 	if found {
 		authorizationList = al
 	}
 
 	// Add the new authorization
-	authorizationList.SetAuthorization(burnFungibleModuleAssetAuthorization)
+	authorizationList.SetAuthorization(updateGatewayGasLimitAuthorization)
 
 	// Validate the authorization list
 	err := authorizationList.Validate()

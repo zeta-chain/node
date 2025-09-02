@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -808,5 +809,34 @@ func (k *Keeper) CallZRC20Approve(
 		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method approve (%s)", err.Error())
 	}
 
+	return nil
+}
+
+func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (*big.Int, error) {
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return &big.Int{}, types.ErrSystemContractNotFound
+	}
+
+	return system.GatewayGasLimit.BigInt(), nil
+}
+
+func (k *Keeper) MustGetGatewayGasLimit(ctx sdk.Context) *big.Int {
+	gasLimit, err := k.GetGatewayGasLimit(ctx)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("failed to get gateway gas limit, using default %s", err.Error()))
+		return types.GatewayGasLimit
+	}
+	return gasLimit
+}
+
+func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) error {
+	system := types.SystemContract{}
+	existingSystemContract, found := k.GetSystemContract(ctx)
+	if found {
+		system = existingSystemContract
+	}
+	system.GatewayGasLimit = gasLimit
+	k.SetSystemContract(ctx, system)
 	return nil
 }
