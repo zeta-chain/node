@@ -31,7 +31,7 @@ type upgradeTracker struct {
 	stateFileDir string
 }
 
-// getIncrementalUpgrades gets all upgrades that have not been been applied. This is typically
+// getIncrementalUpgrades gets all upgrades that have not been applied. This is typically
 // used for developnet upgrades since we need to run migrations as the are committed rather than
 // all at once during a release
 func (t upgradeTracker) getIncrementalUpgrades() ([]upgradeHandlerFn, *storetypes.StoreUpgrades, error) {
