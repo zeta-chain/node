@@ -29,7 +29,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-getter v1.7.8
+	github.com/hashicorp/go-getter v1.7.9
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
