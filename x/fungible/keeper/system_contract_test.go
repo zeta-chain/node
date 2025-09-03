@@ -1107,7 +1107,7 @@ func TestKeeper_MustGetGatewayGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		limit := k.MustGetGatewayGasLimit(ctx)
+		limit := k.GetGatewayGasLimitSafe(ctx)
 		require.Equal(t, types.GatewayGasLimit, limit)
 	})
 
@@ -1119,7 +1119,7 @@ func TestKeeper_MustGetGatewayGasLimit(t *testing.T) {
 		err := k.SetGatewayGasLimit(ctx, sdkmath.NewInt(newGasLimit))
 		require.NoError(t, err)
 
-		limit := k.MustGetGatewayGasLimit(ctx)
+		limit := k.GetGatewayGasLimitSafe(ctx)
 		require.Equal(t, big.NewInt(newGasLimit), limit)
 	})
 }
