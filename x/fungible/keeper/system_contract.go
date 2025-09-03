@@ -812,6 +812,7 @@ func (k *Keeper) CallZRC20Approve(
 	return nil
 }
 
+// GetGatewayGasLimit returns the gateway gas limit
 func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (*big.Int, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
@@ -821,7 +822,8 @@ func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (*big.Int, error) {
 	return system.GatewayGasLimit.BigInt(), nil
 }
 
-func (k *Keeper) MustGetGatewayGasLimit(ctx sdk.Context) *big.Int {
+// GetGatewayGasLimitSafe returns the gateway gas limit, or the default if not set or error occurs
+func (k *Keeper) GetGatewayGasLimitSafe(ctx sdk.Context) *big.Int {
 	gasLimit, err := k.GetGatewayGasLimit(ctx)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("failed to get gateway gas limit, using default %s", err.Error()))
@@ -830,6 +832,7 @@ func (k *Keeper) MustGetGatewayGasLimit(ctx sdk.Context) *big.Int {
 	return gasLimit
 }
 
+// SetGatewayGasLimit sets the gateway gas limit
 func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) error {
 	system := types.SystemContract{}
 	existingSystemContract, found := k.GetSystemContract(ctx)
