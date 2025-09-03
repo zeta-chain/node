@@ -62,7 +62,7 @@ func createUpgrades(chainID string) []upgradeTrackerItem {
 		if err != nil {
 			panic("invalid chain ID: " + chainID + ", error: " + err.Error())
 		}
-		if evmChaindID == chains.ZetaChainMainnet.ChainId {
+		if evmChaindID == chains.ZetaChainPrivnet.ChainId {
 			return append(upgrades, addErc20ModuleUpgrade)
 		}
 	}
