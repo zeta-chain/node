@@ -18,7 +18,7 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
 		// Act
-		err := v5.MigrateStore(ctx, *k)
+		err := v5.MigrateStore(ctx, k)
 
 		// Assert
 		require.NoError(t, err)
@@ -35,7 +35,7 @@ func TestMigrateStore(t *testing.T) {
 		k.SetSystemContract(ctx, defaultSystemContract)
 
 		// Act
-		err := v5.MigrateStore(ctx, *k)
+		err := v5.MigrateStore(ctx, k)
 
 		// Assert
 		require.NoError(t, err)
