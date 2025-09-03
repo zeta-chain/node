@@ -1102,16 +1102,15 @@ func TestKeeper_CallZRC20Deposit(t *testing.T) {
 	})
 }
 
-func TestKeeper_MustGetGatewayGasLimit(t *testing.T) {
+func TestKeeper_GetGatewayGasLimitSafe(t *testing.T) {
 	t.Run("get default if not set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		limit := k.GetGatewayGasLimitSafe(ctx)
 		require.Equal(t, types.GatewayGasLimit, limit)
 	})
 
-	t.Run("get default if set", func(t *testing.T) {
+	t.Run("get value from state if set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		k.SetSystemContract(ctx, *sample.SystemContract())
 		newGasLimit := int64(10)
