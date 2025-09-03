@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -20,22 +19,26 @@ func TestMsgUpdateGatewayGasLimit_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "invalid address",
-			msg:  types.NewMsgUpdateGatewayGasLimit("invalid_address", sdkmath.NewInt(1000000)),
+			msg:  types.NewMsgUpdateGatewayGasLimit("invalid_address", 1000000),
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid gas limit - zero",
-			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), sdkmath.ZeroInt()),
+			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), 0),
 			err:  sdkerrors.ErrInvalidRequest,
 		},
 		{
-			name: "invalid gas limit - negative",
-			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), sdkmath.NewInt(-1)),
+			name: "invalid gas limit - above max",
+			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), types.GatewayGasLimitMax+1),
 			err:  sdkerrors.ErrInvalidRequest,
 		},
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), sdkmath.NewInt(1000000)),
+			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), 1000000),
+		},
+		{
+			name: "valid message - max gas limit",
+			msg:  types.NewMsgUpdateGatewayGasLimit(sample.AccAddress(), types.GatewayGasLimitMax),
 		},
 	}
 	for _, tt := range tests {

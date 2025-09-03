@@ -3,8 +3,6 @@ package sample
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -60,6 +58,6 @@ func SystemContract() *types.SystemContract {
 		SystemContract:  EthAddress().String(),
 		ConnectorZevm:   EthAddress().String(),
 		Gateway:         EthAddress().String(),
-		GatewayGasLimit: sdkmath.NewIntFromBigInt(types.GatewayGasLimit),
+		GatewayGasLimit: types.DefaultGatewayGasLimit,
 	}
 }

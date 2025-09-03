@@ -743,7 +743,7 @@ UpdateGatewayGasLimit updates the gateway gas limit used by the ZetaChain protoc
 ```proto
 message MsgUpdateGatewayGasLimit {
 	string creator = 1;
-	string new_gas_limit = 2;
+	uint64 new_gas_limit = 2;
 }
 ```
 

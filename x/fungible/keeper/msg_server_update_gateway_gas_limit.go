@@ -33,8 +33,8 @@ func (k msgServer) UpdateGatewayGasLimit(
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventGatewayGasLimitUpdated{
 			MsgTypeUrl:  sdk.MsgTypeURL(&types.MsgUpdateGatewayGasLimit{}),
-			NewGasLimit: msg.NewGasLimit.String(),
-			OldGasLimit: oldGasLimit.String(),
+			NewGasLimit: msg.NewGasLimit,
+			OldGasLimit: oldGasLimit,
 			Signer:      msg.Creator,
 		},
 	)

@@ -38,10 +38,7 @@ service Msg {
 message MsgUpdateGatewayGasLimit {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string new_gas_limit = 2 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable) = false
-  ];
+  uint64 new_gas_limit = 2;
 }
 message MsgUpdateGatewayGasLimitResponse {}
 

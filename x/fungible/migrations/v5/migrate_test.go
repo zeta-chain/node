@@ -3,7 +3,6 @@ package v5_test
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -24,14 +23,14 @@ func TestMigrateStore(t *testing.T) {
 		require.NoError(t, err)
 		system, found := k.GetSystemContract(ctx)
 		require.True(t, found)
-		require.Equal(t, sdkmath.NewIntFromBigInt(types.GatewayGasLimit), system.GatewayGasLimit)
+		require.Equal(t, types.DefaultGatewayGasLimit, system.GatewayGasLimit)
 	})
 
 	t.Run("set value if system contract is found", func(t *testing.T) {
 		// Arrange
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		defaultSystemContract := *sample.SystemContract()
-		defaultSystemContract.GatewayGasLimit = sdkmath.NewInt(999999)
+		defaultSystemContract.GatewayGasLimit = 999999
 		k.SetSystemContract(ctx, defaultSystemContract)
 
 		// Act
@@ -41,7 +40,7 @@ func TestMigrateStore(t *testing.T) {
 		require.NoError(t, err)
 		system, found := k.GetSystemContract(ctx)
 		require.True(t, found)
-		require.Equal(t, sdkmath.NewIntFromBigInt(types.GatewayGasLimit), system.GatewayGasLimit)
+		require.Equal(t, types.DefaultGatewayGasLimit, system.GatewayGasLimit)
 		require.Equal(t, defaultSystemContract.SystemContract, system.SystemContract)
 		require.Equal(t, defaultSystemContract.ConnectorZevm, system.ConnectorZevm)
 		require.Equal(t, defaultSystemContract.Gateway, system.Gateway)
