@@ -108,19 +108,25 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 }
 
 func TestUpdateGatewayGasLimit(r *runner.E2ERunner) {
-	// Update the gateway gas limit to 1,600,000
 	newGasLimit := uint64(1_600_000)
+
+	// check the initial gas limit is not equal to 1,600,000
+	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	require.NoError(r, err)
+	require.NotEqual(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
+
+	// Update the gateway gas limit to 1,600,000
 	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		newGasLimit,
 	)
-	_, err := r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
+	_, err = r.ZetaTxServer.BroadcastTx(utils.OperationalPolicyName, msgUpdateGatewayGasLimit)
 	require.NoError(r, err)
 
 	r.WaitForBlocks(1)
 
 	// Verify that the gas limit has been updated
-	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
+	systemContract, err = r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
 	require.NoError(r, err)
 	require.Equal(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 }
