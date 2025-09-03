@@ -818,7 +818,9 @@ func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (*big.Int, error) {
 	if !found {
 		return &big.Int{}, types.ErrSystemContractNotFound
 	}
-
+	if system.GatewayGasLimit.IsNil() || system.GatewayGasLimit.IsZero() {
+		return &big.Int{}, types.ErrGasLimitNotSet
+	}
 	return system.GatewayGasLimit.BigInt(), nil
 }
 
@@ -833,7 +835,7 @@ func (k *Keeper) GetGatewayGasLimitSafe(ctx sdk.Context) *big.Int {
 }
 
 // SetGatewayGasLimit sets the gateway gas limit
-func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) error {
+func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) {
 	system := types.SystemContract{}
 	existingSystemContract, found := k.GetSystemContract(ctx)
 	if found {
@@ -841,5 +843,4 @@ func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) error
 	}
 	system.GatewayGasLimit = gasLimit
 	k.SetSystemContract(ctx, system)
-	return nil
 }
