@@ -28,18 +28,8 @@ func (k msgServer) UpdateGatewayGasLimit(
 		protocolContracts = types.SystemContract{}
 	}
 	oldGasLimit := protocolContracts.GatewayGasLimit
+	k.SetGatewayGasLimit(ctx, msg.NewGasLimit)
 
-	// update the gas limit in the store
-	err = k.SetGatewayGasLimit(ctx, msg.NewGasLimit)
-	if err != nil {
-		return nil, cosmoserrors.Wrapf(
-			err,
-			"failed to set gateway gas limit (%s)",
-			msg.NewGasLimit.String(),
-		)
-	}
-
-	// emit event
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventGatewayGasLimitUpdated{
 			MsgTypeUrl:  sdk.MsgTypeURL(&types.MsgUpdateGatewayGasLimit{}),
