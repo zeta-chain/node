@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-## v35.0.0
+## v36.0.0
 
 ### Features
+
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ## v33.0.0
 
