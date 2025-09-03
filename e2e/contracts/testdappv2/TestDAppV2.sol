@@ -263,6 +263,12 @@ contract TestDAppV2 {
         IGatewayEVM(gateway).deposit{value: msg.value}(dst, RevertOptions(msg.sender, false, address(0), "", 0));
     }
 
+    function gatewayTwoDeposits(address dst) external payable {
+        require(!isZetaChain);
+        IGatewayEVM(gateway).deposit{value: msg.value / 2}(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+        IGatewayEVM(gateway).deposit{value: msg.value / 2}(dst, RevertOptions(msg.sender, false, address(0), "", 0));
+    }
+
     // deposit and call through Gateway EVM
     function gatewayDepositAndCall(address dst, bytes calldata payload) external payable {
         require(!isZetaChain);

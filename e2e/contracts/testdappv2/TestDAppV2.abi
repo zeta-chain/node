@@ -172,6 +172,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "dst",
+        "type": "address"
+      }
+    ],
+    "name": "gatewayTwoDeposits",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "message",
         "type": "string"

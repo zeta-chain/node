@@ -12,6 +12,7 @@ const (
 	  EVM chain tests
 	*/
 	TestETHDepositName                      = "eth_deposit"
+	TestETHMultipleDepositsName             = "eth_multiple_deposits"
 	TestETHDepositAndCallBigPayloadName     = "eth_deposit_and_call_big_payload"
 	TestETHDepositAndCallName               = "eth_deposit_and_call"
 	TestETHDepositFastConfirmationName      = "eth_deposit_fast_confirmation"
@@ -417,6 +418,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
 		},
 		TestETHDeposit,
+	),
+	runner.NewE2ETest(
+		TestETHMultipleDepositsName,
+		"deposit Ether into ZEVM multiple",
+		[]runner.ArgDefinition{
+			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
+		},
+		TestETHMultipleDeposits,
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallName,

@@ -50,7 +50,7 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	github.com/zeta-chain/protocol-contracts v0.0.0-20250902143017-c29a1adf6091
+	github.com/zeta-chain/protocol-contracts v0.0.0-20250903153019-931bb4a30563
 	go.nhat.io/grpcmock v0.25.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394

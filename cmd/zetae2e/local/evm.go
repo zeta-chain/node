@@ -17,6 +17,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	// Test happy paths for gas token workflow
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
+		e2etests.TestETHMultipleDepositsName,
 		e2etests.TestETHDepositAndCallName,
 		e2etests.TestETHDepositAndCallBigPayloadName,
 		e2etests.TestETHDepositFastConfirmationName,
