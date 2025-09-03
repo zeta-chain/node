@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4 "github.com/zeta-chain/node/x/authority/migrations/v4"
 
 	v5 "github.com/zeta-chain/node/x/authority/migrations/v5"
 )
@@ -16,6 +17,11 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{
 		authorityKeeper: keeper,
 	}
+}
+
+// Migrate3to4 migrates the authority store from consensus version 3 to 4
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	return v4.MigrateStore(ctx, m.authorityKeeper)
 }
 
 // Migrate4to5 migrates the authority store from consensus version 4 to 5
