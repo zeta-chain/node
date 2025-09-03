@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
@@ -28,7 +27,7 @@ func TestKeeper_UpdateGatewayGasLimit(t *testing.T) {
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
 			// new gas limit
-			newGasLimit := sdkmath.NewInt(2_000_000)
+			newGasLimit := uint64(2_000_000)
 
 			msg := types.NewMsgUpdateGatewayGasLimit(admin, newGasLimit)
 			keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
@@ -60,7 +59,7 @@ func TestKeeper_UpdateGatewayGasLimit(t *testing.T) {
 
 			authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
-			newGasLimit := sdkmath.NewInt(1_500_000)
+			newGasLimit := uint64(1_500_000)
 
 			_, found := k.GetSystemContract(ctx)
 			require.False(t, found)
@@ -98,7 +97,7 @@ func TestKeeper_UpdateGatewayGasLimit(t *testing.T) {
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
-		msg := types.NewMsgUpdateGatewayGasLimit(admin, sdkmath.NewInt(1000000))
+		msg := types.NewMsgUpdateGatewayGasLimit(admin, uint64(1000000))
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, authoritytypes.ErrUnauthorized)
 
 		// ACT

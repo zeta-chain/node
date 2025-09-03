@@ -1,7 +1,6 @@
 package v5
 
 import (
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -20,7 +19,7 @@ func MigrateStore(ctx sdk.Context, fungibleKeeper fungibleKeeper) error {
 	if found {
 		system = systemContract
 	}
-	system.GatewayGasLimit = sdkmath.NewIntFromBigInt(types.GatewayGasLimit)
+	system.GatewayGasLimit = types.DefaultGatewayGasLimit
 	fungibleKeeper.SetSystemContract(ctx, system)
 	return nil
 }

@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
@@ -110,7 +109,7 @@ func TestAddToInboundTracker(r *runner.E2ERunner) {
 
 func TestUpdateGatewayGasLimit(r *runner.E2ERunner) {
 	// Update the gateway gas limit to 1,600,000
-	newGasLimit := sdkmath.NewInt(1_600_000)
+	newGasLimit := uint64(1_600_000)
 	msgUpdateGatewayGasLimit := fungibletypes.NewMsgUpdateGatewayGasLimit(
 		r.ZetaTxServer.MustGetAccountAddressFromName(utils.OperationalPolicyName),
 		newGasLimit,
@@ -123,5 +122,5 @@ func TestUpdateGatewayGasLimit(r *runner.E2ERunner) {
 	// Verify that the gas limit has been updated
 	systemContract, err := r.FungibleClient.SystemContract(r.Ctx, &fungibletypes.QueryGetSystemContractRequest{})
 	require.NoError(r, err)
-	require.Equal(r, newGasLimit.String(), systemContract.SystemContract.GatewayGasLimit.String())
+	require.Equal(r, newGasLimit, systemContract.SystemContract.GatewayGasLimit)
 }

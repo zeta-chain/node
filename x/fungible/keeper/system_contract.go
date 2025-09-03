@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -813,29 +812,31 @@ func (k *Keeper) CallZRC20Approve(
 }
 
 // GetGatewayGasLimit returns the gateway gas limit
-func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (*big.Int, error) {
+func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (uint64, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return &big.Int{}, types.ErrSystemContractNotFound
+		return 0, types.ErrSystemContractNotFound
 	}
-	if system.GatewayGasLimit.IsNil() || system.GatewayGasLimit.IsZero() {
-		return &big.Int{}, types.ErrGasLimitNotSet
+	if system.GatewayGasLimit == 0 {
+		return 0, types.ErrGasLimitNotSet
 	}
-	return system.GatewayGasLimit.BigInt(), nil
+	return system.GatewayGasLimit, nil
 }
 
 // GetGatewayGasLimitSafe returns the gateway gas limit, or the default if not set or error occurs
+// The function returns a big.Int pointer to be compatible with EVM calls
 func (k *Keeper) GetGatewayGasLimitSafe(ctx sdk.Context) *big.Int {
 	gasLimit, err := k.GetGatewayGasLimit(ctx)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("failed to get gateway gas limit, using default %s", err.Error()))
-		return types.GatewayGasLimit
+		return new(big.Int).SetUint64(types.DefaultGatewayGasLimit)
 	}
-	return gasLimit
+
+	return new(big.Int).SetUint64(gasLimit)
 }
 
 // SetGatewayGasLimit sets the gateway gas limit
-func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit sdkmath.Int) {
+func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit uint64) {
 	system := types.SystemContract{}
 	existingSystemContract, found := k.GetSystemContract(ctx)
 	if found {

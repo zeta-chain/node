@@ -55430,6 +55430,7 @@ definitions:
         type: string
       gatewayGasLimit:
         type: string
+        format: uint64
   zetachain.zetacore.lightclient.ChainState:
     type: object
     properties:

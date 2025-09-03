@@ -1107,18 +1107,18 @@ func TestKeeper_GetGatewayGasLimitSafe(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
 		limit := k.GetGatewayGasLimitSafe(ctx)
-		require.Equal(t, types.GatewayGasLimit, limit)
+		require.Equal(t, types.DefaultGatewayGasLimit, limit.Uint64())
 	})
 
 	t.Run("get value from state if set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		k.SetSystemContract(ctx, *sample.SystemContract())
-		newGasLimit := int64(10)
+		newGasLimit := uint64(10)
 
-		k.SetGatewayGasLimit(ctx, sdkmath.NewInt(newGasLimit))
+		k.SetGatewayGasLimit(ctx, newGasLimit)
 
 		limit := k.GetGatewayGasLimitSafe(ctx)
-		require.Equal(t, big.NewInt(newGasLimit), limit)
+		require.Equal(t, newGasLimit, limit.Uint64())
 	})
 }
 
@@ -1128,15 +1128,15 @@ func TestKeeper_SetGatewayGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		defaultSystemContract := *sample.SystemContract()
 		k.SetSystemContract(ctx, defaultSystemContract)
-		newGasLimit := int64(10)
+		newGasLimit := uint64(10)
 
 		// Act
-		k.SetGatewayGasLimit(ctx, sdkmath.NewInt(newGasLimit))
+		k.SetGatewayGasLimit(ctx, newGasLimit)
 
 		// Assert
 		updatedSystemContract, found := k.GetSystemContract(ctx)
 		require.True(t, found)
-		require.Equal(t, big.NewInt(newGasLimit), updatedSystemContract.GatewayGasLimit.BigInt())
+		require.Equal(t, newGasLimit, updatedSystemContract.GatewayGasLimit)
 		require.Equal(t, defaultSystemContract.SystemContract, updatedSystemContract.SystemContract)
 		require.Equal(t, defaultSystemContract.Gateway, updatedSystemContract.Gateway)
 		require.Equal(t, defaultSystemContract.ConnectorZevm, updatedSystemContract.ConnectorZevm)
@@ -1146,15 +1146,15 @@ func TestKeeper_SetGatewayGasLimit(t *testing.T) {
 	t.Run("set gas limit if system contract is not found", func(t *testing.T) {
 		// Arrange
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		newGasLimit := int64(10)
+		newGasLimit := uint64(10)
 
 		// Act
-		k.SetGatewayGasLimit(ctx, sdkmath.NewInt(newGasLimit))
+		k.SetGatewayGasLimit(ctx, newGasLimit)
 
 		// Assert
 		updatedSystemContract, found := k.GetSystemContract(ctx)
 		require.True(t, found)
-		require.Equal(t, big.NewInt(newGasLimit), updatedSystemContract.GatewayGasLimit.BigInt())
+		require.Equal(t, newGasLimit, updatedSystemContract.GatewayGasLimit)
 		require.Equal(t, "", updatedSystemContract.SystemContract)
 		require.Equal(t, "", updatedSystemContract.Gateway)
 		require.Equal(t, "", updatedSystemContract.ConnectorZevm)
@@ -1195,6 +1195,6 @@ func TestGetGatewayGasLimit(t *testing.T) {
 
 		// Assert
 		require.NoError(t, err)
-		require.Equal(t, defaultSystemContract.GatewayGasLimit.BigInt(), gasLimit)
+		require.Equal(t, defaultSystemContract.GatewayGasLimit, gasLimit)
 	})
 }
