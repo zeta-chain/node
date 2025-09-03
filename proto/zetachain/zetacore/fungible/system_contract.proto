@@ -9,7 +9,7 @@ message SystemContract {
   string system_contract = 1;
   string connector_zevm = 2;
   string gateway = 3;
-  string gateway_gas_limit = 5 [
+  string gateway_gas_limit = 4 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];

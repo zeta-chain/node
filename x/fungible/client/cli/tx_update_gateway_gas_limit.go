@@ -22,7 +22,7 @@ func CmdUpdateGatewayGasLimit() *cobra.Command {
 			}
 
 			gasLimit, ok := sdkmath.NewIntFromString(args[0])
-			if !ok {
+			if !ok || gasLimit.IsZero() || gasLimit.IsNegative() {
 				return types.ErrInvalidGasLimit
 			}
 
