@@ -395,6 +395,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20LiquidityCap{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgUpdateGatewayGasLimit{}),
 			sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}),
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),

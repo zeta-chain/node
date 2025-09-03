@@ -16,6 +16,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap",
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
 		"/zetachain.zetacore.fungible.MsgUnpauseZRC20",
+		"/zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit",
 		"/zetachain.zetacore.observer.MsgResetChainNonces",
 		"/zetachain.zetacore.observer.MsgEnableCCTX",
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",

@@ -20,6 +20,9 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_fungible"
+
+	// DefaultGatewayGasLimit is the default gas limit for gateway contract calls
+	DefaultGatewayGasLimit = uint64(1_500_000)
 )
 
 func KeyPrefix(p string) []byte {
