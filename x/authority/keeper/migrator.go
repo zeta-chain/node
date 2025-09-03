@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4 "github.com/zeta-chain/node/x/authority/migrations/v4"
 
+	v4 "github.com/zeta-chain/node/x/authority/migrations/v4"
 	v5 "github.com/zeta-chain/node/x/authority/migrations/v5"
 )
 
