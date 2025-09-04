@@ -1223,7 +1223,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallName,
