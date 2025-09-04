@@ -268,7 +268,7 @@ func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
 
-// GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
+// GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to separate TSS signer from Zetaclient GRantee
 func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
 	address, err := c.keys.GetAddress()
 	if err != nil {
