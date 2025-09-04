@@ -810,3 +810,38 @@ func (k *Keeper) CallZRC20Approve(
 
 	return nil
 }
+
+// GetGatewayGasLimit returns the gateway gas limit
+func (k *Keeper) GetGatewayGasLimit(ctx sdk.Context) (uint64, error) {
+	system, found := k.GetSystemContract(ctx)
+	if !found {
+		return 0, types.ErrSystemContractNotFound
+	}
+	if system.GatewayGasLimit == 0 {
+		return 0, types.ErrGasLimitNotSet
+	}
+	return system.GatewayGasLimit, nil
+}
+
+// GetGatewayGasLimitSafe returns the gateway gas limit, or the default if not set or error occurs
+// The function returns a big.Int pointer to be compatible with EVM calls
+func (k *Keeper) GetGatewayGasLimitSafe(ctx sdk.Context) *big.Int {
+	gasLimit, err := k.GetGatewayGasLimit(ctx)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("failed to get gateway gas limit, using default %s", err.Error()))
+		return new(big.Int).SetUint64(types.DefaultGatewayGasLimit)
+	}
+
+	return new(big.Int).SetUint64(gasLimit)
+}
+
+// SetGatewayGasLimit sets the gateway gas limit
+func (k *Keeper) SetGatewayGasLimit(ctx sdk.Context, gasLimit uint64) {
+	system := types.SystemContract{}
+	existingSystemContract, found := k.GetSystemContract(ctx)
+	if found {
+		system = existingSystemContract
+	}
+	system.GatewayGasLimit = gasLimit
+	k.SetSystemContract(ctx, system)
+}
