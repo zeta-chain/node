@@ -690,7 +690,7 @@ var AllE2ETests = []runner.E2ETest{
 		"zevm -> evm call that reverts and call onRevert",
 		[]runner.ArgDefinition{},
 		TestZEVMToEVMCallRevert,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestZEVMToEVMCallRevertAndAbortName,
