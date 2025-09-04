@@ -22,44 +22,55 @@ func Test_ActiveMessageContextDynamicFieldName(t *testing.T) {
 	require.Equal(t, expectedJSON, got)
 }
 
-func TestNewGatewayFromPairID(t *testing.T) {
+func TestNewGatewayFromAddress(t *testing.T) {
 	// stubs
 	const (
 		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	tests := []struct {
 		name         string
-		pair         string
+		address      string
 		wantErr      string
 		wantOriginal bool
 	}{
 		{
-			name: "valid pair",
-			pair: MakePair(packageID, gatewayID, ""),
+			name:    "valid legacy gateway address",
+			address: MakeAddress(packageID, gatewayID, "", ""),
 		},
 		{
-			name:         "valid pair with original package id",
-			pair:         MakePair(packageID, gatewayID, originalPackageID),
+			name:         "valid new gateway address with original package id and withdraw cap id",
+			address:      MakeAddress(packageID, gatewayID, withdrawCapID, originalPackageID),
 			wantOriginal: true,
 		},
 		{
-			name:    "invalid pair, missing gateway object id",
-			pair:    "0x123",
-			wantErr: "invalid pair",
+			name:    "invalid gateway address, empty string",
+			address: "",
+			wantErr: "invalid gateway address",
+		},
+		{
+			name:    "invalid gateway address, contains 1 part",
+			address: "0x123",
+			wantErr: "invalid gateway address",
+		},
+		{
+			name:    "invalid gateway address, contains 3 parts",
+			address: fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID),
+			wantErr: "invalid gateway address",
 		},
 		{
 			name:    "invalid Sui address",
-			pair:    fmt.Sprintf("%s,0xabc", packageID),
+			address: fmt.Sprintf("%s,0xabc", packageID),
 			wantErr: "invalid Sui address",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gw, err := NewGatewayFromPairID(tt.pair)
+			gw, err := NewGatewayFromAddress(tt.address)
 			if tt.wantErr != "" {
 				require.Nil(t, gw)
 				require.ErrorContains(t, err, tt.wantErr)
@@ -74,46 +85,51 @@ func TestNewGatewayFromPairID(t *testing.T) {
 				assert.Equal(t, []string{packageID}, gw.PackageIDs())
 				return
 			}
+
+			assert.Equal(t, withdrawCapID, gw.WithdrawCapID())
+			assert.Equal(t, originalPackageID, gw.Original().PackageID())
 			assert.True(t, slices.Equal([]string{packageID, originalPackageID}, gw.PackageIDs()))
 		})
 	}
 }
 
-func Test_MakePair(t *testing.T) {
+func Test_MakeAddress(t *testing.T) {
 	const (
 		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	t.Run("original package id is empty", func(t *testing.T) {
-		pair := MakePair(packageID, gatewayID, "")
-		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), pair)
+		gatewayAddress := MakeAddress(packageID, gatewayID, "", "")
+		assert.Equal(t, fmt.Sprintf("%s,%s", packageID, gatewayID), gatewayAddress)
 	})
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		pair := MakePair(packageID, gatewayID, originalPackageID)
-		assert.Equal(t, fmt.Sprintf("%s,%s,%s", packageID, gatewayID, originalPackageID), pair)
+		gatewayAddress := MakeAddress(packageID, gatewayID, withdrawCapID, originalPackageID)
+		assert.Equal(t, fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayID, withdrawCapID, originalPackageID), gatewayAddress)
 	})
 }
 
-func Test_ToPairID(t *testing.T) {
+func Test_ToAddress(t *testing.T) {
 	const (
 		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	t.Run("original package id is empty", func(t *testing.T) {
 		gw := NewGateway(packageID, gatewayID)
-		assert.Equal(t, MakePair(packageID, gatewayID, ""), gw.ToPairID())
+		assert.Equal(t, MakeAddress(packageID, gatewayID, withdrawCapID, ""), gw.ToAddress())
 	})
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		pairID := MakePair(packageID, gatewayID, originalPackageID)
-		gw, err := NewGatewayFromPairID(pairID)
+		gatewayAddress := MakeAddress(packageID, gatewayID, withdrawCapID, originalPackageID)
+		gw, err := NewGatewayFromAddress(gatewayAddress)
 		require.NoError(t, err)
-		assert.Equal(t, pairID, gw.ToPairID())
+		assert.Equal(t, gatewayAddress, gw.ToAddress())
 	})
 }
 
@@ -121,26 +137,29 @@ func Test_Original(t *testing.T) {
 	const (
 		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
 	t.Run("original package id is not empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, originalPackageID))
+		gw, err := NewGatewayFromAddress(MakeAddress(packageID, gatewayID, withdrawCapID, originalPackageID))
 		require.NoError(t, err)
 
 		gwOriginal := gw.Original()
 		assert.Equal(t, originalPackageID, gwOriginal.PackageID())
 		assert.Equal(t, gatewayID, gwOriginal.ObjectID())
+		assert.Equal(t, withdrawCapID, gwOriginal.WithdrawCapID())
 		assert.Empty(t, gwOriginal.originalPackageID)
 	})
 
 	t.Run("original package id is empty", func(t *testing.T) {
-		gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, ""))
+		gw, err := NewGatewayFromAddress(MakeAddress(packageID, gatewayID, withdrawCapID, ""))
 		require.NoError(t, err)
 
 		gwOriginal := gw.Original()
 		assert.Equal(t, packageID, gwOriginal.PackageID())
 		assert.Equal(t, gatewayID, gwOriginal.ObjectID())
+		assert.Empty(t, gwOriginal.WithdrawCapID())
 		assert.Empty(t, gwOriginal.originalPackageID)
 	})
 }
@@ -152,6 +171,7 @@ func Test_UpdateIDs(t *testing.T) {
 
 		packageID2        = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 		gatewayID2        = "0xaf52affd195806d9aa9d967462cbda411bfed9a6efc4a032bf8e34a391469878"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 	)
 
@@ -159,13 +179,15 @@ func Test_UpdateIDs(t *testing.T) {
 	gw := NewGateway(packageID, gatewayID)
 	assert.Equal(t, packageID, gw.PackageID())
 	assert.Equal(t, gatewayID, gw.ObjectID())
+	assert.Empty(t, gw.WithdrawCapID())
 	assert.Empty(t, gw.originalPackageID)
 
 	// after update
-	require.NoError(t, gw.UpdateIDs(MakePair(packageID2, gatewayID2, originalPackageID)))
+	require.NoError(t, gw.UpdateIDs(MakeAddress(packageID2, gatewayID2, withdrawCapID, originalPackageID)))
 	assert.Equal(t, packageID2, gw.PackageID())
 	assert.Equal(t, gatewayID2, gw.ObjectID())
-	assert.Equal(t, originalPackageID, gw.originalPackageID)
+	assert.Equal(t, withdrawCapID, gw.WithdrawCapID())
+	assert.Equal(t, originalPackageID, gw.Original().PackageID())
 }
 
 func TestParseEvent(t *testing.T) {
@@ -173,12 +195,13 @@ func TestParseEvent(t *testing.T) {
 	const (
 		packageID         = "0x3e9fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443cf"
 		gatewayID         = "0x444fb7c01ef0d97911ccfec79306d9de2d58daa996bd3469da0f6d640cc443aa"
+		withdrawCapID     = "0x84d96419097f3cd66c7dd732cd28c8df58c1183768ae617c0705a6261a60a870"
 		originalPackageID = "0x9a6e7366064fb27ac1daeca6f7d4c13af2f86d26433b5e70bea9b6214e6253e4"
 		sender            = "0x70386a9a912d9f7a603263abfbd8faae861df0ee5f8e2dbdf731fbd159f10e52"
 		txHash            = "HjxLMxMXNz8YfUc2qT4e4CrogKvGeHRbDW7Arr6ntzqq"
 	)
 
-	gw, err := NewGatewayFromPairID(MakePair(packageID, gatewayID, originalPackageID))
+	gw, err := NewGatewayFromAddress(MakeAddress(packageID, gatewayID, withdrawCapID, originalPackageID))
 	require.NoError(t, err)
 
 	eventType := func(t string) string {

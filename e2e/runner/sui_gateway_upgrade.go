@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"os"
 	"os/exec"
@@ -94,10 +93,14 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	}
 	require.NotEmpty(r, packageID, "new gateway package ID not found")
 
+	// find withdraw cap ID
+	withdrawCapID, found := r.suiGetOwnedObjectID(r.SuiTSSAddress, r.SuiGateway.WithdrawCapType())
+	require.True(r, found, "withdraw cap object not found")
+
 	// update runner gateway package ID
 	originalID := r.SuiGateway.PackageID()
-	r.SuiGateway, err = sui.NewGatewayFromPairID(
-		fmt.Sprintf("%s,%s,%s", packageID, r.SuiGateway.ObjectID(), originalID),
+	r.SuiGateway, err = sui.NewGatewayFromAddress(
+		sui.MakeAddress(packageID, r.SuiGateway.ObjectID(), withdrawCapID, originalID),
 	)
 	require.NoError(r, err)
 

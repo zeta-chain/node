@@ -62,7 +62,10 @@ func TestObserver(t *testing.T) {
 	t.Run("ObserveInbound", func(t *testing.T) {
 		// ARRANGE
 		originalPackageID := sample.SuiAddress(t)
-		ts := newTestSuite(t, func(cfg *testSuiteConfig) { cfg.originalPackageID = originalPackageID })
+		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.withdrawCapID = sample.SuiAddress(t)
+			cfg.originalPackageID = originalPackageID
+		})
 
 		evmBob := sample.EthAddress()
 		evmAlice := sample.EthAddress()
@@ -217,7 +220,10 @@ func TestObserver(t *testing.T) {
 	t.Run("ProcessInboundTrackers", func(t *testing.T) {
 		// ARRANGE
 		originalPackageID := sample.SuiAddress(t)
-		ts := newTestSuite(t, func(cfg *testSuiteConfig) { cfg.originalPackageID = originalPackageID })
+		ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+			cfg.withdrawCapID = sample.SuiAddress(t)
+			cfg.originalPackageID = originalPackageID
+		})
 
 		// Given inbound tracker
 		chainID := ts.Chain().ChainId
@@ -509,6 +515,7 @@ func TestObserver(t *testing.T) {
 }
 
 func Test_MigrateInboundCursorV35(t *testing.T) {
+	withdrawCapID := sample.SuiAddress(t)
 	originalPackageID := sample.SuiAddress(t)
 
 	tests := []struct {
@@ -532,8 +539,10 @@ func Test_MigrateInboundCursorV35(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// ARRANGE
-			opt := func(cfg *testSuiteConfig) { cfg.originalPackageID = tt.originalPackageID }
-			ts := newTestSuite(t, opt)
+			ts := newTestSuite(t, func(cfg *testSuiteConfig) {
+				cfg.withdrawCapID = withdrawCapID
+				cfg.originalPackageID = tt.originalPackageID
+			})
 			packageID := ts.Gateway().PackageID()
 			originalPackageID := ts.Gateway().Original().PackageID()
 
@@ -605,6 +614,7 @@ type testSuite struct {
 }
 
 type testSuiteConfig struct {
+	withdrawCapID     string
 	originalPackageID string
 }
 
@@ -620,9 +630,9 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 	chainParams := mocks.MockChainParams(chain.ChainId, 10)
 	require.NotEmpty(t, chainParams.GatewayAddress)
 
-	// append original package ID if provided
-	if cfg.originalPackageID != "" {
-		chainParams.GatewayAddress = fmt.Sprintf("%s,%s", chainParams.GatewayAddress, cfg.originalPackageID)
+	// append withdraw cap ID and original package ID if provided
+	if cfg.withdrawCapID != "" && cfg.originalPackageID != "" {
+		chainParams.GatewayAddress = fmt.Sprintf("%s,%s,%s", chainParams.GatewayAddress, cfg.withdrawCapID, cfg.originalPackageID)
 	}
 
 	zetacore := mocks.NewZetacoreClient(t).
@@ -647,7 +657,7 @@ func newTestSuite(t *testing.T, opts ...func(*testSuiteConfig)) *testSuite {
 
 	suiMock := mocks.NewSuiClient(t)
 
-	gw, err := sui.NewGatewayFromPairID(chainParams.GatewayAddress)
+	gw, err := sui.NewGatewayFromAddress(chainParams.GatewayAddress)
 	require.NoError(t, err)
 
 	observer := New(baseObserver, suiMock, gw)

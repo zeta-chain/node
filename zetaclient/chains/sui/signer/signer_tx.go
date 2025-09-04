@@ -92,7 +92,7 @@ func (s *Signer) buildWithdrawal(ctx context.Context, cctx *cctypes.CrossChainTx
 	gasBudget := gasPrice * params.CallOptions.GasLimit
 
 	// Retrieve withdraw cap ID
-	withdrawCapID, err := s.getWithdrawCapIDCached(ctx)
+	withdrawCapID, err := s.withdrawCapID(ctx)
 	if err != nil {
 		return tx, errors.Wrap(err, "unable to get withdraw cap ID")
 	}

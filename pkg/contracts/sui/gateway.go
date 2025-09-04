@@ -26,6 +26,10 @@ type Gateway struct {
 	// gatewayObjectID is the object ID of the gateway struct
 	objectID string
 
+	// withdrawCapID is an optional field that specifies the object ID of the withdraw cap.
+	// It is used to specify the withdraw cap object ID only after the gateway upgrade.
+	withdrawCapID string
+
 	// originalPackageID is an optional field that points to the original gateway package.
 	// After gateway upgrade, the observer MUST use this packageID to query inbound events,
 	// because the original gateway package was where the events were initially defined.
@@ -63,10 +67,10 @@ func ActiveMessageContextDynamicFieldName() (json.RawMessage, error) {
 	return dynamicFieldNameToJSONArray("active_message_context")
 }
 
-// NewGatewayFromPairID creates a new Sui Gateway
-// from pair of `$packageID,$gatewayObjectID[,originalPackageID]`, where originalPackageID is optional
-func NewGatewayFromPairID(pair string) (*Gateway, error) {
-	packageID, gatewayObjectID, originalPackageID, err := parsePair(pair)
+// NewGatewayFromAddress creates a new Sui Gateway struct from the gateway address in chain params.
+// The gateway address is in the form of `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+func NewGatewayFromAddress(gatewayAddress string) (*Gateway, error) {
+	packageID, gatewayObjectID, withdrawCapID, originalPackageID, err := parseGatewayAddress(gatewayAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +78,7 @@ func NewGatewayFromPairID(pair string) (*Gateway, error) {
 	return &Gateway{
 		packageID:         packageID,
 		objectID:          gatewayObjectID,
+		withdrawCapID:     withdrawCapID,
 		originalPackageID: originalPackageID,
 	}, nil
 }
@@ -83,20 +88,21 @@ func NewGateway(packageID string, gatewayObjectID string) *Gateway {
 	return &Gateway{packageID: packageID, objectID: gatewayObjectID}
 }
 
-// MakePair makes a string containing `$packageID,$gatewayObjectID[,originalPackageID]`
-func MakePair(packageID, gatewayObjectID, originalPackageID string) string {
-	if originalPackageID == "" {
+// MakeAddress makes a gateway address of the form `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// Note: It is only used for tests at the moment.
+func MakeAddress(packageID, gatewayObjectID, withdrawCapID, originalPackageID string) string {
+	if withdrawCapID == "" || originalPackageID == "" {
 		return fmt.Sprintf("%s,%s", packageID, gatewayObjectID)
 	}
-	return fmt.Sprintf("%s,%s,%s", packageID, gatewayObjectID, originalPackageID)
+	return fmt.Sprintf("%s,%s,%s,%s", packageID, gatewayObjectID, withdrawCapID, originalPackageID)
 }
 
-// ToPairID return a pair ID of `$packageID,$gatewayObjectID[,originalPackageID]`
-func (gw *Gateway) ToPairID() string {
+// ToAddress return a gateway address of `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// Note: It is only used for tests at the moment.
+func (gw *Gateway) ToAddress() string {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
-
-	return MakePair(gw.packageID, gw.objectID, gw.originalPackageID)
+	return MakeAddress(gw.packageID, gw.objectID, gw.withdrawCapID, gw.originalPackageID)
 }
 
 // Original creates a Gateway struct that points to the original gateway.
@@ -113,7 +119,7 @@ func (gw *Gateway) Original() *Gateway {
 	if gw.originalPackageID == "" {
 		return gw
 	}
-	return &Gateway{packageID: gw.originalPackageID, objectID: gw.objectID}
+	return &Gateway{packageID: gw.originalPackageID, objectID: gw.objectID, withdrawCapID: gw.withdrawCapID}
 }
 
 // Event represents generic event wrapper
@@ -192,21 +198,22 @@ func (gw *Gateway) ObjectID() string {
 	return gw.objectID
 }
 
+// WithdrawCapID returns Gateway's withdraw cap object id
+func (gw *Gateway) WithdrawCapID() string {
+	gw.mu.RLock()
+	defer gw.mu.RUnlock()
+	return gw.withdrawCapID
+}
+
 // WithdrawCapType returns struct type of the WithdrawCap
 // Note: the withdraw cap was defined in the original package, so original package ID should be used
 func (gw *Gateway) WithdrawCapType() string {
 	return fmt.Sprintf("%s::%s::WithdrawCap", gw.Original().PackageID(), GatewayModule)
 }
 
-// MessageContextType returns struct type of the MessageContext
-// Note: the message context was defined in upgraded package, so new package ID should be used
-func (gw *Gateway) MessageContextType() string {
-	return fmt.Sprintf("%s::%s::MessageContext", gw.PackageID(), GatewayModule)
-}
-
-// UpdateIDs updates packageID, objectID, and originalPackageID.
-func (gw *Gateway) UpdateIDs(pair string) error {
-	packageID, gatewayObjectID, originalPackageID, err := parsePair(pair)
+// UpdateIDs updates packageID, objectID, withdrawCapID and originalPackageID.
+func (gw *Gateway) UpdateIDs(gatewayAddress string) error {
+	packageID, gatewayObjectID, withdrawCapID, originalPackageID, err := parseGatewayAddress(gatewayAddress)
 	if err != nil {
 		return err
 	}
@@ -215,6 +222,7 @@ func (gw *Gateway) UpdateIDs(pair string) error {
 
 	gw.packageID = packageID
 	gw.objectID = gatewayObjectID
+	gw.withdrawCapID = withdrawCapID
 	gw.originalPackageID = originalPackageID
 
 	return nil
@@ -467,26 +475,30 @@ func convertPayload(data []any) ([]byte, error) {
 	return payload, nil
 }
 
-// parsePair parses a pair of IDs from `$packageID,$gatewayObjectID[,originalPackageID]`
-func parsePair(pair string) (string, string, string, error) {
-	parts := strings.Split(pair, ",")
-	if len(parts) != 2 && len(parts) != 3 {
-		return "", "", "", errors.Errorf("invalid pair %q", pair)
+// parseGatewayAddress parses a gateway address of the form `$packageID,$gatewayObjectID[,$withdrawCapID,originalPackageID]`
+// There are two cases:
+//   - `$packageID,$gatewayObjectID`, the first version of the gateway address
+//   - `$packageID,$gatewayObjectID,$withdrawCapID,$originalPackageID`, gateway address after upgrade
+func parseGatewayAddress(gatewayAddress string) (string, string, string, string, error) {
+	parts := strings.Split(gatewayAddress, ",")
+	if len(parts) != 2 && len(parts) != 4 {
+		return "", "", "", "", errors.Errorf("invalid gateway address %q", gatewayAddress)
 	}
 
 	// each part should be a valid Sui address
 	for _, part := range parts {
 		if err := ValidateAddress(part); err != nil {
-			return "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
+			return "", "", "", "", errors.Wrapf(err, "invalid Sui address %q", part)
 		}
 	}
 
-	// part[2] is optional
+	// for first version of the gateway address
 	if len(parts) == 2 {
-		return parts[0], parts[1], "", nil
+		return parts[0], parts[1], "", "", nil
 	}
 
-	return parts[0], parts[1], parts[2], nil
+	// after upgrade
+	return parts[0], parts[1], parts[2], parts[3], nil
 }
 
 // dynamicFieldNameToJSONArray converts a string dynamic field name to a JSON array of integer values

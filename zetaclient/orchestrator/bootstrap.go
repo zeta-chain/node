@@ -201,8 +201,10 @@ func (oc *Orchestrator) bootstrapSui(ctx context.Context, chain zctx.Chain) (*su
 		return nil, errors.Wrap(errSkipChain, "unable to find sui config")
 	}
 
-	// note that gw address should be in format of `$packageID,$gatewayObjectID`
-	gateway, err := suigateway.NewGatewayFromPairID(chain.Params().GatewayAddress)
+	// note that gateway address should be in either of the following formats:
+	//   - `$packageID,$gatewayObjectID`
+	//   - `$packageID,$gatewayObjectID,$withdrawCapID,$originalPackageID`
+	gateway, err := suigateway.NewGatewayFromAddress(chain.Params().GatewayAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create gateway")
 	}
