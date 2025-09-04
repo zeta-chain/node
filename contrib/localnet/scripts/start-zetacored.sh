@@ -233,11 +233,6 @@ then
   fi
 
   # Update governance and other chain parameters for localnet
-  # Note: It should contains the precompile list as well in params using the following line:
-  # .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000100","0x0000000000000000000000000000000000000400","0x0000000000000000000000000000000000000800","0x0000000000000000000000000000000000000801","0x0000000000000000000000000000000000000802","0x0000000000000000000000000000000000000803","0x0000000000000000000000000000000000000804","0x0000000000000000000000000000000000000805"] |
-  # Currently adding this fails as the param is not recognized by <v33
-  # For simplicity it has been removed, but it should be added back once mainnet upgraded to v33 and we want to implement automated tests for precompiles
-  # https://github.com/zeta-chain/node/issues/4081
   jq '
     .app_state.gov.params.voting_period="30s" |
     .app_state.gov.params.quorum="0.1" |
@@ -252,6 +247,7 @@ then
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
+    .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000800","0x0000000000000000000000000000000000000806"] |
     .consensus.params.block.max_gas = "500000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"

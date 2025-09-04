@@ -165,13 +165,6 @@ func (r *E2ERunner) CheckSUITSSBalance() {
 	zrc20Supply, err := r.SUIZRC20.TotalSupply(&bind.CallOpts{})
 	require.NoError(r, err)
 
-	// subtract value from the gas stability pool because of the artificial minting bug
-	// TODO: remove on the chain upgrade to v33
-	// https://github.com/zeta-chain/node/issues/4034
-	gasStabiltiyPoolBalance, err := r.SUIZRC20.BalanceOf(&bind.CallOpts{}, fungibletypes.GasStabilityPoolAddressEVM())
-	require.NoError(r, err, "failed to get SUI gas stability pool balance: %w", err)
-	zrc20Supply = zrc20Supply.Sub(zrc20Supply, gasStabiltiyPoolBalance)
-
 	// Subtract 0.1 SUI to take in consideration the 0.1 SUI minted in the gas pool
 	// TODO: a proper implementation is to implement a donate method in Sui Contract and use it to donate 0.1 SUI
 	// https://github.com/zeta-chain/protocol-contracts-sui/issues/58
