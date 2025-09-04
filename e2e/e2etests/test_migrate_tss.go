@@ -98,10 +98,10 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	cctxETHMigration := migrator.TssFundsMigrator.MigrationCctxIndex
 
 	cctxBTC := utils.WaitCCTXMinedByIndex(r.Ctx, cctxBTCMigration, r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxBTC.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctxBTC, crosschaintypes.CctxStatus_OutboundMined)
 
 	cctxETH := utils.WaitCCTXMinedByIndex(r.Ctx, cctxETHMigration, r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxETH.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctxETH, crosschaintypes.CctxStatus_OutboundMined)
 
 	// Check if new TSS is added to list
 	allTss, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})
