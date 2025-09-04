@@ -17,9 +17,10 @@ func RequireCCTXStatus(
 	msgAndArgs ...any,
 ) {
 	msg := fmt.Sprintf(
-		"cctx status is not %q cctx index %s, status: %s, error: %s",
+		"cctx status is not %q cctx index %s, status: %s, status message %s, error: %s",
 		expected.String(),
 		cctx.Index,
+		cctx.CctxStatus.Status.String(),
 		cctx.CctxStatus.StatusMessage,
 		cctx.CctxStatus.ErrorMessage,
 	)
