@@ -28,7 +28,7 @@ func TestSuiDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.EqualValues(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.EqualValues(r, coin.CoinType_Gas, cctx.InboundParams.CoinType)
 	require.True(r, cctx.InboundParams.IsCrossChainCall)
 

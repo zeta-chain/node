@@ -28,8 +28,9 @@ func TestKeeper_SystemContract(t *testing.T) {
 	t.Run("should return system contract if found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 		sc := types.SystemContract{
-			SystemContract: sample.EthAddress().Hex(),
-			ConnectorZevm:  sample.EthAddress().Hex(),
+			SystemContract:  sample.EthAddress().Hex(),
+			ConnectorZevm:   sample.EthAddress().Hex(),
+			GatewayGasLimit: types.DefaultGatewayGasLimit,
 		}
 		k.SetSystemContract(ctx, sc)
 		res, err := k.SystemContract(ctx, &types.QueryGetSystemContractRequest{})

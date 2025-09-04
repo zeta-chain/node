@@ -74,3 +74,10 @@ message EventGatewayContractUpdated {
   string old_contract_address = 3;
   string signer = 4;
 }
+
+message EventGatewayGasLimitUpdated {
+  string msg_type_url = 1;
+  uint64 new_gas_limit = 2;
+  uint64 old_gas_limit = 3;
+  string signer = 4;
+}

@@ -44,7 +44,7 @@ func TestZetaWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be reverted
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 
 	newBalance, err := r.ZEVMClient.BalanceAt(r.Ctx, revertAddress, nil)
 	require.NoError(r, err)

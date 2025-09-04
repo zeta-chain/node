@@ -18,7 +18,7 @@ import (
 // EnsureNoTrackers ensures that there are no trackers left on zetacore
 func (r *E2ERunner) EnsureNoTrackers() {
 	// get all trackers
-	res, err := r.CctxClient.OutTxTrackerAll(
+	res, err := r.CctxClient.OutboundTrackerAll(
 		r.Ctx,
 		&crosschaintypes.QueryAllOutboundTrackerRequest{},
 	)

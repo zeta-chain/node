@@ -9,4 +9,5 @@ message SystemContract {
   string system_contract = 1;
   string connector_zevm = 2;
   string gateway = 3;
+  uint64 gateway_gas_limit = 4;
 }
