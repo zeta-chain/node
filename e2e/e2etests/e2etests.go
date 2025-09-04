@@ -429,7 +429,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestETHDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
