@@ -1,7 +1,6 @@
 package e2etests
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/stretchr/testify/require"
@@ -11,8 +10,6 @@ import (
 )
 
 func TestTONToZEVMCall(r *runner.E2ERunner, args []string) {
-	fmt.Println("TestTONToZEVMCall")
-
 	require.Len(r, args, 0)
 
 	// ARRANGE
