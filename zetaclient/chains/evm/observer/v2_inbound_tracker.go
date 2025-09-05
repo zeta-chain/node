@@ -58,7 +58,9 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newDepositInboundVote(eventDeposit)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		// try parsing deposit and call
@@ -75,7 +77,9 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newDepositAndCallInboundVote(eventDepositAndCall)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		// try parsing call
@@ -92,7 +96,9 @@ func (ob *Observer) ProcessInboundTrackerV2(
 			}
 			msg := ob.newCallInboundVote(eventCall)
 			_, err = ob.PostVoteInbound(ctx, &msg, zetacore.PostVoteInboundExecutionGasLimit)
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	}
 
