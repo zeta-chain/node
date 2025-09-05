@@ -95,7 +95,6 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.ConnectorZEVMAddr = config.DoubleQuotedString(r.ConnectorZEVMAddr.Hex())
 	conf.Contracts.ZEVM.WZetaAddr = config.DoubleQuotedString(r.WZetaAddr.Hex())
 	conf.Contracts.ZEVM.ZEVMSwapAppAddr = config.DoubleQuotedString(r.ZEVMSwapAppAddr.Hex())
-	conf.Contracts.ZEVM.ContextAppAddr = config.DoubleQuotedString(r.ContextAppAddr.Hex())
 	conf.Contracts.ZEVM.TestDappAddr = config.DoubleQuotedString(r.ZevmTestDAppAddr.Hex())
 	conf.Contracts.ZEVM.Gateway = config.DoubleQuotedString(r.GatewayZEVMAddr.Hex())
 	conf.Contracts.ZEVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2ZEVMAddr.Hex())

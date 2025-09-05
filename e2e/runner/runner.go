@@ -37,7 +37,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
-	"github.com/zeta-chain/node/e2e/contracts/contextapp"
 	"github.com/zeta-chain/node/e2e/contracts/erc20"
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 	"github.com/zeta-chain/node/e2e/contracts/zevmswap"
@@ -197,8 +196,6 @@ type E2ERunner struct {
 	WZeta                *wzeta.WETH9
 	ZEVMSwapAppAddr      ethcommon.Address
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
-	ContextAppAddr       ethcommon.Address
-	ContextApp           *contextapp.ContextApp
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
 	ZevmTestDAppAddr     ethcommon.Address
@@ -298,7 +295,6 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.WZetaAddr = other.WZetaAddr
 	r.EvmTestDAppAddr = other.EvmTestDAppAddr
 	r.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
-	r.ContextAppAddr = other.ContextAppAddr
 	r.SystemContractAddr = other.SystemContractAddr
 	r.ZevmTestDAppAddr = other.ZevmTestDAppAddr
 
@@ -376,10 +372,6 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	}
 
 	r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZEVMClient)
-	if err != nil {
-		return err
-	}
-	r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -490,7 +482,6 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print(" --- 📜Legacy contracts ---")
 
 	r.Logger.Print("ZEVMSwapApp:    %s", r.ZEVMSwapAppAddr.Hex())
-	r.Logger.Print("ContextApp:     %s", r.ContextAppAddr.Hex())
 	r.Logger.Print("TestDappZEVM:   %s", r.ZevmTestDAppAddr.Hex())
 	r.Logger.Print("TestDappEVM:    %s", r.EvmTestDAppAddr.Hex())
 }
