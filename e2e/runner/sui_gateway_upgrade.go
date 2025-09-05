@@ -105,7 +105,7 @@ func (r *E2ERunner) suiUpgradeGatewayPackage() {
 	require.NoError(r, err)
 
 	// update the chain params so zetaclient can pick it up
-	err = r.setSuiChainParams()
+	err = r.setSuiChainParams(false)
 	require.NoError(r, err)
 }
 
