@@ -21,6 +21,10 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 	oldBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 
+	// send erc20 tokens to test dapp to be deposited to gateway
+	tx := r.SendERC20OnEVM(r.TestDAppV2EVMAddr, new(big.Int).Div(amount, big.NewInt(1e18)).Int64())
+	r.WaitForTxReceiptOnEVM(tx)
+
 	// set value of the payable transactions
 	previousValue := r.EVMAuth.Value
 	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
@@ -28,11 +32,6 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 
 	// add 1 fee to provided amount to pay for 2 inbounds (1st one is free)
 	r.EVMAuth.Value = new(big.Int).Add(amount, fee)
-
-	// send erc20 tokens to test dapp to be deposited to gateway
-	tx, err := r.ERC20.Transfer(r.EVMAuth, r.TestDAppV2EVMAddr, amount)
-	require.NoError(r, err)
-	r.WaitForTxReceiptOnEVM(tx)
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple erc20 deposits through contract")
