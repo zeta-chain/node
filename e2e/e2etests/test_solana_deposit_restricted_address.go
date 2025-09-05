@@ -18,7 +18,7 @@ func TestSolanaDepositRestricted(r *runner.E2ERunner, args []string) {
 	depositAmount := utils.ParseBigInt(r, args[1])
 
 	// execute the deposit transaction
-	sig := r.SOLDepositAndCall(nil, receiverRestricted, depositAmount, nil)
+	sig := r.SOLDepositAndCall(nil, receiverRestricted, depositAmount, nil, nil)
 
 	// wait for 5 zeta blocks
 	r.WaitForBlocks(5)

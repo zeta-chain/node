@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	zetaauthz "github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/ticker"
 	"github.com/zeta-chain/node/zetaclient/authz"
 	"github.com/zeta-chain/node/zetaclient/config"
@@ -27,10 +26,6 @@ func NewFromConfig(
 	hotkeyPassword string,
 	logger zerolog.Logger,
 ) (*Client, error) {
-	hotKey := cfg.AuthzHotkey
-
-	chainIP := cfg.ZetaCoreURL
-
 	kb, _, err := keys.GetKeyringKeybase(*cfg, hotkeyPassword)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyring base")
@@ -54,7 +49,7 @@ func NewFromConfig(
 	authz.SetupAuthZSignerList(k.GetOperatorAddress().String(), signerAddress)
 
 	// Create client
-	client, err := NewClient(k, chainIP, hotKey, cfg.ChainID, logger)
+	client, err := NewClient(k, *cfg, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the client")
 	}
@@ -107,11 +102,6 @@ func ensureBlocksProduction(ctx context.Context, zc *Client) error {
 
 // prepareZetacoreClient prepares the zetacore client for use.
 func prepareZetacoreClient(ctx context.Context, zc *Client, cfg *config.Config) error {
-	// Set grantee account number and sequence number
-	if err := zc.SetAccountNumber(zetaauthz.ZetaClientGranteeKey); err != nil {
-		return errors.Wrap(err, "failed to set account number")
-	}
-
 	res, err := zc.GetNodeInfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get node info")

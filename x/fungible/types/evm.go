@@ -1,10 +1,17 @@
 package types
 
 import (
+	"errors"
 	"strings"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+)
+
+var (
+	// ErrOnAbortFailed is the error message for failed onAbort
+	// It is used to handle case where abort amount is refunded but onAbort is not implemented
+	ErrOnAbortFailed = errors.New("onAbort failed")
 )
 
 // IsRevertError checks if an error is a evm revert error

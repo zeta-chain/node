@@ -35,7 +35,7 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 		i := i
 		tx, err := r.BTCZRC20.Withdraw(
 			r.ZEVMAuth,
-			[]byte(r.BTCDeployerAddress.EncodeAddress()),
+			[]byte(r.GetBtcAddress().EncodeAddress()),
 			big.NewInt(int64(satAmount)),
 		)
 		require.NoError(r, err)

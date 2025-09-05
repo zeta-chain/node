@@ -45,6 +45,8 @@ services:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
       - ZETACORED_IMPORT_GENESIS_DATA=${ZETACORED_IMPORT_GENESIS_DATA-}
+      - SKIP_CONSENSUS_VALUES_OVERWRITE=${SKIP_CONSENSUS_VALUES_OVERWRITE:-false}
+
     volumes:
       - ssh:/root/.ssh
       - ~/.zetacored/genesis_data:/root/genesis_data
@@ -172,6 +174,41 @@ services:
       - ssh:/root/.ssh
       - preparams:/root/preparams
 
+  zetacore-new-validator:
+    image: zetanode:latest
+    container_name: zetacore-new-validator
+    hostname: zetacore-new-validator
+    profiles:
+      - tss
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.15
+    entrypoint: ["/root/start-zetacored.sh", "4"]
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+
+  zetaclient-new-validator:
+    image: zetanode:latest
+    container_name: zetaclient-new-validator
+    hostname: zetaclient-new-validator
+    profiles:
+      - tss
+      - all
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.25
+    entrypoint: /root/start-zetaclientd.sh
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
+    volumes:
+      - ssh:/root/.ssh
+      - preparams:/root/preparams
+
   eth:
     image: ghcr.io/zeta-chain/ethereum-client-go:v1.10.26
     container_name: eth
@@ -199,7 +236,7 @@ services:
         ipv4_address: 172.20.0.102
 
   bitcoin:
-    image: ghcr.io/zeta-chain/bitcoin-core-docker:a94b52f
+    image: ghcr.io/zeta-chain/bitcoin-core-docker:28.0-zeta6
     container_name: bitcoin
     hostname: bitcoin
     networks:
@@ -234,9 +271,7 @@ services:
       - ssh:/root/.ssh
 
   ton:
-    # figure out why E2E fail with MyLocalTon v124 @ deposit: deployer.CreateWallet(..)
-    # image: ghcr.io/zeta-chain/ton-docker:4f08c1d
-    image: ghcr.io/zeta-chain/ton-docker:a69ea0f
+    image: ghcr.io/zeta-chain/ton-docker:v2.2.1
     container_name: ton
     hostname: ton
     profiles:
@@ -244,7 +279,7 @@ services:
       - all
     ports:
       - "8111:8000" # sidecar
-      - "4443:4443" # lite client
+      - "8081:8081" # rpc (toncenter v2)
     environment:
       DOCKER_IP: 172.20.0.104
     networks:
@@ -252,12 +287,13 @@ services:
         ipv4_address: 172.20.0.104
 
   sui:
-    image: ghcr.io/zeta-chain/sui-docker:mainnet-v1.41.1
+    image: ghcr.io/zeta-chain/sui-docker:mainnet-v1.51.5-dev
     container_name: sui
     hostname: sui
     profiles:
       - sui
       - all
+      - stress
     ports:
       - "9000:9000" # RPC
     environment:
@@ -281,10 +317,15 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.2
     entrypoint: ["/work/start-zetae2e.sh", "local"]
+    # add public dns to be able to resolve github.com for sui gateway upgrade test
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - LOCALNET_MODE=${LOCALNET_MODE-}
       - E2E_ARGS=${E2E_ARGS-}
       - UPGRADE_HEIGHT=${UPGRADE_HEIGHT-}
+      - USE_ZETAE2E_ANTE=${USE_ZETAE2E_ANTE-}
       - CI=${CI-}
     volumes:
       - ssh:/root/.ssh

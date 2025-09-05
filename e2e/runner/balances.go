@@ -25,6 +25,7 @@ type AccountBalances struct {
 	ZetaSPL      *big.Int
 	ZetaSui      *big.Int
 	ZetaSuiToken *big.Int
+	ZetaTON      *big.Int
 	EvmETH       *big.Int
 	EvmZETA      *big.Int
 	EvmERC20     *big.Int
@@ -33,6 +34,7 @@ type AccountBalances struct {
 	SolSPL       *big.Int
 	SuiSUI       uint64
 	SuiToken     uint64
+	TONTON       uint64
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
@@ -78,6 +80,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	zetaSPL := r.getERC20BalanceSafe(r.SPLZRC20, "spl zrc20")
 	zetaSui := r.getERC20BalanceSafe(r.SUIZRC20, "sui zrc20")
 	zetaSuiToken := r.getERC20BalanceSafe(r.SuiTokenZRC20, "sui token zrc20")
+	zetaTon := r.getERC20BalanceSafe(r.TONZRC20, "ton zrc20")
 
 	// evm
 	evmEth, err := r.EVMClient.BalanceAt(r.Ctx, r.EVMAddress(), nil)
@@ -145,6 +148,18 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		suiToken = r.SuiGetFungibleTokenBalance(signer.Address())
 	}
 
+	// TON
+	var tonTON uint64
+	if r.Clients.TON != nil {
+		_, tonWallet, err := r.Account.AsTONWallet(r.Clients.TON)
+		if err == nil {
+			tonBalance, err := tonWallet.GetBalance(r.Ctx)
+			if err == nil {
+				tonTON = tonBalance
+			}
+		}
+	}
+
 	return AccountBalances{
 		ZetaETH:      zetaEth,
 		ZetaZETA:     zetaZeta,
@@ -155,6 +170,7 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		ZetaSPL:      zetaSPL,
 		ZetaSui:      zetaSui,
 		ZetaSuiToken: zetaSuiToken,
+		ZetaTON:      zetaTon,
 		EvmETH:       evmEth,
 		EvmZETA:      evmZeta,
 		EvmERC20:     evmErc20,
@@ -163,12 +179,13 @@ func (r *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 		SolSPL:       solSPL,
 		SuiSUI:       suiSUI,
 		SuiToken:     suiToken,
+		TONTON:       tonTON,
 	}, nil
 }
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
 func (r *E2ERunner) GetBitcoinBalance() (string, error) {
-	address, _ := r.GetBtcAddress()
+	address, _ := r.GetBtcKeypair()
 	total, err := r.GetBitcoinBalanceByAddress(address)
 	if err != nil {
 		return "", err
@@ -186,9 +203,7 @@ func (r *E2ERunner) GetBitcoinBalanceByAddress(address btcutil.Address) (btcutil
 
 	var total btcutil.Amount
 	for _, unspent := range unspentList {
-		if unspent.Spendable {
-			total += btcutil.Amount(unspent.Amount * 1e8)
-		}
+		total += btcutil.Amount(unspent.Amount * 1e8)
 	}
 
 	return total, nil
@@ -220,6 +235,7 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("* SPL balance: %s", balances.ZetaSPL.String())
 	r.Logger.Print("* SUI balance: %s", balances.ZetaSui.String())
 	r.Logger.Print("* SUI Token balance: %s", balances.ZetaSuiToken.String())
+	r.Logger.Print("* TON balance: %s", balances.ZetaTON.String())
 
 	// evm
 	r.Logger.Print("EVM:")
@@ -244,21 +260,27 @@ func (r *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	r.Logger.Print("Sui:")
 	r.Logger.Print("* SUI balance: %d", balances.SuiSUI)
 	r.Logger.Print("* SUI Token balance: %d", balances.SuiToken)
+
+	// TON
+	r.Logger.Print("TON:")
+	if balances.TONTON != 0 {
+		r.Logger.Print("* TON balance: %d", balances.TONTON)
+	}
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
-func (r *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
+func (r *E2ERunner) PrintTotalDiff(diffs AccountBalancesDiff) {
 	r.Logger.Print(" ---💰 Total gas spent ---")
 
 	// show the value only if it is not zero
-	if accoutBalancesDiff.ZETA.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ZETA spent:  %s", accoutBalancesDiff.ZETA.String())
+	if diffs.ZETA.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ZETA spent:  %s", diffs.ZETA.String())
 	}
-	if accoutBalancesDiff.ETH.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ETH spent:   %s", accoutBalancesDiff.ETH.String())
+	if diffs.ETH.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ETH spent:   %s", diffs.ETH.String())
 	}
-	if accoutBalancesDiff.ERC20.Cmp(big.NewInt(0)) != 0 {
-		r.Logger.Print("* ERC20 spent: %s", accoutBalancesDiff.ERC20.String())
+	if diffs.ERC20.Cmp(big.NewInt(0)) != 0 {
+		r.Logger.Print("* ERC20 spent: %s", diffs.ERC20.String())
 	}
 }
 

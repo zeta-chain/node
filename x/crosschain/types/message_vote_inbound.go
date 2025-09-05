@@ -11,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/authz"
 	"github.com/zeta-chain/node/pkg/coin"
+	"github.com/zeta-chain/node/pkg/contracts/solana"
 )
 
 // MaxMessageLength is the maximum length of a message in a cctx
@@ -42,6 +43,14 @@ func WithZEVMRevertOptions(revertOptions gatewayzevm.RevertOptions) InboundVoteO
 func WithEVMRevertOptions(revertOptions gatewayevm.RevertOptions) InboundVoteOption {
 	return func(msg *MsgVoteInbound) {
 		msg.RevertOptions = NewRevertOptionsFromEVM(revertOptions)
+	}
+}
+
+// WithSOLRevertOptions sets the revert options for the inbound vote message (SOL format)
+// the function convert the type from solana instruction to type defined in proto
+func WithSOLRevertOptions(revertOptions solana.RevertOptions) InboundVoteOption {
+	return func(msg *MsgVoteInbound) {
+		msg.RevertOptions = NewRevertOptionsFromSOL(revertOptions)
 	}
 }
 
@@ -153,6 +162,7 @@ func (msg *MsgVoteInbound) Digest() string {
 	m := *msg
 	m.Creator = ""
 	m.InboundBlockHeight = 0
+	m.ConfirmationMode = ConfirmationMode_SAFE
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
 }

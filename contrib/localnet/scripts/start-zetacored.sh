@@ -74,7 +74,7 @@ fund_accounts_auto() {
   # Fund the default account first
   local default_address=$(yq -r '.default_account.bech32_address' /root/config.yml)
   fund_account "default_account" "$default_address"
-  
+
   # Get all additional accounts and fund them
   local accounts=$(yq -r '.additional_accounts | keys | sort | .[]' /root/config.yml)
   for account_key in $accounts; do
@@ -87,7 +87,14 @@ fund_accounts_auto() {
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
-INDEX=${HOSTNAME:0-1}
+
+if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
+    INDEX="-new-validator"
+else
+    INDEX=${HOSTNAME:0-1}
+fi
+
+echo "HOSTNAME: $HOSTNAME, INDEX: $INDEX"
 
 # Environment variables used for upgrade testing
 export DAEMON_HOME=$HOME/.zetacored
@@ -100,8 +107,6 @@ export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-
-echo "HOSTNAME: $HOSTNAME"
 
 # init ssh keys
 # we generate keys at runtime to ensure that keys are never pushed to
@@ -136,10 +141,15 @@ then
   cp -r ~/zetacored/common/client.toml ~/.zetacored/config/
   cp -r ~/zetacored/common/config.toml ~/.zetacored/config/
   sed -i -e "/moniker =/s/=.*/= \"$HOSTNAME\"/" "$HOME"/.zetacored/config/config.toml
-
-  # Add two new keys for operator and hotkey and create the required json structure for os_info
-  source ~/add-keys.sh
 fi
+
+echo "Creating keys for operator and hotkey for $HOSTNAME"
+if [[ $HOSTNAME == "zetacore-new-validator" ]]; then
+  source ~/add-keys.sh n
+else
+  source ~/add-keys.sh y
+fi
+
 
 # Pause other nodes so that the primary can node can do the genesis creation
 if [ $HOSTNAME != "zetacore0" ]
@@ -163,7 +173,6 @@ fi
 # 5. Copy the final genesis.json to all the nodes and start the nodes
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
 # 7. Start the nodes
-
 # Start of genesis creation . This is done only on zetacore0.
 # Skip genesis if it has already been completed (marked by presence of ~/.zetacored/init_complete file)
 if [[ $HOSTNAME == "zetacore0" && ! -f ~/.zetacored/init_complete ]]
@@ -200,6 +209,16 @@ then
     scp ~/.zetacored/os_info/os_z"$INDEX".json zetaclient"$INDEX":~/.zetacored/os.json
   done
 
+  if host zetacore-new-validator ; then
+    echo "zetacore-new-validator exists"
+    ssh zetaclient-new-validator mkdir -p ~/.zetacored/
+    while ! scp zetacore-new-validator:~/.zetacored/os_info/os.json ~/.zetacored/os_info/os_non_validator.json; do
+          echo "Waiting for os_info.json from node zetacore-new-validator"
+          sleep 1
+        done
+    scp ~/.zetacored/os_info/os_non_validator.json zetaclient-new-validator:~/.zetacored/os.json
+  fi
+
   ssh zetaclient0 mkdir -p ~/.zetacored/
   scp ~/.zetacored/os_info/os.json zetaclient0:/root/.zetacored/os.json
 
@@ -228,6 +247,7 @@ then
     .app_state.emissions.params.ballot_maturity_blocks = "30" |
     .app_state.staking.params.unbonding_time = "10s" |
     .app_state.feemarket.params.min_gas_price = "10000000000.0000" |
+    .app_state.evm.params.active_static_precompiles = ["0x0000000000000000000000000000000000000800","0x0000000000000000000000000000000000000806"] |
     .consensus.params.block.max_gas = "500000000"
   ' "$HOME/.zetacored/config/genesis.json" > "$HOME/.zetacored/config/tmp_genesis.json" \
     && mv "$HOME/.zetacored/config/tmp_genesis.json" "$HOME/.zetacored/config/genesis.json"
@@ -282,11 +302,30 @@ then
 # 4. Collect all the gentx files in zetacore0 and create the final genesis.json
   zetacored collect-gentxs
   zetacored validate-genesis
+
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
       ssh $NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
+
+   if host zetacore-new-validator > /dev/null; then
+    echo "zetacore-new-validator exists copying gentx peer"
+     ssh zetacore-new-validator rm -rf ~/.zetacored/genesis.json
+     scp ~/.zetacored/config/genesis.json zetacore-new-validator:~/.zetacored/config/genesis.json
+     ssh zetacore-new-validator mkdir -p ~/.zetacored/config/gentx/peer/
+      # Check if gentx files exist before copying
+     if ls ~/.zetacored/config/gentx/* >/dev/null 2>&1; then
+       if scp ~/.zetacored/config/gentx/* zetacore-new-validator:~/.zetacored/config/gentx/peer/; then
+         echo "Successfully copied gentx files to new-validator"
+       else
+         echo "Failed to copy gentx files to new-validator - Error code: $?"
+       fi
+     else
+       echo "No gentx files found to copy"
+     fi
+   fi
+
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
@@ -303,12 +342,20 @@ then
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
   scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
 
-  pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
-  pps=${pp:1:58}
-  sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
+   pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
+   pps=${pp:1:58}
+   sed -i -e "s/^persistent_peers = .*/persistent_peers = \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
 # mark init completed so we skip it if container is restarted
 touch ~/.zetacored/init_complete
 
-cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+
+# Start zetacored with conditional skip-config-override flag
+if [[ $HOSTNAME == "zetacore0" && "$SKIP_CONCENSUS_VALUES_OVERWRITE" == "true" ]]; then
+    echo "Starting zetacored with skip-config-override flag"
+    cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored --skip-config-overwrite
+else
+    echo "Starting zetacored with default configuration"
+    cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+fi

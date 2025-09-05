@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
@@ -139,6 +138,7 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 func TestSigner_TryProcessOutbound(t *testing.T) {
 	ctx := makeCtx(t)
 
+	// ARRANGE
 	// Setup evm signer
 	evmSigner := newTestSuite(t)
 	cctx := getCCTX(t)
@@ -149,8 +149,14 @@ func TestSigner_TryProcessOutbound(t *testing.T) {
 		WithZetaChain().
 		WithPostVoteOutbound("", "")
 
-	evmSigner.TryProcessOutbound(ctx, cctx, client, 123)
+	// mock evm client "NonceAt"
+	nonce := uint64(123)
+	evmSigner.evmServer.MockNonceAt(nonce)
 
+	// ACT
+	evmSigner.TryProcessOutbound(ctx, cctx, client, nonce)
+
+	// ASSERT
 	// Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
 	require.Len(t, *list, 1)
@@ -164,9 +170,13 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 
 	// Setup txData struct
 	cctx := getCCTX(t)
-	txData, skip, err := NewOutboundData(ctx, cctx, 123, zerolog.Logger{})
+	nonce := uint64(123)
+	txData, skip, err := NewOutboundData(ctx, cctx, nonce, zerolog.Logger{})
 	require.NoError(t, err)
 	require.False(t, skip)
+
+	// Mock evm client "NonceAt"
+	evmSigner.evmServer.MockNonceAt(nonce)
 
 	t.Run("BroadcastOutbound - should successfully broadcast", func(t *testing.T) {
 		// Call SignERC20Withdraw
@@ -178,7 +188,6 @@ func TestSigner_BroadcastOutbound(t *testing.T) {
 			tx,
 			cctx,
 			zerolog.Logger{},
-			sdktypes.AccAddress{},
 			mocks.NewZetacoreClient(t),
 			txData,
 		)

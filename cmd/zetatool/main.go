@@ -18,6 +18,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(cli.NewGetInboundBallotCMD())
 	rootCmd.AddCommand(cli.NewTrackCCTXCMD())
+	rootCmd.AddCommand(cli.NewApplicationDBStatsCMD())
 	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 	rootCmd.PersistentFlags().
 		Bool(config.FlagDebug, false, "enable debug mode, to show more details on why the command might be failing")

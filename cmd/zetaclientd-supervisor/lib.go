@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"sync"
 	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -25,20 +24,6 @@ import (
 const zetaclientdBinaryName = "zetaclientd"
 
 var defaultUpgradesDir = os.ExpandEnv("$HOME/.zetaclientd/upgrades")
-
-// serializedWriter wraps an io.Writer and ensures that writes to it from multiple goroutines
-// are serialized
-type serializedWriter struct {
-	upstream io.Writer
-	lock     sync.Mutex
-}
-
-func (w *serializedWriter) Write(p []byte) (n int, err error) {
-	w.lock.Lock()
-	defer w.lock.Unlock()
-
-	return w.upstream.Write(p)
-}
 
 func getLogger(cfg config.Config, out io.Writer) zerolog.Logger {
 	var logger zerolog.Logger
@@ -68,13 +53,13 @@ type zetaclientdSupervisor struct {
 }
 
 func newZetaclientdSupervisor(
-	zetaCoreURL string,
+	zetacoreGRPCURL string,
 	logger zerolog.Logger,
 	enableAutoDownload bool,
 ) (*zetaclientdSupervisor, error) {
 	logger = logger.With().Str("module", "zetaclientdSupervisor").Logger()
 	conn, err := grpc.Dial(
-		fmt.Sprintf("%s:9090", zetaCoreURL),
+		zetacoreGRPCURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

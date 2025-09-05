@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"sort"
+	"strings"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -134,7 +135,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Deposited event")
+				Msg("Invalid Deposit event")
 			continue
 		}
 		validEvents = append(validEvents, depositedEvent)
@@ -161,7 +162,7 @@ func (ob *Observer) parseAndValidateDepositEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple Deposited events in same tx")
+				Msg("Multiple Deposited events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -173,17 +174,10 @@ func (ob *Observer) parseAndValidateDepositEvents(
 
 // newDepositInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositInboundVote(event *gatewayevm.GatewayEVMDeposited) types.MsgVoteInbound {
-	// if event.Asset is zero, it's a native token
-	coinType := coin.CoinType_ERC20
-	if crypto.IsEmptyAddress(event.Asset) {
-		coinType = coin.CoinType_Gas
-	}
+	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
 
 	// to maintain compatibility with previous gateway version, deposit event with a non-empty payload is considered as a call
-	isCrossChainCall := false
-	if len(event.Payload) > 0 {
-		isCrossChainCall = true
-	}
+	isCrossChainCall := len(event.Payload) > 0
 
 	// determine confirmation mode
 	confirmationMode := types.ConfirmationMode_FAST
@@ -276,7 +270,7 @@ func (ob *Observer) parseAndValidateCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid Called event")
+				Msg("Invalid Call event")
 			continue
 		}
 		validEvents = append(validEvents, calledEvent)
@@ -300,9 +294,13 @@ func (ob *Observer) parseAndValidateCallEvents(
 	for _, event := range validEvents {
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.Logger().Inbound.Warn().Stringer(logs.FieldTx, event.Raw.TxHash).Msg("multiple Called events in same tx")
+			ob.Logger().Inbound.Warn().
+				Stringer(logs.FieldTx, event.Raw.TxHash).
+				Msg("Multiple Call events in same tx")
+
 			continue
 		}
+
 		guard[event.Raw.TxHash.Hex()] = true
 		filtered = append(filtered, event)
 	}
@@ -399,7 +397,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 				Inbound.Warn().
 				Stringer(logs.FieldTx, log.TxHash).
 				Uint64(logs.FieldBlock, log.BlockNumber).
-				Msg("invalid DepositedAndCalled event")
+				Msg("Invalid DepositedAndCall event")
 			continue
 		}
 		validEvents = append(validEvents, depositAndCallEvent)
@@ -426,7 +424,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 			ob.Logger().
 				Inbound.Warn().
 				Stringer(logs.FieldTx, event.Raw.TxHash).
-				Msg("multiple DepositedAndCalled events in same tx")
+				Msg("Multiple DepositedAndCalled events in same tx")
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -439,10 +437,7 @@ func (ob *Observer) parseAndValidateDepositAndCallEvents(
 // newDepositAndCallInboundVote creates a MsgVoteInbound message for a Deposit event
 func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDepositedAndCalled) types.MsgVoteInbound {
 	// if event.Asset is zero, it's a native token
-	coinType := coin.CoinType_ERC20
-	if crypto.IsEmptyAddress(event.Asset) {
-		coinType = coin.CoinType_Gas
-	}
+	coinType := determineCoinType(event.Asset, ob.ChainParams().ZetaTokenContractAddress)
 
 	return *types.NewMsgVoteInbound(
 		ob.ZetacoreClient().GetKeys().GetOperatorAddress().String(),
@@ -466,4 +461,16 @@ func (ob *Observer) newDepositAndCallInboundVote(event *gatewayevm.GatewayEVMDep
 		types.WithEVMRevertOptions(event.RevertOptions),
 		types.WithCrossChainCall(true),
 	)
+}
+
+// determineCoinType determines the coin type of the inbound event
+func determineCoinType(asset ethcommon.Address, zetaTokenAddress string) coin.CoinType {
+	coinType := coin.CoinType_ERC20
+	if crypto.IsEmptyAddress(asset) {
+		return coin.CoinType_Gas
+	}
+	if strings.EqualFold(asset.Hex(), zetaTokenAddress) {
+		return coin.CoinType_Zeta
+	}
+	return coinType
 }

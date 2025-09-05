@@ -121,10 +121,7 @@ func NewWithdrawalInbound(
 	}
 
 	// if the message is not empty, specify cross-chain call for backward compatibility with the Withdraw event
-	isCrossChainCall := false
-	if len(event.Message) > 0 {
-		isCrossChainCall = true
-	}
+	isCrossChainCall := len(event.Message) > 0
 
 	return NewMsgVoteInbound(
 		"",

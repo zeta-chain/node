@@ -18,18 +18,15 @@ func TestBitcoinDonation(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseFloat(r, args[0])
 	amountTotal := amount + zetabitcoin.DefaultDepositorFee
 
-	// Given a list of UTXOs
-	utxos := r.ListDeployerUTXOs()
-
 	// ACT
 	// Send BTC to TSS address with donation message
 	memo := []byte(constant.DonationMessage)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amountTotal, utxos[:1], memo)
+	txHash, err := r.SendToTSSWithMemo(amountTotal, memo)
 	require.NoError(r, err)
 
-	// ASSERT after 4 Zeta blocks
-	time.Sleep(constant.ZetaBlockTime * 4)
+	// ASSERT after 6 Zeta blocks
+	time.Sleep(constant.ZetaBlockTime * 6)
 	req := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: txHash.String()}
-	_, err = r.CctxClient.InTxHashToCctxData(r.Ctx, req)
+	_, err = r.CctxClient.InboundHashToCctxData(r.Ctx, req)
 	require.Error(r, err)
 }

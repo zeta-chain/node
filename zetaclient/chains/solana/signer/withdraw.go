@@ -2,24 +2,82 @@ package signer
 
 import (
 	"context"
+	"encoding/hex"
 
 	"cosmossdk.io/errors"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
+	"github.com/rs/zerolog"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// createAndSignMsgWithdraw creates and signs a withdraw message for gateway withdraw instruction with TSS.
-func (signer *Signer) createAndSignMsgWithdraw(
+// prepareWithdrawTx prepares withdraw outbound
+func (signer *Signer) prepareWithdrawTx(
 	ctx context.Context,
-	params *types.OutboundParams,
+	cctx *types.CrossChainTx,
 	height uint64,
 	cancelTx bool,
-) (*contracts.MsgWithdraw, error) {
-	chain := signer.Chain()
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+
+	// create msg withdraw
+	msg, msgIn, err := signer.createMsgWithdraw(params, cancelTx)
+	if err != nil {
+		return signer.prepareIncrementNonceTx(ctx, cctx, height, logger)
+	}
+
+	// TSS sign msg withdraw
+	msg, msgIn, err = signMsgWithFallback(ctx, signer, height, params.TssNonce, msg, msgIn)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (*Outbound, error) {
+		inst, err := signer.createWithdrawInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating withdraw instruction")
+		}
+
+		return signer.createOutboundWithFallback(ctx, inst, msgIn, 0)
+	}, nil
+}
+
+func (signer *Signer) prepareExecuteMsg(cctx *types.CrossChainTx) (contracts.ExecuteType, contracts.ExecuteMsg, error) {
+	var executeType contracts.ExecuteType
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.RevertOptions.CallOnRevert {
+		executeType = contracts.ExecuteTypeRevert
+	} else {
+		executeType = contracts.ExecuteTypeCall
+	}
+
+	var message []byte
+	if executeType == contracts.ExecuteTypeRevert {
+		message = cctx.RevertOptions.RevertMessage
+	} else {
+		messageToDecode, err := hex.DecodeString(cctx.RelayedMessage)
+		if err != nil {
+			return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decodeString %s error", cctx.RelayedMessage)
+		}
+		message = messageToDecode
+	}
+
+	var msg contracts.ExecuteMsg
+	if err := msg.Decode(message); err != nil {
+		return executeType, contracts.ExecuteMsg{}, errors.Wrapf(err, "decode ExecuteMsg %s error", cctx.RelayedMessage)
+	}
+
+	return executeType, msg, nil
+}
+
+// createMsgWithdraw creates a withdraw and increment nonce messages
+func (signer *Signer) createMsgWithdraw(
+	params *types.OutboundParams,
+	cancelTx bool,
+) (*contracts.MsgWithdraw, *contracts.MsgIncrementNonce, error) {
 	// #nosec G115 always positive
 	chainID := uint64(signer.Chain().ChainId)
 	nonce := params.TssNonce
@@ -33,22 +91,13 @@ func (signer *Signer) createAndSignMsgWithdraw(
 	// check receiver address
 	to, err := chains.DecodeSolanaWalletAddress(params.Receiver)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
+		return nil, nil, errors.Wrapf(err, "cannot decode receiver address %s", params.Receiver)
 	}
 
-	// prepare withdraw msg and compute hash
 	msg := contracts.NewMsgWithdraw(chainID, nonce, amount, to)
-	msgHash := msg.Hash()
+	msgIncrementNonce := contracts.NewMsgIncrementNonce(chainID, nonce, amount)
 
-	// sign the message with TSS to get an ECDSA signature.
-	// the produced signature is in the [R || S || V] format where V is 0 or 1.
-	signature, err := signer.TSS().Sign(ctx, msgHash[:], height, nonce, chain.ChainId)
-	if err != nil {
-		return nil, errors.Wrap(err, "key-sign failed")
-	}
-
-	// attach the signature and return
-	return msg.SetSignature(signature), nil
+	return msg, msgIncrementNonce, nil
 }
 
 // createWithdrawInstruction wraps the withdraw 'msg' into a Solana instruction.

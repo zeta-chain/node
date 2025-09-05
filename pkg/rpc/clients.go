@@ -11,10 +11,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"google.golang.org/grpc"
 
-	etherminttypes "github.com/zeta-chain/node/rpc/types"
 	authoritytypes "github.com/zeta-chain/node/x/authority/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/node/x/emissions/types"
@@ -55,12 +54,11 @@ type Clients struct {
 	// EmissionsClient is a github.com/zeta-chain/zetacore/x/emissions/types QueryClient
 	Emissions emissionstypes.QueryClient
 
-	// Ethermint specific clients
+	// Evm specific clients
 
-	// Ethermint is a github.com/zeta-chain/zetacore/rpc/types QueryClient
-	Ethermint *etherminttypes.QueryClient
-	// EthermintFeeMarket is a github.com/zeta-chain/ethermint/x/feemarket/types QueryClient
-	EthermintFeeMarket feemarkettypes.QueryClient
+	// Evm is a github.com/zeta-chain/zetacore/rpc/types QueryClient
+	// EvmFeeMarket is a github.com/zeta-chain/evm/x/feemarket/types QueryClient
+	EvmFeeMarket feemarkettypes.QueryClient
 
 	// Tendermint specific clients
 
@@ -83,9 +81,8 @@ func newClients(ctx client.Context) (Clients, error) {
 		Observer:    observertypes.NewQueryClient(ctx),
 		Lightclient: lightclienttypes.NewQueryClient(ctx),
 		Emissions:   emissionstypes.NewQueryClient(ctx),
-		// Ethermint specific clients
-		Ethermint:          etherminttypes.NewQueryClient(ctx),
-		EthermintFeeMarket: feemarkettypes.NewQueryClient(ctx),
+		// Evm specific clients
+		EvmFeeMarket: feemarkettypes.NewQueryClient(ctx),
 		// Tendermint specific clients
 		Tendermint: cmtservice.NewServiceClient(ctx),
 	}, nil

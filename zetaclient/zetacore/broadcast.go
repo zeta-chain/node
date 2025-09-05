@@ -27,6 +27,10 @@ import (
 // gas price increase due to EIP1559 feemarket on ZetaChain
 var bufferMultiplier = sdkmath.LegacyMustNewDecFromStr("1.5")
 
+var reductionRate = sdkmath.LegacyMustNewDecFromStr(ante.GasPriceReductionRate)
+
+var accountSequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
+
 // Broadcast Broadcasts tx to ZetaChain. Returns txHash and error
 func (c *Client) Broadcast(
 	ctx context.Context,
@@ -49,8 +53,6 @@ func (c *Client) Broadcast(
 		baseGasPrice = DefaultBaseGasPrice
 	}
 
-	reductionRate := sdkmath.LegacyMustNewDecFromStr(ante.GasPriceReductionRate)
-
 	// multiply gas price by the system tx reduction rate
 	adjustedBaseGasPrice := sdkmath.LegacyNewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
 
@@ -71,16 +73,16 @@ func (c *Client) Broadcast(
 		}
 	}
 
-	flags := flag.NewFlagSet("zetaclient", 0)
-
-	factory, err := clienttx.NewFactoryCLI(c.cosmosClientContext, flags)
+	factory, err := clienttx.NewFactoryCLI(c.cosmosClientContext, flag.NewFlagSet("zetaclient", 0))
 	if err != nil {
 		return "", err
 	}
 
-	factory = factory.WithAccountNumber(c.accountNumber[authzSigner.KeyType])
-	factory = factory.WithSequence(c.seqNumber[authzSigner.KeyType])
-	factory = factory.WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+	factory = factory.
+		WithAccountNumber(c.accountNumber[authzSigner.KeyType]).
+		WithSequence(c.seqNumber[authzSigner.KeyType]).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
 	builder, err := factory.BuildUnsignedTx(authzWrappedMsg)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to build unsigned tx")
@@ -95,7 +97,7 @@ func (c *Client) Broadcast(
 	))
 	builder.SetFeeAmount(fee)
 
-	err = c.SignTx(factory, c.cosmosClientContext.GetFromName(), builder, true)
+	err = c.SignTx(ctx, factory, c.cosmosClientContext.GetFromName(), builder, true)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to sign tx")
 	}
@@ -111,46 +113,49 @@ func (c *Client) Broadcast(
 		return "", errors.Wrap(err, "fail to broadcast tx sync")
 	}
 
-	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
-	if commit.Code > 0 {
-		if commit.Code == 32 {
-			errMsg := commit.RawLog
-			re := regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
-			matches := re.FindStringSubmatch(errMsg)
-			if len(matches) != 3 {
-				return "", err
-			}
-			expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
-			if err != nil {
-				c.logger.Warn().Msgf("cannot parse expected seq %s", matches[1])
-				return "", err
-			}
-			gotSeq, err := strconv.Atoi(matches[2])
-			if err != nil {
-				c.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
-				return "", err
-			}
-			c.seqNumber[authzSigner.KeyType] = expectedSeq
-			c.logger.Warn().
-				Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
-		}
-		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
+	// Code will be the tendermint ABICode,
+	// it starts at 1, so if it is an error, code will not be zero.
+	if commit.Code == 0 {
+		// increment seqNum
+		c.seqNumber[authzSigner.KeyType]++
+
+		return commit.TxHash, nil
 	}
 
-	// increment seqNum
-	c.seqNumber[authzSigner.KeyType] = c.seqNumber[authzSigner.KeyType] + 1
+	if commit.Code == 32 {
+		matches := accountSequenceMismatchRegex.FindStringSubmatch(commit.RawLog)
+		if len(matches) != 3 {
+			return "", fmt.Errorf("code 32, no matches: %s", commit.RawLog)
+		}
 
-	return commit.TxHash, nil
+		expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
+		if err != nil {
+			return "", errors.Wrapf(err, "code 32, cannot parse expected seq %q", matches[1])
+		}
+
+		gotSeq, err := strconv.ParseUint(matches[2], 10, 64)
+		if err != nil {
+			return "", errors.Wrapf(err, "code 32, cannot parse got seq %q", matches[2])
+		}
+
+		c.seqNumber[authzSigner.KeyType] = expectedSeq
+
+		c.logger.Warn().
+			Msgf("Reset seq number to %d (from err msg) from %d", c.seqNumber[authzSigner.KeyType], gotSeq)
+	}
+
+	return commit.TxHash, fmt.Errorf("failed to broadcast tx (code: %d). Log: %s", commit.Code, commit.RawLog)
 }
 
 // SignTx signs a tx with the given name
 func (c *Client) SignTx(
+	ctx context.Context,
 	txf clienttx.Factory,
 	name string,
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
 ) error {
-	return clienttx.Sign(context.TODO(), txf, name, txBuilder, overwriteSig)
+	return clienttx.Sign(ctx, txf, name, txBuilder, overwriteSig)
 }
 
 // QueryTxResult query the result of a tx
@@ -173,10 +178,19 @@ func HandleBroadcastError(err error, nonce uint64, toChain int64, outboundHash s
 		Str(logs.FieldTx, outboundHash)
 
 	switch {
+	// From the literal meaning of the error message, the tx with this 'nonce' has already been processed,
+	// and the latest TSS account nonce has already been incremented.
+	// Theoretically, this the tx hash should not be posted to the tracker in this case, but we've already
+	// encountered missed outbound tracker caused by unknown reasons (may or may not be false positive).
+	//
+	// To prevent missed potential outbound tracker, now we pass this hash to tracker reporter in this case.
+	// The overhead is:
+	// 	- It is uncertain whether this tx hash was the very FIRST accepted tx with THIS 'nonce', it might be the second...
+	//  - Once decided to report this tx hash, we need to spawn extra goroutines and making extra RPC queries for monitoring.
 	case strings.Contains(msg, "nonce too low"):
-		const m = "nonce too low! this might be a unnecessary key-sign. increase retry interval and awaits outbound confirmation"
+		const m = "nonce too low! this might be an unnecessary key-sign. increase retry interval and awaits outbound confirmation"
 		evt.Msg(m)
-		return false, false
+		return false, true
 
 	case strings.Contains(msg, "replacement transaction underpriced"):
 		evt.Msg("Broadcast replacement")

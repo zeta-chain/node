@@ -44,8 +44,11 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	}
 
 	btcTSSBalanceOld := btcBalance
-	// Use fixed fee of 0.01 for migration
-	btcBalance = btcBalance - 0.01
+	// Use fixed fee of 0.02 for migration
+	// Code links for reference to calculate fee:
+	// https://github.com/zeta-chain/node/blob/5c73a45b6096ed7f7387ae8f7ccc7d5e2c668e0d/zetaclient/chains/bitcoin/signer/sign.go#L54
+	// https://github.com/zeta-chain/node/blob/5c73a45b6096ed7f7387ae8f7ccc7d5e2c668e0d/zetaclient/chains/bitcoin/signer/sign.go#L32
+	btcBalance = btcBalance - 0.02
 	btcChain := chains.BitcoinRegtest.ChainId
 
 	r.WaitForTSSGeneration(2)
@@ -95,10 +98,10 @@ func TestMigrateTSS(r *runner.E2ERunner, _ []string) {
 	cctxETHMigration := migrator.TssFundsMigrator.MigrationCctxIndex
 
 	cctxBTC := utils.WaitCCTXMinedByIndex(r.Ctx, cctxBTCMigration, r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxBTC.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctxBTC, crosschaintypes.CctxStatus_OutboundMined)
 
 	cctxETH := utils.WaitCCTXMinedByIndex(r.Ctx, cctxETHMigration, r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxETH.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctxETH, crosschaintypes.CctxStatus_OutboundMined)
 
 	// Check if new TSS is added to list
 	allTss, err := r.ObserverClient.TssHistory(r.Ctx, &observertypes.QueryTssHistoryRequest{})

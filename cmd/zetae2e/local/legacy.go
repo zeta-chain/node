@@ -138,7 +138,7 @@ func legacyZEVMMPTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 1000)
+		txZetaSend := deployerRunner.TransferZETAOnEvm(account.EVMAddress(), 1000)
 		zevmMPRunner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
@@ -191,7 +191,7 @@ func legacyZETATestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.LegacySendZetaOnEvm(account.EVMAddress(), 1000)
+		txZetaSend := deployerRunner.TransferZETAOnEvm(account.EVMAddress(), 1000)
 		zetaRunner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain

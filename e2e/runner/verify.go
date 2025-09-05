@@ -7,17 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	solanacontracts "github.com/zeta-chain/node/pkg/contracts/solana"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// VerifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on EVM
-func (r *E2ERunner) VerifyTransferAmountFromCCTX(cctx *crosschaintypes.CrossChainTx, amount int64) {
-	r.Logger.Info("outTx hash %s", cctx.GetCurrentOutboundParam().Hash)
-
-	receipt, err := r.EVMClient.TransactionReceipt(
-		r.Ctx,
-		ethcommon.HexToHash(cctx.GetCurrentOutboundParam().Hash),
-	)
+// EVMVerifyOutboundTransferAmount verifies the transfer amount on EVM chain for given outbound hash
+func (r *E2ERunner) EVMVerifyOutboundTransferAmount(outboundHash string, amount int64) {
+	receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outboundHash))
 	require.NoError(r, err)
 
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
@@ -32,13 +26,10 @@ func (r *E2ERunner) VerifyTransferAmountFromCCTX(cctx *crosschaintypes.CrossChai
 	}
 }
 
-// VerifySolanaWithdrawalAmountFromCCTX verifies the withdrawn amount on Solana for given CCTX
-func (r *E2ERunner) VerifySolanaWithdrawalAmountFromCCTX(cctx *crosschaintypes.CrossChainTx, amount uint64) {
-	txHash := cctx.GetCurrentOutboundParam().Hash
-	r.Logger.Info("outbound hash %s", txHash)
-
+// SolanaVerifyWithdrawalAmount verifies the withdrawn amount on Solana for given outbound hash
+func (r *E2ERunner) SolanaVerifyWithdrawalAmount(outboundHash string, amount uint64) {
 	// convert txHash to signature
-	sig, err := solana.SignatureFromBase58(txHash)
+	sig, err := solana.SignatureFromBase58(outboundHash)
 	require.NoError(r, err)
 
 	// query transaction by signature

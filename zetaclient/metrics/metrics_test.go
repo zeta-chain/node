@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +26,9 @@ func Test(t *testing.T) { TestingT(t) }
 var _ = Suite(&MetricsSuite{})
 
 func (ms *MetricsSuite) SetUpSuite(c *C) {
+	if err := killProcessOnPort(8886); err != nil {
+		c.Logf("Warning: failed to kill process on port 8886: %v", err)
+	}
 	m, err := NewMetrics()
 	c.Assert(err, IsNil)
 	go m.Start(context.Background())
@@ -42,6 +47,7 @@ func (ms *MetricsSuite) TestCurryWith(c *C) {
 }
 
 func (ms *MetricsSuite) Test_RPCCount(c *C) {
+
 	GetFilterLogsPerChain.WithLabelValues("chain1").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
 	GetFilterLogsPerChain.WithLabelValues("chain2").Inc()
@@ -86,4 +92,49 @@ func (ms *MetricsSuite) Test_RelayerKeyBalance(c *C) {
 	// assert that relayer key balance is being set correctly
 	balance := testutil.ToFloat64(RelayerKeyBalance.WithLabelValues(chains.SolanaDevnet.Name))
 	c.Assert(balance, Equals, 2.1564)
+}
+
+// killProcessOnPort kills any process listening on the specified port
+func killProcessOnPort(port int) error {
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "windows" {
+		// Windows: netstat -ano | findstr :PORT | taskkill
+		netstatCmd := exec.Command("netstat", "-ano")
+		findstrCmd := exec.Command("findstr", fmt.Sprintf(":%d", port))
+
+		pipe, err := netstatCmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
+		findstrCmd.Stdin = pipe
+
+		if err := netstatCmd.Start(); err != nil {
+			return err
+		}
+
+		output, err := findstrCmd.Output()
+		if err != nil {
+			netstatCmd.Wait()
+			return nil // No process found
+		}
+		netstatCmd.Wait()
+
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			fields := strings.Fields(line)
+			if len(fields) >= 5 {
+				pid := fields[len(fields)-1]
+				if pid != "0" {
+					exec.Command("taskkill", "/F", "/PID", pid).Run()
+				}
+			}
+		}
+	} else {
+		// Unix-like systems: lsof -ti:PORT | xargs kill -9
+		cmd = exec.Command("sh", "-c", fmt.Sprintf("kill -9 $(lsof -ti:%d) 2>/dev/null || true", port))
+		cmd.Run() // Ignore errors since the process might not exist
+	}
+
+	return nil
 }

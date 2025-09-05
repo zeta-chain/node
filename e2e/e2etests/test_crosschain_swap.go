@@ -19,6 +19,19 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	defer stop()
 	r.ZEVMAuth.GasLimit = 10000000
 
+	setupCrosschainSwap(r)
+
+	//ERC20 -> BTC
+	testERC20ToBTC(r)
+
+	//BTC -> ERC20ZRC20
+	testBTCToERC20ZRC20(r)
+
+	//ETH with contract call reverted; should refund BTC
+	testBTCToETHRevert(r)
+}
+
+func setupCrosschainSwap(r *runner.E2ERunner) {
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
@@ -65,7 +78,9 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	)
 	require.NoError(r, err)
 	ensureTxReceipt(txAddLiquidity, "add liq failed")
+}
 
+func testERC20ToBTC(r *runner.E2ERunner) {
 	// msg would be [ZEVMSwapAppAddr, memobytes]
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
 	msg := []byte{}
@@ -73,7 +88,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memobytes, err := r.ZEVMSwapApp.EncodeMemo(
 		&bind.CallOpts{},
 		r.BTCZRC20Addr,
-		[]byte(r.BTCDeployerAddress.EncodeAddress()),
+		[]byte(r.GetBtcAddress().EncodeAddress()),
 	)
 	require.NoError(r, err)
 
@@ -95,10 +110,12 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	utils.RequireCCTXStatus(r, cctx2, types.CctxStatus_OutboundMined)
 
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutboundParam().Hash)
+}
 
+func testBTCToERC20ZRC20(r *runner.E2ERunner) {
 	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	// list deployer utxos
-	utxos := r.ListDeployerUTXOs()
+	utxos := r.ListUTXOs()
 
 	r.Logger.Info("#utxos %d", len(utxos))
 	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
@@ -109,7 +126,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
 	r.Logger.Info("memo length %d", len(memo))
 
-	txID, err := r.SendToTSSFromDeployerWithMemo(0.01, utxos[0:1], memo)
+	txID, err := r.SendToTSSWithMemo(0.01, memo)
 	require.NoError(r, err)
 
 	cctx3 := utils.WaitCctxMinedByInboundHash(r.Ctx, txID.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -126,42 +143,41 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("cctx4 index %s", cctx4.Index)
 	r.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutboundParam().Hash)
 	r.Logger.Info("  status %s", cctx4.CctxStatus.Status.String())
+}
 
-	{
-		r.Logger.Info("******* Third test: BTC -> ETH with contract call reverted; should refund BTC")
-		// the following memo will result in a revert in the contract call as targetZRC20 is set to DeployerAddress
-		// which is apparently not a ZRC20 contract; the UNISWAP call will revert
-		memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.EVMAddress(), r.EVMAddress().Bytes())
-		require.NoError(r, err)
+func testBTCToETHRevert(r *runner.E2ERunner) {
+	r.Logger.Info("******* Third test: BTC -> ETH with contract call reverted; should refund BTC")
+	// the following memo will result in a revert in the contract call as targetZRC20 is set to DeployerAddress
+	// which is apparently not a ZRC20 contract; the UNISWAP call will revert
+	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.EVMAddress(), r.EVMAddress().Bytes())
+	require.NoError(r, err)
 
-		memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
-		r.Logger.Info("memo length %d", len(memo))
+	memo = append(r.ZEVMSwapAppAddr.Bytes(), memo...)
+	r.Logger.Info("memo length %d", len(memo))
 
-		amount := 0.1
-		utxos = r.ListDeployerUTXOs()
-		txid, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[0:1], memo)
-		require.NoError(r, err)
+	amount := 0.1
+	txid, err := r.SendToTSSWithMemo(amount, memo)
+	require.NoError(r, err)
 
-		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-		r.Logger.Info("cctx3 index %s", cctx.Index)
-		r.Logger.Info("  inbound tx hash %s", cctx.InboundParams.ObservedHash)
-		r.Logger.Info("  status %s", cctx.CctxStatus.Status.String())
-		r.Logger.Info("  status msg: %s", cctx.CctxStatus.StatusMessage)
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txid.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.Info("cctx3 index %s", cctx.Index)
+	r.Logger.Info("  inbound tx hash %s", cctx.InboundParams.ObservedHash)
+	r.Logger.Info("  status %s", cctx.CctxStatus.Status.String())
+	r.Logger.Info("  status msg: %s", cctx.CctxStatus.StatusMessage)
 
-		utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
+	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
 
-		outboundHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutboundParam().Hash)
-		require.NoError(r, err)
+	outboundHash, err := chainhash.NewHashFromStr(cctx.GetCurrentOutboundParam().Hash)
+	require.NoError(r, err)
 
-		txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, outboundHash)
-		require.NoError(r, err)
+	txraw, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, outboundHash)
+	require.NoError(r, err)
 
-		r.Logger.Info("out txid %s", txraw.Txid)
-		for _, vout := range txraw.Vout {
-			r.Logger.Info("  vout %d", vout.N)
-			r.Logger.Info("  value %f", vout.Value)
-			r.Logger.Info("  scriptPubKey %s", vout.ScriptPubKey.Hex)
-			r.Logger.Info("  p2wpkh address: %s", utils.ScriptPKToAddress(vout.ScriptPubKey.Hex, r.BitcoinParams))
-		}
+	r.Logger.Info("out txid %s", txraw.Txid)
+	for _, vout := range txraw.Vout {
+		r.Logger.Info("  vout %d", vout.N)
+		r.Logger.Info("  value %f", vout.Value)
+		r.Logger.Info("  scriptPubKey %s", vout.ScriptPubKey.Hex)
+		r.Logger.Info("  p2wpkh address: %s", utils.ScriptPKToAddress(vout.ScriptPubKey.Hex, r.BitcoinParams))
 	}
 }

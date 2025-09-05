@@ -1,53 +1,96 @@
-run:
-  go: '1.20' # as in go.mod
-  timeout: 5m
-  tests: false # exclude test from linting
+# Reference:
+# https://github.com/golangci/golangci-lint/blob/a25cd63879d2252bcee283c5aca0c737ff6ff801/.golangci.reference.yml
+version: "2"
 
+run:
+  go: "1.23"
+  timeout: 30m
+  tests: false
+
+# https://golangci-lint.run/usage/formatters
+formatters:
+  enable: [gci, gofmt, goimports, golines]
+  settings:
+    # Gci controls Go package import order and makes it always deterministic
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/zeta-chain/node)
+
+    golines:
+      max-len: 120
+
+  exclusions:
+    generated: strict
+    paths:
+      - ".*_test\\.go$"
+      - ".*\\.pb\\.go$"
+      - .git
+      - .github
+      - .idea
+      - .vscode
+      - ./typescript
+      - ./contrib/localnet
+
+# https://golangci-lint.run/usage/linters
 linters:
-  disable-all: true
+  default: none
   enable:
+    - bodyclose
+    - dogsled
     - errcheck
-    - revive
-    - ineffassign
-    - unconvert
-    - misspell
-    - goimports
+    - goconst
     - govet
-    - stylecheck
-    - typecheck
+    - ineffassign
     - misspell
     - prealloc
-    - dogsled
-    - goconst
-    - bodyclose
+    - revive
+    - staticcheck
     - unconvert
     - unused
-    - gci
-    - gofmt
     - whitespace
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt:.*
+        - io/ioutil:^Read.*,
+        - github.com/spf13/cobra:MarkFlagRequired
+        - github.com/spf13/viper:BindPFlag
+    gocyclo:
+      min-complexity: 11
+    govet:
+      disable:
+        - composites
+  exclusions:
+    generated: strict
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-linters-settings:
-  gocyclo:
-    min-complexity: 11
-  errcheck:
-    exclude-functions:
-      - fmt:.*
-      - io/ioutil:^Read.*,
-      - github.com/spf13/cobra:MarkFlagRequired
-      - github.com/spf13/viper:BindPFlag
-  exhaustive:
-    check-generated: false
-  gci:
-    # Gci controls Go package import order and makes it always deterministic
-    # https://golangci-lint.run/usage/linters/#gci
-    sections:
-      - standard
-      - default
-      - prefix(github.com/zeta-chain/node)
-    skip-generated: true
+    paths:
+      - ".*\\.pb\\.go$"
+      - .git
+      - .github
+      - .idea
+      - .vscode
+      - ./typescript
+      - ./contrib/localnet
+      - ./scripts
 
-issues:
-  exclude-generated: strict
-  exclude:
-    - composite
-  exclude-dirs: [ ".git", ".github" ]
+    rules:
+      # https://staticcheck.dev/docs/checks
+      # We can enforce more rules if needed.
+      - linters: [staticcheck]
+        text: "QF1002"
+
+      - linters: [staticcheck]
+        text: "QF1003"
+
+      - linters: [staticcheck]
+        text: "SA1019"
+
+      - linters: [staticcheck]
+        text: "QF1008"

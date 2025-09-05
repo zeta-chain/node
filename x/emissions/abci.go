@@ -175,8 +175,7 @@ func distributeRewardsForMaturedBallots(
 	slashAmount sdkmath.Int,
 ) []*types.ObserverEmission {
 	var (
-		rewardsDistributeMap = map[string]int64{}
-		totalRewardsUnits    = int64(0)
+		totalRewardsUnits = int64(0)
 	)
 	ballots := make([]observertypes.Ballot, 0, len(maturedBallots))
 	for _, ballotIdentifier := range maturedBallots {
@@ -185,31 +184,40 @@ func distributeRewardsForMaturedBallots(
 			continue
 		}
 		ballots = append(ballots, ballot)
-		totalRewardsUnits += ballot.BuildRewardsDistribution(rewardsDistributeMap)
 	}
+	rewardsDistributeMap := observertypes.BuildRewardsDistribution(ballots)
+
+	if len(rewardsDistributeMap) == 0 {
+		return nil
+	}
+	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
+
+	for address, rewardUnits := range rewardsDistributeMap {
+		sortedKeys = append(sortedKeys, address)
+		// Rewards are only distributed for correct votes,calculate the total rewards units from the final map to allocate maximum rewards possible to observers
+		if rewardUnits > 0 {
+			totalRewardsUnits += rewardUnits
+		}
+	}
+	sort.Strings(sortedKeys)
+
 	rewardPerUnit := sdkmath.ZeroInt()
 	if totalRewardsUnits > 0 && amount.IsPositive() {
+		// Use Quo to be safe and not over allocate
 		rewardPerUnit = amount.Quo(sdkmath.NewInt(totalRewardsUnits))
 	}
 	ctx.Logger().
 		Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(maturedBallots)))
-	sortedKeys := make([]string, 0, len(rewardsDistributeMap))
-	for k := range rewardsDistributeMap {
-		sortedKeys = append(sortedKeys, k)
-	}
 
-	sort.Strings(sortedKeys)
 	var finalDistributionList []*types.ObserverEmission
+
 	for _, key := range sortedKeys {
 		observerAddress, err := sdk.AccAddressFromBech32(key)
 		if err != nil {
 			ctx.Logger().Error("Error while parsing observer address ", "error", err, "address", key)
 			continue
 		}
-		// observerRewardUnits can be negative if the observer has been slashed
-		// an observers earn 1 unit for a correct vote, and -1 unit for an incorrect vote
 		observerRewardUnits := rewardsDistributeMap[key]
-
 		if observerRewardUnits == 0 {
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
@@ -218,6 +226,7 @@ func distributeRewardsForMaturedBallots(
 			})
 			continue
 		}
+
 		if observerRewardUnits < 0 {
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{

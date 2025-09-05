@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package types
 
 import (
@@ -26,10 +11,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 // EventFormat is the format version of the events.
@@ -37,6 +22,12 @@ import (
 // To fix the issue of tx exceeds block gas limit, we changed the event format in a breaking way.
 // But to avoid forcing clients to re-sync from scatch, we make json-rpc logic to be compatible with both formats.
 type EventFormat int
+
+const (
+	AttributeKeyTxNonce    = "txNonce"
+	AttributeKeyTxData     = "txData"
+	AttributeKeyTxGasLimit = "txGasLimit"
+)
 
 const (
 	MessageType                    = "message"
@@ -47,9 +38,9 @@ const (
 
 	// Event Format 1 (the format used before PR #1062):
 	// ```
-	// ethereum_tx(amount, ethereumTxHash, [txIndex, txGasUsed], txHash, [receipient], ethereumTxFailed)
+	// ethereum_tx(amount, ethereumTxHash, [txIndex, txGasUsed], txHash, [recipient], ethereumTxFailed)
 	// tx_log(txLog, txLog, ...)
-	// ethereum_tx(amount, ethereumTxHash, [txIndex, txGasUsed], txHash, [receipient], ethereumTxFailed)
+	// ethereum_tx(amount, ethereumTxHash, [txIndex, txGasUsed], txHash, [recipient], ethereumTxFailed)
 	// tx_log(txLog, txLog, ...)
 	// ...
 	// ```
@@ -60,9 +51,9 @@ const (
 	// ethereum_tx(ethereumTxHash, txIndex)
 	// ethereum_tx(ethereumTxHash, txIndex)
 	// ...
-	// ethereum_tx(amount, ethereumTxHash, txIndex, txGasUsed, txHash, [receipient], ethereumTxFailed)
+	// ethereum_tx(amount, ethereumTxHash, txIndex, txGasUsed, txHash, [recipient], ethereumTxFailed)
 	// tx_log(txLog, txLog, ...)
-	// ethereum_tx(amount, ethereumTxHash, txIndex, txGasUsed, txHash, [receipient], ethereumTxFailed)
+	// ethereum_tx(amount, ethereumTxHash, txIndex, txGasUsed, txHash, [recipient], ethereumTxFailed)
 	// tx_log(txLog, txLog, ...)
 	// ...
 	// ```
@@ -72,7 +63,6 @@ const (
 
 // ParsedTx is the tx infos parsed from events.
 type ParsedTx struct {
-	// max uint32 means there is no sdk.Msg corresponding to eth tx
 	MsgIndex int
 
 	// the following fields are parsed from events
@@ -81,6 +71,7 @@ type ParsedTx struct {
 	// -1 means uninitialized
 	EthTxIndex int32
 	GasUsed    uint64
+	GasLimit   *uint64
 	Failed     bool
 	// Additional cosmos EVM tx fields
 	TxHash    string
@@ -105,6 +96,8 @@ type ParsedTxs struct {
 	TxHashes map[common.Hash]int
 }
 
+// ParseTxResult parse eth tx infos from cosmos-sdk events.
+// It supports two event formats, the formats are described in the comments of the format constants.
 // ParseTxResult parse eth tx infos from cosmos-sdk events.
 // It supports two event formats, the formats are described in the comments of the format constants.
 func ParseTxResult(result *abci.ExecTxResult, tx sdk.Tx) (*ParsedTxs, error) {
@@ -205,7 +198,7 @@ func ParseTxIndexerResult(
 	txResult *tmrpctypes.ResultTx,
 	tx sdk.Tx,
 	getter func(*ParsedTxs) *ParsedTx,
-) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
+) (*types.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(&txResult.TxResult, tx)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
@@ -225,7 +218,7 @@ func ParseTxIndexerResult(
 		)
 	}
 	if parsedTx.Type == CosmosEVMTxType {
-		return &ethermint.TxResult{
+		return &types.TxResult{
 				Height:  txResult.Height,
 				TxIndex: txResult.Index,
 				// #nosec G115 always in range
@@ -242,11 +235,12 @@ func ParseTxIndexerResult(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				GasLimit:  parsedTx.GasLimit,
 				Data:      parsedTx.Data,
 				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
-	return &ethermint.TxResult{
+	return &types.TxResult{
 		Height:  txResult.Height,
 		TxIndex: txResult.Index,
 		// #nosec G115 always in range
@@ -264,7 +258,7 @@ func ParseTxBlockResult(
 	tx sdk.Tx,
 	txIndex int,
 	height int64,
-) (*ethermint.TxResult, *TxResultAdditionalFields, error) {
+) (*types.TxResult, *TxResultAdditionalFields, error) {
 	txs, err := ParseTxResult(txResult, tx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse tx events: block %d, index %d, %v", height, txIndex, err)
@@ -276,7 +270,7 @@ func ParseTxBlockResult(
 	// TODO: check why when there are multiple synthetic txs events are in reversed order
 	parsedTx := txs.Txs[len(txs.Txs)-1]
 	if parsedTx.Type == CosmosEVMTxType {
-		return &ethermint.TxResult{
+		return &types.TxResult{
 				Height: height,
 				// #nosec G115 always in range
 				TxIndex: uint32(txIndex),
@@ -294,11 +288,12 @@ func ParseTxBlockResult(
 				Recipient: parsedTx.Recipient,
 				Sender:    parsedTx.Sender,
 				GasUsed:   parsedTx.GasUsed,
+				GasLimit:  parsedTx.GasLimit,
 				Data:      parsedTx.Data,
 				Nonce:     parsedTx.Nonce,
 			}, nil
 	}
-	return &ethermint.TxResult{
+	return &types.TxResult{
 		Height: height,
 		// #nosec G115 always in range
 		TxIndex: uint32(txIndex),
@@ -325,7 +320,7 @@ func (p *ParsedTxs) newTx(attrs []abci.EventAttribute) error {
 
 // updateTx updates an exiting tx from events, called during parsing.
 // In event format 2, we update the tx with the attributes of the second `ethereum_tx` event,
-// Due to bug https://github.com/zeta-chain/ethermint/issues/1175, the first `ethereum_tx` event may emit incorrect tx hash,
+// Due to bug https://github.com/evmos/ethermint/issues/1175, the first `ethereum_tx` event may emit incorrect tx hash,
 // so we prefer the second event and override the first one.
 func (p *ParsedTxs) updateTx(eventIndex int, attrs []abci.EventAttribute) error {
 	tx := NewParsedTx(eventIndex)
@@ -379,23 +374,28 @@ func (p *ParsedTxs) AccumulativeGasUsed(msgIndex int) (result uint64) {
 
 // fillTxAttribute parse attributes by name, less efficient than hardcode the index, but more stable against event
 // format changes.
-func fillTxAttribute(tx *ParsedTx, key, value string) error {
+func fillTxAttribute(tx *ParsedTx, key string, value string) error {
 	switch key {
 	case evmtypes.AttributeKeyEthereumTxHash:
 		tx.Hash = common.HexToHash(value)
 	case evmtypes.AttributeKeyTxIndex:
-		txIndex, err := strconv.ParseUint(value, 10, 31)
+		txIndex, err := strconv.ParseUint(value, 10, 31) // #nosec G115
 		if err != nil {
 			return err
 		}
-		// #nosec G115 always in range
-		tx.EthTxIndex = int32(txIndex)
+		tx.EthTxIndex = int32(txIndex) // #nosec G115
 	case evmtypes.AttributeKeyTxGasUsed:
 		gasUsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
 		tx.GasUsed = gasUsed
+	case AttributeKeyTxGasLimit:
+		gasLimit, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		tx.GasLimit = &gasLimit
 	case evmtypes.AttributeKeyEthereumTxFailed:
 		tx.Failed = len(value) > 0
 	case SenderType:
@@ -416,14 +416,14 @@ func fillTxAttribute(tx *ParsedTx, key, value string) error {
 		if !success {
 			return nil
 		}
-	case evmtypes.AttributeKeyTxNonce:
+	case AttributeKeyTxNonce:
 		nonce, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}
 		tx.Nonce = nonce
 
-	case evmtypes.AttributeKeyTxData:
+	case AttributeKeyTxData:
 		hexBytes, err := hexutil.Decode(value)
 		if err != nil {
 			return err

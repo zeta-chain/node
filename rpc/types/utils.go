@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package types
 
 import (
@@ -23,27 +8,30 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtrpcclient "github.com/cometbft/cometbft/rpc/client"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 )
 
 // ExceedBlockGasLimitError defines the error message when tx execution exceeds the block gas limit.
 // The tx fee is deducted in ante handler, so it shouldn't be ignored in JSON-RPC API.
 const ExceedBlockGasLimitError = "out of gas in location: block gas meter; gasWanted:"
 
+// StateDBCommitError defines the error message when commit after executing EVM transaction, for example
+// transfer native token to a distribution module account 0x93354845030274cD4bf1686Abd60AB28EC52e1a7 using an evm type transaction
+// note: the transfer amount cannot be set to 0, otherwise this problem will not be triggered
+const StateDBCommitError = "failed to commit stateDB"
+
 // RawTxToEthTx returns a evm MsgEthereum transaction from raw tx bytes.
-func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgEthereumTx, error) {
+func RawTxToEthTx(clientCtx client.Context, txBz cmttypes.Tx) ([]*evmtypes.MsgEthereumTx, error) {
 	tx, err := clientCtx.TxConfig.TxDecoder()(txBz)
 	if err != nil {
 		return nil, errorsmod.Wrap(errortypes.ErrJSONUnmarshal, err.Error())
@@ -63,21 +51,17 @@ func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgEth
 
 // EthHeaderFromTendermint is an util function that returns an Ethereum Header
 // from a tendermint Header.
-func EthHeaderFromTendermint(
-	header tmtypes.Header,
-	bloom ethtypes.Bloom,
-	baseFee *big.Int,
-	miner sdk.AccAddress,
-) *ethtypes.Header {
+func EthHeaderFromTendermint(header cmttypes.Header, bloom ethtypes.Bloom, baseFee *big.Int) *ethtypes.Header {
 	txHash := ethtypes.EmptyRootHash
-	if len(header.DataHash) == 0 {
+	if len(header.DataHash) != 0 {
 		txHash = common.BytesToHash(header.DataHash)
 	}
 
+	time := uint64(header.Time.UTC().Unix()) //#nosec G115 won't exceed uint64
 	return &ethtypes.Header{
 		ParentHash:  common.BytesToHash(header.LastBlockID.Hash.Bytes()),
 		UncleHash:   ethtypes.EmptyUncleHash,
-		Coinbase:    common.BytesToAddress(miner),
+		Coinbase:    common.BytesToAddress(header.ProposerAddress),
 		Root:        common.BytesToHash(header.AppHash),
 		TxHash:      txHash,
 		ReceiptHash: ethtypes.EmptyRootHash,
@@ -86,25 +70,24 @@ func EthHeaderFromTendermint(
 		Number:      big.NewInt(header.Height),
 		GasLimit:    0,
 		GasUsed:     0,
-		// #nosec G115 always positive
-		Time:      uint64(header.Time.UTC().Unix()),
-		Extra:     []byte{},
-		MixDigest: common.Hash{},
-		Nonce:     ethtypes.BlockNonce{},
-		BaseFee:   baseFee,
+		Time:        time,
+		Extra:       []byte{},
+		MixDigest:   common.Hash{},
+		Nonce:       ethtypes.BlockNonce{},
+		BaseFee:     baseFee,
 	}
 }
 
 // BlockMaxGasFromConsensusParams returns the gas limit for the current block from the chain consensus params.
 func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Context, blockHeight int64) (int64, error) {
-	tmrpcClient, ok := clientCtx.Client.(tmrpcclient.Client)
+	tmrpcClient, ok := clientCtx.Client.(cmtrpcclient.Client)
 	if !ok {
 		panic("incorrect tm rpc client")
 	}
 	resConsParams, err := tmrpcClient.ConsensusParams(goCtx, &blockHeight)
+	defaultGasLimit := int64(^uint32(0)) // #nosec G115
 	if err != nil {
-		// #nosec G115 always in range
-		return int64(^uint32(0)), err
+		return defaultGasLimit, err
 	}
 
 	gasLimit := resConsParams.ConsensusParams.Block.MaxGas
@@ -112,8 +95,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 		// Sets gas limit to max uint32 to not error with javascript dev tooling
 		// This -1 value indicating no block gas limit is set to max uint64 with geth hexutils
 		// which errors certain javascript dev tooling which only supports up to 53 bits
-		// #nosec G115 always in range
-		gasLimit = int64(^uint32(0))
+		gasLimit = defaultGasLimit
 	}
 
 	return gasLimit, nil
@@ -122,7 +104,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 // FormatBlock creates an ethereum block from a tendermint header and ethereum-formatted
 // transactions.
 func FormatBlock(
-	header tmtypes.Header, size int, gasLimit int64,
+	header cmttypes.Header, size int, gasLimit int64,
 	gasUsed *big.Int, transactions []interface{}, bloom ethtypes.Bloom,
 	validatorAddr common.Address, baseFee *big.Int,
 ) map[string]interface{} {
@@ -134,25 +116,21 @@ func FormatBlock(
 	}
 
 	result := map[string]interface{}{
-		// #nosec G115 block height always positive
-		"number":     hexutil.Uint64(header.Height),
-		"hash":       hexutil.Bytes(header.Hash()),
-		"parentHash": common.BytesToHash(header.LastBlockID.Hash.Bytes()),
-		"nonce":      ethtypes.BlockNonce{},   // PoW specific
-		"sha3Uncles": ethtypes.EmptyUncleHash, // No uncles in Tendermint
-		"logsBloom":  bloom,
-		"stateRoot":  hexutil.Bytes(header.AppHash),
-		"miner":      validatorAddr,
-		"mixHash":    common.Hash{},
-		"difficulty": (*hexutil.Big)(big.NewInt(0)),
-		"extraData":  "0x",
-		// #nosec G115 size always positive
-		"size": hexutil.Uint64(size),
-		// #nosec G115 gasLimit always positive
-		"gasLimit": hexutil.Uint64(gasLimit), // Static gas limit
-		"gasUsed":  (*hexutil.Big)(gasUsed),
-		// #nosec G115 timestamp always positive
-		"timestamp":        hexutil.Uint64(header.Time.Unix()),
+		"number":           hexutil.Uint64(header.Height), //#nosec G115 won't exceed uint64
+		"hash":             hexutil.Bytes(header.Hash()),
+		"parentHash":       common.BytesToHash(header.LastBlockID.Hash.Bytes()),
+		"nonce":            ethtypes.BlockNonce{},   // PoW specific
+		"sha3Uncles":       ethtypes.EmptyUncleHash, // No uncles in Tendermint
+		"logsBloom":        bloom,
+		"stateRoot":        hexutil.Bytes(header.AppHash),
+		"miner":            validatorAddr,
+		"mixHash":          common.Hash{},
+		"difficulty":       (*hexutil.Big)(big.NewInt(0)),
+		"extraData":        "0x",
+		"size":             hexutil.Uint64(size),     //#nosec G115 size won't exceed uint64
+		"gasLimit":         hexutil.Uint64(gasLimit), //#nosec G115 gas limit won't exceed uint64
+		"gasUsed":          (*hexutil.Big)(gasUsed),
+		"timestamp":        hexutil.Uint64(header.Time.Unix()), //#nosec G115 won't exceed uint64
 		"transactionsRoot": transactionsRoot,
 		"receiptsRoot":     ethtypes.EmptyRootHash,
 
@@ -169,7 +147,7 @@ func FormatBlock(
 }
 
 // NewTransactionFromMsg returns a transaction that will serialize to the RPC
-// from incomplete message for cosmos EVM transactions.
+// representation, with the given location metadata set (if available).
 func NewTransactionFromMsg(
 	msg *evmtypes.MsgEthereumTx,
 	blockHash common.Hash,
@@ -181,33 +159,36 @@ func NewTransactionFromMsg(
 	if txAdditional != nil {
 		return NewRPCTransactionFromIncompleteMsg(msg, blockHash, blockNumber, index, baseFee, chainID, txAdditional)
 	}
-	tx := msg.AsTransaction()
-	return NewRPCTransaction(tx, blockHash, blockNumber, index, baseFee, chainID)
+	return NewRPCTransaction(msg, blockHash, blockNumber, index, baseFee, chainID)
 }
 
-// NewRPCTransaction returns a transaction that will serialize to the RPC
+// NewTransactionFromData returns a transaction that will serialize to the RPC
 // representation, with the given location metadata set (if available).
 func NewRPCTransaction(
-	tx *ethtypes.Transaction, blockHash common.Hash, blockNumber, index uint64, baseFee *big.Int,
+	msg *evmtypes.MsgEthereumTx,
+	blockHash common.Hash,
+	blockNumber,
+	index uint64,
+	baseFee,
 	chainID *big.Int,
 ) (*RPCTransaction, error) {
+	tx := msg.AsTransaction()
 	// Determine the signer. For replay-protected transactions, use the most permissive
 	// signer, because we assume that signers are backwards-compatible with old
-	// transactions. For non-protected transactions, the homestead signer signer is used
-	// because the return value of ChainId is zero for those transactions.
+	// transactions. For non-protected transactions, the frontier signer is used
+	// because the latest signer will reject the unprotected transactions.
 	var signer ethtypes.Signer
 	if tx.Protected() {
 		signer = ethtypes.LatestSignerForChainID(tx.ChainId())
 	} else {
-		signer = ethtypes.HomesteadSigner{}
+		signer = ethtypes.FrontierSigner{}
 	}
-	from, err := ethtypes.Sender(signer, tx)
+	from, err := msg.GetSenderLegacy(signer)
 	if err != nil {
 		return nil, err
 	}
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
-		// #nosec G115 uint8 -> uint64 false positive
 		Type:     hexutil.Uint64(tx.Type()),
 		From:     from,
 		Gas:      hexutil.Uint64(tx.Gas()),
@@ -241,12 +222,16 @@ func NewRPCTransaction(
 		// if the transaction has been mined, compute the effective gas price
 		if baseFee != nil && blockHash != (common.Hash{}) {
 			// price = min(tip, gasFeeCap - baseFee) + baseFee
-			price := math.BigMin(new(big.Int).Add(tx.GasTipCap(), baseFee), tx.GasFeeCap())
+			price := new(big.Int).Add(tx.GasTipCap(), baseFee)
+			if price.Cmp(tx.GasFeeCap()) > 0 {
+				price = tx.GasFeeCap()
+			}
 			result.GasPrice = (*hexutil.Big)(price)
 		} else {
 			result.GasPrice = (*hexutil.Big)(tx.GasFeeCap())
 		}
 	}
+
 	return result, nil
 }
 
@@ -258,14 +243,19 @@ func NewRPCTransactionFromIncompleteMsg(
 ) (*RPCTransaction, error) {
 	to := &common.Address{}
 	*to = txAdditional.Recipient
+	// for transactions before v31 this value was mistakenly used for Gas field
+	gas := txAdditional.GasUsed
+	if txAdditional.GasLimit != nil {
+		gas = *txAdditional.GasLimit
+	}
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(txAdditional.Type),
-		From:     common.HexToAddress(msg.From),
-		Gas:      hexutil.Uint64(txAdditional.GasUsed),
+		From:     common.BytesToAddress(msg.From),
+		Gas:      hexutil.Uint64(gas),
 		GasPrice: (*hexutil.Big)(baseFee),
 		Hash:     common.HexToHash(msg.Hash),
 		Input:    txAdditional.Data,
-		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from ethermint
+		Nonce:    hexutil.Uint64(txAdditional.Nonce), // TODO: get nonce for "from" from evm
 		To:       to,
 		Value:    (*hexutil.Big)(txAdditional.Value),
 		V:        (*hexutil.Big)(big.NewInt(0)),
@@ -284,15 +274,15 @@ func NewRPCTransactionFromIncompleteMsg(
 // BaseFeeFromEvents parses the feemarket basefee from cosmos events
 func BaseFeeFromEvents(events []abci.Event) *big.Int {
 	for _, event := range events {
-		if event.Type != feemarkettypes.EventTypeFeeMarket {
+		if event.Type != evmtypes.EventTypeFeeMarket {
 			continue
 		}
 
 		for _, attr := range event.Attributes {
-			if attr.Key == feemarkettypes.AttributeKeyBaseFee {
-				result, success := new(big.Int).SetString(attr.Value, 10)
+			if attr.Key == evmtypes.AttributeKeyBaseFee {
+				result, success := sdkmath.NewIntFromString(attr.Value)
 				if success {
-					return result
+					return result.BigInt()
 				}
 
 				return nil
@@ -303,25 +293,26 @@ func BaseFeeFromEvents(events []abci.Event) *big.Int {
 }
 
 // CheckTxFee is an internal function used to check whether the fee of
-// the given transaction is _reasonable_(under the cap).
-func CheckTxFee(gasPrice *big.Int, gas uint64, feeCap float64) error {
+// the given transaction is _reasonable_(under the minimum cap).
+func CheckTxFee(gasPrice *big.Int, gas uint64, minCap float64) error {
 	// Short circuit if there is no cap for transaction fee at all.
-	if feeCap == 0 {
+	if minCap == 0 {
 		return nil
 	}
 	// Return an error if gasPrice is nil
 	if gasPrice == nil {
 		return errors.New("gasprice is nil")
 	}
+
 	totalfee := new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas)))
-	// 1 photon in 10^18 aphoton
+	// 1 token in atto units (1e18)
 	oneToken := new(big.Float).SetInt(big.NewInt(params.Ether))
 	// quo = rounded(x/y)
 	feeEth := new(big.Float).Quo(totalfee, oneToken)
 	// no need to check error from parsing
 	feeFloat, _ := feeEth.Float64()
-	if feeFloat > feeCap {
-		return fmt.Errorf("tx fee (%.2f ether) exceeds the configured cap (%.2f ether)", feeFloat, feeCap)
+	if feeFloat > minCap {
+		return fmt.Errorf("tx fee (%.2f ether) exceeds the configured cap (%.2f ether)", feeFloat, minCap)
 	}
 	return nil
 }
@@ -331,8 +322,13 @@ func TxExceedBlockGasLimit(res *abci.ExecTxResult) bool {
 	return strings.Contains(res.Log, ExceedBlockGasLimitError)
 }
 
-// TxSuccessOrExceedsBlockGasLimit returns true if the transaction was successful
-// or if it failed with an ExceedBlockGasLimit error
-func TxSuccessOrExceedsBlockGasLimit(res *abci.ExecTxResult) bool {
-	return res.Code == 0 || TxExceedBlockGasLimit(res)
+// TxStateDBCommitError returns true if the evm tx commit error.
+func TxStateDBCommitError(res *abci.ExecTxResult) bool {
+	return strings.Contains(res.Log, StateDBCommitError)
+}
+
+// TxSucessOrExpectedFailure returns true if the transaction was successful
+// or if it failed with an ExceedBlockGasLimit error or TxStateDBCommitError error
+func TxSucessOrExpectedFailure(res *abci.ExecTxResult) bool {
+	return res.Code == 0 || TxExceedBlockGasLimit(res) || TxStateDBCommitError(res)
 }

@@ -12,8 +12,17 @@ const (
 	// EnvBtcRPCMainnet is the environment variable to enable mainnet for bitcoin rpc
 	EnvBtcRPCMainnet = "BTC_RPC_MAINNET"
 
-	// EnvBtcRPCTestnet is the environment variable to enable testnet for bitcoin rpc
-	EnvBtcRPCTestnet = "BTC_RPC_TESTNET"
+	// EnvBtcRPCSignet is the environment variable to enable signet for bitcoin rpc
+	EnvBtcRPCSignet = "BTC_RPC_SIGNET"
+
+	// EnvBtcRPCTestnet4 is the environment variable to enable testnet4 for bitcoin rpc
+	EnvBtcRPCTestnet4 = "BTC_RPC_TESTNET4"
+
+	// EnvTONRPC is the environment variable to enable ton rpc
+	EnvTONRPC = "TON_RPC"
+
+	// BTC_TEST_PK is the environment variable to configure bitcoin private key for live unit tests
+	EnvBTCTestPK = "BTC_TEST_PK"
 )
 
 // LiveTestEnabled returns true if live tests are enabled
@@ -27,4 +36,10 @@ func LiveTestEnabled() bool {
 	}
 
 	return enabled
+}
+
+// IsEnvVariableSet returns true if the environment variable is set
+func IsEnvVariableSet(envVar string) bool {
+	value := os.Getenv(envVar)
+	return value != ""
 }

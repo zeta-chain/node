@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package filters
 
 import (
@@ -27,6 +12,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/rpc/backend"
@@ -106,13 +92,13 @@ func newFilter(logger log.Logger, backend Backend, criteria filters.FilterCriter
 	}
 }
 
-const (
-	maxToOverhang = 600
-)
-
 // Logs searches the blockchain for matching log entries, returning all from the
 // first block that contains matches, updating the start of the filter accordingly.
 func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*ethtypes.Log, error) {
+	if blockLimit == 0 {
+		return nil, nil
+	}
+
 	logs := []*ethtypes.Log{}
 	var err error
 
@@ -132,7 +118,7 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 				"error",
 				err.Error(),
 			)
-			return nil, nil
+			return nil, err
 		}
 
 		bloom, err := f.backend.BlockBloom(blockRes)
@@ -141,6 +127,12 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		}
 
 		return f.blockLogs(blockRes, bloom)
+	}
+
+	// Disallow pending logs.
+	if f.criteria.FromBlock.Int64() == rpc.PendingBlockNumber.Int64() ||
+		f.criteria.ToBlock.Int64() == rpc.PendingBlockNumber.Int64() {
+		return nil, errPendingLogsUnsupported
 	}
 
 	// Figure out the limits of the filter range
@@ -154,47 +146,59 @@ func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*eth
 		return nil, nil
 	}
 
-	head := header.Number.Int64()
-	if f.criteria.FromBlock.Int64() < 0 {
-		f.criteria.FromBlock = big.NewInt(head)
-	} else if f.criteria.FromBlock.Int64() == 0 {
-		f.criteria.FromBlock = big.NewInt(1)
-	}
-	if f.criteria.ToBlock.Int64() < 0 {
-		f.criteria.ToBlock = big.NewInt(head)
-	} else if f.criteria.ToBlock.Int64() == 0 {
-		f.criteria.ToBlock = big.NewInt(1)
+	head := header.Number.Uint64()
+	resolveSpecial := func(number int64) (uint64, error) {
+		switch number {
+		case rpc.LatestBlockNumber.Int64(), rpc.FinalizedBlockNumber.Int64(), rpc.SafeBlockNumber.Int64():
+			return head, nil
+		case rpc.EarliestBlockNumber.Int64():
+			return 1, nil
+		default:
+			if number < 0 {
+				return 0, errors.New("negative block number")
+			}
+			return uint64(number), nil
+		}
 	}
 
-	if f.criteria.ToBlock.Int64()-f.criteria.FromBlock.Int64() > blockLimit {
-		return nil, fmt.Errorf("maximum [from, to] blocks distance: %d", blockLimit)
+	from, err := resolveSpecial(f.criteria.FromBlock.Int64())
+	if err != nil {
+		return nil, err
+	}
+	to, err := resolveSpecial(f.criteria.ToBlock.Int64())
+	if err != nil {
+		return nil, err
 	}
 
 	// check bounds
-	if f.criteria.FromBlock.Int64() > head {
-		return []*ethtypes.Log{}, nil
-	} else if f.criteria.ToBlock.Int64() > head+maxToOverhang {
-		f.criteria.ToBlock = big.NewInt(head + maxToOverhang)
+	if from > head || from > to {
+		return nil, errInvalidBlockRange
 	}
 
-	from := f.criteria.FromBlock.Int64()
-	to := f.criteria.ToBlock.Int64()
+	if to > head {
+		return nil, errInvalidBlockRange
+	}
+
+	if blockLimit > 0 && to-from > uint64(blockLimit) {
+		return nil, fmt.Errorf("maximum [from, to] blocks distance: %d", blockLimit)
+	}
 
 	for height := from; height <= to; height++ {
-		blockRes, err := f.backend.TendermintBlockResultByNumber(&height)
+		h := int64(height) //#nosec G115
+		blockRes, err := f.backend.TendermintBlockResultByNumber(&h)
 		if err != nil {
 			f.logger.Debug("failed to fetch block result from Tendermint", "height", height, "error", err.Error())
-			return nil, nil
+			return nil, fmt.Errorf("failed to fetch block result from Tendermint: %w", err)
 		}
 
 		bloom, err := f.backend.BlockBloom(blockRes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to query block bloom filter from block results: %w", err)
 		}
 
 		filtered, err := f.blockLogs(blockRes, bloom)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to fetch block by number %d", height)
+			return nil, fmt.Errorf("failed to fetch block by number %d: %w", height, err)
 		}
 
 		// check logs limit

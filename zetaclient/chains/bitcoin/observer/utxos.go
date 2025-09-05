@@ -29,6 +29,11 @@ type SelectedUTXOs struct {
 
 // FetchUTXOs fetches TSS-owned UTXOs from the Bitcoin node
 func (ob *Observer) FetchUTXOs(ctx context.Context) error {
+	// skip query if node is not ready
+	if !ob.isNodeEnabled() {
+		return nil
+	}
+
 	// this is useful when a zetaclient's pending nonce lagged behind for whatever reason.
 	ob.refreshPendingNonce(ctx)
 

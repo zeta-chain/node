@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/x/fungible/types"
@@ -17,10 +16,11 @@ import (
 func TestKeeper_GetSystemContract(t *testing.T) {
 	t.Run("should get and remove system contract", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
-		k.SetSystemContract(ctx, types.SystemContract{SystemContract: "test"})
+		system := *sample.SystemContract()
+		k.SetSystemContract(ctx, system)
 		val, found := k.GetSystemContract(ctx)
 		require.True(t, found)
-		require.Equal(t, types.SystemContract{SystemContract: "test"}, val)
+		require.Equal(t, system, val)
 
 		// can remove contract
 		k.RemoveSystemContract(ctx)
@@ -1099,5 +1099,102 @@ func TestKeeper_CallZRC20Deposit(t *testing.T) {
 			big.NewInt(1),
 		)
 		require.ErrorIs(t, err, types.ErrContractCall)
+	})
+}
+
+func TestKeeper_GetGatewayGasLimitSafe(t *testing.T) {
+	t.Run("get default if not set", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+
+		limit := k.GetGatewayGasLimitSafe(ctx)
+		require.Equal(t, types.DefaultGatewayGasLimit, limit.Uint64())
+	})
+
+	t.Run("get value from state if set", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		k.SetSystemContract(ctx, *sample.SystemContract())
+		newGasLimit := uint64(10)
+
+		k.SetGatewayGasLimit(ctx, newGasLimit)
+
+		limit := k.GetGatewayGasLimitSafe(ctx)
+		require.Equal(t, newGasLimit, limit.Uint64())
+	})
+}
+
+func TestKeeper_SetGatewayGasLimit(t *testing.T) {
+	t.Run("set gas limit if system contract is found", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		defaultSystemContract := *sample.SystemContract()
+		k.SetSystemContract(ctx, defaultSystemContract)
+		newGasLimit := uint64(10)
+
+		// Act
+		k.SetGatewayGasLimit(ctx, newGasLimit)
+
+		// Assert
+		updatedSystemContract, found := k.GetSystemContract(ctx)
+		require.True(t, found)
+		require.Equal(t, newGasLimit, updatedSystemContract.GatewayGasLimit)
+		require.Equal(t, defaultSystemContract.SystemContract, updatedSystemContract.SystemContract)
+		require.Equal(t, defaultSystemContract.Gateway, updatedSystemContract.Gateway)
+		require.Equal(t, defaultSystemContract.ConnectorZevm, updatedSystemContract.ConnectorZevm)
+
+	})
+
+	t.Run("set gas limit if system contract is not found", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		newGasLimit := uint64(10)
+
+		// Act
+		k.SetGatewayGasLimit(ctx, newGasLimit)
+
+		// Assert
+		updatedSystemContract, found := k.GetSystemContract(ctx)
+		require.True(t, found)
+		require.Equal(t, newGasLimit, updatedSystemContract.GatewayGasLimit)
+		require.Equal(t, "", updatedSystemContract.SystemContract)
+		require.Equal(t, "", updatedSystemContract.Gateway)
+		require.Equal(t, "", updatedSystemContract.ConnectorZevm)
+	})
+}
+
+func TestGetGatewayGasLimit(t *testing.T) {
+	t.Run("unable to get gas limit if system contract is not set", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+
+		// Act
+		_, err := k.GetGatewayGasLimit(ctx)
+		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
+	})
+
+	t.Run("unable to get gas limit if gas limit is not set", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+
+		k.SetSystemContract(ctx, types.SystemContract{})
+
+		// Act
+		_, err := k.GetGatewayGasLimit(ctx)
+
+		// Assert
+		require.ErrorIs(t, err, types.ErrGasLimitNotSet)
+	})
+
+	t.Run("get gas limit if system contract is set", func(t *testing.T) {
+		// Arrange
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		defaultSystemContract := *sample.SystemContract()
+		k.SetSystemContract(ctx, defaultSystemContract)
+
+		// Act
+		gasLimit, err := k.GetGatewayGasLimit(ctx)
+
+		// Assert
+		require.NoError(t, err)
+		require.Equal(t, defaultSystemContract.GatewayGasLimit, gasLimit)
 	})
 }

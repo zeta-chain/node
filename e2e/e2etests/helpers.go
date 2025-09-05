@@ -4,87 +4,57 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"time"
 
-	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/e2e/runner"
-	"github.com/zeta-chain/node/e2e/utils"
-	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 // randomPayload generates a random payload to be used in gateway calls for testing purposes
 func randomPayload(r *runner.E2ERunner) string {
+	return randomPayloadWithSize(r, 100)
+}
+
+// randomPayloadWithSize generates a random payload string containing exactly 'size' characters
+func randomPayloadWithSize(r *runner.E2ERunner, size int) string {
+	// return empty string for invalid size
+	if size <= 0 {
+		return ""
+	}
+
+	var (
+		bytes []byte
+		even  = size%2 == 0
+	)
+
+	// the size will double when converting to hex string, so we just need half the size
+	if even {
+		bytes = make([]byte, size/2)
+	} else {
+		// add 1 more byte if size is odd, we trim it later
+		bytes = make([]byte, (size/2)+1)
+	}
+
+	// generate random bytes
+	_, err := rand.Read(bytes)
+	require.NoError(r, err)
+
+	// hex encode the bytes, the size is double
+	if even {
+		return hex.EncodeToString(bytes)
+	}
+
+	// trim the last letter to fit the odd size
+	return hex.EncodeToString(bytes)[:size]
+}
+
+func randomPayloadBytes(r *runner.E2ERunner) []byte {
 	bytes := make([]byte, 50)
 	_, err := rand.Read(bytes)
 	require.NoError(r, err)
 
-	return hex.EncodeToString(bytes)
-}
-
-func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	tx, err := r.BTCZRC20.Approve(
-		r.ZEVMAuth,
-		r.BTCZRC20Addr,
-		big.NewInt(amount.Int64()*2),
-	) // approve more to cover withdraw fee
-	require.NoError(r, err)
-
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-
-	// mine blocks if testing on regnet
-	stop := r.MineBlocksIfLocalBitcoin()
-	defer stop()
-
-	// withdraw 'amount' of BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
-	require.NoError(r, err)
-
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
-	utils.RequireTxSuccessful(r, receipt)
-
-	// get cctx and check status
-	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
-
-	// get bitcoin tx according to the outTxHash in cctx
-	outTxHash := cctx.GetCurrentOutboundParam().Hash
-	hash, err := chainhash.NewHashFromStr(outTxHash)
-	require.NoError(r, err)
-
-	rawTx, err := r.BtcRPCClient.GetRawTransactionVerbose(r.Ctx, hash)
-	require.NoError(r, err)
-
-	r.Logger.Info("raw tx:")
-	r.Logger.Info("  TxIn: %d", len(rawTx.Vin))
-	for idx, txIn := range rawTx.Vin {
-		r.Logger.Info("  TxIn %d:", idx)
-		r.Logger.Info("    TxID:Vout:  %s:%d", txIn.Txid, txIn.Vout)
-		r.Logger.Info("    ScriptSig: %s", txIn.ScriptSig.Hex)
-	}
-	r.Logger.Info("  TxOut: %d", len(rawTx.Vout))
-	for _, txOut := range rawTx.Vout {
-		r.Logger.Info("  TxOut %d:", txOut.N)
-		r.Logger.Info("    Value: %.8f", txOut.Value)
-		r.Logger.Info("    ScriptPubKey: %s", txOut.ScriptPubKey.Hex)
-	}
-
-	return rawTx
-}
-
-// bigAdd is shorthand for new(big.Int).Add(x, y)
-func bigAdd(x *big.Int, y *big.Int) *big.Int {
-	return new(big.Int).Add(x, y)
-}
-
-// bigSub is shorthand for new(big.Int).Sub(x, y)
-func bigSub(x *big.Int, y *big.Int) *big.Int {
-	return new(big.Int).Sub(x, y)
+	return bytes
 }
 
 func formatDuration(d time.Duration) string {

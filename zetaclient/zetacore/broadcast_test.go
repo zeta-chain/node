@@ -9,8 +9,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
@@ -26,7 +26,7 @@ func TestHandleBroadcastError(t *testing.T) {
 		report bool
 	}
 	testCases := map[error]response{
-		errors.New("nonce too low"):                       {retry: false, report: false},
+		errors.New("nonce too low"):                       {retry: false, report: true},
 		errors.New("replacement transaction underpriced"): {retry: false, report: false},
 		errors.New("already known"):                       {retry: false, report: true},
 		errors.New(""):                                    {retry: true, report: false},
@@ -60,13 +60,13 @@ func TestBroadcast(t *testing.T) {
 				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
 				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 0})
 
-			method = "/ethermint.feemarket.v1.Query/Params"
+			method = "/cosmos.evm.feemarket.v1.Query/Params"
 			s.ExpectUnary(method).
 				UnlimitedTimes().
 				WithPayload(feemarkettypes.QueryParamsRequest{}).
 				Return(feemarkettypes.QueryParamsResponse{
 					Params: feemarkettypes.Params{
-						BaseFee: sdkmath.NewInt(23455),
+						BaseFee: sdkmath.LegacyNewDec(23455),
 					},
 				})
 		},
@@ -81,6 +81,7 @@ func TestBroadcast(t *testing.T) {
 		client := setupZetacoreClient(t,
 			withObserverKeys(observerKeys),
 			withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+			withAccountRetriever(t, 5, 4),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)
@@ -97,6 +98,7 @@ func TestBroadcast(t *testing.T) {
 			withCometBFT(
 				mocks.NewSDKClientWithErr(t, errors.New("account sequence mismatch, expected 5 got 4"), 32),
 			),
+			withAccountRetriever(t, 5, 4),
 		)
 
 		msg := crosschaintypes.NewMsgVoteGasPrice(address.String(), chains.Ethereum.ChainId, 10000, 1000, 1)

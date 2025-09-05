@@ -60,6 +60,7 @@ func Test_GetForeignCoinsFromAsset(t *testing.T) {
 				t,
 				withDefaultObserverKeys(),
 				withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+				withAccountRetriever(t, 5, 4),
 			)
 
 			// ACT

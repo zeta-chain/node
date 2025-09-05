@@ -4,8 +4,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
@@ -13,9 +13,6 @@ import (
 	"github.com/zeta-chain/node/pkg/crypto"
 	"github.com/zeta-chain/node/x/fungible/types"
 )
-
-// gatewayGasLimit is the gas limit for the gateway functions
-var gatewayGasLimit = big.NewInt(1_500_000)
 
 // CallUpdateGatewayAddress calls the updateGatewayAddress function on the ZRC20 contract
 // function updateGatewayAddress(address addr)
@@ -35,7 +32,7 @@ func (k Keeper) CallUpdateGatewayAddress(
 		types.ModuleAddressEVM,
 		zrc20Address,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"updateGatewayAddress",
@@ -85,13 +82,58 @@ func (k Keeper) CallDepositAndCallZRC20(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"depositAndCall0",
 		context,
 		zrc20,
 		amount,
+		target,
+		message,
+	)
+}
+
+// DepositAndCallZeta calls the depositAndCall function on the gateway contract
+// function depositAndCall(
+// MessageContext calldata context,
+// address target,
+// bytes calldata message
+// )
+func (k Keeper) DepositAndCallZeta(
+	ctx sdk.Context,
+	context gatewayzevm.MessageContext,
+	amount *big.Int,
+	target common.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, types.ErrSystemContractNotFound
+	}
+	gatewayAddr := common.HexToAddress(systemContract.Gateway)
+	if crypto.IsEmptyAddress(gatewayAddr) {
+		return nil, types.ErrGatewayContractNotSet
+	}
+	// NOTE:
+	// depositAndCall: ZETA version for depositAndCall method
+	// depositAndCall0: ZRC20 version for depositAndCall method
+	return k.CallEVM(
+		ctx,
+		*gatewayABI,
+		types.ModuleAddressEVM,
+		gatewayAddr,
+		amount,
+		k.GetGatewayGasLimitSafe(ctx),
+		true,
+		false,
+		"depositAndCall",
+		context,
 		target,
 		message,
 	)
@@ -135,7 +177,7 @@ func (k Keeper) CallExecute(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"execute",
@@ -181,7 +223,7 @@ func (k Keeper) CallExecuteRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"executeRevert",
@@ -233,7 +275,7 @@ func (k Keeper) CallDepositAndRevert(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"depositAndRevert",
@@ -243,6 +285,48 @@ func (k Keeper) CallDepositAndRevert(
 		revert.RevertContext{
 			Sender:        common.HexToAddress(inboundSender),
 			Asset:         zrc20,
+			Amount:        amount,
+			RevertMessage: message,
+		},
+	)
+}
+
+func (k Keeper) CallZetaDepositAndRevert(
+	ctx sdk.Context,
+	inboundSender string,
+	amount *big.Int,
+	target common.Address,
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayABI, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, types.ErrSystemContractNotFound
+	}
+	gatewayAddr := common.HexToAddress(systemContract.Gateway)
+	if crypto.IsEmptyAddress(gatewayAddr) {
+		return nil, types.ErrGatewayContractNotSet
+	}
+	// NOTE:
+	// depositAndRevert: ZRC20 version for depositAndRevert method
+	// depositAndRevert0: ZETA version for depositAndRevert method
+	return k.CallEVM(
+		ctx,
+		*gatewayABI,
+		types.ModuleAddressEVM,
+		gatewayAddr,
+		amount,
+		k.GetGatewayGasLimitSafe(ctx),
+		true,
+		false,
+		"depositAndRevert0",
+		target,
+		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
+			Asset:         common.Address{}, // TODO : Should we set this to WZETA?
 			Amount:        amount,
 			RevertMessage: message,
 		},
@@ -287,7 +371,7 @@ func (k Keeper) CallExecuteAbort(
 		types.ModuleAddressEVM,
 		gatewayAddr,
 		BigIntZero,
-		gatewayGasLimit,
+		k.GetGatewayGasLimitSafe(ctx),
 		true,
 		false,
 		"executeAbort",

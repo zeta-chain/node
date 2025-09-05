@@ -11,7 +11,7 @@ import (
 
 type ObserverKeeper interface {
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
-	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
+	CheckObserverCanVote(ctx sdk.Context, address string) error
 	GetSupportedChains(ctx sdk.Context) []chains.Chain
 	GetNodeAccount(ctx sdk.Context, address string) (observertypes.NodeAccount, bool)
 	GetAllNodeAccount(ctx sdk.Context) []observertypes.NodeAccount

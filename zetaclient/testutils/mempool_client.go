@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	APIURLBlocks          = "https://mempool.space/api/v1/blocks"
-	APIURLBlockTxs        = "https://mempool.space/api/block/%s/txs"
-	APIURLBlocksTestnet   = "https://mempool.space/testnet/api/v1/blocks"
-	APIURLBlockTxsTestnet = "https://mempool.space/testnet/api/block/%s/txs"
+	APIURLBlocks           = "https://mempool.space/api/v1/blocks"
+	APIURLBlockTxs         = "https://mempool.space/api/block/%s/txs"
+	APIURLBlocksTestnet4   = "https://mempool.space/testnet4/api/v1/blocks"
+	APIURLBlockTxsTestnet4 = "https://mempool.space/testnet4/api/block/%s/txs"
 )
 
 // MempoolBlock represents a block in the mempool
@@ -136,7 +136,7 @@ func Get(ctx context.Context, path string, v interface{}) error {
 func GetBlocks(ctx context.Context, n int, testnet bool) ([]MempoolBlock, error) {
 	path := fmt.Sprintf("%s/%d", APIURLBlocks, n)
 	if testnet {
-		path = fmt.Sprintf("%s/%d", APIURLBlocksTestnet, n)
+		path = fmt.Sprintf("%s/%d", APIURLBlocksTestnet4, n)
 	}
 	blocks := make([]MempoolBlock, 0)
 	if err := Get(ctx, path, &blocks); err != nil {
@@ -149,7 +149,7 @@ func GetBlocks(ctx context.Context, n int, testnet bool) ([]MempoolBlock, error)
 func GetBlockTxs(ctx context.Context, blockHash string, testnet bool) ([]MempoolTx, error) {
 	path := fmt.Sprintf(APIURLBlockTxs, blockHash)
 	if testnet {
-		path = fmt.Sprintf(APIURLBlockTxsTestnet, blockHash)
+		path = fmt.Sprintf(APIURLBlockTxsTestnet4, blockHash)
 	}
 	txs := make([]MempoolTx, 0)
 	if err := Get(ctx, path, &txs); err != nil {

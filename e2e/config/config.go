@@ -81,12 +81,12 @@ type AdditionalAccounts struct {
 	UserMisc              Account `yaml:"user_misc"`
 	UserAdmin             Account `yaml:"user_admin"`
 	UserMigration         Account `yaml:"user_migration"` // used for TSS migration, TODO: rename (https://github.com/zeta-chain/node/issues/2780)
-	UserPrecompile        Account `yaml:"user_precompile"`
 	UserEther             Account `yaml:"user_ether"`
 	UserERC20             Account `yaml:"user_erc20"`
 	UserEtherRevert       Account `yaml:"user_ether_revert"`
 	UserERC20Revert       Account `yaml:"user_erc20_revert"`
 	UserEmissionsWithdraw Account `yaml:"user_emissions_withdraw"`
+	UserZeta              Account `yaml:"user_zeta"`
 }
 
 type PolicyAccounts struct {
@@ -135,8 +135,10 @@ type Contracts struct {
 
 // Solana contains the addresses of predeployed contracts and accounts on the Solana chain
 type Solana struct {
-	GatewayProgramID DoubleQuotedString `yaml:"gateway_program_id"`
-	SPLAddr          DoubleQuotedString `yaml:"spl"`
+	GatewayProgramID      DoubleQuotedString `yaml:"gateway_program_id"`
+	SPLAddr               DoubleQuotedString `yaml:"spl"`
+	ConnectedProgramID    DoubleQuotedString `yaml:"connected_program_id"`
+	ConnectedSPLProgramID DoubleQuotedString `yaml:"connected_spl_program_id"`
 }
 
 // TON contains the address of predeployed contracts on the TON chain
@@ -144,12 +146,24 @@ type TON struct {
 	GatewayAccountID DoubleQuotedString `yaml:"gateway_account_id"`
 }
 
+// SuiExample contains the object IDs in the example package
+type SuiExample struct {
+	PackageID      DoubleQuotedString `yaml:"package_id"`
+	TokenType      DoubleQuotedString `yaml:"token_type"`
+	GlobalConfigID DoubleQuotedString `yaml:"global_config_id"`
+	PartnerID      DoubleQuotedString `yaml:"partner_id"`
+	ClockID        DoubleQuotedString `yaml:"clock_id"`
+}
+
 // Sui contains the addresses of predeployed contracts on the Sui chain
 type Sui struct {
-	GatewayPackageID         DoubleQuotedString `yaml:"gateway_package_id"`
-	GatewayObjectID          DoubleQuotedString `yaml:"gateway_object_id"`
+	GatewayPackageID DoubleQuotedString `yaml:"gateway_package_id"`
+	GatewayObjectID  DoubleQuotedString `yaml:"gateway_object_id"`
+	// GatewayUpgradeCap is the capability object used to upgrade the gateway
+	GatewayUpgradeCap        DoubleQuotedString `yaml:"gateway_upgrade_cap"`
 	FungibleTokenCoinType    DoubleQuotedString `yaml:"fungible_token_coin_type"`
 	FungibleTokenTreasuryCap DoubleQuotedString `yaml:"fungible_token_treasury_cap"`
+	Example                  SuiExample         `yaml:"example"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
@@ -162,6 +176,7 @@ type EVM struct {
 	Gateway          DoubleQuotedString `yaml:"gateway"`
 	ERC20CustodyNew  DoubleQuotedString `yaml:"erc20_custody_new"`
 	TestDAppV2Addr   DoubleQuotedString `yaml:"test_dapp_v2"`
+	ConnectorNative  DoubleQuotedString `yaml:"connector_native"` // The native connector contract is the V2 version of the connector contract
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
@@ -184,6 +199,7 @@ type ZEVM struct {
 	TestDappAddr       DoubleQuotedString `yaml:"test_dapp"`
 	Gateway            DoubleQuotedString `yaml:"gateway"`
 	TestDAppV2Addr     DoubleQuotedString `yaml:"test_dapp_v2"`
+	CoreRegistry       DoubleQuotedString `yaml:"core_registry"`
 }
 
 // DefaultConfig returns the default config using values for localnet testing
@@ -201,7 +217,7 @@ func DefaultConfig() Config {
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 			Solana:       "http://solana:8899",
-			TON:          "http://ton:8000/lite-client.json",
+			TON:          "http://ton:8081",
 		},
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
@@ -213,7 +229,7 @@ func DefaultConfig() Config {
 }
 
 // ReadConfig reads the config file
-func ReadConfig(file string) (config Config, err error) {
+func ReadConfig(file string, validate bool) (config Config, err error) {
 	if file == "" {
 		return Config{}, errors.New("file name cannot be empty")
 	}
@@ -227,8 +243,10 @@ func ReadConfig(file string) (config Config, err error) {
 	if err != nil {
 		return Config{}, err
 	}
-	if err := config.Validate(); err != nil {
-		return Config{}, err
+	if validate {
+		if err := config.Validate(); err != nil {
+			return Config{}, err
+		}
 	}
 
 	return
@@ -275,12 +293,12 @@ func (a AdditionalAccounts) AsSlice() []Account {
 		a.UserMisc,
 		a.UserAdmin,
 		a.UserMigration,
-		a.UserPrecompile,
 		a.UserEther,
 		a.UserERC20,
 		a.UserEtherRevert,
 		a.UserERC20Revert,
 		a.UserEmissionsWithdraw,
+		a.UserZeta,
 	}
 }
 
@@ -389,10 +407,6 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-	c.AdditionalAccounts.UserPrecompile, err = generateAccount()
-	if err != nil {
-		return err
-	}
 	c.AdditionalAccounts.UserEther, err = generateAccount()
 	if err != nil {
 		return err
@@ -413,7 +427,10 @@ func (c *Config) GenerateKeys() error {
 	if err != nil {
 		return err
 	}
-
+	c.AdditionalAccounts.UserZeta, err = generateAccount()
+	if err != nil {
+		return err
+	}
 	c.PolicyAccounts.EmergencyPolicyAccount, err = generateAccount()
 	if err != nil {
 		return err
@@ -460,7 +477,7 @@ func (a Account) AsTONWallet(client *ton.Client) (*ton.AccountInit, *tonwallet.W
 	return ton.ConstructWalletFromPrivateKey(rawPk, client)
 }
 
-// config actually match
+// Validate configs actually match
 func (a Account) Validate() error {
 	privateKey, err := a.PrivateKey()
 	if err != nil {

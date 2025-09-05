@@ -39,7 +39,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR ?= "./..."
-TEST_BUILD_FLAGS := -tags pebbledb,ledger
+TEST_BUILD_FLAGS := -tags pebbledb,ledger,test
 
 export DOCKER_BUILDKIT := 1
 
@@ -147,11 +147,17 @@ test-cctx:
 ###                                 Linting            	                    ###
 ###############################################################################
 
-lint-pre:
-	@test -z $(gofmt -l .)
-	@GOFLAGS=$(GOFLAGS) go mod verify
+# Make sure LATEST golangci-lint is installed 
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+lint-deps:
+	@if ! command -v golangci-lint &> /dev/null; then \
+		echo "Installing golangci-lint"; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6; \
+		echo "golangci-lint installed successfully"; \
+	fi
 
-lint: lint-pre
+lint: lint-deps
+	@GOFLAGS=$(GOFLAGS) go mod verify
 	@golangci-lint run
 
 lint-gosec:
@@ -160,12 +166,8 @@ lint-gosec:
 gosec:
 	gosec  -exclude-dir=localnet ./...
 
-###############################################################################
-###                           		Formatting			                    ###
-###############################################################################
-
-fmt:
-	@bash ./scripts/fmt.sh
+fmt: lint-deps
+	@golangci-lint fmt
 
 ###############################################################################
 ###                           Generation commands  		                    ###
@@ -211,13 +213,8 @@ mocks:
 	@bash ./scripts/mocks-generate.sh
 .PHONY: mocks
 
-precompiles:
-	@echo "--> Generating bindings for precompiled contracts"
-	@bash ./scripts/bindings-stateful-precompiles.sh
-.PHONY: precompiles
-
 # generate also includes Go code formatting
-generate: proto-gen openapi specs typescript docs-zetacored mocks precompiles fmt
+generate: proto-gen openapi specs typescript docs-zetacored mocks fmt
 .PHONY: generate
 
 
@@ -275,6 +272,10 @@ start-e2e-test: e2e-images
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
+start-skip-consensus-overwrite-test: e2e-images
+	@echo "--> Starting e2e test but skip overwriting the consensus timeout params on zetacore0"
+	cd contrib/localnet/ && SKIP_CONSENSUS_VALUES_OVERWRITE=true $(DOCKER_COMPOSE) up -d
+
 start-staking-test: e2e-images
 	@echo "--> Starting e2e staking test"
 	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-staking" && \
@@ -287,7 +288,27 @@ start-e2e-admin-test: e2e-images
 
 start-e2e-performance-test: e2e-images solana
 	@echo "--> Starting e2e performance test"
-	export E2E_ARGS="${E2E_ARGS} --test-performance" && \
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --test-stress-solana --test-stress-sui" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-e2e-performance-test-1k: e2e-images solana
+	@echo "--> Starting e2e performance test"
+	export E2E_ARGS="${E2E_ARGS}--test-stress-eth --test-stress-solana --test-stress-sui --iterations=1000" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-eth: e2e-images
+	@echo "--> Starting stress test for eth"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-eth --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-solana: e2e-images solana
+	@echo "--> Starting stress test for solana"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-solana --iterations=50" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
+
+start-stress-test-sui: e2e-images
+	@echo "--> Starting stress test for sui"
+	export E2E_ARGS="${E2E_ARGS} --test-stress-sui --iterations=50" && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
 
 start-e2e-import-mainnet-test: e2e-images
@@ -302,15 +323,11 @@ start-e2e-consensus-test: e2e-images
 	export ZETACORE1_PLATFORM=linux/amd64 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
 
-start-stress-test: e2e-images
-	@echo "--> Starting stress test"
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile stress up -d
-
-start-tss-migration-test: e2e-images
+start-tss-migration-test: e2e-images solana
 	@echo "--> Starting tss migration test"
 	export LOCALNET_MODE=tss-migrate && \
-	export E2E_ARGS="${E2E_ARGS} --test-tss-migration" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	export E2E_ARGS="${E2E_ARGS} --test-solana" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile tss --profile solana up -d
 
 start-solana-test: e2e-images solana
 	@echo "--> Starting solana test"
@@ -337,38 +354,38 @@ start-legacy-test: e2e-images
 ###############################################################################
 
 # build from source only if requested
-# NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on lastest-runtime
+# NODE_VERSION and NODE_COMMIT must be set as old-runtime depends on latest-runtime
 ifdef UPGRADE_TEST_FROM_SOURCE
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from source"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime-source \
-		--build-arg OLD_VERSION='release/v29' \
+		--build-arg OLD_VERSION='release/v36' \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
-		--build-arg NODE_COMMIT=$(NODE_COMMIT)
+		--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 		.
-.PHONY: zetanode-upgrade
 else
 zetanode-upgrade: e2e-images
 	@echo "Building zetanode-upgrade from binaries"
 	$(DOCKER) build -t zetanode:old -f Dockerfile-localnet --target old-runtime \
-	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v29.0.0' \
+	--build-arg OLD_VERSION='https://github.com/zeta-chain/node/releases/download/v36.0.0' \
 	--build-arg NODE_VERSION=$(NODE_VERSION) \
 	--build-arg NODE_COMMIT=$(NODE_COMMIT) \
 	.
-.PHONY: zetanode-upgrade
 endif
+
+.PHONY: zetanode-upgrade
 
 start-upgrade-test: zetanode-upgrade solana
 	@echo "--> Starting upgrade test"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=225 && \
-	export E2E_ARGS="--test-solana" && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana -f docker-compose-upgrade.yml up -d
+	export UPGRADE_HEIGHT=260 && \
+	export E2E_ARGS="--test-solana --test-sui" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade --profile solana --profile sui -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-light: zetanode-upgrade
 	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
 	export LOCALNET_MODE=upgrade && \
-	export UPGRADE_HEIGHT=90 && \
+	export UPGRADE_HEIGHT=60 && \
 	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 start-upgrade-test-admin: zetanode-upgrade
@@ -383,9 +400,15 @@ start-upgrade-import-mainnet-test: zetanode-upgrade
 	export LOCALNET_MODE=upgrade && \
 	export ZETACORED_IMPORT_GENESIS_DATA=true && \
 	export ZETACORED_START_PERIOD=15m && \
-	export UPGRADE_HEIGHT=225 && \
+	export UPGRADE_HEIGHT=240 && \
 	cd contrib/localnet/ && ./scripts/import-data.sh mainnet && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
+start-connector-migration-test: zetanode-upgrade
+	@echo "--> Starting migration test for v2 connector contracts"
+	export LOCALNET_MODE=upgrade && \
+	export UPGRADE_HEIGHT=90 && \
+	export E2E_ARGS="${E2E_ARGS} --skip-regular --test-connector-migration --test-legacy" && \
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile upgrade -f docker-compose-upgrade.yml up -d
 
 ###############################################################################
 ###                         Simulation Tests              					###
@@ -414,7 +437,7 @@ $(BINDIR)/runsim:
 # Timeout: Timeout for the simulation test
 define run-sim-test
 	@echo "Running $(1)"
-	@go test -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
+	@go test ${TEST_BUILD_FLAGS} -mod=readonly $(SIMAPP) -run $(2) -Enabled=true \
 		-NumBlocks=$(3) -BlockSize=$(4) -Commit=true -Period=0 -v -timeout $(5)
 endef
 

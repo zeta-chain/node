@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -23,14 +24,16 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	zetaconnnectornative "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -59,7 +62,11 @@ type E2ERunnerOption func(*E2ERunner)
 const (
 	EnvKeyLocalnetMode = "LOCALNET_MODE"
 
-	LocalnetModeUpgrade = "upgrade"
+	LocalnetModeUpgrade      = "upgrade"
+	LocalNetModeTSSMigration = "tss-migration"
+
+	// NodeSyncTolerance is the time tolerance for the ZetaChain nodes behind a RPC to be synced
+	NodeSyncTolerance = constant.ZetaBlockTime * 5
 )
 
 func WithZetaTxServer(txServer *txserver.ZetaTxServer) E2ERunnerOption {
@@ -83,7 +90,6 @@ type E2ERunner struct {
 	TSSAddress            ethcommon.Address
 	BTCTSSAddress         btcutil.Address
 	SuiTSSAddress         string
-	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
 	SolanaDeployerAddress solana.PublicKey
 	FeeCollectorAddress   types.AccAddress
 
@@ -119,8 +125,10 @@ type E2ERunner struct {
 	ZEVMAuth *bind.TransactOpts
 
 	// programs on Solana
-	GatewayProgram solana.PublicKey
-	SPLAddr        solana.PublicKey
+	GatewayProgram      solana.PublicKey
+	SPLAddr             solana.PublicKey
+	ConnectedProgram    solana.PublicKey
+	ConnectedSPLProgram solana.PublicKey
 
 	// TON related
 	TONGateway ton.AccountID
@@ -128,17 +136,21 @@ type E2ERunner struct {
 	// contract Sui
 	SuiGateway *sui.Gateway
 
+	// SuiGatewayUpgradeCap is the upgrade cap used for upgrading the Sui gateway package
+	SuiGatewayUpgradeCap string
+
 	// SuiTokenCoinType is the coin type identifying the fungible token for SUI
 	SuiTokenCoinType string
 
 	// SuiTokenTreasuryCap is the treasury cap for the SUI token that allows minting, only using in local tests
 	SuiTokenTreasuryCap string
 
+	// SuiExample contains the example package information for Sui authenticated call
+	SuiExample config.SuiExample
+
 	// contracts evm
 	ZetaEthAddr       ethcommon.Address
 	ZetaEth           *zetaeth.ZetaEth
-	ConnectorEthAddr  ethcommon.Address
-	ConnectorEth      *zetaconnectoreth.ZetaConnectorEth
 	ERC20CustodyAddr  ethcommon.Address
 	ERC20Custody      *erc20custodyv2.ERC20Custody
 	ERC20Addr         ethcommon.Address
@@ -148,6 +160,12 @@ type E2ERunner struct {
 	GatewayEVM        *gatewayevm.GatewayEVM
 	TestDAppV2EVMAddr ethcommon.Address
 	TestDAppV2EVM     *testdappv2.TestDAppV2
+	// ConnectorNative is the V2 connector for EVM chains
+	ConnectorNativeAddr ethcommon.Address
+	ConnectorNative     *zetaconnnectornative.ZetaConnectorNative
+	// ConnectorEthAddr is the V1 connector for EVM chains
+	ConnectorEthAddr ethcommon.Address
+	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
 
 	// contracts zevm
 	// zrc20 contracts
@@ -188,6 +206,8 @@ type E2ERunner struct {
 	GatewayZEVM          *gatewayzevm.GatewayZEVM
 	TestDAppV2ZEVMAddr   ethcommon.Address
 	TestDAppV2ZEVM       *testdappv2.TestDAppV2
+	CoreRegistryAddr     ethcommon.Address
+	CoreRegistry         *coreregistry.CoreRegistry
 
 	// config
 	CctxTimeout    time.Duration
@@ -287,8 +307,10 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	r.TONGateway = other.TONGateway
 
 	r.SuiGateway = other.SuiGateway
+	r.SuiGatewayUpgradeCap = other.SuiGatewayUpgradeCap
 	r.SuiTokenCoinType = other.SuiTokenCoinType
 	r.SuiTokenTreasuryCap = other.SuiTokenTreasuryCap
+	r.SuiExample = other.SuiExample
 
 	// create instances of contracts
 	r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
@@ -389,7 +411,11 @@ func (r *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-
+	r.ConnectorNativeAddr = other.ConnectorNativeAddr
+	r.ConnectorNative, err = zetaconnnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -407,9 +433,13 @@ func (r *E2ERunner) Unlock() {
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
 func (r *E2ERunner) PrintContractAddresses() {
+	r.Logger.Print("Zetacored version: %s ", r.GetZetacoredVersion())
+
 	r.Logger.Print(" --- 📜Solana addresses ---")
-	r.Logger.Print("GatewayProgram: %s", r.GatewayProgram.String())
-	r.Logger.Print("SPL:            %s", r.SPLAddr.String())
+	r.Logger.Print("GatewayProgram:      %s", r.GatewayProgram.String())
+	r.Logger.Print("SPL:                 %s", r.SPLAddr.String())
+	r.Logger.Print("ConnectedProgram:    %s", r.ConnectedProgram.String())
+	r.Logger.Print("ConnectedSPLProgram: %s", r.ConnectedSPLProgram.String())
 
 	r.Logger.Print(" --- 📜TON addresses ---")
 	if !r.TONGateway.IsZero() {
@@ -420,8 +450,10 @@ func (r *E2ERunner) PrintContractAddresses() {
 
 	r.Logger.Print(" --- 📜Sui addresses ---")
 	if r.SuiGateway != nil {
-		r.Logger.Print("GatewayPackageID: %s", r.SuiGateway.PackageID())
-		r.Logger.Print("GatewayObjectID:  %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("GatewayPackageID:  %s", r.SuiGateway.PackageID())
+		r.Logger.Print("GatewayObjectID:   %s", r.SuiGateway.ObjectID())
+		r.Logger.Print("GatewayUpgradeCap: %s", r.SuiGatewayUpgradeCap)
+		r.Logger.Print("ExamplePackageID:  %s", r.SuiExample.PackageID)
 	} else {
 		r.Logger.Print("💤 Sui tests disabled")
 	}
@@ -443,15 +475,17 @@ func (r *E2ERunner) PrintContractAddresses() {
 	r.Logger.Print("WZeta:          %s", r.WZetaAddr.Hex())
 	r.Logger.Print("GatewayZEVM:    %s", r.GatewayZEVMAddr.Hex())
 	r.Logger.Print("TestDAppV2ZEVM: %s", r.TestDAppV2ZEVMAddr.Hex())
+	r.Logger.Print("CoreRegistry:   %s", r.CoreRegistryAddr.Hex())
 
 	// evm contracts
 	r.Logger.Print(" --- 📜EVM contracts ---")
-	r.Logger.Print("ZetaEth:        %s", r.ZetaEthAddr.Hex())
-	r.Logger.Print("ConnectorEth:   %s", r.ConnectorEthAddr.Hex())
-	r.Logger.Print("ERC20Custody:   %s", r.ERC20CustodyAddr.Hex())
-	r.Logger.Print("ERC20:          %s", r.ERC20Addr.Hex())
-	r.Logger.Print("GatewayEVM:     %s", r.GatewayEVMAddr.Hex())
-	r.Logger.Print("TestDAppV2EVM:  %s", r.TestDAppV2EVMAddr.Hex())
+	r.Logger.Print("ZetaEth:           	%s", r.ZetaEthAddr.Hex())
+	r.Logger.Print("ConnectorEthLegacy:	%s", r.ConnectorEthAddr.Hex())
+	r.Logger.Print("ConnectorEth:  		%s", r.ConnectorNativeAddr.Hex())
+	r.Logger.Print("ERC20Custody:   	%s", r.ERC20CustodyAddr.Hex())
+	r.Logger.Print("ERC20:            	%s", r.ERC20Addr.Hex())
+	r.Logger.Print("GatewayEVM:       	%s", r.GatewayEVMAddr.Hex())
+	r.Logger.Print("TestDAppV2EVM:     	%s", r.TestDAppV2EVMAddr.Hex())
 
 	r.Logger.Print(" --- 📜Legacy contracts ---")
 
@@ -464,6 +498,15 @@ func (r *E2ERunner) PrintContractAddresses() {
 // IsRunningUpgrade returns true if the test is running an upgrade test suite.
 func (r *E2ERunner) IsRunningUpgrade() bool {
 	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningTssMigration() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade
+}
+
+func (r *E2ERunner) IsRunningUpgradeOrTSSMigration() bool {
+	return os.Getenv(EnvKeyLocalnetMode) == LocalnetModeUpgrade ||
+		os.Getenv(EnvKeyLocalnetMode) == LocalNetModeTSSMigration
 }
 
 // Errorf logs an error message. Mimics the behavior of testing.T.Errorf
@@ -493,6 +536,10 @@ func (r *E2ERunner) EVMAddress() ethcommon.Address {
 	return r.Account.EVMAddress()
 }
 
+func (r *E2ERunner) ZetaAddress() types.AccAddress {
+	return types.AccAddress(r.EVMAddress().Bytes())
+}
+
 func (r *E2ERunner) GetSolanaPrivKey() solana.PrivateKey {
 	privkey, err := solana.PrivateKeyFromBase58(r.Account.SolanaPrivateKey.String())
 	require.NoError(r, err)
@@ -507,4 +554,9 @@ func (r *E2ERunner) GetZetacoredVersion() string {
 	require.NoError(r, err, "get node info")
 	r.zetacoredVersion = constant.NormalizeVersion(nodeInfo.ApplicationVersion.Version)
 	return r.zetacoredVersion
+}
+
+func (r *E2ERunner) WorkDirPrefixed(path string) string {
+	prefix := utils.WorkDir(r)
+	return filepath.Join(prefix, path)
 }

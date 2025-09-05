@@ -114,6 +114,7 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 	})
 
 	t.Run("can update name and symbol", func(t *testing.T) {
+		// arrange
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseAuthorityMock: true,
 		})
@@ -137,8 +138,10 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
+		// act
 		_, err := msgServer.UpdateZRC20Name(ctx, msg)
 
+		// assert
 		require.NoError(t, err)
 
 		// check the name and symbol
@@ -150,7 +153,14 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "bar", symbol)
 
+		// check object
+		fc, found := k.GetForeignCoins(ctx, zrc20Address.Hex())
+		require.True(t, found)
+		require.Equal(t, "foo", fc.Name)
+		require.Equal(t, "bar", fc.Symbol)
+
 		// can update name only
+		// arrange
 		msg = types.NewMsgUpdateZRC20Name(
 			admin,
 			zrc20Address.Hex(),
@@ -160,7 +170,10 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
+		// act
 		_, err = msgServer.UpdateZRC20Name(ctx, msg)
+
+		// assert
 		require.NoError(t, err)
 
 		name, err = k.ZRC20Name(ctx, zrc20Address)
@@ -171,7 +184,14 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "bar", symbol)
 
+		// check object
+		fc, found = k.GetForeignCoins(ctx, zrc20Address.Hex())
+		require.True(t, found)
+		require.Equal(t, "foo2", fc.Name)
+		require.Equal(t, "bar", fc.Symbol)
+
 		// can update symbol only
+		// arrange
 		msg = types.NewMsgUpdateZRC20Name(
 			admin,
 			zrc20Address.Hex(),
@@ -181,7 +201,10 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 
 		keepertest.MockCheckAuthorization(&authorityMock.Mock, msg, nil)
 
+		// act
 		_, err = msgServer.UpdateZRC20Name(ctx, msg)
+
+		// assert
 		require.NoError(t, err)
 
 		name, err = k.ZRC20Name(ctx, zrc20Address)
@@ -191,5 +214,11 @@ func TestMsgServer_UpdateZRC20Name(t *testing.T) {
 		symbol, err = k.ZRC20Symbol(ctx, zrc20Address)
 		require.NoError(t, err)
 		require.Equal(t, "bar2", symbol)
+
+		// check object
+		fc, found = k.GetForeignCoins(ctx, zrc20Address.Hex())
+		require.True(t, found)
+		require.Equal(t, "foo2", fc.Name)
+		require.Equal(t, "bar2", fc.Symbol)
 	})
 }

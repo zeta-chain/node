@@ -9,9 +9,10 @@ echo "starting solana test validator..."
 solana-test-validator --limit-ledger-size 50000000 &
 
 sleep 5
-# airdrop to e2e sol account
+# airdrop to e2e sol and spl accounts
 solana airdrop 1000
 solana airdrop 1000 37yGiHAnLvWZUNVwu9esp74YQFqxU1qHCbABkDvRddUQ
+solana airdrop 1000 BZRrLRu7VktRkZt7ZihxP9PLXjBf8vPdVb9dQU4Bj6my
 
 # Deploy initial programs
 solana program deploy gateway.so

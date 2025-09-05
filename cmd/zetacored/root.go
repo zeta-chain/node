@@ -20,7 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -30,31 +33,45 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	cosmosevmcmd "github.com/cosmos/evm/client"
+	"github.com/cosmos/evm/crypto/hd"
+	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	ethermintclient "github.com/zeta-chain/ethermint/client"
-	"github.com/zeta-chain/ethermint/crypto/hd"
-	evmenc "github.com/zeta-chain/ethermint/encoding"
-	"github.com/zeta-chain/ethermint/types"
 
 	"github.com/zeta-chain/node/app"
 	zetacoredconfig "github.com/zeta-chain/node/cmd/zetacored/config"
-	zetamempool "github.com/zeta-chain/node/pkg/mempool"
+	"github.com/zeta-chain/node/pkg/chains"
 	zevmserver "github.com/zeta-chain/node/server"
-	servercfg "github.com/zeta-chain/node/server/config"
+	zetaserverconfig "github.com/zeta-chain/node/server/config"
 )
 
 const EnvPrefix = "zetacore"
 
-// NewRootCmd creates a new root command for wasmd. It is called once in the
+// NewRootCmd creates a new root command for zetacored. It is called once in the
 // main function.
 
 type emptyAppOptions struct{}
 
 func (ao emptyAppOptions) Get(_ string) interface{} { return nil }
 
-func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig()
+func NewRootCmd() *cobra.Command {
+	// need to create this app instance to get autocliopts
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		"",
+		0,
+		zetaserverconfig.DefaultEVMChainID, // should be ok to use default just for temp app
+		emptyAppOptions{},
+	)
+
+	// should be ok to use default just for temp app
+	encodingConfig := app.MakeEncodingConfig(zetaserverconfig.DefaultEVMChainID)
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -111,7 +128,20 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initAppConfig()
+			// TODO https://github.com/zeta-chain/node/issues/4078
+			// need to check about evm chain id, getting it like this is generally fine, but some commands
+			// like docs are halting because of it
+			if initClientCtx.ChainID == "" {
+				return nil
+			}
+
+			zetachain, err := chains.ZetaChainFromCosmosChainID(initClientCtx.ChainID)
+			if err != nil {
+				return err
+			}
+
+			//#nosec G115 chain id won't exceed uint64
+			customAppTemplate, customAppConfig := InitAppConfig(zetacoredconfig.BaseDenom, uint64(zetachain.ChainId))
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
 		},
@@ -122,18 +152,6 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 		confixcmd.ConfigCommand(),
 	)
 
-	// need to create this app instance to get autocliopts
-	tempApp := app.New(
-		log.NewNopLogger(),
-		dbm.NewMemDB(),
-		nil,
-		true,
-		map[int64]bool{},
-		"",
-		0,
-		evmenc.MakeConfig(),
-		emptyAppOptions{},
-	)
 	autoCliOpts := tempApp.AutoCliOpts()
 	autoCliOpts.ClientCtx = initClientCtx
 
@@ -141,13 +159,68 @@ func NewRootCmd() (*cobra.Command, types.EncodingConfig) {
 		panic(err)
 	}
 
-	return rootCmd, encodingConfig
+	return rootCmd
 }
 
-// initAppConfig helps to override default appConfig template and configs.
+// InitAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, interface{}) {
-	return servercfg.AppConfig(zetacoredconfig.BaseDenom)
+func InitAppConfig(denom string, evmChainID uint64) (string, interface{}) {
+	ethCfg := evmtypes.DefaultChainConfig(evmChainID)
+
+	configurator := evmtypes.NewEVMConfigurator()
+	err := configurator.
+		WithExtendedEips(zetacoredconfig.CosmosEVMActivators).
+		WithChainConfig(ethCfg).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         denom,
+			ExtendedDenom: denom,
+			DisplayDenom:  denom,
+			Decimals:      18,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
+
+	type CustomAppConfig struct {
+		serverconfig.Config
+
+		EVM     cosmosevmserverconfig.EVMConfig
+		JSONRPC cosmosevmserverconfig.JSONRPCConfig
+		TLS     cosmosevmserverconfig.TLSConfig
+	}
+
+	// Optionally allow the chain developer to overwrite the SDK's default
+	// server config.
+	srvCfg := serverconfig.DefaultConfig()
+	// The SDK's default minimum gas price is set to "" (empty value) inside
+	// app.toml. If left empty by validators, the node will halt on startup.
+	// However, the chain developer can set a default app.toml value for their
+	// validators here.
+	//
+	// In summary:
+	// - if you leave srvCfg.MinGasPrices = "", all validators MUST tweak their
+	//   own app.toml config,
+	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
+	//   own app.toml to override, or use this default value.
+	//
+	// In this application, we set the min gas prices to 1.
+	srvCfg.MinGasPrices = "1" + denom
+
+	evmCfg := cosmosevmserverconfig.DefaultEVMConfig()
+	evmCfg.EVMChainID = evmChainID
+
+	customAppConfig := CustomAppConfig{
+		Config:  *srvCfg,
+		EVM:     *evmCfg,
+		JSONRPC: *cosmosevmserverconfig.DefaultJSONRPCConfig(),
+		TLS:     *cosmosevmserverconfig.DefaultTLSConfig(),
+	}
+
+	customAppTemplate := serverconfig.DefaultConfigTemplate +
+		cosmosevmserverconfig.DefaultEVMConfigTemplate
+
+	return customAppTemplate, customAppConfig
 }
 
 // initTmConfig overrides the default Tendermint config
@@ -159,15 +232,13 @@ func initTmConfig() *tmcfg.Config {
 	return cfg
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig testutil.TestEncodingConfig) {
 	ac := appCreator{
 		encCfg: encodingConfig,
 	}
 
 	rootCmd.AddCommand(
-		ethermintclient.ValidateChainID(
-			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		),
+		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(
 			banktypes.GenesisBalancesIterator{},
 			app.DefaultNodeHome,
@@ -190,7 +261,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		AddrConversionCmd(),
 		UpgradeHandlerVersionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 
 		debug.Cmd(),
 		snapshot.Cmd(ac.newApp),
@@ -203,16 +273,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig types.EncodingConfig) {
 		addModuleInitFlags,
 	)
 
-	// the ethermintserver one supercedes the sdk one
-	//server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.createSimappAndExport, addModuleInitFlags)
-
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		docsCommand(),
-		ethermintclient.KeyCommands(app.DefaultNodeHome),
+		cosmosevmcmd.KeyCommands(app.DefaultNodeHome, true),
 	)
 
 	// replace the default hd-path for the key add command with Ethereum HD Path
@@ -275,8 +342,10 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg types.EncodingConfig
+	encCfg testutil.TestEncodingConfig
 }
+
+const DefaultMaxTxs = 3000
 
 func (ac appCreator) newApp(
 	logger log.Logger,
@@ -287,21 +356,41 @@ func (ac appCreator) newApp(
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	maxTxs := cast.ToInt(appOpts.Get(server.FlagMempoolMaxTxs))
 	if maxTxs <= 0 {
-		maxTxs = zetamempool.DefaultMaxTxs
+		maxTxs = DefaultMaxTxs
 	}
-	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
-		app.SetMempool(zetamempool.NewPriorityMempool(zetamempool.PriorityNonceWithMaxTx(maxTxs)))
+	signerExtractor := app.NewEthSignerExtractionAdapter(mempool.NewDefaultSignerExtractionAdapter())
+	mpool := mempool.NewPriorityMempool(mempool.PriorityNonceMempoolConfig[int64]{
+		TxPriority:      mempool.NewDefaultTxPriority(),
+		SignerExtractor: signerExtractor,
+		MaxTx:           maxTxs,
 	})
+	baseappOptions = append(baseappOptions, func(app *baseapp.BaseApp) {
+		app.SetMempool(mpool)
+		handler := baseapp.NewDefaultProposalHandler(mpool, app)
+		handler.SetSignerExtractionAdapter(signerExtractor)
+		app.SetPrepareProposal(handler.PrepareProposalHandler())
+		app.SetProcessProposal(handler.ProcessProposalHandler())
+	})
+
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
+	chainID, err := getChainIDFromOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		panic(err)
+	}
+
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		//cosmoscmd.EncodingConfig(ac.encCfg),
-		ac.encCfg,
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64
 		appOpts,
 		baseappOptions...,
 	)
@@ -320,9 +409,16 @@ func (ac appCreator) appExport(
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
 
-	loadLatest := false
-	if height == -1 {
-		loadLatest = true
+	loadLatest := height == -1
+
+	chainID, err := getChainIDFromOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	zetachain, err := chains.ZetaChainFromCosmosChainID(chainID)
+	if err != nil {
+		panic(err)
 	}
 
 	zetaApp = app.New(
@@ -333,7 +429,7 @@ func (ac appCreator) appExport(
 		map[int64]bool{},
 		homePath,
 		uint(1),
-		ac.encCfg,
+		uint64(zetachain.ChainId), //#nosec G115 chain id won't exceed uint64
 		appOpts,
 	)
 
@@ -346,4 +442,22 @@ func (ac appCreator) appExport(
 	}
 
 	return zetaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+// getChainIDFromOpts returns the chain Id from app Opts
+// It first tries to get from the chainId flag, if not available
+// it will load from home
+func getChainIDFromOpts(appOpts servertypes.AppOptions) (chainID string, err error) {
+	// Get the chain Id from appOpts
+	chainID = cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// If not available load from home
+		homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+		chainID, err = zetacoredconfig.GetChainIDFromHome(homeDir)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return
 }

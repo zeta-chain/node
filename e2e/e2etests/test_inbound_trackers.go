@@ -24,7 +24,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 	addTrackerAndWaitForCCTX := func(coinType coin.CoinType, txHash string) {
 		r.AddInboundTracker(coinType, txHash)
 		cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash, r.CctxClient, r.Logger, r.CctxTimeout)
-		require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+		utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 		r.Logger.CCTX(*cctx, "cctx")
 	}
 
@@ -42,7 +42,7 @@ func TestInboundTrackers(r *runner.E2ERunner, args []string) {
 
 	// send eth deposit
 	r.Logger.Print("🏃test eth deposit")
-	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx := r.ETHDeposit(r.EVMAddress(), amount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}, false)
 	addTrackerAndWaitForCCTX(coin.CoinType_Gas, tx.Hash().Hex())
 	r.Logger.Print("🍾 eth deposit observed")
 

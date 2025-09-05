@@ -3,13 +3,11 @@ package observer
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
@@ -159,7 +157,16 @@ func FilterAndParseIncomingTx(
 			continue
 		}
 
-		event, err := GetBtcEvent(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, common.CalcDepositorFee)
+		event, err := GetBtcEventWithWitness(
+			ctx,
+			rpc,
+			tx,
+			tssAddress,
+			blockNumber,
+			logger,
+			netParams,
+			common.CalcDepositorFee,
+		)
 		if err != nil {
 			// unable to parse the tx, the caller should retry
 			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
@@ -190,7 +197,7 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 	// if the memo is invalid, we set the status in the event, the inbound will be observed as invalid
 	err := event.DecodeMemoBytes(ob.Chain().ChainId)
 	if err != nil {
-		ob.Logger().Inbound.Info().Fields(lf).Msgf("invalid memo bytes: %s", hex.EncodeToString(event.MemoBytes))
+		ob.Logger().Inbound.Info().Err(err).Fields(lf).Msgf("invalid memo: %s", hex.EncodeToString(event.MemoBytes))
 		event.Status = crosschaintypes.InboundStatus_INVALID_MEMO
 	}
 
@@ -214,51 +221,6 @@ func (ob *Observer) GetInboundVoteFromBtcEvent(event *BTCInboundEvent) *crosscha
 
 	// create inbound vote message for standard memo
 	return ob.NewInboundVoteFromStdMemo(event, amountInt)
-}
-
-// GetBtcEvent returns a valid BTCInboundEvent or nil
-// it uses witness data to extract the sender address
-func GetBtcEvent(
-	ctx context.Context,
-	rpc RPC,
-	tx btcjson.TxRawResult,
-	tssAddress string,
-	blockNumber uint64,
-	logger zerolog.Logger,
-	netParams *chaincfg.Params,
-	feeCalculator common.DepositorFeeCalculator,
-) (*BTCInboundEvent, error) {
-	return GetBtcEventWithWitness(ctx, rpc, tx, tssAddress, blockNumber, logger, netParams, feeCalculator)
-}
-
-// GetSenderAddressByVin get the sender address from the transaction input (vin)
-func GetSenderAddressByVin(
-	ctx context.Context,
-	rpc RPC,
-	vin btcjson.Vin,
-	net *chaincfg.Params,
-) (string, error) {
-	// query previous raw transaction by txid
-	hash, err := chainhash.NewHashFromStr(vin.Txid)
-	if err != nil {
-		return "", err
-	}
-
-	// this requires running bitcoin node with 'txindex=1'
-	tx, err := rpc.GetRawTransaction(ctx, hash)
-	if err != nil {
-		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
-	}
-
-	// #nosec G115 - always in range
-	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
-		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
-	}
-
-	// decode sender address from previous pkScript
-	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
-
-	return common.DecodeSenderFromScript(pkScript, net)
 }
 
 // NewInboundVoteFromLegacyMemo creates a MsgVoteInbound message for inbound that uses legacy memo

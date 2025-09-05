@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"cosmossdk.io/errors"
+	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zeta-chain/node/app"
@@ -27,13 +28,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	// log outputs must be serialized since we are writing log messages in this process and
 	// also directly from the zetaclient process
-	serializedStdout := &serializedWriter{upstream: os.Stdout}
-	logger := getLogger(cfg, serializedStdout)
+	syncWriter := zerolog.SyncWriter(os.Stdout)
+	logger := getLogger(cfg, syncWriter)
 	logger = logger.With().Str("process", "zetaclientd-supervisor").Logger()
-
-	ctx := context.Background()
 
 	// these signals will result in the supervisor process shutting down
 	shutdownChan := make(chan os.Signal, 1)
@@ -47,8 +48,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	clientCfg := cfg.GetZetacoreClientConfig()
 	_, enableAutoDownload := os.LookupEnv("ZETACLIENTD_SUPERVISOR_ENABLE_AUTO_DOWNLOAD")
-	supervisor, err := newZetaclientdSupervisor(cfg.ZetaCoreURL, logger, enableAutoDownload)
+	supervisor, err := newZetaclientdSupervisor(clientCfg.GRPCURL, logger, enableAutoDownload)
 	if err != nil {
 		logger.Error().Err(err).Msg("unable to get supervisor")
 		os.Exit(1)
@@ -60,12 +62,14 @@ func main() {
 		ctx, cancel := context.WithCancel(ctx)
 		// pass args from supervisor directly to zetaclientd
 		cmd := exec.CommandContext(ctx, zetaclientdBinaryName, os.Args[1:]...) // #nosec G204
+		cmd.Stdout = syncWriter
+		cmd.Stderr = os.Stderr
+
 		// by default, CommandContext sends SIGKILL. we want more graceful shutdown.
 		cmd.Cancel = func() error {
 			return cmd.Process.Signal(syscall.SIGINT)
 		}
-		cmd.Stdout = serializedStdout
-		cmd.Stderr = os.Stderr
+
 		// must reset the passwordInputBuffer every iteration because reads are stateful (seek to end)
 		passwordInputBuffer := bytes.Buffer{}
 		passwordInputBuffer.Write([]byte(strings.Join(passwords, "\n") + "\n"))

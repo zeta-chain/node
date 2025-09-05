@@ -2,7 +2,6 @@ package observer
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -37,7 +36,6 @@ type RPC interface {
 	QueryModuleEvents(ctx context.Context, q client.EventQuery) ([]models.SuiEventResponse, string, error)
 
 	SuiXGetReferenceGasPrice(ctx context.Context) (uint64, error)
-	SuiGetObject(ctx context.Context, req models.SuiGetObjectRequest) (models.SuiObjectResponse, error)
 	SuiGetTransactionBlock(
 		ctx context.Context,
 		req models.SuiGetTransactionBlockRequest,
@@ -46,12 +44,16 @@ type RPC interface {
 
 // New Observer constructor.
 func New(baseObserver *base.Observer, client RPC, gateway *sui.Gateway) *Observer {
-	return &Observer{
+	ob := &Observer{
 		Observer: baseObserver,
 		client:   client,
 		gateway:  gateway,
 		txMap:    make(map[uint64]models.SuiTransactionBlockResponse),
 	}
+
+	ob.LoadLastTxScanned()
+
+	return ob
 }
 
 // Gateway returns Sui gateway.
@@ -103,12 +105,12 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	// no priority fee for Sui
 	const priorityFee = 0
 
-	ob.setLatestGasPrice(gasPrice)
-
 	_, err = ob.ZetacoreClient().PostVoteGasPrice(ctx, ob.Chain(), gasPrice, priorityFee, epochNum)
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
 	}
+
+	ob.setLatestGasPrice(gasPrice)
 
 	return nil
 }
@@ -126,22 +128,11 @@ func (ob *Observer) setLatestGasPrice(price uint64) {
 	ob.latestGasPrice = price
 }
 
-// ensureCursor ensures tx scroll cursor for inbound observations
-func (ob *Observer) ensureCursor() {
-	if ob.LastTxScanned() != "" {
-		return
-	}
-
-	// Note that this would only work for the empty chain database
-	envValue := os.Getenv(base.EnvVarLatestTxByChain(ob.Chain()))
-	if envValue != "" {
-		ob.WithLastTxScanned(envValue)
-	}
-}
-
 func (ob *Observer) getCursor() string { return ob.LastTxScanned() }
 
-func (ob *Observer) setCursor(cursor string) error {
+func (ob *Observer) setCursor(eventID models.EventId) error {
+	cursor := client.EncodeCursor(eventID)
+
 	if err := ob.WriteLastTxScannedToDB(cursor); err != nil {
 		return errors.Wrap(err, "unable to write last tx scanned to db")
 	}

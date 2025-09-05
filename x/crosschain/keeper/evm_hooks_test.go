@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/zeta-chain/node/pkg/contracts/sui"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -24,6 +26,70 @@ import (
 	fungibletypes "github.com/zeta-chain/node/x/fungible/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
+
+// SetupStateForProcessLogsZetaWithdraw sets up additional state required for processing logs for ZETA withdraw events
+// This sets up the system contract with gateway configuration and mints necessary coins.
+func SetupStateForProcessLogsZetaWithdraw(
+	t *testing.T,
+	ctx sdk.Context,
+	k *crosschainkeeper.Keeper,
+	zk keepertest.ZetaKeepers,
+	sdkk keepertest.SDKKeepers,
+	chain chains.Chain,
+	mintAmount sdkmath.Int,
+) {
+	// Mint coins for the fungible module
+	err := sdkk.BankKeeper.MintCoins(
+		ctx,
+		fungibletypes.ModuleName,
+		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, mintAmount)),
+	)
+	require.NoError(t, err)
+
+	// Set up gateway and ZRC20 addresses
+	gatewayFromLog := "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+	zrc20FromLog := "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
+
+	// Deploy system contract
+	systemContract, err := zk.FungibleKeeper.DeploySystemContract(
+		ctx,
+		ethcommon.HexToAddress(zrc20FromLog),
+		ethcommon.Address{},
+		ethcommon.Address{},
+	)
+	require.NoError(t, err)
+
+	// Set up TSS
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+
+	// Set gas price
+	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+		ChainId: chain.ChainId,
+		Prices:  []uint64{100},
+	})
+
+	// Set chain nonces
+	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+		ChainId: chain.ChainId,
+		Nonce:   0,
+	})
+
+	// Set pending nonces
+	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+		NonceLow:  0,
+		NonceHigh: 0,
+		ChainId:   chain.ChainId,
+		Tss:       tss.TssPubkey,
+	})
+
+	// Set system contract configuration
+	zk.FungibleKeeper.SetSystemContract(ctx, fungibletypes.SystemContract{
+		SystemContract: systemContract.Hex(),
+		ConnectorZevm:  sample.EthAddress().String(),
+		Gateway:        gatewayFromLog,
+	})
+}
 
 // SetupStateForProcessLogsZetaSent sets up additional state required for processing logs for ZetaSent events
 // This sets up the gas coin, zrc20 contract, gas price, zrc20 pool.
@@ -256,7 +322,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 			chains.BitcoinMainnet.ChainId,
 			coin.CoinType_Gas,
 		)
-		require.ErrorContains(t, err, "unsupported address")
+		require.ErrorContains(t, err, "unsupported Bitcoin address")
 	})
 
 	t.Run("unable to validate an event with an invalid solana address", func(t *testing.T) {
@@ -283,6 +349,36 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		// 999999 lamports cannot be withdrawn
 		err := k.ValidateZRC20WithdrawEvent(ctx, solWithdrawalEvent, chainID, coin.CoinType_Gas)
 		require.ErrorContains(t, err, "less than rent exempt")
+	})
+
+	t.Run("unable to validate an event with an invalid sui address", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		// create a withdrawal event with an invalid address (contains additional character 'aa')
+		value := big.NewInt(1000000)
+		suiWithdrawalEvent := sample.ZRC20Withdrawal(
+			[]byte("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5abaa"),
+			value,
+		)
+
+		err := k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
+		require.ErrorContains(t, err, "invalid Sui address")
+	})
+
+	t.Run("validate valid Sui event", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		addr, err := sui.EncodeAddress("0x25db16c3ca555f6702c07860503107bb73cce9f6c1d6df00464529db15d5a5ab")
+		require.NoError(t, err)
+
+		value := big.NewInt(1000000)
+		suiWithdrawalEvent := sample.ZRC20Withdrawal(
+			addr,
+			value,
+		)
+
+		err = k.ValidateZRC20WithdrawEvent(ctx, suiWithdrawalEvent, chains.SuiMainnet.ChainId, coin.CoinType_Gas)
+		require.NoError(t, err)
 	})
 }
 
@@ -751,6 +847,61 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 }
 
 func TestKeeper_ProcessLogs(t *testing.T) {
+	t.Run("successfully process ZETA Withdraw to ETH chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+
+		SetupStateForProcessLogsZetaWithdraw(
+			t, ctx, k, zk, sdkk, chain,
+			sdkmath.NewInt(1000000000000),
+		)
+
+		block := sample.ValidZetaWithdrawToEthReceipt(t)
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+
+		require.Equal(t, cctxList[0].InboundParams.CoinType, coin.CoinType_Zeta)
+		require.Equal(t, cctxList[0].ProtocolContractVersion, crosschaintypes.ProtocolContractVersion_V2)
+	})
+
+	t.Run("successfully process ZETA Withdraw and call to ETH chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.GoerliLocalnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+
+		// Use the new setup function
+		SetupStateForProcessLogsZetaWithdraw(
+			t, ctx, k, zk, sdkk, chain,
+			sdkmath.NewInt(10000000000),
+		)
+
+		block := sample.ValidZetaWithdrawAndCallReceipt(t)
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+
+		require.Equal(t, cctxList[0].InboundParams.CoinType, coin.CoinType_Zeta)
+		require.Equal(t, cctxList[0].ProtocolContractVersion, crosschaintypes.ProtocolContractVersion_V2)
+	})
+
 	t.Run("successfully parse and process ZRC20Withdrawal to BTC chain", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
@@ -776,6 +927,109 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutboundParam().Receiver)
 		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundParams.Sender)
 		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
+	})
+
+	t.Run("successfully parse and process gateway withdraw to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.ValidGatewayWithdrawToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+		require.Equal(t, "9fA4vYZfCa9k9UHjnvYCk4YoipsooapGciKMgaTBw9UH", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
+	})
+
+	t.Run("successfully parse and process gateway withdraw and call to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.ValidGatewayWithdrawAndCallToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+		require.Equal(t, "4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
+	})
+
+	t.Run("fails to parse and process invalid gateway withdraw to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.InvalidGatewayWithdrawToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.Error(t, err)
+	})
+
+	t.Run("successfully parse and process gateway call to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.ValidGatewayCallToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+		require.Equal(t, "4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc", cctxList[0].GetCurrentOutboundParam().Receiver)
+		require.Zero(t, cctxList[0].GetCurrentOutboundParam().Amount.BigInt().Int64())
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundParams.TxOrigin)
+	})
+
+	t.Run("fails to parse and process invalid gateway call to SOL chain", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chain := chains.SolanaDevnet
+		chainID := chain.ChainId
+		senderChain := chains.ZetaChainMainnet
+		setSupportedChain(ctx, zk, []int64{chainID, senderChain.ChainId}...)
+		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
+
+		block := sample.InvalidGatewayCallToSOLChainReceipt(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "solana", "SOL")
+		txOrigin := sample.EthAddress()
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), txOrigin.Hex())
+		require.Error(t, err)
 	})
 
 	t.Run("successfully parse and process ZetaSentEvent", func(t *testing.T) {
@@ -879,7 +1133,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		},
 	)
 
-	t.Run("no cctx created  for valid logs if Inbound is disabled", func(t *testing.T) {
+	t.Run("no cctx created for valid logs if Inbound is disabled", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 

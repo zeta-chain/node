@@ -42,13 +42,10 @@ func (c CCTXGatewayObservers) InitiateOutbound(
 	tmpCtx, commit := ctx.CacheContext()
 	outboundReceiverChainID := config.CCTX.GetCurrentOutboundParam().ReceiverChainId
 	// TODO (https://github.com/zeta-chain/node/issues/1010): workaround for this bug
-	noEthereumTxEvent := false
-	if chains.IsZetaChain(
+	noEthereumTxEvent := chains.IsZetaChain(
 		config.CCTX.InboundParams.SenderChainId,
 		c.crosschainKeeper.GetAuthorityKeeper().GetAdditionalChainList(ctx),
-	) {
-		noEthereumTxEvent = true
-	}
+	)
 
 	err = func() error {
 		// If ShouldPayGas flag is set during ValidateInbound PayGasAndUpdateCctx should be called

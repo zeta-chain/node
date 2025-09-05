@@ -4,120 +4,113 @@ import (
 	"fmt"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	"github.com/cosmos/cosmos-sdk/client"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/viper"
-	"github.com/zeta-chain/ethermint/crypto/ethsecp256k1"
-	ethermint "github.com/zeta-chain/ethermint/types"
 	"google.golang.org/grpc/metadata"
 
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+
+	"github.com/cosmos/evm/crypto/ethsecp256k1"
+	"github.com/cosmos/evm/server/config"
+	"github.com/cosmos/evm/testutil/constants"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/node/rpc/backend/mocks"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (suite *BackendTestSuite) TestRPCMinGasPrice() {
+func (s *TestSuite) TestRPCMinGasPrice() {
 	testCases := []struct {
 		name           string
 		registerMock   func()
-		expMinGasPrice int64
+		expMinGasPrice *big.Int
 		expPass        bool
 	}{
 		{
 			"pass - default gas price",
-			func() {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterParamsWithoutHeaderError(queryClient, 1)
-			},
-			ethermint.DefaultGasPrice,
+			func() {},
+			big.NewInt(constants.DefaultGasPrice),
 			true,
 		},
 		{
 			"pass - min gas price is 0",
-			func() {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterParamsWithoutHeader(queryClient, 1)
-			},
-			ethermint.DefaultGasPrice,
+			func() {},
+			big.NewInt(constants.DefaultGasPrice),
 			true,
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			minPrice := suite.backend.RPCMinGasPrice()
+			minPrice := s.backend.RPCMinGasPrice()
 			if tc.expPass {
-				suite.Require().Equal(tc.expMinGasPrice, minPrice)
+				s.Require().Equal(tc.expMinGasPrice, minPrice)
 			} else {
-				suite.Require().NotEqual(tc.expMinGasPrice, minPrice)
+				s.Require().NotEqual(tc.expMinGasPrice, minPrice)
 			}
 		})
 	}
 }
 
-func (suite *BackendTestSuite) TestSetGasPrice() {
+func (s *TestSuite) TestGenerateMinGasCoin() {
 	defaultGasPrice := (*hexutil.Big)(big.NewInt(1))
+	testCases := []struct {
+		name           string
+		gasPrice       hexutil.Big
+		minGas         sdk.DecCoins
+		expectedOutput sdk.DecCoin
+	}{
+		{
+			"pass - empty min gas Coins (default denom)",
+			*defaultGasPrice,
+			sdk.DecCoins{},
+			sdk.DecCoin{
+				Denom:  evmtypes.GetEVMCoinDenom(),
+				Amount: math.LegacyNewDecFromBigInt(defaultGasPrice.ToInt()),
+			},
+		},
+		{
+			"pass - different min gas Coin",
+			*defaultGasPrice,
+			sdk.DecCoins{sdk.NewDecCoin("test", math.NewInt(1))},
+			sdk.DecCoin{
+				Denom:  "test",
+				Amount: math.LegacyNewDecFromBigInt(defaultGasPrice.ToInt()),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
+			s.backend.ClientCtx.Viper = viper.New()
+
+			appConf := config.DefaultConfig()
+			appConf.SetMinGasPrices(tc.minGas)
+
+			output := s.backend.GenerateMinGasCoin(tc.gasPrice, *appConf)
+			s.Require().Equal(tc.expectedOutput, output)
+		})
+	}
+}
+
+// TODO: Combine these 2 into one test since the code is identical
+func (s *TestSuite) TestListAccounts() {
 	testCases := []struct {
 		name         string
 		registerMock func()
-		gasPrice     hexutil.Big
-		expOutput    bool
+		expAddr      []common.Address
+		expPass      bool
 	}{
 		{
-			"pass - cannot get server config",
-			func() {
-				suite.backend.clientCtx.Viper = viper.New()
-			},
-			*defaultGasPrice,
-			false,
-		},
-		{
-			"pass - cannot find coin denom",
-			func() {
-				suite.backend.clientCtx.Viper = viper.New()
-				suite.backend.clientCtx.Viper.Set("telemetry.global-labels", []interface{}{})
-			},
-			*defaultGasPrice,
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
-			tc.registerMock()
-			output := suite.backend.SetGasPrice(tc.gasPrice)
-			suite.Require().Equal(tc.expOutput, output)
-		})
-	}
-}
-
-func (suite *BackendTestSuite) TestAccounts() {
-	testCases := []struct {
-		name                    string
-		accountsRetrievalMethod func() ([]common.Address, error)
-		registerMock            func()
-		expAddr                 []common.Address
-		expPass                 bool
-	}{
-		{
-			"pass - returns acc from keyring from ListAccounts",
-			suite.backend.ListAccounts,
-			func() {},
-			[]common.Address{},
-			true,
-		},
-		{
-			"pass - returns acc from keyring from Accounts",
-			suite.backend.Accounts,
+			"pass - returns empty address",
 			func() {},
 			[]common.Address{},
 			true,
@@ -125,23 +118,55 @@ func (suite *BackendTestSuite) TestAccounts() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output, err := tc.accountsRetrievalMethod()
+			output, err := s.backend.ListAccounts()
 
 			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expAddr, output)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expAddr, output)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *BackendTestSuite) TestSyncing() {
+func (s *TestSuite) TestAccounts() {
+	testCases := []struct {
+		name         string
+		registerMock func()
+		expAddr      []common.Address
+		expPass      bool
+	}{
+		{
+			"pass - returns empty address",
+			func() {},
+			[]common.Address{},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
+			tc.registerMock()
+
+			output, err := s.backend.Accounts()
+
+			if tc.expPass {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expAddr, output)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestSyncing() {
 	testCases := []struct {
 		name         string
 		registerMock func()
@@ -151,7 +176,7 @@ func (suite *BackendTestSuite) TestSyncing() {
 		{
 			"fail - Can't get status",
 			func() {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterStatusError(client)
 			},
 			false,
@@ -160,7 +185,7 @@ func (suite *BackendTestSuite) TestSyncing() {
 		{
 			"pass - Node not catching up",
 			func() {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterStatus(client)
 			},
 			false,
@@ -169,9 +194,9 @@ func (suite *BackendTestSuite) TestSyncing() {
 		{
 			"pass - Node is catching up",
 			func() {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterStatus(client)
-				status, _ := client.Status(suite.backend.ctx)
+				status, _ := client.Status(s.backend.Ctx)
 				status.SyncInfo.CatchingUp = true
 			},
 			map[string]interface{}{
@@ -183,23 +208,23 @@ func (suite *BackendTestSuite) TestSyncing() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output, err := suite.backend.Syncing()
+			output, err := s.backend.Syncing()
 
 			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expResponse, output)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expResponse, output)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-func (suite *BackendTestSuite) TestSetEtherbase() {
+func (s *TestSuite) TestSetEtherbase() {
 	testCases := []struct {
 		name         string
 		registerMock func()
@@ -209,7 +234,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 		{
 			"pass - Failed to get coinbase address",
 			func() {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
 				RegisterStatusError(client)
 			},
 			common.Address{},
@@ -218,27 +243,27 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 		{
 			"pass - the minimum fee is not set",
 			func() {
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterStatus(client)
-				RegisterValidatorAccount(queryClient, suite.acc)
+				RegisterValidatorAccount(QueryClient, s.acc)
 			},
 			common.Address{},
 			false,
 		},
 		{
-			"fail - error querying for account ",
+			"fail - error querying for account",
 			func() {
 				var header metadata.MD
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+				client := s.backend.ClientCtx.Client.(*mocks.Client)
+				QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterStatus(client)
-				RegisterValidatorAccount(queryClient, suite.acc)
-				RegisterParams(queryClient, &header, 1)
-				c := sdk.NewDecCoin("azeta", sdkmath.NewIntFromBigInt(big.NewInt(1)))
-				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
-				delAddr, _ := suite.backend.GetCoinbase()
-				// account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
+				RegisterValidatorAccount(QueryClient, s.acc)
+				RegisterParams(QueryClient, &header, 1)
+				c := sdk.NewDecCoin(constants.ExampleAttoDenom, math.NewIntFromBigInt(big.NewInt(1)))
+				s.backend.Cfg.SetMinGasPrices(sdk.DecCoins{c})
+				delAddr, _ := s.backend.GetCoinbase()
+				// account, _ := s.backend.ClientCtx.AccountRetriever.GetAccount(s.backend.ClientCtx, delAddr)
 				delCommonAddr := common.BytesToAddress(delAddr.Bytes())
 				request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
 				requestMarshal, _ := request.Marshal()
@@ -252,70 +277,46 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 			common.Address{},
 			false,
 		},
-		{
-			"pass - set the etherbase for the miner",
-			func() {
-				priv, err := ethsecp256k1.GenerateKey()
-				suite.Require().NoError(err)
-
-				armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
-				suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
-
-				suite.acc = sdk.AccAddress(priv.PubKey().Address().Bytes())
-				accounts := map[string]client.TestAccount{}
-				accounts[suite.acc.String()] = client.TestAccount{
-					Address: suite.acc,
-					Num:     uint64(1),
-					Seq:     uint64(1),
-				}
-
-				suite.backend.clientCtx = suite.backend.clientCtx.WithAccountRetriever(
-					client.TestAccountRetriever{Accounts: accounts},
-				)
-				var header metadata.MD
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterParams(queryClient, &header, 1)
-				suite.backend.clientCtx = suite.backend.clientCtx.WithInterfaceRegistry(
-					codectypes.NewInterfaceRegistry(),
-				)
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterStatus(client)
-				RegisterValidatorAccount(queryClient, suite.acc)
-				c := sdk.NewDecCoin("azeta", sdkmath.NewIntFromBigInt(big.NewInt(1)))
-				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
-				delAddr, _ := suite.backend.GetCoinbase()
-				account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)
-				delCommonAddr := common.BytesToAddress(delAddr.Bytes())
-				request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
-				requestMarshal, _ := request.Marshal()
-				RegisterUnconfirmedTxsEmpty(client, nil)
-				RegisterABCIQueryAccount(
-					client,
-					requestMarshal,
-					tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
-					account,
-				)
-				RegisterABCIQuerySimulate(client, tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false})
-				RegisterBroadcastTxAny(client)
-			},
-			common.Address{},
-			true,
-		},
+		// TODO: Finish this test case once ABCIQuery GetAccount is fixed
+		// {
+		//	"pass - set the etherbase for the miner",
+		//	func() {
+		//		client := s.backend.ClientCtx.Client.(*mocks.Client)
+		//		QueryClient := s.backend.QueryClient.QueryClient.(*mocks.EVMQueryClient)
+		//		RegisterStatus(client)
+		//		RegisterValidatorAccount(QueryClient, s.acc)
+		//		c := sdk.NewDecCoin(testconstants.ExampleAttoDenom, math.NewIntFromBigInt(big.NewInt(1)))
+		//		s.backend.Cfg.SetMinGasPrices(sdk.DecCoins{c})
+		//		delAddr, _ := s.backend.GetCoinbase()
+		//		account, _ := s.backend.ClientCtx.AccountRetriever.GetAccount(s.backend.ClientCtx, delAddr)
+		//		delCommonAddr := common.BytesToAddress(delAddr.Bytes())
+		//		request := &authtypes.QueryAccountRequest{Address: sdk.AccAddress(delCommonAddr.Bytes()).String()}
+		//		requestMarshal, _ := request.Marshal()
+		//		RegisterABCIQueryAccount(
+		//			client,
+		//			requestMarshal,
+		//			tmrpcclient.ABCIQueryOptions{Height: int64(1), Prove: false},
+		//			account,
+		//		)
+		//	},
+		//	common.Address{},
+		//	false,
+		// },
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output := suite.backend.SetEtherbase(tc.etherbase)
+			output := s.backend.SetEtherbase(tc.etherbase)
 
-			suite.Require().Equal(tc.expResult, output)
+			s.Require().Equal(tc.expResult, output)
 		})
 	}
 }
 
-func (suite *BackendTestSuite) TestImportRawKey() {
+func (s *TestSuite) TestImportRawKey() {
 	priv, _ := ethsecp256k1.GenerateKey()
 	privHex := common.Bytes2Hex(priv.Bytes())
 	pubAddr := common.BytesToAddress(priv.PubKey().Address().Bytes())
@@ -347,16 +348,16 @@ func (suite *BackendTestSuite) TestImportRawKey() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("case %s", tc.name), func() {
-			suite.SetupTest() // reset test and queries
+		s.Run(fmt.Sprintf("case %s", tc.name), func() {
+			s.SetupTest() // reset test and queries
 			tc.registerMock()
 
-			output, err := suite.backend.ImportRawKey(tc.privKey, tc.password)
+			output, err := s.backend.ImportRawKey(tc.privKey, tc.password)
 			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expAddr, output)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expAddr, output)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}

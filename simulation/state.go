@@ -15,8 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	zetachains "github.com/zeta-chain/node/pkg/chains"
@@ -369,7 +369,7 @@ func extractFungibleGenesisState(
 	return fungibleState
 }
 
-// extractEmmisionsGenesisState extracts and updates the emissions genesis state.
+// extractEmissionsGenesisState extracts and updates the emissions genesis state.
 // 1 is set as the ballot maturity blocks.This is done to start the distribution process from height 2
 func extractEmissionsGenesisState(t *testing.T,
 	rawState map[string]json.RawMessage,

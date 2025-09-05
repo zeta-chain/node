@@ -24,7 +24,7 @@ func TestSolanaDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string) 
 	// execute the deposit and call transaction
 	nonExistReceiver := sample.EthAddress()
 	data := []byte("dust lamports should abort cctx")
-	sig := r.SOLDepositAndCall(nil, nonExistReceiver, depositAmount, data)
+	sig := r.SOLDepositAndCall(nil, nonExistReceiver, depositAmount, data, nil)
 
 	// ASSERT
 	// Now we want to make sure cctx is aborted.

@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package debug
 
 import (
@@ -28,14 +13,13 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/server"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	stderrors "github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
-	zetaos "github.com/zeta-chain/node/pkg/os"
 	"github.com/zeta-chain/node/rpc/backend"
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
@@ -51,28 +35,31 @@ type HandlerT struct {
 
 // API is the collection of tracing APIs exposed over the private debugging endpoint.
 type API struct {
-	ctx     *server.Context
-	logger  log.Logger
-	backend backend.EVMBackend
-	handler *HandlerT
+	ctx              *server.Context
+	logger           log.Logger
+	profilingEnabled bool
+	backend          backend.EVMBackend
+	handler          *HandlerT
 }
 
 // NewAPI creates a new API definition for the tracing methods of the Ethereum service.
 func NewAPI(
 	ctx *server.Context,
 	backend backend.EVMBackend,
+	profilingEnabled bool,
 ) *API {
 	return &API{
-		ctx:     ctx,
-		logger:  ctx.Logger.With("module", "debug"),
-		backend: backend,
-		handler: new(HandlerT),
+		ctx:              ctx,
+		logger:           ctx.Logger.With("module", "debug"),
+		backend:          backend,
+		profilingEnabled: profilingEnabled,
+		handler:          new(HandlerT),
 	}
 }
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (a *API) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
+func (a *API) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	a.logger.Debug("debug_traceTransaction", "hash", hash)
 	return a.backend.TraceTransaction(hash, config)
 }
@@ -81,7 +68,7 @@ func (a *API) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (
 // EVM and returns them as a JSON object.
 func (a *API) TraceBlockByNumber(
 	height rpctypes.BlockNumber,
-	config *rpctypes.TraceConfig,
+	config *evmtypes.TraceConfig,
 ) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByNumber", "height", height)
 	if height == 0 {
@@ -99,7 +86,7 @@ func (a *API) TraceBlockByNumber(
 
 // TraceBlockByHash returns the structured logs created during the execution of
 // EVM and returns them as a JSON object.
-func (a *API) TraceBlockByHash(hash common.Hash, config *rpctypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
+func (a *API) TraceBlockByHash(hash common.Hash, config *evmtypes.TraceConfig) ([]*evmtypes.TxTraceResult, error) {
 	a.logger.Debug("debug_traceBlockByHash", "hash", hash)
 	// Get Tendermint Block
 	resBlock, err := a.backend.TendermintBlockByHash(hash)
@@ -121,75 +108,97 @@ func (a *API) TraceBlockByHash(hash common.Hash, config *rpctypes.TraceConfig) (
 // desired, set the rate and write the profile manually.
 func (a *API) BlockProfile(file string, nsec uint) error {
 	a.logger.Debug("debug_blockProfile", "file", file, "nsec", nsec)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	runtime.SetBlockProfileRate(1)
 	defer runtime.SetBlockProfileRate(0)
 
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return writeProfile("block", file, a.logger)
 }
 
 // CpuProfile turns on CPU profiling for nsec seconds and writes
 // profile data to file.
-func (a *API) CpuProfile(file string, nsec uint) error { //nolint: golint, stylecheck, revive
+func (a *API) CpuProfile(file string, nsec uint) error { //nolint: revive
 	a.logger.Debug("debug_cpuProfile", "file", file, "nsec", nsec)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	if err := a.StartCPUProfile(file); err != nil {
 		return err
 	}
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return a.StopCPUProfile()
 }
 
 // GcStats returns GC statistics.
-func (a *API) GcStats() *debug.GCStats {
+func (a *API) GcStats() (*debug.GCStats, error) {
 	a.logger.Debug("debug_gcStats")
+	if !a.profilingEnabled {
+		return nil, rpctypes.ErrProfilingDisabled
+	}
 	s := new(debug.GCStats)
 	debug.ReadGCStats(s)
-	return s
+	return s, nil
 }
 
 // GoTrace turns on tracing for nsec seconds and writes
 // trace data to file.
 func (a *API) GoTrace(file string, nsec uint) error {
 	a.logger.Debug("debug_goTrace", "file", file, "nsec", nsec)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	if err := a.StartGoTrace(file); err != nil {
 		return err
 	}
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	return a.StopGoTrace()
 }
 
 // MemStats returns detailed runtime memory statistics.
-func (a *API) MemStats() *runtime.MemStats {
+func (a *API) MemStats() (*runtime.MemStats, error) {
 	a.logger.Debug("debug_memStats")
+	if !a.profilingEnabled {
+		return nil, rpctypes.ErrProfilingDisabled
+	}
 	s := new(runtime.MemStats)
 	runtime.ReadMemStats(s)
-	return s
+	return s, nil
 }
 
 // SetBlockProfileRate sets the rate of goroutine block profile data collection.
 // rate 0 disables block profiling.
-func (a *API) SetBlockProfileRate(rate int) {
+func (a *API) SetBlockProfileRate(rate int) error {
 	a.logger.Debug("debug_setBlockProfileRate", "rate", rate)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	runtime.SetBlockProfileRate(rate)
+	return nil
 }
 
 // Stacks returns a printed representation of the stacks of all goroutines.
-func (a *API) Stacks() string {
+func (a *API) Stacks() (string, error) {
 	a.logger.Debug("debug_stacks")
+	if !a.profilingEnabled {
+		return "", rpctypes.ErrProfilingDisabled
+	}
 	buf := new(bytes.Buffer)
 	err := pprof.Lookup("goroutine").WriteTo(buf, 2)
 	if err != nil {
 		a.logger.Error("Failed to create stacks", "error", err.Error())
 	}
-	return buf.String()
+	return buf.String(), nil
 }
 
 // StartCPUProfile turns on CPU profiling, writing to the given file.
 func (a *API) StartCPUProfile(file string) error {
 	a.logger.Debug("debug_startCPUProfile", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 
@@ -201,13 +210,12 @@ func (a *API) StartCPUProfile(file string) error {
 		a.logger.Debug("CPU profiling already in progress")
 		return errors.New("CPU profiling already in progress")
 	default:
-		fp, err := zetaos.ExpandHomeDir(file)
+		fp, err := ExpandHome(file)
 		if err != nil {
 			a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
 		}
-		// #nosec G304 variable value is controlled
-		f, err := os.Create(fp)
+		f, err := os.Create(fp) //#nosec G304 forked code
 		if err != nil {
 			a.logger.Debug("failed to create CPU profile file", "error", err.Error())
 			return err
@@ -231,6 +239,9 @@ func (a *API) StartCPUProfile(file string) error {
 // StopCPUProfile stops an ongoing CPU profile.
 func (a *API) StopCPUProfile() error {
 	a.logger.Debug("debug_stopCPUProfile")
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 
@@ -257,6 +268,9 @@ func (a *API) StopCPUProfile() error {
 // WriteBlockProfile writes a goroutine blocking profile to the given file.
 func (a *API) WriteBlockProfile(file string) error {
 	a.logger.Debug("debug_writeBlockProfile", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	return writeProfile("block", file, a.logger)
 }
 
@@ -265,6 +279,9 @@ func (a *API) WriteBlockProfile(file string) error {
 // it must be set on the command line.
 func (a *API) WriteMemProfile(file string) error {
 	a.logger.Debug("debug_writeMemProfile", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	return writeProfile("heap", file, a.logger)
 }
 
@@ -273,42 +290,62 @@ func (a *API) WriteMemProfile(file string) error {
 // desired, set the rate and write the profile manually.
 func (a *API) MutexProfile(file string, nsec uint) error {
 	a.logger.Debug("debug_mutexProfile", "file", file, "nsec", nsec)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	runtime.SetMutexProfileFraction(1)
-	// #nosec G115 uint always in int64 range
-	time.Sleep(time.Duration(nsec) * time.Second)
+	time.Sleep(time.Duration(nsec) * time.Second) //#nosec G115 -- int overflow is not a concern here
 	defer runtime.SetMutexProfileFraction(0)
 	return writeProfile("mutex", file, a.logger)
 }
 
 // SetMutexProfileFraction sets the rate of mutex profiling.
-func (a *API) SetMutexProfileFraction(rate int) {
+func (a *API) SetMutexProfileFraction(rate int) error {
 	a.logger.Debug("debug_setMutexProfileFraction", "rate", rate)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	runtime.SetMutexProfileFraction(rate)
+	return nil
 }
 
 // WriteMutexProfile writes a goroutine blocking profile to the given file.
 func (a *API) WriteMutexProfile(file string) error {
 	a.logger.Debug("debug_writeMutexProfile", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	return writeProfile("mutex", file, a.logger)
 }
 
 // FreeOSMemory forces a garbage collection.
-func (a *API) FreeOSMemory() {
+func (a *API) FreeOSMemory() error {
 	a.logger.Debug("debug_freeOSMemory")
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	debug.FreeOSMemory()
+	return nil
 }
 
 // SetGCPercent sets the garbage collection target percentage. It returns the previous
 // setting. A negative value disables GC.
-func (a *API) SetGCPercent(v int) int {
+func (a *API) SetGCPercent(v int) (int, error) {
 	a.logger.Debug("debug_setGCPercent", "percent", v)
-	return debug.SetGCPercent(v)
+	if !a.profilingEnabled {
+		return 0, rpctypes.ErrProfilingDisabled
+	}
+	return debug.SetGCPercent(v), nil
 }
 
 // GetHeaderRlp retrieves the RLP encoded for of a single header.
 func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
-	// #nosec G115 number always in int64 range
-	header, err := a.backend.HeaderByNumber(rpctypes.BlockNumber(number))
+	if !a.profilingEnabled {
+		return nil, rpctypes.ErrProfilingDisabled
+	}
+	header, err := a.backend.HeaderByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -318,8 +355,12 @@ func (a *API) GetHeaderRlp(number uint64) (hexutil.Bytes, error) {
 
 // GetBlockRlp retrieves the RLP encoded for of a single block.
 func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
-	// #nosec G115 number always in int64 range
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number))
+	if !a.profilingEnabled {
+		return nil, rpctypes.ErrProfilingDisabled
+	}
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return nil, err
 	}
@@ -329,8 +370,12 @@ func (a *API) GetBlockRlp(number uint64) (hexutil.Bytes, error) {
 
 // PrintBlock retrieves a block and returns its pretty printed form.
 func (a *API) PrintBlock(number uint64) (string, error) {
-	// #nosec G115 number always in int64 range
-	block, err := a.backend.EthBlockByNumber(rpctypes.BlockNumber(number))
+	if !a.profilingEnabled {
+		return "", rpctypes.ErrProfilingDisabled
+	}
+	block, err := a.backend.EthBlockByNumber(
+		rpctypes.BlockNumber(number),
+	) //#nosec G115 -- int overflow is not a concern here -- block number is not likely to exceed int64 max value
 	if err != nil {
 		return "", err
 	}
@@ -342,5 +387,8 @@ func (a *API) PrintBlock(number uint64) (string, error) {
 // of intermediate roots: the stateroot after each transaction.
 func (a *API) IntermediateRoots(hash common.Hash, _ *evmtypes.TraceConfig) ([]common.Hash, error) {
 	a.logger.Debug("debug_intermediateRoots", "hash", hash)
+	if !a.profilingEnabled {
+		return nil, rpctypes.ErrProfilingDisabled
+	}
 	return ([]common.Hash)(nil), nil
 }

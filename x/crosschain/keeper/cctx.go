@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +67,7 @@ func (k Keeper) updateZetaAccounting(
 ) {
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted &&
 		cctx.InboundParams.CoinType == coin.CoinType_Zeta &&
-		cctx.CctxStatus.IsAbortRefunded == false {
+		!cctx.CctxStatus.IsAbortRefunded {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }
@@ -100,7 +98,7 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	if cctx.CctxStatus != nil && ctx.BlockHeight() > 0 {
 		cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	}
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
+	p := types.KeyPrefix(types.CCTXKey)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&cctx)
 	cctxIndex := types.KeyPrefix(cctx.Index)
@@ -115,7 +113,7 @@ func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 
 // GetCrossChainTx returns a cctx from its index
 func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossChainTx, found bool) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
+	p := types.KeyPrefix(types.CCTXKey)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	b := store.Get(types.KeyPrefix(index))
@@ -129,7 +127,7 @@ func (k Keeper) GetCrossChainTx(ctx sdk.Context, index string) (val types.CrossC
 
 // GetAllCrossChainTx returns all cctxs
 func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
+	p := types.KeyPrefix(types.CCTXKey)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
@@ -147,7 +145,7 @@ func (k Keeper) GetAllCrossChainTx(ctx sdk.Context) (list []types.CrossChainTx) 
 
 // RemoveCrossChainTx removes a cctx from the store
 func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.CCTXKey))
+	p := types.KeyPrefix(types.CCTXKey)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	store.Delete(types.KeyPrefix(index))
 }

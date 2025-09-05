@@ -12,7 +12,6 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/x/crosschain/types"
-	observertypes "github.com/zeta-chain/node/x/observer/types"
 )
 
 // VoteGasPrice submits information about the connected chain's gas price at a specific block
@@ -31,8 +30,9 @@ func (k msgServer) VoteGasPrice(
 		return nil, cosmoserrors.Wrapf(types.ErrUnsupportedChain, "chain id %d", msg.ChainId)
 	}
 
-	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
-		return nil, observertypes.ErrNotObserver
+	err := k.zetaObserverKeeper.CheckObserverCanVote(ctx, msg.Creator)
+	if err != nil {
+		return nil, err
 	}
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)

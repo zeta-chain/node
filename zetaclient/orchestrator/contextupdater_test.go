@@ -5,7 +5,6 @@ import (
 	"time"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/ptr"
@@ -44,13 +43,13 @@ func Test_UpdateAppContext(t *testing.T) {
 			MinimumVersion:        "",
 		}
 
-		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
-		zetacore.On("GetUpgradePlan", mock.Anything).Return(nil, nil)
-		zetacore.On("GetSupportedChains", mock.Anything).Return(newChains, nil)
-		zetacore.On("GetAdditionalChains", mock.Anything).Return(nil, nil)
-		zetacore.On("GetChainParams", mock.Anything).Return(newParams, nil)
-		zetacore.On("GetCrosschainFlags", mock.Anything).Return(ccFlags, nil)
-		zetacore.On("GetOperationalFlags", mock.Anything).Return(opFlags, nil)
+		on(zetacore, "GetBlockHeight", 1).Return(int64(123), nil)
+		on(zetacore, "GetUpgradePlan", 1).Return(nil, nil)
+		on(zetacore, "GetSupportedChains", 1).Return(newChains, nil)
+		on(zetacore, "GetAdditionalChains", 1).Return(nil, nil)
+		on(zetacore, "GetChainParams", 1).Return(newParams, nil)
+		on(zetacore, "GetCrosschainFlags", 1).Return(ccFlags, nil)
+		on(zetacore, "GetOperationalFlags", 1).Return(opFlags, nil)
 
 		// ACT
 		err := UpdateAppContext(ctx, app, zetacore, logger)
@@ -75,8 +74,8 @@ func Test_UpdateAppContext(t *testing.T) {
 			zetacore               = mocks.NewZetacoreClient(t)
 		)
 
-		zetacore.On("GetBlockHeight", mock.Anything).Return(int64(123), nil)
-		zetacore.On("GetUpgradePlan", mock.Anything).Return(&upgradetypes.Plan{
+		on(zetacore, "GetBlockHeight", 1).Return(int64(123), nil)
+		on(zetacore, "GetUpgradePlan", 1).Return(&upgradetypes.Plan{
 			Name:   "hello",
 			Height: 124,
 		}, nil)

@@ -8,9 +8,9 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -41,8 +41,9 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// #nosec G115 always positive
 		cctx.GetCurrentOutboundParam().ObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
-
-	if inboundCoinType == coin.CoinType_Zeta {
+	// Refactor HandleEVMDeposit to have two clear branches of logic for V1 and V2 protocol versions
+	// TODO : https://github.com/zeta-chain/node/issues/3988
+	if inboundCoinType == coin.CoinType_Zeta && cctx.ProtocolContractVersion == types.ProtocolContractVersion_V1 {
 		// In case of an error
 		// 	- Return true will revert the cctx and create a revert cctx with status PendingRevert
 		// 	- Return false will abort the cctx
@@ -55,7 +56,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return true, errors.Wrap(types.ErrUnableToDecodeMessageString, err.Error())
 		}
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		evmTxResponse, err := k.fungibleKeeper.ZETADepositAndCallContract(
+		evmTxResponse, err := k.fungibleKeeper.LegacyZETADepositAndCallContract(
 			ctx,
 			sender,
 			to,
@@ -64,6 +65,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			data,
 			indexBytes,
 		)
+
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {
@@ -105,6 +107,8 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		// and does not include any other side effects or any logic that modifies the state directly
 		tmpCtx, commit := ctx.CacheContext()
 
+		// contractCall is the same as the isCrossChainCall for V2 protocol version
+		// when removing V1 flows this can be simplified
 		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
 			tmpCtx,
 			from,
@@ -126,7 +130,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			return false, err
 		}
 
-		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
+		// non-empty msg.Message means this is a contract call; therefore, the logs should be processed.
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)

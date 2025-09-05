@@ -17,7 +17,17 @@ type Withdrawal struct {
 	Nonce    uint64
 }
 
-func (d *Withdrawal) IsGas() bool {
+// TokenAmount returns the amount of the withdrawal
+func (d Withdrawal) TokenAmount() math.Uint {
+	return d.Amount
+}
+
+// TxNonce returns the nonce of the withdrawal
+func (d Withdrawal) TxNonce() uint64 {
+	return d.Nonce
+}
+
+func (d Withdrawal) IsGas() bool {
 	return d.CoinType == SUI
 }
 

@@ -65,8 +65,6 @@ func (c *TrackingDetails) UpdateCCTXStatus(ctx *context.Context) {
 	}
 
 	c.UpdateStatusFromZetacoreCCTX(CCTX.CctxStatus.Status)
-
-	return
 }
 
 // UpdateCCTXOutboundDetails updates the TrackingDetails with the outbound chain and nonce
@@ -93,7 +91,6 @@ func (c *TrackingDetails) UpdateCCTXOutboundDetails(ctx *context.Context) {
 	}
 	c.OutboundChain = chain
 	c.OutboundTssNonce = CCTX.GetCurrentOutboundParam().TssNonce
-	return
 }
 
 // UpdateHashListAndPendingStatus updates the TrackingDetails with the hash list and updates pending status
@@ -107,7 +104,7 @@ func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 		outboundNonce  = c.OutboundTssNonce
 	)
 
-	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain, outboundNonce)
+	tracker, err := zetacoreClient.GetOutboundTracker(goCtx, outboundChain.ChainId, outboundNonce)
 	// the tracker is found that means the outbound has been broadcast, but we are waiting for confirmations
 	if err == nil && tracker != nil {
 		c.updateOutboundConfirmation()
@@ -120,12 +117,11 @@ func (c *TrackingDetails) UpdateHashListAndPendingStatus(ctx *context.Context) {
 	}
 	// the cctx is in pending state, but the outbound signing has not been done
 	c.updateOutboundSigning()
-	return
 }
 
 // IsInboundFinalized checks if the inbound voting has been finalized
 func (c *TrackingDetails) IsInboundFinalized() bool {
-	return !(c.Status == PendingInboundConfirmation || c.Status == PendingInboundVoting)
+	return c.Status != PendingInboundConfirmation && c.Status != PendingInboundVoting
 }
 
 // IsPendingOutbound checks if the cctx is pending processing the outbound transaction (outbound or revert)

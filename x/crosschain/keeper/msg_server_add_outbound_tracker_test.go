@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -36,7 +37,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 		cctxIndex := keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
 		msg := types.MsgAddOutboundTracker{
@@ -78,7 +79,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		hash := sample.Hash().Hex()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 		cctxIndex := keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
 		msg := types.MsgAddOutboundTracker{
@@ -121,7 +122,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		newHash := sample.Hash().Hex()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 		cctxIndex := keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
 		k.SetOutboundTracker(ctx, types.OutboundTracker{
@@ -266,7 +267,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		newHash := sample.Hash().Hex()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
 		hashes := make([]*types.TxHash, types.MaxOutboundTrackerHashes)
@@ -315,7 +316,7 @@ func TestMsgServer_AddToOutboundTracker(t *testing.T) {
 		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 		keepertest.MockCctxByNonce(t, ctx, *k, observerMock, types.CctxStatus_PendingOutbound, false)
 
 		k.SetOutboundTracker(ctx, types.OutboundTracker{

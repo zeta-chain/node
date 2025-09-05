@@ -157,7 +157,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 		name         string
 		head         []byte
 		data         []byte
-		isMemo       bool
+		isStdMemo    bool
 		expectedMemo memo.InboundMemo
 		errMsg       string
 	}{
@@ -176,7 +176,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertAddress(fString),
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
-			isMemo: true,
+			isStdMemo: true,
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
 					Version:     0,
@@ -212,7 +212,7 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.ArgRevertAddress(fString),
 				memo.ArgAbortAddress(fAddress),
 				memo.ArgRevertMessage(fBytes)),
-			isMemo: true,
+			isStdMemo: true,
 			expectedMemo: memo.InboundMemo{
 				Header: memo.Header{
 					Version:     0,
@@ -233,19 +233,13 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			},
 		},
 		{
-			name:   "failed to decode memo header",
-			head:   MakeHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeInvalid), 0, 0),
-			data:   ABIPack(t, memo.ArgReceiver(fAddress)),
-			errMsg: "failed to decode memo header",
+			name:      "not a standard memo, failed to decode memo header",
+			head:      MakeHead(0, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeInvalid), 0, 0),
+			data:      ABIPack(t, memo.ArgReceiver(fAddress)),
+			isStdMemo: false,
 		},
 		{
-			name:   "failed to decode if version is invalid",
-			head:   MakeHead(1, uint8(memo.EncodingFmtABI), uint8(memo.OpCodeDeposit), 0, 0),
-			data:   ABIPack(t, memo.ArgReceiver(fAddress)),
-			errMsg: "invalid memo version",
-		},
-		{
-			name: "failed to decode compact encoded data with ABI encoding format",
+			name: "standard memo, failed to unpack compact encoded data with ABI encoding format",
 			head: MakeHead(
 				0,
 				uint8(memo.EncodingFmtABI),
@@ -257,10 +251,11 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 				memo.EncodingFmtCompactShort,
 				memo.ArgReceiver(fAddress),
 			), // but data is compact encoded
-			errMsg: "failed to unpack memo FieldsV0",
+			isStdMemo: true,
+			errMsg:    "failed to unpack memo FieldsV0",
 		},
 		{
-			name: "should return [nil,  true, err] if fields validation fails",
+			name: "standard memo, failed to validate fields",
 			head: MakeHead(
 				0,
 				uint8(memo.EncodingFmtABI),
@@ -271,37 +266,36 @@ func Test_Memo_DecodeFromBytes(t *testing.T) {
 			data: ABIPack(t,
 				memo.ArgReceiver(common.Address{}), // empty receiver address provided
 				memo.ArgPayload(fBytes)),
-			isMemo: true, // it's still a memo, but with invalid field values
-			errMsg: "failed to validate memo FieldsV0",
+			isStdMemo: true, // it's still a memo, but with invalid field values
+			errMsg:    "failed to validate memo FieldsV0",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// ACT
 			data := append(tt.head, tt.data...)
-			memo, isMemo, err := memo.DecodeFromBytes(data)
+			memo, isStdMemo, err := memo.DecodeFromBytes(data)
 
-			// check error message
+			// ASSERT
+			require.Equal(t, tt.isStdMemo, isStdMemo)
+
+			// it's not a standard memo, should return nil error
+			if !tt.isStdMemo {
+				require.Nil(t, memo)
+				require.Nil(t, err)
+				return
+			}
+
+			// it's a standard memo
 			if tt.errMsg != "" {
 				require.Nil(t, memo)
 				require.ErrorContains(t, err, tt.errMsg)
 				return
 			}
 
-			// a standard memo or not
-			require.Equal(t, tt.isMemo, isMemo)
-			if !isMemo {
-				require.Nil(t, memo)
-				return
-			}
-
-			// if it's a standard memo, depending on validation result
-			if err != nil {
-				require.Nil(t, memo)
-			} else {
-				require.NotNil(t, memo)
-				require.Equal(t, tt.expectedMemo, *memo)
-			}
+			require.NotNil(t, memo)
+			require.Equal(t, tt.expectedMemo, *memo)
 		})
 	}
 }

@@ -21,8 +21,10 @@ func (r *E2ERunner) AddTSSToNode() {
 	err := r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
 
+	address, _ := r.GetBtcKeypair()
+
 	// mine some blocks to get some BTC into the deployer address
-	_, err = r.GenerateToAddressIfLocalBitcoin(101, r.BTCDeployerAddress)
+	_, err = r.GenerateToAddressIfLocalBitcoin(101, address)
 	require.NoError(r, err)
 }
 
@@ -41,15 +43,10 @@ func (r *E2ERunner) SetupBitcoinAccounts(createWallet bool) {
 	err := r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCTSSAddress.EncodeAddress())
 	require.NoError(r, err)
 	r.Logger.Info("⚙️ imported BTC TSSAddress: %s", r.BTCTSSAddress.EncodeAddress())
-
-	// import deployer address to index deployer utxos and transactions
-	err = r.BtcRPCClient.ImportAddress(r.Ctx, r.BTCDeployerAddress.EncodeAddress())
-	require.NoError(r, err)
-	r.Logger.Info("⚙️ imported BTCDeployerAddress: %s", r.BTCDeployerAddress.EncodeAddress())
 }
 
-// GetBtcAddress returns the BTC address of the deployer and private key in WIF format
-func (r *E2ERunner) GetBtcAddress() (*btcutil.AddressWitnessPubKeyHash, *btcutil.WIF) {
+// GetBtcKeypair returns the BTC address of the runner account and private key in WIF format
+func (r *E2ERunner) GetBtcKeypair() (*btcutil.AddressWitnessPubKeyHash, *btcutil.WIF) {
 	// load configured private key
 	skBytes, err := hex.DecodeString(r.Account.RawPrivateKey.String())
 	require.NoError(r, err)
@@ -69,13 +66,18 @@ func (r *E2ERunner) GetBtcAddress() (*btcutil.AddressWitnessPubKeyHash, *btcutil
 	return address, privkeyWIF
 }
 
+// GetBtcAddress returns the BTC address of the runner account
+func (r *E2ERunner) GetBtcAddress() *btcutil.AddressWitnessPubKeyHash {
+	address, _ := r.GetBtcKeypair()
+	return address
+}
+
 // SetupBtcAddress setups the deployer Bitcoin address
 func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 	// set the deployer address
-	address, privkeyWIF := r.GetBtcAddress()
-	r.BTCDeployerAddress = address
+	address, _ := r.GetBtcKeypair()
 
-	r.Logger.Info("BTCDeployerAddress: %s, %v", r.BTCDeployerAddress.EncodeAddress(), createWallet)
+	r.Logger.Info("BTCDeployerAddress: %s, %v", address.EncodeAddress(), createWallet)
 
 	// import the deployer private key as a Bitcoin node wallet
 	if createWallet {
@@ -85,7 +87,7 @@ func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 		// https://developer.bitcoin.org/reference/rpc/createwallet.html
 		args := []interface{}{
 			r.Name, // wallet_name
-			false,  // disable_private_keys
+			true,   // disable_private_keys
 			true,   // blank
 			"",     // passphrase
 			false,  // avoid_reuse
@@ -102,8 +104,10 @@ func (r *E2ERunner) SetupBtcAddress(createWallet bool) {
 		if err != nil {
 			require.ErrorContains(r, err, "Database already exists")
 		}
-
-		err = r.BtcRPCClient.ImportPrivKeyRescan(r.Ctx, privkeyWIF, r.Name, true)
-		require.NoError(r, err, "failed to execute ImportPrivKeyRescan")
 	}
+
+	// import account address to index utxos and transactions
+	err := r.BtcRPCClient.ImportAddress(r.Ctx, address.EncodeAddress())
+	require.NoError(r, err)
+	r.Logger.Info("⚙️ imported address: %s", address.EncodeAddress())
 }

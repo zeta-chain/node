@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 
 	"github.com/zeta-chain/node/cmd/zetacored/config"
@@ -52,6 +52,7 @@ func setupGasCoin(
 	// increase the default liquidity cap
 	foreignCoin, found := k.GetForeignCoins(ctx, addr.Hex())
 	require.True(t, found)
+
 	foreignCoin.LiquidityCap = sdkmath.NewUint(1e18).MulUint64(1e12)
 	k.SetForeignCoins(ctx, foreignCoin)
 

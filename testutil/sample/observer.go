@@ -282,7 +282,7 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 	ballotList := make([]types.Ballot, n)
 
 	for i := 0; i < n; i++ {
-		identifier := crypto.Keccak256Hash([]byte(fmt.Sprintf("%d-%d-%d", r.Int63(), r.Int63(), r.Int63())))
+		identifier := crypto.Keccak256Hash(fmt.Appendf(nil, "%d-%d-%d", r.Int63(), r.Int63(), r.Int63()))
 		ballotList[i] = types.Ballot{
 			Index:                identifier.Hex(),
 			BallotIdentifier:     identifier.Hex(),

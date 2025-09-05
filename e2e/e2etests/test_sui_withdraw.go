@@ -1,7 +1,10 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
@@ -22,13 +25,18 @@ func TestSuiWithdraw(r *runner.E2ERunner, args []string) {
 	r.ApproveSUIZRC20(r.GatewayZEVMAddr)
 
 	// perform the withdraw
-	tx := r.SuiWithdrawSUI(signer.Address(), amount)
-	r.Logger.EVMTransaction(*tx, "withdraw")
+	tx := r.SuiWithdraw(
+		signer.Address(),
+		amount,
+		r.SUIZRC20Addr,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+	)
+	r.Logger.EVMTransaction(tx, "withdraw")
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check the balance after the withdraw
 	balanceAfter := r.SuiGetSUIBalance(signer.Address())

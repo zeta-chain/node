@@ -7,8 +7,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
 	"github.com/zeta-chain/node/e2e/contracts/testdapp"
@@ -24,7 +24,7 @@ const (
 
 // LegacySetEVMContractsFromConfig set legacy EVM contracts for e2e test from the config
 func (r *E2ERunner) LegacySetEVMContractsFromConfig() {
-	conf, err := config.ReadConfig(ContractsConfigFile)
+	conf, err := config.ReadConfig(ContractsConfigFile, true)
 	require.NoError(r, err)
 
 	// Set ZetaEthAddr

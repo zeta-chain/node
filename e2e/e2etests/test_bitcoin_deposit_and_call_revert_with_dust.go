@@ -27,9 +27,6 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	)
 	amount := depositAmount + zetabitcoin.DefaultDepositorFee
 
-	// Given a list of UTXOs
-	utxos := r.ListDeployerUTXOs()
-
 	// ACT
 	// Send BTC to TSS address with a dummy memo
 	// zetacore should revert cctx if call is made on a non-existing address
@@ -37,7 +34,7 @@ func TestBitcoinDepositAndCallRevertWithDust(r *runner.E2ERunner, args []string)
 	anyMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
 
 	// One UTXO is enough to cover the deposit amount
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[:1], anyMemo)
+	txHash, err := r.SendToTSSWithMemo(amount, anyMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 

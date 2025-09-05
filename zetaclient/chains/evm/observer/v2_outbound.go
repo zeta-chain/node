@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -27,6 +28,8 @@ func parseOutboundEventV2(
 	custody *erc20custody.ERC20Custody,
 	gatewayAddr ethcommon.Address,
 	gateway *gatewayevm.GatewayEVM,
+	connectorNativeAddress ethcommon.Address,
+	connectorNative *zetaconnectornative.ZetaConnectorNative,
 ) (*big.Int, chains.ReceiveStatus, error) {
 	// return failed status if receipt status is failed
 	if receipt.Status == ethtypes.ReceiptStatusFailed {
@@ -40,13 +43,19 @@ func parseOutboundEventV2(
 		return transaction.Value(), chains.ReceiveStatus_success, nil
 	case common.OutboundTypeERC20Withdraw, common.OutboundTypeERC20WithdrawRevert:
 		return parseAndCheckERC20CustodyWithdraw(cctx, receipt, custodyAddr, custody)
+	case common.OutboundTypeZetaWithdraw, common.OutboundTypeZetaWithdrawRevert:
+		return parseAndCheckZetaConnectorWithdraw(cctx, receipt, connectorNativeAddress, connectorNative)
 	case common.OutboundTypeERC20WithdrawAndCall:
 		return parseAndCheckERC20CustodyWithdrawAndCall(cctx, receipt, custodyAddr, custody)
+	case common.OutboundTypeZetaWithdrawAndCall:
+		return parseAndZetaConnectorWithdrawAndCall(cctx, receipt, connectorNativeAddress, connectorNative)
 	case common.OutboundTypeGasWithdrawAndCall, common.OutboundTypeCall:
 		// both gas withdraw and call and no-asset call uses gateway execute
 		// no-asset call simply hash msg.value == 0
 		return parseAndCheckGatewayExecuted(cctx, receipt, gatewayAddr, gateway)
-	case common.OutboundTypeGasWithdrawRevertAndCallOnRevert, common.OutboundTypeERC20WithdrawRevertAndCallOnRevert:
+	case common.OutboundTypeGasWithdrawRevertAndCallOnRevert,
+		common.OutboundTypeERC20WithdrawRevertAndCallOnRevert,
+		common.OutboundTypeZetaWithdrawRevertAndCallOnRevert:
 		return parseAndCheckGatewayReverted(cctx, receipt, gatewayAddr, gateway)
 	}
 	return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf("unsupported outbound type %d", outboundType)
@@ -77,23 +86,19 @@ func parseAndCheckGatewayExecuted(
 		}
 		// destination
 		if !strings.EqualFold(executed.Destination.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					executed.Destination.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				executed.Destination.Hex(),
+			)
 		}
 		// amount
 		if executed.Value.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					executed.Value.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				executed.Value.String(),
+			)
 		}
 		// data
 		if err := checkCCTXMessage(executed.Data, cctx.RelayedMessage); err != nil {
@@ -131,39 +136,79 @@ func parseAndCheckGatewayReverted(
 		}
 		// destination
 		if !strings.EqualFold(reverted.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					reverted.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				reverted.To.Hex(),
+			)
 		}
 		// token
 		if !strings.EqualFold(reverted.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					reverted.Token.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				reverted.Token.Hex(),
+			)
 		}
 		// amount
 		if reverted.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					reverted.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				reverted.Amount.String(),
+			)
 		}
 
 		return reverted.Amount, chains.ReceiveStatus_success, nil
 	}
 
-	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw event not found")
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("gateway withdraw event not found")
+}
+
+// parseAndCheckZetaConnectorWithdraw parses and checks the Zeta connector withdraw event
+func parseAndCheckZetaConnectorWithdraw(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	connectorAddr ethcommon.Address,
+	connector *zetaconnectornative.ZetaConnectorNative,
+) (*big.Int, chains.ReceiveStatus, error) {
+	params := cctx.GetCurrentOutboundParam()
+
+	for _, vLog := range receipt.Logs {
+		withdrawn, err := connector.ZetaConnectorNativeFilterer.ParseWithdrawn(*vLog)
+		if err != nil {
+			continue
+		}
+		// basic event check
+		if err := common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaConnectorWithdraw); err != nil {
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate zeta connector withdrawn event",
+				)
+		}
+		// destination
+		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
+		}
+		// amount
+		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
+		}
+
+		return withdrawn.Amount, chains.ReceiveStatus_success, nil
+	}
+
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("zeta connector withdraw event not found")
 }
 
 // parseAndCheckERC20CustodyWithdraw parses and checks the ERC20 custody withdraw event
@@ -191,33 +236,27 @@ func parseAndCheckERC20CustodyWithdraw(
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"receiver address mismatch in event, want %s got %s",
-					params.Receiver,
-					withdrawn.To.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
 		}
 		// token
 		if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					withdrawn.Token.Hex(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				withdrawn.Token.Hex(),
+			)
 		}
 		// amount
 		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"amount mismatch in event, want %s got %s",
-					params.Amount.String(),
-					withdrawn.Amount.String(),
-				)
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
 		}
 
 		return withdrawn.Amount, chains.ReceiveStatus_success, nil
@@ -251,22 +290,70 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 		}
 		// destination
 		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"receiver address mismatch in event, want %s got %s",
+				params.Receiver,
+				withdrawn.To.Hex(),
+			)
+		}
+		// token
+		if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"asset address mismatch in event, want %s got %s",
+				cctx.InboundParams.Asset,
+				withdrawn.Token.Hex(),
+			)
+		}
+		// amount
+		if withdrawn.Amount.Cmp(params.Amount.BigInt()) != 0 {
+			return big.NewInt(0), chains.ReceiveStatus_failed, fmt.Errorf(
+				"amount mismatch in event, want %s got %s",
+				params.Amount.String(),
+				withdrawn.Amount.String(),
+			)
+		}
+		// data
+		if err := checkCCTXMessage(withdrawn.Data, cctx.RelayedMessage); err != nil {
+			return big.NewInt(0), chains.ReceiveStatus_failed, err
+		}
+
+		return withdrawn.Amount, chains.ReceiveStatus_success, nil
+	}
+
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw and call event not found")
+}
+
+// parseAndZetaConnectorWithdrawAndCall parses and checks the Zeta connector withdraw and call event
+func parseAndZetaConnectorWithdrawAndCall(
+	cctx *crosschaintypes.CrossChainTx,
+	receipt *ethtypes.Receipt,
+	connectorAddr ethcommon.Address,
+	connector *zetaconnectornative.ZetaConnectorNative,
+) (*big.Int, chains.ReceiveStatus, error) {
+	params := cctx.GetCurrentOutboundParam()
+
+	for _, vLog := range receipt.Logs {
+		withdrawn, err := connector.ZetaConnectorNativeFilterer.ParseWithdrawnAndCalled(*vLog)
+		if err != nil {
+			continue
+		}
+		// basic event check
+		if err := common.ValidateEvmTxLog(vLog, connectorAddr, receipt.TxHash.Hex(), common.TopicsZetaConnectorWithdrawAndCall); err != nil {
+			return big.NewInt(
+					0,
+				), chains.ReceiveStatus_failed, errors.Wrap(
+					err,
+					"failed to validate zeta connector withdraw and call event",
+				)
+		}
+		// destination
+		if !strings.EqualFold(withdrawn.To.Hex(), params.Receiver) {
 			return big.NewInt(
 					0,
 				), chains.ReceiveStatus_failed, fmt.Errorf(
 					"receiver address mismatch in event, want %s got %s",
 					params.Receiver,
 					withdrawn.To.Hex(),
-				)
-		}
-		// token
-		if !strings.EqualFold(withdrawn.Token.Hex(), cctx.InboundParams.Asset) {
-			return big.NewInt(
-					0,
-				), chains.ReceiveStatus_failed, fmt.Errorf(
-					"asset address mismatch in event, want %s got %s",
-					cctx.InboundParams.Asset,
-					withdrawn.Token.Hex(),
 				)
 		}
 		// amount
@@ -287,7 +374,7 @@ func parseAndCheckERC20CustodyWithdrawAndCall(
 		return withdrawn.Amount, chains.ReceiveStatus_success, nil
 	}
 
-	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("erc20 custody withdraw and call event not found")
+	return big.NewInt(0), chains.ReceiveStatus_failed, errors.New("connector withdraw and call event not found")
 }
 
 // checkCCTXMessage checks the message of cctx with the emitted data of the event

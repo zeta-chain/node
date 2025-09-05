@@ -16,6 +16,7 @@ var (
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap",
 		"/zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee",
 		"/zetachain.zetacore.fungible.MsgUnpauseZRC20",
+		"/zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit",
 		"/zetachain.zetacore.observer.MsgResetChainNonces",
 		"/zetachain.zetacore.observer.MsgEnableCCTX",
 		"/zetachain.zetacore.observer.MsgUpdateGasPriceIncreaseFlags",
@@ -44,6 +45,7 @@ var (
 		"/zetachain.zetacore.authority.MsgRemoveChainInfo",
 		"/zetachain.zetacore.lightclient.MsgEnableHeaderVerification",
 		"/zetachain.zetacore.observer.MsgUpdateChainParams",
+		"/zetachain.zetacore.fungible.MsgBurnFungibleModuleAsset",
 	}
 	// EmergencyPolicyMessages keeps track of the message URLs that can, by default, only be executed by emergency policy address
 	EmergencyPolicyMessages = []string{

@@ -25,26 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "false"
+          go-version: '1.23'
       
       - name: Test
         uses: nick-fields/retry@v3

@@ -9,17 +9,13 @@ import (
 
 // Faucet represents the faucet information.
 //
-//nolint:revive,stylecheck // comes from my-local-ton
+//nolint:revive // comes from my-local-ton
 type Faucet struct {
-	InitialBalance   int64  `json:"initialBalance"`
-	PrivateKey       string `json:"privateKey"`
-	PublicKey        string `json:"publicKey"`
 	WalletRawAddress string `json:"walletRawAddress"`
 	Mnemonic         string `json:"mnemonic"`
 	WalletVersion    string `json:"walletVersion"`
 	WorkChain        int32  `json:"workChain"`
 	SubWalletId      int    `json:"subWalletId"`
-	Created          bool   `json:"created"`
 }
 
 // GetFaucet returns the faucet information.

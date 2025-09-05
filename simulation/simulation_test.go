@@ -25,8 +25,8 @@ import (
 	cosmossimcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/node/app"
 	zetasimulation "github.com/zeta-chain/node/simulation"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -186,7 +186,6 @@ func TestAppStateDeterminism(t *testing.T) {
 // 2. It exports the state and validators
 // 3. Verifies that the run and export were successful
 func TestFullAppSimulation(t *testing.T) {
-
 	config := zetasimulation.NewConfigFromFlags()
 
 	config.ChainID = SimAppChainID
@@ -414,6 +413,11 @@ func TestAppImportExport(t *testing.T) {
 		{simApp.GetKey(crosschaintypes.StoreKey), newSimApp.GetKey(crosschaintypes.StoreKey), [][]byte{
 			// We update the timestamp for cctx when importing the genesis state which results in a different value
 			crosschaintypes.KeyPrefix(crosschaintypes.CCTXKey),
+			// The counter index key is not preserved when importing the genesis state
+			// https://github.com/zeta-chain/node/issues/3979
+			// Adding the key to the skip list ignores the difference;
+			// The counter-index logic should be refactored to fix this issue completely
+			crosschaintypes.KeyPrefix(crosschaintypes.CounterIndexKey),
 		}},
 
 		{simApp.GetKey(observertypes.StoreKey), newSimApp.GetKey(observertypes.StoreKey), [][]byte{

@@ -56,10 +56,10 @@ func (k msgServer) AddOutboundTracker(
 	// or an observer
 	var (
 		isAuthorizedPolicy = k.GetAuthorityKeeper().CheckAuthorization(ctx, msg) == nil
-		isObserver         = k.GetObserverKeeper().IsNonTombstonedObserver(ctx, msg.Creator)
+		isObserver         = k.GetObserverKeeper().CheckObserverCanVote(ctx, msg.Creator) == nil
 	)
 
-	if !(isAuthorizedPolicy || isObserver) {
+	if !isAuthorizedPolicy && !isObserver {
 		return nil, cosmoserrors.Wrapf(authoritytypes.ErrUnauthorized, "Creator %s", msg.Creator)
 	}
 

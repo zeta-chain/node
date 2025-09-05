@@ -224,7 +224,7 @@ func (ob *Observer) fetchLogs(ctx context.Context, startBlock, toBlock uint64) (
 		return nil, errors.Wrap(err, "can't get erc20 custody contract")
 	}
 
-	connectorAddr, _, err := ob.getConnectorContract()
+	connectorAddr, _, err := ob.getConnectorLegacyContract()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get connector contract")
 	}
@@ -259,7 +259,7 @@ func (ob *Observer) observeZetaSent(
 	}
 
 	// filter ZetaSent logs
-	addrConnector, connector, err := ob.getConnectorContract()
+	addrConnector, connector, err := ob.getConnectorLegacyContract()
 	if err != nil {
 		// we have to re-scan from this block next time
 		return startBlock - 1, errors.Wrap(err, "error getting connector contract")
@@ -448,7 +448,7 @@ func (ob *Observer) checkAndVoteInboundTokenZeta(
 	}
 
 	// get zeta connector contract
-	addrConnector, connector, err := ob.getConnectorContract()
+	addrConnector, connector, err := ob.getConnectorLegacyContract()
 	if err != nil {
 		return "", err
 	}
@@ -642,6 +642,7 @@ func (ob *Observer) buildInboundVoteMsgForZetaSentEvent(
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 
 	// compliance check
+	// https://github.com/zeta-chain/node/issues/4057
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
 		compliance.PrintComplianceLog(ob.Logger().Inbound, ob.Logger().Compliance,

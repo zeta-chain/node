@@ -17,7 +17,7 @@ import (
 const (
 	// Port is the default port for go-tss server.
 	Port    = 6668
-	Version = messages.NEWJOINPARTYVERSION
+	Version = messages.VersionJoinPartyWithLeader
 	Algo    = tsscommon.ECDSA
 )
 

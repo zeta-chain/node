@@ -91,7 +91,7 @@ type ZetacoreClient interface {
 	GetPendingNoncesByChain(ctx context.Context, chainID int64) (observertypes.PendingNonces, error)
 
 	GetCctxByNonce(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutboundTracker(ctx context.Context, chain chains.Chain, nonce uint64) (*crosschaintypes.OutboundTracker, error)
+	GetOutboundTracker(ctx context.Context, chainID int64, nonce uint64) (*crosschaintypes.OutboundTracker, error)
 	GetAllOutboundTrackerByChain(
 		ctx context.Context,
 		chainID int64,
@@ -144,6 +144,11 @@ type SolanaRPCClient interface {
 	GetSlot(ctx context.Context, commitment solrpc.CommitmentType) (uint64, error)
 	GetBlockTime(ctx context.Context, block uint64) (*solana.UnixTimeSeconds, error)
 	GetAccountInfo(ctx context.Context, account solana.PublicKey) (*solrpc.GetAccountInfoResult, error)
+	GetAccountInfoWithOpts(
+		ctx context.Context,
+		account solana.PublicKey,
+		opts *solrpc.GetAccountInfoOpts,
+	) (*solrpc.GetAccountInfoResult, error)
 	GetBalance(
 		ctx context.Context,
 		account solana.PublicKey,

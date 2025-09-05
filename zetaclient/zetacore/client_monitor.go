@@ -8,8 +8,16 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/pkg/errors"
 
+	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/retry"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/logs"
+)
+
+// constants for monitoring tx results
+const (
+	monitorInterval   = constant.ZetaBlockTime / 2
+	monitorRetryCount = 10
 )
 
 // MonitorVoteOutboundResult monitors the result of a vote outbound tx
@@ -24,9 +32,10 @@ func (c *Client) MonitorVoteOutboundResult(
 	defer func() {
 		if r := recover(); r != nil {
 			c.logger.Error().
-				Interface("panic", r).
-				Str("outbound.hash", zetaTxHash).
-				Msg("monitorVoteOutboundResult: recovered from panic")
+				Any("panic", r).
+				Str(logs.FieldZetaTx, zetaTxHash).
+				Str(logs.FieldMethod, "monitorVoteOutboundResult").
+				Msg("Recovered from panic")
 		}
 	}()
 
@@ -37,8 +46,9 @@ func (c *Client) MonitorVoteOutboundResult(
 	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)
 	if err != nil {
 		c.logger.Error().Err(err).
-			Str("outbound.hash", zetaTxHash).
-			Msg("monitorVoteOutboundResult: unable to query tx result")
+			Str(logs.FieldZetaTx, zetaTxHash).
+			Str(logs.FieldMethod, "monitorVoteOutboundResult").
+			Msg("Unable to query tx result")
 
 		return err
 	}
@@ -59,16 +69,20 @@ func (c *Client) monitorVoteOutboundResult(
 	}
 
 	logFields := map[string]any{
-		"outbound.hash":    zetaTxHash,
+		logs.FieldZetaTx:   zetaTxHash,
 		"outbound.raw_log": txResult.RawLog,
 	}
 
+	raw := strings.ToLower(txResult.RawLog)
+
 	switch {
-	case strings.Contains(txResult.RawLog, "failed to execute message"):
+	case strings.Contains(raw, "already voted"):
+		// noop
+	case strings.Contains(raw, "failed to execute message"):
 		// the inbound vote tx shouldn't fail to execute
 		// this shouldn't happen
 		c.logger.Error().Fields(logFields).Msg("monitorVoteOutboundResult: failed to execute vote")
-	case strings.Contains(txResult.RawLog, "out of gas"):
+	case strings.Contains(raw, "out of gas"):
 		// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 		c.logger.Debug().Fields(logFields).Msg("monitorVoteOutboundResult: out of gas")
 
@@ -99,20 +113,23 @@ func (c *Client) MonitorVoteInboundResult(
 	defer func() {
 		if r := recover(); r != nil {
 			c.logger.Error().
-				Interface("panic", r).
-				Str("inbound.hash", zetaTxHash).
+				Any("panic", r).
+				Str(logs.FieldZetaTx, zetaTxHash).
 				Msg("monitorVoteInboundResult: recovered from panic")
 		}
 	}()
 
 	call := func() error {
-		return retry.Retry(c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg))
+		err := c.monitorVoteInboundResult(ctx, zetaTxHash, retryGasLimit, msg)
+
+		// force retry on err
+		return retry.Retry(err)
 	}
 
-	err := retryWithBackoff(call, monitorRetryCount, monitorInterval/2, monitorInterval)
+	err := retryWithBackoff(call, monitorRetryCount, monitorInterval, monitorInterval*2)
 	if err != nil {
 		c.logger.Error().Err(err).
-			Str("inbound.hash", zetaTxHash).
+			Str(logs.FieldZetaTx, zetaTxHash).
 			Msg("monitorVoteInboundResult: unable to query tx result")
 
 		return err
@@ -134,14 +151,13 @@ func (c *Client) monitorVoteInboundResult(
 	}
 
 	logFields := map[string]any{
-		"inbound.hash":    zetaTxHash,
+		logs.FieldZetaTx:  zetaTxHash,
 		"inbound.raw_log": txResult.RawLog,
 	}
 
 	switch {
 	case strings.Contains(txResult.RawLog, "failed to execute message"):
-		// the inbound vote tx shouldn't fail to execute
-		// this shouldn't happen
+		// the inbound vote tx shouldn't fail to execute. this shouldn't happen
 		c.logger.Error().Fields(logFields).Msg("monitorVoteInboundResult: failed to execute vote")
 
 	case strings.Contains(txResult.RawLog, "out of gas"):
@@ -153,27 +169,29 @@ func (c *Client) monitorVoteInboundResult(
 			if resentTxHash, _, err := c.PostVoteInbound(ctx, retryGasLimit, 0, msg); err != nil {
 				c.logger.Error().Err(err).Fields(logFields).Msg("monitorVoteInboundResult: failed to resend tx")
 			} else {
-				logFields["inbound.resent_hash"] = resentTxHash
+				logFields[logs.FieldZetaTx] = resentTxHash
 				c.logger.Info().Fields(logFields).Msgf("monitorVoteInboundResult: successfully resent tx")
 			}
 		}
-
 	default:
-		c.logger.Debug().Fields(logFields).Msgf("monitorVoteInboundResult: successful")
+		c.logger.Debug().Fields(logFields).Msg("monitorVoteInboundResult: successful")
 	}
 
 	return nil
 }
 
-func retryWithBackoff(call func() error, attempts int, minInternal, maxInterval time.Duration) error {
-	if attempts < 1 {
+func retryWithBackoff(call func() error, attempts uint64, minInternal, maxInterval time.Duration) error {
+	if attempts == 0 {
 		return errors.New("attempts must be positive")
 	}
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = minInternal
-	bo.MaxInterval = maxInterval
 
-	backoffWithRetry := backoff.WithMaxRetries(bo, uint64(attempts))
+	bo := backoff.WithMaxRetries(
+		backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(minInternal),
+			backoff.WithMaxInterval(maxInterval),
+		),
+		attempts,
+	)
 
-	return retry.DoWithBackoff(call, backoffWithRetry)
+	return retry.DoWithBackoff(call, bo)
 }

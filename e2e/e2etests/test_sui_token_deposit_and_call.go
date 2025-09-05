@@ -29,14 +29,14 @@ func TestSuiTokenDepositAndCall(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, resp.Digest, r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.EqualValues(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.EqualValues(r, coin.CoinType_ERC20, cctx.InboundParams.CoinType)
 	require.EqualValues(r, amount.Uint64(), cctx.InboundParams.Amount.Uint64())
 
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SuiTokenZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
+
 	// check the payload was received on the contract
 	r.AssertTestDAppZEVMCalled(true, payload, amount)
-
-	newBalance, err := r.SuiTokenZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
-	require.NoError(r, err)
-	require.EqualValues(r, oldBalance.Add(oldBalance, amount).Uint64(), newBalance.Uint64())
 }

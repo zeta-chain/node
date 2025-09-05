@@ -6,10 +6,56 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/gagliardetto/solana-go"
 	"github.com/near/borsh-go"
+	"github.com/rs/zerolog"
 
 	contracts "github.com/zeta-chain/node/pkg/contracts/solana"
 	"github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/compliance"
 )
+
+// prepareIncrementNonceTx prepares increment nonce outbound
+func (signer *Signer) prepareIncrementNonceTx(
+	ctx context.Context,
+	cctx *types.CrossChainTx,
+	height uint64,
+	logger zerolog.Logger,
+) (outboundGetter, error) {
+	params := cctx.GetCurrentOutboundParam()
+	// compliance check
+	cancelTx := compliance.IsCCTXRestricted(cctx)
+	if cancelTx {
+		compliance.PrintComplianceLog(
+			logger,
+			signer.Logger().Compliance,
+			true,
+			signer.Chain().ChainId,
+			cctx.Index,
+			cctx.InboundParams.Sender,
+			params.Receiver,
+			"SOL",
+		)
+	}
+
+	// create and sign gateway increment nonce message by TSS
+	msg, err := signer.createAndSignMsgIncrementNonce(ctx, params, height, cancelTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (*Outbound, error) {
+		// sign the increment_nonce transaction by relayer key
+		inst, err := signer.createIncrementNonceInstruction(*msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating increment nonce instruction")
+		}
+
+		tx, err := signer.signTx(ctx, inst, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "error signing increment nonce instruction")
+		}
+		return &Outbound{Tx: tx}, nil
+	}, nil
+}
 
 // createAndSignMsgIncrementNonce creates and signs a increment_nonce message for gateway increment_nonce instruction with TSS.
 func (signer *Signer) createAndSignMsgIncrementNonce(
@@ -56,6 +102,7 @@ func (signer *Signer) createIncrementNonceInstruction(
 		RecoveryID:    msg.SigV(),
 		MessageHash:   msg.Hash(),
 		Nonce:         msg.Nonce(),
+		FailureReason: msg.FailureReason(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot serialize increment_nonce instruction")

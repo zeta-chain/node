@@ -77,7 +77,7 @@ func (r *E2ERunner) LegacyDepositEtherWithAmount(amount *big.Int) ethcommon.Hash
 	signedTx, err := r.LegacySendEther(r.TSSAddress, amount, nil)
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*signedTx, "send to TSS")
+	r.Logger.EVMTransaction(signedTx, "send to TSS")
 
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	r.requireTxSuccessful(receipt, "deposit failed")

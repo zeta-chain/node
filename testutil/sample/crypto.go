@@ -13,6 +13,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/coming-chat/go-sui/v2/account"
+	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +23,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/gagliardetto/solana-go"
+	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/node/pkg/cosmos"
@@ -159,6 +162,27 @@ func SolanaSignature(t *testing.T) solana.Signature {
 	require.NoError(t, err)
 
 	return signature
+}
+
+// SuiAddress returns a sample sui address
+func SuiAddress(t require.TestingT) string {
+	privateKey := ed25519.GenPrivKey()
+
+	// create a new account with ed25519 scheme
+	scheme, err := sui_types.NewSignatureScheme(0)
+	require.NoError(t, err)
+	acc := account.NewAccount(scheme, privateKey.GetKey().Seed())
+
+	return acc.Address
+}
+
+// SuiDigest returns a sample sui digest
+func SuiDigest(t *testing.T) string {
+	randomBytes := make([]byte, 32)
+	_, err := rand.Read(randomBytes)
+	require.NoError(t, err)
+
+	return base58.Encode(randomBytes)
 }
 
 // Hash returns a sample hash

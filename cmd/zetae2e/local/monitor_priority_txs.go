@@ -79,7 +79,7 @@ func processTx(txResult *coretypes.ResultTx, nonSystemTxFound *bool, errCh chan 
 				} else {
 					*nonSystemTxFound = true
 				}
-			// if attr key is action, check if tx is ethermint non system tx and if it is, mark it
+			// if attr key is action, check if tx is evm non system tx and if it is, mark it
 			case "action":
 				if isActionNonSystemTx(attr) {
 					*nonSystemTxFound = true
@@ -112,5 +112,5 @@ func isMsgTypeURLSystemTx(attr types.EventAttribute) bool {
 }
 
 func isActionNonSystemTx(attr types.EventAttribute) bool {
-	return attr.Value == "/ethermint.evm.v1.MsgEthereumTx"
+	return attr.Value == "/cosmos.evm.vm.v1.MsgEthereumTx"
 }

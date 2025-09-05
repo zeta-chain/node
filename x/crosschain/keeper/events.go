@@ -80,3 +80,13 @@ func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string
 		ctx.Logger().Error("Error emitting MsgVoteOutbound :", err)
 	}
 }
+
+func EmitInboundProcessingFailure(ctx sdk.Context, inboundHash string, errorMessage string) {
+	err := ctx.EventManager().EmitTypedEvents(&types.EventInboundProcessingFailure{
+		InboundHash:  inboundHash,
+		ErrorMessage: errorMessage,
+	})
+	if err != nil {
+		ctx.Logger().Error("Error emitting EventInboundProcessingFailure :", err)
+	}
+}

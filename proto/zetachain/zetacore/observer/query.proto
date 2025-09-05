@@ -37,6 +37,12 @@ service Query {
         "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
   }
 
+  rpc BallotListForHeight(QueryBallotListForHeightRequest)
+      returns (QueryBallotListForHeightResponse) {
+    option (google.api.http).get =
+        "/zeta-chain/observer/ballot_list_for_height/{height}";
+  }
+
   // Queries a list of ObserversByChainAndType items.
   rpc ObserverSet(QueryObserverSet) returns (QueryObserverSetResponse) {
     option (google.api.http).get = "/zeta-chain/observer/observer_set";
@@ -356,3 +362,9 @@ message QueryBlameByChainAndNonceRequest {
 }
 
 message QueryBlameByChainAndNonceResponse { repeated Blame blame_info = 1; }
+
+message QueryBallotListForHeightRequest { int64 height = 1; }
+
+message QueryBallotListForHeightResponse {
+  BallotListForHeight ballot_list = 1 [ (gogoproto.nullable) = false ];
+}

@@ -19,8 +19,9 @@ import (
 	cc "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 	"github.com/zeta-chain/node/zetaclient/keys"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -29,7 +30,7 @@ func TestSigner(t *testing.T) {
 	ts := newTestSuite(t)
 
 	// Given TON signer
-	signer := New(ts.baseSigner, ts.liteClient, ts.gw)
+	signer := New(ts.baseSigner, ts.rpc, ts.gw)
 
 	// Given a sample TON receiver
 	receiver := ton.MustParseAccountID("0QAyaVdkvWSuax8luWhDXY_0X9Am1ASWlJz4OI7M-jqcM5wK")
@@ -42,10 +43,10 @@ func TestSigner(t *testing.T) {
 
 	amount := tonCoins(t, "5")
 
-	// Given CCTX
-	cctx := sample.CrossChainTx(t, "123")
-	cctx.InboundParams.CoinType = coin.CoinType_Gas
-	cctx.OutboundParams = []*cc.OutboundParams{{
+	// Given CCTX#1
+	cctx1 := sample.CrossChainTx(t, "123")
+	cctx1.InboundParams.CoinType = coin.CoinType_Gas
+	cctx1.OutboundParams = []*cc.OutboundParams{{
 		Receiver:        receiver.ToRaw(),
 		ReceiverChainId: ts.chain.ChainId,
 		CoinType:        coin.CoinType_Gas,
@@ -62,51 +63,61 @@ func TestSigner(t *testing.T) {
 
 	ts.Sign(&withdrawal)
 
-	// Given expected liteapi calls
+	// Given CCTX#2 (invalid receiver -1)
+	cctx2 := sample.CrossChainTx(t, "456")
+	cctx2.InboundParams.CoinType = coin.CoinType_Gas
+	cctx2.OutboundParams = []*cc.OutboundParams{{
+		Receiver:        "-1:3eb9fbd865df68188ea84d6615086c26a7b5912a60bc55fded2cdb029b67ff0e",
+		ReceiverChainId: ts.chain.ChainId,
+		CoinType:        coin.CoinType_Gas,
+		Amount:          amount,
+		TssNonce:        nonce + 1,
+	}}
+
+	// Given expected increase_seqno
+	increaseSeqno := toncontracts.IncreaseSeqno{
+		ReasonCode: uint32(InvalidWorkchain),
+		Seqno:      nonce + 1,
+	}
+
+	ts.Sign(&increaseSeqno)
+
+	// Given expected rpc calls
 	lt, hash := uint64(400), decodeHash(t, "df8a01053f50a74503dffe6802f357bf0e665bd1f3d082faccfebdea93cddfeb")
-	ts.OnGetAccountState(ts.gw.AccountID(), tlb.ShardAccount{LastTransLt: lt, LastTransHash: hash})
+	ts.OnGetAccountState(ts.gw.AccountID(), rpc.Account{LastTxLT: lt, LastTxHash: hash})
 
 	ts.OnSendMessage(0, nil)
 
-	withdrawalTX := sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
-	ts.OnGetTransactionsSince(ts.gw.AccountID(), lt, ton.Bits256(hash), []ton.Transaction{withdrawalTX}, nil)
+	var (
+		withdrawalTx    = sample.TONWithdrawal(t, ts.gw.AccountID(), withdrawal)
+		increaseSeqnoTx = sample.TONIncreaseSeqno(t, ts.gw.AccountID(), increaseSeqno)
+	)
+
+	// returns both txs
+	ts.OnGetTransactionsSince(
+		ts.gw.AccountID(),
+		lt,
+		ton.Bits256(hash),
+		[]ton.Transaction{withdrawalTx, increaseSeqnoTx},
+		nil,
+	)
 
 	// ACT
-	signer.TryProcessOutbound(ts.ctx, cctx, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx1, ts.zetacore, zetaHeight)
+	signer.TryProcessOutbound(ts.ctx, cctx2, ts.zetacore, zetaHeight)
 
 	// ASSERT
 	// Make sure signer send the tx the chain AND published the outbound tracker
-	require.Len(t, ts.trackerBag, 1)
+	require.Len(t, ts.trackerBag, 2)
 
-	tracker := ts.trackerBag[0]
+	tracker1 := ts.trackerBag[0]
 
-	require.Equal(t, uint64(nonce), tracker.nonce)
-	require.Equal(t, liteapi.TransactionToHashString(withdrawalTX), tracker.hash)
-}
+	require.Equal(t, uint64(nonce), tracker1.nonce)
+	require.Equal(t, rpc.TransactionToHashString(withdrawalTx), tracker1.hash)
 
-func TestExitCodeRegex(t *testing.T) {
-	for _, tt := range []string{
-		`unable to send external message: error code: 0 message: 
-		cannot apply external message to current state : 
-		External message was not accepted\nCannot run message on account: inbound external message rejected by 
-		transaction CC8803E21EDA7E6487D191380725A82CD75316E1C131496E1A5636751CE60347:
-		\nexitcode=109, steps=108, gas_used=0\nVM Log (truncated):\n...INT 0\nexecute THROWIFNOT 
-		105\nexecute MYADDR\nexecute XCHG s1,s4\nexecute SDEQ\nexecute THROWIF 112\nexecute OVER\nexecute 
-		EQINT 0\nexecute THROWIF 106\nexecute GETGLOB
-		3\nexecute NEQ\nexecute THROWIF 109\ndefault exception handler, terminating vm with exit code 109\n`,
-
-		`unable to send external message: error code: 0 message: cannot apply external message to current state : 
-		External message was not accepted\nCannot run message on account: 
-		inbound external message rejected by transaction 
-		6CCBB83C7D9BFBFDB40541F35AD069714856F18B4850C1273A117DF6BFADE1C6:\nexitcode=109, steps=108, 
-		gas_used=0\nVM Log (truncated):\n...INT 0....`,
-	} {
-		require.True(t, exitCodeErrorRegex.MatchString(tt))
-
-		exitCode, ok := extractExitCode(tt)
-		require.True(t, ok)
-		require.Equal(t, uint32(109), exitCode)
-	}
+	tracker2 := ts.trackerBag[1]
+	require.Equal(t, uint64(nonce+1), tracker2.nonce)
+	require.Equal(t, rpc.TransactionToHashString(increaseSeqnoTx), tracker2.hash)
 }
 
 type testSuite struct {
@@ -116,7 +127,7 @@ type testSuite struct {
 	chain       chains.Chain
 	chainParams *observertypes.ChainParams
 
-	liteClient *mocks.SignerLiteClient
+	rpc *mocks.TONRPC
 
 	zetacore *mocks.ZetacoreClient
 	tss      *mocks.TSS
@@ -139,7 +150,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain       = chains.TONTestnet
 		chainParams = sample.ChainParams(chain.ChainId)
 
-		liteClient = mocks.NewSignerLiteClient(t)
+		rpc = mocks.NewTONRPC(t)
 
 		tss      = mocks.NewTSS(t)
 		zetacore = mocks.NewZetacoreClient(t).WithKeys(&keys.Keys{})
@@ -147,7 +158,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		testLogger = zerolog.New(zerolog.NewTestWriter(t))
 		logger     = base.Logger{Std: testLogger, Compliance: testLogger}
 
-		gwAccountID = ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b")
+		gwAccountID = ton.MustParseAccountID(testutils.GatewayAddresses[chain.ChainId])
 	)
 
 	ts := &testSuite{
@@ -157,7 +168,7 @@ func newTestSuite(t *testing.T) *testSuite {
 		chain:       chain,
 		chainParams: chainParams,
 
-		liteClient: liteClient,
+		rpc: rpc,
 
 		zetacore: zetacore,
 		tss:      tss,
@@ -174,12 +185,12 @@ func newTestSuite(t *testing.T) *testSuite {
 	return ts
 }
 
-func (ts *testSuite) OnGetAccountState(acc ton.AccountID, state tlb.ShardAccount) *mock.Call {
-	return ts.liteClient.On("GetAccountState", mock.Anything, acc).Return(state, nil)
+func (ts *testSuite) OnGetAccountState(acc ton.AccountID, state rpc.Account) *mock.Call {
+	return ts.rpc.On("GetAccountState", mock.Anything, acc).Return(state, nil)
 }
 
 func (ts *testSuite) OnSendMessage(id uint32, err error) *mock.Call {
-	return ts.liteClient.On("SendMessage", mock.Anything, mock.Anything).Return(id, err)
+	return ts.rpc.On("SendMessage", mock.Anything, mock.Anything).Return(id, err)
 }
 
 func (ts *testSuite) OnGetTransactionsSince(
@@ -189,12 +200,12 @@ func (ts *testSuite) OnGetTransactionsSince(
 	txs []ton.Transaction,
 	err error,
 ) *mock.Call {
-	return ts.liteClient.
+	return ts.rpc.
 		On("GetTransactionsSince", mock.Anything, acc, lt, hash).
 		Return(txs, err)
 }
 
-func (ts *testSuite) Sign(msg Signable) {
+func (ts *testSuite) Sign(msg toncontracts.ExternalMsg) {
 	hash, err := msg.Hash()
 	require.NoError(ts.t, err)
 

@@ -27,9 +27,9 @@ func (k msgServer) VoteBlockHeader(
 			"%s, ChainID %d", voteBlockHeaderID, msg.ChainId)
 	}
 
-	// check if observer
-	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
-		return nil, sdkerrors.Wrap(types.ErrNotObserver, voteBlockHeaderID)
+	err := k.CheckObserverCanVote(ctx, msg.Creator)
+	if err != nil {
+		return nil, err
 	}
 
 	// check the new block header is valid

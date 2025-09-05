@@ -8,14 +8,69 @@
   },
   "instructions": [
     {
+      "name": "call",
+      "docs": [
+        "Calls a contract on ZetaChain zEVM.",
+        "# Arguments",
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - The revert options created by the caller."
+      ],
+      "discriminator": [
+        181,
+        94,
+        56,
+        161,
+        194,
+        221,
+        200,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the call."
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "receiver",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          }
+        },
+        {
+          "name": "message",
+          "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "deposit",
       "docs": [
         "Deposits SOL into the program and credits the `receiver` on ZetaChain zEVM.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of lamports to deposit.",
-        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM."
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `revert_options` - The revert options created by the caller."
       ],
       "discriminator": [
         242,
@@ -77,6 +132,16 @@
               20
             ]
           }
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -84,12 +149,12 @@
       "name": "deposit_and_call",
       "docs": [
         "Deposits SOL and calls a contract on ZetaChain zEVM.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of lamports to deposit.",
         "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
-        "* `message` - The message passed to the contract."
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - The revert options created by the caller."
       ],
       "discriminator": [
         65,
@@ -155,6 +220,16 @@
         {
           "name": "message",
           "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -162,11 +237,11 @@
       "name": "deposit_spl_token",
       "docs": [
         "Deposits SPL tokens and credits the `receiver` on ZetaChain zEVM.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of SPL tokens to deposit.",
-        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM."
+        "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
+        "* `revert_options` - The revert options created by the caller."
       ],
       "discriminator": [
         86,
@@ -283,6 +358,16 @@
               20
             ]
           }
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -290,12 +375,12 @@
       "name": "deposit_spl_token_and_call",
       "docs": [
         "Deposits SPL tokens and calls a contract on ZetaChain zEVM.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of SPL tokens to deposit.",
         "* `receiver` - The Ethereum address of the receiver on ZetaChain zEVM.",
-        "* `message` - The message passed to the contract."
+        "* `message` - The message passed to the contract.",
+        "* `revert_options` - The revert options created by the caller."
       ],
       "discriminator": [
         14,
@@ -416,6 +501,16 @@
         {
           "name": "message",
           "type": "bytes"
+        },
+        {
+          "name": "revert_options",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "RevertOptions"
+              }
+            }
+          }
         }
       ]
     },
@@ -423,16 +518,15 @@
       "name": "execute",
       "docs": [
         "Withdraws amount to destination program pda, and calls on_call on destination program",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
-        "* `amount` - The amount of SOL to withdraw.",
-        "* `sender` - Sender from ZEVM.",
-        "* `data` - Data to pass to destination program.",
-        "* `signature` - The TSS signature.",
-        "* `recovery_id` - The recovery ID for signature verification.",
-        "* `message_hash` - Message hash for signature verification.",
-        "* `nonce` - The current nonce value."
+        "* `amount` - Amount of SOL to transfer.",
+        "* `sender` - Sender's address.",
+        "* `data` - Arbitrary data to pass to the destination program.",
+        "* `signature` - Signature of the message.",
+        "* `recovery_id` - Recovery ID of the signature.",
+        "* `message_hash` - Hash of the message.",
+        "* `nonce` - Nonce of the message."
       ],
       "discriminator": [
         130,
@@ -480,7 +574,30 @@
           ]
         },
         {
-          "name": "destination_program_pda"
+          "name": "destination_program_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
         }
       ],
       "args": [
@@ -530,10 +647,137 @@
       ]
     },
     {
+      "name": "execute_revert",
+      "docs": [
+        "Withdraws amount to destination program pda, and calls on_revert on destination program",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `amount` - The amount of SOL to withdraw.",
+        "* `sender` - Sender from ZEVM.",
+        "* `data` - Data to pass to destination program.",
+        "* `signature` - The TSS signature.",
+        "* `recovery_id` - The recovery ID for signature verification.",
+        "* `message_hash` - Message hash for signature verification.",
+        "* `nonce` - The current nonce value."
+      ],
+      "discriminator": [
+        68,
+        87,
+        162,
+        3,
+        218,
+        222,
+        236,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the deposit."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination_program",
+          "docs": [
+            "The destination program."
+          ]
+        },
+        {
+          "name": "destination_program_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "sender",
+          "type": "pubkey"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "execute_spl_token",
       "docs": [
-        "Execute with SPL tokens. Caller is TSS.",
-        "",
+        "Withdraws amount of SPL tokens to destination program pda, and calls on_call on destination program",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `decimals` - Token decimals for precision.",
@@ -589,7 +833,93 @@
           "docs": [
             "The associated token account for the Gateway PDA."
           ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pda"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "mint_account",
@@ -604,7 +934,30 @@
           ]
         },
         {
-          "name": "destination_program_pda"
+          "name": "destination_program_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
         },
         {
           "name": "destination_program_pda_ata",
@@ -686,17 +1039,277 @@
       ]
     },
     {
+      "name": "execute_spl_token_revert",
+      "docs": [
+        "Withdraws SPL token amount to destination program pda, and calls on_revert on destination program",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `decimals` - Token decimals for precision.",
+        "* `amount` - The amount of tokens to withdraw.",
+        "* `sender` - Sender from ZEVM.",
+        "* `data` - Data to pass to destination program.",
+        "* `signature` - The TSS signature.",
+        "* `recovery_id` - The recovery ID for signature verification.",
+        "* `message_hash` - Message hash for signature verification.",
+        "* `nonce` - The current nonce value."
+      ],
+      "discriminator": [
+        240,
+        160,
+        44,
+        253,
+        131,
+        37,
+        159,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer making the withdrawal."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pda_ata",
+          "docs": [
+            "The associated token account for the Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pda"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint_account",
+          "docs": [
+            "The mint account of the SPL token being withdrawn."
+          ]
+        },
+        {
+          "name": "destination_program",
+          "docs": [
+            "The destination program."
+          ]
+        },
+        {
+          "name": "destination_program_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  110,
+                  101,
+                  99,
+                  116,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "destination_program"
+            }
+          }
+        },
+        {
+          "name": "destination_program_pda_ata",
+          "docs": [
+            "The destination program associated token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The token program."
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The associated token program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The system program."
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "decimals",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "sender",
+          "type": "pubkey"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "recovery_id",
+          "type": "u8"
+        },
+        {
+          "name": "message_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "increment_nonce",
       "docs": [
         "Increments nonce, used by TSS in case outbound fails.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount in original outbound.",
         "* `signature` - The TSS signature.",
         "* `recovery_id` - The recovery ID for signature verification.",
         "* `message_hash` - Message hash for signature verification.",
-        "* `nonce` - The current nonce value."
+        "* `nonce` - The current nonce value.",
+        "* `failure_reason` - The reason for the failure of original outbound."
       ],
       "discriminator": [
         84,
@@ -768,6 +1381,10 @@
         {
           "name": "nonce",
           "type": "u64"
+        },
+        {
+          "name": "failure_reason",
+          "type": "string"
         }
       ]
     },
@@ -845,10 +1462,65 @@
       ]
     },
     {
+      "name": "reset_nonce",
+      "docs": [
+        "Resets the PDA nonce. Caller is authority stored in PDA.",
+        "",
+        "# Arguments",
+        "* `ctx` - The instruction context.",
+        "* `new_nonce` - The new nonce."
+      ],
+      "discriminator": [
+        104,
+        139,
+        110,
+        85,
+        234,
+        155,
+        132,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "The account of the signer performing the update."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pda",
+          "docs": [
+            "Gateway PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "set_deposit_paused",
       "docs": [
         "Pauses or unpauses deposits. Caller is authority stored in PDA.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `deposit_paused` - Boolean flag to pause or unpause deposits."
@@ -904,7 +1576,6 @@
       "name": "unwhitelist_spl_mint",
       "docs": [
         "Unwhitelists an SPL token. Caller is TSS.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `signature` - The TSS signature.",
@@ -1020,7 +1691,6 @@
       "name": "update_authority",
       "docs": [
         "Updates the PDA authority. Caller is authority stored in PDA.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `new_authority_address` - The new authority's public key."
@@ -1076,7 +1746,6 @@
       "name": "update_tss",
       "docs": [
         "Updates the TSS address. Caller is authority stored in PDA.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `tss_address` - The new Ethereum TSS address (20 bytes)."
@@ -1137,7 +1806,6 @@
       "name": "whitelist_spl_mint",
       "docs": [
         "Whitelists a new SPL token. Caller is TSS.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `signature` - The TSS signature.",
@@ -1260,7 +1928,6 @@
       "name": "withdraw",
       "docs": [
         "Withdraws SOL. Caller is TSS.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `amount` - The amount of SOL to withdraw.",
@@ -1353,7 +2020,6 @@
       "name": "withdraw_spl_token",
       "docs": [
         "Withdraws SPL tokens. Caller is TSS.",
-        "",
         "# Arguments",
         "* `ctx` - The instruction context.",
         "* `decimals` - Token decimals for precision.",
@@ -1407,7 +2073,93 @@
           "docs": [
             "The associated token account for the Gateway PDA."
           ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pda"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "mint_account",
@@ -1616,6 +2368,48 @@
               "Flag to indicate whether deposits are paused."
             ],
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RevertOptions",
+      "docs": [
+        "Struct containing revert options",
+        "# Arguments",
+        "* `revert_address` Address to receive revert.",
+        "* `abort_address` Address to receive funds if aborted.",
+        "* `call_on_revert` Flag if on_revert hook should be called.",
+        "* `revert_message` Arbitrary data sent back in on_revert.",
+        "* `on_revert_gas_limit` Gas limit for revert tx."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "revert_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "abort_address",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          },
+          {
+            "name": "call_on_revert",
+            "type": "bool"
+          },
+          {
+            "name": "revert_message",
+            "type": "bytes"
+          },
+          {
+            "name": "on_revert_gas_limit",
+            "type": "u64"
           }
         ]
       }

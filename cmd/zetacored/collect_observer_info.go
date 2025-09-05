@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zeta-chain/node/app"
+	"github.com/zeta-chain/node/pkg/parsers"
 )
 
 func CollectObserverInfoCmd() *cobra.Command {
@@ -26,13 +27,13 @@ func CollectObserverInfoCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var observerInfoList []ObserverInfoReader
+			var observerInfoList []parsers.ObserverInfoReader
 			err = os.Chdir(directory)
 			if err != nil {
 				return err
 			}
 			for _, file := range files {
-				var observerInfo ObserverInfoReader
+				var observerInfo parsers.ObserverInfoReader
 				info, err := file.Info()
 				if err != nil {
 					return err

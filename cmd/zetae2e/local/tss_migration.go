@@ -25,7 +25,7 @@ func tssMigrationTestRoutine(
 		account := conf.AdditionalAccounts.UserMigration
 		// initialize runner for migration test
 		tssMigrationTestRunner, err := initTestRunner(
-			"tssMigration",
+			"triggerTSSMigration",
 			conf,
 			deployerRunner,
 			account,
@@ -55,9 +55,7 @@ func tssMigrationTestRoutine(
 		if err := tssMigrationTestRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("TSS migration tests failed: %v", err)
 		}
-		if err := tssMigrationTestRunner.CheckBTCTSSBalance(); err != nil {
-			return err
-		}
+		tssMigrationTestRunner.CheckBTCTSSBalance()
 
 		tssMigrationTestRunner.Logger.Print("🍾 TSS migration tests completed in %s", time.Since(startTime).String())
 
@@ -65,7 +63,7 @@ func tssMigrationTestRoutine(
 	}
 }
 
-func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
+func triggerTSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbose bool, conf config.Config) {
 	migrationStartTime := time.Now()
 	logger.Print("🏁 starting tss migration")
 
@@ -78,7 +76,7 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	require.NoError(deployerRunner, err)
 
 	// Generate new TSS
-	waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0)
+	noError(waitKeygenHeight(deployerRunner.Ctx, deployerRunner.CctxClient, deployerRunner.ObserverClient, logger, 0))
 
 	// Run migration
 	// migrationRoutine runs migration e2e test , which migrates funds from the older TSS to the new one
@@ -94,8 +92,11 @@ func TSSMigration(deployerRunner *runner.E2ERunner, logger *runner.Logger, verbo
 	// Update TSS address for contracts in connected chains
 	// TODO : Update TSS address for other chains if necessary
 	// https://github.com/zeta-chain/node/issues/3599
-	deployerRunner.UpdateTSSAddressForConnector()
+	deployerRunner.UpdateTSSAddressForConnectorNative()
 	deployerRunner.UpdateTSSAddressForERC20custody()
 	deployerRunner.UpdateTSSAddressForGateway()
+	deployerRunner.UpdateTSSAddressSolana(
+		conf.Contracts.Solana.GatewayProgramID.String(),
+		conf.AdditionalAccounts.UserSolana.SolanaPrivateKey.String())
 	logger.Print("✅ migration completed in %s ", time.Since(migrationStartTime).String())
 }

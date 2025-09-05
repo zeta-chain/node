@@ -17,6 +17,7 @@ import (
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
+	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/metrics"
 )
 
@@ -35,9 +36,16 @@ type RPC interface {
 		hash *hash.Hash,
 		res *btcjson.GetTransactionResult,
 	) (btcjson.TxRawResult, error)
+	GetMempoolEntry(ctx context.Context, txHash string) (*btcjson.GetMempoolEntryResult, error)
 
-	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (int64, error)
+	GetEstimatedFeeRate(ctx context.Context, confTarget int64) (uint64, error)
 	GetTransactionFeeAndRate(ctx context.Context, tx *btcjson.TxRawResult) (int64, int64, error)
+
+	IsTxStuckInMempool(
+		ctx context.Context,
+		txHash string,
+		maxWaitBlocks int64,
+	) (stuck bool, pendingFor time.Duration, err error)
 
 	EstimateSmartFee(
 		ctx context.Context,
@@ -53,6 +61,10 @@ type RPC interface {
 
 	GetBlockHeightByStr(ctx context.Context, blockHash string) (int64, error)
 	GetTransactionByStr(ctx context.Context, hash string) (*hash.Hash, *btcjson.GetTransactionResult, error)
+	GetRawTransactionByStr(ctx context.Context, hash string) (*btcutil.Tx, error)
+
+	GetTransactionInputSpender(ctx context.Context, txid string, vout uint32) (string, error)
+	GetTransactionInitiator(ctx context.Context, txid string) (string, error)
 }
 
 const (
@@ -95,6 +107,13 @@ type Observer struct {
 	// pendingNonce is the outbound artificial pending nonce
 	pendingNonce uint64
 
+	// feeBumpWaitBlocks is the number of blocks to await before considering a tx stuck in mempool
+	feeBumpWaitBlocks int64
+
+	// lastStuckTx contains the last stuck outbound tx information
+	// Note: nil if outbound is not stuck
+	lastStuckTx *LastStuckOutbound
+
 	// utxos contains the UTXOs owned by the TSS address
 	utxos []btcjson.ListUnspentResult
 
@@ -123,19 +142,34 @@ func New(chain chains.Chain, baseObserver *base.Observer, rpc RPC) (*Observer, e
 		return nil, errors.Wrapf(err, "unable to get BTC net params")
 	}
 
+	isRegnet := chains.IsBitcoinRegnet(chain.ChainId)
+
+	feeBumpWaitBlocks := pendingTxFeeBumpWaitBlocks
+	if isRegnet {
+		feeBumpWaitBlocks = pendingTxFeeBumpWaitBlocksRegnet
+	}
+
 	// create bitcoin observer
 	ob := &Observer{
-		Observer:          baseObserver,
-		netParams:         netParams,
-		rpc:               rpc,
+		Observer:  baseObserver,
+		netParams: netParams,
+		rpc:       rpc,
+
+		pendingNonce:      0,
+		feeBumpWaitBlocks: int64(feeBumpWaitBlocks),
+		lastStuckTx:       nil,
 		utxos:             []btcjson.ListUnspentResult{},
+
 		tssOutboundHashes: make(map[string]bool),
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 		broadcastedTx:     make(map[string]string),
+
 		logger: Logger{
 			ObserverLogger: *baseObserver.Logger(),
 			UTXOs:          baseObserver.Logger().Chain.With().Str("module", "utxos").Logger(),
 		},
+
+		nodeEnabled: atomic.Bool{},
 	}
 
 	ob.nodeEnabled.Store(true)
@@ -203,9 +237,43 @@ func (ob *Observer) GetBlockByNumberCached(ctx context.Context, blockNumber int6
 	return blockNheader, nil
 }
 
+// LastStuckOutbound returns the last stuck outbound tx information
+func (ob *Observer) LastStuckOutbound() (tx *LastStuckOutbound, found bool) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	return ob.lastStuckTx, ob.lastStuckTx != nil
+}
+
+// setLastStuckOutbound sets the information of last stuck outbound
+func (ob *Observer) setLastStuckOutbound(stuckTx *LastStuckOutbound) {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
+	lf := map[string]any{
+		logs.FieldMethod: "SetLastStuckOutbound",
+	}
+
+	if stuckTx != nil {
+		lf[logs.FieldNonce] = stuckTx.Nonce
+		lf[logs.FieldTx] = stuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Warn().
+			Fields(lf).
+			Msgf("Bitcoin outbound is stuck for %f minutes", stuckTx.StuckFor.Minutes())
+	} else if ob.lastStuckTx != nil {
+		lf[logs.FieldNonce] = ob.lastStuckTx.Nonce
+		lf[logs.FieldTx] = ob.lastStuckTx.Tx.MsgTx().TxID()
+		ob.logger.Outbound.Info().Fields(lf).Msgf("Bitcoin outbound is no longer stuck")
+	}
+	ob.lastStuckTx = stuckTx
+}
+
 // IsTSSTransaction checks if a given transaction was sent by TSS itself.
-// An unconfirmed transaction is safe to spend only if it was sent by TSS and verified by ourselves.
+// An unconfirmed transaction is safe to spend only if it was sent by TSS self.
 func (ob *Observer) IsTSSTransaction(txid string) bool {
+	ob.Mu().Lock()
+	defer ob.Mu().Unlock()
+
 	_, found := ob.tssOutboundHashes[txid]
 	return found
 }

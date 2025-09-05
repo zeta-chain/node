@@ -19,7 +19,7 @@ The `docker-compose.yml` file defines a network with:
 The following Docker compose files can extend the default localnet setup:
 
 - `docker-compose-stresstest.yml`: Spin up more nodes and clients for testing performance of the network.
-- `docker-compose-upgrade.yml`: Spin up a network with with a upgrade proposal defined at a specific height.
+- `docker-compose-upgrade.yml`: Spin up a network with a upgrade proposal defined at a specific height.
 
 Finally, `docker-compose-monitoring.yml` can be run separately to spin up a local grafana and prometheus setup to monitor the network.
 

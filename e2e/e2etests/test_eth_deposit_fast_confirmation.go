@@ -59,6 +59,8 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	res, err := r.ZetaTxServer.SetZRC20LiquidityCap(r.ETHZRC20Addr, liquidityCap)
 	require.NoError(r, err)
 	r.Logger.Info("set liquidity cap to %s tx hash: %s", liquidityCap.String(), res.TxHash)
+	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
 
 	// ACT-1
 	// deposit with exactly fast amount cap, should be fast confirmed
@@ -67,6 +69,7 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 		r.EVMAddress(),
 		fastAmountCap.BigInt(),
 		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
 	)
 	r.Logger.Info("deposited exactly fast amount %d cap tx hash: %s", fastAmountCap, tx.Hash().Hex())
 
@@ -74,25 +77,40 @@ func TestETHDepositFastConfirmation(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be FAST confirmed
 	timeStart := time.Now()
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, crosschaintypes.ConfirmationMode_FAST, cctx.InboundParams.ConfirmationMode)
 	fastConfirmTime := time.Since(timeStart)
+
+	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	require.Equal(r, new(big.Int).Add(oldBalance, fastAmountCap.BigInt()), newBalance)
 
 	r.Logger.Info("FAST confirmed deposit succeeded in %f seconds", fastConfirmTime.Seconds())
 
 	// ACT-2
 	// deposit with amount more than fast amount cap
+	oldBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
 	amountMoreThanCap := big.NewInt(0).Add(fastAmountCap.BigInt(), big.NewInt(1))
-	tx = r.ETHDeposit(r.EVMAddress(), amountMoreThanCap, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+	tx = r.ETHDeposit(
+		r.EVMAddress(),
+		amountMoreThanCap,
+		gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		true,
+	)
 	r.Logger.Info("deposited more than fast amount cap %d tx hash: %s", amountMoreThanCap, tx.Hash().Hex())
 
 	// ASSERT-2
 	// wait for the cctx to be SAFE confirmed
 	timeStart = time.Now()
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, crosschaintypes.ConfirmationMode_SAFE, cctx.InboundParams.ConfirmationMode)
 	safeConfirmTime := time.Since(timeStart)
+
+	newBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	require.NoError(r, err)
+	require.Equal(r, new(big.Int).Add(oldBalance, amountMoreThanCap), newBalance)
 
 	r.Logger.Info("SAFE confirmed deposit succeeded in %f seconds", safeConfirmTime.Seconds())
 

@@ -17,7 +17,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
 const (
@@ -26,6 +25,17 @@ const (
 
 	// the rank below (or equal to) which we consolidate UTXOs
 	consolidationRank = 10
+
+	// reservedRBFFees is the amount of BTC reserved for RBF fee bumping.
+	// the TSS keysign stops automatically when transactions get stuck in the mempool
+	// 0.01 BTC can bump 10 transactions (1KB each) by 100 sat/vB
+	reservedRBFFees = 0.01
+
+	// rbfTxInSequenceNum is the sequence number used to signal an opt-in full-RBF (Replace-By-Fee) transaction
+	// Setting sequenceNum to "1" effectively makes the transaction timelocks irrelevant.
+	// See: https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+	// See: https://github.com/BlockchainCommons/Learning-Bitcoin-from-the-Command-Line/blob/master/05_2_Resending_a_Transaction_with_RBF.md
+	rbfTxInSequenceNum uint32 = 1
 )
 
 // SignWithdrawTx signs a BTC withdrawal tx and returns the signed tx
@@ -39,16 +49,20 @@ func (signer *Signer) SignWithdrawTx(
 	// we don't know how many UTXOs will be used beforehand, so we do
 	// a conservative estimation using the maximum size of the outbound tx:
 	// estimateFee = feeRate * maxTxSize
-	estimateFee := float64(txData.feeRate*common.OutboundBytesMax) / 1e8
-	totalAmount := txData.amount + estimateFee + float64(nonceMark)*1e-8
+	// #nosec G115 always in range
+	estimateFee := float64(int64(txData.feeRate)*common.OutboundBytesMax) / 1e8
+	totalAmount := txData.amount + estimateFee + reservedRBFFees + float64(nonceMark)*1e-8
 
-	// refresh unspent UTXOs and continue with keysign regardless of error
-	if err := ob.FetchUTXOs(ctx); err != nil {
-		signer.Logger().
-			Std.Error().
-			Err(err).
-			Uint64(logs.FieldNonce, txData.nonce).
-			Msg("FetchUTXOs failed")
+	// refreshing UTXO list before TSS keysign is important:
+	// 1. all TSS outbounds have opted-in for RBF to be replaceable
+	// 2. using old UTXOs may lead to accidental double-spending, which may trigger unwanted RBF
+	//
+	// Note: unwanted RBF is very unlikely to happen for two reasons:
+	// 1. it requires 2/3 TSS signers to accidentally sign the same tx using same outdated UTXOs.
+	// 2. RBF requires a higher fee rate than the original tx, otherwise it will fail.
+	err := ob.FetchUTXOs(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "FetchUTXOs failed for nonce %d", txData.nonce)
 	}
 
 	// select N UTXOs to cover the total expense
@@ -84,7 +98,8 @@ func (signer *Signer) SignWithdrawTx(
 	}
 
 	// fee calculation
-	fees := txSize * txData.feeRate
+	// #nosec G115 always in range
+	fees := txSize * int64(txData.feeRate)
 
 	// add tx outputs
 	inputValue := selected.Value
@@ -93,7 +108,7 @@ func (signer *Signer) SignWithdrawTx(
 	}
 	signer.Logger().
 		Std.Info().
-		Int64("tx.rate", txData.feeRate).
+		Uint64("tx.rate", txData.feeRate).
 		Int64("tx.fees", fees).
 		Uint16("tx.consolidated_utxos", selected.ConsolidatedUTXOs).
 		Float64("tx.consolidated_value", selected.ConsolidatedValue).
@@ -116,8 +131,13 @@ func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, er
 			return nil, err
 		}
 
+		// add input and set 'nSequence' to opt-in for RBF
+		// it doesn't matter on which input we set the RBF sequence
 		outpoint := wire.NewOutPoint(hash, utxo.Vout)
 		txIn := wire.NewTxIn(outpoint, nil, nil)
+		if i == 0 {
+			txIn.Sequence = rbfTxInSequenceNum
+		}
 		tx.AddTxIn(txIn)
 
 		// store the amount for later signing use
@@ -136,7 +156,7 @@ func AddTxInputs(tx *wire.MsgTx, utxos []btcjson.ListUnspentResult) ([]int64, er
 // 2nd output: the payment to the recipient
 // 3rd output: the remaining btc to TSS itself
 //
-// Note: float64 is used for for 'inputValue' because UTXOs struct uses float64.
+// Note: float64 is used for 'inputValue' because UTXOs struct uses float64.
 // But we need to use 'int64' for the outputs because NewTxOut expects int64.
 func (signer *Signer) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,

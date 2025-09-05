@@ -42,9 +42,14 @@ func TestClientLive(t *testing.T) {
 		RPCParams: "mainnet",
 	}
 
-	testnetConfig := config.BTCConfig{
-		RPCHost:   os.Getenv(common.EnvBtcRPCTestnet),
-		RPCParams: "testnet3",
+	signetConfig := config.BTCConfig{
+		RPCHost:   os.Getenv(common.EnvBtcRPCSignet),
+		RPCParams: "signet",
+	}
+
+	testnet4Config := config.BTCConfig{
+		RPCHost:   os.Getenv(common.EnvBtcRPCTestnet4),
+		RPCParams: "testnet4",
 	}
 
 	t.Run("Healthcheck", func(t *testing.T) {
@@ -114,10 +119,14 @@ func TestClientLive(t *testing.T) {
 
 	t.Run("FilterAndParseIncomingTx", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, testnetConfig)
+		ts := newTestSuite(t, mainnetConfig)
+
+		// net params
+		net, err := chains.GetBTCChainParams(ts.chain.ChainId)
+		require.NoError(t, err)
 
 		// get the block that contains the incoming tx
-		hashStr := "0000000000000032cb372f5d5d99c1ebf4430a3059b67c47a54dd626550fb50d"
+		hashStr := "000000000000000000004a8ff16cd6be6c9410768c40c253868137f72f020f2d"
 
 		block, err := ts.GetBlockVerboseByStr(ts.ctx, hashStr)
 		require.NoError(t, err)
@@ -127,32 +136,32 @@ func TestClientLive(t *testing.T) {
 			ts.Client,
 			block.Tx,
 			uint64(block.Height),
-			"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
+			testutils.TSSAddressBTCMainnet,
 			ts.Logger,
-			&chaincfg.TestNet3Params,
+			net,
 		)
 
 		require.NoError(t, err)
 		require.Len(t, inbounds, 1)
-		require.Equal(t, inbounds[0].Value+inbounds[0].DepositorFee, 0.0001)
-		require.Equal(t, inbounds[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
+		require.Equal(t, inbounds[0].Value+inbounds[0].DepositorFee, 0.001)
+		require.Equal(t, inbounds[0].ToAddress, testutils.TSSAddressBTCMainnet)
 
 		// the text memo is base64 std encoded string:DSRR1RmDCwWmxqY201/TMtsJdmA=
-		// see https://blockstream.info/testnet/tx/889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797
-		memo, err := hex.DecodeString("4453525231526d444377576d7871593230312f544d74734a646d413d")
+		// see https://mempool.space/tx/fb626645382defa1a68f4c07300ede722147c3b27a2fded698f0bf54b1110232
+		memo, err := hex.DecodeString("6a956f0aed3b8625f20d696a5e934a5de8c27a2c")
 		require.NoError(t, err)
 		require.Equal(t, inbounds[0].MemoBytes, memo)
-		require.Equal(t, inbounds[0].FromAddress, "tb1qyslx2s8evalx67n88wf42yv7236303ezj3tm2l")
-		require.Equal(t, inbounds[0].BlockNumber, uint64(2406185))
-		require.Equal(t, inbounds[0].TxHash, "889bfa69eaff80a826286d42ec3f725fd97c3338357ddc3a1f543c2d6266f797")
+		require.Equal(t, inbounds[0].FromAddress, "bc1q4hffmv7m7yzglh3ryl3fcenwas46jyql7jpzdk")
+		require.Equal(t, inbounds[0].BlockNumber, uint64(899645))
+		require.Equal(t, inbounds[0].TxHash, "fb626645382defa1a68f4c07300ede722147c3b27a2fded698f0bf54b1110232")
 	})
 
 	t.Run("FilterAndParseIncomingTxNoop", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, testnetConfig)
+		ts := newTestSuite(t, mainnetConfig)
 
 		// get a block that contains no incoming tx
-		hashStr := "000000000000002fd8136dbf91708898da9d6ae61d7c354065a052568e2f2888"
+		hashStr := "000000000000000000004a8ff16cd6be6c9410768c40c253868137f72f020f2d"
 
 		block, err := ts.GetBlockVerboseByStr(ts.ctx, hashStr)
 		require.NoError(t, err)
@@ -175,11 +184,15 @@ func TestClientLive(t *testing.T) {
 	t.Run("GetRecentFeeRate", func(t *testing.T) {
 		// ARRANGE
 		// setup Bitcoin testnet client
-		ts := newTestSuite(t, testnetConfig)
+		ts := newTestSuite(t, testnet4Config)
+
+		// net params
+		net, err := chains.GetBTCChainParams(ts.chain.ChainId)
+		require.NoError(t, err)
 
 		// ACT
 		// get fee rate from recent blocks
-		feeRate, err := btc.GetRecentFeeRate(ts.ctx, ts.Client, &chaincfg.TestNet3Params)
+		feeRate, err := btc.GetRecentFeeRate(ts.ctx, ts.Client, net)
 
 		// ASSERT
 		require.NoError(t, err)
@@ -261,13 +274,9 @@ func TestClientLive(t *testing.T) {
 		}
 	})
 
-	t.Run("GetSenderByVin", func(t *testing.T) {
+	t.Run("GetTransactionInputSpender", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t, mainnetConfig)
-
-		// net params
-		net, err := chains.GetBTCChainParams(ts.chain.ChainId)
-		require.NoError(t, err)
 
 		// calculates block range to test
 		startBlock, err := ts.GetBlockCount(ts.ctx)
@@ -302,7 +311,7 @@ func TestClientLive(t *testing.T) {
 						Txid: mpvin.TxID,
 						Vout: mpvin.Vout,
 					}
-					senderAddr, err := observer.GetSenderAddressByVin(ts.ctx, ts.Client, vin, net)
+					senderAddr, err := ts.GetTransactionInputSpender(ts.ctx, mpvin.TxID, mpvin.Vout)
 					if err != nil {
 						fmt.Printf("error GetSenderAddressByVin for block %d, tx %s vout %d: %s\n", bn, vin.Txid, vin.Vout, err)
 						time.Sleep(3 * time.Second)
@@ -320,9 +329,25 @@ func TestClientLive(t *testing.T) {
 		}
 	})
 
+	t.Run("GetTransactionInitiator", func(t *testing.T) {
+		// ARRANGE
+		ts := newTestSuite(t, signetConfig)
+
+		// Given a inscription commit tx
+		commitTxSender := "tb1quy58ql4ss9q2f00p8xlhtl05ncp3rp6dvtxdtp"
+		commitTxid := "e8072dcd232fe6f89037ee1d6a4ab75ed4c119798743b6edfbfe9af18811ad3e"
+
+		// ACT
+		initiator, err := ts.GetTransactionInitiator(ts.ctx, commitTxid)
+		require.NoError(t, err)
+
+		// ASSERT
+		require.Equal(t, commitTxSender, initiator)
+	})
+
 	t.Run("GetTransactionFeeAndRate", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, testnetConfig)
+		ts := newTestSuite(t, testnet4Config)
 
 		// calculates block range to test
 		startBlock, err := ts.GetBlockCount(ts.ctx)
@@ -332,9 +357,9 @@ func TestClientLive(t *testing.T) {
 		endBlock := startBlock - 1
 
 		// loop through mempool.space blocks backwards
-		for bn := startBlock; bn >= endBlock; {
+		for bn := startBlock; bn > endBlock; {
 			// get mempool.space txs for the block
-			blkHash, mempoolTxs, err := ts.getMemPoolSpaceTxsByBlock(bn, false)
+			blkHash, mempoolTxs, err := ts.getMemPoolSpaceTxsByBlock(bn, true)
 			if err != nil {
 				time.Sleep(3 * time.Second)
 				continue
@@ -349,8 +374,8 @@ func TestClientLive(t *testing.T) {
 
 			// loop through each tx in the block (skip coinbase tx)
 			for i := 1; i < len(block.Tx); {
-				// sample 20 txs per block
-				if i >= 20 {
+				// sample 10 txs per block
+				if i >= 10 {
 					break
 				}
 
@@ -425,11 +450,10 @@ func TestClientLive(t *testing.T) {
 
 	t.Run("AvgFeeRateTestnetMempoolSpace", func(t *testing.T) {
 		// ARRANGE
-		ts := newTestSuite(t, testnetConfig)
+		ts := newTestSuite(t, testnet4Config)
 
-		// test against mempool.space API for 10000 blocks
-		//startBlock := 210000 * 12 // 12th halving
-		startBlock := 2577600
+		// test against mempool.space API
+		startBlock := 85240
 		endBlock := startBlock - 1 // go back to whatever block as needed
 
 		// ACT
@@ -479,11 +503,20 @@ type testSuite struct {
 func newTestSuite(t *testing.T, cfg config.BTCConfig) *testSuite {
 	logger := testlog.New(t)
 
-	require.True(t, cfg.RPCParams == "mainnet" || cfg.RPCParams == "testnet3")
-
-	chain := chains.BitcoinMainnet
-	if cfg.RPCParams == "testnet3" {
-		chain = chains.BitcoinTestnet
+	var chain chains.Chain
+	switch cfg.RPCParams {
+	case "mainnet":
+		chain = chains.BitcoinMainnet
+	case "signet":
+		// signet also uses 'testnet3' RPC params, override it
+		cfg.RPCParams = "testnet3"
+		chain = chains.BitcoinSignetTestnet
+	case "testnet4":
+		// testnet4 also uses 'testnet3' RPC params, override it
+		cfg.RPCParams = "testnet3"
+		chain = chains.BitcoinTestnet4
+	default:
+		t.Fatalf("invalid RPC params: %s", cfg.RPCParams)
 	}
 
 	c, err := client.New(cfg, chain.ChainId, logger.Logger)

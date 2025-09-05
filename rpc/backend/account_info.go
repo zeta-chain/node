@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
@@ -26,10 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
@@ -45,7 +30,7 @@ func (b *Backend) GetCode(address common.Address, blockNrOrHash rpctypes.BlockNu
 		Address: address.String(),
 	}
 
-	res, err := b.queryClient.Code(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Code(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +49,13 @@ func (b *Backend) GetProof(
 		return nil, err
 	}
 
-	height := blockNum.Int64()
+	height := int64(blockNum)
+
 	_, err = b.TendermintBlockByNumber(blockNum)
 	if err != nil {
 		// the error message imitates geth behavior
 		return nil, errors.New("header not found")
 	}
-	ctx := rpctypes.ContextWithHeight(height)
 
 	// if the height is equal to zero, meaning the query condition of the block is either "pending" or "latest"
 	if height == 0 {
@@ -83,18 +68,18 @@ func (b *Backend) GetProof(
 			return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
 		}
 
-		// #nosec G115 range checked
-		height = int64(bn)
+		height = int64(bn) //#nosec G115 -- checked for int overflow already
 	}
 
-	clientCtx := b.clientCtx.WithHeight(height)
+	ctx := rpctypes.ContextWithHeight(height)
+	clientCtx := b.ClientCtx.WithHeight(height)
 
 	// query storage proofs
 	storageProofs := make([]rpctypes.StorageResult, len(storageKeys))
 
 	for i, key := range storageKeys {
 		hexKey := common.HexToHash(key)
-		valueBz, proof, err := b.queryClient.GetProof(
+		valueBz, proof, err := b.QueryClient.GetProof(
 			clientCtx,
 			evmtypes.StoreKey,
 			evmtypes.StateKey(address, hexKey.Bytes()),
@@ -115,14 +100,14 @@ func (b *Backend) GetProof(
 		Address: address.String(),
 	}
 
-	res, err := b.queryClient.Account(ctx, req)
+	res, err := b.QueryClient.Account(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	// query account proofs
 	accountKey := bytes.HexBytes(append(authtypes.AddressStoreKeyPrefix, address.Bytes()...))
-	_, proof, err := b.queryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
+	_, proof, err := b.QueryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +123,7 @@ func (b *Backend) GetProof(
 		Balance:      (*hexutil.Big)(balance.BigInt()),
 		CodeHash:     common.HexToHash(res.CodeHash),
 		Nonce:        hexutil.Uint64(res.Nonce),
-		StorageHash:  common.Hash{}, // NOTE: Ethermint doesn't have a storage hash. TODO: implement?
+		StorageHash:  common.Hash{}, // NOTE: Cosmos EVM doesn't have a storage hash. TODO: implement?
 		StorageProof: storageProofs,
 	}, nil
 }
@@ -159,7 +144,7 @@ func (b *Backend) GetStorageAt(
 		Key:     key,
 	}
 
-	res, err := b.queryClient.Storage(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Storage(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +153,7 @@ func (b *Backend) GetStorageAt(
 	return value.Bytes(), nil
 }
 
-// GetBalance returns the provided account's balance up to the provided block number.
+// GetBalance returns the provided account's *spendable* balance up to the provided block number.
 func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (*hexutil.Big, error) {
 	blockNum, err := b.BlockNumberFromTendermint(blockNrOrHash)
 	if err != nil {
@@ -184,7 +169,7 @@ func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.Bloc
 		return nil, err
 	}
 
-	res, err := b.queryClient.Balance(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	res, err := b.QueryClient.Balance(rpctypes.ContextWithHeight(blockNum.Int64()), req)
 	if err != nil {
 		return nil, err
 	}
@@ -209,13 +194,9 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	if err != nil {
 		return &n, err
 	}
-	if bn > math.MaxInt64 {
-		return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
-	}
 	height := blockNum.Int64()
-	// #nosec G115 range checked
-	currentHeight := int64(bn)
 
+	currentHeight := int64(bn) //#nosec G115 -- checked for int overflow already
 	if height > currentHeight {
 		return &n, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidHeight,
@@ -225,16 +206,16 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	}
 	// Get nonce (sequence) from account
 	from := sdk.AccAddress(address.Bytes())
-	accRet := b.clientCtx.AccountRetriever
+	accRet := b.ClientCtx.AccountRetriever
 
-	err = accRet.EnsureExists(b.clientCtx, from)
+	err = accRet.EnsureExists(b.ClientCtx, from)
 	if err != nil {
 		// account doesn't exist yet, return 0
 		return &n, nil
 	}
 
 	includePending := blockNum == rpctypes.EthPendingBlockNumber
-	nonce, err := b.getAccountNonce(address, includePending, blockNum.Int64(), b.logger)
+	nonce, err := b.getAccountNonce(address, includePending, blockNum.Int64(), b.Logger)
 	if err != nil {
 		return nil, err
 	}

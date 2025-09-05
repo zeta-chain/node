@@ -85,14 +85,14 @@ func SimulateVoteOutbound(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.OperationMsg{}, nil, nil
 		}
-		index := ethcrypto.Keccak256Hash([]byte(fmt.Sprintf("%d", r.Int63()))).Hex()
+		index := ethcrypto.Keccak256Hash(fmt.Appendf(nil, "%d", r.Int63())).Hex()
 
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		if !found {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "tss not found"), nil, nil
 		}
 
-		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), from)
+		asset, err := zetasimulation.GetAsset(ctx, k.GetFungibleKeeper(), to)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgVoteOutbound, "unable to get asset"), nil, err
 		}

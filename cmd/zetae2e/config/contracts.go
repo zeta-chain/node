@@ -7,14 +7,16 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/stretchr/testify/require"
 	"github.com/tonkeeper/tongo/ton"
+	"github.com/zeta-chain/protocol-contracts/pkg/coreregistry.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
-	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaeth.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 
 	"github.com/zeta-chain/node/e2e/config"
@@ -119,6 +121,15 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		r.SPLAddr = solana.MustPublicKeyFromBase58(c.String())
 	}
 
+	if c := conf.Contracts.Solana.ConnectedProgramID; c != "" {
+		r.ConnectedProgram = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	if c := conf.Contracts.Solana.ConnectedSPLProgramID; c != "" {
+		r.ConnectedSPLProgram = solana.MustPublicKeyFromBase58(c.String())
+	}
+
+	// set TON contracts
 	if c := conf.Contracts.TON.GatewayAccountID; c != "" {
 		r.TONGateway = ton.MustParseAccountID(c.String())
 	}
@@ -130,14 +141,18 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	if suiPackageID != "" && suiGatewayID != "" {
 		r.SuiGateway = sui.NewGateway(suiPackageID.String(), suiGatewayID.String())
 	}
-
+	if c := conf.Contracts.Sui.GatewayUpgradeCap; c != "" {
+		r.SuiGatewayUpgradeCap = c.String()
+	}
 	if c := conf.Contracts.Sui.FungibleTokenCoinType; c != "" {
 		r.SuiTokenCoinType = c.String()
 	}
 	if c := conf.Contracts.Sui.FungibleTokenTreasuryCap; c != "" {
 		r.SuiTokenTreasuryCap = c.String()
 	}
+	r.SuiExample = conf.Contracts.Sui.Example
 
+	// set EVM contracts
 	evmChainID, err := r.EVMClient.ChainID(r.Ctx)
 	require.NoError(r, err, "get evm chain ID")
 	evmChainParams := chainParamsByChainID(chainParams, evmChainID.Int64())
@@ -162,6 +177,27 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 		}
 	}
 
+	if c := conf.Contracts.EVM.ConnectorNative; c != "" {
+		r.ConnectorNativeAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorNativeAddr: %w", err)
+		}
+		r.ConnectorNative, err = zetaconnectornative.NewZetaConnectorNative(r.ConnectorNativeAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
+	// Overwrite using contract addresses from config
+	if c := conf.Contracts.EVM.ConnectorEthAddr; c != "" {
+		r.ConnectorEthAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid ConnectorEthAddr: %w", err)
+		}
+		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
+		if err != nil {
+			return err
+		}
+	}
 	// set ZEVM contracts
 	foreignCoins, err := r.Clients.Zetacore.Fungible.ForeignCoinsAll(
 		r.Ctx,
@@ -375,6 +411,17 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid TestDAppV2Addr: %w", err)
 		}
 		r.TestDAppV2ZEVM, err = testdappv2.NewTestDAppV2(r.TestDAppV2ZEVMAddr, r.ZEVMClient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c := conf.Contracts.ZEVM.CoreRegistry; c != "" {
+		r.CoreRegistryAddr, err = c.AsEVMAddress()
+		if err != nil {
+			return fmt.Errorf("invalid CoreRegistryAddr: %w", err)
+		}
+		r.CoreRegistry, err = coreregistry.NewCoreRegistry(r.CoreRegistryAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

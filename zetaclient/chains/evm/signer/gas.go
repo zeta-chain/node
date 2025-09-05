@@ -14,7 +14,7 @@ import (
 // maxGasLimit is the maximum gas limit cap for EVM chain outbound to prevent excessive gas
 const maxGasLimit = 2_500_000
 
-const gasTransferGasLimit = 21_000
+// contractCallMinGasLimit is the minimum gas limit for contract calls to prevent intrinsic low gas limit error
 const contractCallMinGasLimit = 100_000
 
 // Gas represents gas parameters for EVM transactions.
@@ -71,18 +71,21 @@ func gasFromCCTX(cctx *types.CrossChainTx, logger zerolog.Logger) (Gas, error) {
 		limit  = params.CallOptions.GasLimit
 	)
 
+	isWithdrawWithNoCall := !cctx.IsCurrentOutboundRevert() && cctx.InboundParams.IsCrossChainCall
+	isRevertWithNoCall := cctx.IsCurrentOutboundRevert() && cctx.RevertOptions.CallOnRevert
+
 	if limit > maxGasLimit {
 		limit = maxGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).
 			Uint64("cctx.gas_limit", limit).
 			Msgf("Gas limit is too high; Setting to the maximum (%d)", maxGasLimit)
-	} else if limit == gasTransferGasLimit && (params.CoinType != coin.CoinType_Gas || (cctx.IsCurrentOutboundRevert() && cctx.RevertOptions.CallOnRevert)) {
-		// in some context, 21k might currently be used for an outbound that involves a contract call
-		// this includes erc20 withdraw and onRevert calls whe gas deposit revert
-		// we fix this minimum to ensure the transaction has the minimum required gas limit
-		// TODO: fix the gas limit used for these cctx outbound gas limit
-		// https://github.com/zeta-chain/node/issues/3723
+	} else if limit < contractCallMinGasLimit && (params.CoinType != coin.CoinType_Gas || isWithdrawWithNoCall || isRevertWithNoCall) {
+		// currently a gas limit that is too low will not make the transaction fail but just completely block the network because the outbound can't be broadcasted
+		// this check ensure that the gas limit is high enough for the outbound to be broadcasted
+		// a minimal gas limit is set to the tx, this check is skipped above in the case where a simple gas withdraw is performed or a gas deposit revert without revert call
+		// TODO: gas limit that is too low should now block outbound at all
+		// https://github.com/zeta-chain/node/issues/3725
 		limit = contractCallMinGasLimit
 		logger.Warn().
 			Uint64("cctx.initial_gas_limit", params.CallOptions.GasLimit).

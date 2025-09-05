@@ -16,7 +16,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
-// TestSPLWithdrawAndCall executes withdrawAndCall on zevm and calls connected program on solana
+// TestSPLWithdrawAndCallRevert executes withdrawAndCall on zevm and calls connected program on solana
 // execution is reverted in connected program on_call function
 func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
@@ -49,7 +49,7 @@ func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL before withdraw: %s", receiverBalanceBefore.Value.Amount)
 
-	connected := solana.MustPublicKeyFromBase58(runner.ConnectedSPLProgramID.String())
+	connected := solana.MustPublicKeyFromBase58(r.ConnectedSPLProgram.String())
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
 
@@ -70,7 +70,6 @@ func TestSPLWithdrawAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
-		runner.ConnectedSPLProgramID,
 		withdrawAmount,
 		approvedAmount,
 		[]byte("revert"),

@@ -11,19 +11,20 @@ import (
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
 	"github.com/zeta-chain/node/testutil/sample"
 	cc "github.com/zeta-chain/node/x/crosschain/types"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
+	"github.com/zeta-chain/node/zetaclient/testutils"
 )
 
 func TestOutbound(t *testing.T) {
 	gw := toncontracts.NewGateway(
-		ton.MustParseAccountID("0:997d889c815aeac21c47f86ae0e38383efc3c3463067582f6263ad48c5a1485b"),
+		ton.MustParseAccountID(testutils.GatewayAddresses[chains.TONMainnet.ChainId]),
 	)
 
 	t.Run("observeOutboundTrackers", func(t *testing.T) {
 		// ARRANGE
 		ts := newTestSuite(t)
 
-		ob, err := New(ts.baseObserver, ts.liteClient, gw)
+		ob, err := New(ts.baseObserver, ts.rpc, gw)
 		require.NoError(t, err)
 
 		// Given withdrawal
@@ -46,7 +47,7 @@ func TestOutbound(t *testing.T) {
 			Index:    "index123",
 			ChainId:  ts.chain.ChainId,
 			Nonce:    nonce,
-			HashList: []*cc.TxHash{{TxHash: liteapi.TransactionToHashString(withdrawalTX)}},
+			HashList: []*cc.TxHash{{TxHash: rpc.TransactionToHashString(withdrawalTX)}},
 		}
 
 		ts.OnGetAllOutboundTrackerByChain([]cc.OutboundTracker{tracker})

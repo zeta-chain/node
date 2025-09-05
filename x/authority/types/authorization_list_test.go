@@ -395,6 +395,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20LiquidityCap{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUpdateZRC20WithdrawFee{}),
 			sdk.MsgTypeURL(&fungibletypes.MsgUnpauseZRC20{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgUpdateGatewayGasLimit{}),
 			sdk.MsgTypeURL(&observertypes.MsgResetChainNonces{}),
 			sdk.MsgTypeURL(&observertypes.MsgEnableCCTX{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateGasPriceIncreaseFlags{}),
@@ -437,6 +438,7 @@ func TestDefaultAuthorizationsList(t *testing.T) {
 			sdk.MsgTypeURL(&types.MsgRemoveChainInfo{}),
 			sdk.MsgTypeURL(&lightclienttypes.MsgEnableHeaderVerification{}),
 			sdk.MsgTypeURL(&observertypes.MsgUpdateChainParams{}),
+			sdk.MsgTypeURL(&fungibletypes.MsgBurnFungibleModuleAsset{}),
 		}
 		defaultList := types.DefaultAuthorizationsList()
 		for _, msgUrl := range OperationalPolicyMessageList {

@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	zctx "github.com/zeta-chain/node/zetaclient/context"
 	"github.com/zeta-chain/node/zetaclient/db"
@@ -37,7 +36,7 @@ import (
 var TestDataDir = "../../../"
 
 type testSuite struct {
-	*signer.Signer
+	*Signer
 	observer       *observer.Observer
 	tss            *mocks.TSS
 	client         *mocks.BitcoinClient
@@ -68,7 +67,7 @@ func newTestSuite(t *testing.T, chain chains.Chain) *testSuite {
 
 	// create signer
 	baseSigner := base.NewSigner(chain, tss, baseLogger)
-	signer := signer.New(baseSigner, rpcClient)
+	signer := New(baseSigner, rpcClient)
 
 	// create test suite and observer
 	suite := &testSuite{
@@ -88,12 +87,21 @@ func Test_BroadcastOutbound(t *testing.T) {
 		name        string
 		chain       chains.Chain
 		nonce       uint64
+		rbfTx       bool
+		skipRBFTx   bool
 		failTracker bool
 	}{
 		{
 			name:  "should successfully broadcast and include outbound",
 			chain: chains.BitcoinMainnet,
 			nonce: uint64(148),
+		},
+		{
+			name:      "should skip broadcasting RBF tx if nonce is outdated",
+			chain:     chains.BitcoinMainnet,
+			nonce:     uint64(148),
+			rbfTx:     true,
+			skipRBFTx: true,
 		},
 		{
 			name:        "should successfully broadcast and include outbound, but fail to post outbound tracker",
@@ -105,6 +113,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// ARRANGE
 			// setup signer and observer
 			s := newTestSuite(t, tt.chain)
 
@@ -126,7 +135,7 @@ func Test_BroadcastOutbound(t *testing.T) {
 			if tt.failTracker {
 				s.zetacoreClient.WithPostOutboundTracker("")
 			} else {
-				s.zetacoreClient.WithPostOutboundTracker("0x123")
+				s.zetacoreClient.WithPostOutboundTracker("ABC")
 			}
 
 			// mock the previous tx as included
@@ -135,19 +144,31 @@ func Test_BroadcastOutbound(t *testing.T) {
 				TxID: rawResult.Vin[0].Txid,
 			})
 
+			// increment pending nonce to 'nonce+2' to simulate an outdated RBF tx nonce
+			// including tx 'nonce+1' will increment the pending nonce to 'nonce+2'
+			if tt.rbfTx && tt.skipRBFTx {
+				s.observer.SetIncludedTx(tt.nonce+1, &btcjson.GetTransactionResult{TxID: "DEF"})
+			}
+
+			// ACT
 			ctx := makeCtx(t)
 			s.BroadcastOutbound(
 				ctx,
 				msgTx,
 				tt.nonce,
+				tt.rbfTx,
 				cctx,
 				s.observer,
-				s.zetacoreClient,
 			)
 
+			// ASSERT
 			// check if outbound is included
 			gotResult := s.observer.GetIncludedTx(tt.nonce)
-			require.Equal(t, txResult, gotResult)
+			if tt.skipRBFTx {
+				require.Nil(t, gotResult)
+			} else {
+				require.Equal(t, txResult, gotResult)
+			}
 		})
 	}
 }

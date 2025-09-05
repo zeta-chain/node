@@ -81,3 +81,8 @@ message EventERC20CustodyPausing {
   bool pause = 2;
   string cctx_index = 3;
 }
+
+message EventInboundProcessingFailure {
+  string inbound_hash = 1;
+  string error_message = 2;
+}

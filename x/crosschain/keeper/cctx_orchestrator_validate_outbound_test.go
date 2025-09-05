@@ -3,17 +3,18 @@ package keeper_test
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/zeta-chain/node/e2e/contracts/dapp"
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/node/e2e/contracts/dapp"
+
 	cosmoserror "cosmossdk.io/errors"
+	"github.com/cosmos/evm/x/vm/statedb"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/ethermint/x/evm/statedb"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"

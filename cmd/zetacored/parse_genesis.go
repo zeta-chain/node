@@ -23,9 +23,9 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/spf13/cobra"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	"github.com/zeta-chain/node/app"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
@@ -137,7 +137,7 @@ func ImportDataIntoFile(
 		return err
 	}
 
-	moduleList := app.InitGenesisModuleList()
+	moduleList := app.OrderInitGenesis()
 	for _, m := range moduleList {
 		if Skip[m] {
 			continue

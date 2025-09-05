@@ -31,7 +31,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("ZETADepositAndCallContract", mock.Anything,
+		fungibleMock.On("LegacyZETADepositAndCallContract", mock.Anything,
 			mock.Anything,
 			receiver, int64(0), amount, mock.Anything, mock.Anything).Return(nil, nil)
 
@@ -61,7 +61,7 @@ func TestKeeper_InitiateOutboundZEVMDeposit(t *testing.T) {
 
 		// mock unsuccessful HandleEVMDeposit which does not revert
 
-		fungibleMock.On("ZETADepositAndCallContract", mock.Anything, mock.Anything, receiver, int64(0), amount, mock.Anything, mock.Anything).
+		fungibleMock.On("LegacyZETADepositAndCallContract", mock.Anything, mock.Anything, receiver, int64(0), amount, mock.Anything, mock.Anything).
 			Return(nil, fmt.Errorf("deposit error"))
 
 		// call InitiateOutbound

@@ -1,32 +1,21 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/evm/server/config"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -34,26 +23,15 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	rpctypes "github.com/zeta-chain/node/rpc/types"
-	"github.com/zeta-chain/node/server/config"
 )
 
 // BackendI implements the Cosmos and EVM backend.
 type BackendI interface { //nolint: revive
-	CosmosBackend
 	EVMBackend
-}
 
-// CosmosBackend implements the functionality shared within cosmos namespaces
-// as defined by Wallet Connect V2: https://docs.walletconnect.com/2.0/json-rpc/cosmos.
-// Implemented by Backend.
-type CosmosBackend interface { // TODO: define
-	// GetAccounts()
-	// SignDirect()
-	// SignAmino()
+	GetConfig() config.Config
 }
 
 // EVMBackend implements the functionality shared within ethereum namespaces
@@ -77,7 +55,7 @@ type EVMBackend interface {
 	RPCGasCap() uint64            // global gas cap for eth_call over rpc: DoS protection
 	RPCEVMTimeout() time.Duration // global timeout for eth_call over rpc: DoS protection
 	RPCTxFeeCap() float64         // RPCTxFeeCap is the global transaction fee(price * gaslimit) cap for send-transaction variants. The unit is ether.
-	RPCMinGasPrice() int64
+	RPCMinGasPrice() *big.Int
 
 	// Sign Tx
 	Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
@@ -91,7 +69,6 @@ type EVMBackend interface {
 	GetBlockTransactionCountByHash(hash common.Hash) *hexutil.Uint
 	GetBlockTransactionCountByNumber(blockNum rpctypes.BlockNumber) *hexutil.Uint
 	TendermintBlockByNumber(blockNum rpctypes.BlockNumber) (*tmrpctypes.ResultBlock, error)
-	TendermintBlockResultByNumber(height *int64) (*tmrpctypes.ResultBlockResults, error)
 	TendermintBlockByHash(blockHash common.Hash) (*tmrpctypes.ResultBlock, error)
 	BlockNumberFromTendermint(blockNrOrHash rpctypes.BlockNumberOrHash) (rpctypes.BlockNumber, error)
 	BlockNumberFromTendermintByHash(blockHash common.Hash) (*big.Int, error)
@@ -99,7 +76,6 @@ type EVMBackend interface {
 		block *tmrpctypes.ResultBlock,
 		blockRes *tmrpctypes.ResultBlockResults,
 	) ([]*evmtypes.MsgEthereumTx, []*rpctypes.TxResultAdditionalFields)
-	BlockBloom(blockRes *tmrpctypes.ResultBlockResults) (ethtypes.Bloom, error)
 	HeaderByNumber(blockNum rpctypes.BlockNumber) (*ethtypes.Header, error)
 	HeaderByHash(blockHash common.Hash) (*ethtypes.Header, error)
 	RPCBlockFromTendermintBlock(
@@ -112,6 +88,7 @@ type EVMBackend interface {
 		resBlock *tmrpctypes.ResultBlock,
 		blockRes *tmrpctypes.ResultBlockResults,
 	) (*ethtypes.Block, error)
+	// GetBlockReceipts(blockNrOrHash rpctypes.BlockNumberOrHash) ([]map[string]interface{}, error)
 
 	// Account Info
 	GetCode(address common.Address, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Bytes, error)
@@ -127,9 +104,9 @@ type EVMBackend interface {
 	// Chain Info
 	ChainID() (*hexutil.Big, error)
 	ChainConfig() *params.ChainConfig
-	GlobalMinGasPrice() (sdkmath.LegacyDec, error)
+	GlobalMinGasPrice() (*big.Int, error)
 	BaseFee(blockRes *tmrpctypes.ResultBlockResults) (*big.Int, error)
-	CurrentHeader() *ethtypes.Header
+	CurrentHeader() (*ethtypes.Header, error)
 	PendingTransactions() ([]*sdk.Tx, error)
 	GetCoinbase() (sdk.AccAddress, error)
 	FeeHistory(
@@ -141,10 +118,11 @@ type EVMBackend interface {
 
 	// Tx Info
 	GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransaction, error)
-	GetTxByEthHash(txHash common.Hash) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error)
-	GetTxByTxIndex(height int64, txIndex uint) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error)
+	GetTxByEthHash(txHash common.Hash) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
+	GetTxByTxIndex(height int64, txIndex uint) (*cosmosevmtypes.TxResult, *rpctypes.TxResultAdditionalFields, error)
 	GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 	GetTransactionReceipt(hash common.Hash) (map[string]interface{}, error)
+	GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error)
 	GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error)
 	GetTransactionByBlockNumberAndIndex(
 		blockNum rpctypes.BlockNumber,
@@ -164,29 +142,60 @@ type EVMBackend interface {
 	GetLogsByHeight(height *int64) ([][]*ethtypes.Log, error)
 	BloomStatus() (uint64, uint64)
 
+	// TxPool API
+	Content() (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	ContentFrom(address common.Address) (map[string]map[string]map[string]*rpctypes.RPCTransaction, error)
+	Inspect() (map[string]map[string]map[string]string, error)
+	Status() (map[string]hexutil.Uint, error)
+
 	// Tracing
-	TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error)
+	TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error)
 	TraceBlock(
 		height rpctypes.BlockNumber,
-		config *rpctypes.TraceConfig,
+		config *evmtypes.TraceConfig,
 		block *tmrpctypes.ResultBlock,
 	) ([]*evmtypes.TxTraceResult, error)
 }
 
 var _ BackendI = (*Backend)(nil)
 
-var bAttributeKeyEthereumBloom = []byte(evmtypes.AttributeKeyEthereumBloom)
+// ProcessBlocker is a function type that processes a block and its associated data
+// for fee history calculation. It takes a Tendermint block, its corresponding
+// Ethereum block representation, reward percentiles for fee estimation,
+// block results, and a target fee history entry to populate.
+//
+// Parameters:
+//   - tendermintBlock: The raw Tendermint block data
+//   - ethBlock: The Ethereum-formatted block representation
+//   - rewardPercentiles: Percentiles used for fee reward calculation
+//   - tendermintBlockResult: Block execution results from Tendermint
+//   - targetOneFeeHistory: The fee history entry to be populated
+//
+// Returns an error if block processing fails.
+type ProcessBlocker func(
+	tendermintBlock *tmrpctypes.ResultBlock,
+	ethBlock *map[string]interface{},
+	rewardPercentiles []float64,
+	tendermintBlockResult *tmrpctypes.ResultBlockResults,
+	targetOneFeeHistory *rpctypes.OneFeeHistory,
+) error
 
 // Backend implements the BackendI interface
 type Backend struct {
-	ctx                 context.Context
-	clientCtx           client.Context
-	queryClient         *rpctypes.QueryClient // gRPC query client
-	logger              log.Logger
-	chainID             *big.Int
-	cfg                 config.Config
-	allowUnprotectedTxs bool
-	indexer             ethermint.EVMTxIndexer
+	Ctx                 context.Context
+	ClientCtx           client.Context
+	RPCClient           tmrpcclient.SignClient
+	QueryClient         *rpctypes.QueryClient // gRPC query client
+	Logger              log.Logger
+	EvmChainID          *big.Int
+	Cfg                 config.Config
+	AllowUnprotectedTxs bool
+	Indexer             cosmosevmtypes.EVMTxIndexer
+	ProcessBlocker      ProcessBlocker
+}
+
+func (b *Backend) GetConfig() config.Config {
+	return b.Cfg
 }
 
 // NewBackend creates a new Backend instance for cosmos and ethereum namespaces
@@ -195,26 +204,32 @@ func NewBackend(
 	logger log.Logger,
 	clientCtx client.Context,
 	allowUnprotectedTxs bool,
-	indexer ethermint.EVMTxIndexer,
+	indexer cosmosevmtypes.EVMTxIndexer,
 ) *Backend {
-	chainID, err := ethermint.ParseChainID(clientCtx.ChainID)
-	if err != nil {
-		panic(err)
-	}
-
 	appConf, err := config.GetConfig(ctx.Viper)
 	if err != nil {
 		panic(err)
 	}
 
-	return &Backend{
-		ctx:                 context.Background(),
-		clientCtx:           clientCtx,
-		queryClient:         rpctypes.NewQueryClient(clientCtx),
-		logger:              logger.With("module", "backend"),
-		chainID:             chainID,
-		cfg:                 appConf,
-		allowUnprotectedTxs: allowUnprotectedTxs,
-		indexer:             indexer,
+	rpcClient, ok := clientCtx.Client.(tmrpcclient.SignClient)
+	if !ok {
+		panic(fmt.Sprintf("invalid rpc client, expected: tmrpcclient.SignClient, got: %T", clientCtx.Client))
 	}
+
+	ethCfg := evmtypes.GetEthChainConfig()
+	logger.Info("chain id from eth cfg", "chainId", ethCfg.ChainID.String())
+
+	b := &Backend{
+		Ctx:                 context.Background(),
+		ClientCtx:           clientCtx,
+		RPCClient:           rpcClient,
+		QueryClient:         rpctypes.NewQueryClient(clientCtx),
+		Logger:              logger.With("module", "backend"),
+		EvmChainID:          ethCfg.ChainID,
+		Cfg:                 appConf,
+		AllowUnprotectedTxs: allowUnprotectedTxs,
+		Indexer:             indexer,
+	}
+	b.ProcessBlocker = b.ProcessBlock
+	return b
 }

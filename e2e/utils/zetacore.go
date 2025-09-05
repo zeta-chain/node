@@ -2,12 +2,17 @@ package utils
 
 import (
 	"context"
+	"fmt"
+	"math/big"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -28,7 +33,28 @@ const (
 	// https://github.com/zeta-chain/node/issues/2690
 
 	DefaultCctxTimeout = 8 * time.Minute
+
+	// nodeSyncTolerance is the time tolerance for the ZetaChain nodes behind a RPC to be synced
+	nodeSyncTolerance = constant.ZetaBlockTime * 5
 )
+
+// GetCCTXByInboundHash gets cctx by inbound hash
+func GetCCTXByInboundHash(
+	ctx context.Context,
+	client crosschaintypes.QueryClient,
+	inboundHash string,
+) *crosschaintypes.CrossChainTx {
+	t := TestingFromContext(ctx)
+
+	// query cctx by inbound hash
+	in := &crosschaintypes.QueryInboundHashToCctxDataRequest{InboundHash: inboundHash}
+	res, err := client.InboundHashToCctxData(ctx, in)
+
+	require.NoError(t, err)
+	require.Len(t, res.CrossChainTxs, 1)
+
+	return &res.CrossChainTxs[0]
+}
 
 // WaitCctxMinedByInboundHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInboundHash(
@@ -93,7 +119,7 @@ func WaitCctxsMinedByInboundHash(
 		// for the update tests
 		// TODO: replace with InboundHashToCctxData once removed
 		// https://github.com/zeta-chain/node/issues/2200
-		res, err := client.InTxHashToCctxData(ctx, in)
+		res, err := client.InboundHashToCctxData(ctx, in)
 		if err != nil {
 			// prevent spamming logs
 			if i%20 == 0 {
@@ -189,6 +215,58 @@ func WaitCCTXMinedByIndex(
 		}
 
 		return cctx
+	}
+}
+
+// WaitOutboundTracker wait for outbound tracker to be filled with 'hashCount' hashes
+func WaitOutboundTracker(
+	ctx context.Context,
+	client crosschaintypes.QueryClient,
+	chainID int64,
+	nonce uint64,
+	hashCount int,
+	logger infoLogger,
+	timeout time.Duration,
+) []string {
+	if timeout == 0 {
+		timeout = DefaultCctxTimeout
+	}
+
+	t := TestingFromContext(ctx)
+	startTime := time.Now()
+	in := &crosschaintypes.QueryAllOutboundTrackerByChainRequest{Chain: chainID}
+
+	for {
+		require.False(
+			t,
+			time.Since(startTime) > timeout,
+			fmt.Sprintf("waiting outbound tracker timeout, chainID: %d, nonce: %d", chainID, nonce),
+		)
+
+		// wait for a Zeta block before querying outbound tracker
+		time.Sleep(constant.ZetaBlockTime)
+
+		outboundTracker, err := client.OutboundTrackerAllByChain(ctx, in)
+		require.NoError(t, err)
+
+		// loop through all outbound trackers
+		for i, tracker := range outboundTracker.OutboundTracker {
+			if tracker.Nonce == nonce {
+				logger.Info("Tracker[%d]:\n", i)
+				logger.Info("  ChainId: %d\n", tracker.ChainId)
+				logger.Info("  Nonce: %d\n", tracker.Nonce)
+				logger.Info("  HashList:\n")
+
+				hashes := []string{}
+				for j, hash := range tracker.HashList {
+					hashes = append(hashes, hash.TxHash)
+					logger.Info("    hash[%d]: %s\n", j, hash.TxHash)
+				}
+				if len(hashes) >= hashCount {
+					return hashes
+				}
+			}
+		}
 	}
 }
 
@@ -293,7 +371,7 @@ func WaitCctxByInboundHash(
 	}
 
 	for {
-		out, err := c.InTxHashToCctxData(ctx, in)
+		out, err := c.InboundHashToCctxData(ctx, in)
 		statusCode, _ := status.FromError(err)
 
 		switch {
@@ -375,5 +453,46 @@ func WaitForZetaBlocks(
 		if newHeight >= oldHeight+waitBlocks {
 			return
 		}
+	}
+}
+
+// WaitAndVerifyZRC20BalanceChange waits for the zrc20 balance of the given address to change by the given delta amount
+// This function is to tolerate the fact that the balance update may not be synced across all nodes behind a RPC.
+func WaitAndVerifyZRC20BalanceChange(
+	t require.TestingT,
+	zrc20 *zrc20.ZRC20,
+	address common.Address,
+	oldBalance *big.Int,
+	change BalanceChange,
+	logger infoLogger,
+) {
+	// wait until the expected balance is reached or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
+	for {
+		time.Sleep(checkInterval)
+		require.False(t, time.Since(startTime) > nodeSyncTolerance, "timeout waiting for balance change")
+
+		symbol, err := zrc20.Symbol(&bind.CallOpts{})
+		if err != nil {
+			logger.Info("unable to get symbol: %s", err.Error())
+			continue
+		}
+
+		newBalance, err := zrc20.BalanceOf(&bind.CallOpts{}, address)
+		if err != nil {
+			logger.Info("unable to get balance: %s", err.Error())
+			continue
+		}
+
+		if oldBalance.Cmp(newBalance) == 0 {
+			logger.Info("balance has not changed yet")
+			continue
+		}
+		logger.Info("%s balance changed from %d to %d on address %s", symbol, oldBalance, newBalance, address.Hex())
+
+		change.Verify(t, oldBalance, newBalance)
+
+		return
 	}
 }

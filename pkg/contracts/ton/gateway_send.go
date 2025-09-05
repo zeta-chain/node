@@ -23,11 +23,16 @@ type Client interface {
 }
 
 type ExternalMsg interface {
-	emptySig() bool
+	Hash() ([32]byte, error)
 	AsBody() (*boc.Cell, error)
+
+	Signature() [65]byte
+	SetSignature(sig [65]byte)
+
+	emptySig() bool
 }
 
-// see https://docs.ton.org/develop/smart-contracts/messages#message-modes
+// See https://docs.ton.org/v3/documentation/smart-contracts/message-management/message-modes-cookbook
 const (
 	SendFlagSeparateFees = uint8(1)
 	SendFlagIgnoreErrors = uint8(2)
@@ -64,6 +69,25 @@ func (gw *Gateway) SendDepositAndCall(
 
 	if err := writeDepositAndCallBody(body, zevmRecipient, callData); err != nil {
 		return errors.Wrap(err, "failed to write depositAndCall body")
+	}
+
+	return gw.send(ctx, s, amount, body, sendMode)
+}
+
+// SendCall sends `call` operation to the gateway on behalf of the sender.
+// The amount should be >= calculate_gas_fee(op::call)
+func (gw *Gateway) SendCall(
+	ctx context.Context,
+	s Sender,
+	amount math.Uint,
+	zevmRecipient eth.Address,
+	callData []byte,
+	sendMode uint8,
+) error {
+	body := boc.NewCell()
+
+	if err := writeCallBody(body, zevmRecipient, callData); err != nil {
+		return errors.Wrap(err, "failed to write call body")
 	}
 
 	return gw.send(ctx, s, amount, body, sendMode)

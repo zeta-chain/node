@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/testutil/sample"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 )
 
 func Test_SaveBroadcastedTx(t *testing.T) {
@@ -114,7 +113,7 @@ func Test_LoadLastBlockScanned(t *testing.T) {
 		// load last block scanned
 		err := obRegnet.LoadLastBlockScanned(ctx)
 		require.NoError(t, err)
-		require.EqualValues(t, observer.RegnetStartBlock, obRegnet.LastBlockScanned())
+		require.EqualValues(t, RegnetStartBlock, obRegnet.LastBlockScanned())
 	})
 }
 

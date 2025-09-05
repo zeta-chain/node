@@ -10,12 +10,10 @@ import (
 	cometbfthttp "github.com/cometbft/cometbft/rpc/client/http"
 	ctypes "github.com/cometbft/cometbft/types"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	etherminttypes "github.com/zeta-chain/ethermint/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/pkg/authz"
@@ -35,7 +33,7 @@ type Client struct {
 	zetacorerpc.Clients
 
 	logger zerolog.Logger
-	config config.ClientConfiguration
+	config config.ZetacoreClientConfig
 
 	cosmosClientContext cosmosclient.Context
 	cometBFTClient      cometbftrpc.Client
@@ -44,7 +42,7 @@ type Client struct {
 	accountNumber map[authz.KeyType]uint64
 	seqNumber     map[authz.KeyType]uint64
 
-	encodingCfg etherminttypes.EncodingConfig
+	encodingCfg testutil.TestEncodingConfig
 	keys        keyinterfaces.ObserverKeys
 	chainID     string
 	chain       chains.Chain
@@ -54,8 +52,6 @@ type Client struct {
 
 	mu sync.RWMutex
 }
-
-var unsecureGRPC = grpc.WithTransportCredentials(insecure.NewCredentials())
 
 type constructOpts struct {
 	customCometBFT bool
@@ -86,13 +82,16 @@ func WithCustomAccountRetriever(ac cosmosclient.AccountRetriever) Opt {
 // NewClient create a new instance of Client
 func NewClient(
 	keys keyinterfaces.ObserverKeys,
-	chainIP string,
-	signerName string,
-	chainID string,
+	cfg config.Config,
 	logger zerolog.Logger,
 	opts ...Opt,
 ) (*Client, error) {
-	var constructOptions constructOpts
+	var (
+		chainID          = cfg.ChainID
+		zetacoreCfg      = cfg.GetZetacoreClientConfig()
+		constructOptions constructOpts
+	)
+
 	for _, opt := range opts {
 		opt(&constructOptions)
 	}
@@ -102,18 +101,7 @@ func NewClient(
 		return nil, errors.Wrapf(err, "invalid chain id %q", chainID)
 	}
 
-	log := logger.With().Str(logs.FieldModule, "zetacoreClient").Logger()
-
-	cfg := config.ClientConfiguration{
-		ChainHost:    cosmosREST(chainIP),
-		SignerName:   signerName,
-		SignerPasswd: "password",
-		ChainRPC:     CometBFTRPC(chainIP),
-	}
-
-	encodingCfg := app.MakeEncodingConfig()
-
-	zetacoreClients, err := zetacorerpc.NewGRPCClients(cosmosGRPC(chainIP), unsecureGRPC)
+	zetacoreClients, err := zetacorerpc.NewGRPCClients(zetacoreCfg.GRPCURL, zetacoreCfg.GRPCDialOpt)
 	if err != nil {
 		return nil, errors.Wrap(err, "grpc dial fail")
 	}
@@ -125,35 +113,43 @@ func NewClient(
 		seqMap[keyType] = 0
 	}
 
-	cosmosContext, err := buildCosmosClientContext(chainID, keys, cfg, encodingCfg, constructOptions)
+	encodingCfg := app.MakeEncodingConfig(uint64(zetaChain.ChainId)) //#nosec G115 won't exceed uint64
+	cosmosContext, err := buildCosmosClientContext(chainID, keys, zetacoreCfg, encodingCfg, constructOptions)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to build cosmos client context")
 	}
 
-	cometBFTClientIface := constructOptions.cometBFTClient
-
 	// create a cometbft client if one was not provided in the constructOptions
+	cometBFTClient := constructOptions.cometBFTClient
 	if !constructOptions.customCometBFT {
-		cometBFTURL := "http://" + CometBFTRPC(chainIP)
-		cometBFTClient, err := cometbfthttp.New(cometBFTURL, "/websocket")
+		client, err := createCometBFTClient(zetacoreCfg.WSRemote, true)
 		if err != nil {
-			return nil, errors.Wrapf(err, "new cometbft client (%s)", cometBFTURL)
+			return nil, errors.Wrap(err, "unable to create cometbft client")
 		}
-		// start websockets
-		err = cometBFTClient.WSEvents.Start()
-		if err != nil {
-			return nil, errors.Wrap(err, "cometbft start")
-		}
-		cometBFTClientIface = cometBFTClient
+		cometBFTClient = client
 	}
+
+	// set account number and sequence number for the zeta client grantee key
+	address, err := keys.GetAddress()
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to get address")
+	}
+
+	accN, seq, err := cosmosContext.AccountRetriever.GetAccountNumberSequence(cosmosContext, address)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to get account number and sequence number")
+	}
+
+	accountsMap[authz.ZetaClientGranteeKey] = accN
+	seqMap[authz.ZetaClientGranteeKey] = seq
 
 	return &Client{
 		Clients: zetacoreClients,
-		logger:  log,
-		config:  cfg,
+		logger:  logger.With().Str(logs.FieldModule, "zetacoreClient").Logger(),
+		config:  zetacoreCfg,
 
 		cosmosClientContext: cosmosContext,
-		cometBFTClient:      cometBFTClientIface,
+		cometBFTClient:      cometBFTClient,
 
 		accountNumber: accountsMap,
 		seqNumber:     seqMap,
@@ -165,12 +161,30 @@ func NewClient(
 	}, nil
 }
 
+// createCometBFTClient creates a cometbft client and optionally starts websocket
+func createCometBFTClient(remote string, startWS bool) (cometbftrpc.Client, error) {
+	client, err := cometbfthttp.New(remote, "/websocket")
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create cometbft client from remote %s", remote)
+	}
+
+	// start websocket if needed
+	if startWS {
+		if err = client.WSEvents.Start(); err != nil {
+			_ = client.Stop()
+			return nil, errors.Wrap(err, "failed to start cometbft websocket")
+		}
+	}
+
+	return client, nil
+}
+
 // buildCosmosClientContext constructs a valid context with all relevant values set
 func buildCosmosClientContext(
 	chainID string,
 	keys keyinterfaces.ObserverKeys,
-	config config.ClientConfiguration,
-	encodingConfig etherminttypes.EncodingConfig,
+	config config.ZetacoreClientConfig,
+	encodingConfig testutil.TestEncodingConfig,
 	opts constructOpts,
 ) (cosmosclient.Context, error) {
 	if keys == nil {
@@ -183,9 +197,9 @@ func buildCosmosClientContext(
 	}
 
 	var (
-		input   = strings.NewReader("")
-		client  cosmosclient.CometRPC
-		nodeURI string
+		input  = strings.NewReader("")
+		client cosmosclient.CometRPC
+		remote = config.WSRemote
 	)
 
 	// if password is needed, set it as input
@@ -198,18 +212,10 @@ func buildCosmosClientContext(
 	// (google "golang nil interface comparison")
 	client = opts.cometBFTClient
 	if !opts.customCometBFT {
-		remote := config.ChainRPC
-		if !strings.HasPrefix(config.ChainHost, "http") {
-			remote = fmt.Sprintf("tcp://%s", remote)
-		}
-
-		wsClient, err := cometbfthttp.New(remote, "/websocket")
+		client, err = createCometBFTClient(remote, false)
 		if err != nil {
-			return cosmosclient.Context{}, err
+			return cosmosclient.Context{}, errors.Wrap(err, "failed to create cometbft client")
 		}
-
-		client = wsClient
-		nodeURI = remote
 	}
 
 	var accountRetriever cosmosclient.AccountRetriever
@@ -221,12 +227,11 @@ func buildCosmosClientContext(
 
 	return cosmosclient.Context{
 		Client:        client,
-		NodeURI:       nodeURI,
+		NodeURI:       remote,
 		FromAddress:   addr,
 		ChainID:       chainID,
 		Keyring:       keys.GetKeybase(),
 		BroadcastMode: "sync",
-		HomeDir:       config.ChainHomeFolder,
 		FromName:      config.SignerName,
 
 		AccountRetriever: accountRetriever,
@@ -263,42 +268,11 @@ func (c *Client) GetKeys() keyinterfaces.ObserverKeys {
 	return c.keys
 }
 
-// GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
+// GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to separate TSS signer from Zetaclient GRantee
 func (c *Client) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
 	address, err := c.keys.GetAddress()
 	if err != nil {
 		return 0, 0, err
 	}
 	return c.cosmosClientContext.AccountRetriever.GetAccountNumberSequence(c.cosmosClientContext, address)
-}
-
-// SetAccountNumber sets the account number and sequence number for the given keyType
-// todo remove method and make it part of the client constructor.
-func (c *Client) SetAccountNumber(keyType authz.KeyType) error {
-	address, err := c.keys.GetAddress()
-	if err != nil {
-		return errors.Wrap(err, "fail to get address")
-	}
-
-	accN, seq, err := c.cosmosClientContext.AccountRetriever.GetAccountNumberSequence(c.cosmosClientContext, address)
-	if err != nil {
-		return errors.Wrap(err, "fail to get account number and sequence number")
-	}
-
-	c.accountNumber[keyType] = accN
-	c.seqNumber[keyType] = seq
-
-	return nil
-}
-
-func cosmosREST(host string) string {
-	return fmt.Sprintf("%s:1317", host)
-}
-
-func cosmosGRPC(host string) string {
-	return fmt.Sprintf("%s:9090", host)
-}
-
-func CometBFTRPC(host string) string {
-	return fmt.Sprintf("%s:26657", host)
 }

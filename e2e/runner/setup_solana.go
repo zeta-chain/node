@@ -5,6 +5,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/near/borsh-go"
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ func (r *E2ERunner) SetupSolanaAccount() {
 }
 
 // SetupSolana sets Solana contracts and params
-func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
+func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey, splAccountPrivateKey string) {
 	r.Logger.Print("⚙️ initializing gateway program on Solana")
 
 	// set Solana contracts
@@ -67,8 +68,11 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	_, out := r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize gateway logs: %v", out.Meta.LogMessages)
 
-	// initialize connected program
-	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedProgramID)
+	// initialize connected program, use hardcoded program ID if not set
+	if (r.ConnectedProgram == solana.PublicKey{}) {
+		r.ConnectedProgram = ConnectedProgramID
+	}
+	connectedPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedProgram)
 	require.NoError(r, err)
 
 	var instConnected solana.GenericInstruction
@@ -76,7 +80,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(connectedPda).WRITE())
 	accountSliceConnected = append(accountSliceConnected, solana.Meta(solana.SystemProgramID))
-	instConnected.ProgID = ConnectedProgramID
+	instConnected.ProgID = r.ConnectedProgram
 	instConnected.AccountValues = accountSliceConnected
 
 	type InitializeConnected struct {
@@ -94,8 +98,11 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	_, out = r.BroadcastTxSync(signedTx)
 	r.Logger.Info("initialize connected logs: %v", out.Meta.LogMessages)
 
-	// initialize connected_spl program
-	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(ConnectedSPLProgramID)
+	// initialize connected_spl program, use hardcoded program ID if not set
+	if (r.ConnectedSPLProgram == solana.PublicKey{}) {
+		r.ConnectedSPLProgram = ConnectedSPLProgramID
+	}
+	connectedSPLPda, err := solanacontracts.ComputeConnectedPdaAddress(r.ConnectedSPLProgram)
 	require.NoError(r, err)
 
 	var instConnectedSPL solana.GenericInstruction
@@ -103,7 +110,7 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(connectedSPLPda).WRITE())
 	accountSliceConnectedSPL = append(accountSliceConnectedSPL, solana.Meta(solana.SystemProgramID))
-	instConnectedSPL.ProgID = ConnectedSPLProgramID
+	instConnectedSPL.ProgID = r.ConnectedSPLProgram
 	instConnectedSPL.AccountValues = accountSliceConnectedSPL
 
 	type InitializeConnectedSPL struct {
@@ -147,6 +154,25 @@ func (r *E2ERunner) SetupSolana(gatewayID, deployerPrivateKey string) {
 	// deploy test spl
 	mintAccount := r.DeploySPL(&privkey, true)
 	r.SPLAddr = mintAccount.PublicKey()
+
+	// get spl account private key
+	splPrivkey, err := solana.PrivateKeyFromBase58(splAccountPrivateKey)
+	require.NoError(r, err)
+
+	// minting some tokens to spl account for testing
+	ata := r.ResolveSolanaATA(privkey, splPrivkey.PublicKey(), mintAccount.PublicKey())
+
+	mintToInstruction := token.NewMintToInstruction(uint64(100_000_000_000_000), mintAccount.PublicKey(), ata, privkey.PublicKey(), []solana.PublicKey{}).
+		Build()
+	signedTx = r.CreateSignedTransaction(
+		[]solana.Instruction{mintToInstruction},
+		privkey,
+		[]solana.PrivateKey{},
+	)
+
+	// broadcast the transaction and wait for finalization
+	_, out = r.BroadcastTxSync(signedTx)
+	r.Logger.Info("mint spl logs: %v", out.Meta.LogMessages)
 }
 
 func (r *E2ERunner) ensureSolanaChainParams() error {
@@ -169,7 +195,7 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 		InboundTicker:               2,
 		OutboundTicker:              2,
 		OutboundScheduleInterval:    2,
-		OutboundScheduleLookahead:   5,
+		OutboundScheduleLookahead:   20,
 		BallotThreshold:             observertypes.DefaultBallotThreshold,
 		MinObserverDelegation:       observertypes.DefaultMinObserverDelegation,
 		IsSupported:                 true,
@@ -206,4 +232,53 @@ func (r *E2ERunner) ensureSolanaChainParams() error {
 	}
 
 	return errors.New("unable to set Solana chain params")
+}
+
+// UpdateTSSAddressSolana updates the TSS address on the Solana gateway program
+func (r *E2ERunner) UpdateTSSAddressSolana(gatewayID, deployerPrivateKey string) {
+	r.Logger.Print("⚙️ updating tss on the gateway program on Solana")
+
+	// set Solana contracts
+	r.GatewayProgram = solana.MustPublicKeyFromBase58(gatewayID)
+
+	// get deployer account balance
+	privkey, err := solana.PrivateKeyFromBase58(deployerPrivateKey)
+	require.NoError(r, err)
+	pdaComputed := r.ComputePdaAddress()
+
+	// create 'initialize' instruction
+	var inst solana.GenericInstruction
+	accountSlice := []*solana.AccountMeta{}
+	accountSlice = append(accountSlice, solana.Meta(privkey.PublicKey()).WRITE().SIGNER())
+	accountSlice = append(accountSlice, solana.Meta(pdaComputed).WRITE())
+	accountSlice = append(accountSlice, solana.Meta(solana.SystemProgramID))
+	inst.ProgID = r.GatewayProgram
+	inst.AccountValues = accountSlice
+
+	inst.DataBytes, err = borsh.Serialize(solanacontracts.UpdateTssParams{
+		Discriminator: solanacontracts.DiscriminatorUpdateTss,
+		TssAddress:    r.TSSAddress,
+	})
+	require.NoError(r, err)
+
+	// create and sign the transaction
+	signedTx := r.CreateSignedTransaction([]solana.Instruction{&inst}, privkey, []solana.PrivateKey{})
+
+	// broadcast the transaction and wait for finalization
+	_, out := r.BroadcastTxSync(signedTx)
+	r.Logger.Info("update TSS gateway logs: %v", out.Meta.LogMessages)
+
+	// retrieve the PDA account info
+	pdaInfo, err := r.SolanaClient.GetAccountInfoWithOpts(r.Ctx, pdaComputed, &rpc.GetAccountInfoOpts{
+		Commitment: rpc.CommitmentConfirmed,
+	})
+	require.NoError(r, err)
+
+	pda := solanacontracts.PdaInfo{}
+	err = borsh.Deserialize(&pda, pdaInfo.Bytes())
+	require.NoError(r, err)
+	tssAddress := ethcommon.BytesToAddress(pda.TssAddress[:])
+
+	// verify updated TSS address
+	require.Equal(r, r.TSSAddress, tssAddress, "TSS address mismatch")
 }

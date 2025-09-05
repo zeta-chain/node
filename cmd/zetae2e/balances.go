@@ -34,7 +34,7 @@ func NewBalancesCmd() *cobra.Command {
 
 func runBalances(cmd *cobra.Command, args []string) error {
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	conf, err := config.ReadConfig(args[0], true)
 	if err != nil {
 		return err
 	}

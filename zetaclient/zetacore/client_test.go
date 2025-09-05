@@ -4,29 +4,32 @@ import (
 	"context"
 	"net"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
-
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/mock/gomock"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/zetaclient/chains/interfaces"
+	"github.com/zeta-chain/node/zetaclient/common"
 	keyinterfaces "github.com/zeta-chain/node/zetaclient/keys/interfaces"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
+	"go.uber.org/mock/gomock"
 
 	cometbftrpc "github.com/cometbft/cometbft/rpc/client"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/zeta-chain/node/cmd/zetacored/config"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	observertypes "github.com/zeta-chain/node/x/observer/types"
+	zetaclientconfig "github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/keys"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
@@ -83,18 +86,19 @@ func withDummyServer(zetaBlockHeight int64) []grpcmock.ServerOption {
 				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: zetaBlockHeight})
 
 			// London Base Fee
-			s.ExpectUnary("/ethermint.feemarket.v1.Query/Params").
+			s.ExpectUnary("/cosmos.evm.feemarket.v1.Query/Params").
 				UnlimitedTimes().
 				Return(feemarkettypes.QueryParamsResponse{
-					Params: feemarkettypes.Params{BaseFee: sdkmath.NewInt(100)},
+					Params: feemarkettypes.Params{BaseFee: sdkmath.LegacyNewDec(100)},
 				})
 		},
 	}
 }
 
 type clientTestConfig struct {
-	keys keyinterfaces.ObserverKeys
-	opts []Opt
+	zetaClientCfg *zetaclientconfig.Config
+	keys          keyinterfaces.ObserverKeys
+	opts          []Opt
 }
 
 type clientTestOpt func(*clientTestConfig)
@@ -111,6 +115,16 @@ func withDefaultObserverKeys() clientTestOpt {
 	)
 
 	return withObserverKeys(keys.NewKeysWithKeybase(keyRing, address, testSigner, ""))
+}
+
+func withZetacoreURLs(grpcURL, wssURL string) clientTestOpt {
+	return func(cfg *clientTestConfig) {
+		cfg.zetaClientCfg = &zetaclientconfig.Config{
+			ZetacoreIP:      "", // leave IP empty to use URLs
+			ZetacoreURLGRPC: grpcURL,
+			ZetacoreURLWSS:  wssURL,
+		}
+	}
 }
 
 func withCometBFT(client cometbftrpc.Client) clientTestOpt {
@@ -137,9 +151,21 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 		chainID = "zetachain_7000-1"
 	)
 
+	zetaClientCfg := zetaclientconfig.New(false)
+	zetaClientCfg.ZetacoreIP = chainIP
+	zetaClientCfg.AuthzHotkey = signer
+	zetaClientCfg.ChainID = chainID
+
 	var cfg clientTestConfig
 	for _, opt := range opts {
 		opt(&cfg)
+	}
+
+	// use custom zetacore URLs if provided
+	if cfg.zetaClientCfg != nil {
+		zetaClientCfg.ZetacoreIP = cfg.zetaClientCfg.ZetacoreIP
+		zetaClientCfg.ZetacoreURLGRPC = cfg.zetaClientCfg.ZetacoreURLGRPC
+		zetaClientCfg.ZetacoreURLWSS = cfg.zetaClientCfg.ZetacoreURLWSS
 	}
 
 	if cfg.keys == nil {
@@ -148,8 +174,7 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 
 	c, err := NewClient(
 		cfg.keys,
-		chainIP, signer,
-		chainID,
+		zetaClientCfg,
 		zerolog.Nop(),
 		cfg.opts...,
 	)
@@ -157,6 +182,63 @@ func setupZetacoreClient(t *testing.T, opts ...clientTestOpt) *Client {
 	require.NoError(t, err)
 
 	return c
+}
+
+func Test_CosmosGRPC_Live(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping zetacore gRPC live test")
+	}
+
+	tests := []struct {
+		name    string
+		grpcURL string
+		wssURL  string
+	}{
+		{
+			name:    "Lavenderfive",
+			grpcURL: "zetachain.lavenderfive.com:443",
+			wssURL:  "wss://rpc.lavenderfive.com:443/zetachain/websocket",
+		},
+		{
+			name:    "ITRocket",
+			grpcURL: "zetachain-mainnet-grpc.itrocket.net:443",
+			// ITRocket cosmos websocket not found, use Lavenderfive's instead
+			wssURL: "wss://rpc.lavenderfive.com:443/zetachain/websocket",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test_ZetacoreGRPC(t, test.grpcURL, test.wssURL)
+		})
+	}
+}
+
+func Test_CometBFTWebsocket_Live(t *testing.T) {
+	if !common.LiveTestEnabled() {
+		t.Skip("skipping zetacore websocket live test")
+	}
+
+	tests := []struct {
+		name string
+		// wssRemote does not include "wss://" prefix and "/websocket" suffix
+		wssRemote string
+	}{
+		{
+			name:      "AllThatNode",
+			wssRemote: "https://zetachain-mainnet.g.allthatnode.com/full/tendermint",
+		},
+		{
+			name:      "Lavenderfive",
+			wssRemote: "https://rpc.lavenderfive.com:443/zetachain",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test_SubscribeNewBlocks(t, test.wssRemote)
+		})
+	}
 }
 
 // Need to test after refactor
@@ -183,6 +265,7 @@ func TestZetacore_GetZetaHotKeyBalance(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	// should be able to get balance of signer
@@ -229,6 +312,7 @@ func TestZetacore_GetAllOutboundTrackerByChain(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	resp, err := client.GetAllOutboundTrackerByChain(ctx, chain.ChainId, interfaces.Ascending)
@@ -247,23 +331,77 @@ func TestZetacore_SubscribeNewBlocks(t *testing.T) {
 		t,
 		withDefaultObserverKeys(),
 		withCometBFT(cometBFTClient),
+		withAccountRetriever(t, 5, 4),
 	)
+
+	expectedHeight := int64(10)
+	blockEvent := coretypes.ResultEvent{
+		Data: cometbfttypes.EventDataNewBlock{
+			Block: &cometbfttypes.Block{
+				Header: cometbfttypes.Header{
+					Height: expectedHeight,
+				},
+			},
+		},
+	}
 
 	newBlockChan, err := client.NewBlockSubscriber(ctx)
 	require.NoError(t, err)
 
-	height := int64(10)
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		cometBFTClient.PublishToSubscribers(blockEvent)
+	}()
 
-	cometBFTClient.PublishToSubscribers(coretypes.ResultEvent{
-		Data: cometbfttypes.EventDataNewBlock{
-			Block: &cometbfttypes.Block{
-				Header: cometbfttypes.Header{
-					Height: height,
-				},
-			},
-		},
-	})
+	receivedBlock := <-newBlockChan
+	require.Equal(t, expectedHeight, receivedBlock.Block.Header.Height)
+}
 
-	newBlockEvent := <-newBlockChan
-	require.Equal(t, height, newBlockEvent.Block.Header.Height)
+// test_ZetacoreGRPC is a helper function that makes basic gRPC queries to zetacore
+func test_ZetacoreGRPC(t *testing.T, grpcURL, wssURL string) {
+	ctx := context.Background()
+
+	// create zetacore client using live network URLs
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withAccountRetriever(t, 5, 4),
+		withZetacoreURLs(grpcURL, wssURL),
+	)
+
+	// query crosschain model
+	resp, err := client.Clients.Crosschain.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
+	require.NoError(t, err)
+	require.Positive(t, resp.Height)
+
+	// query observer model
+	params, err := client.Clients.Observer.GetChainParams(ctx, &observertypes.QueryGetChainParamsRequest{})
+	require.NoError(t, err)
+	require.NotEmpty(t, params.ChainParams.ChainParams)
+}
+
+// test_SubscribeNewBlocks is a helper function to test the NewBlockSubscriber function in live network
+func test_SubscribeNewBlocks(t *testing.T, wssRemote string) {
+	ctx := context.Background()
+
+	// create CometBFT client
+	cometBFTClient, err := createCometBFTClient(wssRemote, true)
+	require.NoError(t, err)
+
+	// create zetacore client
+	client := setupZetacoreClient(
+		t,
+		withDefaultObserverKeys(),
+		withCometBFT(cometBFTClient),
+		withAccountRetriever(t, 5, 4),
+	)
+
+	// subscribe to new CometBFT blocks
+	newBlockChan, err := client.NewBlockSubscriber(ctx)
+	require.NoError(t, err)
+
+	// read one block event
+	event := <-newBlockChan
+	require.NotNil(t, event.Block)
+	require.Positive(t, event.Block.Header.Height)
 }

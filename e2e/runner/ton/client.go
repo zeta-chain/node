@@ -7,13 +7,21 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/pkg/errors"
-	"github.com/tonkeeper/tongo/liteapi"
 	"github.com/tonkeeper/tongo/tlb"
 	"github.com/tonkeeper/tongo/ton"
+
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
 type Client struct {
-	*liteapi.Client
+	*rpc.Client
+}
+
+func NewClient(url string) *Client {
+	// okay for e2e purposes
+	const chainID = 0
+
+	return &Client{Client: rpc.New(url, chainID)}
 }
 
 // Status checks the health of the TON node
@@ -36,9 +44,7 @@ func (c *Client) GetBalanceOf(ctx context.Context, id ton.AccountID, wait bool) 
 		return math.Uint{}, errors.Wrapf(err, "failed to get account %s state", id.ToRaw())
 	}
 
-	balance := uint64(state.Account.Account.Storage.Balance.Grams)
-
-	return math.NewUint(balance), nil
+	return math.NewUint(state.Balance), nil
 }
 
 func (c *Client) WaitForBlocks(ctx context.Context) error {
@@ -77,7 +83,7 @@ func (c *Client) WaitForAccountActivation(ctx context.Context, account ton.Accou
 			return err
 		}
 
-		if state.Account.Status() == tlb.AccountActive {
+		if state.Status == tlb.AccountActive {
 			return nil
 		}
 
@@ -107,4 +113,23 @@ func (c *Client) WaitForNextSeqno(
 	}
 
 	return errors.New("waiting confirmation timeout")
+}
+
+// tongo library works only with lite-api via ADNL.
+// As we use RPC, we need to wrap some bare minimum to make wallets work.
+type tongoAdapter struct {
+	*Client
+}
+
+func (c *Client) tongoAdapter() *tongoAdapter {
+	return &tongoAdapter{Client: c}
+}
+
+func (a *tongoAdapter) GetAccountState(ctx context.Context, accountID ton.AccountID) (tlb.ShardAccount, error) {
+	state, err := a.Client.GetAccountState(ctx, accountID)
+	if err != nil {
+		return tlb.ShardAccount{}, err
+	}
+
+	return state.ToShardAccount(), nil
 }

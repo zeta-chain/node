@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 func TestParseTxResult(t *testing.T) {
@@ -42,7 +42,7 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
 					}},
 					{Type: "message", Attributes: []abci.EventAttribute{
-						{Key: "action", Value: "/ethermint.evm.v1.MsgEthereumTx"},
+						{Key: "action", Value: "/cosmos.evm.vm.v1.MsgEthereumTx"},
 						{Key: "key", Value: "ethm17xpfvakm2amg962yls6f84z3kell8c5lthdzgl"},
 						{Key: "module", Value: "evm"},
 						{Key: "sender", Value: address},
@@ -112,7 +112,7 @@ func TestParseTxResult(t *testing.T) {
 						{Key: "recipient", Value: "0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7"},
 					}},
 					{Type: "message", Attributes: []abci.EventAttribute{
-						{Key: "action", Value: "/ethermint.evm.v1.MsgEthereumTx"},
+						{Key: "action", Value: "/cosmos.evm.vm.v1.MsgEthereumTx"},
 						{Key: "key", Value: "ethm17xpfvakm2amg962yls6f84z3kell8c5lthdzgl"},
 						{Key: "module", Value: "evm"},
 						{Key: "sender", Value: address},

@@ -24,16 +24,19 @@ jobs:
   changed-files:
     runs-on: ubuntu-22.04
     outputs:
-      x_changed: ${{ steps.x-changes.outputs.any_changed }}
+      relevant_changed: ${{ steps.relevant-changes.outputs.any_changed }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get changed files in x directory
-        id: x-changes
+      - name: Get changed files in relevant directories
+        id: relevant-changes
         uses: zeta-chain/gh-action-changed-files@9200e69727eb73eb060652b19946b8a2fdfb654b
         with:
-          files: x/**
+          files: |
+            x/**
+            app/**
+            cmd/**
 
   matrix-conditionals:
     needs: changed-files
@@ -51,7 +54,7 @@ jobs:
             const defaultTargets = ['test-sim-nondeterminism', 'test-sim-fullappsimulation', 'test-sim-import-export', 'test-sim-after-import'];
             let makeTargets = [];
             if (context.eventName === 'pull_request') {
-              const changedFiles = ${{ needs.changed-files.outputs.x_changed }};
+              const changedFiles = ${{ needs.changed-files.outputs.relevant_changed }};
               const pull_number = context.payload.pull_request.number;
               const { data: pr } = await github.rest.pulls.get({
                   owner: context.repo.owner,
@@ -65,6 +68,8 @@ jobs:
               if (changedFiles || labels.includes('SIM_TESTS')) {
                 makeTargets = defaultTargets;
               }
+            } else if (context.eventName === 'schedule') {
+              makeTargets = defaultTargets;
             } else {
               const makeTargetsInput = context.payload.inputs ? context.payload.inputs['make-targets'] : null;
               makeTargets = makeTargetsInput ? makeTargetsInput.split(',') : defaultTargets;
@@ -102,6 +107,48 @@ jobs:
       - simulation-tests
     if: ${{ !cancelled() }}
     steps:
+      - name: Send slack message with results
+        uses: actions/github-script@v7
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'push' && needs.simulation-tests.result == 'failure') }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_CI_ALERTS }}
+        with:
+          script: |
+            const {data} = await github.rest.actions.listJobsForWorkflowRunAttempt({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              attempt_number: ${{ github.run_attempt }},
+            });
+
+            const simJobs = data.jobs.filter(job => job.name.includes('/') && job.conclusion != 'skipped');
+
+            const simResults = simJobs.map(job => {
+              const icon = job.conclusion === 'success' ? ':white_check_mark:' : ':x:';
+              const cleanName = job.name.split("/")[0];
+              return `${icon} ${cleanName}`;
+            });
+            simResults.sort();
+
+            const overallResultStr = '${{ needs.simulation-tests.result }}';
+            const overallResultPassing = overallResultStr === 'success' || overallResultStr === 'skipped';
+            const overallResultIcon = overallResultPassing ? ':white_check_mark:' : ':x:';
+            let overallResultText = `<https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}|Simulation Test Run Results>`;
+            if (context.eventName === 'push') {
+              overallResultText += ` for push to ${context.ref}`;
+            } else if (context.eventName === 'schedule') {
+              overallResultText += ` for scheduled run`;
+            }
+            const msg = `${overallResultIcon} ${overallResultText}\n${simResults.join('\n')}`;
+
+            await fetch(process.env.SLACK_WEBHOOK_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({text: msg}),
+            });
+
       - name: Aggregate Results
         run: |
           result="${{ needs.simulation-tests.result }}"

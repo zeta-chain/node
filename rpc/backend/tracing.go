@@ -1,40 +1,26 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package backend
 
 import (
 	"encoding/json"
 	"fmt"
 
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // TraceTransaction returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfig) (interface{}, error) {
+func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfig) (interface{}, error) {
 	// Get transaction by hash
 	transaction, _, err := b.GetTxByEthHash(hash)
 	if err != nil {
-		b.logger.Debug("tx not found", "hash", hash)
+		b.Logger.Debug("tx not found", "hash", hash)
 		return nil, err
 	}
 
@@ -45,7 +31,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 
 	blk, err := b.TendermintBlockByNumber(rpctypes.BlockNumber(transaction.Height))
 	if err != nil {
-		b.logger.Debug("block not found", "height", transaction.Height)
+		b.Logger.Debug("block not found", "height", transaction.Height)
 		return nil, err
 	}
 
@@ -69,6 +55,16 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 		return nil, fmt.Errorf("tx not found in block %d", blk.Block.Height)
 	}
 
+	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
+	if !ok {
+		return nil, errors.New("invalid rpc client")
+	}
+
+	cp, err := nc.ConsensusParams(b.Ctx, &blk.Block.Height)
+	if err != nil {
+		return nil, err
+	}
+
 	traceTxRequest := evmtypes.QueryTraceTxRequest{
 		Msg:             ethMsg,
 		Predecessors:    predecessors,
@@ -76,14 +72,12 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 		BlockTime:       blk.Block.Time,
 		BlockHash:       common.Bytes2Hex(blk.BlockID.Hash),
 		ProposerAddress: sdk.ConsAddress(blk.Block.ProposerAddress),
-		ChainId:         b.chainID.Int64(),
+		ChainId:         b.EvmChainID.Int64(),
+		BlockMaxGas:     cp.ConsensusParams.Block.MaxGas,
 	}
 
 	if config != nil {
-		traceTxRequest.TraceConfig, err = convertConfig(config)
-		if err != nil {
-			return nil, err
-		}
+		traceTxRequest.TraceConfig = config
 	}
 
 	// minus one to get the context of block beginning
@@ -92,7 +86,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 		// 0 is a special value in `ContextWithHeight`
 		contextHeight = 1
 	}
-	traceResult, err := b.queryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
+	traceResult, err := b.QueryClient.TraceTx(rpctypes.ContextWithHeight(contextHeight), &traceTxRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +106,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *rpctypes.TraceConfi
 // executes all the transactions contained within. The return value will be one item
 // per transaction, dependent on the requested tracer.
 func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
-	config *rpctypes.TraceConfig,
+	config *evmtypes.TraceConfig,
 	block *tmrpctypes.ResultBlock,
 ) ([]*evmtypes.TxTraceResult, error) {
 	txs := block.Block.Txs
@@ -125,7 +119,7 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 
 	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
 	if err != nil {
-		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
+		b.Logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
 	}
 	msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
@@ -138,22 +132,28 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 	ctxWithHeight := rpctypes.ContextWithHeight(int64(contextHeight))
 
-	traceConfig, err := convertConfig(config)
+	nc, ok := b.ClientCtx.Client.(tmrpcclient.NetworkClient)
+	if !ok {
+		return nil, errors.New("invalid rpc client")
+	}
+
+	cp, err := nc.ConsensusParams(b.Ctx, &block.Block.Height)
 	if err != nil {
 		return nil, err
 	}
 
 	traceBlockRequest := &evmtypes.QueryTraceBlockRequest{
 		Txs:             msgs,
-		TraceConfig:     traceConfig,
+		TraceConfig:     config,
 		BlockNumber:     block.Block.Height,
 		BlockTime:       block.Block.Time,
 		BlockHash:       common.Bytes2Hex(block.BlockID.Hash),
 		ProposerAddress: sdk.ConsAddress(block.Block.ProposerAddress),
-		ChainId:         b.chainID.Int64(),
+		ChainId:         b.EvmChainID.Int64(),
+		BlockMaxGas:     cp.ConsensusParams.Block.MaxGas,
 	}
 
-	res, err := b.queryClient.TraceBlock(ctxWithHeight, traceBlockRequest)
+	res, err := b.QueryClient.TraceBlock(ctxWithHeight, traceBlockRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -164,32 +164,4 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 	}
 
 	return decodedResults, nil
-}
-
-func convertConfig(config *rpctypes.TraceConfig) (*evmtypes.TraceConfig, error) {
-	if config == nil {
-		return &evmtypes.TraceConfig{}, nil
-	}
-
-	cfg := config.TraceConfig
-
-	if config.TracerConfig != nil {
-		switch v := config.TracerConfig.(type) {
-		case string:
-			// It's already a string, use it directly
-			cfg.TracerJsonConfig = v
-		case map[string]interface{}:
-			// this is the compliant style
-			// we need to encode it to a string before passing it to the ethermint side
-			jsonBytes, err := json.Marshal(v)
-			if err != nil {
-				return nil, fmt.Errorf("unable to encode traceConfig to JSON: %w", err)
-			}
-			cfg.TracerJsonConfig = string(jsonBytes)
-		default:
-			return nil, errors.New("unexpected traceConfig type")
-		}
-	}
-
-	return &cfg, nil
 }

@@ -1,11 +1,15 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
 func TestBitcoinWithdrawP2SH(r *runner.E2ERunner, args []string) {
@@ -18,5 +22,10 @@ func TestBitcoinWithdrawP2SH(r *runner.E2ERunner, args []string) {
 	_, ok := receiver.(*btcutil.AddressScriptHash)
 	require.True(r, ok, "Invalid receiver address specified for TestBitcoinWithdrawP2SH.")
 
-	withdrawBTCZRC20(r, receiver, amount)
+	r.WithdrawBTCAndWaitCCTX(
+		receiver,
+		amount,
+		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		crosschaintypes.CctxStatus_OutboundMined,
+	)
 }

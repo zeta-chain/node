@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"errors"
-	"fmt"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"testing"
+
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	"github.com/zeta-chain/node/pkg/chains"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,38 +115,77 @@ func TestKeeper_ProcessAbort(t *testing.T) {
 		require.True(t, cctx.CctxStatus.IsAbortRefunded)
 	})
 
-	t.Run("fail abort with abort error message if process abort fails", func(t *testing.T) {
-		// Arrange
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseFungibleMock: true,
-		})
+	t.Run(
+		"fail abort with abort error message if process abort fails, status not set to refunded if error other than onAbort failure",
+		func(t *testing.T) {
+			// Arrange
+			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseFungibleMock: true,
+			})
 
-		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
-		fungibleMock.On(
-			"ProcessAbort",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("process abort failed"))
+			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+			fungibleMock.On(
+				"ProcessAbort",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("process abort failed"))
 
-		cctx := sample.CrossChainTx(t, "index")
-		cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
-		cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
+			cctx := sample.CrossChainTx(t, "index")
+			cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+			cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
 
-		// act
-		k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+			// act
+			k.ProcessAbort(ctx, cctx, types.StatusMessages{})
 
-		// assert
-		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
-		require.Contains(t, cctx.CctxStatus.ErrorMessageAbort, "process abort failed")
-		require.True(t, cctx.CctxStatus.IsAbortRefunded)
-	})
+			// assert
+			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+			require.Contains(t, cctx.CctxStatus.ErrorMessageAbort, "process abort failed")
+			require.False(t, cctx.CctxStatus.IsAbortRefunded)
+		},
+	)
+
+	t.Run(
+		"fail abort with abort error message if process abort fails, status set to refunded if error is onAbort failure",
+		func(t *testing.T) {
+			// Arrange
+			k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+				UseFungibleMock: true,
+			})
+
+			fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+			fungibleMock.On(
+				"ProcessAbort",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(&evmtypes.MsgEthereumTxResponse{}, errors.Join(errors.New("process abort failed"), fungibletypes.ErrOnAbortFailed))
+
+			cctx := sample.CrossChainTx(t, "index")
+			cctx.ProtocolContractVersion = types.ProtocolContractVersion_V2
+			cctx.RevertOptions.AbortAddress = sample.EthAddress().Hex()
+
+			// act
+			k.ProcessAbort(ctx, cctx, types.StatusMessages{})
+
+			// assert
+			require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+			require.Contains(t, cctx.CctxStatus.ErrorMessageAbort, "process abort failed")
+			require.True(t, cctx.CctxStatus.IsAbortRefunded)
+		},
+	)
 }
 
 func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
@@ -167,6 +207,35 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 			},
 			OutboundParams: []*types.OutboundParams{{
 				Amount: math.NewUint(42),
+			}},
+		},
+			sender,
+		)
+		require.NoError(t, err)
+		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, sender)
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), balance.Uint64())
+	})
+
+	t.Run("should refund amount zrc20 gas on zeta chain for outgoing cctx", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID()
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		err := k.LegacyRefundAbortedAmountOnZetaChainGas(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_Gas,
+				SenderChainId: chains.ZetaChainPrivnet.ChainId,
+				Sender:        sender.String(),
+				TxOrigin:      sender.String(),
+				Amount:        math.NewUint(20),
+			},
+			OutboundParams: []*types.OutboundParams{{
+				ReceiverChainId: chainID,
+				Amount:          math.NewUint(42),
 			}},
 		},
 			sender,
@@ -323,7 +392,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 
 		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
-				CoinType:      coin.CoinType_Gas,
+				CoinType:      coin.CoinType_Zeta,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
@@ -337,7 +406,32 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 		)
 		require.NoError(t, err)
 		coin := sdkk.BankKeeper.GetBalance(ctx, sender.Bytes(), config.BaseDenom)
-		fmt.Println(coin.Amount.String())
+		require.Equal(t, "42", coin.Amount.String())
+	})
+
+	t.Run("should refund amount on zeta chain for outgoing cctx", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID()
+
+		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_Zeta,
+				SenderChainId: chains.ZetaChainPrivnet.ChainId,
+				Sender:        sender.String(),
+				TxOrigin:      sender.String(),
+				Amount:        math.NewUint(20),
+			},
+			OutboundParams: []*types.OutboundParams{{
+				ReceiverChainId: chainID,
+				Amount:          math.NewUint(42),
+			}},
+		},
+			sender,
+		)
+		require.NoError(t, err)
+		coin := sdkk.BankKeeper.GetBalance(ctx, sender.Bytes(), config.BaseDenom)
 		require.Equal(t, "42", coin.Amount.String())
 	})
 
@@ -349,7 +443,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 
 		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
-				CoinType:      coin.CoinType_Gas,
+				CoinType:      coin.CoinType_Zeta,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
@@ -376,7 +470,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 
 		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
-				CoinType:      coin.CoinType_Gas,
+				CoinType:      coin.CoinType_Zeta,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
@@ -399,7 +493,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 
 		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
-				CoinType:      coin.CoinType_Gas,
+				CoinType:      coin.CoinType_Zeta,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
@@ -420,7 +514,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 
 		err := k.LegacyRefundAbortedAmountOnZetaChainZeta(ctx, types.CrossChainTx{
 			InboundParams: &types.InboundParams{
-				CoinType:      coin.CoinType_Gas,
+				CoinType:      coin.CoinType_Zeta,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				TxOrigin:      sender.String(),
@@ -495,6 +589,49 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		balance, err = zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
 		require.NoError(t, err)
 		require.Equal(t, uint64(84), balance.Uint64())
+	})
+
+	t.Run("should refund amount on zeta chain for outgoing cctx", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		asset := sample.EthAddress().String()
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID()
+
+		// deploy zrc20
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20Addr := deployZRC20(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			chainID,
+			"bar",
+			asset,
+			"bar",
+		)
+
+		err := k.LegacyRefundAbortedAmountOnZetaChainERC20(ctx, types.CrossChainTx{
+			InboundParams: &types.InboundParams{
+				CoinType:      coin.CoinType_ERC20,
+				SenderChainId: chains.ZetaChainPrivnet.ChainId,
+				Sender:        sender.String(),
+				Asset:         asset,
+				Amount:        math.NewUint(42),
+			},
+			OutboundParams: []*types.OutboundParams{{
+				ReceiverChainId: chainID,
+				Amount:          math.NewUint(42),
+			}},
+		},
+			sender,
+		)
+		require.NoError(t, err)
+
+		// check amount deposited in balance
+		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), balance.Uint64())
 	})
 
 	t.Run("should error if zrc20 address empty", func(t *testing.T) {

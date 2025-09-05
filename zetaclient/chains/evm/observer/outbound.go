@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -29,7 +30,6 @@ import (
 
 // ProcessOutboundTrackers processes outbound trackers
 func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
-	chainID := ob.Chain().ChainId
 	trackers, err := ob.ZetacoreClient().GetAllOutboundTrackerByChain(ctx, ob.Chain().ChainId, interfaces.Ascending)
 	if err != nil {
 		return errors.Wrap(err, "GetAllOutboundTrackerByChain error")
@@ -43,7 +43,6 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 	// prepare logger fields
 	logger := ob.Logger().Outbound.With().
 		Str(logs.FieldMethod, "ProcessOutboundTrackers").
-		Int64(logs.FieldChain, chainID).
 		Logger()
 
 	// process outbound trackers
@@ -63,24 +62,23 @@ func (ob *Observer) ProcessOutboundTrackers(ctx context.Context) error {
 				txCount++
 				outboundReceipt = receipt
 				outbound = tx
-				logger.Info().Msgf("confirmed outbound %s for chain %d nonce %d", txHash.TxHash, chainID, nonce)
-				if txCount > 1 {
-					logger.Error().
-						Msgf("checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v tx %v", txCount, chainID, nonce, receipt, tx)
-				}
+
+				logger.Info().
+					Uint64(logs.FieldNonce, nonce).
+					Str(logs.FieldTx, txHash.TxHash).
+					Msg("Confirmed outbound")
 			}
 		}
 
-		// should be only one txHash confirmed for each nonce.
-		if txCount == 1 {
+		switch {
+		case txCount == 1:
 			ob.setTxNReceipt(nonce, outboundReceipt, outbound)
-		} else if txCount > 1 {
-			// should not happen. We can't tell which txHash is true. It might happen (e.g. bug, glitchy/hacked endpoint)
-			ob.Logger().Outbound.Error().Msgf("WatchOutbound: confirmed multiple (%d) outbound for chain %d nonce %d", txCount, chainID, nonce)
-		} else {
-			if tracker.MaxReached() {
-				ob.Logger().Outbound.Error().Msgf("WatchOutbound: outbound tracker is full of hashes for chain %d nonce %d", chainID, nonce)
-			}
+		case txCount > 1:
+			// Unexpected state: multiple transactions exist for a single nonce.
+			// This could indicate duplicate transaction broadcasting or unreliable RPC data
+			logger.Error().Uint64(logs.FieldNonce, nonce).Msgf("Confirmed multiple (%d) outbound", txCount)
+		case tracker.MaxReached():
+			logger.Error().Uint64(logs.FieldNonce, nonce).Msg("Outbound tracker is full of hashes")
 		}
 	}
 
@@ -121,31 +119,31 @@ func (ob *Observer) postVoteOutbound(
 
 	const gasLimit = zetacore.PostVoteOutboundGasLimit
 
-	var retryGasLimit uint64
+	retryGasLimit := zetacore.PostVoteOutboundRetryGasLimit
 	if msg.Status == chains.ReceiveStatus_failed {
 		retryGasLimit = zetacore.PostVoteOutboundRevertGasLimit
 	}
 
 	// post vote to zetacore
 	logFields := map[string]any{
-		"chain":    chainID,
-		"nonce":    nonce,
-		"outbound": receipt.TxHash.String(),
+		logs.FieldNonce: nonce,
+		logs.FieldTx:    receipt.TxHash.String(),
 	}
+
 	zetaTxHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, retryGasLimit, msg)
 	if err != nil {
 		logger.Error().
 			Err(err).
 			Fields(logFields).
-			Msgf("PostVoteOutbound: error posting vote for chain %d", chainID)
+			Msg("Unable to post outbound vote")
 		return
 	}
 
 	// print vote tx hash and ballot
 	if zetaTxHash != "" {
-		logFields["vote"] = zetaTxHash
-		logFields["ballot"] = ballot
-		logger.Info().Fields(logFields).Msgf("PostVoteOutbound: posted vote for chain %d", chainID)
+		logFields[logs.FieldZetaTx] = zetaTxHash
+		logFields[logs.FieldBallot] = ballot
+		logger.Info().Fields(logFields).Msg("Outbound vote posted")
 	}
 }
 
@@ -162,15 +160,22 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	receipt, transaction := ob.getTxNReceipt(nonce)
 	sendID := fmt.Sprintf("%d-%d", ob.Chain().ChainId, nonce)
 	logger := ob.Logger().Outbound.With().Str("sendID", sendID).Logger()
-
 	// get connector and erc20Custody contracts
+	// Only one of these connector contracts will be used at one time.
+	// V1 cctx's of cointype ZETA would not be processed once the connector is upgraded to V2
+	connectorLegacyAddr, connectorLegacy, err := ob.getConnectorLegacyContract()
+	if err != nil {
+		return true, errors.Wrap(err, "error getting legacy zeta connector")
+	}
+
 	connectorAddr, connector, err := ob.getConnectorContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting zeta connector for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting zeta connector")
 	}
+
 	custodyAddr, custody, err := ob.getERC20CustodyContract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody")
 	}
 	gatewayAddr, gateway, err := ob.getGatewayContract()
 	if err != nil {
@@ -178,22 +183,22 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 	}
 	_, custodyV2, err := ob.getERC20CustodyV2Contract()
 	if err != nil {
-		return true, errors.Wrapf(err, "error getting erc20 custody v2 for chain %d", ob.Chain().ChainId)
+		return true, errors.Wrap(err, "error getting erc20 custody v2 for chain")
 	}
 
 	// define a few common variables
-	var receiveValue *big.Int
-	var receiveStatus chains.ReceiveStatus
-	cointype := cctx.InboundParams.CoinType
+	var (
+		receiveValue  *big.Int
+		receiveStatus chains.ReceiveStatus
+		cointype      = cctx.InboundParams.CoinType
+	)
 
-	// compliance check, special handling the cancelled cctx
-	if compliance.IsCctxRestricted(cctx) {
-		// use cctx's amount to bypass the amount check in zetacore
+	// cancelled transaction means the outbound is failed
+	// - set amount to CCTX's amount to bypass amount check in zetacore
+	// - set status to failed to revert the CCTX in zetacore
+	if compliance.IsCCTXRestricted(cctx) {
 		receiveValue = cctx.GetCurrentOutboundParam().Amount.BigInt()
-		receiveStatus := chains.ReceiveStatus_failed
-		if receipt.Status == ethtypes.ReceiptStatusSuccessful {
-			receiveStatus = chains.ReceiveStatus_success
-		}
+		receiveStatus = chains.ReceiveStatus_failed
 		ob.postVoteOutbound(ctx, cctx.Index, receipt, transaction, receiveValue, receiveStatus, nonce, cointype, logger)
 		return false, nil
 	}
@@ -204,13 +209,15 @@ func (ob *Observer) VoteOutboundIfConfirmed(
 		receipt,
 		transaction,
 		cointype,
-		connectorAddr,
-		connector,
+		connectorLegacyAddr,
+		connectorLegacy,
 		custodyAddr,
 		custody,
 		custodyV2,
 		gatewayAddr,
 		gateway,
+		connectorAddr,
+		connector,
 	)
 	if err != nil {
 		logger.Error().
@@ -241,6 +248,8 @@ func parseOutboundReceivedValue(
 	custodyV2 *erc20custody.ERC20Custody,
 	gatewayAddress ethcommon.Address,
 	gateway *gatewayevm.GatewayEVM,
+	connectorNativeAddress ethcommon.Address,
+	connectorNative *zetaconnectornative.ZetaConnectorNative,
 ) (*big.Int, chains.ReceiveStatus, error) {
 	// determine the receive status and value
 	// https://docs.nethereum.com/en/latest/nethereum-receipt-status/
@@ -253,7 +262,17 @@ func parseOutboundReceivedValue(
 
 	// parse outbound event for protocol contract v2
 	if cctx.ProtocolContractVersion == crosschaintypes.ProtocolContractVersion_V2 {
-		return parseOutboundEventV2(cctx, receipt, transaction, custodyAddress, custodyV2, gatewayAddress, gateway)
+		return parseOutboundEventV2(
+			cctx,
+			receipt,
+			transaction,
+			custodyAddress,
+			custodyV2,
+			gatewayAddress,
+			gateway,
+			connectorNativeAddress,
+			connectorNative,
+		)
 	}
 
 	// parse receive value from the outbound receipt for Zeta and ERC20
@@ -396,23 +415,34 @@ func (ob *Observer) filterTSSOutboundInBlock(ctx context.Context, blockNumber ui
 		ob.Logger().
 			Outbound.Error().
 			Err(err).
-			Msgf("error getting block %d for chain %d", blockNumber, ob.Chain().ChainId)
+			Uint64(logs.FieldBlock, blockNumber).
+			Msg("Error getting block")
 		return
 	}
 
 	for i := range block.Transactions {
 		tx := block.Transactions[i]
-		if ethcommon.HexToAddress(tx.From) == ob.TSS().PubKey().AddressEVM() {
-			// #nosec G115 nonce always positive
-			nonce := uint64(tx.Nonce)
-			if !ob.isTxConfirmed(nonce) {
-				if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
-					ob.setTxNReceipt(nonce, receipt, txx)
-					ob.Logger().
-						Outbound.Info().
-						Msgf("TSS outbound detected on chain %d nonce %d tx %s", ob.Chain().ChainId, nonce, tx.Hash)
-				}
-			}
+
+		// noop
+		if ethcommon.HexToAddress(tx.From) != ob.TSS().PubKey().AddressEVM() {
+			continue
+		}
+
+		// #nosec G115 nonce always positive
+		nonce := uint64(tx.Nonce)
+
+		// noop
+		if ob.isTxConfirmed(nonce) {
+			continue
+		}
+
+		if receipt, txx, ok := ob.checkConfirmedTx(ctx, tx.Hash, nonce); ok {
+			ob.setTxNReceipt(nonce, receipt, txx)
+			ob.Logger().
+				Outbound.Info().
+				Uint64(logs.FieldNonce, nonce).
+				Str(logs.FieldTx, tx.Hash).
+				Msg("TSS outbound detected")
 		}
 	}
 }

@@ -3,6 +3,7 @@ package observer
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/block-vision/sui-go-sdk/models"
 	"github.com/pkg/errors"
@@ -11,19 +12,22 @@ import (
 	"github.com/zeta-chain/node/pkg/contracts/sui"
 	cctypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+	"github.com/zeta-chain/node/zetaclient/compliance"
+	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/logs"
 	"github.com/zeta-chain/node/zetaclient/zetacore"
 )
 
-var errTxNotFound = errors.New("no tx found")
+var (
+	errTxNotFound = errors.New("no tx found")
+	errCompliance = errors.New("compliance check failed")
+)
 
 // ObserveInbound processes inbound deposit cross-chain transactions.
 func (ob *Observer) ObserveInbound(ctx context.Context) error {
-	ob.ensureCursor()
-
 	query := client.EventQuery{
 		PackageID: ob.gateway.PackageID(),
-		Module:    ob.gateway.Module(),
+		Module:    sui.GatewayModule,
 		Cursor:    ob.getCursor(),
 		Limit:     client.DefaultEventsLimit,
 	}
@@ -53,6 +57,11 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 				Str(logs.FieldTx, event.Id.TxDigest).
 				Msg("TX not found or not finalized. Pausing")
 			return nil
+		case errors.Is(err, errCompliance):
+			// skip restricted tx and update the cursor
+			ob.Logger().Inbound.Warn().Err(err).
+				Str(logs.FieldTx, event.Id.TxDigest).
+				Msg("Tx contains restricted address. Skipping")
 		case err != nil:
 			// failed processing also updates the cursor
 			ob.Logger().Inbound.Err(err).
@@ -61,7 +70,7 @@ func (ob *Observer) ObserveInbound(ctx context.Context) error {
 		}
 
 		// update the cursor
-		if err := ob.setCursor(client.EncodeCursor(event.Id)); err != nil {
+		if err := ob.setCursor(event.Id); err != nil {
 			return errors.Wrapf(err, "unable to set cursor %+v", event.Id)
 		}
 	}
@@ -116,7 +125,10 @@ func (ob *Observer) processInboundEvent(
 	}
 
 	if tx == nil {
-		txReq := models.SuiGetTransactionBlockRequest{Digest: event.TxHash}
+		txReq := models.SuiGetTransactionBlockRequest{
+			Digest:  event.TxHash,
+			Options: models.SuiTransactionBlockOptions{ShowEffects: true},
+		}
 		txFresh, err := ob.client.SuiGetTransactionBlock(ctx, txReq)
 		if err != nil {
 			return errors.Wrap(errTxNotFound, err.Error())
@@ -141,8 +153,11 @@ func (ob *Observer) processInboundEvent(
 // processInboundTracker queries tx with its events by tracker and then votes.
 func (ob *Observer) processInboundTracker(ctx context.Context, tracker cctypes.InboundTracker) error {
 	req := models.SuiGetTransactionBlockRequest{
-		Digest:  tracker.TxHash,
-		Options: models.SuiTransactionBlockOptions{ShowEvents: true},
+		Digest: tracker.TxHash,
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects: true,
+			ShowEvents:  true,
+		},
 	}
 
 	tx, err := ob.client.SuiGetTransactionBlock(ctx, req)
@@ -176,10 +191,33 @@ func (ob *Observer) constructInboundVote(
 		asset = string(deposit.CoinType)
 	}
 
-	// Sui uses checkpoint seq num instead of block height
+	// compliance check, skip restricted tx by returning nil msg
+	if config.ContainRestrictedAddress(deposit.Sender, deposit.Receiver.String()) {
+		compliance.PrintComplianceLog(
+			ob.Logger().Inbound,
+			ob.Logger().Compliance,
+			false,
+			ob.Chain().ChainId,
+			event.TxHash,
+			deposit.Sender,
+			deposit.Receiver.String(),
+			asset,
+		)
+		return nil, errCompliance
+	}
+
+	// a valid inbound should be successful
+	// in theory, Sui protocol should erase emitted events if tx failed, just in case
+	if tx.Effects.Status.Status != client.TxStatusSuccess {
+		return nil, errors.Errorf("inbound is failed: %s", tx.Effects.Status.Error)
+	}
+
+	// Sui uses checkpoint seq num instead of block height.
+	// If checkpoint is invalid (e.g. 0), the tx status remains unclear (e.g. maybe pending).
+	// In this case, we should signal the caller to stop scanning further by returning errTxNotFound.
 	checkpointSeqNum, err := uint64FromStr(tx.Checkpoint)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse checkpoint")
+	if err != nil || checkpointSeqNum == 0 {
+		return nil, errors.Wrap(errTxNotFound, fmt.Sprintf("invalid checkpoint: %s", tx.Checkpoint))
 	}
 
 	return cctypes.NewMsgVoteInbound(

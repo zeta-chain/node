@@ -50,4 +50,8 @@ var (
 		1138,
 		"error depositing ZETA to fungible module account",
 	)
+	ErrProcessDeposit = cosmoserrors.Register(ModuleName, 1139, "error processing deposit")
+	ErrZeroBalance    = cosmoserrors.Register(ModuleName, 1140, "balance is zero")
+	ErrFailedToBurn   = cosmoserrors.Register(ModuleName, 1141, "failed to burn coins")
+	ErrGasLimitNotSet = cosmoserrors.Register(ModuleName, 1142, "gas limit not set")
 )

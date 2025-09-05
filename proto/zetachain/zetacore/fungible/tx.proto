@@ -29,7 +29,18 @@ service Msg {
   rpc UpdateGatewayContract(MsgUpdateGatewayContract)
       returns (MsgUpdateGatewayContractResponse);
   rpc UpdateZRC20Name(MsgUpdateZRC20Name) returns (MsgUpdateZRC20NameResponse);
+  rpc BurnFungibleModuleAsset(MsgBurnFungibleModuleAsset)
+      returns (MsgBurnFungibleModuleAssetResponse);
+  rpc UpdateGatewayGasLimit(MsgUpdateGatewayGasLimit)
+      returns (MsgUpdateGatewayGasLimitResponse);
 }
+
+message MsgUpdateGatewayGasLimit {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  uint64 new_gas_limit = 2;
+}
+message MsgUpdateGatewayGasLimitResponse {}
 
 message MsgDeploySystemContracts {
   option (cosmos.msg.v1.signer) = "creator";
@@ -148,3 +159,11 @@ message MsgUpdateZRC20Name {
 }
 
 message MsgUpdateZRC20NameResponse {}
+
+message MsgBurnFungibleModuleAsset {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string zrc20_address = 2;
+}
+
+message MsgBurnFungibleModuleAssetResponse {}

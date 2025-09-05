@@ -5,9 +5,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -94,15 +94,15 @@ func (k Keeper) ProcessAbort(
 	if err != nil {
 		messages.ErrorMessageAbort = "failed to process abort: " + err.Error()
 	}
+	// note: we still set this value to true if onAbort reverted because the funds will still be deposited to the abortAddress
+	if err == nil || errors.Is(err, fungibletypes.ErrOnAbortFailed) {
+		cctx.CctxStatus.IsAbortRefunded = true
+	}
 
 	// commit state change from the deposit and eventual cctx events
 	commit()
 
-	// note: we still set this value to true if onAbort reverted because the funds will still be deposited to the abortAddress
-	cctx.CctxStatus.IsAbortRefunded = true
 	cctx.CctxStatus.UpdateStatusAndErrorMessages(types.CctxStatus_Aborted, messages)
-
-	return
 }
 
 // LegacyRefundAbortedAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
@@ -136,21 +136,28 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainGas(
 	refundAddress ethcommon.Address,
 ) error {
 	// refund in gas token to refund address
-	// Refund the the amount was previously
+	// Refund the amount that was previously aborted
 	refundAmount := GetAbortedAmount(cctx)
 	if refundAmount.IsNil() || refundAmount.IsZero() {
 		return errors.New("no amount to refund")
 	}
-	chainID := cctx.InboundParams.SenderChainId
+
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
 		return types.ErrForeignCoinNotFound
 	}
+
 	zrc20 := ethcommon.HexToAddress(fcSenderChain.Zrc20ContractAddress)
 	if zrc20 == (ethcommon.Address{}) {
 		return errorsmod.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
+
 	// deposit the amount to the tx origin instead of receiver as this is a refund
 	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
@@ -168,18 +175,26 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainZeta(
 ) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
 	refundAmount := GetAbortedAmount(cctx)
-	chainID := cctx.InboundParams.SenderChainId
+
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// check if chain is an EVM chain
 	if !chains.IsEVMChain(chainID, k.GetAuthorityKeeper().GetAdditionalChainList(ctx)) {
 		return errors.New("only EVM chains are supported for refund when coin type is Zeta")
 	}
+
 	if cctx.InboundParams.Amount.IsNil() || cctx.InboundParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
 	}
+
 	// deposit the amount to refund address
 	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, refundAmount.BigInt()); err != nil {
 		return fmt.Errorf("failed to refund zeta on ZetaChain: %w", err)
 	}
+
 	return nil
 }
 
@@ -206,11 +221,16 @@ func (k Keeper) LegacyRefundAbortedAmountOnZetaChainERC20(
 		return errors.New("no amount to refund")
 	}
 
+	chainID, _, err := cctx.GetConnectedChainID()
+	if err != nil {
+		return errors.Wrap(err, "failed to get connected chain ID")
+	}
+
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(
 		ctx,
 		cctx.InboundParams.Asset,
-		cctx.InboundParams.SenderChainId,
+		chainID,
 	)
 	if !found {
 		return fmt.Errorf("asset %s zrc not found", cctx.InboundParams.Asset)

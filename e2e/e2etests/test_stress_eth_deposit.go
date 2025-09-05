@@ -28,12 +28,24 @@ func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
 	// create a wait group to wait for all the deposits to complete
 	var eg errgroup.Group
 
+	revertOptions := gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)}
+
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		tx := r.ETHDeposit(r.EVMAddress(), depositAmount, gatewayevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)})
+		tx := r.ETHDeposit(
+			r.EVMAddress(),
+			depositAmount,
+			revertOptions,
+			false,
+		)
 		hash := tx.Hash()
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, hash.Hex())
+
+		// slow down submitting transactions a bit.
+		// submitting them as fast as possible does actually work.
+		// but we want to ensure the workload is a bit more representative.
+		time.Sleep(time.Millisecond * 500)
 
 		eg.Go(func() error { return monitorEtherDeposit(r, hash, i, time.Now()) })
 	}

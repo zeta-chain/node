@@ -1,8 +1,4 @@
----
-sidebar_position: 1
----
-
-# Overview
+### Overview
 
 The `emissions` module is responsible for orchestrating rewards distribution for
 observers, validators and TSS signers. Currently, it only distributes rewards to

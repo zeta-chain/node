@@ -11,11 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/zeta-chain/ethermint/app"
-	evmante "github.com/zeta-chain/ethermint/app/ante"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	zetaapp "github.com/zeta-chain/node/app"
 	"github.com/zeta-chain/node/app/ante"
+	"github.com/zeta-chain/node/cmd/zetacored/config"
+	serverconfig "github.com/zeta-chain/node/server/config"
 )
 
 func NewSimApp(
@@ -24,7 +25,20 @@ func NewSimApp(
 	appOptions servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*zetaapp.App, error) {
-	encCdc := zetaapp.MakeEncodingConfig()
+	configurator := evmtypes.NewEVMConfigurator()
+	configurator.ResetTestConfig()
+	err := configurator.
+		WithChainConfig(evmtypes.DefaultChainConfig(777)).
+		WithEVMCoinInfo(evmtypes.EvmCoinInfo{
+			Denom:         config.BaseDenom,
+			ExtendedDenom: config.BaseDenom,
+			DisplayDenom:  config.BaseDenom,
+			Decimals:      config.BaseDenomUnit,
+		}).
+		Configure()
+	if err != nil {
+		panic(err)
+	}
 
 	// Set load latest version to false as we manually set it later.
 	zetaApp := zetaapp.New(
@@ -33,21 +47,22 @@ func NewSimApp(
 		nil,
 		false,
 		map[int64]bool{},
-		app.DefaultNodeHome,
+		"",
 		5,
-		encCdc,
+		serverconfig.DefaultEVMChainID,
 		appOptions,
 		baseAppOptions...,
 	)
 
 	// use zeta antehandler
+	encCdc := zetaapp.MakeEncodingConfig(777)
 	options := ante.HandlerOptions{
 		AccountKeeper:   zetaApp.AccountKeeper,
 		BankKeeper:      zetaApp.BankKeeper,
 		EvmKeeper:       zetaApp.EvmKeeper,
 		FeeMarketKeeper: zetaApp.FeeMarketKeeper,
 		SignModeHandler: encCdc.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  0,
 		ObserverKeeper:  zetaApp.ObserverKeeper,
 	}

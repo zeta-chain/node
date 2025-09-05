@@ -2,16 +2,22 @@
 # check=error=true
 FROM ghcr.io/zeta-chain/ethereum-client-go:v1.10.26 AS geth
 FROM ghcr.io/zeta-chain/solana-docker:1.18.15 AS solana
+FROM ghcr.io/zeta-chain/sui-docker:mainnet-v1.51.5-dev AS sui
 FROM zetanode:latest
 
 COPY --from=geth /usr/local/bin/geth /usr/local/bin/
 COPY --from=solana /usr/bin/solana /usr/local/bin/
+COPY --from=sui /usr/local/bin/sui /usr/local/bin/
 
 COPY contrib/localnet/orchestrator/start-zetae2e.sh /work/
 COPY contrib/localnet/orchestrator/proposals_e2e_start/ /work/proposals_e2e_start/
 COPY contrib/localnet/orchestrator/proposals_e2e_end/ /work/proposals_e2e_end/
 COPY contrib/localnet/scripts/wait-for-ton.sh /work/
+COPY contrib/localnet/sui/sui_client.yaml /root/.sui/sui_config/client.yaml
+COPY e2e/contracts/sui/example /work/example
+COPY e2e/contracts/sui/protocol-contracts-sui-upgrade /work/protocol-contracts-sui-upgrade
 COPY cmd/zetae2e/config/localnet.yml /work/config.yml
+
 RUN chmod +x /work/*.sh
 
 WORKDIR /work

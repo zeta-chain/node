@@ -29,5 +29,5 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
-	r.VerifyTransferAmountFromCCTX(cctx, withdrawalAmount.Int64())
+	r.EVMVerifyOutboundTransferAmount(cctx.GetCurrentOutboundParam().Hash, withdrawalAmount.Int64())
 }

@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -14,7 +15,8 @@ import (
 
 func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
-	amount := utils.ParseInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
+	require.True(r, amount.IsUint64(), fmt.Sprintf("arg[0] is not a uint64: %s", args[0]))
 
 	// load deployer private key
 	privKey := r.GetSolanaPrivKey()
@@ -23,12 +25,14 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	pda := r.ComputePdaAddress()
 	pdaAta := r.ResolveSolanaATA(privKey, pda, r.SPLAddr)
 
-	pdaBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
+	pdaBalanceResult, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+	pdaBalanceBefore := utils.ParseBigInt(r, pdaBalanceResult.Value.Amount)
 
 	senderAta := r.ResolveSolanaATA(privKey, privKey.PublicKey(), r.SPLAddr)
-	senderBalanceBefore, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
+	senderBalanceResult, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
+	senderBalanceBefore := utils.ParseBigInt(r, senderBalanceResult.Value.Amount)
 
 	// get zrc20 balance for recipient
 	zrc20BalanceBefore, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
@@ -36,7 +40,7 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 
 	// deposit SPL tokens
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, r.EVMAddress(), nil)
+	sig := r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, r.EVMAddress(), nil, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -44,30 +48,15 @@ func TestSPLDeposit(r *runner.E2ERunner, args []string) {
 	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, r.EVMAddress().Hex())
 
-	// verify balances are updated
-	pdaBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, pdaAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
-	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
-	require.NoError(r, err)
-
-	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
-	require.NoError(r, err)
-
 	// verify amount is deposited to pda ata
-	require.Equal(
-		r,
-		utils.ParseInt(r, pdaBalanceBefore.Value.Amount)+amount,
-		utils.ParseInt(r, pdaBalanceAfter.Value.Amount),
-	)
+	pdaChange := utils.NewExactChange(amount)
+	r.WaitAndVerifySPLBalanceChange(pdaAta, pdaBalanceBefore, pdaChange)
 
 	// verify amount is subtracted from sender ata
-	require.Equal(
-		r,
-		utils.ParseInt(r, senderBalanceBefore.Value.Amount)-amount,
-		utils.ParseInt(r, senderBalanceAfter.Value.Amount),
-	)
+	senderChange := utils.NewExactChange(new(big.Int).Neg(amount))
+	r.WaitAndVerifySPLBalanceChange(senderAta, senderBalanceBefore, senderChange)
 
-	// verify amount is minted to receiver
-	require.Zero(r, zrc20BalanceBefore.Add(zrc20BalanceBefore, big.NewInt(int64(amount))).Cmp(zrc20BalanceAfter))
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SPLZRC20, r.EVMAddress(), zrc20BalanceBefore, change, r.Logger)
 }

@@ -18,10 +18,13 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "eth", conf.AdditionalAccounts.UserEther, color.FgHiGreen, deployerRunner, verbose,
 		e2etests.TestETHDepositName,
 		e2etests.TestETHDepositAndCallName,
+		e2etests.TestETHDepositAndCallBigPayloadName,
 		e2etests.TestETHDepositFastConfirmationName,
 		e2etests.TestETHWithdrawName,
+		e2etests.TestETHWithdrawCustomGasLimitName,
 		e2etests.TestETHWithdrawAndArbitraryCallName,
 		e2etests.TestETHWithdrawAndCallName,
+		e2etests.TestETHWithdrawAndCallBigPayloadName,
 		e2etests.TestETHWithdrawAndCallThroughContractName,
 		e2etests.TestZEVMToEVMArbitraryCallName,
 		e2etests.TestZEVMToEVMCallName,
@@ -91,6 +94,24 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 			e2etests.TestERC20WithdrawRevertAndAbortName,
 		),
 	)
+	// test zeta token workflow
+	eg.Go(
+		evmTestRoutine(conf, "zeta", conf.AdditionalAccounts.UserZeta, color.FgRed, deployerRunner, verbose,
+			e2etests.TestZetaDepositName,
+			e2etests.TestETHDepositName,
+			//e2etests.TestZetaDepositAndCallName,
+			//e2etests.TestZetaDepositAndCallRevertName,
+			//e2etests.TestZetaDepositRevertAndAbortName,
+			//e2etests.TestZetaDepositAndCallRevertWithCallName,
+			//e2etests.TestZetaDepositAndCallNoMessageName,
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestZetaWithdrawAndCallName,
+			e2etests.TestZetaWithdrawAndCallRevertName,
+			e2etests.TestZetaWithdrawAndCallRevertWithCallName,
+			e2etests.TestZetaWithdrawRevertAndAbortName,
+			e2etests.TestZetaWithdrawAndArbitraryCallName,
+		),
+	)
 }
 
 // evmTestRoutine runs EVM chain related e2e tests
@@ -125,6 +146,9 @@ func evmTestRoutine(
 		// funding the account
 		txERC20Send := deployerRunner.SendERC20OnEVM(account.EVMAddress(), 10000)
 		v2Runner.WaitForTxReceiptOnEVM(txERC20Send)
+
+		txZetaSend := deployerRunner.SendZetaOnEVM(account.EVMAddress(), 10000)
+		v2Runner.WaitForTxReceiptOnEVM(txZetaSend)
 
 		// run erc20 test
 		testsToRun, err := v2Runner.GetE2ETestsToRunByName(

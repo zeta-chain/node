@@ -18,7 +18,7 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 	txDonation, err := r.LegacySendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
 	require.NoError(r, err)
 
-	r.Logger.EVMTransaction(*txDonation, "donation")
+	r.Logger.EVMTransaction(txDonation, "donation")
 
 	// check contract deployment receipt
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, txDonation, r.Logger, r.ReceiptTimeout)

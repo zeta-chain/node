@@ -2,8 +2,10 @@ package runner
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
+	"github.com/zeta-chain/node/cmd/zetacored/config"
 	"github.com/zeta-chain/node/e2e/utils"
 )
 
@@ -18,15 +20,40 @@ func (r *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 		if err := r.Ctx.Err(); err != nil {
 			return fmt.Errorf("context cancelled: %w", err)
 		}
-		if err := r.RunE2ETest(e2eTest, true); err != nil {
+		if err := r.runTestWithProtocolBalanceCheck(e2eTest); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+func (r *E2ERunner) runTestWithProtocolBalanceCheck(e2eTest E2ETest) error {
+	balancesBefore := r.checkProtocolAddressBalance(config.BaseDenom)
+
+	if err := r.RunE2ETest(e2eTest); err != nil {
+		return err
+	}
+
+	balancesAfter := r.checkProtocolAddressBalance(config.BaseDenom)
+	if !balancesAfter.Equal(balancesBefore) {
+		r.Logger.Print("⚠️ protocol address balance changed during test %s: before %s, after %s",
+			e2eTest.Name, balancesBefore.String(), balancesAfter.String())
+	}
+
+	return nil
+}
+
 // RunE2ETest runs a e2e test
-func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
+func (r *E2ERunner) RunE2ETest(e2eTest E2ETest) error {
+	// wait for all dependencies to complete
+	// this is only used by Bitcoin RBF test at the moment
+	if len(e2eTest.Dependencies) > 0 {
+		r.Logger.Print("⏳ waiting   - %s", e2eTest.Name)
+		for _, dependency := range e2eTest.Dependencies {
+			dependency.Wait()
+		}
+	}
+
 	startTime := time.Now()
 	// note: spacing is padded to width of completed message
 	r.Logger.Print("⏳ running   - %s", e2eTest.Name)
@@ -39,9 +66,14 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 	errChan := make(chan error)
 	go func() {
 		defer func() {
-			if r := recover(); r != nil {
-				errChan <- fmt.Errorf("panic: %v", r)
+			if recoverVal := recover(); recoverVal != nil {
+				buf := make([]byte, 4096)
+				n := runtime.Stack(buf, false)
+				r.Logger.Print("panic: %+v. Stack: %s", recoverVal, string(buf[:n]))
+
+				errChan <- fmt.Errorf("panic: %v", recoverVal)
 			}
+
 			close(errChan)
 		}()
 		e2eTest.E2ETest(r, args)
@@ -55,11 +87,6 @@ func (r *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) error {
 		if err != nil {
 			return fmt.Errorf("%s failed (duration %s): %w", e2eTest.Name, time.Since(startTime), err)
 		}
-	}
-
-	// check zrc20 balance vs. supply
-	if checkAccounting {
-		r.CheckZRC20BalanceAndSupply()
 	}
 
 	r.Logger.Print("✅ completed - %s (%s)", e2eTest.Name, time.Since(startTime))
@@ -81,7 +108,7 @@ func (r *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, erro
 		timeBefore := time.Now()
 
 		// run test
-		testErr := r.RunE2ETest(test, false)
+		testErr := r.RunE2ETest(test)
 		if testErr != nil {
 			r.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
 		}

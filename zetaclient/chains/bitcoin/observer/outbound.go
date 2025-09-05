@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
-	"github.com/zeta-chain/node/pkg/coin"
 	"github.com/zeta-chain/node/pkg/constant"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/common"
@@ -109,12 +108,18 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		gasRetryLimit = 0
 	)
 
-	params := *cctx.GetCurrentOutboundParam()
-	nonce := cctx.GetCurrentOutboundParam().TssNonce
+	var (
+		params     = *cctx.GetCurrentOutboundParam()
+		nonce      = cctx.GetCurrentOutboundParam().TssNonce
+		outboundID = ob.OutboundID(nonce)
+		logger     = ob.logger.Outbound.With().
+				Uint64(logs.FieldNonce, nonce).
+				Str(logs.FieldOutboundID, outboundID).
+				Str(logs.FieldMethod, "VoteOutboundIfConfirmed").
+				Logger()
+	)
 
-	// get broadcasted outbound and tx result
-	outboundID := ob.OutboundID(nonce)
-	ob.Logger().Outbound.Info().Msgf("VoteOutboundIfConfirmed %s", outboundID)
+	logger.Info().Msg("VoteOutboundIfConfirmed")
 
 	ob.Mu().Lock()
 	txnHash, broadcasted := ob.broadcastedTx[outboundID]
@@ -134,7 +139,7 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
 		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
 		if nonce == 0 {
-			ob.logger.Outbound.Info().Msgf("VoteOutboundIfConfirmed: outbound %s is nonce 0", outboundID)
+			logger.Info().Msg("VoteOutboundIfConfirmed: outbound is nonce 0")
 			return false, nil
 		}
 
@@ -146,14 +151,12 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		}
 	}
 
-	// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
-	amountInSat := params.Amount.BigInt()
 	// #nosec G115 always in range
 	if res.Confirmations < int64(ob.ChainParams().OutboundConfirmationSafe()) {
-		ob.logger.Outbound.Debug().
-			Int64("currentConfirmations", res.Confirmations).
-			Uint64("requiredConfirmations", ob.ChainParams().OutboundConfirmationSafe()).
-			Msg("VoteOutboundIfConfirmed: outbound not confirmed yet")
+		logger.Debug().
+			Int64("confirmations.current", res.Confirmations).
+			Uint64("confirmations.required", ob.ChainParams().OutboundConfirmationSafe()).
+			Msg("Outbound not confirmed yet")
 
 		return false, nil
 	}
@@ -161,16 +164,21 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 	// Get outbound block height
 	blockHeight, err := ob.rpc.GetBlockHeightByStr(ctx, res.BlockHash)
 	if err != nil {
-		return false, errors.Wrapf(
-			err,
-			"VoteOutboundIfConfirmed: error getting block height by hash %s",
-			res.BlockHash,
-		)
+		return false, errors.Wrapf(err, "error getting block height by hash %s", res.BlockHash)
 	}
 
-	ob.Logger().
-		Outbound.Debug().
-		Msgf("Bitcoin outbound confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
+	var (
+		// It's safe to use cctx's amount to post confirmation because it has already been verified in checkTxInclusion().
+		receiveValue  = math.NewUintFromBigInt(params.Amount.BigInt())
+		receiveStatus = chains.ReceiveStatus_success
+		cointype      = cctx.InboundParams.CoinType
+	)
+
+	// cancelled transaction means the outbound is failed
+	// set status to failed to revert the CCTX in zetacore
+	if compliance.IsCCTXRestricted(cctx) {
+		receiveStatus = chains.ReceiveStatus_failed
+	}
 
 	signer := ob.ZetacoreClient().GetKeys().GetOperatorAddress()
 
@@ -178,40 +186,35 @@ func (ob *Observer) VoteOutboundIfConfirmed(ctx context.Context, cctx *crosschai
 		signer.String(),
 		cctx.Index,
 		res.TxID,
-
 		// #nosec G115 always positive
 		uint64(blockHeight),
-
 		// not used with Bitcoin
 		outboundGasUsed,
 		math.NewInt(outboundGasPrice),
 		outboundGasLimit,
-
-		math.NewUintFromBigInt(amountInSat),
-		chains.ReceiveStatus_success,
+		receiveValue,
+		receiveStatus,
 		ob.Chain().ChainId,
 		nonce,
-		coin.CoinType_Gas,
+		cointype,
 		crosschaintypes.ConfirmationMode_SAFE,
 	)
 
 	zetaHash, ballot, err := ob.ZetacoreClient().PostVoteOutbound(ctx, gasLimit, gasRetryLimit, msg)
 
 	logFields := map[string]any{
-		"outbound.external_tx_hash": res.TxID,
-		"outbound.nonce":            nonce,
-		"outbound.zeta_tx_hash":     zetaHash,
-		"outbound.ballot":           ballot,
+		logs.FieldTx:     res.TxID,
+		logs.FieldZetaTx: zetaHash,
+		logs.FieldBallot: ballot,
 	}
 
 	if err != nil {
-		ob.Logger().
-			Outbound.Error().
+		logger.Error().
 			Err(err).
 			Fields(logFields).
-			Msg("VoteOutboundIfConfirmed: error confirming bitcoin outbound")
+			Msg("Error confirming outbound")
 	} else if zetaHash != "" {
-		ob.Logger().Outbound.Info().Fields(logFields).Msgf("VoteOutboundIfConfirmed: confirmed Bitcoin outbound")
+		logger.Info().Fields(logFields).Msg("Outbound confirmed")
 	}
 
 	return false, nil
@@ -234,15 +237,8 @@ func (ob *Observer) refreshPendingNonce(ctx context.Context) {
 	// #nosec G115 always non-negative
 	nonceLow := uint64(p.NonceLow)
 	if nonceLow > ob.GetPendingNonce() {
-		// get the last included outbound hash
-		txid, err := ob.getOutboundHashByNonce(ctx, nonceLow-1)
-		if err != nil {
-			logger.Error().Err(err).Msg("error getting last outbound txid")
-		}
-
-		// set 'NonceLow' as the new pending nonce
 		ob.setPendingNonce(nonceLow)
-		logger.Info().Uint64("pending_nonce", nonceLow).Str(logs.FieldTx, txid).Msg("increased pending nonce")
+		logger.Info().Uint64("pending_nonce", nonceLow).Msg("increased pending nonce")
 	}
 }
 
@@ -354,12 +350,17 @@ func (ob *Observer) SetIncludedTx(nonce uint64, getTxResult *btcjson.GetTransact
 		}
 	} else {
 		// for other hash:
-		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
-		// we can't tell which txHash is true, so we remove all to be safe
+		// got multiple hashes for same nonce. RBF tx replacement happened.
+		lf["prior_tx"] = res.TxID
+		ob.logger.Outbound.Info().Fields(lf).Msgf("replaced bitcoin outbound")
+
+		// remove prior txHash and txResult
 		delete(ob.tssOutboundHashes, res.TxID)
 		delete(ob.includedTxResults, outboundID)
-		lf["prior_outbound"] = res.TxID
-		ob.logger.Outbound.Error().Fields(lf).Msg("be alert for duplicate payment")
+
+		// add new txHash and txResult
+		ob.tssOutboundHashes[txHash] = true
+		ob.includedTxResults[outboundID] = getTxResult
 	}
 }
 
@@ -393,7 +394,7 @@ func (ob *Observer) checkTssOutboundResult(
 	}
 
 	// differentiate between normal and cancelled cctx
-	if compliance.IsCctxRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
+	if compliance.IsCCTXRestricted(cctx) || params.Amount.Uint64() < constant.BTCWithdrawalDustAmount {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(
@@ -455,7 +456,7 @@ func (ob *Observer) checkTSSVin(ctx context.Context, vins []btcjson.Vin, nonce u
 //   - The third output is the change to TSS (optional)
 func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
-	if !(len(vouts) == 2 || len(vouts) == 3) {
+	if len(vouts) != 2 && len(vouts) != 3 {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
 	}
 
@@ -514,7 +515,7 @@ func (ob *Observer) checkTSSVout(params *crosschaintypes.OutboundParams, vouts [
 //   - The second output is the change to TSS (optional)
 func (ob *Observer) checkTSSVoutCancelled(params *crosschaintypes.OutboundParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
-	if !(len(vouts) == 1 || len(vouts) == 2) {
+	if len(vouts) != 1 && len(vouts) != 2 {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
 	}
 

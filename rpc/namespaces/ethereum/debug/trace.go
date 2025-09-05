@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-//go:build go1.5
-// +build go1.5
-
 package debug
 
 import (
@@ -26,12 +23,15 @@ import (
 
 	stderrors "github.com/pkg/errors"
 
-	zetaos "github.com/zeta-chain/node/pkg/os"
+	rpctypes "github.com/zeta-chain/node/rpc/types"
 )
 
 // StartGoTrace turns on tracing, writing to the given file.
 func (a *API) StartGoTrace(file string) error {
 	a.logger.Debug("debug_startGoTrace", "file", file)
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 
@@ -39,13 +39,12 @@ func (a *API) StartGoTrace(file string) error {
 		a.logger.Debug("trace already in progress")
 		return errors.New("trace already in progress")
 	}
-	fp, err := zetaos.ExpandHomeDir(file)
+	fp, err := ExpandHome(file)
 	if err != nil {
 		a.logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 		return err
 	}
-	// #nosec G304 variable value is controlled
-	f, err := os.Create(fp)
+	f, err := os.Create(fp) //#nosec G304 forked code
 	if err != nil {
 		a.logger.Debug("failed to create go trace file", "error", err.Error())
 		return err
@@ -68,6 +67,9 @@ func (a *API) StartGoTrace(file string) error {
 // StopGoTrace stops an ongoing trace.
 func (a *API) StopGoTrace() error {
 	a.logger.Debug("debug_stopGoTrace")
+	if !a.profilingEnabled {
+		return rpctypes.ErrProfilingDisabled
+	}
 	a.handler.mu.Lock()
 	defer a.handler.mu.Unlock()
 

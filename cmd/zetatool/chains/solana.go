@@ -9,7 +9,7 @@ import (
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
 )
 
-// voteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
+// VoteMsgFromSolEvent builds a MsgVoteInbound from an inbound event
 func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 	zetaChainID int64) (*crosschaintypes.MsgVoteInbound, error) {
 	// create inbound vote message
@@ -27,7 +27,7 @@ func VoteMsgFromSolEvent(event *clienttypes.InboundEvent,
 		0,
 		event.CoinType,
 		event.Asset,
-		0, // not a smart contract call
+		uint64(event.Index),
 		crosschaintypes.ProtocolContractVersion_V2,
 		false,
 		crosschaintypes.InboundStatus_SUCCESS,

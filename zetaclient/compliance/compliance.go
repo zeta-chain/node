@@ -6,52 +6,52 @@ import (
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	"github.com/zeta-chain/node/zetaclient/config"
+	"github.com/zeta-chain/node/zetaclient/logs"
 )
 
-// IsCctxRestricted returns true if the cctx involves restricted addresses
-func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
-	sender := cctx.InboundParams.Sender
-	receiver := cctx.GetCurrentOutboundParam().Receiver
+// IsCCTXRestricted returns true if the cctx involves restricted addresses
+func IsCCTXRestricted(cctx *crosschaintypes.CrossChainTx, additionalAddresses ...string) bool {
+	additionalAddresses = append(
+		additionalAddresses,
+		cctx.InboundParams.Sender,
+		cctx.GetCurrentOutboundParam().Receiver,
+	)
 
-	return config.ContainRestrictedAddress(sender, receiver)
+	return config.ContainRestrictedAddress(additionalAddresses...)
 }
 
 // PrintComplianceLog prints compliance log with fields [chain, cctx/inbound, chain, sender, receiver, token]
 func PrintComplianceLog(
-	inboundLogger zerolog.Logger,
-	complianceLogger zerolog.Logger,
+	logger, complianceLogger zerolog.Logger,
 	outbound bool,
 	chainID int64,
 	identifier, sender, receiver, token string,
 ) {
-	var logMsg string
-	var inboundLoggerWithFields zerolog.Logger
-	var complianceLoggerWithFields zerolog.Logger
+	var (
+		message string
+		fields  map[string]any
+	)
 
 	if outbound {
-		// we print cctx for outbound tx
-		logMsg = "Restricted address detected in cctx"
-		inboundLoggerWithFields = inboundLogger.With().
-			Int64("chain", chainID).
-			Str("cctx", identifier).
-			Str("sender", sender).
-			Str("receiver", receiver).
-			Str("token", token).
-			Logger()
-		complianceLoggerWithFields = complianceLogger.With().
-			Int64("chain", chainID).
-			Str("cctx", identifier).
-			Str("sender", sender).
-			Str("receiver", receiver).
-			Str("token", token).
-			Logger()
+		message = "Restricted address detected in cctx"
+		fields = map[string]any{
+			logs.FieldChain:    chainID,
+			logs.FieldCctx:     identifier,
+			logs.FieldCoinType: token,
+			"sender":           sender,
+			"receiver":         receiver,
+		}
 	} else {
-		// we print inbound for inbound tx
-		logMsg = "Restricted address detected in inbound"
-		inboundLoggerWithFields = inboundLogger.With().Int64("chain", chainID).Str("inbound", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
-		complianceLoggerWithFields = complianceLogger.With().Int64("chain", chainID).Str("inbound", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+		message = "Restricted address detected in inbound"
+		fields = map[string]any{
+			logs.FieldChain:    chainID,
+			logs.FieldCoinType: token,
+			logs.FieldTx:       identifier,
+			"sender":           sender,
+			"receiver":         receiver,
+		}
 	}
 
-	inboundLoggerWithFields.Warn().Msg(logMsg)
-	complianceLoggerWithFields.Warn().Msg(logMsg)
+	logger.Warn().Fields(fields).Msg(message)
+	complianceLogger.Warn().Fields(fields).Msg(message)
 }

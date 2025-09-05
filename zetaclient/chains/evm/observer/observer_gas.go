@@ -15,11 +15,17 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 		return errors.Wrap(err, "unable to suggest gas price")
 	}
 
+	// The zetaclients now only build legacy tx rather than EIP-1559 tx.
+	// Hardcode priority fee to zero to avoid gas price bump failure in the zetacore:
+	// https://github.com/zeta-chain/node/blob/release%2Fv30/x/crosschain/keeper/abci.go#L182
+	// https://github.com/zeta-chain/node/issues/3221
+	priorityFee := uint64(0)
+
 	// PRIORITY FEE (EIP-1559)
-	priorityFee, err := ob.determinePriorityFee(ctx)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine priority fee")
-	}
+	// priorityFee, err := ob.determinePriorityFee(ctx)
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to determine priority fee")
+	// }
 
 	blockNum, err := ob.evmClient.BlockNumber(ctx)
 	if err != nil {
@@ -28,7 +34,7 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 
 	_, err = ob.
 		ZetacoreClient().
-		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee.Uint64(), blockNum)
+		PostVoteGasPrice(ctx, ob.Chain(), gasPrice.Uint64(), priorityFee, blockNum)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to post vote for gas price")
@@ -37,9 +43,9 @@ func (ob *Observer) PostGasPrice(ctx context.Context) error {
 	return nil
 }
 
-// determinePriorityFee determines the chain priority fee.
+// DeterminePriorityFee determines the chain priority fee.
 // Returns zero for non EIP-1559 (London fork) chains.
-func (ob *Observer) determinePriorityFee(ctx context.Context) (*big.Int, error) {
+func (ob *Observer) DeterminePriorityFee(ctx context.Context) (*big.Int, error) {
 	supported, err := ob.supportsPriorityFee(ctx)
 	switch {
 	case err != nil:

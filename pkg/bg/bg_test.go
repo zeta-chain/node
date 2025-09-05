@@ -76,7 +76,7 @@ func TestWork(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 
 		// Check the log output
-		const expected = `{"level":"info", "message":"Background task completed", "worker.name":"hello"}`
+		const expected = `{"level":"debug", "message":"Background task completed", "worker.name":"hello"}`
 		assert.JSONEq(t, expected, out.String())
 
 		// Check onComplete

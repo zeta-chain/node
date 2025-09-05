@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/coin"
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
@@ -32,7 +32,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		senderChainId := int64(0)
 
 		// expect DepositCoinZeta to be called
-		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
+		fungibleMock.On("LegacyZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
 			Return(nil, nil)
 
 		// call HandleEVMDeposit
@@ -64,7 +64,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		// expect DepositCoinZeta to be called
 		errDeposit := errors.New("deposit failed")
-		fungibleMock.On("ZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
+		fungibleMock.On("LegacyZETADepositAndCallContract", ctx, ethcommon.HexToAddress(sender.String()), receiver, senderChainId, amount, mock.Anything, mock.Anything).
 			Return(nil, errDeposit)
 
 		// call HandleEVMDeposit

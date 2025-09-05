@@ -44,7 +44,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -81,22 +80,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmosencoding "github.com/cosmos/evm/encoding"
+	cosmosevmtypes "github.com/cosmos/evm/types"
+	erc20keeper "github.com/cosmos/evm/x/erc20/keeper"
+	erc20types "github.com/cosmos/evm/x/erc20/types"
+	"github.com/cosmos/evm/x/feemarket"
+	feemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
+	feemarkettypes "github.com/cosmos/evm/x/feemarket/types"
+	"github.com/cosmos/evm/x/vm"
+	evmkeeper "github.com/cosmos/evm/x/vm/keeper"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/native" // register native tracers
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	evmante "github.com/zeta-chain/ethermint/app/ante"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	"github.com/zeta-chain/ethermint/x/evm"
-	evmkeeper "github.com/zeta-chain/ethermint/x/evm/keeper"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
-	"github.com/zeta-chain/ethermint/x/feemarket"
-	feemarketkeeper "github.com/zeta-chain/ethermint/x/feemarket/keeper"
-	feemarkettypes "github.com/zeta-chain/ethermint/x/feemarket/types"
 
 	"github.com/zeta-chain/node/app/ante"
 	"github.com/zeta-chain/node/docs/openapi"
-	zetamempool "github.com/zeta-chain/node/pkg/mempool"
-	"github.com/zeta-chain/node/precompiles"
 	srvflags "github.com/zeta-chain/node/server/flags"
 	authoritymodule "github.com/zeta-chain/node/x/authority"
 	authoritykeeper "github.com/zeta-chain/node/x/authority/keeper"
@@ -140,7 +140,7 @@ const Name = "zetacore"
 
 func init() {
 	// manually update the power reduction by replacing micro (u) -> atto (a) evmos
-	sdk.DefaultPowerReduction = ethermint.PowerReduction
+	sdk.DefaultPowerReduction = cosmosevmtypes.AttoPowerReduction
 	// modify fee market parameter defaults through global
 	//feemarkettypes.DefaultMinGasPrice = v5.MainnetMinGasPrices
 	//feemarkettypes.DefaultMinGasMultiplier = v5.MainnetMinGasMultiplier
@@ -179,6 +179,7 @@ var maccPerms = map[string][]string{
 	emissionstypes.ModuleName:                       nil,
 	emissionstypes.UndistributedObserverRewardsPool: nil,
 	emissionstypes.UndistributedTSSRewardsPool:      nil,
+	feemarkettypes.ModuleName:                       nil,
 }
 
 // module accounts that are NOT allowed to receive tokens
@@ -188,6 +189,8 @@ var blockedReceivingModAcc = map[string]bool{
 	stakingtypes.BondedPoolName:    true,
 	stakingtypes.NotBondedPoolName: true,
 	govtypes.ModuleName:            true,
+	evmtypes.ModuleName:            true,
+	feemarkettypes.ModuleName:      true,
 }
 
 var (
@@ -241,6 +244,7 @@ type App struct {
 
 	// evm keepers
 	EvmKeeper       *evmkeeper.Keeper
+	Erc20Keeper     erc20keeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// zetachain keepers
@@ -264,10 +268,11 @@ func New(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig ethermint.EncodingConfig,
+	evmChainID uint64,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	encodingConfig := evmosencoding.MakeConfig(evmChainID)
 	appCodec := encodingConfig.Codec
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -295,6 +300,7 @@ func New(
 		authzkeeper.StoreKey,
 		evmtypes.StoreKey,
 		feemarkettypes.StoreKey,
+		erc20types.StoreKey,
 		authoritytypes.StoreKey,
 		lightclienttypes.StoreKey,
 		crosschaintypes.StoreKey,
@@ -337,9 +343,6 @@ func New(
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
-	customProposalHandler := zetamempool.NewCustomProposalHandler(bApp.Mempool(), bApp)
-	app.SetPrepareProposal(customProposalHandler.PrepareProposalHandler())
-
 	// add capability keeper and ScopeToModule for ibc module
 	//app.CapabilityKeeper = capabilitykeeper.NewKeeper(
 	//	appCodec,
@@ -351,10 +354,10 @@ func New(
 	//scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	// add keepers
-	// use custom Ethermint account for contracts
+	// use custom Evm account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
@@ -508,37 +511,39 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// Create Ethermint keepers
+	// Create Evm keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
-	feeSs := app.GetSubspace(feemarkettypes.ModuleName)
-	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[feemarkettypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName),
-		keys[feemarkettypes.StoreKey], tKeys[feemarkettypes.TransientKey])
 
-	evmSs := app.GetSubspace(evmtypes.ModuleName)
+	app.FeeMarketKeeper = feemarketkeeper.NewKeeper(
+		appCodec, authtypes.NewModuleAddress(govtypes.ModuleName),
+		keys[feemarkettypes.StoreKey],
+		tKeys[feemarkettypes.TransientKey],
+	)
 
 	app.EvmKeeper = evmkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(keys[evmtypes.StoreKey]),
 		keys[evmtypes.StoreKey],
 		tKeys[evmtypes.TransientKey],
+		keys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
-		&app.FeeMarketKeeper,
+		app.FeeMarketKeeper,
+		app.ConsensusParamsKeeper,
+		&app.Erc20Keeper,
 		tracer,
-		precompiles.StatefulContracts(
-			&app.FungibleKeeper,
-			app.StakingKeeper,
-			app.BankKeeper,
-			app.DistrKeeper,
-			appCodec,
-			storetypes.TransientGasConfig(),
-		),
-		aggregateAllKeys(keys, tKeys, memKeys),
+	)
+
+	app.Erc20Keeper = erc20keeper.NewKeeper(
+		keys[erc20types.StoreKey],
+		appCodec,
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.EvmKeeper,
+		app.StakingKeeper,
+		nil,
 	)
 
 	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
@@ -641,6 +646,20 @@ func New(
 	// we prefer to be more strict in what arguments the modules expect.
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
+	// add static precompiles
+	app.EvmKeeper.WithStaticPrecompiles(
+		NewAvailableStaticPrecompiles(
+			*app.StakingKeeper,
+			app.DistrKeeper,
+			app.BankKeeper,
+			app.Erc20Keeper,
+			app.EvmKeeper,
+			app.GovKeeper,
+			app.SlashingKeeper,
+			app.AppCodec(),
+		),
+	)
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 
@@ -692,8 +711,8 @@ func New(
 		//ibc.NewAppModule(app.IBCKeeper),
 		//transfer.NewAppModule(app.TransferKeeper),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
-		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
-		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
+		feemarket.NewAppModule(app.FeeMarketKeeper),
+		vm.NewAppModule(app.EvmKeeper, app.AccountKeeper, app.AccountKeeper.AddressCodec()),
 		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		lightclientmodule.NewAppModule(appCodec, app.LightclientKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
@@ -724,68 +743,12 @@ func New(
 
 	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
-	)
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
-		//capabilitytypes.ModuleName,
-		evmtypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
 		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		paramstypes.ModuleName,
-		group.ModuleName,
-		vestingtypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
-	app.mm.SetOrderEndBlockers(
-		//capabilitytypes.ModuleName,
-		banktypes.ModuleName,
-		authtypes.ModuleName,
-		upgradetypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		vestingtypes.ModuleName,
-		govtypes.ModuleName,
-		paramstypes.ModuleName,
-		//ibcexported.ModuleName,
-		//ibctransfertypes.ModuleName,
-		genutiltypes.ModuleName,
-		group.ModuleName,
-		crisistypes.ModuleName,
-		evmtypes.ModuleName,
-		feemarkettypes.ModuleName,
-		crosschaintypes.ModuleName,
-		//ibccrosschaintypes.ModuleName,
-		observertypes.ModuleName,
-		fungibletypes.ModuleName,
-		emissionstypes.ModuleName,
-		authz.ModuleName,
-		authoritytypes.ModuleName,
-		lightclienttypes.ModuleName,
-		consensusparamtypes.ModuleName,
-	)
+
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+
+	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -793,7 +756,7 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	// NOTE: Cross-chain module must be initialized after observer module, as pending nonces in crosschain needs the tss pubkey from observer module
-	app.mm.SetOrderInitGenesis(InitGenesisModuleList()...)
+	app.mm.SetOrderInitGenesis(OrderInitGenesis()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
@@ -821,7 +784,7 @@ func New(
 		EvmKeeper:       app.EvmKeeper,
 		FeeMarketKeeper: app.FeeMarketKeeper,
 		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-		SigGasConsumer:  evmante.DefaultSigVerificationGasConsumer,
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		MaxTxGasWanted:  TransactionGasLimit,
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(
@@ -1097,36 +1060,5 @@ func (app *App) BlockedAddrs() map[string]bool {
 		blockList[addr.String()] = v
 	}
 
-	// Each enabled precompiled stateful contract should be added as a BlockedAddrs.
-	// That way it's marked as non payable by the bank keeper.
-	for addr, enabled := range precompiles.EnabledStatefulContracts {
-		if enabled {
-			blockList[addr.String()] = enabled
-		}
-	}
-
 	return blockList
-}
-
-// aggregateAllKeys aggregates all the keys in a single map.
-func aggregateAllKeys(
-	keys map[string]*storetypes.KVStoreKey,
-	tKeys map[string]*storetypes.TransientStoreKey,
-	memKeys map[string]*storetypes.MemoryStoreKey,
-) map[string]storetypes.StoreKey {
-	allKeys := make(map[string]storetypes.StoreKey, len(keys)+len(tKeys)+len(memKeys))
-
-	for k, v := range keys {
-		allKeys[k] = v
-	}
-
-	for k, v := range tKeys {
-		allKeys[k] = v
-	}
-
-	for k, v := range memKeys {
-		allKeys[k] = v
-	}
-
-	return allKeys
 }

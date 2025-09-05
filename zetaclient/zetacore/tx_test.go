@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
-	"github.com/zeta-chain/node/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/keys"
@@ -263,7 +262,7 @@ func TestZetacore_GetInboundVoteMessage(t *testing.T) {
 			"azeta",
 			address.String(),
 			0,
-			types.InboundStatus_SUCCESS,
+			crosschaintypes.InboundStatus_SUCCESS,
 		)
 		require.Equal(t, address.String(), msg.Creator)
 	})
@@ -276,6 +275,7 @@ func TestZetacore_MonitorVoteInboundResult(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
@@ -346,6 +346,7 @@ func TestZetacore_MonitorVoteOutboundResult(t *testing.T) {
 	client := setupZetacoreClient(t,
 		withObserverKeys(keys.NewKeysWithKeybase(mocks.NewKeyring(), address, testSigner, "")),
 		withCometBFT(mocks.NewSDKClientWithErr(t, nil, 0)),
+		withAccountRetriever(t, 5, 4),
 	)
 
 	t.Run("monitor outbound vote", func(t *testing.T) {

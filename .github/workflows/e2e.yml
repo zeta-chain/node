@@ -117,6 +117,7 @@ jobs:
       ADMIN_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_TESTS }}
       ADMIN_UPGRADE_TESTS: ${{ steps.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS }}
       PERFORMANCE_TESTS: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS }}
+      PERFORMANCE_TESTS_1K: ${{ steps.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K }}
       STATEFUL_DATA_TESTS: ${{ steps.matrix-conditionals.outputs.STATEFUL_DATA_TESTS }}
       TSS_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.TSS_MIGRATION_TESTS }}
       STAKING_TESTS: ${{ steps.matrix-conditionals.outputs.STAKING_TESTS }}
@@ -124,6 +125,7 @@ jobs:
       TON_TESTS: ${{ steps.matrix-conditionals.outputs.TON_TESTS }}
       SUI_TESTS: ${{ steps.matrix-conditionals.outputs.SUI_TESTS }}
       LEGACY_TESTS: ${{ steps.matrix-conditionals.outputs.LEGACY_TESTS }}
+      V2_CONNECTOR_MIGRATION_TESTS: ${{ steps.matrix-conditionals.outputs.V2_CONNECTOR_MIGRATION_TESTS }}
       ENABLE_MONITORING: ${{ steps.matrix-conditionals.outputs.ENABLE_MONITORING }}
     steps:
       # use api rather than event context to avoid race conditions (label added after push)
@@ -152,6 +154,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', labels.includes('ADMIN_TESTS'));
               core.setOutput('ADMIN_UPGRADE_TESTS', labels.includes('ADMIN_UPGRADE_TESTS'));
               core.setOutput('PERFORMANCE_TESTS', labels.includes('PERFORMANCE_TESTS'));
+              core.setOutput('PERFORMANCE_TESTS_1K', labels.includes('PERFORMANCE_TESTS_1K'));
               core.setOutput('STATEFUL_DATA_TESTS', labels.includes('STATEFUL_DATA_TESTS'));
               core.setOutput('TSS_MIGRATION_TESTS', labels.includes('TSS_MIGRATION_TESTS'));
               core.setOutput('STAKING_TESTS', labels.includes('STAKING_TESTS'));
@@ -159,6 +162,7 @@ jobs:
               core.setOutput('TON_TESTS', labels.includes('TON_TESTS'));
               core.setOutput('SUI_TESTS', labels.includes('SUI_TESTS'));
               core.setOutput('LEGACY_TESTS', labels.includes('LEGACY_TESTS'));
+              core.setOutput('V2_CONNECTOR_MIGRATION_TESTS', labels.includes('V2_CONNECTOR_MIGRATION_TESTS'));
               core.setOutput('ENABLE_MONITORING', labels.includes('ENABLE_MONITORING'));
             } else if (context.eventName === 'merge_group') {
               // default mergequeue tests
@@ -175,7 +179,6 @@ jobs:
               }
               const pr_number = pr_match[1];
               const pr_labels = await getPrLabels(pr_number);
-              core.setOutput('CONSENSUS_TESTS', !pr_labels.includes('CONSENSUS_BREAKING_ACK'));
             } else if (context.eventName === 'push' && context.ref === 'refs/heads/develop') {
               core.setOutput('DEFAULT_TESTS', true);
             } else if (context.eventName === 'push' && context.ref.startsWith('refs/heads/release/')) {
@@ -198,7 +201,7 @@ jobs:
               core.setOutput('UPGRADE_IMPORT_MAINNET_TESTS', true);
               core.setOutput('ADMIN_TESTS', true);
               core.setOutput('ADMIN_UPGRADE_TESTS', true);
-              core.setOutput('PERFORMANCE_TESTS', true);
+              core.setOutput('PERFORMANCE_TESTS_1K', true);
               core.setOutput('STATEFUL_DATA_TESTS', true);
               core.setOutput('TSS_MIGRATION_TESTS', true);
               core.setOutput('STAKING_TESTS', true);
@@ -215,6 +218,7 @@ jobs:
               core.setOutput('ADMIN_TESTS', makeTargets.includes('admin-test'));
               core.setOutput('ADMIN_UPGRADE_TESTS', makeTargets.includes('admin-upgrade-test'));
               core.setOutput('PERFORMANCE_TESTS', makeTargets.includes('performance-test'));
+              core.setOutput('PERFORMANCE_TESTS_1K', makeTargets.includes('performance-test-1k'));
               core.setOutput('STATEFUL_DATA_TESTS', makeTargets.includes('import-mainnet-test'));
               core.setOutput('TSS_MIGRATION_TESTS', makeTargets.includes('tss-migration-test'));
               core.setOutput('STAKING_TESTS', makeTargets.includes('staking-test'));
@@ -222,6 +226,7 @@ jobs:
               core.setOutput('TON_TESTS', makeTargets.includes('ton-test'));
               core.setOutput('SUI_TESTS', makeTargets.includes('sui-test'));
               core.setOutput('LEGACY_TESTS', makeTargets.includes('legacy-test'));
+              core.setOutput('V2_CONNECTOR_MIGRATION_TESTS', makeTargets.includes('v2-connector-migration'));
               core.setOutput('ENABLE_MONITORING', context.payload.inputs['enable-monitoring']);
             }
 
@@ -258,8 +263,12 @@ jobs:
             run: ${{ needs.matrix-conditionals.outputs.ADMIN_UPGRADE_TESTS == 'true' }}
             timeout-minutes: 40
           - make-target: "start-e2e-performance-test"
-            runs-on: buildjet-4vcpu-ubuntu-2204
+            runs-on: buildjet-8vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS == 'true' }}
+          - make-target: "start-e2e-performance-test-1k"
+            runs-on: buildjet-8vcpu-ubuntu-2204
+            run: ${{ needs.matrix-conditionals.outputs.PERFORMANCE_TESTS_1K == 'true' }}
+            timeout-minutes: 60
           - make-target: "start-e2e-import-mainnet-test"
             runs-on: buildjet-16vcpu-ubuntu-2204
             run: ${{ needs.matrix-conditionals.outputs.STATEFUL_DATA_TESTS == 'true' }}
@@ -283,6 +292,10 @@ jobs:
           - make-target: "start-legacy-test"
             runs-on: ubuntu-22.04
             run: ${{ needs.matrix-conditionals.outputs.LEGACY_TESTS == 'true' }}
+          - make-target: "start-connector-migration-test"
+            runs-on: ubuntu-22.04
+            run: ${{ needs.matrix-conditionals.outputs.V2_CONNECTOR_MIGRATION_TESTS == 'true' }}
+            timeout-minutes: 40
     name: ${{ matrix.make-target }}
     uses: ./.github/workflows/reusable-e2e.yml
     with:

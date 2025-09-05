@@ -1,27 +1,12 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package types
 
 import (
 	"math/big"
 
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 )
 
 // Copied the Account and StorageResult types since they are registered under an
@@ -54,6 +39,7 @@ type TxResultAdditionalFields struct {
 	Recipient common.Address `json:"recipient"`
 	Sender    common.Address `json:"sender"`
 	GasUsed   uint64         `json:"gasUsed"`
+	GasLimit  *uint64        `json:"gasLimit"`
 	Nonce     uint64         `json:"nonce"`
 	Data      []byte         `json:"data"`
 }
@@ -116,7 +102,6 @@ type OneFeeHistory struct {
 	Reward               []*big.Int // each element of the array will have the tip provided to miners for the percentile given
 	GasUsedRatio         float64    // the ratio of gas used to the gas limit for each block
 }
-
 type TraceConfig struct {
 	evmtypes.TraceConfig
 	TracerConfig interface{} `json:"tracerConfig"`

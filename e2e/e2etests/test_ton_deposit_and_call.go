@@ -1,7 +1,8 @@
 package e2etests
 
 import (
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"math/big"
+
 	"github.com/stretchr/testify/require"
 
 	testcontract "github.com/zeta-chain/node/e2e/contracts/example"
@@ -45,14 +46,10 @@ func TestTONDepositAndCall(r *runner.E2ERunner, args []string) {
 
 	expectedDeposit := amount.Sub(depositFee)
 
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(expectedDeposit.BigInt())
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.TONZRC20, contractAddr, big.NewInt(0), change, r.Logger)
+
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContract(r, contract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))
-
-	// Check receiver's balance
-	balance, err := r.TONZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
-	require.NoError(r, err)
-
-	r.Logger.Info("Contract's zEVM TON balance after deposit: %d", balance.Uint64())
-
-	require.Equal(r, expectedDeposit.Uint64(), balance.Uint64())
+	utils.WaitAndVerifyExampleContractCall(r, contract, expectedDeposit.BigInt(), []byte(sender.GetAddress().ToRaw()))
 }

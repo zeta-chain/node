@@ -6,11 +6,12 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
 	toncontracts "github.com/zeta-chain/node/pkg/contracts/ton"
-	"github.com/zeta-chain/node/zetaclient/chains/ton/liteapi"
+	"github.com/zeta-chain/node/zetaclient/chains/ton/rpc"
 )
 
 func TestTONWithdraw(r *runner.E2ERunner, args []string) {
@@ -36,13 +37,14 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	r.Logger.Info("Recipient's TON balance before withdrawal: %s", toncontracts.FormatCoins(receiverBalanceBefore))
+	r.Logger.Info("Receiver's TON address: %s", receiver.GetAddress().ToHuman(false, true))
 
 	// Given amount to withdraw (and approved amount in TON ZRC20 to cover the gas fee)
 	amount := utils.ParseUint(r, args[0])
-	approvedAmount := amount.Add(toncontracts.Coins(1))
+	r.Logger.Info("Amount to withdraw: %s", toncontracts.FormatCoins(amount))
 
 	// ACT
-	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), approvedAmount.BigInt())
+	cctx := r.WithdrawTONZRC20(receiver.GetAddress(), amount.BigInt(), gatewayzevm.RevertOptions{})
 
 	// ASSERT
 	r.Logger.Info(
@@ -74,7 +76,7 @@ func TestTONWithdraw(r *runner.E2ERunner, args []string) {
 	)
 
 	// Make sure that TON withdrawal CCTX contain outgoing message with exact withdrawal amount
-	lt, hash, err := liteapi.TransactionHashFromString(cctx.GetCurrentOutboundParam().Hash)
+	lt, hash, err := rpc.TransactionHashFromString(cctx.GetCurrentOutboundParam().Hash)
 	require.NoError(r, err)
 
 	txs, err := r.Clients.TON.GetTransactions(r.Ctx, 1, gw.AccountID(), lt, hash)

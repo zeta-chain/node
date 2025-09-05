@@ -11,10 +11,12 @@ import (
 )
 
 const (
-	HeaderPath        = "ethereum/header.json"
-	ReceiptPrefixPath = "ethereum/receipt_"
-	TxPrefixPath      = "ethereum/tx_"
-	TxsCount          = 81
+	HeaderPath            = "ethereum/header.json"
+	EthReceiptPrefixPath  = "ethereum/receipt_"
+	ZetaReceiptPrefixPath = "zeta/receipt_"
+
+	TxPrefixPath = "ethereum/tx_"
+	TxsCount     = 81
 )
 
 // TypesFiles contains the embedded files of different types in ZetaChain
@@ -24,6 +26,9 @@ var TypesFiles embed.FS
 
 //go:embed ethereum/*
 var ethFiles embed.FS
+
+//go:embed zeta/*
+var zetaFiles embed.FS
 
 //go:embed *
 var testDataFiles embed.FS
@@ -47,9 +52,20 @@ func ReadEthHeader() (header types.Header, err error) {
 // TODO: centralize test data
 // https://github.com/zeta-chain/node/issues/1874
 func ReadEthReceipt(index int) (receipt types.Receipt, err error) {
-	filePath := fmt.Sprintf("%s%d.json", ReceiptPrefixPath, index)
+	filePath := fmt.Sprintf("%s%d.json", EthReceiptPrefixPath, index)
+	return readReceipt(filePath, ethFiles)
+}
 
-	file, err := ethFiles.Open(filePath)
+// ReadZetaReceipt reads a receipt from a file by filename.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func ReadZetaReceipt(name string) (receipt types.Receipt, err error) {
+	filePath := fmt.Sprintf("%s%s.json", ZetaReceiptPrefixPath, name)
+	return readReceipt(filePath, zetaFiles)
+}
+
+func readReceipt(filePath string, e embed.FS) (receipt types.Receipt, err error) {
+	file, err := e.Open(filePath)
 	if err != nil {
 		return receipt, err
 	}

@@ -80,4 +80,6 @@ var (
 		ModuleName,
 		1142,
 		"stability pool percentage cannot be more than 100")
+	ErrValidatorJailed     = errorsmod.Register(ModuleName, 1143, "validator is jailed")
+	ErrValidatorTombstoned = errorsmod.Register(ModuleName, 1144, "validator is tombstoned")
 )

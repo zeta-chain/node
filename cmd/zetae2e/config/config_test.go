@@ -31,7 +31,7 @@ func TestReadConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			conf, err := config.ReadConfig(tt.filePath)
+			conf, err := config.ReadConfig(tt.filePath, true)
 			require.NoError(t, err)
 			require.NotEmpty(t, conf.DefaultAccount.RawEVMAddress)
 			require.NotEmpty(t, conf.DefaultAccount.RawPrivateKey)

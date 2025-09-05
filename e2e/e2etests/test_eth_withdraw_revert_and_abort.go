@@ -15,9 +15,10 @@ import (
 )
 
 func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
 
@@ -39,12 +40,13 @@ func TestETHWithdrawRevertAndAbort(r *runner.E2ERunner, args []string) {
 			OnRevertGasLimit: big.NewInt(200000),
 			AbortAddress:     testAbortAddr,
 		},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})

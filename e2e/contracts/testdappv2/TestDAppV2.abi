@@ -10,6 +10,11 @@
         "internalType": "address",
         "name": "gateway_",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "zetatoken_",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -229,6 +234,25 @@
         "type": "string"
       }
     ],
+    "name": "getSenderAddressWithMessage",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      }
+    ],
     "name": "getSenderWithMessage",
     "outputs": [
       {
@@ -295,7 +319,7 @@
     ],
     "name": "onCall",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -334,6 +358,41 @@
       {
         "components": [
           {
+            "internalType": "bytes",
+            "name": "sender",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "senderEVM",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainID",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct TestDAppV2.zContext",
+        "name": "context",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      }
+    ],
+    "name": "onCall",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
             "internalType": "address",
             "name": "sender",
             "type": "address"
@@ -361,7 +420,7 @@
     ],
     "name": "onRevert",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -413,6 +472,19 @@
     "name": "simpleCall",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "zetatoken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

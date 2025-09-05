@@ -1,94 +1,35 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
-	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
-	tmlog "cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	ethlog "github.com/ethereum/go-ethereum/log"
+	serverconfig "github.com/cosmos/evm/server/config"
+	cosmosevmtypes "github.com/cosmos/evm/types"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	ethermint "github.com/zeta-chain/ethermint/types"
-	"golang.org/x/exp/slog"
 
 	"github.com/zeta-chain/node/rpc"
-	"github.com/zeta-chain/node/server/config"
 )
-
-const (
-	ServerStartTime = 5 * time.Second
-)
-
-type gethLogsToTm struct {
-	logger tmlog.Logger
-	attrs  []slog.Attr
-}
-
-func (g *gethLogsToTm) Enabled(_ context.Context, _ slog.Level) bool {
-	return true
-}
-
-func (g *gethLogsToTm) Handle(_ context.Context, record slog.Record) error {
-	attrs := g.attrs
-	record.Attrs(func(attr slog.Attr) bool {
-		attrs = append(attrs, attr)
-		return true
-	})
-	switch record.Level {
-	case slog.LevelDebug:
-		g.logger.Debug(record.Message, attrs)
-	case slog.LevelInfo:
-		g.logger.Info(record.Message, attrs)
-	case slog.LevelWarn:
-		g.logger.Info(record.Message, attrs)
-	case slog.LevelError:
-		g.logger.Error(record.Message, attrs)
-	}
-	return nil
-}
-
-func (g *gethLogsToTm) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &gethLogsToTm{
-		logger: g.logger,
-		attrs:  append(g.attrs, attrs...),
-	}
-}
-
-func (g *gethLogsToTm) WithGroup(_ string) slog.Handler {
-	return g
-}
 
 // StartJSONRPC starts the JSON-RPC server
 func StartJSONRPC(ctx *server.Context,
 	clientCtx client.Context,
 	tmRPCAddr,
 	tmEndpoint string,
-	config *config.Config,
-	indexer ethermint.EVMTxIndexer,
+	config *serverconfig.Config,
+	indexer cosmosevmtypes.EVMTxIndexer,
 ) (*http.Server, chan struct{}, error) {
 	tmWsClient := ConnectTmWS(tmRPCAddr, tmEndpoint, ctx.Logger)
 
 	logger := ctx.Logger.With("module", "geth")
-	ethlog.SetDefault(ethlog.NewLogger(&gethLogsToTm{logger: logger}))
+	// Set Geth's global logger to use this handler
+	handler := &CustomSlogHandler{logger: logger}
+	slog.SetDefault(slog.New(handler))
 
 	rpcServer := ethrpc.NewServer()
 
@@ -149,7 +90,7 @@ func StartJSONRPC(ctx *server.Context,
 	case err := <-errCh:
 		ctx.Logger.Error("failed to boot JSON-RPC server", "error", err.Error())
 		return nil, nil, err
-	case <-time.After(ServerStartTime): // assume JSON RPC server started successfully
+	case <-time.After(serverconfig.ServerStartTime): // assume JSON RPC server started successfully
 	}
 
 	ctx.Logger.Info("Starting JSON WebSocket server", "address", config.JSONRPC.WsAddress)

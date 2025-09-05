@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	zetae2econfig "github.com/zeta-chain/node/cmd/zetae2e/config"
@@ -22,6 +23,7 @@ import (
 const flagVerbose = "verbose"
 const flagConfig = "config"
 const flagFailFast = "fail-fast"
+const flagOpTimeout = "op-timeout"
 
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
@@ -50,6 +52,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	cmd.Flags().Bool(flagFailFast, false, "should a failure in one test cause an immediate halt")
+	cmd.Flags().Duration(flagOpTimeout, time.Minute*60, "timeout for single operation (CCTX or get receipt)")
 
 	return cmd
 }
@@ -60,7 +63,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	conf, err := config.ReadConfig(configPath)
+	conf, err := config.ReadConfig(configPath, true)
 	if err != nil {
 		return err
 	}
@@ -72,6 +75,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	failFast, err := cmd.Flags().GetBool(flagFailFast)
+	if err != nil {
+		return err
+	}
+
+	timeout, err := cmd.Flags().GetDuration(flagOpTimeout)
 	if err != nil {
 		return err
 	}
@@ -139,8 +147,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// set timeout
-	testRunner.CctxTimeout = 60 * time.Minute
-	testRunner.ReceiptTimeout = 60 * time.Minute
+	testRunner.CctxTimeout = timeout
+	testRunner.ReceiptTimeout = timeout
 
 	// parse test names and arguments from cmd args and run them
 	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
@@ -158,10 +166,15 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print tests completion info
-	logger.Print("tests finished successfully in %s", time.Since(testStartTime).String())
+	logger.Print("tests finished in %s", time.Since(testStartTime).String())
 	testRunner.Logger.SetColor(color.FgHiRed)
 	testRunner.Logger.SetColor(color.FgHiGreen)
 	testRunner.PrintTestReports(reports)
+
+	anyTestFailed := lo.ContainsBy(reports, func(r runner.TestReport) bool { return !r.Success })
+	if anyTestFailed {
+		return errors.New("tests failed")
+	}
 
 	return nil
 }

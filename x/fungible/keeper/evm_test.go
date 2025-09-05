@@ -8,12 +8,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/erc1967proxy.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
@@ -134,6 +134,8 @@ func deploySystemContracts(
 	require.NoError(t, err)
 	require.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	k.SetGatewayGasLimit(ctx, types.DefaultGatewayGasLimit)
 
 	// deploy the gateway contract
 	contract := deployGatewayContract(t, ctx, k, evmk, wzeta, sample.EthAddress())

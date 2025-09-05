@@ -2,7 +2,6 @@ package signer
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -10,7 +9,19 @@ import (
 	erc20custodyv2 "github.com/zeta-chain/protocol-contracts/pkg/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/revert.sol"
+	connector "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectornative.sol"
 )
+
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(errors.Wrap(err, "must"))
+	}
+	return v
+}
+
+var connectorABI = must(connector.ZetaConnectorNativeMetaData.GetAbi())
+var gatewayABI = must(gatewayevm.GatewayEVMMetaData.GetAbi())
+var erc20CustodyV2ABI = must(erc20custodyv2.ERC20CustodyMetaData.GetAbi())
 
 // signGatewayExecute signs a gateway execute
 // used for gas withdrawal and call transaction
@@ -21,11 +32,6 @@ func (signer *Signer) signGatewayExecute(
 	ctx context.Context,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
-	}
-
 	messageContext, err := txData.MessageContext()
 	if err != nil {
 		return nil, err
@@ -35,7 +41,7 @@ func (signer *Signer) signGatewayExecute(
 
 	data, err = gatewayABI.Pack("execute", messageContext, txData.to, txData.message)
 	if err != nil {
-		return nil, fmt.Errorf("execute pack error: %w", err)
+		return nil, errors.Wrap(err, "execute pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -48,7 +54,7 @@ func (signer *Signer) signGatewayExecute(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign execute error: %w", err)
+		return nil, errors.Wrap(err, "sign execute error")
 	}
 
 	return tx, nil
@@ -63,11 +69,6 @@ func (signer *Signer) signGatewayExecuteRevert(
 	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	gatewayABI, err := gatewayevm.GatewayEVMMetaData.GetAbi()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get GatewayEVMMetaData ABI")
-	}
-
 	data, err := gatewayABI.Pack(
 		"executeRevert",
 		txData.to,
@@ -80,7 +81,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("executeRevert pack error: %w", err)
+		return nil, errors.Wrap(err, "executeRevert pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -93,7 +94,7 @@ func (signer *Signer) signGatewayExecuteRevert(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign executeRevert error: %w", err)
+		return nil, errors.Wrap(err, "sign executeRevert error")
 	}
 
 	return tx, nil
@@ -108,14 +109,9 @@ func (signer *Signer) signERC20CustodyWithdraw(
 	ctx context.Context,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
-	}
-
 	data, err := erc20CustodyV2ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -128,9 +124,68 @@ func (signer *Signer) signERC20CustodyWithdraw(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
+		return nil, errors.Wrap(err, "sign withdraw error")
 	}
 
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectorWithdraw(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	data, err := connectorABI.Pack("withdraw", txData.to, txData.amount)
+	if err != nil {
+		return nil, errors.Wrap(err, "withdraw pack error")
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "sign withdraw error")
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectorWithdrawAndCall(
+	ctx context.Context,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	connectorABI, err := connector.ZetaConnectorNativeMetaData.GetAbi()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get ZetaConnectorNativeMetaData ABI")
+	}
+
+	messageContext, err := txData.MessageContext()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := connectorABI.Pack("withdrawAndCall", messageContext, txData.to, txData.amount, txData.message)
+	if err != nil {
+		return nil, errors.Wrap(err, "withdraw and call pack error")
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "sign withdrawAndCall error")
+	}
 	return tx, nil
 }
 
@@ -144,11 +199,6 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 	ctx context.Context,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
-	}
-
 	messageContext, err := txData.MessageContext()
 	if err != nil {
 		return nil, err
@@ -163,7 +213,7 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		txData.message,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -176,7 +226,7 @@ func (signer *Signer) signERC20CustodyWithdrawAndCall(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdrawAndCall error: %w", err)
+		return nil, errors.Wrap(err, "sign withdrawAndCall error")
 	}
 
 	return tx, nil
@@ -193,11 +243,6 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 	inboundSender string,
 	txData *OutboundData,
 ) (*ethtypes.Transaction, error) {
-	erc20CustodyV2ABI, err := erc20custodyv2.ERC20CustodyMetaData.GetAbi()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get ERC20CustodyMetaData ABI")
-	}
-
 	data, err := erc20CustodyV2ABI.Pack(
 		"withdrawAndRevert",
 		txData.to,
@@ -212,7 +257,7 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -225,7 +270,44 @@ func (signer *Signer) signERC20CustodyWithdrawRevert(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdrawAndRevert error: %w", err)
+		return nil, errors.Wrap(err, "sign withdrawAndRevert error")
+	}
+
+	return tx, nil
+}
+
+func (signer *Signer) signZetaConnectorWithdrawRevert(
+	ctx context.Context,
+	inboundSender string,
+	txData *OutboundData,
+) (*ethtypes.Transaction, error) {
+	data, err := connectorABI.Pack(
+		"withdrawAndRevert",
+		txData.to,
+		txData.amount,
+		txData.message,
+		revert.RevertContext{
+			Sender:        common.HexToAddress(inboundSender),
+			Asset:         txData.asset,
+			Amount:        txData.amount,
+			RevertMessage: txData.revertOptions.RevertMessage,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "withdraw pack error")
+	}
+
+	tx, _, _, err := signer.Sign(
+		ctx,
+		data,
+		signer.zetaConnectorAddress,
+		zeroValue,
+		txData.gas,
+		txData.nonce,
+		txData.height,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "sign withdrawAndRevert error")
 	}
 
 	return tx, nil

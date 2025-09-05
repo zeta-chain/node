@@ -14,6 +14,8 @@ import (
 // solanaTestRoutine runs Solana related e2e tests
 func solanaTestRoutine(
 	conf config.Config,
+	name string,
+	account config.Account,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	testNames ...string,
@@ -21,18 +23,18 @@ func solanaTestRoutine(
 	return func() (err error) {
 		// initialize runner for solana test
 		solanaRunner, err := initTestRunner(
-			"solana",
+			name,
 			conf,
 			deployerRunner,
-			conf.AdditionalAccounts.UserSolana,
-			runner.NewLogger(verbose, color.FgCyan, "solana"),
+			account,
+			runner.NewLogger(verbose, color.FgCyan, name),
 			runner.WithZetaTxServer(deployerRunner.ZetaTxServer),
 		)
 		if err != nil {
 			return err
 		}
 
-		solanaRunner.Logger.Print("🏃 starting Solana tests")
+		solanaRunner.Logger.Print("🏃 starting %s tests", name)
 		startTime := time.Now()
 		solanaRunner.SetupSolanaAccount()
 
@@ -42,19 +44,17 @@ func solanaTestRoutine(
 			testNames...,
 		)
 		if err != nil {
-			return fmt.Errorf("solana tests failed: %v", err)
+			return fmt.Errorf("%s tests failed: %v", name, err)
 		}
 
 		if err := solanaRunner.RunE2ETests(testsToRun); err != nil {
-			return fmt.Errorf("solana tests failed: %v", err)
+			return fmt.Errorf("%s tests failed: %v", name, err)
 		}
 
 		// check gateway SOL balance against ZRC20 total supply
-		if err := solanaRunner.CheckSolanaTSSBalance(); err != nil {
-			return err
-		}
+		solanaRunner.CheckSolanaTSSBalance()
 
-		solanaRunner.Logger.Print("🍾 solana tests completed in %s", time.Since(startTime).String())
+		solanaRunner.Logger.Print("🍾 %s tests completed in %s", name, time.Since(startTime).String())
 
 		return err
 	}

@@ -5,7 +5,7 @@ import "time"
 const (
 	// ZetaBlockTime is the block time of the ZetaChain network
 	// It's a rough estimate that can be used in non-critical path to estimate the time of a block
-	ZetaBlockTime = 6000 * time.Millisecond
+	ZetaBlockTime = 4 * time.Second
 
 	// DonationMessage is the message for donation transactions
 	// Transaction sent to the TSS or ERC20 Custody address containing this message are considered as a donation
@@ -22,7 +22,6 @@ const (
 
 	// CmdMigrateTssFunds is used for CCTX of type cmd to give the instruction to the TSS to transfer its funds on a new address
 	CmdMigrateTssFunds = "cmd_migrate_tss_funds"
-
 	// BTCWithdrawalDustAmount is the minimum satoshis that can be withdrawn from zEVM to avoid outbound dust output
 	// The Bitcoin protocol sets a minimum output value to 546 satoshis (dust limit) but we set it to 1000 satoshis
 	BTCWithdrawalDustAmount = 1000

@@ -14,6 +14,11 @@ import (
 	"github.com/zeta-chain/node/testutil"
 )
 
+const (
+	testGroupDepositName  = "btc_deposit"
+	testGroupWithdrawName = "btc_withdraw"
+)
+
 // startBitcoinTests starts Bitcoin related tests
 func startBitcoinTests(
 	eg *errgroup.Group,
@@ -45,6 +50,8 @@ func startBitcoinTests(
 		e2etests.TestBitcoinDepositAndWithdrawWithDustName,
 	}
 	bitcoinWithdrawTests := []string{
+		// need initial deposit to fund the withdraws
+		e2etests.TestBitcoinDepositName,
 		e2etests.TestBitcoinWithdrawSegWitName,
 		e2etests.TestBitcoinWithdrawInvalidAddressName,
 		e2etests.TestLegacyZetaWithdrawBTCRevertName,
@@ -56,6 +63,9 @@ func startBitcoinTests(
 		e2etests.TestBitcoinWithdrawP2WSHName,
 		e2etests.TestBitcoinWithdrawMultipleName,
 		e2etests.TestBitcoinWithdrawRestrictedName,
+		// to run RBF test, change the constant 'minTxConfirmations' to 1 in the Bitcoin observer
+		// https://github.com/zeta-chain/node/blob/5c2a8ffbc702130fd9538b1cd7640d0e04d3e4f6/zetaclient/chains/bitcoin/observer/outbound.go#L27
+		//e2etests.TestBitcoinWithdrawRBFName,
 	}
 
 	if !light {
@@ -85,10 +95,9 @@ func bitcoinTestRoutines(
 	withdrawTests []string,
 ) (func() error, func() error) {
 	// initialize runner for deposit tests
-	// deposit tests need Bitcoin node wallet to handle UTXOs
 	account := conf.AdditionalAccounts.UserBitcoinDeposit
 	runnerDeposit := initBitcoinRunner(
-		"btc_deposit",
+		testGroupDepositName,
 		account,
 		conf,
 		deployerRunner,
@@ -98,10 +107,9 @@ func bitcoinTestRoutines(
 	)
 
 	// initialize runner for withdraw tests
-	// withdraw tests DON'T use Bitcoin node wallet
 	account = conf.AdditionalAccounts.UserBitcoinWithdraw
 	runnerWithdraw := initBitcoinRunner(
-		"btc_withdraw",
+		testGroupWithdrawName,
 		account,
 		conf,
 		deployerRunner,
@@ -115,18 +123,16 @@ func bitcoinTestRoutines(
 	if initNetwork {
 		// mine 101 blocks to ensure the BTC rewards are spendable
 		// Note: the block rewards can be sent to any address in here
-		_, err := runnerDeposit.GenerateToAddressIfLocalBitcoin(101, runnerDeposit.BTCDeployerAddress)
+		_, err := deployerRunner.GenerateToAddressIfLocalBitcoin(101, deployerRunner.GetBtcAddress())
 		require.NoError(runnerDeposit, err)
 
 		// donate BTC to TSS and send BTC to ZEVM addresses
-		runnerDeposit.DonateBTC()
-		runnerDeposit.DepositBTC(runnerDeposit.EVMAddress())
-		runnerDeposit.DepositBTC(runnerWithdraw.EVMAddress())
+		deployerRunner.DonateBTC()
 	}
 
 	// create test routines
-	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests)
-	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests)
+	routineDeposit := createBitcoinTestRoutine(runnerDeposit, depositTests, testGroupDepositName)
+	routineWithdraw := createBitcoinTestRoutine(runnerWithdraw, withdrawTests, testGroupWithdrawName)
 
 	return routineDeposit, routineWithdraw
 }
@@ -151,12 +157,16 @@ func initBitcoinRunner(
 	)
 	testutil.NoError(err)
 
-	runner.BTCDeployerAddress, _ = deployerRunner.GetBtcAddress()
-
 	// initialize funds
 	if initNetwork {
-		// send some BTC block rewards to the deployer address
-		_, err = runner.GenerateToAddressIfLocalBitcoin(4, runner.BTCDeployerAddress)
+		address, _ := runner.GetBtcKeypair()
+
+		// ensure address is imported
+		err := runner.BtcRPCClient.ImportAddress(runner.Ctx, address.EncodeAddress())
+		require.NoError(runner, err)
+
+		// send some BTC block rewards
+		_, err = runner.GenerateToAddressIfLocalBitcoin(101, address)
 		require.NoError(runner, err)
 
 		// send ERC20 token on EVM
@@ -164,8 +174,8 @@ func initBitcoinRunner(
 		runner.WaitForTxReceiptOnEVM(txERC20Send)
 
 		// deposit ETH and ERC20 tokens on ZetaChain
-		txEtherDeposit := runner.DepositEtherDeployer()
-		txERC20Deposit := runner.DepositERC20Deployer()
+		txEtherDeposit := runner.DepositEtherToDeployer()
+		txERC20Deposit := runner.DepositERC20ToDeployer()
 
 		runner.WaitForMinedCCTX(txEtherDeposit)
 		runner.WaitForMinedCCTX(txERC20Deposit)
@@ -175,7 +185,8 @@ func initBitcoinRunner(
 }
 
 // createBitcoinTestRoutine creates a test routine for given test names
-func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() error {
+// The 'wgDependency' argument is used to wait for dependent routine to complete
+func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string, name string) func() error {
 	return func() (err error) {
 		r.Logger.Print("🏃 starting bitcoin tests")
 		startTime := time.Now()
@@ -194,6 +205,11 @@ func createBitcoinTestRoutine(r *runner.E2ERunner, testNames []string) func() er
 		}
 
 		r.Logger.Print("🍾 bitcoin tests completed in %s", time.Since(startTime).String())
+
+		// mark deposit test group as done
+		if name == testGroupDepositName {
+			e2etests.DepdencyAllBitcoinDeposits.Done()
+		}
 
 		return err
 	}

@@ -157,7 +157,7 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 
 	data, err = erc20CustodyV1ABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
 	if err != nil {
-		return nil, fmt.Errorf("withdraw pack error: %w", err)
+		return nil, errors.Wrap(err, "withdraw pack error")
 	}
 
 	tx, _, _, err := signer.Sign(
@@ -170,7 +170,7 @@ func (signer *Signer) SignERC20Withdraw(ctx context.Context, txData *OutboundDat
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign withdraw error: %w", err)
+		return nil, errors.Wrap(err, "sign withdraw error")
 	}
 
 	return tx, nil
@@ -192,7 +192,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 	}
 	data, err := custodyAbi.Pack("whitelist", erc20)
 	if err != nil {
-		return nil, fmt.Errorf("whitelist pack error: %w", err)
+		return nil, errors.Wrap(err, "whitelist pack error")
 	}
 	tx, _, _, err := signer.Sign(
 		ctx,
@@ -204,7 +204,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("sign whitelist error: %w", err)
+		return nil, errors.Wrap(err, "sign whitelist error")
 	}
 	return tx, nil
 }
@@ -221,7 +221,7 @@ func (signer *Signer) SignMigrateTssFundsCmd(ctx context.Context, txData *Outbou
 		txData.height,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("SignMigrateTssFundsCmd error: %w", err)
+		return nil, errors.Wrap(err, "SignMigrateTssFundsCmd error")
 	}
 	return tx, nil
 }

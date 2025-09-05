@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strconv"
 
 	"cosmossdk.io/store/prefix"
@@ -13,7 +12,7 @@ import (
 
 // GetAllChainStates returns all chain states
 func (k Keeper) GetAllChainStates(ctx sdk.Context) (list []types.ChainState) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.ChainStateKey))
+	p := types.KeyPrefix(types.ChainStateKey)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 
 	iterator := storetypes.KVStorePrefixIterator(store, []byte{})

@@ -1,16 +1,15 @@
 package graceful
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/node/zetaclient/testutils/testlog"
 )
 
 func TestProcess(t *testing.T) {
@@ -41,8 +40,8 @@ func TestProcess(t *testing.T) {
 		// ASSERT
 		// Check that service was stopped in a timely manner
 		assert.Less(t, time.Since(start), defaultTimeout)
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "mock is running in blocking mode")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "mock is running in blocking mode")
 	})
 
 	t.Run("Service async", func(t *testing.T) {
@@ -68,8 +67,8 @@ func TestProcess(t *testing.T) {
 		// ASSERT
 		// Check that service was stopped in a timely manner
 		assert.Less(t, time.Since(start), defaultTimeout)
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "mock is running in non-blocking mode")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "mock is running in non-blocking mode")
 	})
 
 	t.Run("Manual starters and stoppers", func(t *testing.T) {
@@ -109,9 +108,9 @@ func TestProcess(t *testing.T) {
 		// ASSERT
 		// Check that service was stopped in a timely manner
 		assert.Less(t, time.Since(start), defaultTimeout)
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "Stopper 1")
-		assert.Contains(t, ts.logBuffer.String(), "Stopper 2")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "Stopper 1")
+		assert.Contains(t, ts.logger.String(), "Stopper 2")
 	})
 
 	t.Run("Starter error", func(t *testing.T) {
@@ -131,8 +130,8 @@ func TestProcess(t *testing.T) {
 		// ASSERT
 		// Check that service had errors and was stopped
 		assert.Less(t, time.Since(start), defaultTimeout)
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "failed to start service")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "failed to start service")
 	})
 
 	t.Run("Panic handling during startup", func(t *testing.T) {
@@ -151,11 +150,11 @@ func TestProcess(t *testing.T) {
 
 		// ASSERT
 		// Check that service had errors and was stopped
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "panic in service")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "panic in service")
 
 		// Check that error contains exact line of panic
-		assert.Contains(t, ts.logBuffer.String(), "graceful_test.go:145")
+		assert.Contains(t, ts.logger.String(), "graceful_test.go:144")
 	})
 
 	t.Run("Panic handling during shutdown", func(t *testing.T) {
@@ -173,11 +172,11 @@ func TestProcess(t *testing.T) {
 
 		// ASSERT
 		// Check that service had errors and was stopped
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
-		assert.Contains(t, ts.logBuffer.String(), "panic during shutdown")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "panic during shutdown")
 
 		// Check that error contains exact line of panic
-		assert.Contains(t, ts.logBuffer.String(), "graceful_test.go:168")
+		assert.Contains(t, ts.logger.String(), "graceful_test.go:167")
 	})
 
 	t.Run("WaitForShutdown noop", func(t *testing.T) {
@@ -192,7 +191,7 @@ func TestProcess(t *testing.T) {
 		ts.process.WaitForShutdown()
 
 		// ASSERT
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown completed")
+		assert.Contains(t, ts.logger.String(), "Shutdown completed")
 	})
 
 	t.Run("Shutdown timeout", func(t *testing.T) {
@@ -214,11 +213,11 @@ func TestProcess(t *testing.T) {
 		ts.process.ShutdownNow()
 
 		// ASSERT
-		assert.Contains(t, ts.logBuffer.String(), "Stopping something")
-		assert.Contains(t, ts.logBuffer.String(), "Shutdown interrupted by timeout")
+		assert.Contains(t, ts.logger.String(), "Stopping something")
+		assert.Contains(t, ts.logger.String(), "Shutdown interrupted by timeout")
 
 		// log doesn't contain this line because it was interrupted
-		assert.NotContains(t, ts.logBuffer.String(), "Stopped something")
+		assert.NotContains(t, ts.logger.String(), "Stopped something")
 	})
 }
 
@@ -227,25 +226,22 @@ type testSuite struct {
 	mockService *mockService
 	mockSignal  chan os.Signal
 
-	logger    zerolog.Logger
-	logBuffer *bytes.Buffer
+	logger *testlog.Log
 }
 
 func newTestSuite(t *testing.T, timeout time.Duration, async bool) *testSuite {
-	logBuffer := &bytes.Buffer{}
-	logger := zerolog.New(io.MultiWriter(zerolog.NewTestWriter(t), logBuffer))
+	logger := testlog.New(t)
 
 	stop := NewSigChan(os.Interrupt)
-	process := New(timeout, logger, stop)
+	process := New(timeout, logger.Logger, stop)
 
 	return &testSuite{
 		mockSignal: stop,
 		process:    process,
 		logger:     logger,
-		logBuffer:  logBuffer,
 		mockService: &mockService{
 			async:  async,
-			Logger: logger,
+			Logger: logger.Logger,
 		},
 	}
 }

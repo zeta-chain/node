@@ -92,7 +92,7 @@ func (s *Sui) Start(ctx context.Context) error {
 		return !s.observer.ChainParams().IsSupported
 	})
 
-	register(s.observer.ObserveInbound, "observer_inbound", optInboundInterval, optInboundSkipper)
+	register(s.observer.ObserveInbound, "observe_inbound", optInboundInterval, optInboundSkipper)
 	register(s.observer.ProcessInboundTrackers, "process_inbound_trackers", optInboundInterval, optInboundSkipper)
 	register(s.observer.CheckRPCStatus, "check_rpc_status")
 	register(s.observer.PostGasPrice, "post_gas_price", optGasInterval, optGenericSkipper)

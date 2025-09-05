@@ -22,7 +22,6 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 0)
 
 	// ARRANGE
-
 	// Deploy the withdrawer contract on ZetaChain with a withdraw amount of 100 satoshis (dust amount is 1000 satoshis)
 	withdrawerAddr, tx, _, err := withdrawer.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient, big.NewInt(100))
 	require.NoError(r, err)
@@ -31,14 +30,10 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	require.Equal(r, receipt.Status, uint64(1))
 
-	// Given a list of UTXOs
-	utxos := r.ListDeployerUTXOs()
-
 	// ACT
 	// Deposit 0.01 BTC to withdrawer, this is an arbitrary amount, must be greater than dust amount
-	txHash, err := r.SendToTSSFromDeployerWithMemo(
+	txHash, err := r.SendToTSSWithMemo(
 		0.01,
-		utxos[:1],
 		append(withdrawerAddr.Bytes(), []byte("payload")...),
 	)
 	require.NoError(r, err)
@@ -48,7 +43,7 @@ func TestBitcoinDepositAndWithdrawWithDust(r *runner.E2ERunner, args []string) {
 	// Now we want to make sure the cctx is reverted with expected error message
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_Reverted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Reverted)
 	require.Contains(r, cctx.CctxStatus.ErrorMessage, crosschaintypes.ErrCannotProcessWithdrawal.Error())
 
 	// check the contract has no BTC balance, this would mean the contract call state transition is not reverted

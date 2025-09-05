@@ -135,14 +135,14 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	switch stressTestArgs.network {
 	case "LOCAL":
 		// deploy and set zevm contract
-		e2eTest.SetupZEVMProtocolContracts()
-		e2eTest.SetupZEVMZRC20s(txserver.ZRC20Deployment{
+		e2eTest.SetupZEVM()
+		e2eTest.SetupZRC20(txserver.ZRC20Deployment{
 			ERC20Addr: e2eTest.ERC20Addr,
 			SPLAddr:   nil, // no stress tests for solana atm
 		})
 
 		// deposit on ZetaChain
-		e2eTest.DepositEtherDeployer()
+		e2eTest.DepositEtherToDeployer()
 		e2eTest.LegacyDepositZeta()
 	case "TESTNET":
 		ethZRC20Addr := must(e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5)))
@@ -204,11 +204,9 @@ func StressTest(cmd *cobra.Command, _ []string) {
 // WithdrawCCtx withdraw ETHZRC20 from ZEVM to EVM
 func WithdrawCCtx(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
-	for {
-		select {
-		case <-ticker.C:
-			WithdrawETHZRC20(runner)
-		}
+
+	for range ticker.C {
+		WithdrawETHZRC20(runner)
 	}
 }
 
@@ -222,72 +220,69 @@ func EchoNetworkMetrics(r *runner.E2ERunner) {
 		chainID           = must(getChainID(r.EVMClient))
 	)
 
-	for {
-		select {
-		case <-ticker.C:
-			numTicks++
-			// Get all pending outbound transactions
-			cctxResp, err := r.CctxClient.ListPendingCctx(
-				context.Background(),
-				&crosschaintypes.QueryListPendingCctxRequest{
-					ChainId: chainID.Int64(),
-				},
-			)
-			if err != nil {
-				continue
-			}
-			sends := cctxResp.CrossChainTx
-			sort.Slice(sends, func(i, j int) bool {
-				return sends[i].GetCurrentOutboundParam().TssNonce < sends[j].GetCurrentOutboundParam().TssNonce
-			})
-			if len(sends) > 0 {
-				fmt.Printf(
-					"pending nonces %d to %d\n",
-					sends[0].GetCurrentOutboundParam().TssNonce,
-					sends[len(sends)-1].GetCurrentOutboundParam().TssNonce,
-				)
-			} else {
-				continue
-			}
-			//
-			// Get all trackers
-			trackerResp, err := r.CctxClient.OutboundTrackerAll(
-				context.Background(),
-				&crosschaintypes.QueryAllOutboundTrackerRequest{},
-			)
-			if err != nil {
-				continue
-			}
-
-			currentMinedTxns := sends[0].GetCurrentOutboundParam().TssNonce
-			newMinedTxCnt := currentMinedTxns - previousMinedTxns
-			previousMinedTxns = currentMinedTxns
-
-			// Add new mined txn count to queue and remove the oldest entry
-			queue = append(queue, newMinedTxCnt)
-			if numTicks > 60/StatInterval {
-				totalMinedTxns -= queue[0]
-				queue = queue[1:]
-				numTicks = 60/StatInterval + 1 //prevent overflow
-			}
-
-			//Calculate rate -> tx/min
-			totalMinedTxns += queue[len(queue)-1]
-			rate := totalMinedTxns
-
-			numPending := len(cctxResp.CrossChainTx)
-			numTrackers := len(trackerResp.OutboundTracker)
-
-			fmt.Println(
-				"Network Stat => Num of Pending cctx: ",
-				numPending,
-				"Num active trackers: ",
-				numTrackers,
-				"Tx Rate: ",
-				rate,
-				" tx/min",
-			)
+	for range ticker.C {
+		numTicks++
+		// Get all pending outbound transactions
+		cctxResp, err := r.CctxClient.ListPendingCctx(
+			context.Background(),
+			&crosschaintypes.QueryListPendingCctxRequest{
+				ChainId: chainID.Int64(),
+			},
+		)
+		if err != nil {
+			continue
 		}
+		sends := cctxResp.CrossChainTx
+		sort.Slice(sends, func(i, j int) bool {
+			return sends[i].GetCurrentOutboundParam().TssNonce < sends[j].GetCurrentOutboundParam().TssNonce
+		})
+		if len(sends) > 0 {
+			fmt.Printf(
+				"pending nonces %d to %d\n",
+				sends[0].GetCurrentOutboundParam().TssNonce,
+				sends[len(sends)-1].GetCurrentOutboundParam().TssNonce,
+			)
+		} else {
+			continue
+		}
+		//
+		// Get all trackers
+		trackerResp, err := r.CctxClient.OutboundTrackerAll(
+			context.Background(),
+			&crosschaintypes.QueryAllOutboundTrackerRequest{},
+		)
+		if err != nil {
+			continue
+		}
+
+		currentMinedTxns := sends[0].GetCurrentOutboundParam().TssNonce
+		newMinedTxCnt := currentMinedTxns - previousMinedTxns
+		previousMinedTxns = currentMinedTxns
+
+		// Add new mined txn count to queue and remove the oldest entry
+		queue = append(queue, newMinedTxCnt)
+		if numTicks > 60/StatInterval {
+			totalMinedTxns -= queue[0]
+			queue = queue[1:]
+			numTicks = 60/StatInterval + 1 //prevent overflow
+		}
+
+		//Calculate rate -> tx/min
+		totalMinedTxns += queue[len(queue)-1]
+		rate := totalMinedTxns
+
+		numPending := len(cctxResp.CrossChainTx)
+		numTrackers := len(trackerResp.OutboundTracker)
+
+		fmt.Println(
+			"Network Stat => Num of Pending cctx: ",
+			numPending,
+			"Num active trackers: ",
+			numTrackers,
+			"Tx Rate: ",
+			rate,
+			" tx/min",
+		)
 	}
 }
 

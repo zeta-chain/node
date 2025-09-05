@@ -42,7 +42,7 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
@@ -54,10 +54,9 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	require.EqualValues(r, r.ETHZRC20Addr.Hex(), abortContext.Asset.Hex())
 
-	// check abort contract received the tokens
-	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
+	// wait for the abort contract to receive tokens
+	change := utils.NewBalanceChange(true)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
 
 	// Test 2: no contract for abort
 
@@ -80,10 +79,9 @@ func TestETHDepositRevertAndAbort(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx = utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
-	// check abort contract received the tokens
-	balance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, eoaAddress)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
+	// wait for the eoa to receive tokens
+	change = utils.NewBalanceChange(true)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, eoaAddress, big.NewInt(0), change, r.Logger)
 }

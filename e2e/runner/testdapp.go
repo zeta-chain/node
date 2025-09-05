@@ -2,6 +2,7 @@ package runner
 
 import (
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -10,40 +11,59 @@ import (
 	"github.com/zeta-chain/node/e2e/contracts/testdappv2"
 )
 
+const (
+	// The nodes of external chain take to to sync the state, for example:
+	// The BSC chain outbound takes 15 seconds to confirm and still not enough for the node to sync,
+	// so we need proper tolerance to ensure the nodes behind RPC are in sync
+	externalNodeSyncTolerance = 30 * time.Second
+)
+
 // AssertTestDAppZEVMCalled is a function that asserts the values of the test dapp on the ZEVM
 // this function uses TestDAppV2 for the assertions, in the future we should only use this contracts for all tests
 // https://github.com/zeta-chain/node/issues/2655
 func (r *E2ERunner) AssertTestDAppZEVMCalled(expectedCalled bool, message string, amount *big.Int) {
-	r.assertTestDAppCalled(r.TestDAppV2ZEVM, message, expectedCalled, amount)
+	r.waitAndVerifyTestDAppCall(r.TestDAppV2ZEVM, message, expectedCalled, amount)
 }
 
 // AssertTestDAppEVMCalled is a function that asserts the values of the test dapp on the external EVM
 func (r *E2ERunner) AssertTestDAppEVMCalled(expectedCalled bool, message string, amount *big.Int) {
-	r.assertTestDAppCalled(r.TestDAppV2EVM, message, expectedCalled, amount)
+	r.waitAndVerifyTestDAppCall(r.TestDAppV2EVM, message, expectedCalled, amount)
 }
 
-func (r *E2ERunner) assertTestDAppCalled(
+// waitAndVerifyTestDAppCall waits for the test dapp to be called with the expected message and amount
+// This function is to tolerate the fact that the dApp state may not be synced across all nodes behind a RPC.
+func (r *E2ERunner) waitAndVerifyTestDAppCall(
 	testDApp *testdappv2.TestDAppV2,
 	message string,
 	expectedCalled bool,
 	expectedAmount *big.Int,
 ) {
-	// check the payload was received on the contract
-	called, err := testDApp.GetCalledWithMessage(&bind.CallOpts{}, message)
-	require.NoError(r, err)
-	require.EqualValues(r, expectedCalled, called)
+	// do simply assert if the dApp is NOT expected to be called, no need to wait
+	if !expectedCalled {
+		called, err := testDApp.GetCalledWithMessage(&bind.CallOpts{}, message)
+		require.NoError(r, err)
+		require.EqualValues(r, expectedCalled, called)
+		return
+	}
 
-	if expectedCalled {
+	// wait until the dApp gets called with the expected message and amount or timeout
+	startTime := time.Now()
+	checkInterval := 2 * time.Second
+
+	for {
+		time.Sleep(checkInterval)
+		require.False(r, time.Since(startTime) > externalNodeSyncTolerance, "timeout waiting for dApp state to update")
+
+		called, err := testDApp.GetCalledWithMessage(&bind.CallOpts{}, message)
+		require.NoError(r, err)
+
 		amount, err := testDApp.GetAmountWithMessage(&bind.CallOpts{}, message)
 		require.NoError(r, err)
-		require.EqualValues(
-			r,
-			expectedAmount.Uint64(),
-			amount.Uint64(),
-			"Amounts do not match, expected %s, actual %s",
-			expectedAmount.String(),
-			amount.String(),
-		)
+
+		// stop only if both message and amount are matching the expected values
+		if called == expectedCalled && amount.Cmp(expectedAmount) == 0 {
+			return
+		}
 	}
 }
 

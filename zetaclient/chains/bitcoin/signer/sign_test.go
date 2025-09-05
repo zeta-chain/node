@@ -1,4 +1,4 @@
-package signer_test
+package signer
 
 import (
 	"context"
@@ -24,7 +24,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
 	"github.com/zeta-chain/node/zetaclient/chains/base"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/signer"
 	"github.com/zeta-chain/node/zetaclient/testutils/mocks"
 )
 
@@ -45,9 +44,9 @@ func Test_SignWithdrawTx(t *testing.T) {
 	}
 
 	// helper function to create tx data
-	mkTxData := func(height uint64, minRelayFee float64) signer.OutboundData {
+	mkTxData := func(height uint64, minRelayFee float64) OutboundData {
 		cctx := mkCCTX(t)
-		txData, err := signer.NewOutboundData(cctx, height, minRelayFee, zerolog.Nop(), zerolog.Nop())
+		txData, err := NewOutboundData(cctx, height, minRelayFee, false, zerolog.Nop())
 		require.NoError(t, err)
 		return *txData
 	}
@@ -55,7 +54,7 @@ func Test_SignWithdrawTx(t *testing.T) {
 	tests := []struct {
 		name           string
 		chain          chains.Chain
-		txData         signer.OutboundData
+		txData         OutboundData
 		failFetchUTXOs bool
 		failSignTx     bool
 		fail           bool
@@ -185,7 +184,7 @@ func Test_AddTxInputs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// create tx msg and add inputs
 			tx := wire.NewMsgTx(wire.TxVersion)
-			inAmounts, err := signer.AddTxInputs(tx, tt.utxos)
+			inAmounts, err := AddTxInputs(tx, tt.utxos)
 
 			// assert
 			if tt.fail {
@@ -206,7 +205,7 @@ func Test_AddWithdrawTxOutputs(t *testing.T) {
 		mocks.NewTSS(t).FakePubKey(testutils.TSSPubKeyMainnet),
 		base.DefaultLogger(),
 	)
-	signer := signer.New(
+	signer := New(
 		baseSigner,
 		mocks.NewBitcoinClient(t),
 	)
@@ -414,7 +413,7 @@ func Test_SignTx(t *testing.T) {
 					Amount:  amount,
 				})
 			}
-			inAmounts, err := signer.AddTxInputs(tx, utxos)
+			inAmounts, err := AddTxInputs(tx, utxos)
 			require.NoError(t, err)
 			require.Len(t, inAmounts, len(tt.inputs))
 

@@ -52,7 +52,7 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 	r.Logger.Info("receiver balance of SPL before withdraw: %s", receiverBalanceBefore.Value.Amount)
 
-	connected := solana.MustPublicKeyFromBase58(runner.ConnectedSPLProgramID.String())
+	connected := solana.MustPublicKeyFromBase58(r.ConnectedSPLProgram.String())
 	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(connected)
 	require.NoError(r, err)
 
@@ -67,7 +67,6 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 
 	// withdraw
 	tx := r.WithdrawAndCallSPLZRC20(
-		runner.ConnectedSPLProgramID,
 		withdrawAmount,
 		approvedAmount,
 		[]byte("hello"),
@@ -90,9 +89,11 @@ func TestSPLWithdrawAndCall(r *runner.E2ERunner, args []string) {
 	require.NoError(r, err)
 
 	type ConnectedPdaInfo struct {
-		Discriminator [8]byte
-		LastSender    [20]byte
-		LastMessage   string
+		Discriminator     [8]byte
+		LastSender        common.Address
+		LastMessage       string
+		LastRevertSender  solana.PublicKey
+		LastRevertMessage string
 	}
 	pda := ConnectedPdaInfo{}
 	err = borsh.Deserialize(&pda, connectedPdaInfo.Bytes())

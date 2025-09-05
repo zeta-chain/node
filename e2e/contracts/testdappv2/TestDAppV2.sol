@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-struct RevertOptions {
-    address revertAddress;
-    bool callOnRevert;
-    address abortAddress;
-    bytes revertMessage;
-    uint256 onRevertGasLimit;
-}
+    struct RevertOptions {
+        address revertAddress;
+        bool callOnRevert;
+        address abortAddress;
+        bytes revertMessage;
+        uint256 onRevertGasLimit;
+    }
 
 interface IGatewayZEVM {
     function withdraw(
@@ -45,6 +45,8 @@ interface IZRC20 {
 
 interface IERC20 {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
 }
 
 contract TestDAppV2 {
@@ -58,6 +60,9 @@ contract TestDAppV2 {
 
     // address of the gateway
     address immutable public gateway;
+
+    // address of the zeta token
+    address immutable public zetatoken;
 
     struct zContext {
         bytes sender;
@@ -90,9 +95,10 @@ contract TestDAppV2 {
     mapping(bytes => address) public senderWithMessage;
 
     // the constructor is used to determine if the chain is ZetaChain
-    constructor(bool isZetaChain_, address gateway_) {
+    constructor(bool isZetaChain_, address gateway_, address zetatoken_) {
         isZetaChain = isZetaChain_;
         gateway = gateway_;
+        zetatoken = zetatoken_;
     }
 
     // return the index used for the "WithMessage" mapping when the message for calls is empty
@@ -126,6 +132,11 @@ contract TestDAppV2 {
         return senderWithMessageZEVM[keccak256(abi.encodePacked(message))];
     }
 
+    // Additional getter to check sender address from senderWithMessage mapping (for EVM calls)
+    function getSenderAddressWithMessage(string memory message) public view returns (address) {
+        return senderWithMessage[bytes(message)];
+    }
+
     // Universal contract interface on ZEVM
     function onCall(
         zContext calldata context,
@@ -133,7 +144,7 @@ contract TestDAppV2 {
         uint256 amount,
         bytes calldata message
     )
-    external
+    external payable
     {
         require(!isRevertMessage(string(message)));
 
@@ -143,6 +154,21 @@ contract TestDAppV2 {
         setAmountWithMessage(messageStr, amount);
         setSenderWithMessage(messageStr, context.sender);
     }
+
+    // Universal contract interface for zeta token
+    function onCall(
+        zContext calldata context,
+        bytes calldata message
+    ) external payable {
+        require(!isRevertMessage(string(message)));
+
+        string memory messageStr = message.length == 0 ? getNoMessageIndex(context.senderEVM) : string(message);
+
+        setCalledWithMessage(messageStr);
+        setAmountWithMessage(messageStr, msg.value); // Use msg.value since no amount parameter
+        setSenderWithMessage(messageStr, context.sender);
+    }
+
 
     // called with gas token
     function gasCall(string memory message) external payable {
@@ -176,7 +202,7 @@ contract TestDAppV2 {
     }
 
     // Revertable interface
-    function onRevert(RevertContext calldata revertContext) external {
+    function onRevert(RevertContext calldata revertContext) external payable {
         require(!isRevertMessage(string(revertContext.revertMessage)));
 
         // if the chain is ZetaChain, consume gas to test the gas consumption
@@ -208,12 +234,24 @@ contract TestDAppV2 {
         senderWithMessage[revertContext.revertMessage] = revertContext.sender;
     }
 
-    // Callable interface on connected EVM chains
     function onCall(MessageContext calldata messageContext, bytes calldata message) external payable returns (bytes memory) {
         string memory messageStr = message.length == 0 ? getNoMessageIndex(messageContext.sender) : string(message);
 
+        uint256 amountToRecord = msg.value;
+
+        // Check if this is a ZETA call
+        if (message.length > 0 && keccak256(abi.encodePacked(messageStr)) == keccak256(abi.encodePacked(addressToString(zetatoken)))) {
+            IERC20 zetaTokenContract = IERC20(zetatoken);
+            uint256 allowance = zetaTokenContract.allowance(msg.sender, address(this));
+
+            if (allowance > 0) {
+                require(zetaTokenContract.transferFrom(msg.sender, address(this), allowance), "Zetatoken transfer from gateway failed");
+                amountToRecord = allowance;
+            }
+        }
+
         setCalledWithMessage(messageStr);
-        setAmountWithMessage(messageStr, msg.value);
+        setAmountWithMessage(messageStr, amountToRecord);
         senderWithMessage[bytes(messageStr)] = messageContext.sender;
 
         return "";
@@ -251,6 +289,20 @@ contract TestDAppV2 {
 
         // Reset the storage array to avoid accumulation of storage cost
         delete storageArray;
+    }
+
+    // Helper function to convert address to lowercase hex string
+    function addressToString(address _addr) internal pure returns (string memory) {
+        bytes32 value = bytes32(uint256(uint160(_addr)));
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory str = new bytes(42);
+        str[0] = '0';
+        str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2+i*2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+        return string(str);
     }
 
     function isWithdrawMessage(string memory message) internal pure returns (bool) {

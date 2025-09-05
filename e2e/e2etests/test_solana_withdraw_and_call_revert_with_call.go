@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"math/big"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/gagliardetto/solana-go"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+	solanacontract "github.com/zeta-chain/node/pkg/contracts/solana"
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -46,12 +48,29 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	payload := randomPayload(r)
 	r.AssertTestDAppEVMCalled(false, payload, withdrawAmount)
 
+	connectedPda, err := solanacontract.ComputeConnectedPdaAddress(r.ConnectedProgram)
+	require.NoError(r, err)
+
+	// encode msg
+	msg := solanacontract.ExecuteMsg{
+		Accounts: []solanacontract.AccountMeta{
+			{PublicKey: [32]byte(connectedPda.Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(r.ComputePdaAddress().Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(r.GetSolanaPrivKey().PublicKey().Bytes()), IsWritable: true},
+			{PublicKey: [32]byte(solana.SystemProgramID.Bytes()), IsWritable: false},
+			{PublicKey: [32]byte(solana.SysVarInstructionsPubkey.Bytes()), IsWritable: false},
+		},
+		Data: []byte("revert"),
+	}
+
+	msgEncoded, err := msg.Encode()
+	require.NoError(r, err)
+
 	// withdraw and call
 	tx := r.WithdrawAndCallSOLZRC20(
-		runner.ConnectedProgramID,
 		withdrawAmount,
 		approvedAmount,
-		[]byte("revert"),
+		msgEncoded,
 		gatewayzevm.RevertOptions{
 			CallOnRevert:     true,
 			RevertAddress:    revertAddress,
@@ -84,4 +103,15 @@ func TestSolanaWithdrawAndCallRevertWithCall(r *runner.E2ERunner, args []string)
 	require.NoError(r, err)
 
 	require.Equal(r, withdrawAmount.Int64(), finalBalance.Int64()-initialBalance.Int64())
+
+	// check that failure log is attached to increment nonce instruction
+	txIncNonce, err := r.SolanaClient.GetTransaction(
+		r.Ctx,
+		solana.MustSignatureFromBase58(cctx.OutboundParams[0].Hash),
+		nil,
+	)
+	require.NoError(r, err)
+
+	expectedLog := "Program log: Failure reason: Program 4xEw862A2SEwMjofPkUyd4NEekmVJKJsdHkK3UkAtDrc failed: custom program error: 0x1771"
+	require.True(r, slices.Contains(txIncNonce.Meta.LogMessages, expectedLog))
 }

@@ -85,25 +85,27 @@ func (event *BTCInboundEvent) DecodeMemoBytes(chainID int64) error {
 		receiver       ethcommon.Address
 	)
 
+	// skip decoding if no memo is found, returning error to revert the inbound
+	if bytes.Equal(event.MemoBytes, []byte(noMemoFound)) {
+		event.MemoBytes = []byte{}
+		return errors.New("no memo found in inbound")
+	}
+
 	// skip decoding donation tx as it won't go through zetacore
 	if bytes.Equal(event.MemoBytes, []byte(constant.DonationMessage)) {
 		return nil
 	}
 
 	// try to decode the standard memo as the preferred format
-	// the standard memo is NOT enabled for Bitcoin mainnet
-
-	if chainID != chains.BitcoinMainnet.ChainId {
-		memoStd, isStandardMemo, err = memo.DecodeFromBytes(event.MemoBytes)
+	// then process standard memo or fallback to legacy memo
+	// note: err is guaranteed to be nil when 'isStandardMemo == false',
+	// so a non-nil error indicates the standard memo contains improper data
+	memoStd, isStandardMemo, err = memo.DecodeFromBytes(event.MemoBytes)
+	if err != nil {
+		return errors.Wrap(err, "standard memo contains improper data")
 	}
 
-	// process standard memo or fallback to legacy memo
 	if isStandardMemo {
-		// skip standard memo that carries improper data
-		if err != nil {
-			return errors.Wrap(err, "standard memo contains improper data")
-		}
-
 		// validate the content of the standard memo
 		err = ValidateStandardMemo(*memoStd, chainID)
 		if err != nil {

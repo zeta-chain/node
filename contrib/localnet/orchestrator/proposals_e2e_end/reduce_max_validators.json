@@ -1,0 +1,21 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.staking.v1beta1.MsgUpdateParams",
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr",
+      "params": {
+        "unbonding_time": "345600s",
+        "max_validators": 50,
+        "max_entries": 7,
+        "historical_entries": 10000,
+        "bond_denom": "azeta",
+        "min_commission_rate": "0.000000000000000000"
+      }
+    }
+  ],
+  "metadata": "",
+  "deposit": "1000000000000000000000azeta",
+  "title": "Reduce max_validators to 50",
+  "summary": "This proposal will reduce the active set size to 50, to test what impact this will have on the network.",
+  "expedited": false
+}

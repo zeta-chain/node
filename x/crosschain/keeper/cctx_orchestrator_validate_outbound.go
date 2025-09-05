@@ -9,9 +9,9 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -53,7 +53,7 @@ func (k Keeper) ValidateOutboundZEVM(
 			// This is the only case where we set outbound and revert messages,
 			// as both the outbound and the revert failed in the same block
 			k.ProcessAbort(ctx, cctx, types.StatusMessages{
-				StatusMessage:        fmt.Sprintf("revert failed to be processed"),
+				StatusMessage:        "revert failed to be processed",
 				ErrorMessageOutbound: ccctxerror.NewCCTXErrorJSONMessage("", depositErr),
 				ErrorMessageRevert:   ccctxerror.NewCCTXErrorJSONMessage("", revertErr),
 			})
@@ -122,7 +122,6 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			// use same gas limit of outbound as a fallback -- should not happen
 			gasLimit = cctx.OutboundParams[0].CallOptions.GasLimit
 		}
-
 		// create new OutboundParams for the revert
 		err = cctx.AddRevertOutbound(gasLimit)
 		if err != nil {
@@ -141,16 +140,25 @@ func (k Keeper) processFailedOutboundOnExternalChain(
 			return err
 		}
 
+		receiverBytes, err := chains.DecodeAddressFromChainID(
+			cctx.GetCurrentOutboundParam().ReceiverChainId,
+			cctx.GetCurrentOutboundParam().Receiver,
+			k.GetAuthorityKeeper().GetAdditionalChainList(ctx),
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to decode receiver address")
+		}
+
 		// validate data of the revert outbound
-		err = k.validateZRC20Withdrawal(
+		err = k.validateOutbound(
 			ctx,
 			cctx.GetCurrentOutboundParam().ReceiverChainId,
 			cctx.InboundParams.CoinType,
 			cctx.GetCurrentOutboundParam().Amount.BigInt(),
-			[]byte(cctx.GetCurrentOutboundParam().Receiver),
+			receiverBytes,
 		)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to validate ZRC20 withdrawal")
 		}
 
 		err = k.SetObserverOutboundInfo(ctx, cctx.InboundParams.SenderChainId, cctx)
@@ -228,7 +236,7 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 				StatusMessage: "outbound failed and revert failed",
 				ErrorMessageRevert: ccctxerror.NewCCTXErrorJSONMessage(
 					"revert tx failed to be executed",
-					nil,
+					err,
 				),
 			})
 		}
@@ -284,7 +292,6 @@ func (k Keeper) processFailedOutboundObservers(ctx sdk.Context, cctx *types.Cros
 	}
 	newStatus := cctx.CctxStatus.Status.String()
 	EmitOutboundFailure(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
-	return
 }
 
 // processFailedZETAOutboundOnZEVM processes a failed ZETA outbound on ZEVM
@@ -422,7 +429,7 @@ func (k Keeper) processFailedOutboundV2(ctx sdk.Context, cctx *types.CrossChainT
 			return errors.Wrap(err, "revert transaction reverted")
 		} else if err != nil {
 			// this should not happen and we don't commit the state to avoid inconsistent state
-			return errors.Wrap(err, "revert transaction couldn't be processed")
+			return errors.Wrap(err, "revert transaction could not be processed")
 		}
 
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.

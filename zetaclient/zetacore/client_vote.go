@@ -121,7 +121,7 @@ func (c *Client) PostVoteOutbound(
 	if err != nil {
 		return "", ballotIndex, errors.Wrapf(
 			err,
-			"PostVoteOutbound: unable to check if already voted for ballot %s voter %s",
+			"hasVoted check failed for ballot %s voter %s",
 			ballotIndex,
 			msg.Creator,
 		)

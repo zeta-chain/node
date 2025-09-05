@@ -58,7 +58,7 @@ func suiConfigLocalnet() SuiConfig {
 
 func tonConfigLocalnet() TONConfig {
 	return TONConfig{
-		LiteClientConfigURL: "http://ton:8000/lite-client.json",
+		Endpoint: "http://ton:8081",
 	}
 }
 

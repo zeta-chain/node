@@ -1,6 +1,8 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
 
@@ -50,13 +52,12 @@ func TestBitcoinStdMemoDepositAndCallRevertAndAbort(r *runner.E2ERunner, args []
 	r.Logger.CCTX(*cctx, "bitcoin_std_memo_deposit")
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Aborted)
 
+	// wait for the abort contract to receive tokens
+	change := utils.NewBalanceChange(true)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.BTCZRC20, testAbortAddr, big.NewInt(0), change, r.Logger)
+
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})
 	require.NoError(r, err)
 	require.True(r, aborted)
-
-	// check abort contract received the tokens
-	balance, err := r.BTCZRC20.BalanceOf(&bind.CallOpts{}, testAbortAddr)
-	require.NoError(r, err)
-	require.True(r, balance.Uint64() > 0)
 }

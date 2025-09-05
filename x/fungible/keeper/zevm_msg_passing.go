@@ -5,16 +5,16 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/x/fungible/types"
 )
 
 // ZETADepositAndCallContract deposits native ZETA to the to address if its an account or if the account does not exist yet
 // If it's not an account it calls onReceive function of the connector contract and provides the address as the destinationAddress .The amount of tokens is minted to the fungible module account, wrapped and sent to the contract
-func (k Keeper) ZETADepositAndCallContract(ctx sdk.Context,
+func (k Keeper) LegacyZETADepositAndCallContract(ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	inboundSenderChainID int64,

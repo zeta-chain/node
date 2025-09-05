@@ -7,8 +7,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
 
 	"github.com/zeta-chain/node/pkg/chains"
 	"github.com/zeta-chain/node/pkg/coin"
@@ -55,7 +55,7 @@ type ObserverKeeper interface {
 		observationType observertypes.VoteType,
 	) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
-	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
+	CheckObserverCanVote(ctx sdk.Context, address string) error
 	FindBallot(
 		ctx sdk.Context,
 		index string,
@@ -218,7 +218,7 @@ type FungibleKeeper interface {
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	RefundRemainingGasFees(ctx sdk.Context, chainID int64, amount *big.Int, receiver ethcommon.Address) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
-	ZETADepositAndCallContract(ctx sdk.Context,
+	LegacyZETADepositAndCallContract(ctx sdk.Context,
 		sender ethcommon.Address,
 		to ethcommon.Address,
 		inboundSenderChainID int64,
@@ -233,6 +233,7 @@ type FungibleKeeper interface {
 		remainingAmount *big.Int,
 		data []byte,
 		indexBytes [32]byte) (*evmtypes.MsgEthereumTxResponse, error)
+	GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error)
 }
 
 type AuthorityKeeper interface {

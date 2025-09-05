@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -32,7 +33,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 
 		msg := types.MsgAddInboundTracker{
 			Creator:  nonAdmin,
@@ -85,7 +86,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(false)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(errors.New("not an observer"))
 
 		setSupportedChain(ctx, zk, chainID)
 
@@ -103,7 +104,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		require.True(t, found)
 	})
 
-	t.Run("observer add tx tracker", func(t *testing.T) {
+	t.Run("observer is able to add inbound tracker", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 			UseObserverMock:  true,
@@ -117,7 +118,7 @@ func TestMsgServer_AddInboundTracker(t *testing.T) {
 		chainID := getValidEthChainID()
 
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(chains.Chain{}, true)
-		observerMock.On("IsNonTombstonedObserver", mock.Anything, mock.Anything).Return(true)
+		observerMock.On("CheckObserverCanVote", mock.Anything, mock.Anything).Return(nil)
 
 		msg := types.MsgAddInboundTracker{
 			Creator:  admin,

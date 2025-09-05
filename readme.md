@@ -5,7 +5,7 @@ smart contracts and messaging between any blockchain.
 
 ## Prerequisites
 
-- [Go](https://golang.org/doc/install) 1.22
+- [Go](https://golang.org/doc/install) 1.23
 - [Docker](https://docs.docker.com/install/) and
   [Docker Compose](https://docs.docker.com/compose/install/) (optional, for
   running tests locally)
@@ -16,8 +16,8 @@ smart contracts and messaging between any blockchain.
 
 ZetaChain is built with [Cosmos SDK](https://github.com/cosmos/cosmos-sdk), a
 modular framework for building blockchain and
-[Ethermint](https://github.com/zeta-chain/ethermint), a module that implements
-EVM-compatibility (ZetaChain fork).
+[Cosmos EVM](https://github.com/zeta-chain/evm), a module that implements
+EVM-compatibility.
 
 This repository contains the core components:
 

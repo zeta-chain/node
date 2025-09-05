@@ -69,7 +69,7 @@ func (ob *Observer) CheckReceiptForBtcTxHash(ctx context.Context, txHash string,
 	}
 
 	// #nosec G115 always positive
-	event, err := GetBtcEvent(
+	event, err := GetBtcEventWithWitness(
 		ctx,
 		ob.rpc,
 		*tx,

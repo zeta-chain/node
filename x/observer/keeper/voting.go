@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/node/pkg/chains"
@@ -25,7 +24,9 @@ func (k Keeper) AddVoteToBallot(
 	if err != nil {
 		return ballot, err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot identifier %s", address, ballot.BallotIdentifier))
+	ctx.Logger().Debug("vote added",
+		"voter", address,
+		"ballot_identifier", ballot.BallotIdentifier)
 	k.SetBallot(ctx, &ballot)
 	return ballot, nil
 }
@@ -42,19 +43,34 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
-// IsNonTombstonedObserver checks whether a signer is authorized to sign
-// This function checks if the signer is present in the observer set
-// and also checks if the signer is not tombstoned
-func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
-	isPresentInMapper := k.IsAddressPartOfObserverSet(ctx, address)
-	if !isPresentInMapper {
-		return false
+// CheckObserverCanVote checks if the address is a valid observer
+func (k Keeper) CheckObserverCanVote(ctx sdk.Context, address string) error {
+	isActiveObserver := k.IsAddressPartOfObserverSet(ctx, address)
+	if !isActiveObserver {
+		return sdkerrors.Wrapf(types.ErrNotObserver, "address is not part of the observer set: %s", address)
 	}
-	isTombstoned, err := k.IsOperatorTombstoned(ctx, address)
-	if err != nil || isTombstoned {
-		return false
+	valAddress, err := types.GetOperatorAddressFromAccAddress(address)
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidAddress, "invalid operator address for observer : %s", address)
 	}
-	return true
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrNotValidator, "observer is not a validator: %s", address)
+	}
+	if validator.Jailed {
+		return sdkerrors.Wrapf(types.ErrValidatorJailed, "observer is jailed: %s", address)
+	}
+	if validator.Status != stakingtypes.Bonded {
+		return sdkerrors.Wrapf(types.ErrValidatorStatus, "observer is not bonded: %s", address)
+	}
+	consAddress, err := validator.GetConsAddr()
+	if err != nil {
+		return sdkerrors.Wrapf(types.ErrInvalidAddress, "invalid consensus address for observer: %s", address)
+	}
+	if k.slashingKeeper.IsTombstoned(ctx, consAddress) {
+		return sdkerrors.Wrapf(types.ErrValidatorTombstoned, "observer is tombstoned: %s", address)
+	}
+	return nil
 }
 
 // FindBallot finds the ballot for the given index

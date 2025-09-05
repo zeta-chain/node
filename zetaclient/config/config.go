@@ -93,6 +93,18 @@ func SetRestrictedAddressesFromConfig(cfg Config) {
 	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 
+// GetRestrictedAddresses returns a list of restricted addresses
+func GetRestrictedAddresses() []string {
+	restrictedAddressBookLock.RLock()
+	defer restrictedAddressBookLock.RUnlock()
+
+	addresses := []string{}
+	for addr := range restrictedAddressBook {
+		addresses = append(addresses, addr)
+	}
+	return addresses
+}
+
 func getRestrictedAddressAbsPath(basePath string) (string, error) {
 	file := filepath.Join(basePath, folder, restrictedAddressesPath)
 	file, err := filepath.Abs(file)
@@ -119,7 +131,7 @@ func loadRestrictedAddressesConfig(cfg Config, file string) error {
 	// Clear the existing map, load addresses from main config, then load addresses
 	// from dedicated config file
 	SetRestrictedAddressesFromConfig(cfg)
-	for _, addr := range cfg.ComplianceConfig.RestrictedAddresses {
+	for _, addr := range addresses {
 		restrictedAddressBook[strings.ToLower(addr)] = true
 	}
 	return nil

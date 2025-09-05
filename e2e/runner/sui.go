@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/block-vision/sui-go-sdk/models"
@@ -14,7 +15,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 
+	"github.com/zeta-chain/node/e2e/utils"
 	"github.com/zeta-chain/node/pkg/contracts/sui"
+	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
+	"github.com/zeta-chain/node/zetaclient/chains/sui/client"
+)
+
+const (
+	// onCallRevertMessage is the message that triggers a revert in the 'on_call' function
+	onCallRevertMessage = "revert"
 )
 
 // SuiGetSUIBalance returns the SUI balance of an address
@@ -45,40 +54,51 @@ func (r *E2ERunner) SuiGetFungibleTokenBalance(addr string) uint64 {
 	return balance
 }
 
-// SuiWithdrawSUI calls Withdraw of Gateway with SUI Zrc20 on ZEVM
-func (r *E2ERunner) SuiWithdrawSUI(
+// SuiWithdraw calls Withdraw on ZEVM Gateway with given ZRC20
+func (r *E2ERunner) SuiWithdraw(
 	receiver string,
 	amount *big.Int,
+	zrc20 ethcommon.Address,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	tx, err := r.GatewayZEVM.Withdraw(
+	tx, err := r.GatewayZEVM.Withdraw0(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
-		r.SUIZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		zrc20,
+		revertOptions,
 	)
 	require.NoError(r, err)
 
 	return tx
 }
 
-// SuiWithdrawFungibleToken calls Withdraw of Gateway with Sui fungible token ZRC20 on ZEVM
-func (r *E2ERunner) SuiWithdrawFungibleToken(
+// SuiWithdrawAndCall calls WithdrawAndCall on ZEVM Gateway with given ZRC20
+func (r *E2ERunner) SuiWithdrawAndCall(
 	receiver string,
 	amount *big.Int,
+	zrc20 ethcommon.Address,
+	message []byte,
+	gasLimit *big.Int,
+	revertOptions gatewayzevm.RevertOptions,
 ) *ethtypes.Transaction {
 	receiverBytes, err := hex.DecodeString(receiver[2:])
 	require.NoError(r, err, "receiver: "+receiver[2:])
 
-	tx, err := r.GatewayZEVM.Withdraw(
+	tx, err := r.GatewayZEVM.WithdrawAndCall(
 		r.ZEVMAuth,
 		receiverBytes,
 		amount,
-		r.SuiTokenZRC20Addr,
-		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		zrc20,
+		message,
+		gatewayzevm.CallOptions{
+			GasLimit:        gasLimit,
+			IsArbitraryCall: false, // always authenticated call
+		},
+		revertOptions,
 	)
 	require.NoError(r, err)
 
@@ -174,6 +194,110 @@ func (r *E2ERunner) SuiMintUSDC(
 	require.NoError(r, err)
 
 	return r.suiExecuteTx(signer, tx)
+}
+
+// SuiCreateExampleWACPayload creates a payload for on_call function in Sui the example package
+// The payload message contains below three fields in order:
+// field 0: [42-byte ZEVM sender], checksum address, with 0x prefix
+// field 1: [32-byte Sui target package], without 0x prefix
+// field 2: [32-byte Sui receiver], without 0x prefix
+//
+// The first two fields are used by E2E test to easily mock up the verifications against 'MessageContext' passed to the 'on_call'.
+// A real-world app just encodes useful data that meets its needs, and it will be only the receiver 'suiAddress' in this case.
+func (r *E2ERunner) SuiCreateExampleWACPayload(authorizedSender ethcommon.Address, suiAddress string) sui.CallPayload {
+	// only the CCTX's coinType is needed, no additional type argument
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	message := make([]byte, 106)
+
+	// field 0
+	copy(message[:42], []byte(authorizedSender.Hex()))
+
+	// field 1
+	target, err := hex.DecodeString(r.SuiExample.PackageID.String()[2:])
+	require.NoError(r, err)
+	copy(message[42:74], target)
+
+	// field 2
+	receiver, err := hex.DecodeString(suiAddress[2:])
+	require.NoError(r, err)
+	copy(message[74:], receiver)
+
+	return sui.NewCallPayload(argumentTypes, objects, message)
+}
+
+// SuiCreateExampleWACPayload creates a payload that triggers a revert in the 'on_call'
+// function in Sui the example package
+func (r *E2ERunner) SuiCreateExampleWACPayloadForRevert() (sui.CallPayload, error) {
+	// only the CCTX's coinType is needed, no additional arguments
+	argumentTypes := []string{}
+	objects := []string{
+		r.SuiExample.GlobalConfigID.String(),
+		r.SuiExample.PartnerID.String(),
+		r.SuiExample.ClockID.String(),
+	}
+
+	// the 'on_call' method of the "connected" contract specifically throws an error
+	// for this message to trigger "tx revert" test case
+	message := []byte(onCallRevertMessage)
+
+	return sui.NewCallPayload(argumentTypes, objects, message), nil
+}
+
+// SuiGetConnectedCalledCount reads the called_count from the GlobalConfig object in connected module
+func (r *E2ERunner) SuiGetConnectedCalledCount() uint64 {
+	// Get object data
+	resp, err := r.Clients.Sui.SuiGetObject(r.Ctx, models.SuiGetObjectRequest{
+		ObjectId: r.SuiExample.GlobalConfigID.String(),
+		Options:  models.SuiObjectDataOptions{ShowContent: true},
+	})
+
+	require.NoError(r, err)
+	require.Nil(r, resp.Error)
+	require.NotNil(r, resp.Data)
+	require.NotNil(r, resp.Data.Content)
+
+	fields := resp.Data.Content.Fields
+
+	// Extract called_count field from the object content
+	rawValue, ok := fields["called_count"]
+	require.True(r, ok, "missing called_count field")
+
+	v, ok := rawValue.(string)
+	require.True(r, ok, "want string, got %T for called_count", rawValue)
+
+	// #nosec G115 always in range
+	calledCount, err := strconv.ParseUint(v, 10, 64)
+	require.NoError(r, err)
+
+	return calledCount
+}
+
+// SuiMonitorCCTXByInboundHash monitors a CCTX by inbound hash until it gets mined
+// This function wrapps WaitCctxMinedByInboundHash and prints additional logs needed in stress test
+func (r *E2ERunner) SuiMonitorCCTXByInboundHash(inboundHash string, index int) (time.Duration, error) {
+	startTime := time.Now()
+
+	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, inboundHash, r.CctxClient, r.Logger, r.CctxTimeout)
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		return 0, fmt.Errorf(
+			"index %d: cctx failed with status %s, message %s, index %s",
+			index,
+			cctx.CctxStatus.Status,
+			cctx.CctxStatus.StatusMessage,
+			cctx.Index,
+		)
+	}
+
+	timeElapsed := time.Since(startTime)
+	r.Logger.Print("index %d: cctx succeeded in %s", index, timeElapsed.String())
+
+	return timeElapsed, nil
 }
 
 // suiExecuteDeposit executes a deposit on the SUI contract
@@ -317,11 +441,16 @@ func (r *E2ERunner) suiExecuteTx(
 	require.NoError(r, err, "sign transaction")
 
 	resp, err := r.Clients.Sui.SuiExecuteTransactionBlock(r.Ctx, models.SuiExecuteTransactionBlockRequest{
-		TxBytes:     tx.TxBytes,
-		Signature:   []string{signature},
+		TxBytes:   tx.TxBytes,
+		Signature: []string{signature},
+		Options: models.SuiTransactionBlockOptions{
+			ShowEffects:       true,
+			ShowObjectChanges: true,
+		},
 		RequestType: "WaitForLocalExecution",
 	})
 	require.NoError(r, err)
+	require.Equal(r, resp.Effects.Status.Status, client.TxStatusSuccess, "tx failed: %s", resp.Effects.Status.Error)
 
 	return resp
 }

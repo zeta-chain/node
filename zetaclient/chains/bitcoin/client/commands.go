@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"time"
 
 	types "github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
@@ -75,6 +76,43 @@ func (c *Client) GetBlockHeader(ctx context.Context, hash *chainhash.Hash) (*wir
 	}
 
 	return &bh, nil
+}
+
+// GetRawMempool fetches all mempool transaction hashes.
+func (c *Client) GetRawMempool(ctx context.Context) ([]*chainhash.Hash, error) {
+	cmd := types.NewGetRawMempoolCmd(types.Bool(false))
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get raw mempool")
+	}
+
+	txHashStrs, err := unmarshal[[]string](out)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to unmarshal to strings")
+	}
+
+	txHashes := make([]*chainhash.Hash, len(txHashStrs))
+	for i, hashString := range txHashStrs {
+		txHashes[i], err = chainhash.NewHashFromStr(hashString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return txHashes, nil
+}
+
+// GetMempoolEntry fetches the mempool entry for the given transaction hash.
+func (c *Client) GetMempoolEntry(ctx context.Context, txHash string) (*types.GetMempoolEntryResult, error) {
+	cmd := types.NewGetMempoolEntryCmd(txHash)
+
+	out, err := c.sendCommand(ctx, cmd)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get mempool entry for %s", txHash)
+	}
+
+	return unmarshalPtr[types.GetMempoolEntryResult](out)
 }
 
 func (c *Client) GetBlockVerbose(ctx context.Context, hash *chainhash.Hash) (*types.GetBlockVerboseTxResult, error) {
@@ -180,6 +218,50 @@ func (c *Client) EstimateSmartFee(
 	}
 
 	return unmarshalPtr[types.EstimateSmartFeeResult](out)
+}
+
+// IsTxStuckInMempool checks if the transaction is stuck in the mempool.
+//
+// A pending tx with 'confirmations == 0' will be considered stuck due to excessive pending time.
+func (c *Client) IsTxStuckInMempool(
+	ctx context.Context,
+	txHash string,
+	maxWaitBlocks int64,
+) (stuck bool, pendingFor time.Duration, err error) {
+	lastBlock, err := c.GetBlockCount(ctx)
+	if err != nil {
+		return false, 0, errors.Wrap(err, "GetBlockCount failed")
+	}
+
+	entry, err := c.GetMempoolEntry(ctx, txHash)
+	if err != nil {
+		// not a mempool tx, of course not stuck
+		if isTxNotInMempoolError(err) {
+			return false, 0, nil
+		}
+
+		return false, 0, errors.Wrap(err, "GetMempoolEntry failed")
+	}
+
+	const blockTimeBTC = 10 * time.Minute
+
+	// is the tx pending for too long?
+	pendingFor = time.Since(time.Unix(entry.Time, 0))
+	maxPendingFor := blockTimeBTC * time.Duration(maxWaitBlocks)
+	pendingDeadline := entry.Height + maxWaitBlocks
+
+	// the block mining is frozen in Regnet for E2E test
+	if c.isRegnet {
+		maxPendingFor := time.Second * time.Duration(maxWaitBlocks)
+
+		stuck = pendingFor > maxPendingFor && entry.Height == lastBlock
+
+		return stuck, pendingFor, nil
+	}
+
+	stuck = pendingFor > maxPendingFor && lastBlock > pendingDeadline
+
+	return stuck, pendingFor, nil
 }
 
 func (c *Client) ListUnspent(ctx context.Context) ([]types.ListUnspentResult, error) {
@@ -292,98 +374,8 @@ func (c *Client) GenerateToAddress(
 	return convertedResult, nil
 }
 
-func (c *Client) CreateRawTransaction(
-	ctx context.Context,
-	inputs []types.TransactionInput,
-	amounts map[btcutil.Address]btcutil.Amount,
-	lockTime *int64,
-) (*wire.MsgTx, error) {
-	convertedAmounts := make(map[string]float64, len(amounts))
-	for addr, amount := range amounts {
-		convertedAmounts[addr.String()] = amount.ToBTC()
-	}
-
-	cmd := types.NewCreateRawTransactionCmd(inputs, convertedAmounts, lockTime)
-
-	out, err := c.sendCommand(ctx, cmd)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to create raw tx")
-	}
-
-	// Decode the serialized transaction hex to raw bytes.
-	serializedTx, err := unmarshalHex(out)
-	if err != nil {
-		return nil, err
-	}
-
-	// Deserialize the transaction and return it.
-	var msgTx wire.MsgTx
-
-	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
-		return nil, err
-	}
-
-	return &msgTx, nil
-}
-
-func (c *Client) SignRawTransactionWithWallet2(
-	ctx context.Context,
-	tx *wire.MsgTx,
-	inputs []types.RawTxWitnessInput,
-) (*wire.MsgTx, bool, error) {
-	if tx == nil {
-		return nil, false, errors.New("tx is nil")
-	}
-
-	// Serialize the transaction and convert to hex string.
-	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
-	if err := tx.Serialize(buf); err != nil {
-		return nil, false, errors.Wrap(err, "unable to serialize tx")
-	}
-
-	txHex := hex.EncodeToString(buf.Bytes())
-
-	cmd := types.NewSignRawTransactionWithWalletCmd(txHex, &inputs, nil)
-
-	out, err := c.sendCommand(ctx, cmd)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "unable to sign raw tx")
-	}
-
-	result, err := unmarshalPtr[types.SignRawTransactionWithWalletResult](out)
-	if err != nil {
-		return nil, false, errors.Wrap(err, "unable to unmarshal sign raw tx result")
-	}
-
-	// Decode the serialized transaction hex to raw bytes.
-	serializedTx, err := hex.DecodeString(result.Hex)
-	if err != nil {
-		return nil, false, err
-	}
-
-	// Deserialize the transaction and return it.
-	var msgTx wire.MsgTx
-	if err = msgTx.Deserialize(bytes.NewReader(serializedTx)); err != nil {
-		return nil, false, err
-	}
-
-	return &msgTx, result.Complete, nil
-}
-
 func (c *Client) ImportAddress(ctx context.Context, address string) error {
 	cmd := types.NewImportAddressCmd(address, "", nil)
-
-	_, err := c.sendCommand(ctx, cmd)
-	return err
-}
-
-func (c *Client) ImportPrivKeyRescan(ctx context.Context, privKeyWIF *btcutil.WIF, label string, rescan bool) error {
-	wif := ""
-	if privKeyWIF != nil {
-		wif = privKeyWIF.String()
-	}
-
-	cmd := types.NewImportPrivKeyCmd(wif, &label, &rescan)
 
 	_, err := c.sendCommand(ctx, cmd)
 	return err

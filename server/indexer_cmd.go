@@ -1,32 +1,18 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package server
 
 import (
 	"fmt"
 
-	cmtnode "github.com/cometbft/cometbft/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 	sm "github.com/cometbft/cometbft/state"
 	cmtstore "github.com/cometbft/cometbft/store"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/evm/indexer"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/ethermint/indexer"
 )
 
+// NewIndexTxCmd creates a new Cobra command to index historical Ethereum transactions.
 func NewIndexTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "index-eth-tx [backward|forward]",
@@ -62,13 +48,13 @@ func NewIndexTxCmd() *cobra.Command {
 			idxer := indexer.NewKVIndexer(idxDB, logger.With("module", "evmindex"), clientCtx)
 
 			// open local tendermint db, because the local rpc won't be available.
-			cmtdb, err := cmtnode.DefaultDBProvider(&cmtnode.DBContext{ID: "blockstore", Config: cfg})
+			tmdb, err := cmtconfig.DefaultDBProvider(&cmtconfig.DBContext{ID: "blockstore", Config: cfg})
 			if err != nil {
 				return err
 			}
-			blockStore := cmtstore.NewBlockStore(cmtdb)
+			blockStore := cmtstore.NewBlockStore(tmdb)
 
-			stateDB, err := cmtnode.DefaultDBProvider(&cmtnode.DBContext{ID: "state", Config: cfg})
+			stateDB, err := cmtconfig.DefaultDBProvider(&cmtconfig.DBContext{ID: "state", Config: cfg})
 			if err != nil {
 				return err
 			}

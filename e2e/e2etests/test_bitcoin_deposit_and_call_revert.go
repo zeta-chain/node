@@ -19,15 +19,12 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 	amount := utils.ParseFloat(r, args[0])
 	amount += zetabitcoin.DefaultDepositorFee
 
-	// Given a list of UTXOs
-	utxos := r.ListDeployerUTXOs()
-
 	// ACT
 	// Send BTC to TSS address with a dummy memo
 	// zetacore should revert cctx if call is made on a non-existing address
 	nonExistReceiver := sample.EthAddress()
 	badMemo := append(nonExistReceiver.Bytes(), []byte("gibberish-memo")...)
-	txHash, err := r.SendToTSSFromDeployerWithMemo(amount, utxos[:1], badMemo)
+	txHash, err := r.SendToTSSWithMemo(amount, badMemo)
 	require.NoError(r, err)
 	require.NotEmpty(r, txHash)
 
@@ -37,7 +34,7 @@ func TestBitcoinDepositAndCallRevert(r *runner.E2ERunner, args []string) {
 
 	// Check revert tx receiver address and amount
 	receiver, value := r.QueryOutboundReceiverAndAmount(cctx.OutboundParams[1].Hash)
-	require.Equal(r, r.BTCDeployerAddress.EncodeAddress(), receiver)
+	require.Equal(r, r.GetBtcAddress().EncodeAddress(), receiver)
 	require.True(r, value > 0)
 
 	r.Logger.Info("Sent %f BTC to TSS with invalid memo, got refund of %d satoshis", amount, value)

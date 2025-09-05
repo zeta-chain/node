@@ -20,9 +20,14 @@ const (
 	OpDonate Op = 100 + iota
 	OpDeposit
 	OpDepositAndCall
+	OpCall
 )
 
-const OpWithdraw Op = 200
+// Outbound operations
+const (
+	OpWithdraw      Op = 200
+	OpIncreaseSeqno Op = 205
+)
 
 // ExitCode represents an error code. Might be TVM or custom.
 // TVM: https://docs.ton.org/v3/documentation/tvm/tvm-exit-codes
@@ -77,6 +82,19 @@ func (d DepositAndCall) AsBody() (*boc.Cell, error) {
 	return b, writeDepositAndCallBody(b, d.Recipient, d.CallData)
 }
 
+// Call represents a call operation
+type Call struct {
+	Sender    ton.AccountID
+	Recipient eth.Address
+	CallData  []byte
+}
+
+func (c Call) AsBody() (*boc.Cell, error) {
+	b := boc.NewCell()
+
+	return b, writeCallBody(b, c.Recipient, c.CallData)
+}
+
 func writeDepositBody(b *boc.Cell, recipient eth.Address) error {
 	return ErrCollect(
 		b.WriteUint(uint64(OpDeposit), sizeOpCode),
@@ -103,6 +121,24 @@ func writeDepositAndCallBody(b *boc.Cell, recipient eth.Address, callData []byte
 	)
 }
 
+func writeCallBody(b *boc.Cell, recipient eth.Address, callData []byte) error {
+	if len(callData) == 0 {
+		return errors.New("call data is empty")
+	}
+
+	callDataCell, err := MarshalSnakeCell(callData)
+	if err != nil {
+		return err
+	}
+
+	return ErrCollect(
+		b.WriteUint(uint64(OpCall), sizeOpCode),
+		b.WriteUint(0, sizeQueryID),
+		b.WriteBytes(recipient.Bytes()),
+		b.AddRef(callDataCell),
+	)
+}
+
 // Withdrawal represents a withdrawal external message
 type Withdrawal struct {
 	Recipient ton.AccountID
@@ -111,9 +147,11 @@ type Withdrawal struct {
 	Sig       [65]byte
 }
 
-func (w *Withdrawal) emptySig() bool {
-	return w.Sig == [65]byte{}
-}
+// SetSignature sets signature to the withdrawal message.
+// Note that signature has the following order: [R, S, V (recovery ID)]
+func (w *Withdrawal) SetSignature(sig [65]byte) { copy(w.Sig[:], sig[:]) }
+func (w *Withdrawal) Signature() [65]byte       { return w.Sig }
+func (w *Withdrawal) emptySig() bool            { return w.Sig == [65]byte{} }
 
 // Hash returns hash of the withdrawal message. (used for signing)
 func (w *Withdrawal) Hash() ([32]byte, error) {
@@ -125,12 +163,6 @@ func (w *Withdrawal) Hash() ([32]byte, error) {
 	return payload.Hash256()
 }
 
-// SetSignature sets signature to the withdrawal message.
-// Note that signature has the following order: [R, S, V (recovery ID)]
-func (w *Withdrawal) SetSignature(sig [65]byte) {
-	copy(w.Sig[:], sig[:])
-}
-
 // Signer returns EVM address of the signer (e.g. TSS)
 func (w *Withdrawal) Signer() (eth.Address, error) {
 	hash, err := w.Hash()
@@ -138,21 +170,7 @@ func (w *Withdrawal) Signer() (eth.Address, error) {
 		return eth.Address{}, err
 	}
 
-	var sig [65]byte
-	copy(sig[:], w.Sig[:])
-
-	// recovery id
-	// https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
-	if sig[64] >= 27 {
-		sig[64] -= 27
-	}
-
-	pub, err := crypto.SigToPub(hash[:], sig[:])
-	if err != nil {
-		return eth.Address{}, err
-	}
-
-	return crypto.PubkeyToAddress(*pub), nil
+	return deriveSigner(hash, w.Sig)
 }
 
 func (w *Withdrawal) AsBody() (*boc.Cell, error) {
@@ -161,23 +179,7 @@ func (w *Withdrawal) AsBody() (*boc.Cell, error) {
 		return nil, err
 	}
 
-	var (
-		body    = boc.NewCell()
-		v, r, s = splitSignature(w.Sig)
-	)
-
-	// note that in TVM, the order of signature is different (v, r, s)
-	err = ErrCollect(
-		body.WriteUint(uint64(v), 8),
-		body.WriteBytes(r[:]),
-		body.WriteBytes(s[:]),
-		body.AddRef(payload),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+	return messageToBody(payload, w.Sig)
 }
 
 func (w *Withdrawal) payload() (*boc.Cell, error) {
@@ -195,6 +197,100 @@ func (w *Withdrawal) payload() (*boc.Cell, error) {
 	}
 
 	return payload, nil
+}
+
+// IncreaseSeqno represents an external message (an alternative to Withdrawal) that only
+// increases seqno (nonce) and might contain reason code. Used as a factual tx for "canceling" CCTX.
+type IncreaseSeqno struct {
+	Seqno      uint32
+	ReasonCode uint32
+	Sig        [65]byte
+}
+
+func (is *IncreaseSeqno) SetSignature(sig [65]byte) { copy(is.Sig[:], sig[:]) }
+func (is *IncreaseSeqno) Signature() [65]byte       { return is.Sig }
+func (is *IncreaseSeqno) emptySig() bool            { return is.Sig == [65]byte{} }
+
+func (is *IncreaseSeqno) Hash() ([32]byte, error) {
+	payload, err := is.payload()
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	return payload.Hash256()
+}
+
+// Signer returns EVM address of the signer (e.g. TSS)
+func (is *IncreaseSeqno) Signer() (eth.Address, error) {
+	hash, err := is.Hash()
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return deriveSigner(hash, is.Sig)
+}
+
+func (is *IncreaseSeqno) AsBody() (*boc.Cell, error) {
+	payload, err := is.payload()
+	if err != nil {
+		return nil, err
+	}
+
+	return messageToBody(payload, is.Sig)
+}
+
+func (is *IncreaseSeqno) payload() (*boc.Cell, error) {
+	payload := boc.NewCell()
+
+	err := ErrCollect(
+		payload.WriteUint(uint64(OpIncreaseSeqno), sizeOpCode),
+		payload.WriteUint(uint64(is.ReasonCode), sizeOpCode),
+		payload.WriteUint(uint64(is.Seqno), sizeSeqno),
+	)
+
+	if err != nil {
+		return nil, errors.New("unable to marshal payload as cell")
+	}
+
+	return payload, nil
+}
+
+func deriveSigner(hash [32]byte, sig [65]byte) (eth.Address, error) {
+	var sigCopy [65]byte
+	copy(sigCopy[:], sig[:])
+
+	// recovery id
+	// https://bitcoin.stackexchange.com/questions/38351/ecdsa-v-r-s-what-is-v
+	if sigCopy[64] >= 27 {
+		sigCopy[64] -= 27
+	}
+
+	pub, err := crypto.SigToPub(hash[:], sigCopy[:])
+	if err != nil {
+		return eth.Address{}, err
+	}
+
+	return crypto.PubkeyToAddress(*pub), nil
+}
+
+func messageToBody(payload *boc.Cell, sig [65]byte) (*boc.Cell, error) {
+	var (
+		body    = boc.NewCell()
+		v, r, s = splitSignature(sig)
+	)
+
+	// note that in TVM, the order of signature is different (v, r, s)
+	err := ErrCollect(
+		body.WriteUint(uint64(v), 8),
+		body.WriteBytes(r[:]),
+		body.WriteBytes(s[:]),
+		body.AddRef(payload),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 // Ton Virtual Machine (TVM) uses different order of signature params (v,r,s) instead of (r,s,v);

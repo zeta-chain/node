@@ -1,6 +1,7 @@
 package e2etests
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -15,7 +16,8 @@ import (
 
 func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Len(r, args, 1)
-	amount := utils.ParseInt(r, args[0])
+	amount := utils.ParseBigInt(r, args[0])
+	require.True(r, amount.IsUint64(), fmt.Sprintf("arg[0] is not a uint64: %s", args[0]))
 
 	// deploy an example contract in ZEVM
 	contractAddr, _, contract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
@@ -43,7 +45,7 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	// execute the deposit transaction
 	data := []byte("hello spl tokens")
 	// #nosec G115 e2eTest - always in range
-	sig := r.SPLDepositAndCall(&privKey, uint64(amount), r.SPLAddr, contractAddr, data)
+	sig := r.SPLDepositAndCall(&privKey, amount.Uint64(), r.SPLAddr, contractAddr, data, nil)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -52,10 +54,10 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, contractAddr.Hex())
 
 	// check if example contract has been called, bar value should be set to amount
-	utils.MustHaveCalledExampleContractWithMsg(
+	utils.WaitAndVerifyExampleContractCallWithMsg(
 		r,
 		contract,
-		big.NewInt(int64(amount)),
+		amount,
 		data,
 		[]byte(r.GetSolanaPrivKey().PublicKey().String()),
 	)
@@ -67,23 +69,21 @@ func TestSPLDepositAndCall(r *runner.E2ERunner, args []string) {
 	senderBalanceAfter, err := r.SolanaClient.GetTokenAccountBalance(r.Ctx, senderAta, rpc.CommitmentConfirmed)
 	require.NoError(r, err)
 
-	zrc20BalanceAfter, err := r.SPLZRC20.BalanceOf(&bind.CallOpts{}, contractAddr)
-	require.NoError(r, err)
-
 	// verify amount is deposited to pda ata
 	require.Equal(
 		r,
-		utils.ParseInt(r, pdaBalanceBefore.Value.Amount)+amount,
-		utils.ParseInt(r, pdaBalanceAfter.Value.Amount),
+		new(big.Int).Add(utils.ParseBigInt(r, pdaBalanceBefore.Value.Amount), amount),
+		utils.ParseBigInt(r, pdaBalanceAfter.Value.Amount),
 	)
 
 	// verify amount is subtracted from sender ata
 	require.Equal(
 		r,
-		utils.ParseInt(r, senderBalanceBefore.Value.Amount)-amount,
-		utils.ParseInt(r, senderBalanceAfter.Value.Amount),
+		new(big.Int).Sub(utils.ParseBigInt(r, senderBalanceBefore.Value.Amount), amount),
+		utils.ParseBigInt(r, senderBalanceAfter.Value.Amount),
 	)
 
-	// verify amount is minted to receiver
-	require.Zero(r, zrc20BalanceBefore.Add(zrc20BalanceBefore, big.NewInt(int64(amount))).Cmp(zrc20BalanceAfter))
+	// wait for the zrc20 balance to be updated
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.SPLZRC20, contractAddr, zrc20BalanceBefore, change, r.Logger)
 }

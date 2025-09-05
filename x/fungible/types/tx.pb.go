@@ -31,6 +31,94 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type MsgUpdateGatewayGasLimit struct {
+	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	NewGasLimit uint64 `protobuf:"varint,2,opt,name=new_gas_limit,json=newGasLimit,proto3" json:"new_gas_limit,omitempty"`
+}
+
+func (m *MsgUpdateGatewayGasLimit) Reset()         { *m = MsgUpdateGatewayGasLimit{} }
+func (m *MsgUpdateGatewayGasLimit) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGatewayGasLimit) ProtoMessage()    {}
+func (*MsgUpdateGatewayGasLimit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7bea9688d1d01113, []int{0}
+}
+func (m *MsgUpdateGatewayGasLimit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGatewayGasLimit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGatewayGasLimit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGatewayGasLimit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGatewayGasLimit.Merge(m, src)
+}
+func (m *MsgUpdateGatewayGasLimit) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGatewayGasLimit) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGatewayGasLimit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGatewayGasLimit proto.InternalMessageInfo
+
+func (m *MsgUpdateGatewayGasLimit) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateGatewayGasLimit) GetNewGasLimit() uint64 {
+	if m != nil {
+		return m.NewGasLimit
+	}
+	return 0
+}
+
+type MsgUpdateGatewayGasLimitResponse struct {
+}
+
+func (m *MsgUpdateGatewayGasLimitResponse) Reset()         { *m = MsgUpdateGatewayGasLimitResponse{} }
+func (m *MsgUpdateGatewayGasLimitResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGatewayGasLimitResponse) ProtoMessage()    {}
+func (*MsgUpdateGatewayGasLimitResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7bea9688d1d01113, []int{1}
+}
+func (m *MsgUpdateGatewayGasLimitResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGatewayGasLimitResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGatewayGasLimitResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGatewayGasLimitResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGatewayGasLimitResponse.Merge(m, src)
+}
+func (m *MsgUpdateGatewayGasLimitResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGatewayGasLimitResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGatewayGasLimitResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGatewayGasLimitResponse proto.InternalMessageInfo
+
 type MsgDeploySystemContracts struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 }
@@ -39,7 +127,7 @@ func (m *MsgDeploySystemContracts) Reset()         { *m = MsgDeploySystemContrac
 func (m *MsgDeploySystemContracts) String() string { return proto.CompactTextString(m) }
 func (*MsgDeploySystemContracts) ProtoMessage()    {}
 func (*MsgDeploySystemContracts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{0}
+	return fileDescriptor_7bea9688d1d01113, []int{2}
 }
 func (m *MsgDeploySystemContracts) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -87,7 +175,7 @@ func (m *MsgDeploySystemContractsResponse) Reset()         { *m = MsgDeploySyste
 func (m *MsgDeploySystemContractsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDeploySystemContractsResponse) ProtoMessage()    {}
 func (*MsgDeploySystemContractsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{1}
+	return fileDescriptor_7bea9688d1d01113, []int{3}
 }
 func (m *MsgDeploySystemContractsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -162,7 +250,7 @@ func (m *MsgUpdateZRC20WithdrawFee) Reset()         { *m = MsgUpdateZRC20Withdra
 func (m *MsgUpdateZRC20WithdrawFee) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20WithdrawFee) ProtoMessage()    {}
 func (*MsgUpdateZRC20WithdrawFee) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{2}
+	return fileDescriptor_7bea9688d1d01113, []int{4}
 }
 func (m *MsgUpdateZRC20WithdrawFee) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -212,7 +300,7 @@ func (m *MsgUpdateZRC20WithdrawFeeResponse) Reset()         { *m = MsgUpdateZRC2
 func (m *MsgUpdateZRC20WithdrawFeeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20WithdrawFeeResponse) ProtoMessage()    {}
 func (*MsgUpdateZRC20WithdrawFeeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{3}
+	return fileDescriptor_7bea9688d1d01113, []int{5}
 }
 func (m *MsgUpdateZRC20WithdrawFeeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -250,7 +338,7 @@ func (m *MsgUpdateSystemContract) Reset()         { *m = MsgUpdateSystemContract
 func (m *MsgUpdateSystemContract) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateSystemContract) ProtoMessage()    {}
 func (*MsgUpdateSystemContract) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{4}
+	return fileDescriptor_7bea9688d1d01113, []int{6}
 }
 func (m *MsgUpdateSystemContract) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -300,7 +388,7 @@ func (m *MsgUpdateSystemContractResponse) Reset()         { *m = MsgUpdateSystem
 func (m *MsgUpdateSystemContractResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateSystemContractResponse) ProtoMessage()    {}
 func (*MsgUpdateSystemContractResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{5}
+	return fileDescriptor_7bea9688d1d01113, []int{7}
 }
 func (m *MsgUpdateSystemContractResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -345,7 +433,7 @@ func (m *MsgDeployFungibleCoinZRC20) Reset()         { *m = MsgDeployFungibleCoi
 func (m *MsgDeployFungibleCoinZRC20) String() string { return proto.CompactTextString(m) }
 func (*MsgDeployFungibleCoinZRC20) ProtoMessage()    {}
 func (*MsgDeployFungibleCoinZRC20) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{6}
+	return fileDescriptor_7bea9688d1d01113, []int{8}
 }
 func (m *MsgDeployFungibleCoinZRC20) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -438,7 +526,7 @@ func (m *MsgDeployFungibleCoinZRC20Response) Reset()         { *m = MsgDeployFun
 func (m *MsgDeployFungibleCoinZRC20Response) String() string { return proto.CompactTextString(m) }
 func (*MsgDeployFungibleCoinZRC20Response) ProtoMessage()    {}
 func (*MsgDeployFungibleCoinZRC20Response) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{7}
+	return fileDescriptor_7bea9688d1d01113, []int{9}
 }
 func (m *MsgDeployFungibleCoinZRC20Response) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -483,7 +571,7 @@ func (m *MsgRemoveForeignCoin) Reset()         { *m = MsgRemoveForeignCoin{} }
 func (m *MsgRemoveForeignCoin) String() string { return proto.CompactTextString(m) }
 func (*MsgRemoveForeignCoin) ProtoMessage()    {}
 func (*MsgRemoveForeignCoin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{8}
+	return fileDescriptor_7bea9688d1d01113, []int{10}
 }
 func (m *MsgRemoveForeignCoin) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -533,7 +621,7 @@ func (m *MsgRemoveForeignCoinResponse) Reset()         { *m = MsgRemoveForeignCo
 func (m *MsgRemoveForeignCoinResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRemoveForeignCoinResponse) ProtoMessage()    {}
 func (*MsgRemoveForeignCoinResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{9}
+	return fileDescriptor_7bea9688d1d01113, []int{11}
 }
 func (m *MsgRemoveForeignCoinResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -572,7 +660,7 @@ func (m *MsgUpdateContractBytecode) Reset()         { *m = MsgUpdateContractByte
 func (m *MsgUpdateContractBytecode) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateContractBytecode) ProtoMessage()    {}
 func (*MsgUpdateContractBytecode) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{10}
+	return fileDescriptor_7bea9688d1d01113, []int{12}
 }
 func (m *MsgUpdateContractBytecode) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -629,7 +717,7 @@ func (m *MsgUpdateContractBytecodeResponse) Reset()         { *m = MsgUpdateCont
 func (m *MsgUpdateContractBytecodeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateContractBytecodeResponse) ProtoMessage()    {}
 func (*MsgUpdateContractBytecodeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{11}
+	return fileDescriptor_7bea9688d1d01113, []int{13}
 }
 func (m *MsgUpdateContractBytecodeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -668,7 +756,7 @@ func (m *MsgUpdateZRC20LiquidityCap) Reset()         { *m = MsgUpdateZRC20Liquid
 func (m *MsgUpdateZRC20LiquidityCap) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20LiquidityCap) ProtoMessage()    {}
 func (*MsgUpdateZRC20LiquidityCap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{12}
+	return fileDescriptor_7bea9688d1d01113, []int{14}
 }
 func (m *MsgUpdateZRC20LiquidityCap) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -718,7 +806,7 @@ func (m *MsgUpdateZRC20LiquidityCapResponse) Reset()         { *m = MsgUpdateZRC
 func (m *MsgUpdateZRC20LiquidityCapResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20LiquidityCapResponse) ProtoMessage()    {}
 func (*MsgUpdateZRC20LiquidityCapResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{13}
+	return fileDescriptor_7bea9688d1d01113, []int{15}
 }
 func (m *MsgUpdateZRC20LiquidityCapResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -756,7 +844,7 @@ func (m *MsgPauseZRC20) Reset()         { *m = MsgPauseZRC20{} }
 func (m *MsgPauseZRC20) String() string { return proto.CompactTextString(m) }
 func (*MsgPauseZRC20) ProtoMessage()    {}
 func (*MsgPauseZRC20) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{14}
+	return fileDescriptor_7bea9688d1d01113, []int{16}
 }
 func (m *MsgPauseZRC20) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -806,7 +894,7 @@ func (m *MsgPauseZRC20Response) Reset()         { *m = MsgPauseZRC20Response{} }
 func (m *MsgPauseZRC20Response) String() string { return proto.CompactTextString(m) }
 func (*MsgPauseZRC20Response) ProtoMessage()    {}
 func (*MsgPauseZRC20Response) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{15}
+	return fileDescriptor_7bea9688d1d01113, []int{17}
 }
 func (m *MsgPauseZRC20Response) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -844,7 +932,7 @@ func (m *MsgUnpauseZRC20) Reset()         { *m = MsgUnpauseZRC20{} }
 func (m *MsgUnpauseZRC20) String() string { return proto.CompactTextString(m) }
 func (*MsgUnpauseZRC20) ProtoMessage()    {}
 func (*MsgUnpauseZRC20) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{16}
+	return fileDescriptor_7bea9688d1d01113, []int{18}
 }
 func (m *MsgUnpauseZRC20) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -894,7 +982,7 @@ func (m *MsgUnpauseZRC20Response) Reset()         { *m = MsgUnpauseZRC20Response
 func (m *MsgUnpauseZRC20Response) String() string { return proto.CompactTextString(m) }
 func (*MsgUnpauseZRC20Response) ProtoMessage()    {}
 func (*MsgUnpauseZRC20Response) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{17}
+	return fileDescriptor_7bea9688d1d01113, []int{19}
 }
 func (m *MsgUnpauseZRC20Response) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -932,7 +1020,7 @@ func (m *MsgUpdateGatewayContract) Reset()         { *m = MsgUpdateGatewayContra
 func (m *MsgUpdateGatewayContract) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateGatewayContract) ProtoMessage()    {}
 func (*MsgUpdateGatewayContract) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{18}
+	return fileDescriptor_7bea9688d1d01113, []int{20}
 }
 func (m *MsgUpdateGatewayContract) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -982,7 +1070,7 @@ func (m *MsgUpdateGatewayContractResponse) Reset()         { *m = MsgUpdateGatew
 func (m *MsgUpdateGatewayContractResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateGatewayContractResponse) ProtoMessage()    {}
 func (*MsgUpdateGatewayContractResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{19}
+	return fileDescriptor_7bea9688d1d01113, []int{21}
 }
 func (m *MsgUpdateGatewayContractResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1022,7 +1110,7 @@ func (m *MsgUpdateZRC20Name) Reset()         { *m = MsgUpdateZRC20Name{} }
 func (m *MsgUpdateZRC20Name) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20Name) ProtoMessage()    {}
 func (*MsgUpdateZRC20Name) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{20}
+	return fileDescriptor_7bea9688d1d01113, []int{22}
 }
 func (m *MsgUpdateZRC20Name) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1086,7 +1174,7 @@ func (m *MsgUpdateZRC20NameResponse) Reset()         { *m = MsgUpdateZRC20NameRe
 func (m *MsgUpdateZRC20NameResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateZRC20NameResponse) ProtoMessage()    {}
 func (*MsgUpdateZRC20NameResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7bea9688d1d01113, []int{21}
+	return fileDescriptor_7bea9688d1d01113, []int{23}
 }
 func (m *MsgUpdateZRC20NameResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1115,7 +1203,97 @@ func (m *MsgUpdateZRC20NameResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateZRC20NameResponse proto.InternalMessageInfo
 
+type MsgBurnFungibleModuleAsset struct {
+	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Zrc20Address string `protobuf:"bytes,2,opt,name=zrc20_address,json=zrc20Address,proto3" json:"zrc20_address,omitempty"`
+}
+
+func (m *MsgBurnFungibleModuleAsset) Reset()         { *m = MsgBurnFungibleModuleAsset{} }
+func (m *MsgBurnFungibleModuleAsset) String() string { return proto.CompactTextString(m) }
+func (*MsgBurnFungibleModuleAsset) ProtoMessage()    {}
+func (*MsgBurnFungibleModuleAsset) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7bea9688d1d01113, []int{24}
+}
+func (m *MsgBurnFungibleModuleAsset) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBurnFungibleModuleAsset) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBurnFungibleModuleAsset.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBurnFungibleModuleAsset) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBurnFungibleModuleAsset.Merge(m, src)
+}
+func (m *MsgBurnFungibleModuleAsset) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBurnFungibleModuleAsset) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBurnFungibleModuleAsset.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBurnFungibleModuleAsset proto.InternalMessageInfo
+
+func (m *MsgBurnFungibleModuleAsset) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgBurnFungibleModuleAsset) GetZrc20Address() string {
+	if m != nil {
+		return m.Zrc20Address
+	}
+	return ""
+}
+
+type MsgBurnFungibleModuleAssetResponse struct {
+}
+
+func (m *MsgBurnFungibleModuleAssetResponse) Reset()         { *m = MsgBurnFungibleModuleAssetResponse{} }
+func (m *MsgBurnFungibleModuleAssetResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBurnFungibleModuleAssetResponse) ProtoMessage()    {}
+func (*MsgBurnFungibleModuleAssetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7bea9688d1d01113, []int{25}
+}
+func (m *MsgBurnFungibleModuleAssetResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBurnFungibleModuleAssetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBurnFungibleModuleAssetResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBurnFungibleModuleAssetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBurnFungibleModuleAssetResponse.Merge(m, src)
+}
+func (m *MsgBurnFungibleModuleAssetResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBurnFungibleModuleAssetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBurnFungibleModuleAssetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBurnFungibleModuleAssetResponse proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterType((*MsgUpdateGatewayGasLimit)(nil), "zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit")
+	proto.RegisterType((*MsgUpdateGatewayGasLimitResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateGatewayGasLimitResponse")
 	proto.RegisterType((*MsgDeploySystemContracts)(nil), "zetachain.zetacore.fungible.MsgDeploySystemContracts")
 	proto.RegisterType((*MsgDeploySystemContractsResponse)(nil), "zetachain.zetacore.fungible.MsgDeploySystemContractsResponse")
 	proto.RegisterType((*MsgUpdateZRC20WithdrawFee)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee")
@@ -1138,6 +1316,8 @@ func init() {
 	proto.RegisterType((*MsgUpdateGatewayContractResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateGatewayContractResponse")
 	proto.RegisterType((*MsgUpdateZRC20Name)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20Name")
 	proto.RegisterType((*MsgUpdateZRC20NameResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20NameResponse")
+	proto.RegisterType((*MsgBurnFungibleModuleAsset)(nil), "zetachain.zetacore.fungible.MsgBurnFungibleModuleAsset")
+	proto.RegisterType((*MsgBurnFungibleModuleAssetResponse)(nil), "zetachain.zetacore.fungible.MsgBurnFungibleModuleAssetResponse")
 }
 
 func init() {
@@ -1145,79 +1325,84 @@ func init() {
 }
 
 var fileDescriptor_7bea9688d1d01113 = []byte{
-	// 1152 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xcf, 0xd6, 0xf9, 0xf9, 0x1a, 0x27, 0xf9, 0x8e, 0xd2, 0x64, 0xb3, 0x89, 0x9c, 0xd6, 0xcd,
-	0xb7, 0x84, 0x00, 0x76, 0x6b, 0x5a, 0x22, 0x10, 0x6d, 0x85, 0x4d, 0xd2, 0x22, 0xd5, 0x08, 0x19,
-	0x5a, 0xa4, 0x5c, 0xcc, 0x64, 0x77, 0xb2, 0x5e, 0xc5, 0xde, 0x59, 0x76, 0xd6, 0x75, 0x5d, 0x2e,
-	0x05, 0x6e, 0x48, 0x95, 0x2a, 0xf8, 0x3f, 0x50, 0xff, 0x8c, 0x1e, 0x7b, 0x44, 0x08, 0x55, 0x28,
-	0x39, 0xf4, 0xc6, 0x81, 0x03, 0x67, 0x34, 0xb3, 0xbb, 0xd3, 0xf5, 0x7a, 0xd7, 0x76, 0x12, 0x71,
-	0x49, 0x76, 0xc6, 0xef, 0xf3, 0xe6, 0x33, 0xef, 0x7d, 0xde, 0x7b, 0xbb, 0xb0, 0xf1, 0x98, 0x78,
-	0x58, 0x6f, 0x60, 0xcb, 0x2e, 0x8a, 0x27, 0xea, 0x92, 0xe2, 0x41, 0xdb, 0x36, 0xad, 0xfd, 0x26,
-	0x29, 0x7a, 0x8f, 0x0a, 0x8e, 0x4b, 0x3d, 0x8a, 0x56, 0xa5, 0x55, 0x21, 0xb4, 0x2a, 0x84, 0x56,
-	0xda, 0xa2, 0x49, 0x4d, 0x2a, 0xec, 0x8a, 0xfc, 0xc9, 0x87, 0x68, 0x57, 0x12, 0x1c, 0x3b, 0x87,
-	0x66, 0x51, 0xa7, 0x96, 0x2d, 0xfe, 0x04, 0x76, 0xcb, 0x3a, 0x65, 0x2d, 0xca, 0x8a, 0x2d, 0x66,
-	0x16, 0x1f, 0x5e, 0xe3, 0xff, 0xfc, 0x1f, 0xf2, 0x65, 0x50, 0xab, 0xcc, 0xfc, 0x94, 0x38, 0x4d,
-	0xda, 0xfd, 0xb2, 0xcb, 0x3c, 0xd2, 0xaa, 0x50, 0xdb, 0x73, 0xb1, 0xee, 0x31, 0xa4, 0xc2, 0x94,
-	0xee, 0x12, 0xec, 0x51, 0x57, 0x55, 0x2e, 0x2a, 0x9b, 0x33, 0xb5, 0x70, 0xf9, 0xd1, 0xec, 0x0f,
-	0xaf, 0x9f, 0x6f, 0x85, 0xab, 0xfc, 0x1f, 0x0a, 0x5c, 0x4c, 0x73, 0x52, 0x23, 0xcc, 0xa1, 0x36,
-	0x23, 0x68, 0x0b, 0x16, 0xda, 0xb6, 0xc5, 0x3a, 0xd8, 0x79, 0x50, 0xda, 0xc5, 0xba, 0x47, 0xdd,
-	0x6e, 0xe0, 0xb5, 0x6f, 0x1f, 0x2d, 0xc2, 0x44, 0x87, 0x5f, 0x47, 0x3d, 0x27, 0x0c, 0xfc, 0x05,
-	0xda, 0x84, 0x79, 0x69, 0x59, 0xa3, 0x6d, 0x8f, 0xb8, 0x6a, 0x46, 0xfc, 0x1e, 0xdf, 0x46, 0x1b,
-	0x90, 0xd5, 0xa9, 0x6d, 0x13, 0xee, 0x6d, 0x6f, 0xe7, 0x41, 0x55, 0x1d, 0x17, 0x76, 0xbd, 0x9b,
-	0xe8, 0x0a, 0xcc, 0xb1, 0x1e, 0xb2, 0xea, 0x84, 0x30, 0x8b, 0xed, 0xe6, 0xff, 0x51, 0x60, 0xa5,
-	0xca, 0xcc, 0xfb, 0x8e, 0x81, 0x3d, 0xb2, 0x57, 0xab, 0x94, 0xae, 0x7e, 0x6d, 0x79, 0x0d, 0xc3,
-	0xc5, 0x9d, 0x5d, 0x42, 0xd2, 0x83, 0x84, 0x2e, 0x43, 0xf6, 0xb1, 0xab, 0x97, 0xae, 0xd6, 0xb1,
-	0x61, 0xb8, 0x84, 0xb1, 0xe0, 0x36, 0xb3, 0x62, 0xf3, 0x13, 0x7f, 0x0f, 0xdd, 0x85, 0x05, 0x9b,
-	0x74, 0xea, 0x9d, 0xc0, 0x63, 0xfd, 0x80, 0x10, 0x75, 0x92, 0xdb, 0x95, 0x73, 0x2f, 0x5e, 0xad,
-	0x8f, 0xfd, 0xfe, 0x6a, 0x7d, 0xc9, 0x4f, 0x1d, 0x33, 0x0e, 0x0b, 0x16, 0x2d, 0xb6, 0xb0, 0xd7,
-	0x28, 0xdc, 0xb7, 0x6c, 0xaf, 0x36, 0x67, 0x93, 0x4e, 0x94, 0x48, 0x19, 0xb2, 0xdc, 0x93, 0x89,
-	0x59, 0xbd, 0x69, 0xb5, 0x2c, 0x4f, 0x9d, 0x1a, 0xc9, 0xcd, 0x79, 0x9b, 0x74, 0xee, 0x60, 0x76,
-	0x8f, 0x43, 0x62, 0x79, 0xbd, 0x0c, 0x97, 0x52, 0xef, 0x1d, 0xe6, 0x35, 0xff, 0x44, 0x81, 0x65,
-	0x69, 0xd5, 0x9b, 0xfc, 0x01, 0xb1, 0xb9, 0x09, 0xab, 0x9c, 0xac, 0x1f, 0xe9, 0xba, 0x1e, 0x00,
-	0x62, 0x91, 0x52, 0x6d, 0xd2, 0xe9, 0xf5, 0x18, 0x44, 0x2d, 0xc6, 0xf3, 0x12, 0xac, 0xa7, 0x30,
-	0x90, 0x2c, 0xff, 0x3e, 0x07, 0x9a, 0x94, 0xe8, 0x6e, 0x50, 0x53, 0x15, 0x6a, 0xd9, 0xe2, 0x5e,
-	0x03, 0x88, 0x2e, 0xc2, 0xc4, 0x0e, 0x37, 0x09, 0xa5, 0x28, 0x16, 0x68, 0x13, 0x16, 0x0e, 0xa8,
-	0x4b, 0x2c, 0xd3, 0xae, 0x8b, 0xe2, 0xab, 0x5b, 0x86, 0xd0, 0x62, 0xa6, 0x36, 0x17, 0xec, 0x57,
-	0xf8, 0xf6, 0x67, 0x06, 0xd2, 0x60, 0xda, 0x20, 0xba, 0xd5, 0xc2, 0x4d, 0x26, 0x54, 0x98, 0xad,
-	0xc9, 0x35, 0x42, 0x30, 0x6e, 0xe3, 0x16, 0x09, 0x64, 0x27, 0x9e, 0xd1, 0x12, 0x4c, 0xb2, 0x6e,
-	0x6b, 0x9f, 0x36, 0x7d, 0x15, 0xd4, 0x82, 0x15, 0x2a, 0xc3, 0x0c, 0x2f, 0xe7, 0xba, 0xd7, 0x75,
-	0x88, 0xc8, 0xec, 0x5c, 0xe9, 0xff, 0x85, 0x84, 0x7e, 0xe1, 0x1c, 0x9a, 0x05, 0x51, 0xf7, 0xfc,
-	0x72, 0x5f, 0x75, 0x1d, 0x52, 0x9b, 0xd6, 0x83, 0x27, 0xb4, 0x0a, 0x33, 0x6f, 0xd4, 0x31, 0x2d,
-	0xe8, 0x4e, 0x9b, 0x41, 0xea, 0x51, 0x05, 0xb2, 0x4d, 0xeb, 0xdb, 0xb6, 0x65, 0x58, 0x5e, 0xb7,
-	0xae, 0x63, 0x47, 0x9d, 0x91, 0xf2, 0x51, 0x06, 0xc8, 0x67, 0x56, 0x82, 0x2a, 0xd8, 0x89, 0xe5,
-	0xe5, 0x16, 0xe4, 0xd3, 0x63, 0x2e, 0x1b, 0x83, 0x0a, 0x53, 0x61, 0xda, 0x83, 0xd8, 0x07, 0xcb,
-	0xbc, 0x0e, 0x8b, 0x55, 0x66, 0xd6, 0x48, 0x8b, 0x3e, 0x24, 0xbb, 0x41, 0x58, 0xa9, 0x65, 0x9f,
-	0xb1, 0xe4, 0x62, 0x24, 0x73, 0xb0, 0x96, 0x74, 0x88, 0x54, 0xce, 0xcf, 0xd1, 0xea, 0x0f, 0x75,
-	0x55, 0xee, 0x7a, 0x44, 0xa7, 0xc6, 0xa0, 0xea, 0x7f, 0x1b, 0x16, 0x52, 0x64, 0x3d, 0xaf, 0xf7,
-	0xaa, 0x19, 0xe5, 0xfd, 0xca, 0xe5, 0x0e, 0xeb, 0x0d, 0xcc, 0x1a, 0x41, 0x5b, 0xe3, 0x95, 0x59,
-	0xa1, 0x06, 0xb9, 0x8b, 0x59, 0x63, 0x40, 0x65, 0xc6, 0x39, 0x49, 0xe6, 0xbf, 0x2a, 0x42, 0xf3,
-	0x91, 0xfa, 0xbd, 0x17, 0xc9, 0xd5, 0x59, 0x1b, 0x57, 0x9f, 0x5e, 0x32, 0x23, 0xb5, 0x9b, 0x41,
-	0x7a, 0xd9, 0x10, 0x7a, 0x49, 0xe1, 0x2b, 0xaf, 0xf5, 0x0d, 0x64, 0xab, 0xcc, 0xfc, 0x02, 0xb7,
-	0x19, 0x19, 0x56, 0xbc, 0x6f, 0xc1, 0x7c, 0xcf, 0x45, 0x08, 0xbf, 0x4a, 0x86, 0xb7, 0xf8, 0xe8,
-	0x55, 0x48, 0x5c, 0x12, 0xcb, 0x70, 0xa1, 0xe7, 0x04, 0x79, 0xf4, 0x3e, 0xcc, 0x73, 0x82, 0xb6,
-	0xf3, 0x1f, 0x1e, 0xbe, 0xe2, 0xb7, 0xd3, 0xc8, 0x19, 0xf2, 0xf8, 0x1f, 0x15, 0x31, 0xac, 0xfd,
-	0x00, 0xdd, 0xc1, 0x1e, 0xe9, 0xe0, 0xee, 0x08, 0xbd, 0xf6, 0x36, 0xac, 0xf9, 0x83, 0x41, 0x00,
-	0xd2, 0x9a, 0xed, 0x8a, 0x98, 0x03, 0x3d, 0x3e, 0x93, 0x0b, 0x26, 0x2f, 0x86, 0x7d, 0x22, 0x09,
-	0xc9, 0xf4, 0xa9, 0x02, 0xa8, 0x37, 0x95, 0x9f, 0xf3, 0xe6, 0x76, 0x46, 0xc9, 0x85, 0xfd, 0x32,
-	0x93, 0xd8, 0x2f, 0xc7, 0xa3, 0xfd, 0x32, 0xc6, 0x79, 0x2d, 0x5e, 0x09, 0x9c, 0x4e, 0xc8, 0xb6,
-	0xf4, 0xd7, 0x79, 0xc8, 0x54, 0x99, 0x89, 0x9e, 0x2a, 0x70, 0x21, 0xf9, 0x4d, 0xe8, 0x46, 0x61,
-	0xc0, 0xab, 0x59, 0x21, 0xed, 0xdd, 0x47, 0xbb, 0x79, 0x2a, 0x98, 0xec, 0x8c, 0xbf, 0x28, 0xb0,
-	0x9c, 0x36, 0xb1, 0xb6, 0x47, 0x73, 0xdd, 0x07, 0xd4, 0x6e, 0x9f, 0x12, 0x28, 0x59, 0x7d, 0xaf,
-	0xc0, 0xff, 0xfa, 0x7b, 0xf2, 0xb5, 0x61, 0x6e, 0xfb, 0x20, 0xda, 0x87, 0x27, 0x86, 0x48, 0x0e,
-	0x3f, 0x29, 0xb0, 0x98, 0xf8, 0xc6, 0x71, 0x7d, 0x98, 0xcf, 0x24, 0x94, 0xf6, 0xf1, 0x69, 0x50,
-	0x92, 0xcc, 0x33, 0x05, 0x96, 0x52, 0xc6, 0xc3, 0x07, 0xa3, 0x39, 0x8e, 0xe3, 0xb4, 0x5b, 0xa7,
-	0xc3, 0x25, 0x50, 0xea, 0x7b, 0x5f, 0x1d, 0x91, 0x52, 0x1c, 0x37, 0x2a, 0xa5, 0xb4, 0xf7, 0x44,
-	0x21, 0xe6, 0xb4, 0x51, 0xb4, 0x7d, 0x02, 0xdf, 0x51, 0xe0, 0x70, 0x31, 0x0f, 0x19, 0x26, 0xa8,
-	0x09, 0x10, 0x99, 0x24, 0x5b, 0xc3, 0xdc, 0xbd, 0xb1, 0xd5, 0x4a, 0xa3, 0xdb, 0xca, 0xd3, 0x5c,
-	0x98, 0xed, 0x19, 0x1e, 0xef, 0x0e, 0xa5, 0x1f, 0xb1, 0xd6, 0xae, 0x9f, 0xc4, 0x5a, 0x9e, 0xc9,
-	0x9b, 0x5a, 0xf2, 0xc4, 0xb8, 0x31, 0x5a, 0xf0, 0x62, 0xb0, 0xe1, 0x4d, 0x6d, 0xe0, 0x68, 0x40,
-	0xdf, 0xc1, 0x7c, 0x7c, 0x2c, 0x14, 0x4f, 0x90, 0x45, 0x0e, 0xd0, 0xb6, 0x4f, 0x08, 0x08, 0x0f,
-	0xd7, 0x26, 0x9e, 0xbc, 0x7e, 0xbe, 0xa5, 0x94, 0x77, 0x5e, 0x1c, 0xe5, 0x94, 0x97, 0x47, 0x39,
-	0xe5, 0xcf, 0xa3, 0x9c, 0xf2, 0xec, 0x38, 0x37, 0xf6, 0xf2, 0x38, 0x37, 0xf6, 0xdb, 0x71, 0x6e,
-	0x6c, 0xef, 0x1d, 0xd3, 0xf2, 0x1a, 0xed, 0xfd, 0x82, 0x4e, 0x5b, 0xe2, 0x83, 0xfa, 0x3d, 0xff,
-	0xdb, 0xda, 0xa6, 0x06, 0x29, 0x3e, 0x8a, 0x7c, 0xb2, 0x77, 0x1d, 0xc2, 0xf6, 0x27, 0xc5, 0x27,
-	0xf4, 0xfb, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x13, 0xe0, 0xad, 0x0d, 0xde, 0x0f, 0x00, 0x00,
+	// 1223 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xdf, 0x6f, 0xdb, 0x44,
+	0x1c, 0xaf, 0x97, 0xfe, 0xfc, 0xd2, 0xb4, 0xc5, 0xea, 0x5a, 0xd7, 0xad, 0xd2, 0x2e, 0x2b, 0xa3,
+	0x14, 0x48, 0xb6, 0xb0, 0x51, 0x81, 0xd8, 0xa6, 0x25, 0xb4, 0x1b, 0xd2, 0x82, 0x90, 0x61, 0x43,
+	0xea, 0x4b, 0x70, 0xed, 0xab, 0x63, 0x35, 0xf1, 0x19, 0x9f, 0xb3, 0x2c, 0xe3, 0x65, 0xc0, 0x1b,
+	0xd2, 0xa4, 0x09, 0xf8, 0x3b, 0xd0, 0xfe, 0x8c, 0x3d, 0xee, 0x11, 0x21, 0x34, 0xa1, 0xf6, 0x61,
+	0xef, 0x3c, 0xf0, 0x8c, 0xee, 0x6c, 0xdf, 0x6c, 0xc7, 0x8e, 0x93, 0x16, 0x5e, 0x5a, 0xdf, 0xe5,
+	0xfb, 0xe3, 0x73, 0xf7, 0xfd, 0xdc, 0xe7, 0x7b, 0x3a, 0xd8, 0x7c, 0x84, 0x5c, 0x55, 0x6b, 0xaa,
+	0xa6, 0x55, 0x66, 0x5f, 0xd8, 0x41, 0xe5, 0xc3, 0x8e, 0x65, 0x98, 0x07, 0x2d, 0x54, 0x76, 0x1f,
+	0x96, 0x6c, 0x07, 0xbb, 0x58, 0x5c, 0xe5, 0x56, 0xa5, 0xc0, 0xaa, 0x14, 0x58, 0xc9, 0x8b, 0x06,
+	0x36, 0x30, 0xb3, 0x2b, 0xd3, 0x2f, 0xcf, 0x45, 0xbe, 0x94, 0x10, 0xd8, 0x3e, 0x32, 0xca, 0x1a,
+	0x36, 0x2d, 0xf6, 0xc7, 0xb7, 0x5b, 0xd6, 0x30, 0x69, 0x63, 0x52, 0x6e, 0x13, 0xa3, 0xfc, 0xe0,
+	0x0a, 0xfd, 0xe7, 0xfd, 0x50, 0x3c, 0x04, 0xa9, 0x4e, 0x8c, 0x7b, 0xb6, 0xae, 0xba, 0xe8, 0xb6,
+	0xea, 0xa2, 0xae, 0xda, 0xbb, 0xad, 0x92, 0xbb, 0x66, 0xdb, 0x74, 0x45, 0x09, 0xa6, 0x34, 0x07,
+	0xa9, 0x2e, 0x76, 0x24, 0x61, 0x43, 0xd8, 0x9a, 0x51, 0x82, 0xa1, 0x58, 0x84, 0xbc, 0x85, 0xba,
+	0x0d, 0x43, 0x25, 0x8d, 0x16, 0x35, 0x95, 0xce, 0x6d, 0x08, 0x5b, 0xe3, 0xca, 0x1b, 0x16, 0xea,
+	0x06, 0xde, 0x1f, 0xcf, 0xfe, 0xf0, 0xea, 0xd9, 0x76, 0xe0, 0x51, 0x2c, 0xc2, 0x46, 0x5a, 0x1e,
+	0x05, 0x11, 0x1b, 0x5b, 0x04, 0x15, 0xab, 0x0c, 0xcb, 0xa7, 0xc8, 0x6e, 0xe1, 0xde, 0x97, 0x3d,
+	0xe2, 0xa2, 0x76, 0x0d, 0x5b, 0xae, 0xa3, 0x6a, 0x2e, 0x49, 0xc7, 0x12, 0xcb, 0xf3, 0xa7, 0xc0,
+	0x12, 0x25, 0x06, 0x09, 0x12, 0x89, 0xdb, 0xb0, 0xd0, 0xb1, 0x4c, 0xd2, 0x55, 0xed, 0xfb, 0x95,
+	0x3d, 0x55, 0x73, 0xb1, 0xd3, 0xf3, 0xa3, 0xf6, 0xcd, 0x8b, 0x8b, 0x30, 0xd1, 0xa5, 0x5b, 0xcb,
+	0x96, 0x38, 0xa3, 0x78, 0x03, 0x71, 0x0b, 0xe6, 0xb9, 0xa5, 0x82, 0x3b, 0x2e, 0x72, 0xa4, 0x1c,
+	0xfb, 0x3d, 0x3e, 0x2d, 0x6e, 0x42, 0x5e, 0xc3, 0x96, 0x85, 0x68, 0xb4, 0xfd, 0xdd, 0xfb, 0x75,
+	0x69, 0x9c, 0xd9, 0x45, 0x27, 0xc5, 0x4b, 0x30, 0x47, 0x22, 0x60, 0xa5, 0x09, 0x66, 0x16, 0x9b,
+	0x2d, 0xfe, 0x23, 0xc0, 0x0a, 0xdf, 0xc7, 0x7d, 0xa5, 0x56, 0xb9, 0xfc, 0xb5, 0xe9, 0x36, 0x75,
+	0x47, 0xed, 0xee, 0x21, 0x34, 0xa0, 0x60, 0x17, 0x21, 0xff, 0xc8, 0xd1, 0x2a, 0x97, 0x1b, 0xaa,
+	0xae, 0x3b, 0x88, 0x10, 0x7f, 0x35, 0xb3, 0x6c, 0xf2, 0x96, 0x37, 0x27, 0xde, 0x81, 0x05, 0x5a,
+	0xd5, 0xae, 0x1f, 0xb1, 0x71, 0x88, 0x90, 0x34, 0x49, 0xed, 0xaa, 0x85, 0xe7, 0x2f, 0xd7, 0xc7,
+	0xfe, 0x78, 0xb9, 0xbe, 0xe4, 0xd1, 0x88, 0xe8, 0x47, 0x25, 0x13, 0x97, 0xdb, 0xaa, 0xdb, 0x2c,
+	0xdd, 0x33, 0x2d, 0x57, 0x99, 0xb3, 0x50, 0x37, 0x0c, 0xa4, 0x1a, 0xe7, 0xc7, 0xd4, 0x50, 0x61,
+	0x06, 0xf0, 0xe7, 0x22, 0x5c, 0x48, 0x5d, 0x37, 0x27, 0xd0, 0x63, 0x01, 0x96, 0xb9, 0x55, 0xb4,
+	0xf8, 0x03, 0xf6, 0xe6, 0x3a, 0xac, 0x52, 0xb0, 0xde, 0x4e, 0x37, 0x34, 0xdf, 0x21, 0xb6, 0x53,
+	0x92, 0x85, 0xba, 0xd1, 0x88, 0xfe, 0xae, 0xc5, 0x70, 0x5e, 0x80, 0xf5, 0x14, 0x04, 0x1c, 0xe5,
+	0xdf, 0xe7, 0x40, 0xe6, 0x14, 0xdd, 0xf3, 0xcf, 0x77, 0x0d, 0x9b, 0x16, 0x5b, 0xd7, 0x00, 0xa0,
+	0x8b, 0x30, 0xb1, 0x4b, 0x4d, 0x02, 0x2a, 0xb2, 0x81, 0xb8, 0x05, 0x0b, 0x87, 0xd8, 0x41, 0xa6,
+	0x61, 0x35, 0x98, 0x10, 0x34, 0x4c, 0x9d, 0x71, 0x31, 0xa7, 0xcc, 0xf9, 0xf3, 0x35, 0x3a, 0xfd,
+	0x99, 0x2e, 0xca, 0x30, 0xad, 0x23, 0xcd, 0x6c, 0xab, 0x2d, 0xc2, 0x58, 0x98, 0x57, 0xf8, 0x58,
+	0x14, 0x61, 0xdc, 0x52, 0xdb, 0xc8, 0xa7, 0x1d, 0xfb, 0x16, 0x97, 0x60, 0x92, 0xf4, 0xda, 0x07,
+	0xb8, 0xe5, 0xb1, 0x40, 0xf1, 0x47, 0x62, 0x15, 0x66, 0xa8, 0xb4, 0x34, 0xdc, 0x9e, 0x8d, 0x58,
+	0x65, 0xe7, 0x2a, 0x6f, 0x95, 0x12, 0xb4, 0xcb, 0x3e, 0x32, 0x4a, 0x4c, 0x83, 0xe8, 0xe2, 0xbe,
+	0xea, 0xd9, 0x48, 0x99, 0xd6, 0xfc, 0x2f, 0x71, 0x15, 0x66, 0x5e, 0xb3, 0x63, 0x9a, 0xc1, 0x9d,
+	0x36, 0x02, 0xe1, 0xa9, 0x41, 0xbe, 0x65, 0x7e, 0xdb, 0x31, 0x75, 0xd3, 0xed, 0x35, 0x34, 0xd5,
+	0x96, 0x66, 0x38, 0x7d, 0x84, 0x01, 0xf4, 0x99, 0xe5, 0x4e, 0x35, 0xd5, 0x8e, 0xd5, 0xe5, 0x06,
+	0x14, 0xd3, 0xf7, 0x9c, 0x0b, 0x83, 0x04, 0x53, 0x41, 0xd9, 0xfd, 0xbd, 0xf7, 0x87, 0x45, 0x0d,
+	0x16, 0xeb, 0xc4, 0x50, 0x50, 0x1b, 0x3f, 0x40, 0x7b, 0xfe, 0xb6, 0x62, 0xd3, 0x3a, 0xe3, 0x91,
+	0x8b, 0x81, 0x2c, 0xc0, 0x5a, 0x52, 0x12, 0xce, 0x9c, 0x9f, 0xc3, 0xa7, 0x3f, 0xe0, 0x55, 0xb5,
+	0xe7, 0x22, 0x0d, 0xeb, 0x83, 0x4e, 0xff, 0x3b, 0xb0, 0x90, 0x42, 0xeb, 0x79, 0x2d, 0xca, 0xe6,
+	0x40, 0xd9, 0x69, 0xc0, 0x46, 0x53, 0x25, 0x4d, 0x5f, 0xd6, 0xe8, 0xc9, 0xac, 0x61, 0x1d, 0xdd,
+	0x51, 0x49, 0x73, 0xc0, 0xc9, 0x8c, 0x63, 0xe2, 0xc8, 0x7f, 0x13, 0x18, 0xe7, 0x43, 0xe7, 0xf7,
+	0x6e, 0xa8, 0x56, 0x67, 0x15, 0xae, 0x3e, 0xbe, 0xe4, 0x86, 0x92, 0x9b, 0x41, 0x7c, 0xd9, 0x64,
+	0x7c, 0x49, 0xc1, 0xcb, 0x97, 0xf5, 0x0d, 0xe4, 0xeb, 0xc4, 0xf8, 0x42, 0xed, 0x10, 0x94, 0x75,
+	0x78, 0xdf, 0x86, 0xf9, 0xc8, 0x42, 0x10, 0x5d, 0x4a, 0x8e, 0x4a, 0x7c, 0x78, 0x29, 0x28, 0x4e,
+	0x89, 0x65, 0x38, 0x1f, 0xc9, 0xc0, 0x53, 0x1f, 0xc0, 0x3c, 0x05, 0x68, 0xd9, 0xff, 0x63, 0xf2,
+	0x15, 0x4f, 0x4e, 0x43, 0x39, 0x78, 0xfa, 0x1f, 0x85, 0xfe, 0x8b, 0xc3, 0x10, 0x5a, 0x7b, 0x13,
+	0xd6, 0xbc, 0xc6, 0xc0, 0x1c, 0xd2, 0xc4, 0x76, 0x85, 0xf5, 0x81, 0x48, 0xcc, 0xe4, 0x03, 0x93,
+	0x70, 0xab, 0xe8, 0x93, 0xdb, 0x27, 0x02, 0x88, 0xd1, 0x52, 0x7e, 0x4e, 0xc5, 0xed, 0x8c, 0x94,
+	0x0b, 0xf4, 0x32, 0x97, 0xa8, 0x97, 0xe3, 0x61, 0xbd, 0x8c, 0x61, 0x5e, 0x8b, 0x9f, 0x04, 0x0a,
+	0x87, 0xa3, 0x35, 0xd9, 0xaf, 0xd5, 0x8e, 0x63, 0x05, 0x2a, 0x55, 0xc7, 0x7a, 0xa7, 0x85, 0x6e,
+	0x11, 0x82, 0xdc, 0xff, 0x56, 0x6d, 0x3c, 0x8a, 0xa7, 0xa4, 0x0a, 0x00, 0x55, 0x7e, 0x9d, 0x83,
+	0x5c, 0x9d, 0x18, 0xe2, 0x13, 0x01, 0xce, 0x27, 0x5f, 0xcd, 0xae, 0x95, 0x06, 0xdc, 0x5b, 0x4b,
+	0x69, 0x97, 0x31, 0xf9, 0xfa, 0xa9, 0xdc, 0xb8, 0x54, 0xff, 0x22, 0xc0, 0x72, 0x5a, 0x0b, 0xdd,
+	0x19, 0x2e, 0x74, 0x9f, 0xa3, 0x7c, 0xf3, 0x94, 0x8e, 0x1c, 0xd5, 0xf7, 0x02, 0xbc, 0xd9, 0xdf,
+	0x24, 0xae, 0x64, 0x85, 0xed, 0x73, 0x91, 0x3f, 0x1a, 0xd9, 0x85, 0x63, 0xf8, 0x49, 0x80, 0xc5,
+	0xc4, 0x2b, 0xd0, 0xd5, 0xac, 0x98, 0x49, 0x5e, 0xf2, 0x27, 0xa7, 0xf1, 0xe2, 0x60, 0x9e, 0x0a,
+	0xb0, 0x94, 0xd2, 0xaf, 0x3e, 0x1c, 0x2e, 0x70, 0xdc, 0x4f, 0xbe, 0x71, 0x3a, 0xbf, 0x04, 0x48,
+	0x7d, 0x17, 0xe8, 0x21, 0x21, 0xc5, 0xfd, 0x86, 0x85, 0x94, 0x76, 0x71, 0x65, 0x64, 0x4e, 0xeb,
+	0x8d, 0x3b, 0x23, 0xc4, 0x0e, 0x3b, 0x66, 0x93, 0x39, 0xa3, 0xbb, 0x89, 0x2d, 0x80, 0x50, 0x6b,
+	0xdb, 0xce, 0x0a, 0xf7, 0xda, 0x56, 0xae, 0x0c, 0x6f, 0xcb, 0xb3, 0x39, 0x30, 0x1b, 0xe9, 0x66,
+	0xef, 0x65, 0xc2, 0x0f, 0x59, 0xcb, 0x57, 0x47, 0xb1, 0xe6, 0x39, 0xa9, 0xa8, 0x25, 0xb7, 0xb0,
+	0x6b, 0xc3, 0x6d, 0x5e, 0xcc, 0x2d, 0x5b, 0xd4, 0x06, 0xf6, 0x2a, 0xf1, 0x3b, 0x98, 0x8f, 0xf7,
+	0xa9, 0xf2, 0x08, 0x55, 0xa4, 0x0e, 0xf2, 0xce, 0x88, 0x0e, 0x11, 0x12, 0xa6, 0x35, 0x9e, 0xcc,
+	0xa0, 0x29, 0x8e, 0xd9, 0x24, 0xcc, 0xe8, 0x3f, 0xfd, 0x25, 0xe2, 0xcf, 0x13, 0xa3, 0x95, 0x28,
+	0x70, 0x1b, 0xb1, 0x44, 0xf1, 0x47, 0x0a, 0x79, 0xe2, 0xf1, 0xab, 0x67, 0xdb, 0x42, 0x75, 0xf7,
+	0xf9, 0x71, 0x41, 0x78, 0x71, 0x5c, 0x10, 0xfe, 0x3a, 0x2e, 0x08, 0x4f, 0x4f, 0x0a, 0x63, 0x2f,
+	0x4e, 0x0a, 0x63, 0xbf, 0x9f, 0x14, 0xc6, 0xf6, 0xdf, 0x35, 0x4c, 0xb7, 0xd9, 0x39, 0x28, 0x69,
+	0xb8, 0xcd, 0xde, 0x64, 0xde, 0xf7, 0x9e, 0x67, 0x2c, 0xac, 0xa3, 0xf2, 0xc3, 0xd0, 0xab, 0x4f,
+	0xcf, 0x46, 0xe4, 0x60, 0x92, 0xbd, 0xc2, 0x7c, 0xf0, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4a,
+	0xb1, 0x50, 0xfb, 0x21, 0x12, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1243,6 +1428,8 @@ type MsgClient interface {
 	UnpauseZRC20(ctx context.Context, in *MsgUnpauseZRC20, opts ...grpc.CallOption) (*MsgUnpauseZRC20Response, error)
 	UpdateGatewayContract(ctx context.Context, in *MsgUpdateGatewayContract, opts ...grpc.CallOption) (*MsgUpdateGatewayContractResponse, error)
 	UpdateZRC20Name(ctx context.Context, in *MsgUpdateZRC20Name, opts ...grpc.CallOption) (*MsgUpdateZRC20NameResponse, error)
+	BurnFungibleModuleAsset(ctx context.Context, in *MsgBurnFungibleModuleAsset, opts ...grpc.CallOption) (*MsgBurnFungibleModuleAssetResponse, error)
+	UpdateGatewayGasLimit(ctx context.Context, in *MsgUpdateGatewayGasLimit, opts ...grpc.CallOption) (*MsgUpdateGatewayGasLimitResponse, error)
 }
 
 type msgClient struct {
@@ -1352,6 +1539,24 @@ func (c *msgClient) UpdateZRC20Name(ctx context.Context, in *MsgUpdateZRC20Name,
 	return out, nil
 }
 
+func (c *msgClient) BurnFungibleModuleAsset(ctx context.Context, in *MsgBurnFungibleModuleAsset, opts ...grpc.CallOption) (*MsgBurnFungibleModuleAssetResponse, error) {
+	out := new(MsgBurnFungibleModuleAssetResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/BurnFungibleModuleAsset", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateGatewayGasLimit(ctx context.Context, in *MsgUpdateGatewayGasLimit, opts ...grpc.CallOption) (*MsgUpdateGatewayGasLimitResponse, error) {
+	out := new(MsgUpdateGatewayGasLimitResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/UpdateGatewayGasLimit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	DeploySystemContracts(context.Context, *MsgDeploySystemContracts) (*MsgDeploySystemContractsResponse, error)
@@ -1365,6 +1570,8 @@ type MsgServer interface {
 	UnpauseZRC20(context.Context, *MsgUnpauseZRC20) (*MsgUnpauseZRC20Response, error)
 	UpdateGatewayContract(context.Context, *MsgUpdateGatewayContract) (*MsgUpdateGatewayContractResponse, error)
 	UpdateZRC20Name(context.Context, *MsgUpdateZRC20Name) (*MsgUpdateZRC20NameResponse, error)
+	BurnFungibleModuleAsset(context.Context, *MsgBurnFungibleModuleAsset) (*MsgBurnFungibleModuleAssetResponse, error)
+	UpdateGatewayGasLimit(context.Context, *MsgUpdateGatewayGasLimit) (*MsgUpdateGatewayGasLimitResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1403,6 +1610,12 @@ func (*UnimplementedMsgServer) UpdateGatewayContract(ctx context.Context, req *M
 }
 func (*UnimplementedMsgServer) UpdateZRC20Name(ctx context.Context, req *MsgUpdateZRC20Name) (*MsgUpdateZRC20NameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateZRC20Name not implemented")
+}
+func (*UnimplementedMsgServer) BurnFungibleModuleAsset(ctx context.Context, req *MsgBurnFungibleModuleAsset) (*MsgBurnFungibleModuleAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BurnFungibleModuleAsset not implemented")
+}
+func (*UnimplementedMsgServer) UpdateGatewayGasLimit(ctx context.Context, req *MsgUpdateGatewayGasLimit) (*MsgUpdateGatewayGasLimitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGatewayGasLimit not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1607,6 +1820,42 @@ func _Msg_UpdateZRC20Name_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BurnFungibleModuleAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBurnFungibleModuleAsset)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BurnFungibleModuleAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Msg/BurnFungibleModuleAsset",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BurnFungibleModuleAsset(ctx, req.(*MsgBurnFungibleModuleAsset))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateGatewayGasLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGatewayGasLimit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateGatewayGasLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Msg/UpdateGatewayGasLimit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateGatewayGasLimit(ctx, req.(*MsgUpdateGatewayGasLimit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.fungible.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1655,9 +1904,75 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateZRC20Name",
 			Handler:    _Msg_UpdateZRC20Name_Handler,
 		},
+		{
+			MethodName: "BurnFungibleModuleAsset",
+			Handler:    _Msg_BurnFungibleModuleAsset_Handler,
+		},
+		{
+			MethodName: "UpdateGatewayGasLimit",
+			Handler:    _Msg_UpdateGatewayGasLimit_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "zetachain/zetacore/fungible/tx.proto",
+}
+
+func (m *MsgUpdateGatewayGasLimit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGatewayGasLimit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGatewayGasLimit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.NewGasLimit != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NewGasLimit))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateGatewayGasLimitResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGatewayGasLimitResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGatewayGasLimitResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgDeploySystemContracts) Marshal() (dAtA []byte, err error) {
@@ -2456,6 +2771,66 @@ func (m *MsgUpdateZRC20NameResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgBurnFungibleModuleAsset) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBurnFungibleModuleAsset) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBurnFungibleModuleAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Zrc20Address) > 0 {
+		i -= len(m.Zrc20Address)
+		copy(dAtA[i:], m.Zrc20Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Zrc20Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBurnFungibleModuleAssetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBurnFungibleModuleAssetResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBurnFungibleModuleAssetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -2467,6 +2842,31 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgUpdateGatewayGasLimit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.NewGasLimit != 0 {
+		n += 1 + sovTx(uint64(m.NewGasLimit))
+	}
+	return n
+}
+
+func (m *MsgUpdateGatewayGasLimitResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgDeploySystemContracts) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2819,11 +3219,188 @@ func (m *MsgUpdateZRC20NameResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgBurnFungibleModuleAsset) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Zrc20Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgBurnFungibleModuleAssetResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgUpdateGatewayGasLimit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGatewayGasLimit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGatewayGasLimit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewGasLimit", wireType)
+			}
+			m.NewGasLimit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NewGasLimit |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateGatewayGasLimitResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGatewayGasLimitResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGatewayGasLimitResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgDeploySystemContracts) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -5140,6 +5717,170 @@ func (m *MsgUpdateZRC20NameResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateZRC20NameResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBurnFungibleModuleAsset) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBurnFungibleModuleAsset: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBurnFungibleModuleAsset: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zrc20Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zrc20Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBurnFungibleModuleAssetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBurnFungibleModuleAssetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBurnFungibleModuleAssetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/zrc20.sol"
 

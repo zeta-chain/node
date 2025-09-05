@@ -56,6 +56,8 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	// copy contracts from deployer runner
 	conf.Contracts.Solana.GatewayProgramID = config.DoubleQuotedString(r.GatewayProgram.String())
 	conf.Contracts.Solana.SPLAddr = config.DoubleQuotedString(r.SPLAddr.String())
+	conf.Contracts.Solana.ConnectedProgramID = config.DoubleQuotedString(r.ConnectedProgram.String())
+	conf.Contracts.Solana.ConnectedSPLProgramID = config.DoubleQuotedString(r.ConnectedSPLProgram.String())
 
 	conf.Contracts.TON.GatewayAccountID = config.DoubleQuotedString(r.TONGateway.ToRaw())
 
@@ -63,9 +65,11 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 		conf.Contracts.Sui.GatewayPackageID = config.DoubleQuotedString(r.SuiGateway.PackageID())
 		conf.Contracts.Sui.GatewayObjectID = config.DoubleQuotedString(r.SuiGateway.ObjectID())
 	}
+	conf.Contracts.Sui.GatewayUpgradeCap = config.DoubleQuotedString(r.SuiGatewayUpgradeCap)
 
 	conf.Contracts.Sui.FungibleTokenCoinType = config.DoubleQuotedString(r.SuiTokenCoinType)
 	conf.Contracts.Sui.FungibleTokenTreasuryCap = config.DoubleQuotedString(r.SuiTokenTreasuryCap)
+	conf.Contracts.Sui.Example = r.SuiExample
 
 	conf.Contracts.EVM.ZetaEthAddr = config.DoubleQuotedString(r.ZetaEthAddr.Hex())
 	conf.Contracts.EVM.ConnectorEthAddr = config.DoubleQuotedString(r.ConnectorEthAddr.Hex())
@@ -74,6 +78,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.EVM.TestDappAddr = config.DoubleQuotedString(r.EvmTestDAppAddr.Hex())
 	conf.Contracts.EVM.Gateway = config.DoubleQuotedString(r.GatewayEVMAddr.Hex())
 	conf.Contracts.EVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2EVMAddr.Hex())
+	conf.Contracts.EVM.ConnectorNative = config.DoubleQuotedString(r.ConnectorNativeAddr.Hex())
 
 	conf.Contracts.ZEVM.SystemContractAddr = config.DoubleQuotedString(r.SystemContractAddr.Hex())
 	conf.Contracts.ZEVM.ETHZRC20Addr = config.DoubleQuotedString(r.ETHZRC20Addr.Hex())
@@ -94,6 +99,7 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.ZEVM.TestDappAddr = config.DoubleQuotedString(r.ZevmTestDAppAddr.Hex())
 	conf.Contracts.ZEVM.Gateway = config.DoubleQuotedString(r.GatewayZEVMAddr.Hex())
 	conf.Contracts.ZEVM.TestDAppV2Addr = config.DoubleQuotedString(r.TestDAppV2ZEVMAddr.Hex())
+	conf.Contracts.ZEVM.CoreRegistry = config.DoubleQuotedString(r.CoreRegistryAddr.Hex())
 
 	return conf
 }

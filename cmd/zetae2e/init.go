@@ -31,7 +31,7 @@ func NewInitCmd() *cobra.Command {
 	InitCmd.Flags().
 		StringVar(&initConf.RPCs.Solana, "solanaURL", initConf.RPCs.Solana, "--solanaURL http://solana:8899")
 	InitCmd.Flags().
-		StringVar(&initConf.RPCs.TON, "tonURL", initConf.RPCs.TON, "--tonURL http://ton:8000/lite-client.json")
+		StringVar(&initConf.RPCs.TON, "tonURL", initConf.RPCs.TON, "--tonURL http://ton:8081")
 	InitCmd.Flags().StringVar(&initConf.ZetaChainID, "chainID", initConf.ZetaChainID, "--chainID athens_101-1")
 	InitCmd.Flags().StringVar(&configFile, local.FlagConfigFile, "e2e.config", "--cfg ./e2e.config")
 

@@ -103,7 +103,7 @@ func (s *Scheduler) Register(ctx context.Context, exec Executable, opts ...Opt) 
 	task.logger = newTaskLogger(task, config, s.logger)
 	task.ticker = newTickable(task, config)
 
-	task.logger.Info().Msg("Starting scheduler task")
+	task.logger.Info().Msgf("Starting scheduler task %s", task.name)
 	bg.Work(ctx, task.ticker.Start, bg.WithLogger(task.logger))
 
 	s.mu.Lock()
@@ -171,7 +171,7 @@ func (s *Scheduler) StopGroup(group Group) {
 
 // Stop stops the task and offloads it from the scheduler.
 func (t *Task) Stop() {
-	t.logger.Info().Msg("Stopping scheduler task")
+	t.logger.Info().Msgf("Stopping scheduler task %s", t.name)
 	start := time.Now()
 
 	t.ticker.Stop()

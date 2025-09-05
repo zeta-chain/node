@@ -13,7 +13,7 @@ import (
 )
 
 func TestERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
-	require.Len(r, args, 1)
+	require.Len(r, args, 2)
 
 	previousGasLimit := r.ZEVMAuth.GasLimit
 	r.ZEVMAuth.GasLimit = 10000000
@@ -22,6 +22,7 @@ func TestERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 	}()
 
 	amount := utils.ParseBigInt(r, args[0])
+	gasLimit := utils.ParseBigInt(r, args[1])
 
 	r.ApproveERC20ZRC20(r.GatewayZEVMAddr)
 	r.ApproveETHZRC20(r.GatewayZEVMAddr)
@@ -32,12 +33,13 @@ func TestERC20WithdrawAndCallNoMessage(r *runner.E2ERunner, args []string) {
 		amount,
 		[]byte{},
 		gatewayzevm.RevertOptions{OnRevertGasLimit: big.NewInt(0)},
+		gasLimit,
 	)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw_and_call")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_OutboundMined)
 
 	// check called
 	messageIndex, err := r.TestDAppV2EVM.GetNoMessageIndex(&bind.CallOpts{}, r.EVMAddress())

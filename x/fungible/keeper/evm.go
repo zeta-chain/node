@@ -14,14 +14,16 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/cosmos/evm/x/vm/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	evmtypes "github.com/zeta-chain/ethermint/x/evm/types"
+	"github.com/zeta-chain/protocol-contracts/pkg/gatewayzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/wzeta.sol"
 	zevmconnectorcontract "github.com/zeta-chain/protocol-contracts/pkg/zetaconnectorzevm.sol"
@@ -268,6 +270,36 @@ func (k Keeper) DepositZRC20(
 	)
 }
 
+// DepositZeta deposits ZETA tokens into and account using the gateway contract;
+func (k Keeper) DepositZeta(
+	ctx sdk.Context,
+	to common.Address,
+	amount *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	gatewayAbi, err := gatewayzevm.GatewayZEVMMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	systemContract, found := k.GetSystemContract(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "GetSystemContract address not found")
+	}
+	gateway := common.HexToAddress(systemContract.Gateway)
+	return k.CallEVM(
+		ctx,
+		*gatewayAbi,
+		types.ModuleAddressEVM,
+		gateway,
+		amount,
+		DefaultGasLimit,
+		true,
+		false,
+		"deposit",
+		to,
+	)
+}
+
 // UpdateZRC20ProtocolFlatFee updates the protocol flat fee for a given ZRC20 contract
 func (k Keeper) UpdateZRC20ProtocolFlatFee(
 	ctx sdk.Context,
@@ -377,28 +409,34 @@ func (k Keeper) CallOnReceiveZevmConnector(ctx sdk.Context,
 		return nil, cosmoserrors.Wrap(types.ErrABIGet, err.Error())
 	}
 
-	err = k.DepositCoinsToFungibleModule(ctx, zetaValue)
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrDepositZetaToFungibleAccount, err.Error())
+	mintAndDeposit := func(ctx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		res, err := k.CallEVM(
+			ctx,
+			*zevmConnectorAbi,
+			types.ModuleAddressEVM,
+			connectorAddress,
+			zetaValue,
+			ZEVMGasLimitConnectorCall,
+			true,
+			false,
+			"onReceive",
+			zetaTxSenderAddress,
+			sourceChainID,
+			destinationAddress,
+			zetaValue,
+			message,
+			internalSendHash,
+		)
+		return res, true, err // true indicates that this is a cross-chain transaction
+		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
 
-	return k.CallEVM(
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
-		*zevmConnectorAbi,
-		types.ModuleAddressEVM,
-		connectorAddress,
 		zetaValue,
-		ZEVMGasLimitConnectorCall,
-		true,
-		false,
-		"onReceive",
-		zetaTxSenderAddress,
-		sourceChainID,
-		destinationAddress,
-		zetaValue,
-		message,
-		internalSendHash,
+		mintAndDeposit,
 	)
+	return res, err
 }
 
 // CallOnRevertZevmConnector calls the onRevert function of the ZevmConnector contract
@@ -424,28 +462,36 @@ func (k Keeper) CallOnRevertZevmConnector(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	err = k.DepositCoinsToFungibleModule(ctx, remainingZetaValue)
-	if err != nil {
-		return nil, err
+
+	mintAndRevert := func(ctx sdk.Context) (*evmtypes.MsgEthereumTxResponse, bool, error) {
+		res, err := k.CallEVM(
+			ctx,
+			*zevmConnectorAbi,
+			types.ModuleAddressEVM,
+			connectorAddress,
+			remainingZetaValue,
+			ZEVMGasLimitConnectorCall,
+			true,
+			false,
+			"onRevert",
+			zetaTxSenderAddress,
+			sourceChainID,
+			destinationAddress,
+			destinationChainID,
+			remainingZetaValue,
+			message,
+			internalSendHash,
+		)
+		return res, true, err // true indicates that this is a cross-chain transaction
+		// Note the contract call flag is not used here as the check is done at a higher level for legacy functions
 	}
-	return k.CallEVM(
+
+	res, _, err := k.ExecuteWithMintedZeta(
 		ctx,
-		*zevmConnectorAbi,
-		types.ModuleAddressEVM,
-		connectorAddress,
 		remainingZetaValue,
-		ZEVMGasLimitConnectorCall,
-		true,
-		false,
-		"onRevert",
-		zetaTxSenderAddress,
-		sourceChainID,
-		destinationAddress,
-		destinationChainID,
-		remainingZetaValue,
-		message,
-		internalSendHash,
+		mintAndRevert,
 	)
+	return res, err
 }
 
 // QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20
@@ -697,6 +743,12 @@ func (k Keeper) CallEVM(
 	return resp, nil
 }
 
+const (
+	AttributeKeyTxNonce    = "txNonce"
+	AttributeKeyTxData     = "txData"
+	AttributeKeyTxGasLimit = "txGasLimit"
+)
+
 // CallEVMWithData performs a smart contract method call using contract data
 // value is the amount of wei to send; gaslimit is the custom gas limit, if nil EstimateGas is used
 // to bisect the correct gas limit (this may sometimes result in insufficient gas limit; not sure why)
@@ -739,6 +791,14 @@ func (k Keeper) CallEVMWithData(
 		if err != nil {
 			return nil, err
 		}
+		// NOTE: handle case where there's a revert related error
+		// (backwards compatibility with ethermint, otherwise it will attempt tx with gas cap 0)
+		if gasRes.Failed() {
+			if (gasRes.VmError != vm.ErrExecutionReverted.Error()) || len(gasRes.Ret) == 0 {
+				return nil, errors.New(gasRes.VmError)
+			}
+			return nil, evmtypes.NewExecErrorWithReason(gasRes.Ret)
+		}
 		gasCap = gasRes.Gas
 		k.Logger(ctx).Info("call evm", "EstimateGas", gasCap)
 	}
@@ -746,21 +806,22 @@ func (k Keeper) CallEVMWithData(
 		gasCap = gasLimit.Uint64()
 	}
 	msg := &core.Message{
-		From:              from,
-		To:                contract,
-		Nonce:             nonce,
-		Value:             value,         // amount
-		GasLimit:          gasCap,        // gasLimit
-		GasFeeCap:         big.NewInt(0), // gasFeeCap
-		GasTipCap:         big.NewInt(0), // gasTipCap
-		GasPrice:          big.NewInt(0), // gasPrice
-		Data:              data,
-		AccessList:        ethtypes.AccessList{}, // AccessList
-		SkipAccountChecks: !commit,               // isFake
+		From:             from,
+		To:               contract,
+		Nonce:            nonce,
+		Value:            value,         // amount
+		GasLimit:         gasCap,        // gasLimit
+		GasFeeCap:        big.NewInt(0), // gasFeeCap
+		GasTipCap:        big.NewInt(0), // gasTipCap
+		GasPrice:         big.NewInt(0), // gasPrice
+		Data:             data,
+		AccessList:       ethtypes.AccessList{}, // AccessList
+		SkipNonceChecks:  !commit,               // isFake
+		SkipFromEOACheck: !commit,
 	}
-	k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
-	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "chainid", k.evmKeeper.ChainID(), "ctx.chainid", ctx.ChainID())
-	res, err := k.evmKeeper.ApplyMessage(ctx, msg, evmtypes.NewNoOpTracer(), commit)
+	// k.evmKeeper.WithChainID(ctx) //FIXME:  set chainID for signer; should not need to do this; but seems necessary. Why?
+	k.Logger(ctx).Debug("call evm", "gasCap", gasCap, "ctx.chainid", ctx.ChainID())
+	res, err := k.evmKeeper.ApplyMessage(ctx, *msg, evmtypes.NewNoOpTracer(), commit, false)
 	if err != nil {
 		return nil, err
 	}
@@ -809,9 +870,14 @@ func (k Keeper) CallEVMWithData(
 
 		if !noEthereumTxEvent {
 			// adding txData for more info in rpc methods in order to parse synthetic txs
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxData, hexutil.Encode(msg.Data)))
-			// adding nonce for more info in rpc methods in order to parse synthetic txs
-			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxNonce, fmt.Sprint(nonce)))
+			attrs = append(attrs, sdk.NewAttribute(AttributeKeyTxData, hexutil.Encode(msg.Data)))
+			// adding nonce and gas limit for more info in rpc methods in order to parse synthetic txs
+			attrs = append(attrs, sdk.NewAttribute(AttributeKeyTxNonce, fmt.Sprint(nonce)))
+			attrs = append(
+				attrs,
+				sdk.NewAttribute(AttributeKeyTxGasLimit, strconv.FormatUint(msg.GasLimit, 10)),
+			)
+
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					evmtypes.EventTypeEthereumTx,
@@ -830,11 +896,12 @@ func (k Keeper) CallEVMWithData(
 			})
 		}
 
+		// Compute block bloom filter
 		logs := evmtypes.LogsToEthereum(res.Logs)
 		var bloomReceipt ethtypes.Bloom
 		if len(logs) > 0 {
 			bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
-			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.CreateBloom(&ethtypes.Receipt{Logs: logs}).Bytes()))
 			bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
 			k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
 			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))

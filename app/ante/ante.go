@@ -1,18 +1,3 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/zeta-chain/ethermint/blob/main/LICENSE
 package ante
 
 import (
@@ -26,6 +11,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmante "github.com/cosmos/evm/ante/evm"
 
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 	observertypes "github.com/zeta-chain/node/x/observer/types"
@@ -74,13 +60,18 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			opts := txWithExtensions.GetExtensionOptions()
 			if len(opts) > 0 {
 				switch typeURL := opts[0].GetTypeUrl(); typeURL {
-				case "/ethermint.evm.v1.ExtensionOptionsEthereumTx":
-					// handle as *evmtypes.MsgEthereumTx
-					anteHandler = newEthAnteHandler(options)
-				case "/ethermint.types.v1.ExtensionOptionsWeb3Tx":
+				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
+					anteHandler = sdk.ChainAnteDecorators(
+						evmante.NewEVMMonoDecorator(
+							options.AccountKeeper,
+							options.FeeMarketKeeper,
+							options.EvmKeeper,
+							options.MaxTxGasWanted,
+						))
+				case "/cosmos.evm.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
 					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
-				case "/ethermint.types.v1.ExtensionOptionDynamicFeeTx":
+				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
 					anteHandler = newCosmosAnteHandler(options)
 				default:
@@ -102,9 +93,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 			// if tx is a system tx, and singer is authorized, use system tx handler
 
-			isAuthorized := func(creator string) bool {
-				return options.ObserverKeeper.IsNonTombstonedObserver(ctx, creator)
+			isAuthorized := func(creator string) error {
+				return options.ObserverKeeper.CheckObserverCanVote(ctx, creator)
 			}
+
 			if IsSystemTx(tx, isAuthorized) {
 				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
@@ -151,7 +143,7 @@ func Recover(logger tmlog.Logger, err *error) {
 // system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
 // the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
 // the tx is authorized.
-func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
+func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) error) bool {
 	// the following determines whether the tx is a system tx which will uses different handler
 	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
 	if len(tx.GetMsgs()) != 1 { // this is not a system tx
@@ -178,9 +170,7 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*observertypes.MsgVoteTSS,
 		*observertypes.MsgVoteBlame:
 		signers := innerMsg.(sdk.LegacyMsg).GetSigners()
-		if len(signers) == 1 {
-			return isAuthorizedSigner(signers[0].String())
-		}
+		return len(signers) == 1 && isAuthorizedSigner(signers[0].String()) == nil
 	}
 
 	return false

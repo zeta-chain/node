@@ -47,7 +47,7 @@ func TestBitcoinStdMemoDepositAndCallRevertOtherAddress(r *runner.E2ERunner, arg
 	utils.RequireCCTXStatus(r, cctx, types.CctxStatus_Reverted)
 
 	// Make sure inbound sender and revert address are correct
-	require.Equal(r, cctx.InboundParams.Sender, r.BTCDeployerAddress.EncodeAddress())
+	require.Equal(r, cctx.InboundParams.Sender, r.GetBtcAddress().EncodeAddress())
 	require.Equal(r, cctx.GetCurrentOutboundParam().Receiver, revertAddress)
 
 	// Check revert tx receiver address and amount

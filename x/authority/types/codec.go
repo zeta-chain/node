@@ -11,6 +11,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdatePolicies{}, "authority/UpdatePolicies", nil)
 	cdc.RegisterConcrete(&MsgUpdateChainInfo{}, "authority/UpdateChainInfo", nil)
 	cdc.RegisterConcrete(&MsgRemoveChainInfo{}, "authority/RemoveChainInfo", nil)
+	cdc.RegisterConcrete(&MsgAddAuthorization{}, "authority/AddAuthorization", nil)
+	cdc.RegisterConcrete(&MsgRemoveAuthorization{}, "authority/RemoveAuthorization", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -18,6 +20,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdatePolicies{},
 		&MsgUpdateChainInfo{},
 		&MsgRemoveChainInfo{},
+		&MsgAddAuthorization{},
+		&MsgRemoveAuthorization{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

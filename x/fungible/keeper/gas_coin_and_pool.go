@@ -72,6 +72,9 @@ func (k Keeper) SetupChainGasCoinAndPool(
 			sdk.NewAttribute(gasAssetName, zrc20Addr.String()),
 		),
 	)
+
+	// https://github.com/zeta-chain/node/issues/4056
+	// TODO : Verify the above linked issue and fix if needed
 	err = k.SetGasCoin(ctx, big.NewInt(chain.ChainId), zrc20Addr)
 	if err != nil {
 		return ethcommon.Address{}, err

@@ -1,4 +1,4 @@
-package observer_test
+package observer
 
 import (
 	"testing"
@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/node/pkg/constant"
 	"github.com/zeta-chain/node/pkg/memo"
 	"github.com/zeta-chain/node/testutil/sample"
-	"github.com/zeta-chain/node/zetaclient/chains/bitcoin/observer"
 	"github.com/zeta-chain/node/zetaclient/config"
 	"github.com/zeta-chain/node/zetaclient/testutils"
 	clienttypes "github.com/zeta-chain/node/zetaclient/types"
@@ -25,8 +24,8 @@ func createTestBtcEvent(
 	net *chaincfg.Params,
 	memo []byte,
 	memoStd *memo.InboundMemo,
-) observer.BTCInboundEvent {
-	return observer.BTCInboundEvent{
+) BTCInboundEvent {
+	return BTCInboundEvent{
 		FromAddress: sample.BTCAddressP2WPKH(t, sample.Rand(), net).String(),
 		ToAddress:   sample.EthAddress().Hex(),
 		MemoBytes:   memo,
@@ -47,12 +46,12 @@ func Test_Category(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name     string
-		event    *observer.BTCInboundEvent
+		event    *BTCInboundEvent
 		expected clienttypes.InboundCategory
 	}{
 		{
 			name: "should return InboundCategoryProcessable for a processable inbound event",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
@@ -60,7 +59,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted sender address",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: sample.RestrictedBtcAddressTest,
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 			},
@@ -68,7 +67,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted receiver address in standard memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoStd: &memo.InboundMemo{
@@ -81,7 +80,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryRestricted for a restricted revert address in standard memo",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoStd: &memo.InboundMemo{
@@ -96,7 +95,7 @@ func Test_Category(t *testing.T) {
 		},
 		{
 			name: "should return InboundCategoryDonation for a donation inbound event",
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				FromAddress: "tb1quhassyrlj43qar0mn0k5sufyp6mazmh2q85lr6ex8ehqfhxpzsksllwrsu",
 				ToAddress:   testutils.TSSAddressBTCAthens3,
 				MemoBytes:   []byte(constant.DonationMessage),
@@ -118,7 +117,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 	tests := []struct {
 		name             string
 		chainID          int64
-		event            *observer.BTCInboundEvent
+		event            *BTCInboundEvent
 		expectedMemoStd  *memo.InboundMemo
 		expectedReceiver common.Address
 		donation         bool
@@ -127,7 +126,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should decode standard memo bytes successfully",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -150,28 +149,47 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should fall back to legacy memo successfully",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// raw address + payload
 				MemoBytes: testutil.HexToBytes(t, "2d07a9cbd57dcca3e2cf966c88bc874445b6e3b668656c6c6f207361746f736869"),
 			},
 			expectedReceiver: common.HexToAddress("0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6"),
 		},
 		{
-			name:    "should disable standard memo for Bitcoin mainnet",
+			name:    "should decode standard memo bytes successfully for Bitcoin Mainnet",
 			chainID: chains.BitcoinMainnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call
 				MemoBytes: testutil.HexToBytes(
 					t,
 					"5a0110032d07a9cbd57dcca3e2cf966c88bc874445b6e3b60d68656c6c6f207361746f736869",
 				),
 			},
-			expectedReceiver: common.HexToAddress("0x5A0110032d07A9cbd57dcCa3e2Cf966c88bC8744"),
+			expectedMemoStd: &memo.InboundMemo{
+				Header: memo.Header{
+					Version:     0,
+					EncodingFmt: memo.EncodingFmtCompactShort,
+					OpCode:      memo.OpCodeDepositAndCall,
+					DataFlags:   3, // reciever + payload
+				},
+				FieldsV0: memo.FieldsV0{
+					Receiver: common.HexToAddress("0x2D07A9CBd57DCca3E2cF966C88Bc874445b6E3B6"),
+					Payload:  []byte("hello satoshi"),
+				},
+			},
+		},
+		{
+			name:    "should return error if no memo is found",
+			chainID: chains.BitcoinTestnet.ChainId,
+			event: &BTCInboundEvent{
+				MemoBytes: []byte("no memo found"),
+			},
+			errMsg: "no memo found in inbound",
 		},
 		{
 			name:    "should do nothing for donation message",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				MemoBytes: []byte(constant.DonationMessage),
 			},
 			donation: true,
@@ -179,7 +197,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should return error if standard memo contains improper data",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a deposit and call, receiver is empty ZEVM address
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -191,7 +209,7 @@ func Test_DecodeEventMemoBytes(t *testing.T) {
 		{
 			name:    "should return error if standard memo validation failed",
 			chainID: chains.BitcoinTestnet.ChainId,
-			event: &observer.BTCInboundEvent{
+			event: &BTCInboundEvent{
 				// a no asset call opCode passed, not supported at the moment
 				MemoBytes: testutil.HexToBytes(
 					t,
@@ -289,7 +307,7 @@ func Test_ValidateStandardMemo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := observer.ValidateStandardMemo(tt.memo, chains.BitcoinTestnet.ChainId)
+			err := ValidateStandardMemo(tt.memo, chains.BitcoinTestnet.ChainId)
 			if tt.errMsg != "" {
 				require.Contains(t, err.Error(), tt.errMsg)
 				return
@@ -315,7 +333,7 @@ func Test_IsEventProcessable(t *testing.T) {
 	// test cases
 	tests := []struct {
 		name   string
-		event  observer.BTCInboundEvent
+		event  BTCInboundEvent
 		result bool
 	}{
 		{
