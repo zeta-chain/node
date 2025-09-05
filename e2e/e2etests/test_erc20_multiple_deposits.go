@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -36,7 +36,13 @@ func TestERC20MultipleDeposits(r *runner.E2ERunner, args []string) {
 
 	// send multiple deposit through contract
 	r.Logger.Print("🏃test multiple erc20 deposits through contract")
-	tx, err = r.TestDAppV2EVM.GatewayMultipleERC20Deposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, r.ERC20Addr, amount, []byte(randomPayload(r)))
+	tx, err = r.TestDAppV2EVM.GatewayMultipleERC20Deposits(
+		r.EVMAuth,
+		r.TestDAppV2ZEVMAddr,
+		r.ERC20Addr,
+		amount,
+		[]byte(randomPayload(r)),
+	)
 	require.NoError(r, err)
 	r.WaitForTxReceiptOnEVM(tx)
 	r.Logger.Print("🍾 multiple erc20 deposits through contract observed")

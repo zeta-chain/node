@@ -5,9 +5,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
-
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
