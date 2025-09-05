@@ -736,6 +736,17 @@ message MsgBurnFungibleModuleAsset {
 }
 ```
 
+#### MsgUpdateGatewayGasLimit
+
+UpdateGatewayGasLimit updates the gateway gas limit used by the ZetaChain protocol
+
+```proto
+message MsgUpdateGatewayGasLimit {
+	string creator = 1;
+	uint64 new_gas_limit = 2;
+}
+```
+
 ## lightclient
 
 ### Messages

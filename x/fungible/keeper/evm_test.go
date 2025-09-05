@@ -135,6 +135,8 @@ func deploySystemContracts(
 	require.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
 
+	k.SetGatewayGasLimit(ctx, types.DefaultGatewayGasLimit)
+
 	// deploy the gateway contract
 	contract := deployGatewayContract(t, ctx, k, evmk, wzeta, sample.EthAddress())
 	require.NotEmpty(t, contract)

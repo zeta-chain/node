@@ -53,4 +53,5 @@ var (
 	ErrProcessDeposit = cosmoserrors.Register(ModuleName, 1139, "error processing deposit")
 	ErrZeroBalance    = cosmoserrors.Register(ModuleName, 1140, "balance is zero")
 	ErrFailedToBurn   = cosmoserrors.Register(ModuleName, 1141, "failed to burn coins")
+	ErrGasLimitNotSet = cosmoserrors.Register(ModuleName, 1142, "gas limit not set")
 )

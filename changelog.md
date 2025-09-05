@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-## v35.0.0
+## v36.0.0
+
 ### Features
-* [4125](https://github.com/zeta-chain/node/pull/4125) - add conditional logic for adding erc20 module based on chain id for v35 upgrade
+
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ## v33.0.0
 

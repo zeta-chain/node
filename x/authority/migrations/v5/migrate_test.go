@@ -1,4 +1,4 @@
-package v3_test
+package v5_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/zeta-chain/node/testutil/keeper"
-	v3 "github.com/zeta-chain/node/x/authority/migrations/v3"
+	v5 "github.com/zeta-chain/node/x/authority/migrations/v5"
 	"github.com/zeta-chain/node/x/authority/types"
 )
 
@@ -16,15 +16,11 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		list := types.DefaultAuthorizationsList()
-		list.RemoveAuthorization("/zetachain.zetacore.fungible.MsgUpdateZRC20Name")
-		list.RemoveAuthorization("/zetachain.zetacore.crosschain.MsgRemoveInboundTracker")
-		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateOperationalChainParams")
-		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgUpdateChainParams")
-		list.RemoveAuthorization("/zetachain.zetacore.observer.MsgDisableFastConfirmation")
+		list.RemoveAuthorization("/zetachain.zetacore.fungible.MsgUpdateGatewayGasLimit")
 		k.SetAuthorizationList(ctx, list)
 
 		// Act
-		err := v3.MigrateStore(ctx, *k)
+		err := v5.MigrateStore(ctx, *k)
 
 		// Assert
 		require.NoError(t, err)
@@ -39,7 +35,7 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx := keepertest.AuthorityKeeper(t)
 
 		// Act
-		err := v3.MigrateStore(ctx, *k)
+		err := v5.MigrateStore(ctx, *k)
 
 		// Assert
 		require.NoError(t, err)
@@ -64,7 +60,7 @@ func TestMigrateStore(t *testing.T) {
 		}})
 
 		// Act
-		err := v3.MigrateStore(ctx, *k)
+		err := v5.MigrateStore(ctx, *k)
 
 		// Assert
 		require.Error(t, err)
