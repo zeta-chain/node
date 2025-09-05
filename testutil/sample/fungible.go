@@ -55,7 +55,9 @@ func ForeignCoinList(t *testing.T, zrc20ETH, zrc20BTC, zrc20ERC20, erc20Asset st
 
 func SystemContract() *types.SystemContract {
 	return &types.SystemContract{
-		SystemContract: EthAddress().String(),
-		ConnectorZevm:  EthAddress().String(),
+		SystemContract:  EthAddress().String(),
+		ConnectorZevm:   EthAddress().String(),
+		Gateway:         EthAddress().String(),
+		GatewayGasLimit: types.DefaultGatewayGasLimit,
 	}
 }

@@ -5,6 +5,7 @@
 ### Features
 
 * [4064](https://github.com/zeta-chain/node/pull/4064) - add support for withdraws using the new v2 connector contract
+* [4153](https://github.com/zeta-chain/node/pull/4153) - make the gas limit used for gateway calls a configurable parameter
 
 ### Refactor
 

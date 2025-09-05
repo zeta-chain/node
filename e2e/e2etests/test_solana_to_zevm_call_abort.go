@@ -29,7 +29,7 @@ func TestSolanaToZEVMCallAbort(r *runner.E2ERunner, args []string) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInboundHash(r.Ctx, sig.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "solana_call")
-	require.Equal(r, crosschaintypes.CctxStatus_Aborted, cctx.CctxStatus.Status)
+	utils.RequireCCTXStatus(r, cctx, crosschaintypes.CctxStatus_Aborted)
 
 	// check onAbort was called
 	aborted, err := testAbort.IsAborted(&bind.CallOpts{})

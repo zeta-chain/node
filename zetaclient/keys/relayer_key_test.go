@@ -245,7 +245,7 @@ func Test_ReadWriteRelayerKeyFile(t *testing.T) {
 		require.ErrorContains(t, err, "unable to read relayer key data")
 	})
 
-	t.Run("should return error if unmarsalling fails", func(t *testing.T) {
+	t.Run("should return error if unmarshalling fails", func(t *testing.T) {
 		// create a bad key file
 		badKeyFile := path.Join(keyPath, "bad.json")
 		createBadRelayerKeyFile(t, badKeyFile)

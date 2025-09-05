@@ -286,7 +286,8 @@ var (
 	DepdencyAllBitcoinDeposits = runner.NewE2EDependency("all_bitcoin_deposits")
 )
 
-const V2ZetaVersion = "v33.0.0"
+// v2ZetaVersion is the minimum version that supports ZETA transfers using the gateway (v2 protocol contracts)
+const v2ZetaVersion = "v37.0.0"
 
 // AllE2ETests is an ordered list of all e2e tests
 var AllE2ETests = []runner.E2ETest{
@@ -300,7 +301,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount in wei", DefaultValue: "1000000000000000000"},
 		},
 		TestZetaDeposit,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallName,
@@ -309,7 +310,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestZetaDepositAndCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertName,
@@ -318,14 +319,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevert,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositRevertAndAbortName,
 		"deposit Zeta into ZEVM, revert, then abort with onAbort because revert fee cannot be paid",
 		[]runner.ArgDefinition{},
 		TestZetaDepositRevertAndAbort,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallRevertWithCallName,
@@ -334,7 +335,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallRevertWithCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaDepositAndCallNoMessageName,
@@ -343,7 +344,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "10000000000000000000"},
 		},
 		TestZetaDepositAndCallNoMessage,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawName,
@@ -352,7 +353,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdraw,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallName,
@@ -362,7 +363,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawAndCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertName,
@@ -371,7 +372,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevert,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndCallRevertWithCallName,
@@ -380,7 +381,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndCallRevertWithCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawRevertAndAbortName,
@@ -390,7 +391,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "gas limit for withdraw and call", DefaultValue: "350000"},
 		},
 		TestZetaWithdrawRevertAndAbort,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestZetaWithdrawAndArbitraryCallName,
@@ -399,7 +400,7 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "1000"},
 		},
 		TestZetaWithdrawAndArbitraryCall,
-		runner.WithMinimumVersion(V2ZetaVersion),
+		runner.WithMinimumVersion(v2ZetaVersion),
 	),
 	runner.NewE2ETest(
 		TestETHDepositName,
@@ -429,7 +430,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Ether into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestETHDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestETHDepositAndCallNoMessageName,
@@ -1229,7 +1230,7 @@ var AllE2ETests = []runner.E2ETest{
 		"deposit Bitcoin into ZEVM using fast confirmation",
 		[]runner.ArgDefinition{},
 		TestBitcoinDepositFastConfirmation,
-		runner.WithMinimumVersion("v29.0.0"),
+		runner.WithMinimumVersion("v37.0.0"),
 	),
 	runner.NewE2ETest(
 		TestBitcoinDepositAndCallName,
