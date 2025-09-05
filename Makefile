@@ -227,7 +227,7 @@ start-localnet: e2e-images start-localnet-skip-build
 start-localnet-skip-build:
 	@echo "--> Starting localnet"
 	export LOCALNET_MODE=setup-only && \
-	cd contrib/localnet/ && $(DOCKER_COMPOSE) up -d
+	cd contrib/localnet/ && $(DOCKER_COMPOSE) --profile solana up -d
 
 # stop-localnet should include all profiles so other containers are also removed
 stop-localnet:
