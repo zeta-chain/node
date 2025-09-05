@@ -35,6 +35,7 @@ const (
 	TestDepositAndCallOutOfGasName               = "deposit_and_call_out_of_gas"
 
 	TestERC20DepositName                      = "erc20_deposit"
+	TestERC20MultipleDepositsName             = "erc20_multiple_deposits_name"
 	TestERC20DepositAndCallName               = "erc20_deposit_and_call"
 	TestERC20DepositAndCallNoMessageName      = "erc20_deposit_and_call_no_message"
 	TestERC20DepositAndCallRevertName         = "erc20_deposit_and_call_revert"
@@ -423,7 +424,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestETHMultipleDepositsName,
 		"deposit Ether into ZEVM multiple",
 		[]runner.ArgDefinition{
-			{Description: "amount in wei", DefaultValue: "100000000000000000000"},
+			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestETHMultipleDeposits,
 	),
@@ -590,6 +591,14 @@ var AllE2ETests = []runner.E2ETest{
 			{Description: "amount", DefaultValue: "100000000000000000000"},
 		},
 		TestERC20Deposit,
+	),
+	runner.NewE2ETest(
+		TestERC20MultipleDepositsName,
+		"deposit ERC20 into ZEVM multiple",
+		[]runner.ArgDefinition{
+			{Description: "amount", DefaultValue: "100000000000000000000"},
+		},
+		TestERC20MultipleDeposits,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositAndCallName,

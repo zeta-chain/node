@@ -1,11 +1,13 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zeta-chain/node/e2e/runner"
 	"github.com/zeta-chain/node/e2e/utils"
+
 	crosschaintypes "github.com/zeta-chain/node/x/crosschain/types"
 )
 
@@ -16,31 +18,36 @@ func TestETHMultipleDeposits(r *runner.E2ERunner, args []string) {
 
 	r.Logger.Info("starting eth multiple deposits test")
 
-	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.EVMAddress())
+	oldBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.TestDAppV2ZEVMAddr)
 	require.NoError(r, err)
 
 	// set value of the payable transactions
 	previousValue := r.EVMAuth.Value
-	r.EVMAuth.Value = amount
-
-	// send two deposit through contract
-	r.Logger.Print("🏃test two deposits through contract")
-	tx, err := r.TestDAppV2EVM.GatewayTwoDeposits(r.EVMAuth, r.EVMAddress())
+	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
 	require.NoError(r, err)
+	// add 2 fees to provided amount to pay for 3 inbounds (1st one is free)
+	r.EVMAuth.Value = new(big.Int).Add(amount, new(big.Int).Mul(fee, big.NewInt(2)))
+
+	// send multiple deposit through contract
+	r.Logger.Print("🏃test multiple deposits through contract")
+	tx, err := r.TestDAppV2EVM.GatewayMultipleDeposits(r.EVMAuth, r.TestDAppV2ZEVMAddr, []byte(randomPayload(r)))
+	require.NoError(r, err)
+	r.WaitForTxReceiptOnEVM(tx)
 	r.Logger.Print("🍾 multiple deposits through contract observed")
 
 	r.EVMAuth.Value = previousValue
 
 	// wait for the cctxs to be mined
-	cctx := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 2, r.Logger, r.CctxTimeout)
-	r.Logger.CCTX(*cctx[0], "deposit 1")
-	r.Logger.CCTX(*cctx[1], "deposit 2")
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx[0].CctxStatus.Status)
-	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctx[1].CctxStatus.Status)
+	cctxs := utils.WaitCctxsMinedByInboundHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctxs[0], "deposit eth")
+	r.Logger.CCTX(*cctxs[1], "deposit and call eth")
+	r.Logger.CCTX(*cctxs[2], "call")
+
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[0].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[1].CctxStatus.Status)
+	require.Equal(r, crosschaintypes.CctxStatus_OutboundMined, cctxs[2].CctxStatus.Status)
 
 	// wait for the zrc20 balance to be updated
-	fee, err := r.GatewayEVM.AdditionalActionFeeWei(nil)
-	require.NoError(r, err)
-	change := utils.NewExactChange(amount.Sub(amount, fee))
-	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.EVMAddress(), oldBalance, change, r.Logger)
+	change := utils.NewExactChange(amount)
+	utils.WaitAndVerifyZRC20BalanceChange(r, r.ETHZRC20, r.TestDAppV2ZEVMAddr, oldBalance, change, r.Logger)
 }

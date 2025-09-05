@@ -40,6 +40,7 @@ func startEVMTests(eg *errgroup.Group, conf config.Config, deployerRunner *runne
 	eg.Go(evmTestRoutine(conf, "erc20", conf.AdditionalAccounts.UserERC20, color.FgHiBlue, deployerRunner, verbose,
 		e2etests.TestETHDepositName, // necessary to pay fees on ZEVM
 		e2etests.TestERC20DepositName,
+		e2etests.TestERC20MultipleDepositsName,
 		e2etests.TestERC20DepositAndCallName,
 		e2etests.TestERC20WithdrawName,
 		e2etests.TestERC20WithdrawAndArbitraryCallName,
